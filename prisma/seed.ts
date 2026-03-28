@@ -121,10 +121,10 @@ async function main() {
   const hashedPassword = await bcrypt.hash("admin123", 10);
 
   await prisma.user.upsert({
-    where: { email: "admin@patholab.com" },
+    where: { email: "admin@patholab.cloud" },
     update: {},
     create: {
-      email: "admin@patholab.com",
+      email: "admin@patholab.cloud",
       password: hashedPassword,
       name: "Super Admin",
       role: Role.SUPER_ADMIN,
