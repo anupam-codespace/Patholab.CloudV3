@@ -94,7 +94,7 @@ export default function UpgradePage() {
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         order_id: orderData.razorpayOrderId,
-        name: "Globiz Patholab",
+        name: "Patholab",
         description: `Upgrade to ${selectedPlan.displayName}`,
         handler: async function (response: any) {
           const verifyRes = await fetch("/api/payment/verify-upgrade", {

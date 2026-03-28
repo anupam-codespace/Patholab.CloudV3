@@ -533,7 +533,7 @@ export default function ClinicalReportPage() {
                       </div>
                     )}
                     <div className="text-[9px] text-center text-gray-400 pb-2">
-                      Powered by Globiz Patholab
+                      Powered by Patholab
                     </div>
                   </div>
                 )}

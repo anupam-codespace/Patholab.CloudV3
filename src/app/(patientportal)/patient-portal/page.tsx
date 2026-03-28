@@ -80,7 +80,7 @@ export default function PatientPortalHome() {
           </div>
           <div>
             <h1 className="font-bold text-slate-800 text-lg leading-none">
-              Globiz Patholab
+              Patholab
             </h1>
             <p className="text-xs text-slate-500 font-medium">Patient Portal</p>
           </div>
@@ -254,7 +254,7 @@ export default function PatientPortalHome() {
                 </form>
 
                 <div className="text-center text-sm text-slate-500">
-                  New to Globiz Patholab?{" "}
+                  New to Patholab?{" "}
                   <a
                     href="#"
                     className="text-blue-600 font-bold hover:underline">
@@ -321,7 +321,7 @@ export default function PatientPortalHome() {
           </div>
 
           <div className="mt-12 pt-6 border-t border-slate-100 text-center text-xs text-slate-400">
-            &copy; 2026 Globiz Patholab. All rights reserved. <br />
+            &copy; 2026 Patholab. All rights reserved. <br />
             <span className="mt-1 inline-block">
               ISO 9001:2015 Certified Lab
             </span>

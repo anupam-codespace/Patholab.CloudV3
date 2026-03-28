@@ -306,7 +306,7 @@ export default function RegistrationWizard() {
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         subscription_id: orderData.subscriptionId,
-        name: "Globiz Patholab",
+        name: "Patholab",
         description: `Subscribe to ${selectedPlan.displayName}`,
         handler: async function (response: any) {
           const verifyRes = await fetch("/api/payment/verify", {

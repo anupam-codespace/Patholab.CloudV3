@@ -68,7 +68,7 @@ export async function POST(req: Request) {
       <div style="font-family: sans-serif; padding: 20px; color: #333;">
         <h2 style="color: #2563eb;">Demo Request Received!</h2>
         <p>Hi ${name},</p>
-        <p>Thank you for booking a demo with <strong>Globiz Patholab</strong>. We have successfully received your request.</p>
+        <p>Thank you for booking a demo with <strong>Patholab</strong>. We have successfully received your request.</p>
         
         <div style="background-color: #f0f9ff; border-left: 4px solid #2563eb; padding: 15px; margin: 20px 0;">
            <p style="margin: 0; font-size: 14px; color: #555;">Our representative will review your requirements and call you very soon from the following number:</p>

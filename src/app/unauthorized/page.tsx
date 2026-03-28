@@ -95,7 +95,7 @@ export default function UnauthorizedPage() {
         {/* Footer */}
         <div className="text-center mt-8">
           <p className="text-slate-400 text-xs">
-            Globiz Patholab Protection System • Event ID:{" "}
+            Patholab Protection System • Event ID:{" "}
             <span className="font-mono text-slate-500">403_FORBIDDEN</span>
           </p>
         </div>

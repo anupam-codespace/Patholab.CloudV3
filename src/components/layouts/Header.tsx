@@ -123,7 +123,7 @@ export function Header({ user }: HeaderProps) {
           className="flex items-center gap-2 text-red-600 hover:opacity-80 transition-opacity">
           <FlaskConical className="h-5 w-5 fill-current" />
           <span className="text-lg font-bold tracking-tight hidden md:inline-block">
-            Globiz Patholab
+            Patholab
           </span>
         </Link>
 
@@ -234,9 +234,7 @@ export function Header({ user }: HeaderProps) {
                     <p className="text-sm font-medium text-slate-700">
                       Email Support
                     </p>
-                    <p className="text-xs text-slate-500">
-                      support@Globiz Patholab
-                    </p>
+                    <p className="text-xs text-slate-500">support@Patholab</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">

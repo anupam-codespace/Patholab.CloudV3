@@ -838,7 +838,7 @@ export default function LandingClient() {
           </div>
 
           <div className="text-xs font-medium text-stone-400 text-center md:text-right">
-            <p>© {new Date().getFullYear()} Globiz Patholab.</p>
+            <p>© {new Date().getFullYear()} Patholab.</p>
             <p>
               Developed by{" "}
               <a

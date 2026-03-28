@@ -25,7 +25,7 @@ export async function sendSlackAlert(message: string, type: 'info' | 'success' |
             color: colors[type], // Color code bar
             text: message,       // Main text
             mrkdwn_in: ["text"], // Enable markdown (bold, italics)
-            footer: "Globiz Patholab System",
+            footer: "Patholab System",
             ts: Math.floor(Date.now() / 1000) // Timestamp
           }
         ]
