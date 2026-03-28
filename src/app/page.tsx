@@ -16,14 +16,14 @@ export const metadata: Metadata = {
     title: "Patholab - The Future of Diagnostics",
     description:
       "Scale your lab with AI-powered reporting and multi-center management.",
-    url: "https://Patholab",
+    url: "https://Patholab.cloud",
     siteName: "Patholab",
     images: [{ url: "/og-image.jpg", width: 1200, height: 630 }],
     locale: "en_IN",
     type: "website",
   },
   alternates: {
-    canonical: "https://Patholab",
+    canonical: "https://Patholab.cloud",
   },
 };
 
