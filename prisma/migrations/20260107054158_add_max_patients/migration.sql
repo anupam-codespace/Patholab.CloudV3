@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Plan" ADD COLUMN     "maxPatients" INTEGER NOT NULL DEFAULT 100,
+ALTER COLUMN "features" SET DEFAULT '[]';

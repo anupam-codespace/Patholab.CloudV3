@@ -1,0 +1,1986 @@
+// ==========================================
+// CONFIG & GENERATOR
+// ==========================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// SYSTEM CONFIGURATION
+// ==========================================
+
+model SystemConfig {
+  id            String  @id @default(cuid())
+  systemName    String  @default("Patholab Cloud") // Your SaaS Name
+  systemLogo    String?
+  systemEmail   String?
+  systemPhone   String?
+  systemAddress String?
+
+  // ✅ NEW: SaaS Legal Details (For "Bill From" on Invoices)
+  gstNumber     String? // Your Company's GST
+  panNumber     String? // Your Company's PAN
+  invoicePrefix String  @default("SAAS") // Prefix for invoices (e.g. SAAS-1001)
+  nextInvoiceNo Int     @default(1) // Auto-increment counter
+
+  primaryColor   String @default("#3b82f6")
+  secondaryColor String @default("#8b5cf6")
+  currency       String @default("INR")
+  currencySymbol String @default("₹")
+  taxRate        Float  @default(18.0)
+  landingPage    Json?
+
+  // Integrations
+  enableABDM        Boolean @default(false)
+  abdmClientId      String?
+  abdmClientSecret  String?
+  razorpayKeyId     String?
+  razorpayKeySecret String?
+
+  // Email
+  smtpHost     String?
+  smtpPort     Int?
+  smtpUser     String?
+  smtpPassword String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ==========================================
+// USER MANAGEMENT & RBAC
+// ==========================================
+
+model User {
+  id               String           @id @default(cuid())
+  email            String           @unique
+  password         String
+  name             String
+  phone            String?
+  role             Role             @default(LAB_OWNER)
+  emailVerified    Boolean          @default(false)
+  // ✅ CHANGE 1: Add Onboarding Status
+  onboardingStatus OnboardingStatus @default(REGISTERED)
+
+  // ✅ CHANGE 2: Default isActive to false until payment
+  isActive Boolean @default(false)
+
+  avatar String?
+
+  // ABDM Integration
+  abhaNumber  String? @unique
+  abhaAddress String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  lab                Lab?                 @relation("LabOwner")
+  staffLabs          LabStaff[]
+  otp                OTP?
+  notifications      Notification[]
+  supportTickets     SupportTicket[]
+  activityLogs       ActivityLog[]
+  doctor             Doctor?
+  agency             Agency?
+  phlebotomistTrips  HomeCollectionTrip[]
+  sentInvitations    Invitation[]
+  technicianReports  Report[]             @relation("TechnicianReports")
+  seniorTechReports  Report[]             @relation("SeniorTechReports")
+  pathologistReports Report[]             @relation("PathologistReports")
+
+  @@index([email])
+  @@index([role])
+}
+
+enum OnboardingStatus {
+  REGISTERED // Step 2 complete (Account created)
+  VERIFIED // Step 3 complete (OTP done)
+  LAB_SETUP // Step 4 complete (Lab details saved)
+  COMPLETED // Step 5 complete (Payment done)
+}
+
+enum Role {
+  SUPER_ADMIN
+  LAB_OWNER
+  TECHNICIAN
+  LAB_MANAGER
+  RECEPTIONIST
+  DOCTOR
+  AGENCY
+}
+
+model OTP {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  code      String
+  type      OTPType  @default(EMAIL_VERIFICATION)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+enum OTPType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
+// ==========================================
+// LABORATORY CORE
+// ==========================================
+
+model Lab {
+  id String @id @default(cuid())
+
+  // Basic Info
+  name           String
+  address        String
+  city           String
+  state          String
+  pincode        String
+  phone          String
+  email          String
+  licenseNumber  String     @unique
+  registrationNo String?
+  taxId          String?
+ 
+
+  // GST & Legal
+  gstNumber  String?
+  panNumber  String?
+  entityType String?
+
+  // Banking
+  bankName      String?
+  accountNumber String?
+  ifscCode      String?
+  accountHolder String?
+
+  // Branding
+  logo       String?
+  letterhead String?
+  footer     String?
+  signature  String?
+  isActive   Boolean @default(true)
+
+  // Commission Settings
+  defaultDoctorCommission Float?         @default(10)
+  defaultAgencyCommission Float?         @default(5)
+  commissionType          CommissionType @default(PERCENTAGE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Owner
+  ownerId String @unique
+  owner   User   @relation("LabOwner", fields: [ownerId], references: [id])
+
+  // Relations
+  subscription   Subscription?
+  staff          LabStaff[]
+  patients       Patient[]
+  tests          Test[]
+  testCategories TestCategory[]
+  testParameters LabTestParameter[]
+  invoices       Invoice[]
+  doctors        Doctor[]
+  agencies       Agency[]
+  discounts      Discount[]
+  samples        Sample[]
+
+  reportTemplates ReportTemplate[]
+  unmappedCodes UnmappedMachineCode[]
+
+  // ✅ ADD THIS LINE TO FIX THE ERROR:
+  containerTypes ContainerType[]
+
+  departments  Department[]
+  sampleTypes  SampleType[]
+  testHeadings TestHeading[]
+  reports      Report[]
+  expenses       Expense[]
+
+  // Inventory & IoT Relations
+  inventoryItems   InventoryItem[]
+  inventoryBatches InventoryBatch[]
+  suppliers        Supplier[]
+  analyzers        LabAnalyzer[]
+  homeTrips        HomeCollectionTrip[]
+
+  customFieldDefinitions CustomFieldDefinition[]
+
+  @@index([ownerId])
+  @@index([licenseNumber])
+}
+
+model LabStaff {
+  id     String @id @default(cuid())
+  labId  String
+  lab    Lab    @relation(fields: [labId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  position   String
+  department String?
+  salary     Float?
+  joinDate   DateTime @default(now())
+  isActive   Boolean  @default(true)
+
+  customPermissions Json?
+
+  createdAt DateTime @default(now())
+
+  @@unique([labId, userId])
+  @@index([labId])
+}
+
+
+// ==========================================
+// INVENTORY MANAGEMENT (Catalog & Batch Architecture)
+// ==========================================
+
+model Supplier {
+  id            String  @id @default(cuid())
+  labId         String
+  lab           Lab     @relation(fields: [labId], references: [id])
+  name          String
+  contactPerson String?
+  email         String?
+  phone         String?
+  address       String?
+  gstNumber     String?
+
+  inventoryItems InventoryItem[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@index([labId])
+}
+
+// 1. The Item Master (The Catalog Definition - NO stock levels here)
+model InventoryItem {
+  id    String @id @default(cuid())
+  labId String
+  lab   Lab    @relation(fields: [labId], references: [id])
+
+  supplierId String?
+  supplier   Supplier? @relation(fields: [supplierId], references: [id])
+
+  name        String
+  sku         String?
+  description String?
+  category    String?
+
+  // Setup for Unit Conversion (e.g., Buy "Box", Use "ml")
+  purchaseUnit     String @default("Box")
+  usageUnit        String @default("ml")
+  conversionFactor Float  @default(1.0)
+  minStockLevel    Float  @default(10) // Alert when total active batch stock drops below this
+  reorderLevel     Float?
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  batches InventoryBatch[]
+  recipes TestParameterReagent[] // Maps to tests consuming this
+
+  @@unique([labId, name])
+  @@index([labId])
+}
+
+// 2. The Physical Batch/Lot (The Shelf Stock)
+model InventoryBatch {
+  id    String @id @default(cuid())
+  labId String
+  lab   Lab    @relation(fields: [labId], references: [id])
+
+  itemId String
+  item   InventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  batchNumber String
+  expiryDate  DateTime
+
+  // Stock logic for this specific batch
+  initialQuantity Float
+  currentQuantity Float @default(0)
+
+  costPrice Float?
+  mrp       Float?
+  location  String? // e.g., "Fridge A", "Store Room"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions InventoryTransaction[]
+
+  @@unique([itemId, batchNumber])
+  @@index([itemId])
+  @@index([labId])
+}
+
+// 3. The Transaction Log (The Ledger)
+model InventoryTransaction {
+  id String @id @default(cuid())
+
+  // ✅ CHANGED: Now points to the Batch, not the Item
+  batchId String?
+  batch   InventoryBatch? @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  quantity Float // Positive (+ addition), Negative (- consumption)          
+  type     StockType
+
+  // Context
+  testId String?
+  test   Test?   @relation(fields: [testId], references: [id])
+
+  notes       String?
+  performedBy String?
+  createdAt   DateTime @default(now())
+
+  @@index([batchId])
+  @@index([type])
+}
+
+// 4. The Consumption Recipe (Links Test Parameters -> Reagents)
+model TestParameterReagent {
+  id String @id @default(cuid())
+
+  parameterId String
+  parameter   LabTestParameter @relation(fields: [parameterId], references: [id], onDelete: Cascade)
+
+  inventoryItemId String
+  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+
+  // Amount consumed PER TEST (e.g. 1.5). This uses the `usageUnit` from InventoryItem
+  quantity Float
+
+  createdAt DateTime @default(now())
+
+  @@unique([parameterId, inventoryItemId])
+}
+
+enum StockType {
+  PURCHASE
+  CONSUMPTION
+  RETURN
+  WASTAGE
+  EXPIRED
+  ADJUSTMENT
+}
+
+// ==========================================
+// TEST ENGINE & STRUCTURED RESULTS
+// ==========================================
+model TestCategory {
+  id    String  @id @default(cuid())
+  labId String?
+  lab   Lab?    @relation(fields: [labId], references: [id])
+
+  name        String
+  description String?
+  icon        String?
+  isActive    Boolean @default(true)
+  isGlobal    Boolean @default(false)
+
+  testTemplates TestTemplate[]
+  tests         Test[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([labId, name])
+}
+
+model TestTemplate {
+  id String @id @default(cuid())
+
+  categoryId String?
+  category   TestCategory? @relation(fields: [categoryId], references: [id])
+
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id])
+
+  sampleTypeId String?
+  sampleType   SampleType? @relation(fields: [sampleTypeId], references: [id])
+
+  // ✅ LINK TO CONTAINER MASTER (Crucial for Barcode Logic)
+  containerTypeId String?
+  containerType   ContainerType? @relation(fields: [containerTypeId], references: [id])
+
+  legacySampleType String? @map("sampleType")
+
+  name        String
+  printName   String?
+  code        String
+  description String?
+
+  price    Float
+  b2bPrice Float?  @default(0)
+  cost     Float?  @default(0)
+  tat      String?
+  method   String?
+
+  // Configuration
+  volume       String?
+  duration     Int?
+  requirements String?
+
+  type     TestType @default(SINGLE)
+  isActive Boolean  @default(true)
+  isNabl   Boolean  @default(false)
+  
+  // ✅ DIAGNOSTICS: Pre-filled standard text (HTML) for Radiology/Cardio tests
+  defaultTextReport String? 
+
+  parameters   TestTemplateParameter[]
+  patientTests Test[]
+  customFields TestTemplateField[]
+
+  // ✅ NEW: Relations to the custom Doctor/Agency commission lists
+  doctorCommissions DoctorTestCommission[]
+  agencyCommissions AgencyTestCommission[]
+
+  referenceData Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now()) @updatedAt
+
+  @@index([departmentId])
+}
+
+// ==========================================
+// NEW LIMS MASTER DATA (Departments, Samples, Headings)
+// ==========================================
+
+model Department {
+  id    String @id @default(cuid())
+  labId String
+  lab   Lab    @relation(fields: [labId], references: [id], onDelete: Cascade)
+
+  name         String // e.g., "Hematology", "Biochemistry"
+  code         String? // e.g., "HEM"
+  displayOrder Int     @default(0)
+
+  testTemplates TestTemplate[] // Links to the Test Master
+
+  createdAt DateTime @default(now())
+
+  @@unique([labId, name])
+}
+
+model SampleType {
+  id    String @id @default(cuid())
+  labId String
+  lab   Lab    @relation(fields: [labId], references: [id], onDelete: Cascade)
+
+  name String // e.g., "Serum", "EDTA Whole Blood"
+  code String? // e.g., "SER"
+
+  testTemplates TestTemplate[] // Links to the Test Master
+
+  createdAt DateTime @default(now())
+
+  @@unique([labId, name])
+}
+
+model TestHeading {
+  id    String @id @default(cuid())
+  labId String
+  lab   Lab    @relation(fields: [labId], references: [id], onDelete: Cascade)
+
+  name String // e.g., "LIPID PROFILE", "COMPLETE BLOOD COUNT"
+
+  // Used to group parameters inside a test template
+  parameters TestTemplateParameter[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([labId, name])
+}
+
+model Test {
+  id         String @id @default(cuid())
+  labId      String
+  lab        Lab    @relation(fields: [labId], references: [id])
+  testNumber String
+
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id])
+
+  categoryId String?
+  category   TestCategory? @relation(fields: [categoryId], references: [id])
+
+  testTemplateId String?
+  testTemplate   TestTemplate? @relation(fields: [testTemplateId], references: [id])
+
+  invoiceId String?
+  invoice   Invoice? @relation(fields: [invoiceId], references: [id])
+
+  // ✅ LINK BACK TO SAMPLE (The Fix: Many Tests -> One Sample)
+  sampleId String?
+  sample   Sample? @relation(fields: [sampleId], references: [id])
+
+  testName String
+  testCode String
+
+  status   TestStatus   @default(PENDING)
+  priority TestPriority @default(NORMAL)
+
+  referredBy String?
+  doctorId   String?
+  doctor     Doctor? @relation("DoctorReferral", fields: [doctorId], references: [id])
+  agencyId   String?
+  agency     Agency? @relation("AgencyReferral", fields: [agencyId], references: [id])
+
+  // Timestamps
+  scheduledAt         DateTime?
+  sampleCollectedAt   DateTime?
+  processingStartedAt DateTime?
+  completedAt         DateTime?
+  approvedAt          DateTime?
+  approvedBy          String?
+  reportGeneratedAt   DateTime?
+  sampleReceivedAt    DateTime?
+
+  reportUrl  String?
+  notes      String?
+  impression String?
+
+  price      Float
+  discount   Float @default(0)
+  finalPrice Float
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  commissions    Commission[]
+  results        TestResultParameter[]
+  inventoryUsage InventoryTransaction[]
+  aiPrediction   AIPrediction?
+  customResults  TestResultCustomField[]
+
+  @@unique([labId, testNumber])
+  @@index([patientId])
+  @@index([status])
+}
+
+// Unified Result Model (Manual + Machine + AI)
+model TestResultParameter {
+  id     String @id @default(cuid())
+  testId String
+  test   Test   @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  parameterName String
+  value         String
+  unit          String?
+
+  // Reference Range Snapshot
+  refRangeMin  Float?
+  refRangeMax  Float?
+  refRangeText String?
+
+  // Analysis
+  isAbnormal Boolean @default(false)
+  isCritical Boolean @default(false)
+
+  // Source Tracking (V3)
+  analyzerId  String?
+  analyzer    LabAnalyzer? @relation(fields: [analyzerId], references: [id])
+  entryMethod EntryMethod  @default(MANUAL)
+
+  order Int @default(0)
+
+  @@index([testId])
+}
+
+enum EntryMethod {
+  MANUAL
+  MACHINE_INTERFACE
+  FILE_UPLOAD
+}
+
+model AIPrediction {
+  id     String @id @default(cuid())
+  testId String @unique
+  test   Test   @relation(fields: [testId], references: [id])
+
+  summary         String
+  riskScore       Float?
+  recommendations Json?
+  modelUsed       String?
+  createdAt       DateTime @default(now())
+}
+
+enum TestStatus {
+  PENDING
+  SCHEDULED
+  SAMPLE_COLLECTED
+  IN_PROGRESS
+  COMPLETED
+  APPROVED
+  DELIVERED
+  CANCELLED
+}
+
+enum TestPriority {
+  NORMAL
+  URGENT
+  CRITICAL
+}
+
+// ==========================================
+// NEW: TEST PARAMETER DEFINITIONS (The "Library")
+// ==========================================
+
+// 1. The Reusable Parameter (e.g., "Hemoglobin", "WBC Count")
+model LabTestParameter {
+  id    String @id @default(cuid())
+  labId String
+  lab   Lab    @relation(fields: [labId], references: [id])
+
+  name      String // e.g., "Hemoglobin"
+  printName String? // ✅ e.g., "Hemoglobin (Hb)"
+  code      String // e.g., "HB"
+  unit      String? // e.g., "g/dL"
+
+  // ✅ NEW: Professional Features
+  inputType ParameterInputType @default(NUMBER)
+  decimals  Int                @default(2) // e.g. 12.50 vs 12.5
+  method    String? // e.g. "Photometry"
+  formula   String? // ✅ e.g., "(a/b)*100" (For Globulin/Ratios)
+
+  price Float @default(0)
+
+  options String[] // Dropdown values
+
+  // Relations
+  usedInTemplates TestTemplateParameter[]
+  referenceRanges ParameterReferenceRange[]
+  reagents        TestParameterReagent[]
+
+  // ✅ Add this so single parameters know their tube type
+  containerTypeId String?
+  containerType   ContainerType? @relation(fields: [containerTypeId], references: [id])
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([labId, code])
+  @@index([labId])
+}
+
+// 2. Reference Ranges (Smart High/Low Logic)
+model ParameterReferenceRange {
+  id          String           @id @default(cuid())
+  parameterId String
+  parameter   LabTestParameter @relation(fields: [parameterId], references: [id], onDelete: Cascade)
+
+  // Demographics
+  gender Gender // MALE, FEMALE, OTHER, BOTH (Handle BOTH in logic)
+
+  // ✅ NEW: Flexible Age Logic
+  minAge  Int    @default(0)
+  maxAge  Int    @default(100)
+  ageUnit String @default("YEAR") // YEAR, MONTH, DAY (Crucial for babies)
+
+  // Values
+  lowValue  Float? // Normal Low
+  highValue Float? // Normal High
+
+  // ✅ NEW: Panic Values
+  criticalLow  Float? // Panic Low (Triggers red alert)
+  criticalHigh Float? // Panic High
+
+  textValue   String? // For qualitative tests (e.g., "Negative")
+  displayText String? // What to show on report if normal (Optional)
+
+  customLabel String?
+
+  createdAt DateTime @default(now())
+
+  @@index([parameterId])
+}
+
+// 3. The Linker (Connects Parameters to Billable Tests)
+model TestTemplateParameter {
+  id String @id @default(cuid())
+
+  templateId String
+  template   TestTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  parameterId String
+  parameter   LabTestParameter @relation(fields: [parameterId], references: [id])
+
+  order Int @default(0)
+
+  // ✅ NEW: Grouping inside the test
+  headingId String?
+  heading   TestHeading? @relation(fields: [headingId], references: [id])
+
+  @@unique([templateId, parameterId])
+  @@index([templateId])
+}
+
+enum ParameterInputType {
+  NUMBER
+  TEXT
+  LONG_TEXT
+  DROPDOWN
+  HEADING // Useful for grouping sections in a report (e.g. "MICROSCOPY")
+}
+
+enum TestType {
+  SINGLE // One parameter only
+  BUNDLE // Multiple parameters (CBC, LFT)
+  PROFILE // Complex grouping
+}
+
+// ==========================================
+// REFERRAL & COMMISSION
+// ==========================================
+
+model Doctor {
+  id             String  @id @default(cuid())
+  labId          String
+  lab            Lab     @relation(fields: [labId], references: [id])
+
+  // ✅ 1. Made User relation optional
+  userId         String? @unique
+  user           User?   @relation(fields: [userId], references: [id])
+
+  // ✅ 2. Added direct contact info for quick tracking without a user account
+  name           String  @default("Legacy Doctor")
+  email          String? 
+  phone          String? 
+
+  // ✅ 3. Made registrationNo optional
+  registrationNo String? 
+  specialization String?
+  qualification  String?
+  clinic         String?
+
+  commissionRate Float?
+  commissionType CommissionType @default(PERCENTAGE)
+  customTestCommissions DoctorTestCommission[]
+
+  totalReferrals  Int   @default(0)
+  totalCommission Float @default(0)
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tests       Test[]       @relation("DoctorReferral")
+  commissions Commission[]
+  patients    Patient[]    @relation("PatientDefaultDoctor")
+
+  @@unique([labId, registrationNo])
+  @@index([labId])
+}
+
+model Agency {
+  id             String  @id @default(cuid())
+  labId          String
+  lab            Lab     @relation(fields: [labId], references: [id])
+
+  // ✅ 1. Made User relation optional
+  userId         String? @unique
+  user           User?   @relation(fields: [userId], references: [id])
+
+  // ✅ 2. Added direct contact info
+  agencyName     String @default("Legacy Agency")
+  contactPerson  String?
+  email          String? 
+  phone          String? 
+  panNumber      String?
+
+  commissionRate Float?
+  commissionType CommissionType @default(PERCENTAGE)
+
+  totalReferrals  Int   @default(0)
+  totalCommission Float @default(0)
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tests       Test[]       @relation("AgencyReferral")
+  commissions Commission[]
+  invoices    Invoice[]
+  patients    Patient[]    @relation("PatientDefaultAgency")
+  customTestCommissions AgencyTestCommission[]
+
+  @@index([labId])
+}
+
+model Commission {
+  id     String @id @default(cuid())
+  testId String
+  test   Test   @relation(fields: [testId], references: [id])
+
+  doctorId String?
+  doctor   Doctor? @relation(fields: [doctorId], references: [id])
+
+  agencyId String?
+  agency   Agency? @relation(fields: [agencyId], references: [id])
+
+  amount Float
+  type   CommissionType
+  rate   Float
+  status CommissionStatus @default(PENDING)
+
+  paidAt         DateTime?
+  transactionRef String?
+
+  createdAt DateTime @default(now())
+
+  @@index([testId])
+  @@index([status])
+}
+
+enum CommissionType {
+  PERCENTAGE
+  FIXED
+}
+
+enum CommissionStatus {
+  PENDING
+  APPROVED
+  PAID
+  CANCELLED
+}
+
+// ==========================================
+// REPORT MANAGEMENT
+// ==========================================
+
+model Report {
+  id    String @id @default(cuid())
+  labId String
+  lab   Lab    @relation(fields: [labId], references: [id])
+
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id])
+
+  // Relations to User (Fixes your error)
+  technicianId String?
+  technician   User?   @relation("TechnicianReports", fields: [technicianId], references: [id])
+
+  seniorTechId String?
+  seniorTech   User?   @relation("SeniorTechReports", fields: [seniorTechId], references: [id])
+
+  pathologistId String?
+  pathologist   User?   @relation("PathologistReports", fields: [pathologistId], references: [id])
+
+  // Report Details
+  reportUrl String? // Link to PDF
+  status    ReportStatus @default(GENERATED)
+
+  approvedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([labId])
+  @@index([patientId])
+}
+
+enum ReportStatus {
+  GENERATED
+  APPROVED
+  PRINTED
+  SENT_TO_PATIENT
+}
+
+// ==========================================
+// PATIENT & LOGISTICS (Unified)
+// ==========================================
+
+model Patient {
+  id        String @id @default(cuid())
+  labId     String
+  lab       Lab    @relation(fields: [labId], references: [id])
+  patientId String
+
+  name        String
+  email       String?
+  phone       String
+  dateOfBirth DateTime?
+  age         Int?
+  ageUnit     String    @default("Years") // ✅ KEPT (Prevents data loss)
+  gender      Gender?
+  bloodGroup  String?
+  address     String?
+
+  // IDs (Added based on your new flow)
+  srfId          String?
+  passportNumber String?
+
+  // V3 Upgrades
+  gstNumber         String?
+  walletBalance     Float    @default(0)
+  loyaltyPoints     Int      @default(0)
+  membershipTier    String   @default("SILVER")
+  chronicConditions String[]
+
+  doctorId String?
+  doctor   Doctor? @relation("PatientDefaultDoctor", fields: [doctorId], references: [id])
+
+  agencyId String?
+  agency   Agency? @relation("PatientDefaultAgency", fields: [agencyId], references: [id])
+
+  medicalHistory Json?
+  allergies      String?
+
+  // ABDM
+  abhaNumber String?
+  healthId   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tests        Test[]
+  appointments Appointment[]
+  samples      Sample[]
+  invoices     Invoice[]
+  reports      Report[]
+
+  //Radiology
+  radiologyAppointments RadiologyAppointment[]
+  radiologyStudies      RadiologyStudy[]
+
+  @@unique([labId, patientId])
+  @@unique([labId, abhaNumber])
+  @@index([phone])
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  BOTH
+  CUSTOM
+}
+
+model Sample {
+  id    String @id @default(cuid())
+  labId String
+  lab   Lab    @relation(fields: [labId], references: [id])
+
+  // ✅ 1. IDENTITY (The Barcode)
+  sampleId      String
+  barcodeFormat String @default("CODE128")
+
+  // ✅ 2. THE RELATIONSHIP FIX (One Sample -> Many Tests)
+  tests Test[]
+
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id])
+
+  // ✅ 3. SAMPLE DEFINITION
+  sampleType    String // e.g. "Whole Blood"
+  containerType String? // e.g. "Lavender Top"
+
+  // ✅ 4. LOGISTICS
+  collectionMode    CollectionMode @default(LAB_VISIT)
+  collectedAt       DateTime?
+  collectedBy       String?
+  collectionLat     Float?
+  collectionLng     Float?
+  collectionAddress String?
+
+  courierName        String?
+  trackingNumber     String?
+  transitTemperature String?
+
+  status SampleStatus @default(COLLECTED)
+
+  // ✅ 5. LAB PROCESSING
+  storageLocation String?
+  temperature     String?
+
+  receivedAt DateTime?
+  receivedBy String?
+  condition  String?
+
+  // ✅ 6. MACHINE INTEGRATION
+  machineId    String?
+  rackPosition String?
+
+  // ✅ 7. QC
+  rejectionReason String?
+
+  timeline  SampleLog[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@unique([labId, sampleId])
+  @@index([sampleId])
+  @@index([status])
+}
+
+enum SampleStatus {
+  COLLECTED
+  IN_TRANSIT
+  RECEIVED
+  PROCESSING
+  PROCESSED
+  STORED
+  REJECTED
+}
+
+enum CollectionMode {
+  LAB_VISIT
+  HOME_COLLECTION
+  HOSPITAL_PICKUP
+}
+
+model SampleLog {
+  id        String       @id @default(cuid())
+  sampleId  String
+  sample    Sample       @relation(fields: [sampleId], references: [id])
+  status    SampleStatus
+  timestamp DateTime     @default(now())
+  actor     String
+  notes     String?
+  location  String?
+}
+
+model HomeCollectionTrip {
+  id             String @id @default(cuid())
+  labId          String
+  lab            Lab    @relation(fields: [labId], references: [id])
+  phlebotomistId String
+  phlebotomist   User   @relation(fields: [phlebotomistId], references: [id])
+
+  scheduledDate DateTime
+  startLocation String?
+  endLocation   String?
+  totalDistance Float?
+  status        TripStatus @default(SCHEDULED)
+
+  appointments Appointment[]
+  createdAt    DateTime      @default(now())
+}
+
+enum TripStatus {
+  SCHEDULED
+  STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+// ==========================================
+// 1. PLAN DEFINITIONS (The Base Tier)
+// ==========================================
+
+model Plan {
+  id          String  @id @default(cuid())
+  name        String  @unique // Internal slug (e.g. "starter_monthly", "pro_yearly")
+  displayName String // Public name (e.g. "Starter Plan")
+  description String?
+
+  // --- Pricing ---
+  price        Float
+  currency     String       @default("INR")
+  billingCycle BillingCycle @default(MONTHLY)
+  razorpayId   String? // Razorpay Plan ID for auto-recurring
+
+  // --- Hard Limits (Base Monthly Allowance) ---
+  // Set -1 for Unlimited
+  maxTestsPerMonth Int   @default(100) // Resets every month
+  maxPatientsTotal Int   @default(1000) // Total DB records allowed
+  maxStaff         Int   @default(2) // Active staff accounts
+  maxStorageGB     Float @default(1.0) // File storage cap
+
+  // --- Feature Flags (Module Access) ---
+  hasInventory    Boolean @default(false)
+  hasAnalytics    Boolean @default(false)
+  hasB2bBilling   Boolean @default(false) // Doctor/Agency commissions
+  hasEmailReports Boolean @default(true)
+  hasWhatsapp     Boolean @default(false)
+  hasAiPrediction Boolean @default(false)
+  hasApiAccess    Boolean @default(false) // <--- ADD THIS BACK
+  hasWhiteLabel   Boolean @default(false) // Remove your branding
+
+  // --- UI/Marketing ---
+  isActive  Boolean @default(true)
+  isPopular Boolean @default(false)
+  features  Json    @default("[]") // Array of strings for pricing page
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  subscriptions Subscription[]
+}
+
+enum BillingCycle {
+  MONTHLY
+  QUARTERLY
+  HALF_YEARLY
+  YEARLY
+  LIFETIME
+}
+
+// ==========================================
+// 2. ADD-ONS (Booster Packs)
+// ==========================================
+
+model AddOn {
+  id          String  @id @default(cuid())
+  name        String // e.g. "50 Test Booster"
+  description String? // e.g. "Valid for current month only"
+
+  // Pricing
+  price      Float
+  currency   String  @default("INR")
+  razorpayId String? // Optional linked Razorpay Item ID
+
+  // Functionality
+  type  AddOnType
+  value Int // The numeric amount to add (e.g. 50, 1, 1024)
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  payments Payment[] // Linked to payments for invoicing
+}
+
+enum AddOnType {
+  TEST_LIMIT // Adds to monthly test quota
+  STORAGE_LIMIT // Adds to storage quota (GB)
+  PATIENT_LIMIT // Adds to total patient capacity
+  STAFF_LIMIT // Adds extra staff seat
+}
+
+// ==========================================
+// 3. SUBSCRIPTIONS (The License State)
+// ==========================================
+
+model Subscription {
+  id    String @id @default(cuid())
+  labId String @unique
+  lab   Lab    @relation(fields: [labId], references: [id], onDelete: Cascade)
+
+  planId String
+  plan   Plan   @relation(fields: [planId], references: [id])
+
+  status SubStatus @default(TRIAL)
+
+  startDate DateTime @default(now())
+  endDate   DateTime
+
+  razorpaySubId String? @unique
+
+  // --- DYNAMIC LIMITS (The Logic) ---
+  // Total Limit = Plan.Limit + Booster + Bonus
+
+  // 1. Paid Add-ons (Reset these to 0 every month via Cron)
+  boosterTests    Int   @default(0)
+  boosterStorage  Float @default(0.0)
+  boosterStaff    Int   @default(0)
+  boosterPatients Int   @default(0)
+
+  // 2. Admin Overrides (Permanent or goodwill adjustments)
+  bonusTests   Int   @default(0)
+  bonusStorage Float @default(0.0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  payments     Payment[]
+  usage        UsageMetric[] // Historical reporting
+  currentUsage CurrentUsage? // Real-time consumption tracker
+}
+
+enum SubStatus {
+  PENDING_LAB_SETUP
+  TRIAL
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  EXPIRED
+}
+
+// ==========================================
+// 4. REAL-TIME USAGE TRACKER
+// ==========================================
+
+model CurrentUsage {
+  id             String       @id @default(cuid())
+  subscriptionId String       @unique
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  // Current Consumption
+  testsUsed     Int   @default(0) // Resets to 0 monthly
+  patientsCount Int   @default(0) // Total active patients
+  staffCount    Int   @default(1) // Active staff users
+  storageUsedGB Float @default(0.0) // Total file size
+
+  lastUpdated DateTime @updatedAt
+}
+
+model Payment {
+  id             String       @id @default(cuid())
+  subscriptionId String
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id])
+
+  // If this payment was for an Add-on, link it here
+  addOnId String?
+  addOn   AddOn?  @relation(fields: [addOnId], references: [id])
+
+  // Transaction Details
+  amount    Float
+  taxAmount Float?
+  currency  String        @default("INR")
+  status    PaymentStatus @default(PENDING)
+
+  // Gateway References
+  razorpayOrderId   String? @unique
+  razorpayPaymentId String? @unique
+
+  // SaaS Invoice Details
+  invoiceNumber String?   @unique
+  invoiceDate   DateTime? @default(now())
+  invoiceUrl    String?
+
+  // Snapshot of Lab Details at time of purchase
+  billingSnapshot Json?
+
+  createdAt DateTime @default(now())
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+model Invoice {
+  id    String @id @default(cuid())
+  labId String
+  lab   Lab    @relation(fields: [labId], references: [id])
+
+  invoiceNumber String  @unique
+  notes         String?
+  financialYear String? @default("2024-25")
+
+  patientId String?
+  patient   Patient? @relation(fields: [patientId], references: [id])
+  agencyId  String?
+  agency    Agency?  @relation(fields: [agencyId], references: [id])
+
+  items InvoiceItem[]
+  tests Test[] // ✅ ADDED (Relation back to Test)
+
+  subtotal Float
+  discount Float @default(0)
+
+  taxableAmount Float
+  cgstAmount    Float @default(0)
+  sgstAmount    Float @default(0)
+  igstAmount    Float @default(0)
+  totalTax      Float
+
+  roundOff   Float @default(0)
+  grandTotal Float
+
+  placeOfSupply String?
+  isB2B         Boolean @default(false)
+  gstinCustomer String?
+
+  status         InvoiceStatus @default(PENDING)
+  paymentMode    String?
+  transactionRef String?
+  pdfUrl         String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model InvoiceItem {
+  id        String  @id @default(cuid())
+  invoiceId String
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  description String
+  hsnSacCode  String?
+
+  unitPrice Float
+  quantity  Int   @default(1)
+  discount  Float @default(0)
+
+  taxRate   Float
+  taxAmount Float
+
+  total Float
+}
+
+enum InvoiceStatus {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+// ==========================================
+// SUPPORT & LOGS
+// ==========================================
+
+model SupportTicket {
+  id           String @id @default(cuid())
+  ticketNumber String @unique
+  userId       String
+  user         User   @relation(fields: [userId], references: [id])
+
+  subject     String
+  description String
+  status      TicketStatus   @default(OPEN)
+  priority    TicketPriority @default(MEDIUM)
+  category    String         @default("GENERAL")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  messages TicketMessage[]
+}
+
+model TicketMessage {
+  id         String        @id @default(cuid())
+  ticketId   String
+  ticket     SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  message    String
+  isStaff    Boolean       @default(false)
+  senderName String?
+  createdAt  DateTime      @default(now())
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum NotificationType {
+  TEST
+  PAYMENT
+  SYSTEM
+  LAB_UPDATE
+}
+
+model Notification {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  title   String
+  message String
+  type    String @default("SYSTEM") // SYSTEM, LAB_UPDATE, PROMOTION, ALERT
+
+  // ✨ NEW FIELDS
+  link     String? // URL to redirect (e.g., /plans)
+  imageUrl String? // URL of an image banner
+
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ActivityLog {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  action      String
+  entity      String
+  entityId    String
+  description String
+  createdAt   DateTime @default(now())
+}
+
+model UsageMetric {
+  id             String       @id @default(cuid())
+  subscriptionId String
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id])
+  month          Int
+  year           Int
+  testsCount     Int          @default(0)
+  storageUsedGB  Float        @default(0)
+
+  @@unique([subscriptionId, month, year])
+}
+
+// ==========================================
+// DISCOUNT & APPOINTMENTS
+// ==========================================
+
+model Discount {
+  id         String       @id @default(cuid())
+  labId      String
+  lab        Lab          @relation(fields: [labId], references: [id])
+  code       String       @unique
+  value      Float
+  type       DiscountType
+  validUntil DateTime?
+  isActive   Boolean      @default(true)
+  createdAt  DateTime     @default(now())
+
+  @@index([labId])
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED
+}
+
+model Appointment {
+  id        String  @id @default(cuid())
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id])
+
+  // Link to Home Collection Trip
+  tripId String?
+  trip   HomeCollectionTrip? @relation(fields: [tripId], references: [id])
+
+  appointmentDate DateTime
+  status          AppointmentStatus @default(SCHEDULED)
+  createdAt       DateTime          @default(now())
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+model Invitation {
+  id        String   @id @default(cuid())
+  email     String
+  name      String
+  labName   String?
+  role      Role     @default(LAB_OWNER)
+  token     String   @unique
+  expiresAt DateTime
+
+  // Relation Fields
+  inviterId String
+  inviter   User   @relation(fields: [inviterId], references: [id])
+
+  status    InviteStatus @default(PENDING)
+  createdAt DateTime     @default(now())
+
+  @@index([token])
+  @@index([email])
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+}
+
+model Page {
+  id          String  @id @default(cuid())
+  title       String
+  slug        String  @unique // e.g. "about-us"
+  content     String // Stores HTML content
+  metaTitle   String? // For SEO
+  metaDesc    String? // For SEO
+  isPublished Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+}
+
+model Lead {
+  id      String     @id @default(cuid())
+  name    String
+  email   String
+  phone   String
+  labName String?
+  message String?
+  status  LeadStatus @default(NEW)
+  source  String     @default("WEBSITE_DEMO")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  CONVERTED
+  CLOSED
+}
+
+model CustomFieldDefinition {
+  id    String @id @default(cuid())
+  labId String
+  lab   Lab    @relation(fields: [labId], references: [id])
+
+  name         String // e.g., "Interpretation", "Methodology Note"
+  type         FieldType @default(TEXT) // TEXT, LONG_TEXT, DROPDOWN
+  options      String[] // For Dropdown values (e.g. ["Method A", "Method B"])
+  reportLayout String?   @default("FULL")
+
+  printOnReport Boolean @default(true) // Should this show on PDF?
+
+  createdAt DateTime @default(now())
+
+  // Relations
+  usedInTests TestTemplateField[]
+  results     TestResultCustomField[]
+
+  @@unique([labId, name])
+}
+
+// 2. THE MAPPING (Which test uses which field?)
+model TestTemplateField {
+  id         String       @id @default(cuid())
+  templateId String
+  template   TestTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  fieldDefId String
+  fieldDef   CustomFieldDefinition @relation(fields: [fieldDefId], references: [id])
+
+  order    Int     @default(0) // Control display order
+  required Boolean @default(false)
+
+  @@unique([templateId, fieldDefId])
+}
+
+// 3. THE VALUE (The actual data entered for a patient)
+model TestResultCustomField {
+  id     String @id @default(cuid())
+  testId String
+  test   Test   @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  fieldDefId String
+  fieldDef   CustomFieldDefinition @relation(fields: [fieldDefId], references: [id])
+  layout     Json?
+
+  value String // The text or option selected
+
+  @@unique([testId, fieldDefId])
+}
+
+enum FieldType {
+  TEXT // Short Input
+  LONG_TEXT // Textarea (for Interpretations)
+  DROPDOWN // Select Box
+  DATE // Date Picker
+  IMAGE // For Graphs, ECGs, X-Rays
+  RICH_TEXT // For HTML formatted text
+}
+
+// Master data for Tubes (e.g., EDTA, Serum, Urine Cup)
+model ContainerType {
+  id    String @id @default(cuid())
+  labId String
+  lab   Lab    @relation(fields: [labId], references: [id])
+
+  name     String // e.g. "Lavender Top (EDTA)"
+  code     String // e.g. "EDTA" (Standard code for stickers)
+  capColor String? // e.g. "#A855F7" (For UI visuals)
+
+  // Link to Templates so system knows which test needs which tube
+  templates TestTemplate[]
+
+  parameters LabTestParameter[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([labId, name])
+}
+
+// ==========================================
+// REPORT CUSTOMIZATION ENGINE
+// ==========================================
+model ReportTemplate {
+  id String @id @default(cuid())
+
+  labId String
+  // ⚠️ CHANGED: Removed @unique so one lab can have many templates
+  lab   Lab    @relation(fields: [labId], references: [id], onDelete: Cascade)
+
+  // 1. Template Management
+  name     String  @default("Standard Clinical Report")
+  isActive Boolean @default(false) // ✅ NEW: Only one template will be true at a time
+
+  // 2. Page Settings
+  pageSize    String @default("A4") // A4, LETTER, A5
+  orientation String @default("PORTRAIT") // PORTRAIT, LANDSCAPE
+
+  // 3. Branding & Assets (Legacy Support)
+  // We keep these for backward compatibility, but the 'config' JSON 
+  // below is now the source of truth for your new Builder.
+  primaryColor String? @default("#000000")
+  accentColor  String? @default("#2563eb")
+  fontFamily   String? @default("Inter")
+  logoUrl      String?
+  signatureUrl String?
+  headerImage  String?
+  footerImage  String?
+  isoMarkUrl   String?
+  watermarkUrl String?
+
+  // 4. Content Configuration (The Engine)
+  // This JSON field stores your Arrays of Signatures, HTML Strings, 
+  // Base64 Images, and Layout Modes.
+  config Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // ✅ NEW: Index for fast lookups of a lab's templates
+  @@index([labId])
+}
+
+
+
+model LabAnalyzer {
+  id           String @id @default(cuid())
+  labId        String
+  lab          Lab    @relation(fields: [labId], references: [id])
+
+  name         String
+  model        String
+  serialNumber String
+  ipAddress    String?
+  protocol     String?
+
+  maintenanceDue DateTime?
+  isActive       Boolean   @default(true)
+
+  results  TestResultParameter[]
+  
+  // ✅ ADD THIS EXACT LINE HERE:
+  mappings ParameterMapping[]
+  unmappedCodes UnmappedMachineCode[]
+}
+
+model ParameterMapping {
+  id            String @id @default(cuid())
+  labAnalyzerId String
+  machineCode   String // What the Mindray sends (e.g., "HGB")
+  parameterName String // Your exact parameterName in TestResultParameter (e.g., "Hemoglobin")
+
+
+  analyzer      LabAnalyzer @relation(fields: [labAnalyzerId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime @default(now())
+
+  @@unique([labAnalyzerId, machineCode])
+  @@index([labAnalyzerId])
+}
+
+// ==========================================
+// EXPENSE MANAGEMENT
+// ==========================================
+
+model Expense {
+  id          String   @id @default(cuid())
+  labId       String
+  lab         Lab      @relation(fields: [labId], references: [id], onDelete: Cascade)
+  
+  title       String   // e.g., "Mindray Maintenance", "Staff Salary"
+  category    ExpenseCategory
+  amount      Float
+  date        DateTime @default(now())
+  
+  paymentMode String   @default("CASH")
+  referenceNo String?  // Invoice or receipt number
+  notes       String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([labId])
+  @@index([date])
+}
+
+enum ExpenseCategory {
+  SALARY
+  RENT
+  UTILITIES
+  MACHINE_MAINTENANCE
+  MARKETING
+  OFFICE_SUPPLIES
+  MISC
+}
+
+//updated commision
+
+model DoctorTestCommission {
+  id             String         @id @default(cuid())
+  
+  doctorId       String
+  doctor         Doctor         @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  
+  testTemplateId String
+  testTemplate   TestTemplate   @relation(fields: [testTemplateId], references: [id], onDelete: Cascade)
+  
+  commissionRate Float
+  commissionType CommissionType @default(PERCENTAGE)
+
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@unique([doctorId, testTemplateId])
+}
+
+model AgencyTestCommission {
+  id             String         @id @default(cuid())
+  
+  agencyId       String
+  agency         Agency         @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  
+  testTemplateId String
+  testTemplate   TestTemplate   @relation(fields: [testTemplateId], references: [id], onDelete: Cascade)
+  
+  commissionRate Float
+  commissionType CommissionType @default(PERCENTAGE)
+
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@unique([agencyId, testTemplateId])
+}
+
+
+
+// ==============================================================================
+// RADIOLOGY INFORMATION SYSTEM (RIS) MODULES
+// Enterprise & Future-Proof Edition
+// ==============================================================================
+
+// 1. Modalities (The Radiology Machines & PACS Nodes)
+model Modality {
+  id              String   @id @default(uuid())
+  labId           String
+  name            String   // e.g., "GE 1.5T MRI", "Siemens CT Room 1"
+  type            String   // e.g., "MRI", "CT", "USG", "XRAY", "PET"
+  
+  // Network & DICOM Config
+  aeTitle         String?  // PACS Application Entity Title
+  ipAddress       String?  // Machine's IP on the local network
+  port            Int?     // Port used for DICOM transfer (e.g., 104)
+  location        String?  // e.g., "Ground Floor, Room A"
+  
+  // Asset Management
+  manufacturer    String?  // e.g., "GE Healthcare", "Philips"
+  lastMaintenance DateTime?
+  nextMaintenance DateTime?
+  
+  status          String   @default("ACTIVE") // ACTIVE, MAINTENANCE, INACTIVE
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  appointments    RadiologyAppointment[]
+  studies         RadiologyStudy[]
+
+  @@index([labId, status])
+}
+
+// 2. Radiology Appointments (Time Slot Booking)
+model RadiologyAppointment {
+  id               String   @id @default(uuid())
+  labId            String
+  
+  // ✅ Fixed: Added actual relation to your Patient model
+  patientId        String   
+  patient          Patient  @relation(fields: [patientId], references: [id]) 
+  
+  modalityId       String
+  
+  scheduledStart   DateTime 
+  scheduledEnd     DateTime 
+  
+  // Clinical Context upfront
+  scanName         String   // e.g., "MRI Brain with Contrast"
+  priority         String   @default("ROUTINE") // ROUTINE, URGENT, STAT
+  notes            String?  // Front desk notes (e.g., "Patient is claustrophobic")
+  
+  status           String   @default("SCHEDULED") // SCHEDULED, ARRIVED, IN_PROGRESS, COMPLETED, CANCELLED
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  modality         Modality @relation(fields: [modalityId], references: [id])
+  study            RadiologyStudy? 
+
+  @@index([labId, scheduledStart])
+  @@index([modalityId, status])
+}
+
+// 3. The Radiology Study (The actual Scan / PACS Record)
+model RadiologyStudy {
+  id               String   @id @default(uuid())
+  labId            String
+  
+  // ✅ Fixed: Added actual relation to your Patient model
+  patientId        String
+  patient          Patient  @relation(fields: [patientId], references: [id])
+
+  appointmentId    String?  @unique
+  modalityId       String
+  
+  // --- PACS INTEGRATION FIELDS ---
+  accessionNumber  String   @unique // Sent to machine via Modality Worklist (MWL)
+  studyInstanceUid String?  @unique // Globally unique DICOM identifier
+  dicomInstances   Int      @default(0) // Total number of images/slices in this scan
+  storageSizeMb    Float?   // File size on your PACS server
+  // ----------------------------------------
+
+  // Clinical & Safety Data
+  scanName         String   // e.g., "CT KUB Non-Contrast"
+  clinicalHistory  String?  @db.Text // Doctor's reason for scan
+  isContrastUsed   Boolean  @default(false)
+  
+  // Safety & Compliance (JSON for flexible NABH/JCI checklists)
+  // e.g., { "creatinineChecked": true, "pregnancyRuledOut": true, "metalImplants": "None" }
+  safetyChecklist  Json?    
+  
+  // Dispatch & Media Tracking (JSON for UI mapping)
+  // e.g., { "film": "PRINTED", "cd": "PENDING", "digital": "SENT" }
+  mediaStatus      Json?    
+
+  // Staffing
+  referringDoctor  String?  
+  technicianId     String?  // Tech who performed it
+  radiologistId    String?  // Doctor assigned to read it
+  
+  // Flow: ORDERED -> SCANNED -> REPORTING -> VERIFIED
+  status           String   @default("ORDERED") 
+  priority         String   @default("ROUTINE") // ROUTINE, URGENT, STAT
+
+  createdAt        DateTime @default(now())
+  performedAt      DateTime? 
+
+  appointment      RadiologyAppointment? @relation(fields: [appointmentId], references: [id])
+  modality         Modality              @relation(fields: [modalityId], references: [id])
+  report           RadiologyReport?
+
+  @@index([labId, status, priority])
+  @@index([accessionNumber])
+}
+
+// 4. The Radiology Report (The Doctor's Interpretation)
+model RadiologyReport {
+  id               String   @id @default(uuid())
+  studyId          String   @unique
+  
+  clinicalNotes    String?  @db.Text // Radiologist's private notes before reporting
+  
+  // Core Report Data
+  findings         String   @db.Text
+  impression       String   @db.Text
+  
+  // Post-Verification Edits (Medico-legal requirement)
+  addendum         String?  @db.Text 
+  
+  // Future-Proofing: AI Pre-reads (e.g., Qure.ai / Lunit integration)
+  // Store AI insights here before the human doctor verifies them
+  aiAnalysis       Json?    
+  
+  // Key Images (JSON Array of URLs pointing to specific annotated DICOM slices)
+  keyImages        Json?
+
+  status           String   @default("DRAFT") // DRAFT, DICTATED, FINAL
+  radiologistId    String   // Link to your Doctor/User model
+  verifiedAt       DateTime?
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  study            RadiologyStudy @relation(fields: [studyId], references: [id], onDelete: Cascade)
+}
+
+// 5. Reporting Macros (Templates to save Radiologists time)
+model RadiologyMacro {
+  id               String   @id @default(uuid())
+  labId            String
+  
+  title            String   // e.g., "Normal Chest X-Ray (PA View)"
+  modalityType     String   // e.g., "XRAY", "MRI", "CT"
+  
+  // Trigger word for the rich text editor (e.g., "/N-CXR")
+  shortcode        String?  
+  
+  // The pre-filled text
+  findingsText     String   @db.Text
+  impressionText   String   @db.Text
+  
+  // Scope management
+  isGlobal         Boolean  @default(false) // If true, all doctors in lab can use it
+  createdById      String   // Which doctor created this template
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([labId, modalityType])
+}
+
+// 6. Global DICOM & PACS Settings for the Lab
+model DicomSettings {
+  id              String   @id @default(uuid())
+  labId           String   @unique
+  
+  // Local RIS Identity
+  localAETitle    String   @default("GLOBIZ_RIS")
+  localPort       Int      @default(104)
+  
+  // Primary PACS Archive
+  pacsAETitle     String   @default("PACS_SERVER")
+  pacsIpAddress   String   @default("192.168.1.100")
+  pacsPort        Int      @default(4242)
+  
+  // Modality Worklist (MWL)
+  enableMwl       Boolean  @default(true)
+  mwlAETitle      String   @default("GLOBIZ_MWL")
+  mwlPort         Int      @default(105)
+  
+  // Web Viewer URL (e.g., OHIF, Weasis, Osimis)
+  viewerBaseUrl   String   @default("http://localhost:8042/viewer?StudyInstanceUID=")
+
+  updatedAt       DateTime @updatedAt
+}
+
+// A temporary holding queue for machine codes the webhook couldn't map
+model UnmappedMachineCode {
+  id            String   @id @default(cuid())
+  labId         String
+  labAnalyzerId String
+  sampleId      String
+  machineCode   String
+  
+  analyzer      LabAnalyzer @relation(fields: [labAnalyzerId], references: [id], onDelete: Cascade)
+  lab           Lab         @relation(fields: [labId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime @default(now())
+
+  // Ensure we don't spam the database with duplicates from the 5-second retries
+  @@unique([labAnalyzerId, sampleId, machineCode])
+  @@index([labId])
+}
