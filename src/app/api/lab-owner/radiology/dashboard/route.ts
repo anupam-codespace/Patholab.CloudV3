@@ -5,8 +5,29 @@ import { startOfDay, endOfDay, differenceInMinutes, format } from 'date-fns';
 
 export async function GET(req: NextRequest) {
   try {
-    const user = await getDataFromToken(req);
-    if (!user || !user.labId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const tokenData = await getDataFromToken(req);
+    
+    // 1. Resilient Auth Check (Catches id, userId, or _id)
+    const userId = tokenData?.id || tokenData?.userId || tokenData?._id;
+
+    if (!tokenData || !userId) {
+       return NextResponse.json({ error: 'Unauthorized: No valid session found.' }, { status: 401 });
+    }
+
+    // 2. Safely Resolve Lab ID
+    let currentLabId = tokenData.labId;
+
+    if (!currentLabId) {
+       const userRecord = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { lab: { select: { id: true } } }
+       });
+
+       if (!userRecord || !userRecord.lab) {
+           return NextResponse.json({ error: 'Forbidden: User is not associated with a lab.' }, { status: 403 });
+       }
+       currentLabId = userRecord.lab.id;
+    }
 
     const todayStart = startOfDay(new Date());
     const todayEnd = endOfDay(new Date());
@@ -17,18 +38,18 @@ export async function GET(req: NextRequest) {
     
     // A. Scans Today
     const scansTodayCount = await prisma.radiologyStudy.count({
-      where: { labId: user.labId, createdAt: { gte: todayStart, lte: todayEnd } }
+      where: { labId: currentLabId, createdAt: { gte: todayStart, lte: todayEnd } } // <-- FIXED
     });
 
     // B. Pending Reports (Scanned but not verified)
     const pendingReportsCount = await prisma.radiologyStudy.count({
-      where: { labId: user.labId, status: { in: ['SCANNED', 'REPORTING'] } }
+      where: { labId: currentLabId, status: { in: ['SCANNED', 'REPORTING'] } } // <-- FIXED
     });
 
     // C. Average TAT (Turnaround Time) for today's completed reports
     const completedToday = await prisma.radiologyStudy.findMany({
       where: {
-        labId: user.labId,
+        labId: currentLabId, // <-- FIXED
         status: 'VERIFIED',
         report: { verifiedAt: { gte: todayStart, lte: todayEnd } }
       },
@@ -47,14 +68,12 @@ export async function GET(req: NextRequest) {
       avgTatStr = `${Math.floor(avgMins / 60)}h ${avgMins % 60}m`;
     }
 
-    // D. Revenue Today (Assuming you have a standard Payment table linked to lab/invoices)
-    // Adjust this query based on your exact billing schema.
+    // D. Revenue Today
     const revenueAgg = await prisma.payment.aggregate({
       _sum: { amount: true },
       where: { 
         status: 'SUCCESS',
         createdAt: { gte: todayStart, lte: todayEnd },
-        // Add labId relation if your payment table requires it
       }
     });
     const revenueToday = revenueAgg._sum.amount || 0;
@@ -63,7 +82,7 @@ export async function GET(req: NextRequest) {
     // 2. MODALITIES STATUS (Machines)
     // ==========================================
     const modalitiesList = await prisma.modality.findMany({
-      where: { labId: user.labId }
+      where: { labId: currentLabId } // <-- FIXED
     });
 
     const modalitiesData = await Promise.all(modalitiesList.map(async (mod) => {
@@ -105,7 +124,7 @@ export async function GET(req: NextRequest) {
     // 3. PENDING QUEUE (For Radiologists)
     // ==========================================
     const pendingQueueRaw = await prisma.radiologyStudy.findMany({
-      where: { labId: user.labId, status: { in: ['SCANNED', 'REPORTING'] } },
+      where: { labId: currentLabId, status: { in: ['SCANNED', 'REPORTING'] } }, // <-- FIXED
       include: {
         patient: { select: { name: true } },
         modality: { select: { type: true } }
