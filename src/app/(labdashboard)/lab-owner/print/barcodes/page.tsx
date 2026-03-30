@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Loader2, Printer } from 'lucide-react';
+import { Loader2, Printer, ScanLine, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import Barcode from 'react-barcode';
@@ -14,7 +14,10 @@ function BarcodePrintContent() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!invoiceId) return;
+    if (!invoiceId) {
+       setLoading(false);
+       return;
+    }
 
     fetch(`/api/lab-owner/barcodes/${invoiceId}`)
       .then(res => res.json())
@@ -28,15 +31,29 @@ function BarcodePrintContent() {
       });
   }, [invoiceId]);
 
-  if (loading) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin text-blue-600" /></div>;
+  if (loading) {
+     return (
+        <div className="h-screen flex flex-col items-center justify-center bg-slate-50">
+           <Loader2 className="animate-spin h-10 w-10 text-indigo-600 mb-4" />
+           <p className="text-sm font-medium text-slate-500 animate-pulse">Generating Labels...</p>
+        </div>
+     );
+  }
   
-  if (samples.length === 0) return <div className="p-10 text-center text-slate-500">No samples found for this invoice.</div>;
+  if (!invoiceId || samples.length === 0) {
+     return (
+        <div className="h-screen flex flex-col items-center justify-center bg-slate-50">
+           <AlertCircle className="h-12 w-12 text-slate-400 mb-4" />
+           <h2 className="text-xl font-bold text-slate-800">No Samples Found</h2>
+           <p className="text-slate-500 mb-6">No barcode labels are available for this request.</p>
+        </div>
+     );
+  }
 
   return (
-    // ✅ REMOVED 'min-h-screen' here to prevent forcing height in print mode
-    <div className="flex flex-col items-center p-8 bg-slate-100 min-h-screen print:bg-white print:p-0 print:min-h-0 print:block">
+    <div className="flex flex-col items-center p-4 sm:p-8 bg-slate-100 min-h-screen font-sans print:bg-white print:p-0 print:min-h-0 print:block">
       
-      {/* ✅ STRICT PRINT CSS */}
+      {/* --- STRICT PRINT CSS (Preserved 100%) --- */}
       <style jsx global>{`
         @media print {
            @page {
@@ -83,25 +100,29 @@ function BarcodePrintContent() {
            .barcode-label {
              break-inside: avoid;
              page-break-inside: avoid;
-             border: 1px dashed #ccc; /* Guide for cutting */
+             border: none !important; /* Remove preview border for actual print */
            }
         }
       `}</style>
 
       {/* --- CONTROLS (Hidden when printing) --- */}
-      <div className="mb-8 print:hidden flex flex-col items-center gap-4 w-full max-w-4xl">
-         <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 text-blue-800 max-w-md text-sm text-center">
-            <p className="font-bold">🖨️ A4 Print Ready</p>
-            <p>Make sure to select <strong>A4</strong> paper size in your printer settings.</p>
+      <div className="mb-8 print:hidden flex flex-col items-center gap-6 w-full max-w-4xl z-10 relative">
+         <div className="bg-white/70 backdrop-blur-md p-6 rounded-2xl border border-slate-200/60 shadow-sm text-center flex flex-col items-center w-full">
+            <div className="h-12 w-12 bg-indigo-50 rounded-xl flex items-center justify-center mb-4">
+               <ScanLine className="h-6 w-6 text-indigo-600" />
+            </div>
+            <h1 className="text-xl font-bold text-slate-900 mb-1">Print Sample Labels</h1>
+            <p className="text-sm font-medium text-slate-500 mb-6 max-w-md">
+               Load thermal label stock or A4 sticker sheets. Verify printer settings before proceeding.
+            </p>
+            <Button onClick={() => window.print()} className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 w-48 h-11 rounded-xl font-bold shadow-md shadow-indigo-500/25 transition-all duration-300 hover:-translate-y-0.5">
+               <Printer className="mr-2 h-4 w-4"/> Print {samples.length} Labels
+            </Button>
          </div>
-         <Button onClick={() => window.print()} className="bg-blue-600 hover:bg-blue-700 w-48 shadow-md">
-            <Printer className="mr-2 h-4 w-4"/> Print Labels
-         </Button>
       </div>
 
-      {/* --- PRINTABLE AREA --- */}
-      {/* Added width constraint to simulate A4 width on screen for better preview */}
-      <div id="printable-area" className="bg-white p-8 shadow-xl print:shadow-none print:p-0 print:bg-transparent w-[210mm] flex flex-wrap content-start gap-4 mx-auto">
+      {/* --- PRINTABLE AREA (A4 Simulation for UI Preview) --- */}
+      <div id="printable-area" className="bg-white shadow-2xl print:shadow-none print:bg-transparent w-[210mm] min-h-[297mm] p-[10mm] print:p-0 flex flex-wrap content-start gap-[5mm] mx-auto rounded-sm relative z-0">
          
          {samples.map((sample) => (
             /* 📐 INDIVIDUAL STICKER (50mm x 25mm) */
@@ -121,8 +142,8 @@ function BarcodePrintContent() {
                   </div>
                   
                   {/* Tube Badge */}
-                  <div className="bg-black text-white text-[8px] font-bold px-1 py-0.5 rounded-[1px] min-w-[10mm] text-center">
-                      {sample.containerType ? sample.containerType.substring(0, 4).toUpperCase() : "GEN"}
+                  <div className="bg-black text-white text-[8px] font-bold px-1 py-0.5 rounded-[1px] min-w-[10mm] text-center uppercase tracking-wider">
+                      {sample.containerType ? sample.containerType.substring(0, 4) : "GEN"}
                   </div>
                </div>
 
@@ -146,7 +167,9 @@ function BarcodePrintContent() {
                <div className="w-full mt-[1px]">
                   <div className="border-t border-black w-full h-[1px] mb-[1px]"></div>
                   <span className="text-[8px] font-bold text-black uppercase block text-center leading-none truncate">
-                    {sample.tests.map((t: any) => t.testCode).join(', ') || "ROUTINE"}
+                    {sample.tests && sample.tests.length > 0 
+                      ? sample.tests.map((t: any) => t.testCode).join(', ') 
+                      : "ROUTINE"}
                   </span>
                </div>
 
@@ -159,7 +182,7 @@ function BarcodePrintContent() {
 
 export default function BarcodePage() {
     return (
-        <Suspense fallback={<div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin"/></div>}>
+        <Suspense fallback={<div className="h-screen flex items-center justify-center bg-slate-50"><Loader2 className="animate-spin text-indigo-600 h-8 w-8"/></div>}>
             <BarcodePrintContent />
         </Suspense>
     );
