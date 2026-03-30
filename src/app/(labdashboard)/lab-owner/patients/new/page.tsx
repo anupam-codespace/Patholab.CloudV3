@@ -6,11 +6,12 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'react-hot-toast';
-import { useQuery } from '@tanstack/react-query'; // ✅ Added for dynamic fetching
+import { useQuery } from '@tanstack/react-query'; 
 import { 
   User, Calendar, Phone, ScanLine, Camera, 
   ChevronRight, X, Loader2, Mail, Fingerprint, ScanBarcode, 
-  ChevronsUpDown, Check, Stethoscope, Briefcase, Banknote, UserCheck, CreditCard
+  ChevronsUpDown, Check, Stethoscope, Briefcase, Banknote, UserCheck, CreditCard,
+  MapPin, Activity, ShieldCheck, Clock
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -19,7 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import {
@@ -33,12 +34,12 @@ import {
 import { getDoctors } from '@/actions/doctor-management';
 import { getAgencies } from '@/actions/agency-management';
 
-// --- VALIDATION SCHEMA ---
+// --- VALIDATION SCHEMA (Fixed: Removed .default() to prevent TS Type Collisions) ---
 const patientSchema = z.object({
-  title: z.string().default('Mr.'),
+  title: z.string(),
   name: z.string().min(2, "Name is required"),
   age: z.coerce.number().min(1, "Age is required"),
-  ageUnit: z.enum(['Years', 'Months', 'Days']).default('Years'),
+  ageUnit: z.enum(['Years', 'Months', 'Days']),
   gender: z.enum(['MALE', 'FEMALE', 'OTHER']),
   
   phone: z.string().min(10, "10 digits required").max(10, "10 digits maximum"),
@@ -47,7 +48,7 @@ const patientSchema = z.object({
   
   doctorName: z.string().optional(), 
   agencyName: z.string().optional(), 
-  paymentMode: z.string().default('Cash'),
+  paymentMode: z.string(),
   
   collectedBy: z.string().optional(), 
 
@@ -82,17 +83,15 @@ export default function CreatePatientPage() {
     queryFn: async () => await getAgencies()
   });
 
-  // Map database records to the format the combobox expects
   const liveDoctors = [
     { label: "Self (No Doctor)", value: "Self" },
-    ...(doctorsData?.map(d => ({ label: d.name, value: d.id })) || [])
+    ...(doctorsData?.map((d: any) => ({ label: d.name, value: d.id })) || [])
   ];
 
   const liveAgencies = [
     { label: "Direct Walk-in", value: "Direct" },
-    ...(agenciesData?.map(a => ({ label: a.agencyName, value: a.id })) || [])
+    ...(agenciesData?.map((a: any) => ({ label: a.agencyName, value: a.id })) || [])
   ];
-
 
   const form = useForm<PatientFormValues>({
     resolver: zodResolver(patientSchema),
@@ -103,8 +102,8 @@ export default function CreatePatientPage() {
       phone: phoneParam,
       collectionDate: format(new Date(), 'yyyy-MM-dd'),
       collectionTime: format(new Date(), 'HH:mm'),
-      doctorName: 'Self', // ✅ Set smart defaults
-      agencyName: 'Direct', // ✅ Set smart defaults
+      doctorName: 'Self', 
+      agencyName: 'Direct', 
       paymentMode: 'Cash',
       collectedBy: '' 
     }
@@ -120,7 +119,6 @@ export default function CreatePatientPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...data,
-          // We pass these exactly as they are (they now hold the UUID or "Self"/"Direct")
           doctorId: data.doctorName, 
           agencyId: data.agencyName
         }),
@@ -130,7 +128,7 @@ export default function CreatePatientPage() {
       
       if (!res.ok) {
         if (res.status === 409) {
-           if(confirm("Patient exists. Load profile?")) {
+           if(confirm("Patient already exists. Load their profile?")) {
               const params = new URLSearchParams({
                  patientId: result.patient?.id,
                  doc: data.doctorName || 'Self',
@@ -143,10 +141,10 @@ export default function CreatePatientPage() {
            }
            throw new Error("Duplicate ignored.");
         }
-        throw new Error(result.error || "Failed to register");
+        throw new Error(result.error || "Failed to register patient");
       }
 
-      toast.success("Patient Registered");
+      toast.success("Patient Registered Successfully");
       
       const params = new URLSearchParams({
          patientId: result.id, 
@@ -164,23 +162,7 @@ export default function CreatePatientPage() {
     }
   };
 
-  // Minimized Section Header
-  const SectionHeader = ({ icon: Icon, title }: { icon: any, title: string }) => (
-    <div className="flex items-center gap-2 mb-2 pb-1 border-b border-slate-100">
-        <div className="p-0.5 bg-blue-50/80 rounded-md text-blue-600">
-            <Icon className="h-3 w-3" />
-        </div>
-        <h3 className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">{title}</h3>
-    </div>
-  );
-
-  // Minimized Label
-  const InputLabel = ({ label, required }: { label: string, required?: boolean }) => (
-    <Label className="text-[9px] font-bold text-slate-500 uppercase tracking-wide mb-0.5 block">
-        {label} {required && <span className="text-red-500">*</span>}
-    </Label>
-  );
-
+  // Modern Combobox Component
   const CreatableCombobox = ({ value, onChange, options, placeholder, icon: Icon }: any) => {
     const [open, setOpen] = useState(false);
     const [inputValue, setInputValue] = useState("");
@@ -188,44 +170,41 @@ export default function CreatePatientPage() {
     return (
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <div className="relative">
-              <Icon className="absolute left-2 top-2 h-3.5 w-3.5 text-slate-400 z-10" />
+          <div className="relative group cursor-pointer">
+              <Icon className="absolute left-3 top-3.5 h-4 w-4 text-slate-400 group-hover:text-indigo-500 transition-colors z-10" />
               <Button
                 type="button" 
                 variant="outline"
                 role="combobox"
                 aria-expanded={open}
                 className={cn(
-                  "w-full h-8 pl-7 pr-2 justify-between font-normal bg-slate-50 border-slate-200 focus:bg-white hover:bg-white text-left text-xs",
-                  !value && "text-muted-foreground"
+                  "w-full h-11 pl-10 pr-4 justify-between font-normal bg-slate-50 border-slate-200 hover:bg-white focus:bg-white text-left text-sm rounded-xl transition-all shadow-sm",
+                  !value && "text-slate-500"
                 )}
               >
                 <span className="truncate">{value 
                   ? options.find((opt: any) => opt.value === value)?.label || value 
                   : placeholder}</span>
-                <ChevronsUpDown className="ml-2 h-3 w-3 shrink-0 opacity-50" />
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
           </div>
         </PopoverTrigger>
-        <PopoverContent className="w-[250px] p-0" align="start">
+        <PopoverContent className="w-[300px] p-0 shadow-2xl border-slate-100 rounded-xl overflow-hidden" align="start">
           <Command>
             <CommandInput 
-                placeholder={placeholder} 
+                placeholder={`Search or type new...`} 
                 onValueChange={(search) => setInputValue(search)}
-                className="h-8 text-xs"
+                className="h-11 text-sm border-none focus:ring-0"
             />
-            <CommandList>
+            <CommandList className="max-h-[250px] custom-scrollbar">
               <CommandEmpty>
-                  <div className="p-2 text-xs text-slate-500">
-                     <p>No record found.</p>
+                  <div className="p-3 text-sm text-slate-500 text-center">
+                     <p className="mb-2">No record found.</p>
                      <Button 
                         type="button" 
-                        variant="ghost" 
-                        size="sm" 
-                        className="mt-1 h-auto py-1 w-full justify-start text-blue-600 font-bold bg-blue-50 hover:bg-blue-100 hover:text-blue-700 text-xs"
+                        variant="secondary" 
+                        className="w-full bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 font-bold"
                         onClick={() => {
-                           // If the user types a new doctor that isn't in the DB, 
-                           // we still allow it as plain text. 
                            onChange(inputValue); 
                            setOpen(false);
                         }}>
@@ -242,9 +221,9 @@ export default function CreatePatientPage() {
                       onChange(opt.value);
                       setOpen(false);
                     }}
-                    className="text-xs"
+                    className="text-sm py-2.5 cursor-pointer hover:bg-slate-50"
                   >
-                    <Check className={cn("mr-2 h-3 w-3", value === opt.value ? "opacity-100" : "opacity-0")}/>
+                    <Check className={cn("mr-2 h-4 w-4 text-indigo-600", value === opt.value ? "opacity-100" : "opacity-0")}/>
                     {opt.label}
                   </CommandItem>
                 ))}
@@ -257,259 +236,293 @@ export default function CreatePatientPage() {
   };
 
   return (
-      // ✅ 1. SCREEN FIT LAYOUT
-      <div className="flex flex-col min-h-[85vh] bg-slate-50/50 font-sans">
+      <div className="min-h-screen bg-slate-50 flex flex-col font-sans selection:bg-indigo-100 relative">
         
-        {/* COMPACT HEADER (h-12) */}
-        <div className="flex-none h-12 bg-white border-b flex items-center justify-between px-4 z-20 shadow-sm">
-           <div className="flex items-center gap-3">
-             <Button type="button" variant="ghost" size="icon" onClick={() => router.back()} className="h-7 w-7 text-slate-400 hover:text-slate-700">
-                <X className="h-4 w-4"/>
-             </Button>
-             <div className="flex items-center gap-2">
-                <h1 className="text-sm font-bold text-slate-800 tracking-tight">New Patient</h1>
-                <Badge variant="secondary" className="text-[9px] h-4 px-1.5 bg-yellow-50 text-yellow-700 border-yellow-200">Draft</Badge>
-             </div>
-           </div>
-           
-           <div className="hidden md:flex items-center gap-1 text-[9px] font-bold tracking-wider opacity-70 scale-90">
-              <div className="px-2 py-0.5 bg-blue-600 text-white rounded-full">01 DETAILS</div>
-              <div className="w-4 h-px bg-slate-200"></div>
-              <div className="px-2 py-0.5 bg-slate-100 text-slate-400 rounded-full">02 TESTS</div>
-              <div className="w-4 h-px bg-slate-200"></div>
-              <div className="px-2 py-0.5 bg-slate-100 text-slate-400 rounded-full">03 BILLING</div>
-           </div>
-        </div>
+        {/* Decorative Background Mesh */}
+        <div className="absolute top-0 inset-x-0 h-64 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-100/50 via-slate-50 to-transparent pointer-events-none z-0" />
 
-        {/* CONTENT AREA - Auto Scale */}
-        <div className="flex-1 min-h-0 p-2 md:p-3 mb-0">
-          <form id="patient-form" onSubmit={form.handleSubmit(onSubmit)} className="max-w-6xl mx-auto h-fit flex flex-col justify-center">
+        {/* --- FLOATING HEADER --- */}
+        <header className="sticky top-0 z-30 bg-white/70 backdrop-blur-xl border-b border-slate-200/60 shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 h-fit">
-                
-                {/* LEFT: DEMOGRAPHICS (Dense) */}
-                <div className="lg:col-span-8 flex flex-col gap-3">
-                    <Card className="shadow-sm border-slate-200/60 overflow-hidden">
-                        <CardContent className="p-3">
-                            <SectionHeader icon={User} title="Demographics" />
-                            <div className="grid grid-cols-12 gap-2">
-                                {/* Title */}
-                                <div className="col-span-3 md:col-span-2">
-                                    <InputLabel label="Title" />
-                                    <Controller name="title" control={control} render={({ field }) => (
-                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                            <SelectTrigger className="h-8 bg-slate-50 border-slate-200 focus:bg-white text-xs"><SelectValue /></SelectTrigger>
-                                            <SelectContent>
-                                                {['Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Baby'].map(t => <SelectItem key={t} value={t} className="text-xs">{t}</SelectItem>)}
-                                            </SelectContent>
-                                        </Select>
-                                    )}/>
-                                </div>
-                                {/* Full Name */}
-                                <div className="col-span-9 md:col-span-5">
-                                    <InputLabel label="Full Name" required />
-                                    <Input {...register('name')} className="h-8 bg-slate-50 border-slate-200 focus:bg-white font-medium text-slate-800 text-xs" placeholder="e.g. Rahul Sharma" />
-                                    {errors.name && <p className="text-[9px] text-red-500 mt-0.5">{errors.name.message}</p>}
-                                </div>
-                                {/* Age & Gender Group */}
-                                <div className="col-span-12 md:col-span-5 grid grid-cols-3 gap-2">
-                                    <div>
-                                        <InputLabel label="Age" required />
-                                        <Input type="number" {...register('age')} className="h-8 bg-slate-50 border-slate-200 focus:bg-white text-xs" />
-                                    </div>
-                                    <div>
-                                        <InputLabel label="Unit" />
-                                        <Controller name="ageUnit" control={control} render={({ field }) => (
-                                            <Select onValueChange={field.onChange} value={field.value}>
-                                                <SelectTrigger className="h-8 bg-slate-50 border-slate-200 focus:bg-white text-xs"><SelectValue /></SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="Years" className="text-xs">Yrs</SelectItem>
-                                                    <SelectItem value="Months" className="text-xs">Mths</SelectItem>
-                                                    <SelectItem value="Days" className="text-xs">Days</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        )}/>
-                                    </div>
-                                    <div>
-                                        <InputLabel label="Gender" required />
-                                        <Controller name="gender" control={control} render={({ field }) => (
-                                            <Select onValueChange={field.onChange} value={field.value}>
-                                                <SelectTrigger className="h-8 bg-slate-50 border-slate-200 focus:bg-white text-xs"><SelectValue /></SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="MALE" className="text-xs">Male</SelectItem>
-                                                    <SelectItem value="FEMALE" className="text-xs">Female</SelectItem>
-                                                    <SelectItem value="OTHER" className="text-xs">Other</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        )}/>
-                                    </div>
-                                </div>
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-slate-100 text-slate-500 shrink-0" onClick={() => router.back()}>
+                <X className="h-5 w-5"/>
+              </Button>
+              <div>
+                <h1 className="text-xl font-bold tracking-tight text-slate-900 leading-tight flex items-center gap-2">
+                  New Registration
+                  <Badge variant="secondary" className="bg-amber-100 text-amber-700 hover:bg-amber-100 uppercase tracking-wider text-[10px] font-bold">Draft</Badge>
+                </h1>
+              </div>
+            </div>
+            
+            {/* Premium Step Indicator */}
+            <div className="hidden md:flex items-center gap-2 bg-slate-100/80 p-1.5 rounded-full border border-slate-200/50 shadow-inner">
+               <div className="px-4 py-1.5 bg-white text-indigo-700 rounded-full shadow-sm text-xs font-bold tracking-wide flex items-center gap-2">
+                 <div className="h-5 w-5 bg-indigo-100 rounded-full flex items-center justify-center text-[10px]">1</div> Details
+               </div>
+               <div className="px-4 py-1.5 text-slate-400 text-xs font-bold tracking-wide flex items-center gap-2 opacity-70">
+                 <div className="h-5 w-5 bg-slate-200 rounded-full flex items-center justify-center text-[10px] text-slate-500">2</div> Tests
+               </div>
+               <div className="px-4 py-1.5 text-slate-400 text-xs font-bold tracking-wide flex items-center gap-2 opacity-70">
+                 <div className="h-5 w-5 bg-slate-200 rounded-full flex items-center justify-center text-[10px] text-slate-500">3</div> Billing
+               </div>
+            </div>
 
-                                {/* Phone & Email */}
-                                <div className="col-span-12 md:col-span-6">
-                                    <InputLabel label="Phone" required />
-                                    <div className="relative">
-                                        <Phone className="absolute left-2 top-2 h-3.5 w-3.5 text-slate-400" />
-                                        <Input {...register('phone')} className="h-8 pl-7 bg-slate-50 border-slate-200 focus:bg-white font-mono text-xs" placeholder="9876543210" maxLength={10} />
-                                    </div>
-                                    {errors.phone && <p className="text-[9px] text-red-500 mt-0.5">{errors.phone.message}</p>}
-                                </div>
-                                <div className="col-span-12 md:col-span-6">
-                                    <InputLabel label="Email" />
-                                    <div className="relative">
-                                        <Mail className="absolute left-2 top-2 h-3.5 w-3.5 text-slate-400" />
-                                        <Input {...register('email')} className="h-8 pl-7 bg-slate-50 border-slate-200 focus:bg-white text-xs" placeholder="Optional" />
-                                    </div>
+          </div>
+        </header>
+
+        {/* --- FORM AREA --- */}
+        <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 z-10 pb-32">
+          <form id="patient-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 lg:space-y-0 lg:grid lg:grid-cols-12 lg:gap-8">
+            
+            {/* LEFT COLUMN: Demographics & Contact (Spans 8) */}
+            <div className="lg:col-span-8 space-y-6">
+               
+               {/* Panel 1: Personal Identity */}
+               <Card className="border-slate-200/80 shadow-sm rounded-2xl overflow-hidden hover:shadow-md transition-shadow duration-300">
+                  <CardHeader className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex flex-row items-center gap-2 space-y-0">
+                    <Activity className="h-4 w-4 text-indigo-500" />
+                    <CardTitle className="text-sm font-semibold text-slate-800 tracking-wide uppercase">Patient Demographics</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6 space-y-5">
+                    
+                    <div className="flex flex-col sm:flex-row gap-4">
+                       <div className="w-full sm:w-32 space-y-1.5">
+                          <Label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Title <span className="text-red-500">*</span></Label>
+                          <Controller name="title" control={control} render={({ field }) => (
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <SelectTrigger className="h-11 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:ring-indigo-500/20"><SelectValue /></SelectTrigger>
+                                  <SelectContent>
+                                      {['Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Baby'].map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                                  </SelectContent>
+                              </Select>
+                          )}/>
+                       </div>
+                       <div className="flex-1 space-y-1.5">
+                          <Label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Full Name <span className="text-red-500">*</span></Label>
+                          <Input {...register('name')} className="h-11 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:ring-indigo-500/20 transition-all text-sm font-medium" placeholder="e.g. Rahul Sharma" />
+                          {errors.name && <p className="text-[10px] font-bold text-red-500 mt-1">{errors.name.message}</p>}
+                       </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
+                       <div className="sm:col-span-5 grid grid-cols-2 gap-3">
+                          <div className="space-y-1.5">
+                              <Label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Age <span className="text-red-500">*</span></Label>
+                              <Input type="number" {...register('age')} className="h-11 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:ring-indigo-500/20 text-center" />
+                          </div>
+                          <div className="space-y-1.5">
+                              <Label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Unit</Label>
+                              <Controller name="ageUnit" control={control} render={({ field }) => (
+                                  <Select onValueChange={field.onChange} value={field.value}>
+                                      <SelectTrigger className="h-11 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:ring-indigo-500/20"><SelectValue /></SelectTrigger>
+                                      <SelectContent>
+                                          <SelectItem value="Years">Yrs</SelectItem>
+                                          <SelectItem value="Months">Mos</SelectItem>
+                                          <SelectItem value="Days">Days</SelectItem>
+                                      </SelectContent>
+                                  </Select>
+                              )}/>
+                          </div>
+                       </div>
+                       <div className="sm:col-span-4 space-y-1.5">
+                          <Label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Gender <span className="text-red-500">*</span></Label>
+                          <Controller name="gender" control={control} render={({ field }) => (
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                  <SelectTrigger className="h-11 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:ring-indigo-500/20"><SelectValue /></SelectTrigger>
+                                  <SelectContent>
+                                      <SelectItem value="MALE">Male</SelectItem>
+                                      <SelectItem value="FEMALE">Female</SelectItem>
+                                      <SelectItem value="OTHER">Other</SelectItem>
+                                  </SelectContent>
+                              </Select>
+                          )}/>
+                       </div>
+                    </div>
+                  </CardContent>
+               </Card>
+
+               {/* Panel 2: Contact Details */}
+               <Card className="border-slate-200/80 shadow-sm rounded-2xl overflow-hidden hover:shadow-md transition-shadow duration-300">
+                  <CardHeader className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex flex-row items-center gap-2 space-y-0">
+                    <MapPin className="h-4 w-4 text-indigo-500" />
+                    <CardTitle className="text-sm font-semibold text-slate-800 tracking-wide uppercase">Contact & IDs</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6 space-y-5">
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                       <div className="space-y-1.5">
+                          <Label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Phone Number <span className="text-red-500">*</span></Label>
+                          <div className="relative">
+                              <Phone className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
+                              <Input {...register('phone')} className="h-11 pl-10 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:ring-indigo-500/20 font-mono text-sm" placeholder="9876543210" maxLength={10} />
+                          </div>
+                          {errors.phone && <p className="text-[10px] font-bold text-red-500 mt-1">{errors.phone.message}</p>}
+                       </div>
+                       <div className="space-y-1.5">
+                          <Label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Email Address</Label>
+                          <div className="relative">
+                              <Mail className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
+                              <Input {...register('email')} className="h-11 pl-10 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:ring-indigo-500/20" placeholder="patient@example.com" />
+                          </div>
+                       </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                       <Label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Home Address</Label>
+                       <Textarea {...register('address')} className="min-h-[80px] rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:ring-indigo-500/20 resize-none py-3" placeholder="Apartment, Street, City..." />
+                    </div>
+
+                    <div className="h-px bg-slate-100 my-2" />
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                       <div className="space-y-1.5">
+                          <Label className="text-xs font-bold text-slate-600 uppercase tracking-wider">ABHA Number</Label>
+                          <div className="relative">
+                              <ScanBarcode className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
+                              <Input {...register('abhaNumber')} className="h-11 pl-10 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:ring-indigo-500/20 font-mono text-sm" placeholder="XXXX-XXXX-XXXX" />
+                          </div>
+                       </div>
+                       <div className="space-y-1.5">
+                          <Label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Passport / SRF</Label>
+                          <div className="relative">
+                              <ShieldCheck className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
+                              <Input {...register('passport')} className="h-11 pl-10 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:ring-indigo-500/20" placeholder="Optional" />
+                          </div>
+                       </div>
+                    </div>
+
+                    <div className="flex gap-3 pt-2">
+                        <Button type="button" variant="outline" className="h-10 rounded-xl text-xs gap-2 border-slate-200 text-slate-600 hover:bg-slate-50">
+                            <ScanLine className="h-4 w-4" /> Scan Aadhar QR
+                        </Button>
+                        <Button type="button" variant="outline" className="h-10 rounded-xl text-xs gap-2 border-slate-200 text-slate-600 hover:bg-slate-50">
+                            <Camera className="h-4 w-4" /> Capture Photo
+                        </Button>
+                    </div>
+
+                  </CardContent>
+               </Card>
+            </div>
+
+            {/* RIGHT COLUMN: Clinical Routing (Spans 4) */}
+            <div className="lg:col-span-4 space-y-6">
+               <Card className="border-slate-200/80 shadow-sm rounded-2xl overflow-hidden hover:shadow-md transition-shadow duration-300">
+                  <CardHeader className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex flex-row items-center gap-2 space-y-0">
+                    <Calendar className="h-4 w-4 text-indigo-500" />
+                    <CardTitle className="text-sm font-semibold text-slate-800 tracking-wide uppercase">Visit Routing</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6 space-y-5">
+                    
+                    <div className="bg-indigo-50/50 rounded-xl p-4 border border-indigo-100/50">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                                <Label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Date</Label>
+                                <Input type="date" {...register('collectionDate')} className="h-11 rounded-xl bg-white border-indigo-200 focus:ring-indigo-500/20" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Time</Label>
+                                <div className="relative">
+                                   <Clock className="absolute right-3 top-3.5 h-4 w-4 text-slate-400 pointer-events-none" />
+                                   <Input type="time" {...register('collectionTime')} className="h-11 rounded-xl bg-white border-indigo-200 focus:ring-indigo-500/20 pr-10" />
                                 </div>
                             </div>
-                        </CardContent>
-                    </Card>
+                        </div>
+                    </div>
 
-                    <Card className="shadow-sm border-slate-200/60 flex-1">
-                        <CardContent className="p-3">
-                            <SectionHeader icon={Fingerprint} title="Address & Identity" />
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 h-full">
-                                <div className="h-full">
-                                    <InputLabel label="Address" />
-                                    <Textarea {...register('address')} className="h-[88px] bg-slate-50 border-slate-200 focus:bg-white resize-none text-xs" placeholder="Enter full address..." />
-                                </div>
-                                <div className="space-y-3">
-                                    <div>
-                                        <InputLabel label="ABHA No." />
-                                        <div className="relative">
-                                            <ScanBarcode className="absolute left-2 top-2 h-3.5 w-3.5 text-slate-400" />
-                                            <Input {...register('abhaNumber')} className="h-8 pl-7 bg-slate-50 border-slate-200 focus:bg-white text-xs" placeholder="XXXX-XXXX-XXXX" />
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <InputLabel label="Passport / SRF" />
-                                        <div className="relative">
-                                            <CreditCard className="absolute left-2 top-2 h-3.5 w-3.5 text-slate-400" />
-                                            <Input {...register('passport')} className="h-8 pl-7 bg-slate-50 border-slate-200 focus:bg-white text-xs" placeholder="Optional" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
+                    <div className="space-y-4">
+                        <div className="space-y-1.5">
+                            <Label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Referring Doctor</Label>
+                            <Controller name="doctorName" control={control} render={({ field }) => (
+                                <CreatableCombobox 
+                                    value={field.value} 
+                                    onChange={field.onChange} 
+                                    options={liveDoctors} 
+                                    placeholder="Select Doctor..." 
+                                    icon={Stethoscope}
+                                />
+                            )}/>
+                        </div>
 
-                {/* RIGHT: VISIT INFO (Dense) */}
-                <div className="lg:col-span-4 flex flex-col gap-3">
-                    <Card className="shadow-sm border-slate-200 h-full flex flex-col">
-                        <CardContent className="p-3 flex-1 flex flex-col">
-                            <SectionHeader icon={Calendar} title="Visit Information" />
-                            
-                            <div className="space-y-3 flex-1">
-                                <div className="bg-blue-50/50 rounded-lg p-2 border border-blue-100/50">
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <div>
-                                            <InputLabel label="Date" />
-                                            <Input type="date" {...register('collectionDate')} className="h-8 bg-white border-blue-200 focus:border-blue-300 text-[10px]" />
-                                        </div>
-                                        <div>
-                                            <InputLabel label="Time" />
-                                            <Input type="time" {...register('collectionTime')} className="h-8 bg-white border-blue-200 focus:border-blue-300 text-[10px]" />
-                                        </div>
-                                    </div>
-                                </div>
+                        <div className="space-y-1.5">
+                            <Label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Agency / Client</Label>
+                            <Controller name="agencyName" control={control} render={({ field }) => (
+                                <CreatableCombobox 
+                                    value={field.value} 
+                                    onChange={field.onChange} 
+                                    options={liveAgencies} 
+                                    placeholder="Select Agency..." 
+                                    icon={Briefcase}
+                                />
+                            )}/>
+                        </div>
 
-                                <div className="space-y-2">
-                                    <div>
-                                        <InputLabel label="Referring Doctor" />
-                                        <Controller name="doctorName" control={control} render={({ field }) => (
-                                            <CreatableCombobox 
-                                                value={field.value} 
-                                                onChange={field.onChange} 
-                                                options={liveDoctors} 
-                                                placeholder="Select Doctor..." 
-                                                icon={Stethoscope}
-                                            />
-                                        )}/>
-                                    </div>
+                        <div className="space-y-1.5">
+                            <Label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Collected By</Label>
+                            <Controller name="collectedBy" control={control} render={({ field }) => (
+                                <CreatableCombobox 
+                                    value={field.value} 
+                                    onChange={field.onChange} 
+                                    options={COLLECTORS} 
+                                    placeholder="Select Collector..." 
+                                    icon={UserCheck}
+                                />
+                            )}/>
+                        </div>
 
-                                    <div>
-                                        <InputLabel label="Agency / Client" />
-                                        <Controller name="agencyName" control={control} render={({ field }) => (
-                                            <CreatableCombobox 
-                                                value={field.value} 
-                                                onChange={field.onChange} 
-                                                options={liveAgencies} 
-                                                placeholder="Select Agency..." 
-                                                icon={Briefcase}
-                                            />
-                                        )}/>
-                                    </div>
+                        <div className="h-px bg-slate-100 my-2" />
 
-                                    <div>
-                                        <InputLabel label="Collected By" />
-                                        <Controller name="collectedBy" control={control} render={({ field }) => (
-                                            <CreatableCombobox 
-                                                value={field.value} 
-                                                onChange={field.onChange} 
-                                                options={COLLECTORS} 
-                                                placeholder="Select Collector..." 
-                                                icon={UserCheck}
-                                            />
-                                        )}/>
-                                    </div>
+                        <div className="space-y-1.5">
+                            <Label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Payment Mode</Label>
+                            <Controller name="paymentMode" control={control} render={({ field }) => (
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <SelectTrigger className="h-11 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:ring-indigo-500/20 pl-10 relative">
+                                        <Banknote className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Cash">Cash</SelectItem>
+                                        <SelectItem value="UPI">UPI / QR</SelectItem>
+                                        <SelectItem value="Card">Card</SelectItem>
+                                        <SelectItem value="Credit">Credit (Due)</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            )}/>
+                        </div>
+                    </div>
 
-                                    <div>
-                                        <InputLabel label="Payment Mode" />
-                                        <Controller name="paymentMode" control={control} render={({ field }) => (
-                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                <SelectTrigger className="h-8 bg-slate-50 border-slate-200 focus:bg-white pl-7 relative text-xs">
-                                                    <Banknote className="absolute left-2 top-2 h-3.5 w-3.5 text-slate-400" />
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="Cash" className="text-xs">Cash</SelectItem>
-                                                    <SelectItem value="UPI" className="text-xs">UPI / QR</SelectItem>
-                                                    <SelectItem value="Card" className="text-xs">Card</SelectItem>
-                                                    <SelectItem value="Credit" className="text-xs">Credit</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        )}/>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="mt-2 pt-2 border-t border-slate-100">
-                                <div className="grid grid-cols-2 gap-2">
-                                    <Button type="button" variant="outline" className="h-8 text-[10px] gap-2 border-slate-200 text-slate-600 bg-slate-50">
-                                        <ScanLine className="h-3 w-3" /> Scan ID
-                                    </Button>
-                                    <Button type="button" variant="outline" className="h-8 text-[10px] gap-2 border-slate-200 text-slate-600 bg-slate-50">
-                                        <Camera className="h-3 w-3" /> Photo
-                                    </Button>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-
+                  </CardContent>
+               </Card>
             </div>
           </form>
-        </div>
+        </main>
 
-        {/* FOOTER (Compact) */}
-        <div className="flex-none h-14 bg-white border-t px-4 flex items-center justify-between z-20 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
-           <div className="text-[10px] text-slate-400 font-medium hidden md:block">
-              <span className="text-red-500">*</span> Required Fields
-           </div>
+        {/* --- STICKY BOTTOM ACTION BAR --- */}
+        <div className="fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 p-4 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] z-40">
+           <div className="max-w-7xl mx-auto flex justify-between items-center">
+              <div className="text-xs text-slate-500 font-medium hidden sm:block">
+                 <span className="text-red-500 font-bold">*</span> Indicates a required field
+              </div>
 
-           <div className="flex gap-2 w-full md:w-auto">
-              <Button type="button" variant="outline" onClick={() => router.back()} className="h-9 px-6 border-slate-300 text-slate-600 hover:bg-slate-50 font-medium text-xs">
-                 Cancel
-              </Button>
-              <Button 
-                 type="submit" 
-                 form="patient-form" 
-                 disabled={isSubmitting}
-                 className="bg-blue-600 hover:bg-blue-700 h-9 px-8 font-semibold shadow-md transition-all active:scale-95 flex-1 md:flex-none text-white text-xs"
-              >
-                 {isSubmitting ? <Loader2 className="animate-spin h-3 w-3 mr-2" /> : <span className="flex items-center">Save & Proceed <ChevronRight className="ml-2 h-3 w-3"/></span>}
-              </Button>
+              <div className="flex gap-3 w-full sm:w-auto">
+                 <Button type="button" variant="ghost" onClick={() => router.back()} className="flex-1 sm:flex-none h-12 rounded-xl text-slate-600 hover:bg-slate-100 font-medium px-6">
+                    Cancel
+                 </Button>
+                 <Button 
+                    type="submit" 
+                    form="patient-form" 
+                    disabled={isSubmitting}
+                    className="flex-1 sm:w-56 h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold shadow-md shadow-indigo-500/25 transition-all duration-300 hover:-translate-y-0.5"
+                 >
+                    {isSubmitting ? (
+                      <><Loader2 className="animate-spin h-5 w-5 mr-2" /> Saving...</>
+                    ) : (
+                      <>Save & Continue <ChevronRight className="ml-2 h-5 w-5"/></>
+                    )}
+                 </Button>
+              </div>
            </div>
         </div>
 
