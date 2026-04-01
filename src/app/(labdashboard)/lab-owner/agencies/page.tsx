@@ -8,12 +8,16 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'; // ✅ Added Tabs
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Trash2, Pencil, Building2, Phone, Percent, IndianRupee, UserCircle, Eye, FileText, CheckCircle2, Clock, Check, Loader2 } from 'lucide-react';
+import { 
+  Plus, Search, Trash2, Pencil, Building2, Phone, Percent, 
+  IndianRupee, UserCircle, Eye, FileText, CheckCircle2, Clock, 
+  Check, Loader2, Sparkles, TrendingUp, Wallet, ShieldCheck, FileSpreadsheet
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 
-// ✅ Mock fetcher for tests (You will need to import your real getTests action here)
+// Mock fetcher for tests (Preserved exactly as requested)
 import { getTests } from '@/actions/test-catalog'; 
 
 export default function AgenciesPage() {
@@ -25,7 +29,7 @@ export default function AgenciesPage() {
   const [isViewOpen, setIsViewOpen] = useState(false);
   
   const [editingAgency, setEditingAgency] = useState<any>(null);
-  const [viewingAgency, setViewingAgency] = useState<any>(null); // State for the Ledger View
+  const [viewingAgency, setViewingAgency] = useState<any>(null);
 
   // Form States (Basic)
   const [formData, setFormData] = useState({
@@ -33,7 +37,7 @@ export default function AgenciesPage() {
     commissionRate: 0, commissionType: 'PERCENTAGE'
   });
 
-  // ✅ NEW: State for Custom Test Commissions
+  // State for Custom Test Commissions
   const [customCommissions, setCustomCommissions] = useState<any[]>([]);
   const [testSearch, setTestSearch] = useState('');
 
@@ -43,7 +47,7 @@ export default function AgenciesPage() {
     queryFn: async () => await getAgencies()
   });
 
-  // ✅ NEW: Query to fetch all lab tests for the search bar
+  // Query to fetch all lab tests for the search bar
   const { data: allTests } = useQuery({
     queryKey: ['tests'],
     queryFn: async () => await getTests()
@@ -52,7 +56,6 @@ export default function AgenciesPage() {
   // Mutations
   const saveMutation = useMutation({
     mutationFn: async (payload: any) => {
-      // We pass the basic data AND the array of custom commissions
       if (editingAgency) {
         await updateAgency(editingAgency.id, payload);
       } else {
@@ -60,7 +63,7 @@ export default function AgenciesPage() {
       }
     },
     onSuccess: () => {
-      toast.success(editingAgency ? "Agency updated!" : "Agency added successfully!");
+      toast.success(editingAgency ? "Agency updated successfully!" : "Agency added successfully!");
       setIsDialogOpen(false);
       queryClient.invalidateQueries({ queryKey: ['agencies'] });
     },
@@ -70,7 +73,7 @@ export default function AgenciesPage() {
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => await deleteAgency(id),
     onSuccess: () => {
-      toast.success("Agency deleted");
+      toast.success("Agency deleted securely");
       queryClient.invalidateQueries({ queryKey: ['agencies'] });
     }
   });
@@ -79,7 +82,7 @@ export default function AgenciesPage() {
   const handleAddNew = () => {
     setEditingAgency(null);
     setFormData({ agencyName: '', contactPerson: '', phone: '', email: '', panNumber: '', commissionRate: 5, commissionType: 'PERCENTAGE' });
-    setCustomCommissions([]); // Reset custom rates
+    setCustomCommissions([]); 
     setIsDialogOpen(true);
   };
 
@@ -94,7 +97,6 @@ export default function AgenciesPage() {
       commissionRate: agency.commissionRate || 0, 
       commissionType: agency.commissionType
     });
-    // ✅ Load existing custom rates from agency if they exist
     setCustomCommissions(agency.customTestCommissions || []); 
     setIsDialogOpen(true);
   };
@@ -105,7 +107,7 @@ export default function AgenciesPage() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this agency? All historical data will be retained for accounting.")) {
+    if (confirm("Are you sure you want to delete this agency? Historical ledger data will be safely retained.")) {
       deleteMutation.mutate(id);
     }
   };
@@ -114,7 +116,6 @@ export default function AgenciesPage() {
     e.preventDefault();
     if (!formData.agencyName) return toast.error("Agency name is required");
     
-    // ✅ Combine basic data with custom rates array
     saveMutation.mutate({
       ...formData,
       commissionRate: Number(formData.commissionRate),
@@ -122,30 +123,26 @@ export default function AgenciesPage() {
     });
   };
 
-  // ✅ NEW: Add a specific test to the Custom Rates list
   const addCustomTestRate = (test: any) => {
     if (customCommissions.some(c => c.testTemplateId === test.id)) {
-        return toast.error("This test already has a custom rate.");
+        return toast.error("This test already has a custom rate defined.");
     }
     setCustomCommissions([
         ...customCommissions, 
         { testTemplateId: test.id, testName: test.name, commissionRate: 0, commissionType: 'FIXED' }
     ]);
-    setTestSearch(''); // Clear search
+    setTestSearch('');
   };
 
-  // ✅ NEW: Update a specific test rate
   const updateCustomRate = (index: number, field: string, value: any) => {
     const updated = [...customCommissions];
     updated[index][field] = value;
     setCustomCommissions(updated);
   };
 
-  // ✅ NEW: Remove a custom rate
   const removeCustomRate = (index: number) => {
     setCustomCommissions(customCommissions.filter((_, i) => i !== index));
   };
-
 
   const filteredAgencies = agencies?.filter((a: any) => 
     a.agencyName?.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -153,341 +150,421 @@ export default function AgenciesPage() {
   ) || [];
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-slate-50/50 selection:bg-violet-500/30 relative font-sans text-slate-900 pb-12">
       
-      {/* HEADER */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-2xl shadow-sm border border-slate-200 gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">B2B Agencies</h1>
-          <p className="text-sm text-slate-500 mt-1">Manage collection centers, hospitals, and their payout rules.</p>
-        </div>
-        <Button onClick={handleAddNew} className="bg-blue-600 hover:bg-blue-700 text-white shadow-md">
-          <Plus className="h-4 w-4 mr-2" /> Add Agency
-        </Button>
-      </div>
+      {/* Background Ambience */}
+      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.02] pointer-events-none mix-blend-overlay"></div>
+      <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-violet-100/40 to-transparent pointer-events-none"></div>
 
-      {/* SEARCH BAR */}
-      <div className="relative w-full max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-        <input
-          type="text"
-          placeholder="Search by agency name or phone..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 transition-all shadow-sm"
-        />
-      </div>
-
-      {/* AGENCIES TABLE */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader className="bg-slate-50/80">
-              <TableRow>
-                <TableHead className="font-semibold text-slate-600">Agency Details</TableHead>
-                <TableHead className="font-semibold text-slate-600">Contact Person</TableHead>
-                <TableHead className="font-semibold text-slate-600">Commission Rule</TableHead>
-                <TableHead className="font-semibold text-slate-600">Total Referrals</TableHead>
-                <TableHead className="font-semibold text-slate-600 text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-10 text-slate-500">Loading agencies...</TableCell></TableRow>
-              ) : filteredAgencies.length === 0 ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-10 text-slate-500">No B2B agencies found in your network.</TableCell></TableRow>
-              ) : (
-                filteredAgencies.map((agency: any) => (
-                  <TableRow key={agency.id} className="hover:bg-slate-50/50">
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 bg-indigo-50 text-indigo-700 rounded-full flex items-center justify-center font-bold">
-                          <Building2 className="h-5 w-5" />
-                        </div>
-                        <div>
-                          <div className="font-bold text-slate-900">{agency.agencyName}</div>
-                          <div className="text-[10px] text-slate-400 font-mono mt-0.5">PAN: {agency.panNumber || 'N/A'}</div>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm font-medium text-slate-700 flex items-center gap-1.5"><UserCircle className="h-3.5 w-3.5 text-slate-400"/> {agency.contactPerson || '-'}</div>
-                      <div className="text-xs text-slate-500 flex items-center gap-1.5 mt-1"><Phone className="h-3 w-3 text-slate-400"/> {agency.phone || '-'}</div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col items-start gap-1">
-                          <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-bold ${agency.commissionType === 'PERCENTAGE' ? 'bg-purple-50 text-purple-700' : 'bg-emerald-50 text-emerald-700'}`}>
-                            {agency.commissionType === 'PERCENTAGE' ? <Percent className="h-3 w-3 mr-1"/> : <IndianRupee className="h-3 w-3 mr-1"/>}
-                            {agency.commissionRate} {agency.commissionType === 'PERCENTAGE' ? '%' : 'Flat'} (Profile Default)
-                          </span>
-                          {/* ✅ SHOW BADGE IF THEY HAVE CUSTOM RATES */}
-                          {agency.customTestCommissions?.length > 0 && (
-                              <span className="text-[10px] text-blue-600 font-bold bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
-                                  {agency.customTestCommissions.length} Custom Test Rates
-                              </span>
-                          )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="font-bold text-slate-800">{agency._count?.tests || 0} Tests</div>
-                      <div className="text-xs text-slate-500 font-bold text-orange-600">Lifetime Generated: ₹{(agency as any).totalCommission.toFixed(2)}</div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => handleView(agency)} className="text-slate-400 hover:text-indigo-600 bg-indigo-50/0 hover:bg-indigo-50"><Eye className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleEdit(agency)} className="text-slate-400 hover:text-blue-600"><Pencil className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(agency.id)} className="text-slate-400 hover:text-red-600"><Trash2 className="h-4 w-4" /></Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      </div>
-
-      {/* DETAILED VIEW MODAL (LEDGER) - UNCHANGED */}
-      <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
-        <DialogContent className="max-w-4xl bg-slate-50">
-          <DialogHeader className="bg-white p-4 -mx-6 -mt-6 border-b rounded-t-lg shadow-sm">
-            <div className="flex items-center gap-3">
-               <div className="h-12 w-12 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center">
-                  <Building2 className="h-6 w-6" />
-               </div>
-               <div>
-                  <DialogTitle className="text-xl">{viewingAgency?.agencyName}</DialogTitle>
-                  <DialogDescription>{viewingAgency?.contactPerson} | {viewingAgency?.phone}</DialogDescription>
-               </div>
-            </div>
-            
-            <div className="flex gap-6 mt-4">
-                <div className="bg-slate-50 px-4 py-2 rounded-lg border">
-                    <p className="text-[10px] text-slate-500 font-bold uppercase">Total Referrals</p>
-                    <p className="text-lg font-black text-slate-800">{viewingAgency?._count?.tests || 0}</p>
+      <div className="p-4 md:p-8 max-w-[1600px] mx-auto space-y-8 relative z-10">
+        
+        {/* --- HEADER & CONTROLS (Glassmorphism Card) --- */}
+        <div className="bg-white/70 backdrop-blur-xl border border-white/60 shadow-sm rounded-3xl p-6 md:p-8 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 transition-all duration-300">
+          <div className="space-y-2">
+             <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-violet-100 text-violet-700 rounded-xl">
+                   <Building2 className="w-6 h-6" />
                 </div>
-                <div className="bg-orange-50 px-4 py-2 rounded-lg border border-orange-100">
-                    <p className="text-[10px] text-orange-600 font-bold uppercase">Lifetime Commission Generated</p>
-                    <p className="text-lg font-black text-orange-700">₹{viewingAgency?.totalCommission?.toLocaleString()}</p>
-                </div>
-            </div>
-          </DialogHeader>
-
-          <div className="mt-4">
-            <h3 className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2"><FileText className="w-4 h-4"/> Referral & Commission Ledger</h3>
-            <div className="bg-white rounded-xl border shadow-sm max-h-[400px] overflow-y-auto">
-                <Table>
-                    <TableHeader className="sticky top-0 bg-slate-100 z-10 shadow-sm">
-                        <TableRow>
-                            <TableHead className="text-xs">Date</TableHead>
-                            <TableHead className="text-xs">Patient</TableHead>
-                            <TableHead className="text-xs">Test Name</TableHead>
-                            <TableHead className="text-xs text-right">Commission Earned</TableHead>
-                            <TableHead className="text-xs text-right">Payment Status</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {viewingAgency?.commissions?.length === 0 ? (
-                            <TableRow><TableCell colSpan={5} className="text-center py-8 text-slate-400">No referrals logged yet.</TableCell></TableRow>
-                        ) : (
-                            viewingAgency?.commissions?.map((comm: any) => (
-                                <TableRow key={comm.id} className="hover:bg-slate-50">
-                                    <TableCell className="text-xs text-slate-500 font-mono">
-                                        {new Date(comm.test.createdAt).toLocaleDateString()}
-                                    </TableCell>
-                                    <TableCell className="font-medium text-sm text-slate-800">
-                                        {comm.test.patient?.name || 'Unknown Patient'}
-                                    </TableCell>
-                                    <TableCell>
-                                        <div className="text-xs font-bold text-slate-700">{comm.test.testName}</div>
-                                        <div className="text-[10px] text-slate-400">{comm.test.testNumber}</div>
-                                    </TableCell>
-                                    <TableCell className="text-right font-bold text-slate-800">
-                                        ₹{comm.amount.toLocaleString()}
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        {comm.status === 'PAID' ? (
-                                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200"><CheckCircle2 className="w-3 h-3 mr-1"/> Paid</Badge>
-                                        ) : (
-                                            <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200"><Clock className="w-3 h-3 mr-1"/> Pending</Badge>
-                                        )}
-                                    </TableCell>
-                                </TableRow>
-                            ))
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
+                <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Agency Network</h1>
+             </div>
+            <p className="text-sm font-medium text-slate-500 ml-12 max-w-xl">
+              Manage your B2B partners, collection centers, and hospital tie-ups. Configure default margins and custom test payouts.
+            </p>
           </div>
-        </DialogContent>
-      </Dialog>
 
-      {/* ✅ UPDATED ADD / EDIT MODAL WITH TABS */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl p-0 overflow-hidden">
-          <DialogHeader className="px-6 pt-6 pb-2">
-            <DialogTitle>{editingAgency ? 'Edit Agency Profile' : 'Add New Agency'}</DialogTitle>
-          </DialogHeader>
+          <div className="flex flex-col sm:flex-row w-full xl:w-auto gap-4 items-center">
+            <div className="relative w-full sm:w-80 group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-violet-600 transition-colors" />
+              <input
+                type="text"
+                placeholder="Search agencies or phone..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full h-12 pl-11 pr-4 bg-white/80 border border-slate-200 rounded-2xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all shadow-sm"
+              />
+            </div>
+            <Button 
+              onClick={handleAddNew} 
+              className="w-full sm:w-auto h-12 px-6 rounded-2xl bg-slate-900 hover:bg-violet-600 text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 font-bold"
+            >
+              <Plus className="h-4 w-4 mr-2" /> Register Agency
+            </Button>
+          </div>
+        </div>
 
-          <form onSubmit={handleSubmit} className="flex flex-col">
-            <Tabs defaultValue="basic" className="w-full">
-              <div className="px-6 border-b border-slate-100">
-                  <TabsList className="bg-slate-50/50 w-full justify-start p-0 h-auto gap-4 rounded-none">
-                    <TabsTrigger value="basic" className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent py-3 px-1 text-sm font-semibold">
-                        Basic & Default Margins
-                    </TabsTrigger>
-                    <TabsTrigger value="custom" className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent py-3 px-1 text-sm font-semibold flex items-center gap-2 text-indigo-600">
-                        Custom Test Rates <Badge className="bg-indigo-100 text-indigo-700 border-none text-[10px] h-4 px-1.5">{customCommissions.length}</Badge>
-                    </TabsTrigger>
-                  </TabsList>
-              </div>
-
-              {/* TAB 1: BASIC PROFILE */}
-              <TabsContent value="basic" className="p-6 pt-4 space-y-4 m-0">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-semibold text-slate-700">Agency Name *</label>
-                    <Input placeholder="e.g. City Care Hospital" value={formData.agencyName} onChange={e => setFormData({...formData, agencyName: e.target.value})} required />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-semibold text-slate-700">Contact Person</label>
-                    <Input placeholder="e.g. Mr. Sharma" value={formData.contactPerson} onChange={e => setFormData({...formData, contactPerson: e.target.value})} />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-semibold text-slate-700">Phone Number</label>
-                    <Input placeholder="9876543210" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-semibold text-slate-700">Email Address</label>
-                    <Input type="email" placeholder="agency@example.com" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
-                  </div>
-                </div>
-                
-                <div className="space-y-1.5">
-                    <label className="text-sm font-semibold text-slate-700">PAN Number</label>
-                    <Input placeholder="ABCDE1234F" className="uppercase font-mono" value={formData.panNumber} onChange={e => setFormData({...formData, panNumber: e.target.value.toUpperCase()})} />
-                    <p className="text-[10px] text-slate-500">Optional: Used for corporate TDS accounting.</p>
-                </div>
-
-                <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-4 mt-2">
-                  <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                    Profile Default Commission
-                  </h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Commission Type</label>
-                      <Select value={formData.commissionType} onValueChange={(v) => setFormData({...formData, commissionType: v})}>
-                        <SelectTrigger className="bg-white"><SelectValue/></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="PERCENTAGE">Percentage (%)</SelectItem>
-                          <SelectItem value="FIXED">Flat Rate (₹)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Rate / Amount</label>
-                      <Input type="number" step="0.01" min="0" value={formData.commissionRate} onChange={e => setFormData({...formData, commissionRate: Number(e.target.value)})} className="bg-white font-bold" />
-                    </div>
-                  </div>
-                  <p className="text-[11px] text-slate-500 leading-tight">
-                    This is the fallback rate. If a test does not have a specific custom rate assigned in the next tab, this default rule will apply.
-                  </p>
-                </div>
-              </TabsContent>
-
-              {/* TAB 2: CUSTOM TEST RATES */}
-              <TabsContent value="custom" className="p-6 pt-4 space-y-4 m-0">
-                  <div className="relative z-10">
-                     <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                     <Input 
-                        placeholder="Search to add a specific test..." 
-                        className="pl-9 bg-slate-50 border-slate-200"
-                        value={testSearch}
-                        onChange={(e) => setTestSearch(e.target.value)}
-                     />
-                     {testSearch && (
-                        <div className="absolute top-11 left-0 w-full bg-white border border-slate-200 rounded-lg shadow-xl max-h-48 overflow-y-auto z-50">
-                            {allTests?.filter((t: any) => t.name.toLowerCase().includes(testSearch.toLowerCase())).slice(0, 10).map((t: any) => (
-                                <div 
-                                    key={t.id} 
-                                    onClick={() => addCustomTestRate(t)}
-                                    className="p-3 text-sm border-b last:border-0 hover:bg-indigo-50 cursor-pointer flex justify-between items-center"
-                                >
-                                    <span className="font-semibold text-slate-700">{t.name}</span>
-                                    <span className="text-xs bg-slate-100 px-2 py-0.5 rounded text-slate-500 font-mono">₹{t.price}</span>
-                                </div>
-                            ))}
+        {/* --- AGENCIES TABLE (Bento List Design) --- */}
+        <div className="bg-white/60 backdrop-blur-md rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/60 overflow-hidden transition-all duration-500">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-slate-50/80 border-b border-slate-100/80">
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="font-bold text-[11px] uppercase tracking-wider text-slate-500 py-5 pl-6">Agency Details</TableHead>
+                  <TableHead className="font-bold text-[11px] uppercase tracking-wider text-slate-500">Contact Person</TableHead>
+                  <TableHead className="font-bold text-[11px] uppercase tracking-wider text-slate-500">Margin Rules</TableHead>
+                  <TableHead className="font-bold text-[11px] uppercase tracking-wider text-slate-500">Performance</TableHead>
+                  <TableHead className="font-bold text-[11px] uppercase tracking-wider text-slate-500 text-right pr-6">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow><TableCell colSpan={5} className="text-center py-20 text-slate-500 font-medium">Loading network data...</TableCell></TableRow>
+                ) : filteredAgencies.length === 0 ? (
+                  <TableRow>
+                     <TableCell colSpan={5} className="text-center py-20">
+                        <div className="flex flex-col items-center justify-center gap-3 text-slate-400">
+                           <Building2 className="h-10 w-10 opacity-20" />
+                           <p className="font-medium">No B2B agencies found in your network.</p>
                         </div>
-                     )}
-                  </div>
+                     </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredAgencies.map((agency: any) => (
+                    <TableRow key={agency.id} className="hover:bg-white group transition-colors duration-200 border-b border-slate-50">
+                      <TableCell className="py-4 pl-6">
+                        <div className="flex items-center gap-4">
+                          <div className="h-12 w-12 bg-gradient-to-br from-violet-100 to-indigo-100 text-violet-700 rounded-2xl flex items-center justify-center font-bold shadow-sm">
+                             {agency.agencyName.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <div className="font-extrabold text-slate-800 text-sm">{agency.agencyName}</div>
+                            <div className="text-[11px] font-semibold text-slate-400 font-mono mt-1 tracking-wide">
+                               PAN: {agency.panNumber || 'UNREGISTERED'}
+                            </div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                           <UserCircle className="h-4 w-4 text-slate-400"/> {agency.contactPerson || 'Not Provided'}
+                        </div>
+                        <div className="text-xs font-medium text-slate-500 flex items-center gap-2 mt-1.5">
+                           <Phone className="h-3.5 w-3.5 text-slate-400"/> {agency.phone || 'N/A'}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col items-start gap-2">
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold shadow-sm ${agency.commissionType === 'PERCENTAGE' ? 'bg-violet-50 text-violet-700 border border-violet-100' : 'bg-emerald-50 text-emerald-700 border border-emerald-100'}`}>
+                              {agency.commissionType === 'PERCENTAGE' ? <Percent className="h-3.5 w-3.5 mr-1.5 opacity-70"/> : <IndianRupee className="h-3.5 w-3.5 mr-1.5 opacity-70"/>}
+                              {agency.commissionRate} {agency.commissionType === 'PERCENTAGE' ? '%' : 'Flat'} 
+                              <span className="opacity-60 font-medium ml-1">Default</span>
+                            </span>
+                            {agency.customTestCommissions?.length > 0 && (
+                                <span className="text-[10px] text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 flex items-center gap-1">
+                                    <Sparkles className="w-3 h-3"/>
+                                    {agency.customTestCommissions.length} Custom Overrides
+                                </span>
+                            )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-extrabold text-slate-800 flex items-center gap-1.5">
+                           <FileSpreadsheet className="w-4 h-4 text-indigo-500" />
+                           {agency._count?.tests || 0} Referrals
+                        </div>
+                        <div className="text-[11px] font-bold text-emerald-600 flex items-center gap-1.5 mt-1.5 uppercase tracking-wide">
+                           <Wallet className="w-3.5 h-3.5 opacity-70" />
+                           ₹{(agency as any).totalCommission?.toLocaleString() || '0.00'} Generated
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right pr-6">
+                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                          <Button variant="outline" size="icon" onClick={() => handleView(agency)} className="h-9 w-9 border-slate-200 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200 rounded-xl">
+                             <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button variant="outline" size="icon" onClick={() => handleEdit(agency)} className="h-9 w-9 border-slate-200 text-slate-500 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-200 rounded-xl">
+                             <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button variant="outline" size="icon" onClick={() => handleDelete(agency.id)} className="h-9 w-9 border-slate-200 text-slate-500 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-200 rounded-xl">
+                             <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
 
-                  <div className="border rounded-xl bg-white overflow-hidden">
-                      <Table>
-                          <TableHeader className="bg-slate-50">
-                              <TableRow>
-                                  <TableHead className="text-xs font-bold h-9">Test Name</TableHead>
-                                  <TableHead className="text-xs font-bold h-9 w-32">Type</TableHead>
-                                  <TableHead className="text-xs font-bold h-9 w-28">Margin</TableHead>
-                                  <TableHead className="h-9 w-10"></TableHead>
-                              </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                              {customCommissions.length === 0 ? (
-                                  <TableRow>
-                                      <TableCell colSpan={4} className="text-center py-6 text-sm text-slate-500 bg-slate-50/30">
-                                          No custom rates. The profile default will be used for all tests.
+        {/* --- DETAILED VIEW MODAL (LEDGER) --- */}
+        <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
+          <DialogContent className="max-w-4xl p-0 overflow-hidden bg-slate-50 border-0 shadow-2xl rounded-3xl">
+            <DialogHeader className="bg-white p-8 border-b border-slate-100">
+              <div className="flex items-start justify-between">
+                 <div className="flex items-center gap-5">
+                    <div className="h-16 w-16 bg-gradient-to-br from-violet-500 to-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/30">
+                       <Building2 className="h-8 w-8" />
+                    </div>
+                    <div>
+                       <DialogTitle className="text-2xl font-extrabold text-slate-900 tracking-tight">{viewingAgency?.agencyName}</DialogTitle>
+                       <DialogDescription className="text-sm font-medium text-slate-500 flex items-center gap-3 mt-1.5">
+                          <span className="flex items-center gap-1"><UserCircle className="w-4 h-4"/> {viewingAgency?.contactPerson || 'N/A'}</span>
+                          <span>•</span>
+                          <span className="flex items-center gap-1"><Phone className="w-4 h-4"/> {viewingAgency?.phone || 'N/A'}</span>
+                       </DialogDescription>
+                    </div>
+                 </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 mt-8">
+                  <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-5 rounded-2xl border border-slate-200 relative overflow-hidden">
+                      <div className="relative z-10">
+                          <p className="text-[11px] text-slate-500 font-bold uppercase tracking-widest">Total Volume</p>
+                          <p className="text-3xl font-black text-slate-800 mt-1">{viewingAgency?._count?.tests || 0}</p>
+                      </div>
+                      <TrendingUp className="absolute -right-4 -bottom-4 w-24 h-24 text-slate-200/50" />
+                  </div>
+                  <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 p-5 rounded-2xl border border-emerald-100 relative overflow-hidden">
+                      <div className="relative z-10">
+                          <p className="text-[11px] text-emerald-600 font-bold uppercase tracking-widest">Lifetime Commissions</p>
+                          <p className="text-3xl font-black text-emerald-700 mt-1 tracking-tight">₹{viewingAgency?.totalCommission?.toLocaleString() || '0'}</p>
+                      </div>
+                      <Wallet className="absolute -right-4 -bottom-4 w-24 h-24 text-emerald-200/40" />
+                  </div>
+              </div>
+            </DialogHeader>
+
+            <div className="p-8">
+              <h3 className="text-sm font-extrabold text-slate-800 mb-4 flex items-center gap-2 uppercase tracking-wide">
+                 <FileText className="w-4 h-4 text-violet-500"/> Transaction Ledger
+              </h3>
+              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm max-h-[400px] overflow-y-auto">
+                  <Table>
+                      <TableHeader className="sticky top-0 bg-slate-50/90 backdrop-blur-sm z-10 shadow-sm">
+                          <TableRow className="hover:bg-transparent">
+                              <TableHead className="text-[10px] font-bold uppercase tracking-wider h-10 pl-6">Date</TableHead>
+                              <TableHead className="text-[10px] font-bold uppercase tracking-wider h-10">Patient Details</TableHead>
+                              <TableHead className="text-[10px] font-bold uppercase tracking-wider h-10">Test Ordered</TableHead>
+                              <TableHead className="text-[10px] font-bold uppercase tracking-wider h-10 text-right">Payout</TableHead>
+                              <TableHead className="text-[10px] font-bold uppercase tracking-wider h-10 text-right pr-6">Status</TableHead>
+                          </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                          {viewingAgency?.commissions?.length === 0 ? (
+                              <TableRow><TableCell colSpan={5} className="text-center py-12 text-sm font-medium text-slate-400">No transactions logged for this agency.</TableCell></TableRow>
+                          ) : (
+                              viewingAgency?.commissions?.map((comm: any) => (
+                                  <TableRow key={comm.id} className="hover:bg-slate-50 transition-colors">
+                                      <TableCell className="text-xs text-slate-500 font-mono font-medium pl-6">
+                                          {new Date(comm.test.createdAt).toLocaleDateString()}
+                                      </TableCell>
+                                      <TableCell className="font-bold text-sm text-slate-800">
+                                          {comm.test.patient?.name || 'Unknown Patient'}
+                                      </TableCell>
+                                      <TableCell>
+                                          <div className="text-xs font-bold text-slate-700">{comm.test.testName}</div>
+                                          <div className="text-[10px] text-slate-400 font-mono mt-0.5">{comm.test.testNumber}</div>
+                                      </TableCell>
+                                      <TableCell className="text-right font-black text-slate-800">
+                                          ₹{comm.amount.toLocaleString()}
+                                      </TableCell>
+                                      <TableCell className="text-right pr-6">
+                                          {comm.status === 'PAID' ? (
+                                              <Badge className="bg-emerald-50 text-emerald-700 border-none shadow-sm"><CheckCircle2 className="w-3 h-3 mr-1"/> Paid</Badge>
+                                          ) : (
+                                              <Badge className="bg-amber-50 text-amber-700 border-none shadow-sm"><Clock className="w-3 h-3 mr-1"/> Pending</Badge>
+                                          )}
                                       </TableCell>
                                   </TableRow>
-                              ) : (
-                                  customCommissions.map((cc, index) => (
-                                      <TableRow key={index}>
-                                          <TableCell className="font-semibold text-sm">{cc.testName}</TableCell>
-                                          <TableCell>
-                                              <Select value={cc.commissionType} onValueChange={(v) => updateCustomRate(index, 'commissionType', v)}>
-                                                  <SelectTrigger className="h-8 text-xs bg-slate-50"><SelectValue/></SelectTrigger>
-                                                  <SelectContent>
-                                                      <SelectItem value="PERCENTAGE">Percentage (%)</SelectItem>
-                                                      <SelectItem value="FIXED">Flat (₹)</SelectItem>
-                                                  </SelectContent>
-                                              </Select>
-                                          </TableCell>
-                                          <TableCell>
-                                              <Input 
-                                                  type="number" 
-                                                  step="0.01" 
-                                                  className="h-8 text-xs font-bold" 
-                                                  value={cc.commissionRate} 
-                                                  onChange={(e) => updateCustomRate(index, 'commissionRate', Number(e.target.value))}
-                                              />
-                                          </TableCell>
-                                          <TableCell>
-                                              <Button type="button" variant="ghost" size="icon" onClick={() => removeCustomRate(index)} className="h-7 w-7 text-slate-400 hover:text-red-600 hover:bg-red-50">
-                                                  <Trash2 className="h-3 w-3" />
-                                              </Button>
-                                          </TableCell>
-                                      </TableRow>
-                                  ))
-                              )}
-                          </TableBody>
-                      </Table>
-                  </div>
-              </TabsContent>
-            </Tabs>
-
-            <div className="flex justify-end gap-2 p-6 pt-4 border-t border-slate-100 bg-slate-50/50">
-              <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-              <Button type="submit" className="bg-blue-600 hover:bg-blue-700 shadow-md" disabled={saveMutation.isPending}>
-                {saveMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2"/> : <Check className="h-4 w-4 mr-2" />}
-                {editingAgency ? 'Update Profile' : 'Save Agency'}
-              </Button>
+                              ))
+                          )}
+                      </TableBody>
+                  </Table>
+              </div>
             </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
 
+        {/* --- ADD / EDIT MODAL WITH TABS --- */}
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="max-w-3xl p-0 overflow-hidden bg-slate-50 rounded-3xl border-0 shadow-2xl">
+            <DialogHeader className="px-8 pt-8 pb-4 bg-white">
+              <DialogTitle className="text-2xl font-extrabold tracking-tight text-slate-900">
+                 {editingAgency ? 'Update Agency Configuration' : 'Register New Agency'}
+              </DialogTitle>
+              <DialogDescription className="text-sm font-medium text-slate-500">
+                 Setup profile details and define complex commission margins.
+              </DialogDescription>
+            </DialogHeader>
+
+            <form onSubmit={handleSubmit} className="flex flex-col">
+              <Tabs defaultValue="basic" className="w-full">
+                <div className="px-8 border-b border-slate-200 bg-white">
+                    <TabsList className="bg-transparent w-full justify-start p-0 h-auto gap-8 rounded-none">
+                      <TabsTrigger 
+                         value="basic" 
+                         className="rounded-none border-b-2 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent py-4 px-1 text-sm font-bold text-slate-500 data-[state=active]:text-violet-700 transition-all"
+                      >
+                          Profile & Defaults
+                      </TabsTrigger>
+                      <TabsTrigger 
+                         value="custom" 
+                         className="rounded-none border-b-2 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent py-4 px-1 text-sm font-bold text-slate-500 data-[state=active]:text-violet-700 transition-all flex items-center gap-2"
+                      >
+                          Custom Test Overrides 
+                          <Badge className="bg-violet-100 text-violet-700 border-none text-[10px] h-5 px-1.5 shadow-sm rounded-md font-black">{customCommissions.length}</Badge>
+                      </TabsTrigger>
+                    </TabsList>
+                </div>
+
+                {/* TAB 1: BASIC PROFILE */}
+                <TabsContent value="basic" className="p-8 pt-6 space-y-6 m-0">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Agency Name <span className="text-rose-500">*</span></label>
+                      <Input placeholder="e.g. City Care Hospital" value={formData.agencyName} onChange={e => setFormData({...formData, agencyName: e.target.value})} className="h-11 rounded-xl bg-white border-slate-200 shadow-sm focus-visible:ring-violet-500" required />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Contact Person</label>
+                      <Input placeholder="e.g. Mr. Sharma" value={formData.contactPerson} onChange={e => setFormData({...formData, contactPerson: e.target.value})} className="h-11 rounded-xl bg-white border-slate-200 shadow-sm focus-visible:ring-violet-500" />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Phone Number</label>
+                      <Input placeholder="9876543210" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="h-11 rounded-xl bg-white border-slate-200 shadow-sm focus-visible:ring-violet-500" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Email Address</label>
+                      <Input type="email" placeholder="agency@example.com" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="h-11 rounded-xl bg-white border-slate-200 shadow-sm focus-visible:ring-violet-500" />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">PAN / Tax ID</label>
+                      <Input placeholder="ABCDE1234F" className="uppercase font-mono h-11 rounded-xl bg-white border-slate-200 shadow-sm focus-visible:ring-violet-500" value={formData.panNumber} onChange={e => setFormData({...formData, panNumber: e.target.value.toUpperCase()})} />
+                      <p className="text-[11px] font-medium text-slate-500 flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5"/> Used for corporate TDS and compliance accounting.</p>
+                  </div>
+
+                  <div className="p-6 bg-white border border-slate-200 rounded-2xl space-y-5 shadow-sm">
+                    <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
+                       <Percent className="w-5 h-5 text-violet-500" />
+                       <h3 className="text-sm font-extrabold text-slate-800">Base Commission Rule</h3>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Rule Type</label>
+                        <Select value={formData.commissionType} onValueChange={(v) => setFormData({...formData, commissionType: v})}>
+                          <SelectTrigger className="h-11 rounded-xl bg-slate-50 font-semibold border-slate-200 shadow-sm">
+                             <SelectValue/>
+                          </SelectTrigger>
+                          <SelectContent className="rounded-xl shadow-xl">
+                            <SelectItem value="PERCENTAGE" className="font-semibold cursor-pointer">Percentage (%)</SelectItem>
+                            <SelectItem value="FIXED" className="font-semibold cursor-pointer">Flat Amount (₹)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Value</label>
+                        <Input type="number" step="0.01" min="0" value={formData.commissionRate} onChange={e => setFormData({...formData, commissionRate: Number(e.target.value)})} className="h-11 rounded-xl bg-slate-50 font-black text-slate-900 border-slate-200 shadow-sm focus-visible:ring-violet-500" />
+                      </div>
+                    </div>
+                    <p className="text-[11px] font-medium text-slate-500 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                       Fallback rate. If a test doesn't have a specific custom rate assigned in the next tab, this rule applies.
+                    </p>
+                  </div>
+                </TabsContent>
+
+                {/* TAB 2: CUSTOM TEST RATES */}
+                <TabsContent value="custom" className="p-8 pt-6 space-y-6 m-0 min-h-[400px]">
+                    <div className="relative z-10">
+                       <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                       <Input 
+                          placeholder="Search catalog to add custom test override..." 
+                          className="h-12 pl-12 rounded-xl bg-white border-slate-200 shadow-sm font-medium focus-visible:ring-violet-500"
+                          value={testSearch}
+                          onChange={(e) => setTestSearch(e.target.value)}
+                       />
+                       {testSearch && (
+                          <div className="absolute top-14 left-0 w-full bg-white border border-slate-200 rounded-2xl shadow-2xl max-h-64 overflow-y-auto z-50 p-2">
+                              {allTests?.filter((t: any) => t.name.toLowerCase().includes(testSearch.toLowerCase())).slice(0, 10).map((t: any) => (
+                                  <div 
+                                      key={t.id} 
+                                      onClick={() => addCustomTestRate(t)}
+                                      className="p-3 text-sm rounded-xl hover:bg-violet-50 cursor-pointer flex justify-between items-center transition-colors mb-1 last:mb-0 group"
+                                  >
+                                      <span className="font-bold text-slate-700 group-hover:text-violet-700">{t.name}</span>
+                                      <span className="text-xs bg-slate-100 px-2 py-1 rounded-md text-slate-600 font-mono font-bold group-hover:bg-white">₹{t.price}</span>
+                                  </div>
+                              ))}
+                              {allTests?.filter((t: any) => t.name.toLowerCase().includes(testSearch.toLowerCase())).length === 0 && (
+                                  <div className="p-4 text-center text-sm font-medium text-slate-500">No tests found matching "{testSearch}"</div>
+                              )}
+                          </div>
+                       )}
+                    </div>
+
+                    <div className="border border-slate-200 rounded-2xl bg-white shadow-sm overflow-hidden">
+                        <Table>
+                            <TableHeader className="bg-slate-50/80">
+                                <TableRow className="hover:bg-transparent">
+                                    <TableHead className="text-[10px] font-bold uppercase tracking-wider h-11 pl-6">Test Detail</TableHead>
+                                    <TableHead className="text-[10px] font-bold uppercase tracking-wider h-11 w-40">Rule Type</TableHead>
+                                    <TableHead className="text-[10px] font-bold uppercase tracking-wider h-11 w-32">Margin</TableHead>
+                                    <TableHead className="h-11 w-14"></TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {customCommissions.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={4} className="text-center py-16 bg-slate-50/30">
+                                           <div className="flex flex-col items-center justify-center gap-2 text-slate-400">
+                                              <Sparkles className="h-8 w-8 opacity-20" />
+                                              <p className="text-sm font-medium">No custom overrides defined.</p>
+                                              <p className="text-xs">The default profile margin will be used for all tests.</p>
+                                           </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    customCommissions.map((cc, index) => (
+                                        <TableRow key={index} className="hover:bg-slate-50 transition-colors">
+                                            <TableCell className="font-extrabold text-sm text-slate-800 pl-6">{cc.testName}</TableCell>
+                                            <TableCell>
+                                                <Select value={cc.commissionType} onValueChange={(v) => updateCustomRate(index, 'commissionType', v)}>
+                                                    <SelectTrigger className="h-10 text-xs font-bold rounded-lg bg-white border-slate-200 shadow-sm focus:ring-violet-500"><SelectValue/></SelectTrigger>
+                                                    <SelectContent className="rounded-xl">
+                                                        <SelectItem value="PERCENTAGE" className="font-semibold cursor-pointer">Percentage (%)</SelectItem>
+                                                        <SelectItem value="FIXED" className="font-semibold cursor-pointer">Flat (₹)</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Input 
+                                                    type="number" 
+                                                    step="0.01" 
+                                                    className="h-10 text-sm font-black rounded-lg bg-white border-slate-200 shadow-sm focus-visible:ring-violet-500" 
+                                                    value={cc.commissionRate} 
+                                                    onChange={(e) => updateCustomRate(index, 'commissionRate', Number(e.target.value))}
+                                                />
+                                            </TableCell>
+                                            <TableCell className="pr-4 text-right">
+                                                <Button type="button" variant="ghost" size="icon" onClick={() => removeCustomRate(index)} className="h-9 w-9 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl">
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </TabsContent>
+              </Tabs>
+
+              <div className="flex items-center justify-end gap-3 p-6 border-t border-slate-200 bg-white">
+                <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="h-11 px-6 rounded-xl font-bold text-slate-600 hover:bg-slate-100">Cancel</Button>
+                <Button type="submit" className="h-11 px-8 rounded-xl font-bold bg-slate-900 hover:bg-violet-600 text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300" disabled={saveMutation.isPending}>
+                  {saveMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2"/> : <Check className="h-4 w-4 mr-2" />}
+                  {editingAgency ? 'Update Agency' : 'Save Agency'}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+      </div>
     </div>
   );
 }

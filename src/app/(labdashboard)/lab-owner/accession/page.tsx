@@ -5,7 +5,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { 
   Search, Plus, Trash2, Save, RotateCcw, 
-  FlaskConical, Box, LayoutGrid, Info, CalendarClock, Microscope, UserCheck
+  FlaskConical, Box, LayoutGrid, Info, CalendarClock, 
+  Microscope, UserCheck, Stethoscope, Clock, Syringe,
+  CreditCard, FileText, ChevronRight, Activity, Beaker
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
@@ -18,7 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 
 // Enhanced Type Definition to include Parameters
@@ -83,10 +85,10 @@ export default function AccessionPage() {
   const [paymentMode, setPaymentMode] = useState(paymentModeParam); 
   const [collectedBy, setCollectedBy] = useState(collectedByParam);
   
-  // ✅ STATE: Collected At (Text based)
+  // STATE: Collected At (Text based)
   const [collectedAt, setCollectedAt] = useState('');
 
-  // ✅ Initialize with readable text format "YYYY-MM-DD HH:mm"
+  // Initialize with readable text format "YYYY-MM-DD HH:mm"
   useEffect(() => {
     const now = new Date();
     const year = now.getFullYear();
@@ -143,7 +145,6 @@ export default function AccessionPage() {
            paymentMode: paymentMode,
            
            collectedBy: collectedBy,
-           // ✅ SEND AS DATE OBJECT (Parses text string)
            collectedAt: collectedAt ? new Date(collectedAt) : new Date(),
 
            tests: selectedTests.map(t => ({ id: t.id, price: t.price, type: t.type })), 
@@ -167,249 +168,355 @@ export default function AccessionPage() {
      }
   };
 
-  if (isLoading) return <div className="h-screen flex items-center justify-center">Loading Accession...</div>;
-  if (!data) return <div>Error loading data</div>;
+  if (isLoading) return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 gap-4">
+        <div className="relative">
+            <div className="w-12 h-12 rounded-full border-4 border-indigo-200 animate-spin border-t-indigo-600"></div>
+            <Microscope className="absolute inset-0 m-auto h-5 w-5 text-indigo-600 animate-pulse" />
+        </div>
+        <p className="text-slate-500 font-medium animate-pulse">Initializing Accession Workspace...</p>
+    </div>
+  );
+  
+  if (!data) return <div className="min-h-screen flex items-center justify-center text-slate-500">Error loading patient data.</div>;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-60px)] bg-slate-100 overflow-hidden">
+    <div className="flex flex-col h-screen bg-slate-50/80 font-sans relative overflow-hidden selection:bg-indigo-500/30">
       
-      {/* HEADER */}
-      <div className="flex-none h-14 bg-white border-b px-4 flex justify-between items-center shadow-sm z-10">
-         <div className="flex items-center gap-4 text-sm">
-            <span className="font-bold text-lg text-blue-900">{data.patient.name}</span>
-            <span className="text-slate-500 border-l pl-3">{data.patient.age} {data.patient.ageUnit || 'Y'} / {data.patient.gender}</span>
-            <span className="text-slate-500 border-l pl-3">ID: <span className="font-mono text-slate-700">{data.patient.patientId}</span></span>
-            
+      {/* Background Ambience */}
+      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.02] pointer-events-none mix-blend-overlay"></div>
+      <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-indigo-50/50 to-transparent pointer-events-none"></div>
+
+      {/* --- HEADER (Glassmorphism) --- */}
+      <header className="flex-none h-auto sm:h-20 bg-white/70 backdrop-blur-xl border-b border-slate-200/60 px-4 sm:px-8 flex flex-col sm:flex-row justify-between sm:items-center gap-4 py-4 sm:py-0 shadow-sm z-20">
+         <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
+            <div className="flex items-center gap-3">
+                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-inner text-white font-bold text-xl">
+                    {data.patient.name.charAt(0)}
+                </div>
+                <div>
+                    <h1 className="font-extrabold text-xl sm:text-2xl text-slate-900 tracking-tight leading-none">
+                        {data.patient.name}
+                    </h1>
+                    <div className="flex items-center gap-2 mt-1.5 text-xs sm:text-sm font-medium text-slate-500">
+                        <Badge variant="secondary" className="bg-slate-100 hover:bg-slate-200 text-slate-600 border-none px-2 py-0.5 rounded-md">
+                            {data.patient.age} {data.patient.ageUnit || 'Y'} / {data.patient.gender}
+                        </Badge>
+                        <span className="text-slate-300">•</span>
+                        <span className="flex items-center gap-1 font-mono text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">
+                            ID: {data.patient.patientId}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
             {doctorNameParam && doctorNameParam !== 'Self' && (
-                <span className="text-slate-500 border-l pl-3 font-medium text-blue-600">Ref: {doctorNameParam}</span>
+                <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-indigo-50 border border-indigo-100 rounded-xl">
+                    <Stethoscope className="w-4 h-4 text-indigo-600" />
+                    <span className="text-sm font-semibold text-indigo-900">Ref: {doctorNameParam}</span>
+                </div>
             )}
          </div>
-         <div className="text-xs font-medium text-slate-500">
-            {new Date().toLocaleDateString()} | {new Date().toLocaleTimeString()}
+
+         <div className="flex items-center gap-3">
+             <div className="text-right hidden md:block">
+                <div className="text-sm font-bold text-slate-700">{new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</div>
+                <div className="text-xs font-medium text-slate-400">{new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</div>
+             </div>
+             <Button variant="outline" size="icon" className="h-10 w-10 rounded-full border-slate-200 text-slate-500 hover:text-slate-900 shadow-sm" onClick={() => router.back()}>
+                 <RotateCcw className="h-4 w-4" />
+             </Button>
          </div>
-      </div>
+      </header>
 
-      <div className="flex-1 grid grid-cols-12 gap-0 overflow-hidden min-h-0">
-         
-         {/* LEFT: CATALOG */}
-         <div className="col-span-3 bg-white border-r flex flex-col h-full overflow-hidden">
-            <div className="p-3 border-b space-y-3 bg-slate-50/50 flex-none">
-               <div className="relative">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
-                  <Input 
-                    placeholder="Search test..." 
-                    className="pl-9 h-9 bg-white" 
-                    autoFocus
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                  />
-               </div>
-               <Tabs defaultValue="ALL" className="w-full" onValueChange={(v) => setFilterType(v as any)}>
-                  <TabsList className="w-full h-8 grid grid-cols-4 p-0.5 bg-slate-200/60"> 
-                     <TabsTrigger value="ALL" className="text-[10px]">All</TabsTrigger>
-                     <TabsTrigger value="SINGLE" className="text-[10px]">Tests</TabsTrigger>
-                     <TabsTrigger value="PROFILE" className="text-[10px]">Pkg</TabsTrigger>
-                     <TabsTrigger value="PARAMETER" className="text-[10px]">Param</TabsTrigger> 
-                  </TabsList>
-               </Tabs>
-            </div>
+      {/* --- MAIN WORKSPACE --- */}
+      <div className="flex-1 overflow-y-auto lg:overflow-hidden p-4 sm:p-6">
+          <div className="max-w-[1800px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
+             
+             {/* LEFT: TEST CATALOG (4 Cols) */}
+             <Card className="lg:col-span-4 flex flex-col border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white/60 backdrop-blur-md rounded-3xl overflow-hidden h-[60vh] lg:h-full">
+                <div className="p-5 border-b border-slate-100 bg-white/40 space-y-4 flex-none z-10">
+                   <div className="relative group">
+                      <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+                      <Input 
+                        placeholder="Search for tests, packages, or parameters..." 
+                        className="pl-10 h-11 bg-white border-slate-200 rounded-xl shadow-sm focus-visible:ring-indigo-500 text-sm font-medium transition-all" 
+                        autoFocus
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                      />
+                   </div>
+                   <Tabs defaultValue="ALL" className="w-full" onValueChange={(v) => setFilterType(v as any)}>
+                      <TabsList className="w-full h-10 grid grid-cols-4 bg-slate-100/80 p-1 rounded-xl"> 
+                         <TabsTrigger value="ALL" className="rounded-lg text-xs font-semibold data-[state=active]:bg-white data-[state=active]:text-indigo-700 data-[state=active]:shadow-sm transition-all">All</TabsTrigger>
+                         <TabsTrigger value="SINGLE" className="rounded-lg text-xs font-semibold data-[state=active]:bg-white data-[state=active]:text-indigo-700 data-[state=active]:shadow-sm transition-all">Tests</TabsTrigger>
+                         <TabsTrigger value="PROFILE" className="rounded-lg text-xs font-semibold data-[state=active]:bg-white data-[state=active]:text-indigo-700 data-[state=active]:shadow-sm transition-all">Pkgs</TabsTrigger>
+                         <TabsTrigger value="PARAMETER" className="rounded-lg text-xs font-semibold data-[state=active]:bg-white data-[state=active]:text-indigo-700 data-[state=active]:shadow-sm transition-all">Params</TabsTrigger> 
+                      </TabsList>
+                   </Tabs>
+                </div>
 
-            <div className="flex-1 overflow-y-auto min-h-0">
-               <div className="divide-y">
-                  {filteredCatalog.map((item) => (
-                     <div 
-                        key={item.id} 
-                        onClick={() => addTest(item)}
-                        className="p-3 hover:bg-blue-50 cursor-pointer group transition-colors flex justify-between items-start"
-                     >
-                        <div className="space-y-1">
-                           <div className="font-medium text-sm text-slate-800 group-hover:text-blue-700">
-                              {item.name}
+                <div className="flex-1 overflow-y-auto p-2 bg-slate-50/30">
+                   <div className="space-y-1.5">
+                      {filteredCatalog.map((item) => (
+                         <div 
+                            key={item.id} 
+                            onClick={() => addTest(item)}
+                            className="p-4 bg-white border border-slate-100 rounded-2xl cursor-pointer group transition-all duration-300 hover:shadow-md hover:border-indigo-200 hover:-translate-y-0.5 flex justify-between items-center"
+                         >
+                            <div className="space-y-1.5 pr-4">
+                               <div className="font-bold text-sm text-slate-800 group-hover:text-indigo-700 leading-tight transition-colors">
+                                  {item.name}
+                               </div>
+                               <div className="flex flex-wrap items-center gap-2">
+                                  <Badge variant="outline" className="text-[10px] uppercase tracking-wider h-5 px-1.5 text-slate-500 font-semibold border-slate-200 bg-slate-50">
+                                     {item.code}
+                                  </Badge>
+                                  {item.type === 'PROFILE' && <Badge className="text-[10px] h-5 px-1.5 bg-violet-100 text-violet-700 hover:bg-violet-100 border-0 shadow-none"><Box className="w-3 h-3 mr-1"/> Pkg</Badge>}
+                                  {item.type === 'PARAMETER' && <Badge className="text-[10px] h-5 px-1.5 bg-amber-100 text-amber-700 hover:bg-amber-100 border-0 shadow-none"><LayoutGrid className="w-3 h-3 mr-1"/> Param</Badge>}
+                                  {item.type === 'SINGLE' && <Badge className="text-[10px] h-5 px-1.5 bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-0 shadow-none"><FlaskConical className="w-3 h-3 mr-1"/> Test</Badge>}
+                               </div>
+                            </div>
+                            <div className="flex flex-col items-end gap-2">
+                               <div className="font-extrabold text-sm text-slate-700">₹{item.price}</div>
+                               <div className="h-6 w-6 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                                  <Plus className="h-4 w-4" />
+                               </div>
+                            </div>
+                         </div>
+                      ))}
+                      {filteredCatalog.length === 0 && (
+                          <div className="flex flex-col items-center justify-center h-48 text-slate-400">
+                              <Search className="h-8 w-8 mb-2 opacity-20" />
+                              <p className="text-sm font-medium">No tests found</p>
+                          </div>
+                      )}
+                   </div>
+                </div>
+             </Card>
+
+             {/* MIDDLE: SELECTED TESTS (5 Cols) */}
+             <Card className="lg:col-span-5 flex flex-col border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white/60 backdrop-blur-md rounded-3xl overflow-hidden h-[60vh] lg:h-full">
+                <div className="p-5 border-b border-slate-100 bg-white/40 flex justify-between items-center flex-none">
+                   <div>
+                       <CardTitle className="text-lg font-extrabold text-slate-800 flex items-center gap-2">
+                           <Activity className="h-5 w-5 text-indigo-500" />
+                           Selected Items
+                       </CardTitle>
+                       <CardDescription className="text-xs font-medium mt-1 text-slate-500">
+                           {selectedTests.length} {selectedTests.length === 1 ? 'item' : 'items'} in current order
+                       </CardDescription>
+                   </div>
+                   {selectedTests.length > 0 && (
+                       <Button variant="ghost" size="sm" className="h-8 text-xs font-semibold text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg" onClick={() => setSelectedTests([])}>
+                          Clear Cart
+                       </Button>
+                   )}
+                </div>
+
+                <div className="flex-1 overflow-auto bg-white/30">
+                   <Table>
+                      <TableHeader className="bg-slate-50/80 sticky top-0 z-10 backdrop-blur-sm">
+                         <TableRow className="h-10 hover:bg-transparent border-slate-100">
+                            <TableHead className="w-[45%] text-xs font-bold uppercase tracking-wider text-slate-500 pl-6">Test Detail</TableHead>
+                            <TableHead className="w-[20%] text-xs font-bold uppercase tracking-wider text-slate-500 hidden sm:table-cell">Sample</TableHead>
+                            <TableHead className="w-[20%] text-xs font-bold uppercase tracking-wider text-slate-500 text-right">Rate</TableHead>
+                            <TableHead className="w-[15%] pr-6"></TableHead>
+                         </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                         {selectedTests.length === 0 ? (
+                            <TableRow className="hover:bg-transparent">
+                               <TableCell colSpan={4} className="h-[40vh] text-center border-0">
+                                  <div className="flex flex-col items-center justify-center gap-3">
+                                     <div className="h-16 w-16 rounded-2xl bg-indigo-50 flex items-center justify-center">
+                                         <Beaker className="h-8 w-8 text-indigo-300" />
+                                     </div>
+                                     <div className="space-y-1">
+                                         <h3 className="text-sm font-bold text-slate-700">No Tests Selected</h3>
+                                         <p className="text-xs text-slate-500 max-w-[200px] mx-auto">Search and select tests from the catalog to add them to this order.</p>
+                                     </div>
+                                  </div>
+                               </TableCell>
+                            </TableRow>
+                         ) : (
+                            selectedTests.map((t, idx) => (
+                               <TableRow key={`${t.id}-${idx}`} className="h-14 hover:bg-white/80 transition-colors border-b border-slate-50">
+                                  <TableCell className="pl-6">
+                                     <div className="font-bold text-sm text-slate-800 leading-tight">{t.name}</div>
+                                     <div className="flex items-center gap-2 mt-1">
+                                        <span className="text-[10px] text-slate-400 font-medium">{t.code}</span>
+                                        {t.type === 'PROFILE' && <span className="text-[9px] uppercase tracking-wider font-bold text-violet-600 bg-violet-50 px-1.5 py-0.5 rounded-sm">Pkg</span>}
+                                     </div>
+                                  </TableCell>
+                                  <TableCell className="hidden sm:table-cell">
+                                      <div className="flex items-center gap-1.5 text-xs font-medium text-slate-600">
+                                          <Syringe className="h-3 w-3 text-slate-400" />
+                                          {t.sampleType?.name || 'N/A'}
+                                      </div>
+                                  </TableCell>
+                                  <TableCell className="text-right font-extrabold text-sm text-slate-700">₹{t.price}</TableCell>
+                                  <TableCell className="text-right pr-6">
+                                     <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" onClick={() => removeTest(t.id)}>
+                                        <Trash2 className="h-4 w-4" />
+                                     </Button>
+                                  </TableCell>
+                               </TableRow>
+                            ))
+                         )}
+                      </TableBody>
+                   </Table>
+                </div>
+             </Card>
+
+             {/* RIGHT: BILLING & CHECKOUT (3 Cols) */}
+             <Card className="lg:col-span-3 flex flex-col border-0 shadow-[0_8px_30px_rgb(0,0,0,0.06)] bg-white rounded-3xl overflow-hidden h-auto lg:h-full relative z-20">
+                <div className="p-5 border-b border-slate-100 flex-none bg-slate-50/50">
+                   <h3 className="font-extrabold text-slate-800 flex items-center gap-2">
+                       <CreditCard className="w-5 h-5 text-indigo-500" />
+                       Checkout & Billing
+                   </h3>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-5 space-y-6">
+                   
+                   {/* Financial Summary Box */}
+                   <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 space-y-4">
+                       <div className="flex justify-between items-center text-sm font-semibold text-slate-600">
+                           <span>Subtotal</span>
+                           <span className="text-slate-900 font-bold">₹ {subTotal}</span>
+                       </div>
+                       
+                       <div className="flex items-center justify-between gap-4">
+                          <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider shrink-0">Discount (₹)</Label>
+                          <Input 
+                            type="number" 
+                            value={discount} 
+                            onChange={e => setDiscount(Number(e.target.value))} 
+                            className="h-10 w-24 text-right font-bold text-rose-600 border-slate-200 bg-white shadow-sm focus-visible:ring-indigo-500 rounded-xl" 
+                          />
+                       </div>
+                       
+                       <div className="pt-4 border-t border-slate-200/60">
+                           <div className="bg-gradient-to-r from-violet-600 to-indigo-600 rounded-xl p-4 flex justify-between items-center shadow-lg shadow-indigo-500/20 text-white">
+                               <span className="text-xs font-bold uppercase tracking-wider opacity-90">Net Payable</span>
+                               <span className="font-extrabold text-2xl tracking-tight">₹ {netPayable}</span>
                            </div>
-                           <div className="flex items-center gap-2">
-                              <Badge variant="outline" className="text-[10px] h-4 px-1 text-slate-500 font-normal border-slate-300">
-                                 {item.code}
-                              </Badge>
-                              {item.type === 'PROFILE' && <Badge className="text-[10px] h-4 px-1 bg-purple-100 text-purple-700 border-0">Pkg</Badge>}
-                              {item.type === 'PARAMETER' && <Badge className="text-[10px] h-4 px-1 bg-yellow-100 text-yellow-700 border-0">Param</Badge>}
-                           </div>
-                        </div>
-                        <div className="font-semibold text-sm text-slate-600">₹{item.price}</div>
-                     </div>
-                  ))}
-               </div>
-            </div>
-         </div>
+                       </div>
+                   </div>
+                   
+                   {/* Payment Controls */}
+                   <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                         <div className="space-y-1.5">
+                            <Label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Amount Paid</Label>
+                            <Input 
+                                type="number" 
+                                value={paidAmount} 
+                                onChange={e => setPaidAmount(Number(e.target.value))} 
+                                className="h-11 font-bold border-slate-200 shadow-sm focus-visible:ring-emerald-500 rounded-xl" 
+                            />
+                         </div>
+                         <div className="space-y-1.5">
+                            <Label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Pay Mode</Label>
+                            <Select value={paymentMode} onValueChange={setPaymentMode}>
+                               <SelectTrigger className="h-11 font-semibold border-slate-200 shadow-sm rounded-xl">
+                                   <SelectValue />
+                               </SelectTrigger>
+                               <SelectContent className="rounded-xl shadow-xl border-slate-100">
+                                  <SelectItem value="CASH" className="font-medium cursor-pointer rounded-lg">Cash</SelectItem>
+                                  <SelectItem value="UPI" className="font-medium cursor-pointer rounded-lg">UPI / QR</SelectItem>
+                                  <SelectItem value="CARD" className="font-medium cursor-pointer rounded-lg">Card</SelectItem>
+                                  <SelectItem value="DUE" className="font-medium cursor-pointer rounded-lg text-rose-600">Credit / Due</SelectItem>
+                               </SelectContent>
+                            </Select>
+                         </div>
+                      </div>
 
-         {/* CENTER: SELECTED TESTS */}
-         <div className="col-span-6 bg-slate-50/30 flex flex-col h-full border-r overflow-hidden">
-            <div className="p-2 border-b bg-white flex justify-between items-center flex-none h-12">
-               <h2 className="font-semibold text-sm text-slate-800 px-2">Selected Tests ({selectedTests.length})</h2>
-               <Button variant="ghost" size="sm" className="h-7 text-xs text-red-600" onClick={() => setSelectedTests([])}>
-                  Clear All
-               </Button>
-            </div>
+                      <div className="flex justify-between items-center p-3 rounded-xl bg-slate-50 border border-slate-100">
+                         <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Balance Due</span>
+                         <span className={`font-extrabold text-lg ${balance > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>₹ {balance}</span>
+                      </div>
+                   </div>
 
-            <div className="flex-1 overflow-auto min-h-0">
-               <Table>
-                  <TableHeader className="bg-slate-100 sticky top-0 z-10">
-                     <TableRow className="h-9 hover:bg-slate-100">
-                        <TableHead className="w-[45%] text-xs font-semibold text-slate-600 pl-4">Test Name</TableHead>
-                        <TableHead className="w-[15%] text-xs font-semibold text-slate-600">Sample</TableHead>
-                        <TableHead className="w-[15%] text-xs font-semibold text-slate-600">TAT</TableHead>
-                        <TableHead className="w-[15%] text-xs font-semibold text-slate-600 text-right">Rate</TableHead>
-                        <TableHead className="w-[10%]"></TableHead>
-                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                     {selectedTests.length === 0 ? (
-                        <TableRow>
-                           <TableCell colSpan={5} className="h-64 text-center text-slate-400">
-                              <div className="flex flex-col items-center gap-2">
-                                 <Microscope className="h-8 w-8 opacity-20" />
-                                 <span>No tests selected</span>
+                   {/* Collection Details Section */}
+                   <div className="space-y-4 pt-2">
+                       <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider border-b border-slate-100 pb-2">Sample Details</h4>
+                       <div className="space-y-3">
+                           <div className="space-y-1.5">
+                              <Label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Collected By</Label>
+                              <div className="relative">
+                                 <UserCheck className="absolute left-3 top-3.5 h-4 w-4 text-slate-400"/>
+                                 <Input 
+                                    value={collectedBy} 
+                                    onChange={(e) => setCollectedBy(e.target.value)}
+                                    className="h-11 pl-9 text-sm font-medium border-slate-200 shadow-sm rounded-xl focus-visible:ring-indigo-500"
+                                    placeholder="Phlebotomist Name"
+                                 />
                               </div>
-                           </TableCell>
-                        </TableRow>
-                     ) : (
-                        selectedTests.map((t, idx) => (
-                           <TableRow key={`${t.id}-${idx}`} className="h-10 hover:bg-white border-b border-slate-100">
-                              <TableCell className="pl-4 font-medium text-sm text-slate-700">
-                                 {t.name}
-                                 {t.type === 'PROFILE' && <span className="ml-2 text-[10px] text-purple-600 bg-purple-50 px-1 rounded">Pkg</span>}
-                              </TableCell>
-                              <TableCell className="text-xs text-slate-500">
-                                 {t.sampleType?.name || '-'}
-                              </TableCell>
-                              <TableCell className="text-xs text-slate-500">
-                                 {t.tat || '-'}
-                              </TableCell>
-                              <TableCell className="text-right font-medium text-slate-700">₹{t.price}</TableCell>
-                              <TableCell className="text-right pr-2">
-                                 <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-red-600" onClick={() => removeTest(t.id)}>
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                 </Button>
-                              </TableCell>
-                           </TableRow>
-                        ))
-                     )}
-                  </TableBody>
-               </Table>
-            </div>
-         </div>
+                           </div>
+                           <div className="space-y-1.5">
+                              <Label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Collection Time</Label>
+                              <div className="relative">
+                                 <CalendarClock className="absolute left-3 top-3.5 h-4 w-4 text-slate-400 pointer-events-none"/>
+                                 <Input 
+                                    type="text" 
+                                    value={collectedAt}
+                                    onChange={(e) => setCollectedAt(e.target.value)}
+                                    className="h-11 pl-9 text-sm font-medium border-slate-200 shadow-sm rounded-xl focus-visible:ring-indigo-500 font-mono"
+                                    placeholder="YYYY-MM-DD HH:mm"
+                                 />
+                              </div>
+                           </div>
+                       </div>
+                   </div>
 
-         {/* RIGHT: BILLING & ACTION */}
-         <div className="col-span-3 bg-white flex flex-col h-full shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] z-20 overflow-hidden relative">
-            
-            <div className="p-3 border-b bg-blue-50/30 flex-none h-12 flex items-center">
-               <h3 className="font-bold text-slate-800 text-sm">Payment Details</h3>
-            </div>
+                   {/* Add-ons */}
+                   <div className="space-y-4 pt-2">
+                      <div className="space-y-3">
+                         <Label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Print Configuration</Label>
+                         <div className="flex gap-6">
+                            <div className="flex items-center space-x-2.5">
+                               <Checkbox id="slip" defaultChecked className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-600" />
+                               <label htmlFor="slip" className="text-sm font-medium text-slate-700 cursor-pointer">Print Slip</label>
+                            </div>
+                            <div className="flex items-center space-x-2.5">
+                               <Checkbox id="barcode" defaultChecked className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-600" />
+                               <label htmlFor="barcode" className="text-sm font-medium text-slate-700 cursor-pointer">Barcodes</label>
+                            </div>
+                         </div>
+                      </div>
 
-            <div className="flex-1 overflow-y-auto min-h-0 p-4 space-y-4">
-               {/* Totals */}
-               <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                     <Label className="text-[10px] uppercase font-bold text-slate-500">Total</Label>
-                     <Input readOnly value={subTotal} className="h-8 bg-slate-50 font-bold" />
-                  </div>
-                  <div className="space-y-1">
-                     <Label className="text-[10px] uppercase font-bold text-slate-500">Discount</Label>
-                     <Input type="number" value={discount} onChange={e => setDiscount(Number(e.target.value))} className="h-8 text-red-600" />
-                  </div>
-               </div>
-
-               <div className="bg-blue-600 text-white rounded-md p-2 flex justify-between items-center shadow-sm">
-                  <span className="text-xs font-medium opacity-80">Net Payable</span>
-                  <span className="font-bold text-lg">₹ {netPayable}</span>
-               </div>
-               
-               <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                     <Label className="text-[10px] uppercase font-bold text-slate-500">Paid</Label>
-                     <Input type="number" value={paidAmount} onChange={e => setPaidAmount(Number(e.target.value))} className="h-8 border-green-200" />
-                  </div>
-                  <div className="space-y-1">
-                     <Label className="text-[10px] uppercase font-bold text-slate-500">Mode</Label>
-                     <Select value={paymentMode} onValueChange={setPaymentMode}>
-                        <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                           <SelectItem value="CASH">Cash</SelectItem>
-                           <SelectItem value="UPI">UPI / QR</SelectItem>
-                           <SelectItem value="CARD">Card</SelectItem>
-                           <SelectItem value="DUE">Credit</SelectItem>
-                        </SelectContent>
-                     </Select>
-                  </div>
-               </div>
-
-               {/* ✅ UPDATED SAMPLE DETAILS (GRID LAYOUT + TEXT INPUT FOR TIME) */}
-               <div className="grid grid-cols-2 gap-3 pt-2">
-                   <div className="space-y-1">
-                      <Label className="text-[10px] uppercase font-bold text-slate-500">Collected By</Label>
-                      <div className="relative">
-                         <UserCheck className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400"/>
-                         <Input 
-                            value={collectedBy} 
-                            onChange={(e) => setCollectedBy(e.target.value)}
-                            className="h-9 pl-8 text-xs border-slate-200 bg-slate-50 focus:bg-white"
-                            placeholder="Name..."
-                         />
+                      <div className="space-y-1.5">
+                         <Label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Order Notes</Label>
+                         <Textarea placeholder="Special instructions for lab technician..." className="h-20 text-sm resize-none rounded-xl border-slate-200 shadow-sm focus-visible:ring-indigo-500 p-3" />
                       </div>
                    </div>
-                   <div className="space-y-1">
-                      <Label className="text-[10px] uppercase font-bold text-slate-500">Collected At</Label>
-                      <div className="relative">
-                         <CalendarClock className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400 pointer-events-none"/>
-                         <Input 
-                            type="text" // ✅ CHANGED TO TEXT INPUT
-                            value={collectedAt}
-                            onChange={(e) => setCollectedAt(e.target.value)}
-                            className="h-9 pl-8 text-xs border-slate-200 bg-slate-50 focus:bg-white"
-                            placeholder="YYYY-MM-DD HH:mm"
-                         />
-                      </div>
-                   </div>
-               </div>
+                </div>
 
-               <div className="flex justify-between items-center text-xs font-bold border-t pt-2 mt-2">
-                  <span className="text-slate-500">Balance Due:</span>
-                  <span className={balance > 0 ? 'text-red-600' : 'text-green-600'}>₹ {balance}</span>
-               </div>
+                {/* Submit Footer */}
+                <div className="p-4 border-t border-slate-100 bg-white flex flex-col sm:flex-row gap-3 flex-none z-30 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.05)]">
+                   <Button 
+                      className="flex-1 h-12 text-sm font-bold bg-slate-900 hover:bg-indigo-600 text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 rounded-xl"
+                      onClick={handleSubmit}
+                      disabled={isSubmitting || selectedTests.length === 0}
+                   >
+                      {isSubmitting ? (
+                          <div className="flex items-center gap-2">
+                              <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin"></div>
+                              Processing...
+                          </div>
+                      ) : (
+                          <div className="flex items-center gap-2">
+                              Submit & Generate Bill
+                              <ChevronRight className="w-4 h-4" />
+                          </div>
+                      )}
+                   </Button>
+                </div>
+             </Card>
 
-               <div className="space-y-2 pt-2">
-                  <Label className="text-[10px] uppercase font-bold text-slate-500">Print Options</Label>
-                  <div className="flex gap-4">
-                     <div className="flex items-center space-x-2">
-                        <Checkbox id="slip" defaultChecked />
-                        <label htmlFor="slip" className="text-xs text-slate-700">Slip</label>
-                     </div>
-                     <div className="flex items-center space-x-2">
-                        <Checkbox id="barcode" defaultChecked />
-                        <label htmlFor="barcode" className="text-xs text-slate-700">Barcode</label>
-                     </div>
-                  </div>
-               </div>
-
-               <div className="space-y-1 pt-1 pb-2">
-                  <Label className="text-[10px] uppercase font-bold text-slate-500">Note</Label>
-                  <Textarea placeholder="Instructions..." className="h-14 text-xs resize-none" />
-               </div>
-            </div>
-
-            <div className="p-3 border-t bg-slate-50 flex gap-2 flex-none z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-               <Button variant="outline" className="flex-1 h-9 text-xs border-slate-300" onClick={() => router.back()}>
-                  Cancel
-               </Button>
-               <Button 
-                  className="flex-[2] h-9 text-xs bg-blue-700 hover:bg-blue-800 shadow-sm"
-                  onClick={handleSubmit}
-                  disabled={isSubmitting || selectedTests.length === 0}
-               >
-                  {isSubmitting ? '...' : 'Submit Order'}
-               </Button>
-            </div>
-         </div>
-
+          </div>
       </div>
     </div>
   );
