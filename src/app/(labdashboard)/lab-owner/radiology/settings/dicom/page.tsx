@@ -12,7 +12,11 @@ import {
   ShieldCheck,
   AlertCircle,
   Loader2,
+  Plug,
+  Wifi,
+  WifiOff,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -112,180 +116,251 @@ export default function DicomSettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-[calc(100vh-100px)] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      <div className="flex h-[calc(100vh-4rem)] flex-col items-center justify-center bg-slate-50 font-sans">
+        <Loader2 className="h-10 w-10 animate-spin text-indigo-600 mb-4" />
+        <p className="text-sm font-bold text-slate-500 uppercase tracking-widest animate-pulse">
+          Loading Configuration...
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6">
-      {/* HEADER */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200 pb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-            <Network className="h-6 w-6 text-blue-600" />
-            DICOM & PACS Settings
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Configure networking for imaging modalities and image archiving.
-          </p>
-        </div>
-        <Button
-          onClick={() => saveMutation.mutate(settings)}
-          className="bg-blue-600 hover:bg-blue-700 text-white min-w-[160px] shadow-md"
-          disabled={saveMutation.isPending}>
-          {saveMutation.isPending ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <Save className="mr-2 h-4 w-4" />
-          )}
-          {saveMutation.isPending ? "Saving Config..." : "Save Configuration"}
-        </Button>
-      </div>
+    <div className="min-h-[calc(100vh-4rem)] bg-slate-50 font-sans relative selection:bg-indigo-100 pb-12">
+      {/* Decorative Background Mesh */}
+      <div className="absolute top-0 inset-x-0 h-64 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-100/40 via-slate-50 to-transparent pointer-events-none z-0" />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* LEFT COLUMN: Main Configurations */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* SECTION 1: Local RIS Identity */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2">
-              <Server className="h-5 w-5 text-slate-600" />
-              <h2 className="text-lg font-bold text-slate-800">
-                Local RIS Node (Your Server)
-              </h2>
+      {/* FLOATING HEADER */}
+      <header className="sticky top-0 z-30 bg-white/70 backdrop-blur-xl border-b border-slate-200/60 shadow-sm">
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-inner shrink-0">
+              <Network className="h-6 w-6 text-white" />
             </div>
-            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label>Local AE Title</Label>
-                <Input
-                  value={settings.localAETitle}
-                  onChange={(e) =>
-                    setSettings({
-                      ...settings,
-                      localAETitle: e.target.value.toUpperCase(),
-                    })
-                  }
-                  className="uppercase font-mono text-sm"
-                />
-                <p className="text-[10px] text-slate-500">
-                  The Application Entity Title of this RIS software.
-                </p>
-              </div>
-              <div className="space-y-2">
-                <Label>Listener Port</Label>
-                <Input
-                  type="number"
-                  value={settings.localPort}
-                  onChange={(e) =>
-                    setSettings({ ...settings, localPort: e.target.value })
-                  }
-                  className="font-mono text-sm"
-                />
-              </div>
+            <div>
+              <h1 className="text-xl font-bold text-slate-900 tracking-tight leading-tight">
+                DICOM & PACS Settings
+              </h1>
+              <p className="text-xs font-medium text-slate-500 mt-0.5">
+                Configure networking for imaging modalities and archive routing.
+              </p>
             </div>
           </div>
 
-          {/* SECTION 2: PACS Server */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2">
-              <ShieldCheck className="h-5 w-5 text-emerald-600" />
-              <h2 className="text-lg font-bold text-slate-800">
-                Primary PACS Archive
-              </h2>
-            </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <div className="space-y-2">
-                  <Label>PACS AE Title</Label>
+          <Button
+            onClick={() => saveMutation.mutate(settings)}
+            disabled={saveMutation.isPending}
+            className="w-full md:w-auto h-11 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white rounded-xl shadow-md shadow-indigo-500/25 font-bold transition-all duration-300 hover:-translate-y-0.5 shrink-0 px-8"
+          >
+            {saveMutation.isPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="mr-2 h-4 w-4" />
+            )}
+            {saveMutation.isPending ? "Saving Config..." : "Save Configuration"}
+          </Button>
+        </div>
+      </header>
+
+      <main className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* LEFT COLUMN: Main Configurations (Spans 8) */}
+          <div className="lg:col-span-8 space-y-8">
+            {/* SECTION 1: Local RIS Identity */}
+            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+              <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/80 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Server className="h-5 w-5 text-slate-500" />
+                  <h2 className="text-base font-bold text-slate-800">
+                    Local RIS Node (This Server)
+                  </h2>
+                </div>
+                <Badge
+                  variant="outline"
+                  className="bg-slate-100 text-slate-500 border-none font-mono text-[10px] tracking-wider uppercase"
+                >
+                  Identity
+                </Badge>
+              </div>
+              <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="space-y-1.5">
+                  <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                    Local AE Title
+                  </Label>
                   <Input
-                    value={settings.pacsAETitle}
+                    value={settings.localAETitle}
                     onChange={(e) =>
                       setSettings({
                         ...settings,
-                        pacsAETitle: e.target.value.toUpperCase(),
+                        localAETitle: e.target.value.toUpperCase(),
                       })
                     }
-                    className="uppercase font-mono text-sm"
+                    className="uppercase font-mono text-sm h-11 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:ring-indigo-500/20"
                   />
+                  <p className="text-[10px] font-medium text-slate-400 mt-1">
+                    The Application Entity Title of this RIS software.
+                  </p>
                 </div>
-                <div className="space-y-2">
-                  <Label>IP Address / Hostname</Label>
-                  <Input
-                    value={settings.pacsIpAddress}
-                    onChange={(e) =>
-                      setSettings({
-                        ...settings,
-                        pacsIpAddress: e.target.value,
-                      })
-                    }
-                    className="font-mono text-sm"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>PACS Port</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                    Listener Port
+                  </Label>
                   <Input
                     type="number"
-                    value={settings.pacsPort}
+                    value={settings.localPort}
                     onChange={(e) =>
-                      setSettings({ ...settings, pacsPort: e.target.value })
+                      setSettings({ ...settings, localPort: e.target.value })
                     }
-                    className="font-mono text-sm"
+                    className="font-mono text-sm h-11 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:ring-indigo-500/20"
                   />
                 </div>
               </div>
+            </div>
 
-              {/* CONNECTION TESTER */}
-              <div className="p-4 bg-slate-50 rounded-lg border border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            {/* SECTION 2: PACS Server */}
+            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+              <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/80 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div
-                    className={`p-2 rounded-full ${pacsStatus === "CONNECTED" ? "bg-emerald-100 text-emerald-600" : pacsStatus === "FAILED" ? "bg-red-100 text-red-600" : "bg-slate-200 text-slate-500"}`}>
-                    <Activity className="h-5 w-5" />
+                  <ShieldCheck className="h-5 w-5 text-emerald-500" />
+                  <h2 className="text-base font-bold text-slate-800">
+                    Primary PACS Archive
+                  </h2>
+                </div>
+                <Badge
+                  variant="outline"
+                  className="bg-emerald-50 text-emerald-600 border-emerald-200 font-mono text-[10px] tracking-wider uppercase"
+                >
+                  Storage
+                </Badge>
+              </div>
+
+              <div className="p-6 space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                      PACS AE Title
+                    </Label>
+                    <Input
+                      value={settings.pacsAETitle}
+                      onChange={(e) =>
+                        setSettings({
+                          ...settings,
+                          pacsAETitle: e.target.value.toUpperCase(),
+                        })
+                      }
+                      className="uppercase font-mono text-sm h-11 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:ring-indigo-500/20"
+                    />
                   </div>
-                  <div>
-                    <p className="font-bold text-sm text-slate-800">
-                      Connection Status
-                    </p>
-                    <p
-                      className={`text-xs font-medium ${pacsStatus === "CONNECTED" ? "text-emerald-600" : pacsStatus === "FAILED" ? "text-red-600" : "text-slate-500"}`}>
-                      {pacsStatus === "UNKNOWN"
-                        ? "Not tested recently"
-                        : pacsStatus === "CONNECTED"
-                          ? "Online & Reachable (C-ECHO OK)"
-                          : "Connection Failed"}
-                    </p>
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                      IP / Hostname
+                    </Label>
+                    <Input
+                      value={settings.pacsIpAddress}
+                      onChange={(e) =>
+                        setSettings({
+                          ...settings,
+                          pacsIpAddress: e.target.value,
+                        })
+                      }
+                      className="font-mono text-sm h-11 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:ring-indigo-500/20"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                      PACS Port
+                    </Label>
+                    <Input
+                      type="number"
+                      value={settings.pacsPort}
+                      onChange={(e) =>
+                        setSettings({ ...settings, pacsPort: e.target.value })
+                      }
+                      className="font-mono text-sm h-11 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:ring-indigo-500/20"
+                    />
                   </div>
                 </div>
-                <Button
-                  variant="outline"
-                  onClick={() => pingMutation.mutate()}
-                  disabled={pingMutation.isPending || !settings.pacsIpAddress}
-                  className="bg-white shrink-0">
-                  {pingMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  ) : (
-                    "Test C-ECHO"
-                  )}
-                  {pingMutation.isPending ? "Pinging..." : "Ping PACS"}
-                </Button>
+
+                {/* CONNECTION TESTER */}
+                <div className="p-5 bg-slate-50/50 rounded-xl border border-slate-200/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={`h-12 w-12 rounded-xl flex items-center justify-center border shadow-sm transition-colors ${
+                        pacsStatus === "CONNECTED"
+                          ? "bg-emerald-50 border-emerald-200 text-emerald-600"
+                          : pacsStatus === "FAILED"
+                            ? "bg-rose-50 border-rose-200 text-rose-600"
+                            : "bg-white border-slate-200 text-slate-400"
+                      }`}
+                    >
+                      {pingMutation.isPending ? (
+                        <Activity className="h-6 w-6 animate-pulse text-indigo-500" />
+                      ) : pacsStatus === "CONNECTED" ? (
+                        <Wifi className="h-6 w-6" />
+                      ) : pacsStatus === "FAILED" ? (
+                        <WifiOff className="h-6 w-6" />
+                      ) : (
+                        <Plug className="h-6 w-6" />
+                      )}
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <p className="font-bold text-sm text-slate-900 uppercase tracking-wider">
+                        Connection Status
+                      </p>
+                      <p
+                        className={`text-xs font-bold mt-0.5 truncate ${
+                          pacsStatus === "CONNECTED"
+                            ? "text-emerald-600"
+                            : pacsStatus === "FAILED"
+                              ? "text-rose-600"
+                              : "text-slate-500"
+                        }`}
+                      >
+                        {pingMutation.isPending
+                          ? "Testing connection..."
+                          : pacsStatus === "UNKNOWN"
+                            ? "Not tested recently"
+                            : pacsStatus === "CONNECTED"
+                              ? "Online & Reachable (C-ECHO OK)"
+                              : "Connection Failed (Check IP/Port)"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    onClick={() => pingMutation.mutate()}
+                    disabled={pingMutation.isPending || !settings.pacsIpAddress}
+                    className="w-full sm:w-auto bg-white border-slate-200 text-slate-700 font-bold hover:bg-slate-50 hover:text-indigo-600 h-10 rounded-xl transition-colors shadow-sm shrink-0"
+                  >
+                    {pingMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <Activity className="h-4 w-4 mr-2" />
+                    )}
+                    {pingMutation.isPending ? "Pinging..." : "Test C-ECHO"}
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* SECTION 3: Web Viewer */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2">
-              <MonitorPlay className="h-5 w-5 text-purple-600" />
-              <h2 className="text-lg font-bold text-slate-800">
-                Diagnostic Web Viewer (WADO)
-              </h2>
-            </div>
-            <div className="p-6">
-              <div className="space-y-2">
-                <Label>Viewer Base URL</Label>
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <LinkIcon className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+            {/* SECTION 3: Web Viewer */}
+            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+              <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/80 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <MonitorPlay className="h-5 w-5 text-indigo-500" />
+                  <h2 className="text-base font-bold text-slate-800">
+                    Diagnostic Web Viewer (WADO)
+                  </h2>
+                </div>
+              </div>
+              <div className="p-6">
+                <div className="space-y-1.5">
+                  <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                    Viewer Base URL
+                  </Label>
+                  <div className="relative w-full">
+                    <LinkIcon className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
                     <Input
                       value={settings.viewerBaseUrl}
                       onChange={(e) =>
@@ -294,109 +369,141 @@ export default function DicomSettingsPage() {
                           viewerBaseUrl: e.target.value,
                         })
                       }
-                      className="pl-10 font-mono text-sm text-blue-600"
+                      className="pl-10 font-mono text-sm text-indigo-600 h-11 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:ring-indigo-500/20"
+                      placeholder="http://192.168.1.100:8042/viewer?StudyInstanceUID="
+                    />
+                  </div>
+                  <p className="text-[11px] font-medium text-slate-500 mt-2">
+                    Example format for Orthanc/Osimis:{" "}
+                    <code className="bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded text-slate-700 font-mono text-[10px]">
+                      http://192.168.1.100:8042/viewer?StudyInstanceUID=
+                    </code>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT COLUMN: Modality Worklist (MWL) & Help (Spans 4) */}
+          <div className="lg:col-span-4 space-y-6">
+            <div
+              className={`bg-white rounded-2xl border shadow-sm overflow-hidden transition-all duration-300 ${
+                settings.enableMwl
+                  ? "border-indigo-200 shadow-indigo-500/10"
+                  : "border-slate-200 opacity-80"
+              }`}
+            >
+              <div className="px-5 py-4 border-b border-slate-100 bg-slate-50/80 flex justify-between items-center">
+                <h2 className="text-base font-bold text-slate-800">
+                  Modality Worklist
+                </h2>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`text-[10px] font-bold uppercase tracking-wider ${settings.enableMwl ? "text-emerald-600" : "text-slate-400"}`}
+                  >
+                    {settings.enableMwl ? "Active" : "Disabled"}
+                  </span>
+                  <div
+                    className={`h-2.5 w-2.5 rounded-full transition-colors ${settings.enableMwl ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-slate-300"}`}
+                  />
+                </div>
+              </div>
+
+              <div className="p-5 space-y-5">
+                <p className="text-xs font-medium text-slate-500 leading-relaxed">
+                  MWL allows your MRI and CT machines to automatically fetch
+                  patient details from this RIS, eliminating manual data entry
+                  by technicians.
+                </p>
+
+                <div
+                  className={`space-y-4 transition-opacity ${settings.enableMwl ? "opacity-100" : "opacity-40 pointer-events-none"}`}
+                >
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                      MWL AE Title
+                    </Label>
+                    <Input
+                      value={settings.mwlAETitle}
+                      onChange={(e) =>
+                        setSettings({
+                          ...settings,
+                          mwlAETitle: e.target.value.toUpperCase(),
+                        })
+                      }
+                      className="uppercase font-mono text-sm h-10 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-indigo-300"
+                      disabled={!settings.enableMwl}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                      MWL Port
+                    </Label>
+                    <Input
+                      type="number"
+                      value={settings.mwlPort}
+                      onChange={(e) =>
+                        setSettings({ ...settings, mwlPort: e.target.value })
+                      }
+                      className="font-mono text-sm h-10 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-indigo-300"
+                      disabled={!settings.enableMwl}
                     />
                   </div>
                 </div>
-                <p className="text-[11px] text-slate-500 mt-1">
-                  Example:{" "}
-                  <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-700">
-                    http://192.168.1.100:8042/viewer?StudyInstanceUID=
-                  </code>
-                </p>
+
+                <Button
+                  variant={settings.enableMwl ? "outline" : "default"}
+                  className={`w-full h-11 rounded-xl font-bold transition-all ${
+                    settings.enableMwl
+                      ? "bg-white border-rose-200 text-rose-600 hover:bg-rose-50"
+                      : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-500/25 hover:-translate-y-0.5"
+                  }`}
+                  onClick={() =>
+                    setSettings({ ...settings, enableMwl: !settings.enableMwl })
+                  }
+                >
+                  {settings.enableMwl
+                    ? "Disable MWL Service"
+                    : "Enable MWL Service"}
+                </Button>
               </div>
+            </div>
+
+            <div className="bg-indigo-50/50 border border-indigo-100 rounded-2xl p-5 shadow-sm">
+              <h3 className="font-bold text-indigo-900 mb-3 flex items-center gap-2 text-sm">
+                <AlertCircle className="h-4 w-4 text-indigo-600" /> Quick
+                Terminology
+              </h3>
+              <ul className="text-xs font-medium text-indigo-800/80 space-y-3">
+                <li className="flex items-start gap-2 leading-relaxed">
+                  <span className="font-black text-indigo-400 mt-0.5">•</span>
+                  <span>
+                    <strong className="text-indigo-900">AE Title:</strong>{" "}
+                    Application Entity Title. A unique identity string for a
+                    DICOM node (no spaces allowed).
+                  </span>
+                </li>
+                <li className="flex items-start gap-2 leading-relaxed">
+                  <span className="font-black text-indigo-400 mt-0.5">•</span>
+                  <span>
+                    <strong className="text-indigo-900">C-ECHO:</strong> A
+                    standard "ping" used to verify if a DICOM node is online and
+                    listening.
+                  </span>
+                </li>
+                <li className="flex items-start gap-2 leading-relaxed">
+                  <span className="font-black text-indigo-400 mt-0.5">•</span>
+                  <span>
+                    <strong className="text-indigo-900">WADO:</strong> Web
+                    Access to DICOM Objects. Used to securely view heavy medical
+                    images via browser.
+                  </span>
+                </li>
+              </ul>
             </div>
           </div>
         </div>
-
-        {/* RIGHT COLUMN: Modality Worklist (MWL) & Help */}
-        <div className="space-y-6">
-          <div
-            className={`bg-white rounded-xl border shadow-sm overflow-hidden transition-all ${settings.enableMwl ? "border-slate-200" : "border-slate-200 opacity-80"}`}>
-            <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-              <h2 className="text-lg font-bold text-slate-800">
-                Modality Worklist (MWL)
-              </h2>
-              <div
-                className={`h-3 w-3 rounded-full ${settings.enableMwl ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-slate-300"}`}></div>
-            </div>
-            <div className="p-6 space-y-4">
-              <p className="text-xs text-slate-600 leading-relaxed mb-4">
-                MWL allows your MRI and CT machines to automatically fetch
-                patient details from this RIS, eliminating manual data entry by
-                technicians.
-              </p>
-
-              <div className="space-y-2">
-                <Label>MWL AE Title</Label>
-                <Input
-                  value={settings.mwlAETitle}
-                  onChange={(e) =>
-                    setSettings({
-                      ...settings,
-                      mwlAETitle: e.target.value.toUpperCase(),
-                    })
-                  }
-                  className="uppercase font-mono text-sm"
-                  disabled={!settings.enableMwl}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>MWL Port</Label>
-                <Input
-                  type="number"
-                  value={settings.mwlPort}
-                  onChange={(e) =>
-                    setSettings({ ...settings, mwlPort: e.target.value })
-                  }
-                  className="font-mono text-sm"
-                  disabled={!settings.enableMwl}
-                />
-              </div>
-
-              <Button
-                variant={settings.enableMwl ? "destructive" : "default"}
-                className="w-full mt-4"
-                onClick={() =>
-                  setSettings({ ...settings, enableMwl: !settings.enableMwl })
-                }>
-                {settings.enableMwl
-                  ? "Disable MWL Service"
-                  : "Enable MWL Service"}
-              </Button>
-            </div>
-          </div>
-
-          <div className="bg-blue-50 border border-blue-100 rounded-xl p-6">
-            <h3 className="font-bold text-blue-800 mb-3 flex items-center gap-2">
-              <AlertCircle className="h-4 w-4" /> Quick Terminology
-            </h3>
-            <ul className="text-xs text-blue-800 space-y-3">
-              <li className="flex gap-2">
-                <span className="font-black">•</span>{" "}
-                <span>
-                  <strong>AE Title:</strong> Application Entity Title. A unique
-                  name for a DICOM node (no spaces allowed).
-                </span>
-              </li>
-              <li className="flex gap-2">
-                <span className="font-black">•</span>{" "}
-                <span>
-                  <strong>C-ECHO:</strong> A standard "ping" used to verify if a
-                  DICOM node is online.
-                </span>
-              </li>
-              <li className="flex gap-2">
-                <span className="font-black">•</span>{" "}
-                <span>
-                  <strong>WADO:</strong> Web Access to DICOM Objects. Used by
-                  the browser to view heavy images.
-                </span>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </div>
+      </main>
     </div>
   );
 }
