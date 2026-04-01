@@ -4,6 +4,8 @@ import { verifyToken } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
+import { format } from "date-fns";
+import { ArrowLeft, Beaker, CheckCircle2, ShieldAlert, Activity, FileText, Server, AlertTriangle } from "lucide-react";
 
 export default async function SampleReviewPage({
   params,
@@ -38,29 +40,21 @@ export default async function SampleReviewPage({
 
   if (!sample) {
     return (
-      <div className="max-w-5xl mx-auto p-12 text-center mt-10 bg-white rounded-2xl border border-slate-200 shadow-sm">
-        <svg
-          className="w-16 h-16 mx-auto text-slate-300 mb-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-        </svg>
-        <h1 className="text-2xl font-bold text-slate-800">Sample Not Found</h1>
-        <p className="text-slate-500 mt-2">
-          Barcode{" "}
-          <span className="font-mono font-bold text-slate-700">{sampleId}</span>{" "}
-          does not exist in your lab.
-        </p>
-        <Link
-          href="/lab-owner/analyzers"
-          className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-lg font-bold mt-6 inline-block transition-colors">
-          &larr; Back to Dashboard
-        </Link>
+      <div className="min-h-[calc(100vh-4rem)] bg-slate-50 font-sans flex items-center justify-center p-6">
+        <div className="bg-white rounded-3xl border border-slate-200/60 p-12 text-center shadow-xl shadow-slate-200/40 max-w-md w-full">
+          <div className="h-20 w-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Beaker className="h-10 w-10 text-slate-300" />
+          </div>
+          <h1 className="text-2xl font-black text-slate-800 tracking-tight">Sample Not Found</h1>
+          <p className="text-slate-500 mt-2 text-sm leading-relaxed">
+            Barcode <span className="font-mono font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded">{sampleId}</span> does not exist in your lab database.
+          </p>
+          <Link href="/lab-owner/analyzers">
+            <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl font-bold mt-8 transition-all hover:-translate-y-0.5 shadow-md w-full">
+              Back to Dashboard
+            </button>
+          </Link>
+        </div>
       </div>
     );
   }
@@ -100,310 +94,210 @@ export default async function SampleReviewPage({
   );
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6 bg-slate-50 min-h-screen pb-32">
-      {/* 1. HEADER CARD */}
-      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <Link
-            href="/lab-owner/analyzer"
-            className="text-blue-600 text-sm font-bold hover:underline mb-3 inline-flex items-center gap-1">
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-            </svg>
-            Back to Analyzer Hub
+    <div className="min-h-[calc(100vh-4rem)] bg-slate-50 font-sans relative selection:bg-indigo-100 pb-32">
+      
+      {/* Decorative Background Mesh */}
+      <div className="absolute top-0 inset-x-0 h-64 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-100/40 via-slate-50 to-transparent pointer-events-none z-0" />
+
+      {/* FLOATING HEADER */}
+      <header className="sticky top-0 z-30 bg-white/70 backdrop-blur-xl border-b border-slate-200/60 shadow-sm">
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <Link href="/lab-owner/analyzer" className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors mb-3">
+             <ArrowLeft className="h-3.5 w-3.5" /> Back to Analyzer Hub
           </Link>
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold text-slate-800 tracking-tight">
-              Sample{" "}
-              <span className="font-mono text-blue-600 bg-blue-50 px-3 py-1 rounded-lg border border-blue-100">
-                {sample.sampleId}
-              </span>
-            </h1>
-            {isFullyApproved ? (
-              <span className="px-3 py-1.5 bg-emerald-100 text-emerald-800 font-bold rounded-full text-xs uppercase tracking-wider border border-emerald-200">
-                Verified & Approved
-              </span>
-            ) : (
-              <span className="px-3 py-1.5 bg-amber-100 text-amber-800 font-bold rounded-full text-xs uppercase tracking-wider border border-amber-200">
-                Pending Review
-              </span>
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-inner shrink-0">
+                <Beaker className="h-6 w-6 text-white" />
+              </div>
+              <div className="min-w-0 flex flex-col items-start gap-1">
+                <div className="flex items-center gap-2">
+                   <h1 className="text-2xl font-black text-slate-900 tracking-tight leading-tight">
+                     Sample
+                   </h1>
+                   <span className="font-mono text-sm font-bold text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-md border border-indigo-100 shadow-sm mt-0.5">
+                     {sample.sampleId}
+                   </span>
+                </div>
+                {isFullyApproved ? (
+                  <span className="text-[10px] font-bold px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded uppercase tracking-wider flex items-center gap-1 shadow-sm">
+                    <CheckCircle2 className="h-3 w-3" /> Verified & Approved
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-bold px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded uppercase tracking-wider flex items-center gap-1 shadow-sm">
+                    <Activity className="h-3 w-3 animate-pulse" /> Pending Review
+                  </span>
+                )}
+              </div>
+            </div>
+            
+            {hasAbnormalResults && !isFullyApproved && (
+              <div className="bg-rose-50 border border-rose-200 p-3 rounded-xl flex items-start gap-3 max-w-sm shadow-sm shrink-0 w-full md:w-auto">
+                <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                <div className="text-xs">
+                  <p className="font-bold text-rose-900 uppercase tracking-wider">Abnormal Results</p>
+                  <p className="mt-0.5 text-rose-700 leading-snug font-medium">
+                    Analyzer flagged parameters out of range. Review carefully.
+                  </p>
+                </div>
+              </div>
             )}
           </div>
+        </div>
+      </header>
 
-          <div className="flex flex-wrap gap-x-8 gap-y-2 mt-5 text-sm">
-            <div className="flex flex-col">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                Patient Name
-              </span>
-              <span className="font-medium text-slate-800">
-                {sample.patient.name}
-              </span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                Age / Gender
-              </span>
-              <span className="font-medium text-slate-800">
-                {sample.patient.age} {sample.patient.ageUnit} •{" "}
-                {sample.patient.gender}
-              </span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                Collected On
-              </span>
-              <span className="font-medium text-slate-800">
-                {sample.collectedAt
-                  ? new Date(sample.collectedAt).toLocaleDateString("en-IN", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })
-                  : "Unknown"}
-              </span>
-            </div>
-          </div>
+      <main className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10 space-y-6">
+        
+        {/* PATIENT CONTEXT BAR */}
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-wrap gap-x-8 gap-y-4">
+           <div className="flex flex-col">
+             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Patient Name</span>
+             <span className="font-bold text-slate-800 text-sm mt-0.5">{sample.patient.name}</span>
+           </div>
+           <div className="flex flex-col">
+             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Age / Gender</span>
+             <span className="font-bold text-slate-800 text-sm mt-0.5">{sample.patient.age} {sample.patient.ageUnit.charAt(0)} • {sample.patient.gender}</span>
+           </div>
+           <div className="flex flex-col">
+             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Collection Date</span>
+             <span className="font-bold text-slate-800 text-sm mt-0.5">
+               {sample.collectedAt ? format(new Date(sample.collectedAt), "dd MMM yyyy, hh:mm a") : "Unknown"}
+             </span>
+           </div>
         </div>
 
-        {hasAbnormalResults && !isFullyApproved && (
-          <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl flex items-start gap-3 max-w-sm">
-            <svg
-              className="w-6 h-6 shrink-0 mt-0.5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-            </svg>
-            <div className="text-sm">
-              <p className="font-bold">Abnormal Results Detected</p>
-              <p className="mt-1 opacity-90 leading-snug">
-                The machine flagged certain parameters as out of normal range.
-                Please verify before approving.
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
+        {/* DYNAMIC TEST RESULTS LOOP */}
+        <div className="space-y-8">
+          {sample.tests.map((test) => {
+            const isTestApproved = test.status === "APPROVED" || test.status === "DELIVERED";
 
-      {/* 2. DYNAMIC TEST RESULTS LOOP */}
-      <div className="space-y-6">
-        {sample.tests.map((test) => {
-          const isTestApproved =
-            test.status === "APPROVED" || test.status === "DELIVERED";
-
-          return (
-            <div
-              key={test.id}
-              className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-              {/* TEST HEADER WITH MANUAL EDIT LINK */}
-              <div className="bg-slate-800 px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                  <div className="flex items-center gap-3">
-                    <h2 className="text-white font-bold tracking-wide text-lg">
-                      {test.testName}
-                    </h2>
-                    {isTestApproved && (
-                      <svg
-                        className="w-5 h-5 text-emerald-400"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                      </svg>
-                    )}
+            return (
+              <div
+                key={test.id}
+                className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col">
+                
+                {/* TEST HEADER */}
+                <div className="bg-slate-900 px-6 py-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div>
+                    <div className="flex items-center gap-3">
+                      <h2 className="text-white font-black tracking-tight text-lg">
+                        {test.testName}
+                      </h2>
+                      {isTestApproved && <CheckCircle2 className="h-5 w-5 text-emerald-400" />}
+                    </div>
+                    <span className="text-slate-400 text-xs font-mono font-bold bg-slate-800 px-2 py-0.5 rounded mt-1.5 inline-block border border-slate-700 shadow-inner">
+                      CODE: {test.testCode}
+                    </span>
                   </div>
-                  <span className="text-slate-400 text-xs font-mono bg-slate-700/50 px-2 py-0.5 rounded mt-1 inline-block">
-                    Code: {test.testCode}
-                  </span>
+
+                  <Link
+                    href={`/lab-owner/workflow/results/${sample.patientId}`}
+                    className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-2.5 px-5 rounded-xl transition-all shadow-md flex items-center gap-2 border border-indigo-500 w-full sm:w-auto justify-center hover:-translate-y-0.5">
+                    <FileText className="h-4 w-4" />
+                    {isTestApproved ? "View Full Record" : "Edit Manual Results"}
+                  </Link>
                 </div>
 
-                {/* ALWAYS VISIBLE EDIT BUTTON LINKING TO PATIENT ID */}
-                <Link
-                  href={`/lab-owner/workflow/results/${sample.patientId}`}
-                  className="bg-slate-700 hover:bg-blue-600 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors flex items-center gap-2 border border-slate-600 hover:border-blue-500">
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                  </svg>
-                  {isTestApproved ? "View / Edit Results" : "Edit Results"}
-                </Link>
-              </div>
+                {/* PARAMETER TABLE */}
+                <div className="overflow-x-auto custom-scrollbar">
+                  <table className="w-full text-left border-collapse min-w-[700px]">
+                    <thead>
+                      <tr className="bg-slate-50/80 border-b border-slate-200/80 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
+                        <th className="px-6 py-4 w-1/4">Parameter</th>
+                        <th className="px-6 py-4 w-1/4">Result Value</th>
+                        <th className="px-6 py-4 w-1/6">Unit</th>
+                        <th className="px-6 py-4 w-1/6">Ref. Range</th>
+                        <th className="px-6 py-4 w-1/6 text-right">Data Source</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-sm">
+                      {test.results.map((result) => (
+                        <tr key={result.id} className="hover:bg-slate-50/50 transition-colors">
+                          <td className="px-6 py-4 font-bold text-slate-700">
+                            {result.parameterName}
+                          </td>
 
-              {/* PARAMETER TABLE */}
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse min-w-[700px]">
-                  <thead>
-                    <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs uppercase tracking-wider">
-                      <th className="px-6 py-4 font-semibold w-1/4">
-                        Parameter
-                      </th>
-                      <th className="px-6 py-4 font-semibold w-1/4">
-                        Result Value
-                      </th>
-                      <th className="px-6 py-4 font-semibold w-1/6">Unit</th>
-                      <th className="px-6 py-4 font-semibold w-1/6">
-                        Ref. Range
-                      </th>
-                      <th className="px-6 py-4 font-semibold w-1/6 text-right">
-                        Data Source
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 text-sm">
-                    {test.results.map((result) => (
-                      <tr
-                        key={result.id}
-                        className="hover:bg-slate-50 transition-colors">
-                        <td className="px-6 py-4 font-medium text-slate-700">
-                          {result.parameterName}
-                        </td>
-
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-2">
-                            <span
-                              className={`font-bold px-3 py-1.5 rounded-md text-[13px] border ${
-                                result.isCritical
-                                  ? "bg-red-600 text-white border-red-700 shadow-md shadow-red-500/20"
-                                  : result.isAbnormal
-                                    ? "bg-red-50 text-red-700 border-red-200"
-                                    : result.value
-                                      ? "bg-white text-slate-800 border-slate-200 shadow-sm"
-                                      : "bg-transparent text-slate-400 font-normal italic border-dashed border-slate-300"
-                              }`}>
-                              {result.value || "Pending Entry..."}
-                            </span>
-                            {result.isAbnormal && !result.isCritical && (
-                              <svg
-                                className="w-5 h-5 text-red-500"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor">
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth="2"
-                                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                              </svg>
-                            )}
-                          </div>
-                        </td>
-
-                        <td className="px-6 py-4 text-slate-500">
-                          {result.unit || "-"}
-                        </td>
-                        <td className="px-6 py-4 text-slate-500 whitespace-pre-wrap leading-relaxed">
-                          {result.refRangeText || "-"}
-                        </td>
-
-                        <td className="px-6 py-4 text-right">
-                          {result.entryMethod === "MACHINE_INTERFACE" ? (
-                            <div className="inline-flex flex-col items-end">
-                              <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-1.5 rounded-md border border-emerald-200 uppercase tracking-widest">
-                                <svg
-                                  className="w-3.5 h-3.5"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor">
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth="2"
-                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                Auto Sync
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={`font-bold px-3 py-1.5 rounded-lg text-sm border ${
+                                  result.isCritical
+                                    ? "bg-rose-600 text-white border-rose-700 shadow-md shadow-rose-500/20"
+                                    : result.isAbnormal
+                                      ? "bg-rose-50 text-rose-700 border-rose-200"
+                                      : result.value
+                                        ? "bg-white text-slate-800 border-slate-200 shadow-sm"
+                                        : "bg-slate-50 text-slate-400 font-normal italic border-dashed border-slate-300"
+                                }`}>
+                                {result.value || "Pending Entry..."}
                               </span>
-                              {result.analyzer && (
-                                <span
-                                  className="text-[10px] text-slate-400 mt-1.5 font-mono truncate max-w-[120px]"
-                                  title={result.analyzer.name}>
-                                  {result.analyzer.name}
-                                </span>
+                              {result.isAbnormal && !result.isCritical && (
+                                <ShieldAlert className="w-5 h-5 text-rose-500" />
                               )}
                             </div>
-                          ) : (
-                            <span className="text-xs font-medium text-slate-400 bg-slate-100 px-2.5 py-1 rounded-md">
-                              Manual
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
+                          </td>
 
-                    {test.results.length === 0 && (
-                      <tr>
-                        <td
-                          colSpan={5}
-                          className="px-6 py-10 text-center text-slate-500">
-                          <p className="font-medium text-slate-600 mb-2">
-                            No parameters found.
-                          </p>
-                          {/* Updated to use patientId here as well */}
-                          <Link
-                            href={`/lab-owner/workflow/results/${sample.patientId}`}
-                            className="text-blue-600 font-bold hover:underline text-sm">
-                            Click here to add results manually &rarr;
-                          </Link>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                          <td className="px-6 py-4 text-slate-500 font-medium">
+                            {result.unit || "-"}
+                          </td>
+                          <td className="px-6 py-4 text-slate-500 font-medium whitespace-pre-wrap leading-relaxed">
+                            {result.refRangeText || "-"}
+                          </td>
+
+                          <td className="px-6 py-4 text-right">
+                            {result.entryMethod === "MACHINE_INTERFACE" ? (
+                              <div className="inline-flex flex-col items-end">
+                                <span className="inline-flex items-center gap-1.5 text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-200 uppercase tracking-widest shadow-sm">
+                                  <Server className="w-3 h-3" /> Auto Sync
+                                </span>
+                                {result.analyzer && (
+                                  <span className="text-[10px] text-slate-400 mt-1.5 font-mono font-bold truncate max-w-[120px]" title={result.analyzer.name}>
+                                    {result.analyzer.name}
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-1 rounded-md uppercase tracking-wider">
+                                Manual
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+
+                      {test.results.length === 0 && (
+                        <tr>
+                          <td colSpan={5} className="px-6 py-16 text-center text-slate-500">
+                            <p className="font-bold text-slate-600 mb-2">No parameters found.</p>
+                            <Link href={`/lab-owner/workflow/results/${sample.patientId}`} className="text-indigo-600 font-bold hover:underline text-sm inline-flex items-center gap-1">
+                              Click here to add results manually &rarr;
+                            </Link>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      </main>
 
       {/* 3. FLOATING ACTION FOOTER (Only shows if NOT approved) */}
       {!isFullyApproved && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] p-4 md:p-6 z-50">
-          <div className="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-blue-100 text-blue-600 p-2 rounded-full hidden sm:block">
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
+        <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-slate-200/60 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] p-4 md:p-6 z-50 animate-in slide-in-from-bottom-10 duration-300">
+          <div className="max-w-[1200px] mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="flex items-center gap-4">
+              <div className="bg-indigo-100 text-indigo-600 p-3 rounded-xl hidden sm:flex shrink-0 shadow-inner border border-indigo-200">
+                <CheckCircle2 className="w-6 h-6" />
               </div>
-              <div>
-                <p className="font-bold text-slate-800 text-sm md:text-base">
+              <div className="text-center sm:text-left">
+                <p className="font-black text-slate-900 text-sm md:text-base">
                   Ready to finalize this report?
                 </p>
-                <p className="text-xs text-slate-500">
-                  Ensure all machine and manual entries are verified. Approval
-                  locks the results.
+                <p className="text-xs font-medium text-slate-500 mt-0.5">
+                  Verify machine integrations and manual entries. Approval locks the results.
                 </p>
               </div>
             </div>
@@ -411,18 +305,8 @@ export default async function SampleReviewPage({
             <form action={approveAllResults} className="w-full sm:w-auto">
               <button
                 type="submit"
-                className="w-full sm:w-auto px-8 py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-xl shadow-blue-500/30 transition-all text-sm flex items-center justify-center gap-2 active:scale-[0.98]">
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M5 13l4 4L19 7"></path>
-                </svg>
+                className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold rounded-xl shadow-md shadow-emerald-500/25 transition-all hover:-translate-y-0.5 text-sm flex items-center justify-center gap-2">
+                <ShieldAlert className="w-5 h-5" />
                 Verify & Approve All Tests
               </button>
             </form>
