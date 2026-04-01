@@ -2,24 +2,63 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getDataFromToken } from '@/lib/auth';
 
+// --- AUTHENTICATION HELPER ---
+async function getValidatedLabId(req: NextRequest) {
+  const tokenData = await getDataFromToken(req);
+  
+  // Resilient Auth Check (Catches id, userId, or _id)
+  const userId = tokenData?.id || tokenData?.userId || tokenData?._id;
+
+  if (!tokenData || !userId) {
+     throw new Error("UNAUTHORIZED");
+  }
+
+  let currentLabId = tokenData.labId;
+
+  // If labId isn't directly on the token, fetch it securely from the DB
+  if (!currentLabId) {
+     const userRecord = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { lab: { select: { id: true } } }
+     });
+
+     if (!userRecord || !userRecord.lab) {
+         throw new Error("FORBIDDEN");
+     }
+     currentLabId = userRecord.lab.id;
+  }
+
+  return currentLabId;
+}
+
 export async function GET(req: NextRequest) {
   try {
-    const user = await getDataFromToken(req);
-    if (!user || !user.labId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // 1. Resilient Auth Check
+    let currentLabId;
+    try {
+      currentLabId = await getValidatedLabId(req);
+    } catch (err: any) {
+      const status = err.message === "UNAUTHORIZED" ? 401 : 403;
+      return NextResponse.json({ error: err.message }, { status });
+    }
 
     const { searchParams } = new URL(req.url);
     const search = searchParams.get('search') || '';
 
-    // Fetch all studies that have a report, ordered by newest first
+    // 2. Fetch all studies that have a report, ordered by newest first
     const archivedReports = await prisma.radiologyStudy.findMany({
       where: {
-        labId: user.labId,
+        labId: currentLabId, // <-- FIXED: Using securely resolved ID
         report: { isNot: null }, // Only studies that have reached the reporting stage
-        OR: search ? [
-          { patient: { name: { contains: search, mode: 'insensitive' } } },
-          { patient: { phone: { contains: search, mode: 'insensitive' } } },
-          { accessionNumber: { contains: search, mode: 'insensitive' } }
-        ] : undefined
+        
+        // Apply search filter if a query exists
+        ...(search ? {
+          OR: [
+            { patient: { name: { contains: search, mode: 'insensitive' } } },
+            { patient: { phone: { contains: search, mode: 'insensitive' } } },
+            { accessionNumber: { contains: search, mode: 'insensitive' } }
+          ]
+        } : {})
       },
       include: {
         patient: { select: { id: true, name: true, phone: true } },
@@ -30,21 +69,26 @@ export async function GET(req: NextRequest) {
       take: 100 // Limit to recent 100 for performance (Add pagination later)
     });
 
-    // Format data for the UI
+    // 3. Format data for the UI with strict null-checking
     const formattedData = archivedReports.map(study => ({
       id: study.id,
       accessionNo: study.accessionNumber,
-      patientName: study.patient.name,
-      patientPhone: study.patient.phone,
+      patientName: study.patient?.name || "Unknown Patient",
+      patientPhone: study.patient?.phone || "N/A",
       scanName: study.scanName,
-      modality: study.modality.type,
+      modality: study.modality?.type || "UNKNOWN",
       status: study.report?.status || 'UNKNOWN',
-      verifiedDate: study.report?.verifiedAt ? new Date(study.report.verifiedAt).toLocaleString('en-IN') : 'Not Verified',
+      verifiedDate: study.report?.verifiedAt 
+        ? new Date(study.report.verifiedAt).toLocaleString('en-IN', {
+            day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+          }) 
+        : 'Not Verified',
     }));
 
-    return NextResponse.json(formattedData);
+    return NextResponse.json(formattedData, { status: 200 });
+
   } catch (error) {
     console.error("Reports Archive GET Error:", error);
-    return NextResponse.json({ error: "Failed to fetch reports" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch reports archive" }, { status: 500 });
   }
 }
