@@ -1,54 +1,61 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getContainerTypes, deleteContainerType } from '@/actions/container-management';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, Search, Trash2, Pencil, TestTube2 } from 'lucide-react'; 
+import { Plus, Search, Trash2, Pencil, TestTube2, AlertCircle } from 'lucide-react'; 
 import toast from 'react-hot-toast';
 import ContainerForm from '../components/container-form'; 
 
+// 1. Define the Container Interface
+export interface ContainerType {
+  id: string;
+  name: string;
+  code: string;
+  capColor: string;
+}
+
 export default function ContainersTab() {
-  const [containers, setContainers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   
   // Dialog & Edit State
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingContainer, setEditingContainer] = useState<any>(null);
+  const [editingContainer, setEditingContainer] = useState<ContainerType | null>(null);
 
-  useEffect(() => { loadData(); }, []);
+  // 2. Fetch Containers with React Query
+  const { data: containers = [], isLoading, isError } = useQuery<ContainerType[]>({
+    queryKey: ['container-types'],
+    queryFn: async () => await getContainerTypes(),
+  });
 
-  async function loadData() {
-    try {
-      const data = await getContainerTypes();
-      setContainers(data);
-    } catch (error) {
-      toast.error("Failed to load containers");
-    } finally {
-      setLoading(false);
+  // 3. Handle Deletions with useMutation
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await deleteContainerType(id);
+      if (!res.success) throw new Error("Failed to delete container");
+      return res;
+    },
+    onSuccess: () => {
+      toast.success("Container deleted");
+      queryClient.invalidateQueries({ queryKey: ['container-types'] });
+    },
+    onError: () => {
+      toast.error("Error deleting container");
     }
-  }
+  });
 
-  async function handleDelete(id: string) {
-    if (!confirm("Are you sure? This might affect existing tests using this container.")) return;
-    try {
-        const res = await deleteContainerType(id);
-        if(res.success) {
-            toast.success("Container deleted");
-            loadData();
-        } else {
-            toast.error("Failed to delete");
-        }
-    } catch (error) {
-        toast.error("Error deleting container");
-    }
+  function handleDelete(id: string) {
+    if (!window.confirm("Are you sure? This might affect existing tests using this container.")) return;
+    deleteMutation.mutate(id);
   }
 
   // --- Handlers for Add/Edit ---
-  function handleEdit(container: any) {
+  function handleEdit(container: ContainerType) {
     setEditingContainer(container);
     setIsDialogOpen(true);
   }
@@ -96,10 +103,11 @@ export default function ContainersTab() {
             {/* PASS DATA TO FORM */}
             <ContainerForm 
                 key={editingContainer ? editingContainer.id : 'new'} 
-                initialData={editingContainer}
+                initialData={editingContainer || undefined}
                 onSuccess={() => {
                    setIsDialogOpen(false);
-                   loadData();
+                   // Invalidate the query to instantly refresh the table
+                   queryClient.invalidateQueries({ queryKey: ['container-types'] });
                 }} 
             />
           </DialogContent>
@@ -119,8 +127,16 @@ export default function ContainersTab() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {loading ? (
+            {isLoading ? (
                <TableRow><TableCell colSpan={5} className="text-center h-24 text-muted-foreground">Loading Containers...</TableCell></TableRow>
+            ) : isError ? (
+               <TableRow>
+                 <TableCell colSpan={5} className="text-center h-24 text-red-500">
+                   <div className="flex items-center justify-center gap-2">
+                     <AlertCircle className="h-4 w-4" /> Failed to load containers. Please refresh.
+                   </div>
+                 </TableCell>
+               </TableRow>
             ) : filteredContainers.length === 0 ? (
                <TableRow><TableCell colSpan={5} className="text-center h-24 text-muted-foreground">No containers found. Create one to get started.</TableCell></TableRow>
             ) : (
@@ -151,7 +167,13 @@ export default function ContainersTab() {
                            <Pencil className="h-4 w-4" />
                         </Button>
                         {/* DELETE BUTTON */}
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(container.id)} className="text-slate-400 hover:text-red-600">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => handleDelete(container.id)} 
+                          disabled={deleteMutation.isPending && deleteMutation.variables === container.id}
+                          className="text-slate-400 hover:text-red-600"
+                        >
                            <Trash2 className="h-4 w-4" />
                         </Button>
                     </div>

@@ -1,50 +1,80 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getParameters, deleteParameter } from '@/actions/parameter-management';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, Search, Trash2, Pencil, Beaker } from 'lucide-react'; 
+import { Plus, Search, Trash2, Pencil, Beaker, AlertCircle } from 'lucide-react'; 
 import toast from 'react-hot-toast';
 import ParameterForm from '../components/parameter-form'; 
 
+// 1. Define TypeScript Interfaces
+export interface InventoryItem {
+  name: string;
+  usageUnit: string;
+}
+
+export interface Reagent {
+  id: string;
+  quantity: number;
+  inventoryItem?: InventoryItem;
+}
+
+export interface ContainerType {
+  code: string;
+  capColor?: string;
+}
+
+export interface Parameter {
+  id: string;
+  code: string;
+  name: string;
+  printName?: string;
+  unit?: string;
+  inputType: 'NUMBER' | 'TEXT' | 'LONG_TEXT' | 'DROPDOWN' | 'HEADING';
+  price?: number;
+  containerType?: ContainerType;
+  reagents?: Reagent[];
+}
+
 export default function ParametersTab() {
-  const [parameters, setParameters] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   
   // Dialog & Edit State
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingParam, setEditingParam] = useState<any>(null);
+  const [editingParam, setEditingParam] = useState<Parameter | null>(null);
 
-  useEffect(() => { loadData(); }, []);
+  // 2. Fetch Parameters with React Query
+  const { data: parameters = [], isLoading, isError } = useQuery<Parameter[]>({
+    queryKey: ['parameters'],
+    queryFn: async () => await getParameters(),
+  });
 
-  async function loadData() {
-    try {
-      const data = await getParameters();
-      setParameters(data);
-    } catch (error) {
-      toast.error("Failed to load parameters");
-    } finally {
-      setLoading(false);
+  // 3. Handle Deletions with useMutation
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await deleteParameter(id);
+    },
+    onSuccess: () => {
+      toast.success("Parameter deleted");
+      queryClient.invalidateQueries({ queryKey: ['parameters'] });
+    },
+    onError: () => {
+      toast.error("Error deleting parameter");
     }
-  }
+  });
 
-  async function handleDelete(id: string) {
-    if (!confirm("Are you sure? Deleting this parameter will remove it from all tests that use it.")) return;
-    try {
-        await deleteParameter(id);
-        toast.success("Parameter deleted");
-        loadData();
-    } catch (error) {
-        toast.error("Error deleting parameter");
-    }
+  function handleDelete(id: string) {
+    if (!window.confirm("Are you sure? Deleting this parameter will remove it from all tests that use it.")) return;
+    deleteMutation.mutate(id);
   }
 
   // --- Handlers for Add/Edit ---
-  function handleEdit(param: any) {
+  function handleEdit(param: Parameter) {
     setEditingParam(param);
     setIsDialogOpen(true);
   }
@@ -64,10 +94,10 @@ export default function ParametersTab() {
       {/* TOOLBAR */}
       <div className="flex justify-between items-center bg-white p-4 rounded-lg border shadow-sm">
         <div className="relative w-72">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <input 
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input 
             placeholder="Search by name or code..." 
-            className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 transition-all" 
+            className="pl-9 bg-slate-50" 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -93,10 +123,10 @@ export default function ParametersTab() {
             <ParameterForm 
                 // key ensures the form resets completely when switching between Add/Edit
                 key={editingParam ? editingParam.id : 'new'} 
-                initialData={editingParam}
+                initialData={editingParam || undefined}
                 onSuccess={() => {
                    setIsDialogOpen(false);
-                   loadData();
+                   queryClient.invalidateQueries({ queryKey: ['parameters'] });
                 }} 
             />
           </DialogContent>
@@ -113,15 +143,22 @@ export default function ParametersTab() {
               <TableHead>Unit</TableHead>
               <TableHead>Input Type</TableHead>
               <TableHead>Tube</TableHead>
-              {/* ✅ NEW: Reagents Column */}
               <TableHead>Auto-Consume Reagents</TableHead>
               <TableHead className="text-right">Price</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {loading ? (
+            {isLoading ? (
                <TableRow><TableCell colSpan={8} className="text-center h-24 text-muted-foreground">Loading Library...</TableCell></TableRow>
+            ) : isError ? (
+               <TableRow>
+                 <TableCell colSpan={8} className="text-center h-24 text-red-500">
+                   <div className="flex items-center justify-center gap-2">
+                     <AlertCircle className="h-4 w-4" /> Failed to load parameters. Please refresh.
+                   </div>
+                 </TableCell>
+               </TableRow>
             ) : filteredParams.length === 0 ? (
                <TableRow><TableCell colSpan={8} className="text-center h-24 text-muted-foreground">No parameters found. Create one to get started.</TableCell></TableRow>
             ) : (
@@ -161,11 +198,11 @@ export default function ParametersTab() {
                     )}
                   </TableCell>
 
-                  {/* ✅ NEW: Reagents Display */}
+                  {/* Reagents Display */}
                   <TableCell>
                     {param.reagents && param.reagents.length > 0 ? (
                       <div className="flex flex-wrap gap-1.5 max-w-[250px]">
-                        {param.reagents.map((r: any) => (
+                        {param.reagents.map((r) => (
                           <div key={r.id} className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-[10px] font-medium bg-emerald-50 text-emerald-800 border border-emerald-200">
                             <Beaker className="w-3 h-3 text-emerald-600" />
                             <span className="truncate max-w-[120px]" title={r.inventoryItem?.name}>
@@ -191,7 +228,13 @@ export default function ParametersTab() {
                         <Button variant="ghost" size="icon" onClick={() => handleEdit(param)} className="text-slate-400 hover:text-blue-600 hover:bg-blue-50 h-8 w-8">
                            <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(param.id)} className="text-slate-400 hover:text-red-600 hover:bg-red-50 h-8 w-8">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => handleDelete(param.id)} 
+                          disabled={deleteMutation.isPending && deleteMutation.variables === param.id}
+                          className="text-slate-400 hover:text-red-600 hover:bg-red-50 h-8 w-8"
+                        >
                            <Trash2 className="h-4 w-4" />
                         </Button>
                     </div>

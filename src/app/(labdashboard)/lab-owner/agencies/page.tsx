@@ -2,65 +2,90 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useForm, useFieldArray } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { getAgencies, createAgency, updateAgency, deleteAgency } from '@/actions/agency-management';
+import { getTests } from '@/actions/test-catalog'; 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'; // ✅ Added Tabs
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Trash2, Pencil, Building2, Phone, Percent, IndianRupee, UserCircle, Eye, FileText, CheckCircle2, Clock, Check, Loader2 } from 'lucide-react';
+import { Plus, Search, Trash2, Pencil, Building2, Phone, Percent, IndianRupee, UserCircle, Eye, FileText, CheckCircle2, Clock, Check, Loader2, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-// ✅ Mock fetcher for tests (You will need to import your real getTests action here)
-import { getTests } from '@/actions/test-catalog'; 
+// --- 1. TYPES & ZOD SCHEMA ---
+const customCommissionSchema = z.object({
+  testTemplateId: z.string(),
+  testName: z.string(),
+  commissionRate: z.coerce.number().min(0, "Must be >= 0"),
+  commissionType: z.enum(['PERCENTAGE', 'FIXED'])
+});
+
+const agencySchema = z.object({
+  agencyName: z.string().min(1, "Agency name is required"),
+  contactPerson: z.string().optional(),
+  phone: z.string().optional(),
+  email: z.string().email("Invalid email").optional().or(z.literal('')),
+  panNumber: z.string().optional(),
+  commissionRate: z.coerce.number().min(0, "Must be >= 0").default(0),
+  commissionType: z.enum(['PERCENTAGE', 'FIXED']).default('PERCENTAGE'),
+  customCommissions: z.array(customCommissionSchema).default([])
+});
+
+type AgencyFormData = z.infer<typeof agencySchema>;
 
 export default function AgenciesPage() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
+  const [testSearch, setTestSearch] = useState('');
   
   // Modals State
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
-  
-  const [editingAgency, setEditingAgency] = useState<any>(null);
-  const [viewingAgency, setViewingAgency] = useState<any>(null); // State for the Ledger View
-
-  // Form States (Basic)
-  const [formData, setFormData] = useState({
-    agencyName: '', contactPerson: '', phone: '', email: '', panNumber: '',
-    commissionRate: 0, commissionType: 'PERCENTAGE'
-  });
-
-  // ✅ NEW: State for Custom Test Commissions
-  const [customCommissions, setCustomCommissions] = useState<any[]>([]);
-  const [testSearch, setTestSearch] = useState('');
+  const [editingAgencyId, setEditingAgencyId] = useState<string | null>(null);
+  const [viewingAgency, setViewingAgency] = useState<any>(null);
 
   // Queries
-  const { data: agencies, isLoading } = useQuery({
+  const { data: agencies = [], isLoading, isError } = useQuery({
     queryKey: ['agencies'],
     queryFn: async () => await getAgencies()
   });
 
-  // ✅ NEW: Query to fetch all lab tests for the search bar
-  const { data: allTests } = useQuery({
+  const { data: allTests = [] } = useQuery({
     queryKey: ['tests'],
-    queryFn: async () => await getTests()
+    queryFn: async () => await getTests(),
+    staleTime: 1000 * 60 * 5 // 5 minutes
+  });
+
+  // React Hook Form Setup
+  const { register, control, handleSubmit, reset, watch, setValue, formState: { errors, isSubmitting } } = useForm<AgencyFormData>({
+    resolver: zodResolver(agencySchema),
+    defaultValues: {
+      agencyName: '', contactPerson: '', phone: '', email: '', panNumber: '',
+      commissionRate: 5, commissionType: 'PERCENTAGE', customCommissions: []
+    }
+  });
+
+  const { fields: customCommissions, append, remove, update } = useFieldArray({
+    control,
+    name: "customCommissions"
   });
 
   // Mutations
   const saveMutation = useMutation({
-    mutationFn: async (payload: any) => {
-      // We pass the basic data AND the array of custom commissions
-      if (editingAgency) {
-        await updateAgency(editingAgency.id, payload);
+    mutationFn: async (payload: AgencyFormData) => {
+      if (editingAgencyId) {
+        await updateAgency(editingAgencyId, payload);
       } else {
         await createAgency(payload);
       }
     },
     onSuccess: () => {
-      toast.success(editingAgency ? "Agency updated!" : "Agency added successfully!");
+      toast.success(editingAgencyId ? "Agency updated!" : "Agency added successfully!");
       setIsDialogOpen(false);
       queryClient.invalidateQueries({ queryKey: ['agencies'] });
     },
@@ -77,25 +102,26 @@ export default function AgenciesPage() {
 
   // Handlers
   const handleAddNew = () => {
-    setEditingAgency(null);
-    setFormData({ agencyName: '', contactPerson: '', phone: '', email: '', panNumber: '', commissionRate: 5, commissionType: 'PERCENTAGE' });
-    setCustomCommissions([]); // Reset custom rates
+    setEditingAgencyId(null);
+    reset({
+      agencyName: '', contactPerson: '', phone: '', email: '', panNumber: '',
+      commissionRate: 5, commissionType: 'PERCENTAGE', customCommissions: []
+    });
     setIsDialogOpen(true);
   };
 
   const handleEdit = (agency: any) => {
-    setEditingAgency(agency);
-    setFormData({
+    setEditingAgencyId(agency.id);
+    reset({
       agencyName: agency.agencyName, 
       contactPerson: agency.contactPerson || '', 
       phone: agency.phone || '', 
       email: agency.email || '', 
       panNumber: agency.panNumber || '',
       commissionRate: agency.commissionRate || 0, 
-      commissionType: agency.commissionType
+      commissionType: agency.commissionType || 'PERCENTAGE',
+      customCommissions: agency.customTestCommissions || []
     });
-    // ✅ Load existing custom rates from agency if they exist
-    setCustomCommissions(agency.customTestCommissions || []); 
     setIsDialogOpen(true);
   };
 
@@ -105,52 +131,33 @@ export default function AgenciesPage() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this agency? All historical data will be retained for accounting.")) {
+    if (window.confirm("Are you sure you want to delete this agency? All historical data will be retained for accounting.")) {
       deleteMutation.mutate(id);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.agencyName) return toast.error("Agency name is required");
-    
-    // ✅ Combine basic data with custom rates array
-    saveMutation.mutate({
-      ...formData,
-      commissionRate: Number(formData.commissionRate),
-      customCommissions: customCommissions 
-    });
+  const onSubmit = (data: AgencyFormData) => {
+    saveMutation.mutate(data);
   };
 
-  // ✅ NEW: Add a specific test to the Custom Rates list
   const addCustomTestRate = (test: any) => {
-    if (customCommissions.some(c => c.testTemplateId === test.id)) {
+    const currentCommissions = watch('customCommissions');
+    if (currentCommissions.some(c => c.testTemplateId === test.id)) {
         return toast.error("This test already has a custom rate.");
     }
-    setCustomCommissions([
-        ...customCommissions, 
-        { testTemplateId: test.id, testName: test.name, commissionRate: 0, commissionType: 'FIXED' }
-    ]);
-    setTestSearch(''); // Clear search
+    append({ 
+      testTemplateId: test.id, 
+      testName: test.name, 
+      commissionRate: 0, 
+      commissionType: 'FIXED' 
+    });
+    setTestSearch(''); 
   };
 
-  // ✅ NEW: Update a specific test rate
-  const updateCustomRate = (index: number, field: string, value: any) => {
-    const updated = [...customCommissions];
-    updated[index][field] = value;
-    setCustomCommissions(updated);
-  };
-
-  // ✅ NEW: Remove a custom rate
-  const removeCustomRate = (index: number) => {
-    setCustomCommissions(customCommissions.filter((_, i) => i !== index));
-  };
-
-
-  const filteredAgencies = agencies?.filter((a: any) => 
+  const filteredAgencies = agencies.filter((a: any) => 
     a.agencyName?.toLowerCase().includes(searchTerm.toLowerCase()) || 
     a.phone?.includes(searchTerm)
-  ) || [];
+  );
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
@@ -193,7 +200,15 @@ export default function AgenciesPage() {
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-10 text-slate-500">Loading agencies...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} className="text-center py-10 text-slate-500"><Loader2 className="h-6 w-6 animate-spin mx-auto mb-2"/> Loading agencies...</TableCell></TableRow>
+              ) : isError ? (
+                <TableRow>
+                   <TableCell colSpan={5} className="text-center h-24 text-red-500">
+                     <div className="flex items-center justify-center gap-2">
+                       <AlertCircle className="h-4 w-4" /> Failed to load agencies. Please refresh.
+                     </div>
+                   </TableCell>
+                 </TableRow>
               ) : filteredAgencies.length === 0 ? (
                 <TableRow><TableCell colSpan={5} className="text-center py-10 text-slate-500">No B2B agencies found in your network.</TableCell></TableRow>
               ) : (
@@ -201,7 +216,7 @@ export default function AgenciesPage() {
                   <TableRow key={agency.id} className="hover:bg-slate-50/50">
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 bg-indigo-50 text-indigo-700 rounded-full flex items-center justify-center font-bold">
+                        <div className="h-10 w-10 bg-indigo-50 text-indigo-700 rounded-full flex items-center justify-center font-bold shrink-0">
                           <Building2 className="h-5 w-5" />
                         </div>
                         <div>
@@ -220,7 +235,6 @@ export default function AgenciesPage() {
                             {agency.commissionType === 'PERCENTAGE' ? <Percent className="h-3 w-3 mr-1"/> : <IndianRupee className="h-3 w-3 mr-1"/>}
                             {agency.commissionRate} {agency.commissionType === 'PERCENTAGE' ? '%' : 'Flat'} (Profile Default)
                           </span>
-                          {/* ✅ SHOW BADGE IF THEY HAVE CUSTOM RATES */}
                           {agency.customTestCommissions?.length > 0 && (
                               <span className="text-[10px] text-blue-600 font-bold bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
                                   {agency.customTestCommissions.length} Custom Test Rates
@@ -230,13 +244,13 @@ export default function AgenciesPage() {
                     </TableCell>
                     <TableCell>
                       <div className="font-bold text-slate-800">{agency._count?.tests || 0} Tests</div>
-                      <div className="text-xs text-slate-500 font-bold text-orange-600">Lifetime Generated: ₹{(agency as any).totalCommission.toFixed(2)}</div>
+                      <div className="text-xs text-slate-500 font-bold text-orange-600">Lifetime Generated: ₹{(agency.totalCommission || 0).toFixed(2)}</div>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
                         <Button variant="ghost" size="icon" onClick={() => handleView(agency)} className="text-slate-400 hover:text-indigo-600 bg-indigo-50/0 hover:bg-indigo-50"><Eye className="h-4 w-4" /></Button>
                         <Button variant="ghost" size="icon" onClick={() => handleEdit(agency)} className="text-slate-400 hover:text-blue-600"><Pencil className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(agency.id)} className="text-slate-400 hover:text-red-600"><Trash2 className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(agency.id)} disabled={deleteMutation.isPending && deleteMutation.variables === agency.id} className="text-slate-400 hover:text-red-600"><Trash2 className="h-4 w-4" /></Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -268,7 +282,7 @@ export default function AgenciesPage() {
                 </div>
                 <div className="bg-orange-50 px-4 py-2 rounded-lg border border-orange-100">
                     <p className="text-[10px] text-orange-600 font-bold uppercase">Lifetime Commission Generated</p>
-                    <p className="text-lg font-black text-orange-700">₹{viewingAgency?.totalCommission?.toLocaleString()}</p>
+                    <p className="text-lg font-black text-orange-700">₹{(viewingAgency?.totalCommission || 0).toLocaleString()}</p>
                 </div>
             </div>
           </DialogHeader>
@@ -287,7 +301,7 @@ export default function AgenciesPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {viewingAgency?.commissions?.length === 0 ? (
+                        {viewingAgency?.commissions?.length === 0 || !viewingAgency?.commissions ? (
                             <TableRow><TableCell colSpan={5} className="text-center py-8 text-slate-400">No referrals logged yet.</TableCell></TableRow>
                         ) : (
                             viewingAgency?.commissions?.map((comm: any) => (
@@ -326,15 +340,15 @@ export default function AgenciesPage() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl p-0 overflow-hidden">
           <DialogHeader className="px-6 pt-6 pb-2">
-            <DialogTitle>{editingAgency ? 'Edit Agency Profile' : 'Add New Agency'}</DialogTitle>
+            <DialogTitle>{editingAgencyId ? 'Edit Agency Profile' : 'Add New Agency'}</DialogTitle>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="flex flex-col">
+          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col">
             <Tabs defaultValue="basic" className="w-full">
               <div className="px-6 border-b border-slate-100">
                   <TabsList className="bg-slate-50/50 w-full justify-start p-0 h-auto gap-4 rounded-none">
-                    <TabsTrigger value="basic" className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent py-3 px-1 text-sm font-semibold">
-                        Basic & Default Margins
+                    <TabsTrigger value="basic" className={`rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent py-3 px-1 text-sm font-semibold ${errors.agencyName ? 'text-red-500' : ''}`}>
+                        Basic & Default Margins {errors.agencyName && '*'}
                     </TabsTrigger>
                     <TabsTrigger value="custom" className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent py-3 px-1 text-sm font-semibold flex items-center gap-2 text-indigo-600">
                         Custom Test Rates <Badge className="bg-indigo-100 text-indigo-700 border-none text-[10px] h-4 px-1.5">{customCommissions.length}</Badge>
@@ -347,28 +361,33 @@ export default function AgenciesPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-sm font-semibold text-slate-700">Agency Name *</label>
-                    <Input placeholder="e.g. City Care Hospital" value={formData.agencyName} onChange={e => setFormData({...formData, agencyName: e.target.value})} required />
+                    <Input placeholder="e.g. City Care Hospital" {...register("agencyName")} className={errors.agencyName ? "border-red-500 bg-red-50" : ""} />
+                    {errors.agencyName && <span className="text-[10px] text-red-500 font-bold">{errors.agencyName.message}</span>}
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-sm font-semibold text-slate-700">Contact Person</label>
-                    <Input placeholder="e.g. Mr. Sharma" value={formData.contactPerson} onChange={e => setFormData({...formData, contactPerson: e.target.value})} />
+                    <Input placeholder="e.g. Mr. Sharma" {...register("contactPerson")} />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-sm font-semibold text-slate-700">Phone Number</label>
-                    <Input placeholder="9876543210" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
+                    <Input placeholder="9876543210" {...register("phone")} />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-sm font-semibold text-slate-700">Email Address</label>
-                    <Input type="email" placeholder="agency@example.com" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+                    <Input type="email" placeholder="agency@example.com" {...register("email")} className={errors.email ? "border-red-500 bg-red-50" : ""} />
+                    {errors.email && <span className="text-[10px] text-red-500 font-bold">{errors.email.message}</span>}
                   </div>
                 </div>
                 
                 <div className="space-y-1.5">
                     <label className="text-sm font-semibold text-slate-700">PAN Number</label>
-                    <Input placeholder="ABCDE1234F" className="uppercase font-mono" value={formData.panNumber} onChange={e => setFormData({...formData, panNumber: e.target.value.toUpperCase()})} />
+                    <Input placeholder="ABCDE1234F" className="uppercase font-mono" {...register("panNumber")} onChange={(e) => {
+                         // Force uppercase while typing
+                         setValue('panNumber', e.target.value.toUpperCase());
+                    }}/>
                     <p className="text-[10px] text-slate-500">Optional: Used for corporate TDS accounting.</p>
                 </div>
 
@@ -379,7 +398,7 @@ export default function AgenciesPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Commission Type</label>
-                      <Select value={formData.commissionType} onValueChange={(v) => setFormData({...formData, commissionType: v})}>
+                      <Select defaultValue={watch('commissionType')} onValueChange={(v: any) => setValue('commissionType', v)}>
                         <SelectTrigger className="bg-white"><SelectValue/></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="PERCENTAGE">Percentage (%)</SelectItem>
@@ -389,7 +408,7 @@ export default function AgenciesPage() {
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Rate / Amount</label>
-                      <Input type="number" step="0.01" min="0" value={formData.commissionRate} onChange={e => setFormData({...formData, commissionRate: Number(e.target.value)})} className="bg-white font-bold" />
+                      <Input type="number" step="0.01" min="0" {...register("commissionRate")} className={`bg-white font-bold ${errors.commissionRate ? "border-red-500" : ""}`} />
                     </div>
                   </div>
                   <p className="text-[11px] text-slate-500 leading-tight">
@@ -443,10 +462,14 @@ export default function AgenciesPage() {
                                   </TableRow>
                               ) : (
                                   customCommissions.map((cc, index) => (
-                                      <TableRow key={index}>
-                                          <TableCell className="font-semibold text-sm">{cc.testName}</TableCell>
+                                      <TableRow key={cc.id}>
+                                          <TableCell className="font-semibold text-sm">
+                                            <input type="hidden" {...register(`customCommissions.${index}.testTemplateId`)} />
+                                            <input type="hidden" {...register(`customCommissions.${index}.testName`)} />
+                                            {cc.testName}
+                                          </TableCell>
                                           <TableCell>
-                                              <Select value={cc.commissionType} onValueChange={(v) => updateCustomRate(index, 'commissionType', v)}>
+                                              <Select defaultValue={cc.commissionType} onValueChange={(v: any) => setValue(`customCommissions.${index}.commissionType`, v)}>
                                                   <SelectTrigger className="h-8 text-xs bg-slate-50"><SelectValue/></SelectTrigger>
                                                   <SelectContent>
                                                       <SelectItem value="PERCENTAGE">Percentage (%)</SelectItem>
@@ -459,12 +482,11 @@ export default function AgenciesPage() {
                                                   type="number" 
                                                   step="0.01" 
                                                   className="h-8 text-xs font-bold" 
-                                                  value={cc.commissionRate} 
-                                                  onChange={(e) => updateCustomRate(index, 'commissionRate', Number(e.target.value))}
+                                                  {...register(`customCommissions.${index}.commissionRate`)}
                                               />
                                           </TableCell>
                                           <TableCell>
-                                              <Button type="button" variant="ghost" size="icon" onClick={() => removeCustomRate(index)} className="h-7 w-7 text-slate-400 hover:text-red-600 hover:bg-red-50">
+                                              <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="h-7 w-7 text-slate-400 hover:text-red-600 hover:bg-red-50">
                                                   <Trash2 className="h-3 w-3" />
                                               </Button>
                                           </TableCell>
@@ -479,9 +501,9 @@ export default function AgenciesPage() {
 
             <div className="flex justify-end gap-2 p-6 pt-4 border-t border-slate-100 bg-slate-50/50">
               <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-              <Button type="submit" className="bg-blue-600 hover:bg-blue-700 shadow-md" disabled={saveMutation.isPending}>
-                {saveMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2"/> : <Check className="h-4 w-4 mr-2" />}
-                {editingAgency ? 'Update Profile' : 'Save Agency'}
+              <Button type="submit" className="bg-blue-600 hover:bg-blue-700 shadow-md" disabled={isSubmitting || saveMutation.isPending}>
+                {(isSubmitting || saveMutation.isPending) ? <Loader2 className="h-4 w-4 animate-spin mr-2"/> : <Check className="h-4 w-4 mr-2" />}
+                {editingAgencyId ? 'Update Profile' : 'Save Agency'}
               </Button>
             </div>
           </form>

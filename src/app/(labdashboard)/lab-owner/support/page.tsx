@@ -2,8 +2,11 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { 
-  MessageSquare, Plus, HelpCircle, Clock, CheckCircle2, AlertCircle, Send, User, X
+  MessageSquare, Plus, HelpCircle, Clock, CheckCircle2, AlertCircle, Send
 } from 'lucide-react';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
@@ -22,12 +25,45 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
+// --- TYPESCRIPT INTERFACES & SCHEMA ---
+export interface Message {
+  id: string;
+  ticketId: string;
+  message: string;
+  isStaff: boolean;
+  senderName: string;
+  createdAt: string;
+}
+
+export interface Ticket {
+  id: string;
+  ticketNumber: string;
+  subject: string;
+  description: string;
+  status: 'OPEN' | 'IN_PROGRESS' | 'WAITING_FOR_CUSTOMER' | 'RESOLVED';
+  category: 'TECHNICAL' | 'BILLING';
+  priority: 'LOW' | 'MEDIUM' | 'HIGH';
+  createdAt: string;
+  _count?: { messages: number };
+  messages?: Message[];
+}
+
+const createTicketSchema = z.object({
+  category: z.enum(['TECHNICAL', 'BILLING']),
+  priority: z.enum(['LOW', 'MEDIUM', 'HIGH']),
+  subject: z.string().min(1, "Subject is required"),
+  description: z.string().min(10, "Please provide a bit more detail (min 10 characters)"),
+});
+
+type CreateTicketFormData = z.infer<typeof createTicketSchema>;
+
+// --- MAIN COMPONENT ---
 export default function LabSupportPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   
-  // 1. Fetch Tickets
-  const { data: tickets, isLoading } = useQuery({
+  // Fetch Tickets
+  const { data: tickets, isLoading, isError } = useQuery<Ticket[]>({
     queryKey: ['my-tickets'],
     queryFn: async () => {
       const res = await fetch('/api/support'); 
@@ -36,11 +72,10 @@ export default function LabSupportPage() {
     }
   });
 
-  // Calculate Stats
   const stats = {
-    open: tickets?.filter((t: any) => t.status === 'OPEN').length || 0,
-    progress: tickets?.filter((t: any) => t.status === 'IN_PROGRESS').length || 0,
-    resolved: tickets?.filter((t: any) => t.status === 'RESOLVED').length || 0,
+    open: tickets?.filter((t) => t.status === 'OPEN').length || 0,
+    progress: tickets?.filter((t) => t.status === 'IN_PROGRESS').length || 0,
+    resolved: tickets?.filter((t) => t.status === 'RESOLVED').length || 0,
   };
 
   return (
@@ -50,7 +85,7 @@ export default function LabSupportPage() {
           <h1 className="text-3xl font-bold tracking-tight">Help & Support</h1>
           <p className="text-muted-foreground">Get assistance with your lab operations.</p>
         </div>
-        <Button onClick={() => setIsCreateOpen(true)} className="shadow-lg">
+        <Button onClick={() => setIsCreateOpen(true)} className="shadow-lg bg-blue-600 hover:bg-blue-700">
           <Plus className="mr-2 h-4 w-4" /> Create New Ticket
         </Button>
       </div>
@@ -92,11 +127,16 @@ export default function LabSupportPage() {
               <div className="space-y-3">
                 {isLoading ? (
                   <div className="text-center py-8 text-muted-foreground">Loading tickets...</div>
-                ) : tickets?.length > 0 ? (
-                  tickets.map((ticket: any) => (
+                ) : isError ? (
+                  <div className="text-center py-8 text-red-500 flex flex-col items-center">
+                    <AlertCircle className="h-8 w-8 mb-2" />
+                    <p>Failed to load tickets. Please refresh the page.</p>
+                  </div>
+                ) : tickets?.length && tickets.length > 0 ? (
+                  tickets.map((ticket) => (
                     <div 
                       key={ticket.id} 
-                      onClick={() => setSelectedTicketId(ticket.id)} // ✅ CLICK HANDLER ADDED
+                      onClick={() => setSelectedTicketId(ticket.id)}
                     >
                       <TicketItem ticket={ticket} />
                     </div>
@@ -133,22 +173,16 @@ export default function LabSupportPage() {
         </Card>
       </div>
 
-      {/* CREATE DIALOG */}
       <CreateTicketDialog open={isCreateOpen} onOpenChange={setIsCreateOpen} />
-
-      {/* ✅ DETAIL SHEET (CHAT) ADDED */}
-      <TicketDetailSheet 
-        ticketId={selectedTicketId} 
-        onClose={() => setSelectedTicketId(null)} 
-      />
+      <TicketDetailSheet ticketId={selectedTicketId} onClose={() => setSelectedTicketId(null)} />
     </div>
   );
 }
 
 // --- SUB-COMPONENTS ---
 
-function TicketItem({ ticket }: any) {
-  const statusStyles: any = {
+function TicketItem({ ticket }: { ticket: Ticket }) {
+  const statusStyles: Record<string, string> = {
     OPEN: 'bg-red-100 text-red-700',
     IN_PROGRESS: 'bg-yellow-100 text-yellow-700',
     WAITING_FOR_CUSTOMER: 'bg-blue-100 text-blue-700',
@@ -175,16 +209,17 @@ function TicketItem({ ticket }: any) {
   );
 }
 
-// CHAT SHEET COMPONENT
+// CHAT SHEET COMPONENT (Optimistic Updates Included)
 function TicketDetailSheet({ ticketId, onClose }: { ticketId: string | null, onClose: () => void }) {
   const queryClient = useQueryClient();
   const [reply, setReply] = useState('');
 
-  const { data: ticket, isLoading } = useQuery({
+  const { data: ticket } = useQuery<Ticket>({
     queryKey: ['ticket-detail', ticketId],
     queryFn: async () => {
       if (!ticketId) return null;
       const res = await fetch(`/api/support/${ticketId}`);
+      if (!res.ok) throw new Error('Failed to fetch ticket detail');
       return res.json();
     },
     enabled: !!ticketId,
@@ -192,22 +227,54 @@ function TicketDetailSheet({ ticketId, onClose }: { ticketId: string | null, onC
   });
 
   const replyMutation = useMutation({
-    mutationFn: async () => {
-      await fetch(`/api/support/${ticketId}`, {
+    mutationFn: async (newMessage: string) => {
+      const res = await fetch(`/api/support/${ticketId}`, {
         method: 'POST',
-        body: JSON.stringify({
-          message: reply,
-          isStaff: false, // User is sending this
-          senderName: 'You' 
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: newMessage, isStaff: false, senderName: 'You' })
       });
+      if (!res.ok) throw new Error('Failed to send');
+      return res.json();
     },
-    onSuccess: () => {
-      setReply('');
-      queryClient.invalidateQueries({ queryKey: ['ticket-detail'] });
-      toast.success('Reply sent');
+    onMutate: async (newMessage) => {
+      await queryClient.cancelQueries({ queryKey: ['ticket-detail', ticketId] });
+      const previousTicket = queryClient.getQueryData<Ticket>(['ticket-detail', ticketId]);
+
+      if (previousTicket) {
+        queryClient.setQueryData<Ticket>(['ticket-detail', ticketId], {
+          ...previousTicket,
+          messages: [
+            ...(previousTicket.messages || []),
+            {
+              id: `temp-${Date.now()}`,
+              ticketId: ticketId as string,
+              message: newMessage,
+              isStaff: false,
+              senderName: 'You',
+              createdAt: new Date().toISOString()
+            }
+          ]
+        });
+      }
+      return { previousTicket };
+    },
+    onError: (err, newMsg, context) => {
+      if (context?.previousTicket) {
+        queryClient.setQueryData(['ticket-detail', ticketId], context.previousTicket);
+      }
+      toast.error('Failed to send reply');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['ticket-detail', ticketId] });
+      queryClient.invalidateQueries({ queryKey: ['my-tickets'] }); 
     }
   });
+
+  const handleSendReply = () => {
+    if (!reply.trim()) return;
+    replyMutation.mutate(reply);
+    setReply(''); 
+  };
 
   if (!ticketId || !ticket) return null;
 
@@ -228,10 +295,10 @@ function TicketDetailSheet({ ticketId, onClose }: { ticketId: string | null, onC
 
         <ScrollArea className="flex-1 p-6">
           <div className="space-y-6">
-            {ticket.messages.map((msg: any) => (
+            {ticket.messages?.map((msg) => (
               <div key={msg.id} className={`flex gap-3 ${!msg.isStaff ? 'flex-row-reverse' : ''}`}>
                 <Avatar className="h-8 w-8 mt-1">
-                  <AvatarFallback className={!msg.isStaff ? 'bg-primary text-primary-foreground' : ''}>
+                  <AvatarFallback className={!msg.isStaff ? 'bg-blue-600 text-white' : 'bg-slate-200'}>
                     {msg.isStaff ? 'S' : 'U'}
                   </AvatarFallback>
                 </Avatar>
@@ -240,7 +307,7 @@ function TicketDetailSheet({ ticketId, onClose }: { ticketId: string | null, onC
                     <span className="text-xs font-medium">{msg.senderName || (msg.isStaff ? 'Support' : 'You')}</span>
                     <span className="text-[10px] text-muted-foreground">{format(new Date(msg.createdAt), 'HH:mm')}</span>
                   </div>
-                  <div className={`p-3 rounded-lg text-sm ${!msg.isStaff ? 'bg-primary text-primary-foreground rounded-tr-none' : 'bg-white border rounded-tl-none shadow-sm'}`}>
+                  <div className={`p-3 rounded-lg text-sm shadow-sm ${!msg.isStaff ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-white border rounded-tl-none'}`}>
                     {msg.message}
                   </div>
                 </div>
@@ -254,10 +321,16 @@ function TicketDetailSheet({ ticketId, onClose }: { ticketId: string | null, onC
             <Textarea 
               value={reply}
               onChange={(e) => setReply(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendReply();
+                }
+              }}
               placeholder="Type your reply..."
               className="min-h-[80px] resize-none"
             />
-            <Button size="icon" onClick={() => replyMutation.mutate()} disabled={!reply.trim()}>
+            <Button size="icon" onClick={handleSendReply} disabled={!reply.trim() || replyMutation.isPending} className="bg-blue-600 hover:bg-blue-700">
               <Send className="h-4 w-4" />
             </Button>
           </div>
@@ -267,32 +340,43 @@ function TicketDetailSheet({ ticketId, onClose }: { ticketId: string | null, onC
   );
 }
 
-function CreateTicketDialog({ open, onOpenChange }: any) {
+// ZOD POWERED CREATE DIALOG
+function CreateTicketDialog({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
   const queryClient = useQueryClient();
-  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setLoading(true);
-    const formData = new FormData(e.currentTarget);
-    const data = Object.fromEntries(formData.entries());
+  const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm<CreateTicketFormData>({
+    resolver: zodResolver(createTicketSchema),
+    defaultValues: {
+      category: 'TECHNICAL',
+      priority: 'MEDIUM',
+      subject: '',
+      description: ''
+    }
+  });
 
-    try {
+  const createMutation = useMutation({
+    mutationFn: async (data: CreateTicketFormData) => {
       const res = await fetch('/api/support', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error('Failed');
-      
-      toast.success('Ticket submitted');
+      if (!res.ok) throw new Error('Failed to create ticket');
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success('Ticket submitted successfully');
       queryClient.invalidateQueries({ queryKey: ['my-tickets'] });
+      reset();
       onOpenChange(false);
-    } catch (err) {
-      toast.error('Failed to submit');
-    } finally {
-      setLoading(false);
+    },
+    onError: () => {
+      toast.error('Failed to submit ticket');
     }
+  });
+
+  const onSubmit = (data: CreateTicketFormData) => {
+    createMutation.mutate(data);
   };
 
   return (
@@ -300,23 +384,23 @@ function CreateTicketDialog({ open, onOpenChange }: any) {
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>New Support Ticket</DialogTitle>
-          <DialogDescription>Describe your issue.</DialogDescription>
+          <DialogDescription>Describe your issue and our team will help you shortly.</DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Category</Label>
-              <Select name="category" defaultValue="TECHNICAL">
+              <Select value={watch('category')} onValueChange={(v: any) => setValue('category', v)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="TECHNICAL">Technical</SelectItem>
-                  <SelectItem value="BILLING">Billing</SelectItem>
+                  <SelectItem value="TECHNICAL">Technical Issue</SelectItem>
+                  <SelectItem value="BILLING">Billing / Invoice</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
               <Label>Priority</Label>
-              <Select name="priority" defaultValue="MEDIUM">
+              <Select value={watch('priority')} onValueChange={(v: any) => setValue('priority', v)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="LOW">Low</SelectItem>
@@ -327,16 +411,20 @@ function CreateTicketDialog({ open, onOpenChange }: any) {
             </div>
           </div>
           <div className="space-y-2">
-            <Label>Subject</Label>
-            <Input name="subject" required />
+            <Label>Subject <span className="text-red-500">*</span></Label>
+            <Input {...register('subject')} className={errors.subject ? "border-red-500" : ""} />
+            {errors.subject && <p className="text-[10px] text-red-500">{errors.subject.message}</p>}
           </div>
           <div className="space-y-2">
-            <Label>Description</Label>
-            <Textarea name="description" required className="min-h-[100px]" />
+            <Label>Description <span className="text-red-500">*</span></Label>
+            <Textarea {...register('description')} className={`min-h-[100px] ${errors.description ? "border-red-500" : ""}`} />
+            {errors.description && <p className="text-[10px] text-red-500">{errors.description.message}</p>}
           </div>
-          <DialogFooter>
+          <DialogFooter className="pt-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button type="submit" disabled={loading}>Submit Ticket</Button>
+            <Button type="submit" disabled={createMutation.isPending} className="bg-blue-600 hover:bg-blue-700">
+              {createMutation.isPending ? 'Submitting...' : 'Submit Ticket'}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -41,7 +41,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   DropdownMenu,
@@ -72,7 +71,6 @@ const staffSchema = z.object({
 
 type StaffFormValues = z.infer<typeof staffSchema>;
 
-// ✅ KEY FIX: Must export default function
 export default function StaffPage() {
   const queryClient = useQueryClient();
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -96,16 +94,18 @@ export default function StaffPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error);
-      return json;
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        throw new Error(json.error || "Failed to add staff");
+      }
+      return res.json();
     },
     onSuccess: () => {
       toast.success("Staff added successfully!");
       setIsAddOpen(false);
       queryClient.invalidateQueries({ queryKey: ["staff"] });
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: Error) => toast.error(err.message),
   });
 
   // 3. DELETE/UPDATE MUTATION
@@ -128,7 +128,10 @@ export default function StaffPage() {
         body,
       });
 
-      if (!res.ok) throw new Error("Action failed");
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        throw new Error(json.error || "Action failed");
+      }
     },
     onSuccess: (_, variables) => {
       toast.success(
@@ -136,7 +139,7 @@ export default function StaffPage() {
       );
       queryClient.invalidateQueries({ queryKey: ["staff"] });
     },
-    onError: () => toast.error("Failed to perform action"),
+    onError: (err: Error) => toast.error(err.message),
   });
 
   // Filter Logic
@@ -213,7 +216,7 @@ export default function StaffPage() {
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Avatar>
-                        <AvatarFallback className="bg-blue-100 text-blue-700 font-bold">
+                        <AvatarFallback className="bg-blue-100 text-blue-700 font-bold uppercase">
                           {staff.user.name.charAt(0)}
                         </AvatarFallback>
                       </Avatar>
@@ -239,11 +242,11 @@ export default function StaffPage() {
                   </TableCell>
                   <TableCell>
                     {staff.isActive ? (
-                      <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
+                      <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none">
                         <CheckCircle2 className="h-3 w-3 mr-1" /> Active
                       </Badge>
                     ) : (
-                      <Badge className="bg-red-100 text-red-700 hover:bg-red-100">
+                      <Badge className="bg-red-100 text-red-700 hover:bg-red-100 border-none">
                         <XCircle className="h-3 w-3 mr-1" /> Inactive
                       </Badge>
                     )}
@@ -274,7 +277,7 @@ export default function StaffPage() {
                         <DropdownMenuItem
                           className="text-red-600 focus:text-red-600 focus:bg-red-50"
                           onClick={() => {
-                            if (confirm("Remove staff member?"))
+                            if (window.confirm("Remove staff member?"))
                               actionMutation.mutate({
                                 id: staff.id,
                                 action: "DELETE",
@@ -307,12 +310,18 @@ export default function StaffPage() {
 function AddStaffModal({ open, onOpenChange, onSubmit, isLoading }: any) {
   const form = useForm<StaffFormValues>({
     resolver: zodResolver(staffSchema),
-    defaultValues: { role: "TECHNICIAN" },
+    defaultValues: { role: "TECHNICIAN", name: "", email: "", phone: "", position: "", department: "", salary: undefined },
   });
+
+  // Reset form when modal closes so stale data isn't preserved
+  useEffect(() => {
+    if (!open) {
+      form.reset();
+    }
+  }, [open, form]);
 
   const handleSubmit = (data: StaffFormValues) => {
     onSubmit(data);
-    form.reset();
   };
 
   return (
@@ -333,7 +342,7 @@ function AddStaffModal({ open, onOpenChange, onSubmit, isLoading }: any) {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <Label>Full Name</Label>
-              <Input {...form.register("name")} placeholder="e.g. John Doe" />
+              <Input {...form.register("name")} placeholder="e.g. John Doe" className={form.formState.errors.name ? "border-red-500" : ""} />
               {form.formState.errors.name && (
                 <p className="text-red-500 text-xs">
                   {form.formState.errors.name.message}
@@ -342,7 +351,7 @@ function AddStaffModal({ open, onOpenChange, onSubmit, isLoading }: any) {
             </div>
             <div className="space-y-1">
               <Label>Phone</Label>
-              <Input {...form.register("phone")} placeholder="9876543210" />
+              <Input {...form.register("phone")} placeholder="9876543210" className={form.formState.errors.phone ? "border-red-500" : ""} />
               {form.formState.errors.phone && (
                 <p className="text-red-500 text-xs">
                   {form.formState.errors.phone.message}
@@ -357,6 +366,7 @@ function AddStaffModal({ open, onOpenChange, onSubmit, isLoading }: any) {
               {...form.register("email")}
               type="email"
               placeholder="john@lab.com"
+              className={form.formState.errors.email ? "border-red-500" : ""}
             />
             {form.formState.errors.email && (
               <p className="text-red-500 text-xs">
@@ -369,8 +379,9 @@ function AddStaffModal({ open, onOpenChange, onSubmit, isLoading }: any) {
             <div className="space-y-1">
               <Label>System Role</Label>
               <Select
-                onValueChange={(val: any) => form.setValue("role", val)}
-                defaultValue="TECHNICIAN">
+                // Added shouldValidate: true so Zod tracks the change immediately
+                onValueChange={(val: any) => form.setValue("role", val, { shouldValidate: true })}
+                defaultValue={form.getValues("role")}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -386,6 +397,7 @@ function AddStaffModal({ open, onOpenChange, onSubmit, isLoading }: any) {
               <Input
                 {...form.register("position")}
                 placeholder="e.g. Senior Phlebotomist"
+                className={form.formState.errors.position ? "border-red-500" : ""}
               />
               {form.formState.errors.position && (
                 <p className="text-red-500 text-xs">
@@ -417,7 +429,7 @@ function AddStaffModal({ open, onOpenChange, onSubmit, isLoading }: any) {
             <Button
               type="submit"
               disabled={isLoading}
-              className="bg-blue-600 hover:bg-blue-700 w-full">
+              className="bg-blue-600 hover:bg-blue-700 w-full mt-4">
               {isLoading ? (
                 <Loader2 className="animate-spin h-4 w-4 mr-2" />
               ) : (
