@@ -1,39 +1,96 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getTests, deleteTest } from '@/actions/test-catalog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, Search, Trash2, Pencil, Beaker } from 'lucide-react'; // ✅ Added Beaker icon
+import { Plus, Search, Trash2, Pencil, Beaker, AlertCircle } from 'lucide-react'; 
 import toast from 'react-hot-toast';
 import TestForm from '../components/test-form';
 
+// --- TYPESCRIPT INTERFACES ---
+export interface InventoryItem {
+  id: string;
+  name: string;
+  usageUnit: string;
+}
+
+export interface Reagent {
+  inventoryItemId: string;
+  quantity: number;
+  inventoryItem: InventoryItem;
+}
+
+export interface Parameter {
+  id: string;
+  reagents?: Reagent[];
+}
+
+export interface TestComponent {
+  parameter?: Parameter;
+}
+
+export interface ContainerType {
+  code: string;
+  capColor?: string;
+}
+
+export interface Department {
+  name: string;
+}
+
+export interface Test {
+  id: string;
+  name: string;
+  code: string;
+  price: number;
+  _count?: { parameters: number };
+  department?: Department;
+  containerType?: ContainerType;
+  components: TestComponent[];
+}
+
+interface AggregatedReagent {
+  name: string;
+  unit: string;
+  totalQuantity: number;
+}
+
 export default function TestsTab() {
-  const [tests, setTests] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingTest, setEditingTest] = useState<any>(null);
+  const [editingTest, setEditingTest] = useState<Test | null>(null);
 
-  useEffect(() => { loadData(); }, []);
+  // --- FETCH DATA ---
+  const { data: tests = [], isLoading, isError } = useQuery<Test[]>({
+    queryKey: ['test-masters'],
+    queryFn: async () => await getTests(),
+  });
 
-  async function loadData() {
-    try {
-      const data = await getTests();
-      setTests(data);
-    } catch (error) { toast.error("Failed to load tests"); } 
-    finally { setLoading(false); }
+  // --- MUTATIONS ---
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await deleteTest(id);
+    },
+    onSuccess: () => {
+      toast.success("Test deleted");
+      queryClient.invalidateQueries({ queryKey: ['test-masters'] });
+    },
+    onError: () => {
+      toast.error("Failed to delete test");
+    }
+  });
+
+  function handleDelete(id: string) {
+    if (!window.confirm("Are you sure you want to delete this test?")) return;
+    deleteMutation.mutate(id);
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm("Delete this test?")) return;
-    await deleteTest(id);
-    loadData();
-  }
-
-  function handleEdit(test: any) {
+  function handleEdit(test: Test) {
     setEditingTest(test);
     setIsDialogOpen(true);
   }
@@ -43,7 +100,7 @@ export default function TestsTab() {
     setIsDialogOpen(true);
   }
 
-  const filtered = tests.filter(t => 
+  const filteredTests = tests.filter(t => 
     t.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
     t.code.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -56,7 +113,7 @@ export default function TestsTab() {
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input 
             placeholder="Search tests..." 
-            className="pl-9" 
+            className="pl-9 bg-slate-50" 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -77,9 +134,12 @@ export default function TestsTab() {
               </DialogTitle>
             </DialogHeader>
             <TestForm 
-              key={editingTest ? editingTest.id : 'new'} // ✅ Added Key constraint
-              initialData={editingTest} 
-              onSuccess={() => { setIsDialogOpen(false); loadData(); }} 
+              key={editingTest ? editingTest.id : 'new'} 
+              initialData={editingTest || undefined} 
+              onSuccess={() => { 
+                setIsDialogOpen(false); 
+                queryClient.invalidateQueries({ queryKey: ['test-masters'] }); 
+              }} 
             />
           </DialogContent>
         </Dialog>
@@ -94,18 +154,30 @@ export default function TestsTab() {
               <TableHead>Test Name</TableHead>
               <TableHead>Department</TableHead>
               <TableHead>Tube</TableHead>
-              <TableHead>Auto-Consume Reagents</TableHead> {/* ✅ NEW COLUMN */}
+              <TableHead>Auto-Consume Reagents</TableHead>
               <TableHead>Rate</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {loading ? <TableRow><TableCell colSpan={7} className="text-center h-24">Loading...</TableCell></TableRow> :
-             filtered.map((t) => {
-                // ✅ LIVE REAGENT AGGREGATION LOGIC
+            {isLoading ? (
+               <TableRow><TableCell colSpan={7} className="text-center h-24 text-muted-foreground">Loading tests...</TableCell></TableRow>
+            ) : isError ? (
+               <TableRow>
+                 <TableCell colSpan={7} className="text-center h-24 text-red-500">
+                   <div className="flex items-center justify-center gap-2">
+                     <AlertCircle className="h-4 w-4" /> Failed to load tests. Please refresh.
+                   </div>
+                 </TableCell>
+               </TableRow>
+            ) : filteredTests.length === 0 ? (
+               <TableRow><TableCell colSpan={7} className="text-center h-24 text-muted-foreground">No tests found.</TableCell></TableRow>
+            ) : (
+             filteredTests.map((t) => {
+                // LIVE REAGENT AGGREGATION LOGIC
                 // Combine reagents from all parameters in this test
-                const aggregatedReagents = t.components.reduce((acc: any, comp: any) => {
-                   comp.parameter?.reagents?.forEach((r: any) => {
+                const aggregatedReagents = t.components.reduce<Record<string, AggregatedReagent>>((acc, comp) => {
+                   comp.parameter?.reagents?.forEach((r) => {
                       if (!acc[r.inventoryItemId]) {
                          acc[r.inventoryItemId] = {
                             name: r.inventoryItem.name,
@@ -120,7 +192,7 @@ export default function TestsTab() {
                 const reagentList = Object.values(aggregatedReagents);
 
                 return (
-                  <TableRow key={t.id} className="hover:bg-slate-50">
+                  <TableRow key={t.id} className="hover:bg-slate-50/50">
                     <TableCell><span className="font-mono text-xs font-bold text-slate-600">{t.code}</span></TableCell>
                     <TableCell className="font-medium">
                         {t.name}
@@ -141,11 +213,11 @@ export default function TestsTab() {
                         )}
                     </TableCell>
 
-                    {/* ✅ DISPLAY AGGREGATED REAGENTS */}
+                    {/* DISPLAY AGGREGATED REAGENTS */}
                     <TableCell>
                       {reagentList.length > 0 ? (
                         <div className="flex flex-col gap-1">
-                          {reagentList.map((r: any, idx: number) => (
+                          {reagentList.map((r, idx) => (
                             <div key={idx} className="inline-flex items-center gap-1.5 text-[10px] font-medium text-emerald-700">
                               <Beaker className="w-3 h-3 text-emerald-500 shrink-0" />
                               <span className="truncate max-w-[120px]" title={r.name}>{r.name}</span>
@@ -163,17 +235,24 @@ export default function TestsTab() {
                     <TableCell className="font-semibold text-green-700">₹{t.price}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => handleEdit(t)} className="text-slate-400 hover:text-blue-600">
+                        <Button variant="ghost" size="icon" onClick={() => handleEdit(t)} className="text-slate-400 hover:text-blue-600 h-8 w-8">
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(t.id)} className="text-slate-400 hover:text-red-500">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => handleDelete(t.id)} 
+                          disabled={deleteMutation.isPending && deleteMutation.variables === t.id}
+                          className="text-slate-400 hover:text-red-500 hover:bg-red-50 h-8 w-8"
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </TableCell>
                   </TableRow>
                 )
-             })}
+             })
+            )}
           </TableBody>
         </Table>
       </div>

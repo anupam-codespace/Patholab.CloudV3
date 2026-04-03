@@ -2,6 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { useQuery } from '@tanstack/react-query';
+
 import { createTest, updateTest } from '@/actions/test-catalog'; 
 import { getDepartments, getSampleTypes, getTestHeadings, getContainerTypes } from '@/actions/lims-management';
 import { getParameters } from '@/actions/parameter-management';
@@ -11,20 +15,42 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
-import { Trash2, GripVertical, Save, Loader2, Search, AlertCircle, Beaker } from 'lucide-react'; // ✅ Added Beaker icon
+import { Trash2, GripVertical, Save, Loader2, Search, AlertCircle, Beaker } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { CustomFieldSelector } from './custom-field-selector';
-import { useQuery } from '@tanstack/react-query';
 
+// --- 1. TYPES & ZOD SCHEMA ---
 type Option = { id: string; name: string; code?: string };
 
+const testSchema = z.object({
+  name: z.string().min(1, "Test Name is required"),
+  code: z.string().min(1, "Short code is required"),
+  printName: z.string().optional(),
+  departmentId: z.string().min(1, "Department is required"),
+  sampleTypeId: z.string().min(1, "Sample Type is required"),
+  containerTypeId: z.string().optional(),
+  price: z.coerce.number().min(0, "Price cannot be negative").default(0),
+  b2bPrice: z.coerce.number().min(0).default(0),
+  cost: z.coerce.number().min(0).default(0),
+  tat: z.string().min(1, "Turnaround Time is required"),
+  method: z.string().min(1, "Methodology is required"),
+  isActive: z.boolean().default(true),
+  components: z.array(z.object({
+    parameterId: z.string(),
+    headingId: z.string().optional(),
+    name: z.string()
+  })).min(1, "Please add at least one parameter to this test.")
+});
+
+type TestFormData = z.infer<typeof testSchema>;
+
+// --- 2. MAIN COMPONENT ---
 interface TestFormProps {
   onSuccess: () => void;
   initialData?: any; 
 }
 
 export default function TestForm({ onSuccess, initialData }: TestFormProps) {
-  const [loading, setLoading] = useState(false);
   const [departments, setDepartments] = useState<Option[]>([]);
   const [samples, setSamples] = useState<Option[]>([]);
   const [headings, setHeadings] = useState<Option[]>([]);
@@ -32,11 +58,14 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
   const [paramSearch, setParamSearch] = useState('');
   const [customFieldIds, setCustomFieldIds] = useState<string[]>([]);
 
+  // Standardized React Query for Containers
   const { data: containers } = useQuery({
     queryKey: ['containers'],
-    queryFn: async () => await getContainerTypes() 
+    queryFn: async () => await getContainerTypes(),
+    staleTime: 1000 * 60 * 5, 
   });
 
+  // Load Reference Data
   useEffect(() => {
     Promise.all([getDepartments(), getSampleTypes(), getTestHeadings(), getParameters()])
       .then(([d, s, h, p]) => {
@@ -47,6 +76,7 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
       });
   }, []);
 
+  // 3. Form Setup with Zod Resolver
   const { 
     register, 
     control, 
@@ -55,31 +85,20 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
     reset, 
     watch, 
     getValues,
-    trigger, 
-    formState: { errors } 
-  } = useForm({
+    formState: { errors, isSubmitting } 
+  } = useForm<TestFormData>({
+    resolver: zodResolver(testSchema),
     defaultValues: {
-      name: '', 
-      code: '', 
-      printName: '', 
-      departmentId: '', 
-      sampleTypeId: '',
-      containerTypeId: '', 
-      price: 0, 
-      b2bPrice: 0, 
-      cost: 0, 
-      tat: '', 
-      method: '', 
-      isActive: true,
-      components: [] as { parameterId: string; headingId?: string; name: string }[] 
+      name: '', code: '', printName: '', departmentId: '', sampleTypeId: '',
+      containerTypeId: '', price: 0, b2bPrice: 0, cost: 0, tat: '', method: '', 
+      isActive: true, components: []
     }
   });
 
   const { fields, append, remove } = useFieldArray({ control, name: "components" });
-
   const watchedComponents = watch("components");
 
-  // ✅ Load Initial Data (Population Logic)
+  // 4. Data Hydration
   useEffect(() => {
     if (initialData) {
       const formattedComponents = initialData.components?.map((c: any) => ({
@@ -98,10 +117,8 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
         price: Number(initialData.price), 
         b2bPrice: Number(initialData.b2bPrice || 0),
         cost: Number(initialData.cost || 0), 
-        
         tat: initialData.tat || '', 
         method: initialData.method || '',
-        
         isActive: initialData.isActive ?? true, 
         components: formattedComponents
       });
@@ -109,10 +126,7 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
       const existingIds = initialData.customFields?.map((cf: any) => cf.fieldDefId) || [];
       setCustomFieldIds(existingIds);
     } else {
-      reset({
-        name: '', code: '', printName: '', departmentId: '', sampleTypeId: '',
-        containerTypeId: '', price: 0, b2bPrice: 0, cost: 0, tat: '', method: '', isActive: true, components: []
-      });
+      reset(); // Resets to defaultValues defined in useForm
       setCustomFieldIds([]);
     }
   }, [initialData, reset]);
@@ -126,26 +140,18 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
       }, 0);
 
       if (totalParamPrice > 0 && getValues("price") === 0) {
-          setValue("price", totalParamPrice);
+          setValue("price", totalParamPrice, { shouldValidate: true });
       }
   }, [watchedComponents, paramLibrary, setValue, getValues]);
 
 
-  const onSubmit = async (data: any) => {
-    if (data.components.length === 0) {
-        toast.error("Please add at least one parameter to this test.");
-        return; 
-    }
-
-    setLoading(true);
+  // 5. Submit Handler (Zod ensures safe types)
+  const onSubmit = async (data: TestFormData) => {
     try {
       const payload = {
         ...data,
         containerTypeId: data.containerTypeId || undefined,
-        price: Number(data.price), 
-        b2bPrice: Number(data.b2bPrice), 
-        cost: Number(data.cost),
-        components: data.components.map((c: any, index: number) => ({
+        components: data.components.map((c, index) => ({
             parameterId: c.parameterId,
             headingId: c.headingId === "none" ? null : c.headingId,
             order: index + 1
@@ -164,21 +170,19 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
     } catch (error) {
       toast.error("Failed to save test");
       console.error(error);
-    } finally {
-      setLoading(false);
     }
   };
 
   const addParameter = (paramId: string) => {
     const param = paramLibrary.find(p => p.id === paramId);
     if (param) {
-       append({ parameterId: param.id, name: param.name });
+       append({ parameterId: param.id, name: param.name, headingId: "none" });
        setParamSearch('');
     }
   };
 
-  // ✅ LIVE REAGENT AGGREGATION FOR PREVIEW (NEW LOGIC)
-  const liveReagents = watchedComponents.reduce((acc: any, comp: any) => {
+  // LIVE REAGENT AGGREGATION FOR PREVIEW
+  const liveReagents = watchedComponents.reduce((acc: any, comp) => {
     const param = paramLibrary.find(p => p.id === comp.parameterId);
     param?.reagents?.forEach((r: any) => {
        if (!acc[r.inventoryItemId]) {
@@ -196,42 +200,39 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      
-      <input type="hidden" {...register("departmentId", { required: "Department is required" })} />
-      <input type="hidden" {...register("sampleTypeId", { required: "Sample Type is required" })} />
-
       <Tabs defaultValue="basic" className="w-full">
         <TabsList className="grid w-full grid-cols-3 bg-slate-100 p-1 rounded-lg">
-          <TabsTrigger value="basic" className={errors.name || errors.code || errors.departmentId ? "text-red-500" : ""}>
-             Basic Details {errors.name && "*"}
+          <TabsTrigger value="basic" className={errors.name || errors.code || errors.departmentId || errors.sampleTypeId ? "text-red-500" : ""}>
+             Basic Details {(errors.name || errors.code || errors.departmentId || errors.sampleTypeId) && "*"}
           </TabsTrigger>
-          <TabsTrigger value="parameters" className={watchedComponents.length === 0 ? "text-amber-600" : ""}>
-             Parameter Mapping
+          <TabsTrigger value="parameters" className={errors.components ? "text-red-500" : watchedComponents.length === 0 ? "text-amber-600" : ""}>
+             Parameter Mapping {errors.components && "*"}
           </TabsTrigger>
           <TabsTrigger value="pricing" className={errors.price || errors.tat || errors.method ? "text-red-500" : ""}>
-             Pricing & Ops {errors.tat && "*"}
+             Pricing & Ops {(errors.price || errors.tat || errors.method) && "*"}
           </TabsTrigger>
         </TabsList>
 
+        {/* --- TAB: BASIC DETAILS --- */}
         <TabsContent value="basic" className="space-y-6 pt-4">
           <div className="grid grid-cols-2 gap-4">
              <div className="space-y-2">
                 <Label className="flex items-center gap-1">Test Name <span className="text-red-500">*</span></Label>
                 <Input 
-                    {...register("name", { required: "Test Name is required" })} 
+                    {...register("name")} 
                     placeholder="e.g. Complete Blood Count" 
                     className={errors.name ? "border-red-500 bg-red-50" : ""}
                 />
-                {errors.name && <span className="text-xs text-red-500">{errors.name.message as string}</span>}
+                {errors.name && <span className="text-xs text-red-500">{errors.name.message}</span>}
              </div>
              <div className="space-y-2">
                 <Label className="flex items-center gap-1">Short Code <span className="text-red-500">*</span></Label>
                 <Input 
-                    {...register("code", { required: "Code is required" })} 
+                    {...register("code")} 
                     placeholder="e.g. CBC" 
                     className={errors.code ? "border-red-500 bg-red-50" : ""}
                 />
-                {errors.code && <span className="text-xs text-red-500">{errors.code.message as string}</span>}
+                {errors.code && <span className="text-xs text-red-500">{errors.code.message}</span>}
              </div>
           </div>
           
@@ -245,9 +246,7 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
                 <Label className="flex items-center gap-1">Department <span className="text-red-500">*</span></Label>
                 <Select 
                     value={watch("departmentId")} 
-                    onValueChange={(v) => {
-                        setValue("departmentId", v, { shouldValidate: true });
-                    }}
+                    onValueChange={(v) => setValue("departmentId", v, { shouldValidate: true })}
                 >
                     <SelectTrigger className={errors.departmentId ? "border-red-500 ring-1 ring-red-200" : ""}>
                         <SelectValue placeholder="Select Department" />
@@ -256,16 +255,14 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
                         {departments.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
                     </SelectContent>
                 </Select>
-                {errors.departmentId && <span className="text-xs text-red-500">{errors.departmentId.message as string}</span>}
+                {errors.departmentId && <span className="text-xs text-red-500">{errors.departmentId.message}</span>}
              </div>
 
              <div className="space-y-2">
                 <Label className="flex items-center gap-1">Sample Type <span className="text-red-500">*</span></Label>
                 <Select 
                     value={watch("sampleTypeId")} 
-                    onValueChange={(v) => {
-                        setValue("sampleTypeId", v, { shouldValidate: true });
-                    }}
+                    onValueChange={(v) => setValue("sampleTypeId", v, { shouldValidate: true })}
                 >
                     <SelectTrigger className={errors.sampleTypeId ? "border-red-500 ring-1 ring-red-200" : ""}>
                         <SelectValue placeholder="Select Sample" />
@@ -274,7 +271,7 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
                         {samples.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                     </SelectContent>
                 </Select>
-                {errors.sampleTypeId && <span className="text-xs text-red-500">{errors.sampleTypeId.message as string}</span>}
+                {errors.sampleTypeId && <span className="text-xs text-red-500">{errors.sampleTypeId.message}</span>}
              </div>
 
              <div className="space-y-2">
@@ -307,8 +304,8 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
           </div>
         </TabsContent>
 
+        {/* --- TAB: PARAMETER MAPPING --- */}
         <TabsContent value="parameters" className="space-y-4 pt-4">
-           {/* Parameter Selection (Unchanged) */}
            <div className="p-4 bg-slate-50 border rounded-lg space-y-3">
               <Label className="text-xs font-semibold uppercase text-muted-foreground">Add Parameters</Label>
               <div className="relative">
@@ -327,10 +324,11 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
               </div>
            </div>
            
-           <div className={`space-y-2 border rounded-md p-2 ${fields.length === 0 ? 'border-amber-200 bg-amber-50' : 'border-slate-200'}`}>
+           <div className={`space-y-2 border rounded-md p-2 ${errors.components ? 'border-red-300 bg-red-50' : fields.length === 0 ? 'border-amber-200 bg-amber-50' : 'border-slate-200'}`}>
               <div className="flex justify-between items-center">
                   <div className="text-sm font-medium">Selected Components ({fields.length})</div>
-                  {fields.length === 0 && <span className="text-xs text-amber-600 font-bold flex items-center"><AlertCircle className="w-3 h-3 mr-1"/> No parameters selected</span>}
+                  {errors.components && <span className="text-xs text-red-600 font-bold flex items-center"><AlertCircle className="w-3 h-3 mr-1"/> {errors.components.message}</span>}
+                  {!errors.components && fields.length === 0 && <span className="text-xs text-amber-600 font-bold flex items-center"><AlertCircle className="w-3 h-3 mr-1"/> No parameters selected</span>}
               </div>
               <div className="space-y-2 max-h-[300px] overflow-y-auto">
                 {fields.map((field, index) => (
@@ -352,7 +350,7 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
               </div>
            </div>
 
-           {/* ✅ NEW: LIVE REAGENT PREVIEW UI */}
+           {/* LIVE REAGENT PREVIEW UI */}
            {liveReagentList.length > 0 && (
              <div className="mt-4 p-4 bg-emerald-50 border border-emerald-100 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
@@ -368,54 +366,64 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
                 </div>
              </div>
            )}
-
         </TabsContent>
 
+        {/* --- TAB: PRICING & OPS --- */}
         <TabsContent value="pricing" className="space-y-4 pt-4">
              <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
                     <Label className="flex items-center gap-1">Standard Rate (₹) <span className="text-red-500">*</span></Label>
                     <Input 
                         type="number" 
-                        {...register("price", { required: "Price is required", min: 0 })} 
+                        step="0.01"
+                        {...register("price")} 
                         className={`font-semibold text-slate-900 ${errors.price ? "border-red-500 bg-red-50" : ""}`}
                     />
-                    {errors.price && <span className="text-xs text-red-500">Required</span>}
+                    {errors.price && <span className="text-xs text-red-500">{errors.price.message}</span>}
                     <p className="text-[10px] text-muted-foreground">Auto-calculated from parameters. You can edit this.</p>
                 </div>
-                <div className="space-y-2"><Label>B2B Rate</Label><Input type="number" {...register("b2bPrice")} /></div>
-                <div className="space-y-2"><Label>Lab Cost</Label><Input type="number" {...register("cost")} /></div>
+                <div className="space-y-2">
+                   <Label>B2B Rate</Label>
+                   <Input type="number" step="0.01" {...register("b2bPrice")} />
+                </div>
+                <div className="space-y-2">
+                   <Label>Lab Cost</Label>
+                   <Input type="number" step="0.01" {...register("cost")} />
+                </div>
              </div>
              
              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label className="flex items-center gap-1">TAT <span className="text-red-500">*</span></Label>
                     <Input 
-                        {...register("tat", { required: "Turnaround Time is required" })} 
+                        {...register("tat")} 
                         placeholder="e.g. 4 Hours" 
                         className={errors.tat ? "border-red-500 bg-red-50" : ""}
                     />
-                    {errors.tat && <span className="text-xs text-red-500">{errors.tat.message as string}</span>}
+                    {errors.tat && <span className="text-xs text-red-500">{errors.tat.message}</span>}
                 </div>
                 <div className="space-y-2">
                     <Label className="flex items-center gap-1">Methodology <span className="text-red-500">*</span></Label>
                     <Input 
-                        {...register("method", { required: "Methodology is required" })} 
+                        {...register("method")} 
                         placeholder="e.g. CLIA" 
                         className={errors.method ? "border-red-500 bg-red-50" : ""}
                     />
-                    {errors.method && <span className="text-xs text-red-500">{errors.method.message as string}</span>}
+                    {errors.method && <span className="text-xs text-red-500">{errors.method.message}</span>}
                 </div>
              </div>
              
-             <div className="flex items-center space-x-2 pt-2"><Checkbox id="active" checked={watch("isActive")} onCheckedChange={(v) => setValue("isActive", !!v)} /><Label htmlFor="active">Active</Label></div>
+             <div className="flex items-center space-x-2 pt-2">
+                <Checkbox id="active" checked={watch("isActive")} onCheckedChange={(v) => setValue("isActive", !!v)} />
+                <Label htmlFor="active">Active</Label>
+             </div>
         </TabsContent>
       </Tabs>
 
       <div className="flex justify-end gap-2 pt-4 border-t mt-4">
         <Button type="button" variant="outline" onClick={onSuccess}>Cancel</Button>
-        <Button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700">
-            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+        <Button type="submit" disabled={isSubmitting} className="bg-blue-600 hover:bg-blue-700">
+            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
             {initialData ? 'Update Test' : 'Save Test Master'}
         </Button>
       </div>
@@ -424,7 +432,7 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
       {(Object.keys(errors).length > 0) && (
           <div className="p-3 bg-red-50 border border-red-200 rounded text-red-600 text-sm flex items-center gap-2 animate-pulse">
               <AlertCircle className="w-5 h-5" />
-              <strong>Validation Error:</strong> Please fill in all required fields (marked in red).
+              <strong>Validation Error:</strong> Please check the tabs with red asterisks (*) and fix the highlighted fields.
           </div>
       )}
     </form>
