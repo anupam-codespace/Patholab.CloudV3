@@ -5,18 +5,17 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from '@/lib/utils';
-import { UploadCloud, FileImage, Code } from 'lucide-react'; // ✅ Import icons for new types
+import { UploadCloud, Code, Trash2 } from 'lucide-react'; 
 
 // --- TYPES ---
-interface CustomFieldDef {
+export interface CustomFieldDef {
   id: string;
   name: string;
-  // ✅ UPDATED: Added IMAGE and RICH_TEXT to type definition
   type: 'TEXT' | 'LONG_TEXT' | 'DROPDOWN' | 'DATE' | 'IMAGE' | 'RICH_TEXT'; 
   options: string[];
 }
 
-interface TemplateFieldMapping {
+export interface TemplateFieldMapping {
   id: string;
   fieldDefId: string;
   fieldDef: CustomFieldDef;
@@ -24,7 +23,7 @@ interface TemplateFieldMapping {
   required: boolean;
 }
 
-interface CustomResultValue {
+export interface CustomResultValue {
   fieldDefId: string;
   value: string;
 }
@@ -100,28 +99,59 @@ export function DynamicTestFields({
                    </SelectContent>
                 </Select>
 
-              /* 3. ✅ NEW: IMAGE (Upload Preview) */
+              /* 3. ✅ INTERACTIVE: IMAGE (Upload Preview) */
               ) : def.type === 'IMAGE' ? (
-                <div className="border-2 border-dashed border-slate-300 rounded-md p-6 flex flex-col items-center justify-center bg-white hover:bg-slate-50 transition cursor-not-allowed">
-                    <div className="bg-slate-100 p-2 rounded-full mb-2">
-                        <UploadCloud className="h-5 w-5 text-slate-400" />
-                    </div>
-                    <span className="text-xs text-slate-500 font-medium">Upload Image / Graph</span>
-                    <span className="text-[10px] text-slate-400 mt-1">(Max 2MB)</span>
+                <div className="relative border-2 border-dashed border-slate-300 rounded-md p-6 flex flex-col items-center justify-center bg-white hover:bg-slate-50 transition group overflow-hidden">
+                    {/* Hidden Native File Input */}
+                    <input 
+                      type="file"
+                      accept="image/*"
+                      disabled={readOnly}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed z-10"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          // Generating a local preview URL
+                          // In a real app, you would upload this file to S3/Cloudinary and pass the URL to onChange
+                          const previewUrl = URL.createObjectURL(file);
+                          onChange(def.id, previewUrl);
+                        }
+                      }}
+                    />
+                    
+                    {currentVal ? (
+                      <div className="flex flex-col items-center gap-2">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={currentVal} alt="Preview" className="max-h-32 rounded-md shadow-sm object-contain relative z-0" />
+                        {!readOnly && (
+                            <span className="text-xs text-blue-600 underline group-hover:text-blue-800 relative z-20 bg-white/80 px-2 py-1 rounded mt-1">
+                              Click to replace image
+                            </span>
+                        )}
+                      </div>
+                    ) : (
+                      <>
+                        <div className="bg-slate-100 p-2 rounded-full mb-2 group-hover:bg-blue-50 transition-colors">
+                            <UploadCloud className="h-5 w-5 text-slate-400 group-hover:text-blue-500" />
+                        </div>
+                        <span className="text-xs text-slate-500 font-medium group-hover:text-slate-700">Click or drag to upload Image</span>
+                        <span className="text-[10px] text-slate-400 mt-1">(Max 2MB)</span>
+                      </>
+                    )}
                 </div>
 
-              /* 4. ✅ NEW: RICH TEXT (HTML Input) */
+              /* 4. ✅ REFINED: RICH TEXT (HTML Input) */
               ) : def.type === 'RICH_TEXT' ? (
                 <div className="space-y-1">
                     <Textarea 
                       value={currentVal}
                       onChange={(e) => onChange(def.id, e.target.value)}
                       disabled={readOnly}
-                      className="bg-white min-h-[100px] text-sm font-mono"
-                      placeholder={`Enter HTML content...`}
+                      className="bg-slate-50 min-h-[100px] text-sm font-mono border-slate-300 focus:bg-white"
+                      placeholder={`<b>Patient Note:</b><br/>Enter HTML content here...`}
                     />
                     <div className="flex items-center gap-1 text-[10px] text-slate-400">
-                        <Code className="h-3 w-3" /> <span>Supports HTML tags (&lt;b&gt;, &lt;i&gt;, etc.)</span>
+                        <Code className="h-3 w-3" /> <span>Raw HTML Editor (Supports &lt;b&gt;, &lt;i&gt;, &lt;u&gt;, etc.)</span>
                     </div>
                 </div>
 

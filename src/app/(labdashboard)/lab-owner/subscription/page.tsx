@@ -6,13 +6,11 @@ import {
   AlertCircle,
   CreditCard,
   ArrowUpCircle,
-  ArrowDownCircle,
   Activity,
   Calendar,
   Zap,
   FileText,
   Database,
-  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +26,47 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 
+// --- TYPES ---
+export interface Plan {
+  id: string;
+  name: string;
+  displayName: string;
+  description: string;
+  price: number;
+  billingCycle: "MONTHLY" | "YEARLY";
+  features: string | string[];
+  maxTestsPerMonth: number;
+  maxPatientsTotal: number;
+  maxStaff: number;
+}
+
+export interface UsageMetrics {
+  tests: number;
+  limitTests: number;
+  boosterTests: number;
+  patients: number;
+  limitPatients: number;
+  storageUsed: number;
+  limitStorage: number;
+}
+
+export interface PaymentRecord {
+  id: string;
+  createdAt: string;
+  invoiceNumber?: string;
+  amount: number;
+  status: "SUCCESS" | "FAILED" | "PENDING";
+  addOn?: { name: string };
+  subscription?: { plan?: { displayName: string } };
+}
+
+export interface SubscriptionData {
+  currentPlan?: Plan & { status: "ACTIVE" | "TRIAL" | "INACTIVE"; endDate: string };
+  usage?: UsageMetrics;
+  availablePlans?: Plan[];
+  payments?: PaymentRecord[];
+}
+
 // Helper for currency format
 const formatCurrency = (val: number) =>
   new Intl.NumberFormat("en-IN", {
@@ -37,7 +76,7 @@ const formatCurrency = (val: number) =>
   }).format(val);
 
 export default function SubscriptionPage() {
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError } = useQuery<SubscriptionData>({
     queryKey: ["lab-subscription"],
     queryFn: async () => {
       const res = await fetch("/api/lab-owner/subscription/details");
@@ -59,7 +98,8 @@ export default function SubscriptionPage() {
     window.open(`/lab-owner/invoice/${paymentId}`, "_blank");
   };
 
-  const getFeatures = (features: any) => {
+  const getFeatures = (features: string | string[] | undefined): string[] => {
+    if (!features) return [];
     try {
       if (Array.isArray(features)) return features;
       if (typeof features === "string") return JSON.parse(features);
@@ -179,11 +219,11 @@ export default function SubscriptionPage() {
                     / {usage?.limitTests === -1 ? "∞" : usage?.limitTests}
                   </span>
                   {/* Show Booster Badge */}
-                  {usage?.boosterTests > 0 && (
+                  {(usage?.boosterTests ?? 0) > 0 && (
                     <Badge
                       variant="secondary"
                       className="text-[10px] h-5 px-1 bg-yellow-100 text-yellow-700 hover:bg-yellow-200">
-                      <Zap className="h-3 w-3 mr-0.5" /> +{usage.boosterTests}
+                      <Zap className="h-3 w-3 mr-0.5" /> +{usage?.boosterTests}
                     </Badge>
                   )}
                 </span>
@@ -196,7 +236,7 @@ export default function SubscriptionPage() {
                 }
                 className="h-2 bg-slate-100"
                 indicatorClassName={
-                  usage?.tests > usage?.limitTests * 0.9
+                  (usage?.tests || 0) > (usage?.limitTests || 1) * 0.9
                     ? "bg-red-500"
                     : "bg-blue-600"
                 }
@@ -228,11 +268,11 @@ export default function SubscriptionPage() {
               />
             </div>
 
-            {/* Storage Usage (Optional Display) */}
+            {/* Storage Usage */}
             <div className="flex items-center gap-2 text-xs text-slate-500 mt-2">
               <Database className="h-3 w-3" />
               Storage: {usage?.storageUsed?.toFixed(2) || 0} GB /{" "}
-              {usage?.limitStorage?.toFixed(0)} GB
+              {usage?.limitStorage?.toFixed(0) || 0} GB
             </div>
           </CardContent>
         </Card>
@@ -244,7 +284,7 @@ export default function SubscriptionPage() {
           <ArrowUpCircle className="h-5 w-5 text-blue-600" /> Available Upgrades
         </h3>
         <div className="grid gap-6 md:grid-cols-3">
-          {availablePlans?.map((plan: any) => {
+          {availablePlans?.map((plan) => {
             const isCurrent = currentPlan?.id === plan.id;
             const isUpgrade = plan.price > (currentPlan?.price || 0);
             const features = getFeatures(plan.features);
@@ -360,7 +400,7 @@ export default function SubscriptionPage() {
                     </td>
                   </tr>
                 ) : (
-                  payments.map((payment: any) => (
+                  payments.map((payment) => (
                     <tr
                       key={payment.id}
                       className="hover:bg-slate-50/50 transition-colors">
@@ -392,6 +432,8 @@ export default function SubscriptionPage() {
                           className={
                             payment.status === "SUCCESS"
                               ? "text-green-700 bg-green-50 border-green-200 px-2 py-0.5"
+                              : payment.status === "PENDING"
+                              ? "text-yellow-700 bg-yellow-50 border-yellow-200 px-2 py-0.5"
                               : "text-red-700 bg-red-50 border-red-200 px-2 py-0.5"
                           }>
                           {payment.status}

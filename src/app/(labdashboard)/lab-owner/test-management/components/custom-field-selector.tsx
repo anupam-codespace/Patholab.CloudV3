@@ -1,109 +1,210 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Check, ChevronsUpDown, X, Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Loader2, Plus, X, LayoutTemplate } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { getCustomFields } from '@/actions/custom-field-management';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from '@/components/ui/badge';
+import toast from 'react-hot-toast';
 
-interface CustomFieldSelectorProps {
-  selectedIds: string[];
-  onChange: (ids: string[]) => void;
-}
+import { saveCustomField } from '@/actions/custom-field-management';
+import { DynamicTestFields } from './dynamic-test-fields';
 
-export function CustomFieldSelector({ selectedIds, onChange }: CustomFieldSelectorProps) {
-  const [open, setOpen] = useState(false);
-  const [availableFields, setAvailableFields] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+// 1. Zod Schema
+const schema = z.object({
+  name: z.string().min(1, "Field name is required"),
+  type: z.enum(['TEXT', 'LONG_TEXT', 'DROPDOWN', 'DATE', 'IMAGE', 'RICH_TEXT']),
+  reportLayout: z.string().optional(), 
+});
 
-  useEffect(() => {
-    getCustomFields()
-      .then((data) => setAvailableFields(data))
-      .catch((err) => console.error(err))
-      .finally(() => setLoading(false));
-  }, []);
+// 2. Type Inference
+type CustomFieldFormData = z.infer<typeof schema>;
 
-  const handleSelect = (id: string) => {
-    if (selectedIds.includes(id)) {
-      onChange(selectedIds.filter((i) => i !== id));
-    } else {
-      onChange([...selectedIds, id]);
+export default function CustomFieldForm({ initialData, onSuccess }: { initialData?: any, onSuccess: () => void }) {
+  const [options, setOptions] = useState<string[]>(initialData?.options || []);
+  const [newOption, setNewOption] = useState('');
+
+  const form = useForm<CustomFieldFormData>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      name: initialData?.name || '',
+      type: initialData?.type || 'TEXT',
+      reportLayout: initialData?.reportLayout || 'FULL', 
+    }
+  });
+
+  // Extract isSubmitting and errors directly from formState
+  const { isSubmitting, errors } = form.formState;
+
+  const watchedName = form.watch('name');
+  const watchedType = form.watch('type');
+  const watchedLayout = form.watch('reportLayout');
+
+  const handleAddOption = () => {
+    if (!newOption.trim()) return;
+    setOptions([...options, newOption.trim()]);
+    setNewOption('');
+  };
+
+  const removeOption = (idx: number) => {
+    setOptions(options.filter((_, i) => i !== idx));
+  };
+
+  const onSubmit = async (data: CustomFieldFormData) => {
+    try {
+      await saveCustomField({
+        id: initialData?.id,
+        name: data.name,
+        type: data.type,
+        options: data.type === 'DROPDOWN' ? options : [],
+        reportLayout: data.type === 'IMAGE' ? data.reportLayout : undefined, 
+      });
+      toast.success(initialData ? "Field updated" : "Field created");
+      onSuccess();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to save field");
     }
   };
 
-  const selectedFields = availableFields.filter(f => selectedIds.includes(f.id));
+  const previewFields = [{
+    id: 'preview',
+    fieldDefId: 'preview-def',
+    fieldDef: {
+      id: 'preview-def',
+      name: watchedName || 'Field Name',
+      type: watchedType as any, // Type assertion needed here for the preview mock
+      options: options.length > 0 ? options : ['Option 1', 'Option 2']
+    },
+    order: 0,
+    required: false
+  }];
 
   return (
-    <div className="space-y-3">
-      <div className="flex flex-col gap-1">
-        <Label className="text-sm font-semibold text-slate-800">Custom Report Fields</Label>
-        <p className="text-[11px] text-slate-500">Select extra fields to appear on the report (e.g. Interpretation, Kit Name).</p>
-      </div>
-
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            className="w-full justify-between bg-white h-10 font-normal border-slate-300"
-          >
-            {selectedIds.length > 0 
-              ? `${selectedIds.length} fields selected` 
-              : "Select custom fields..."}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-[400px] p-0" align="start">
-          <Command>
-            <CommandInput placeholder="Search custom fields..." />
-            <CommandList>
-              <CommandEmpty className="py-4 text-center text-xs text-slate-500">
-                 {loading ? <Loader2 className="h-4 w-4 animate-spin mx-auto"/> : 'No custom fields found. Create one in the "Custom Fields" tab.'}
-              </CommandEmpty>
-              <CommandGroup>
-                {availableFields.map((field) => (
-                  <CommandItem
-                    key={field.id}
-                    value={field.name}
-                    onSelect={() => handleSelect(field.id)}
-                  >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4 text-blue-600",
-                        selectedIds.includes(field.id) ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                    <div className="flex flex-col">
-                        <span className="font-medium">{field.name}</span>
-                        <span className="text-[10px] text-slate-400 uppercase tracking-wide">{field.type}</span>
-                    </div>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
-
-      {/* Selected Tags Display */}
-      {selectedFields.length > 0 && (
-        <div className="flex flex-wrap gap-2 p-3 bg-slate-50 rounded-md border border-slate-200">
-            {selectedFields.map(field => (
-                <Badge key={field.id} variant="secondary" className="bg-white border-slate-300 text-slate-700 pl-2 pr-1 py-1">
-                    {field.name}
-                    <X 
-                        className="h-3 w-3 ml-2 text-slate-400 hover:text-red-500 cursor-pointer" 
-                        onClick={() => handleSelect(field.id)}
-                    />
-                </Badge>
-            ))}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      {/* LEFT: FORM */}
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        
+        <div className="space-y-2">
+          <Label>Field Name</Label>
+          <Input 
+            {...form.register('name')} 
+            placeholder="e.g. ECG Graph, Cardiologist Note" 
+            className={errors.name ? "border-red-500 focus-visible:ring-red-500" : ""}
+          />
+          {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
         </div>
-      )}
+
+        <div className="space-y-2">
+          <Label>Input Type</Label>
+          <Select 
+            onValueChange={(val) => form.setValue('type', val as any)} 
+            defaultValue={form.getValues('type')}
+          >
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="TEXT">Short Text</SelectItem>
+              <SelectItem value="LONG_TEXT">Long Text (TextArea)</SelectItem>
+              <SelectItem value="DROPDOWN">Dropdown List</SelectItem>
+              <SelectItem value="DATE">Date Picker</SelectItem>
+              <SelectItem value="IMAGE">Image / Graph Upload</SelectItem>
+              <SelectItem value="RICH_TEXT">Rich Text / HTML</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Layout Selector */}
+        {watchedType === 'IMAGE' && (
+            <div className="bg-blue-50 p-4 rounded-md border border-blue-100">
+                <Label className="flex items-center gap-2 mb-3 text-blue-800 text-xs font-bold uppercase tracking-wide">
+                    <LayoutTemplate className="h-4 w-4"/> Report Display Size
+                </Label>
+                <div className="grid grid-cols-3 gap-2">
+                    {/* Full Width Option */}
+                    <div 
+                        className={`cursor-pointer border-2 rounded-md p-2 flex flex-col items-center gap-2 text-xs font-medium transition-all ${watchedLayout === 'FULL' ? 'border-blue-600 bg-white shadow-sm ring-1 ring-blue-600' : 'border-slate-200 bg-white/50 hover:bg-white'}`}
+                        onClick={() => form.setValue('reportLayout', 'FULL')}
+                    >
+                        <div className="w-full h-6 bg-slate-300 rounded border border-slate-400"></div>
+                        <span className="text-[10px] text-slate-600">Full Width (1/1)</span>
+                    </div>
+
+                    {/* Half Width Option */}
+                    <div 
+                        className={`cursor-pointer border-2 rounded-md p-2 flex flex-col items-center gap-2 text-xs font-medium transition-all ${watchedLayout === 'HALF' ? 'border-blue-600 bg-white shadow-sm ring-1 ring-blue-600' : 'border-slate-200 bg-white/50 hover:bg-white'}`}
+                        onClick={() => form.setValue('reportLayout', 'HALF')}
+                    >
+                        <div className="flex gap-1 w-full h-6">
+                            <div className="w-1/2 bg-slate-300 rounded border border-slate-400"></div>
+                            <div className="w-1/2 bg-slate-200 rounded border border-slate-300 border-dashed"></div>
+                        </div>
+                        <span className="text-[10px] text-slate-600">Half Width (1/2)</span>
+                    </div>
+
+                    {/* Third Width Option */}
+                    <div 
+                        className={`cursor-pointer border-2 rounded-md p-2 flex flex-col items-center gap-2 text-xs font-medium transition-all ${watchedLayout === 'THIRD' ? 'border-blue-600 bg-white shadow-sm ring-1 ring-blue-600' : 'border-slate-200 bg-white/50 hover:bg-white'}`}
+                        onClick={() => form.setValue('reportLayout', 'THIRD')}
+                    >
+                        <div className="flex gap-1 w-full h-6">
+                            <div className="w-1/3 bg-slate-300 rounded border border-slate-400"></div>
+                            <div className="w-1/3 bg-slate-200 rounded border border-slate-300 border-dashed"></div>
+                            <div className="w-1/3 bg-slate-200 rounded border border-slate-300 border-dashed"></div>
+                        </div>
+                        <span className="text-[10px] text-slate-600">Small (1/3)</span>
+                    </div>
+                </div>
+                <p className="text-[10px] text-blue-600/80 mt-2">Select how much width this image should take on the printed report.</p>
+            </div>
+        )}
+
+        {watchedType === 'DROPDOWN' && (
+          <div className="bg-slate-50 p-3 rounded-md border border-slate-200">
+            <Label className="text-xs">Dropdown Options</Label>
+            <div className="flex gap-2 mt-2 mb-3">
+              <Input 
+                value={newOption} 
+                onChange={e => setNewOption(e.target.value)} 
+                placeholder="Add option..." 
+                className="h-8 text-xs"
+                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddOption())}
+              />
+              <Button type="button" size="sm" variant="secondary" onClick={handleAddOption} className="h-8">
+                <Plus className="h-3 w-3" />
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {options.map((opt, i) => (
+                <Badge key={i} variant="outline" className="bg-white pl-2 pr-1 py-0.5 text-[10px]">
+                  {opt} <X className="h-3 w-3 ml-1 cursor-pointer hover:text-red-500" onClick={() => removeOption(i)}/>
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="flex justify-end gap-3 mt-6">
+          <Button type="submit" disabled={isSubmitting} className="bg-blue-600 hover:bg-blue-700">
+            {isSubmitting && <Loader2 className="animate-spin mr-2 h-4 w-4" />} Save
+          </Button>
+        </div>
+      </form>
+
+      {/* RIGHT: PREVIEW */}
+      <div className="bg-slate-100/50 p-6 rounded-lg border-2 border-dashed border-slate-200 flex flex-col justify-center">
+        <div className="bg-white p-4 shadow-sm border border-slate-200 rounded-md">
+           <p className="text-[10px] text-slate-400 mb-2 uppercase tracking-wider font-bold">Preview (Data Entry Form)</p>
+           <DynamicTestFields 
+             fields={previewFields} 
+             values={[]} 
+             onChange={() => {}} 
+           />
+        </div>
+      </div>
     </div>
   );
 }

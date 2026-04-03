@@ -1,50 +1,57 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, Trash2, Pencil, Type, AlignLeft, List, CalendarDays, FileText } from 'lucide-react';
+import { Plus, Trash2, Pencil, Type, AlignLeft, List, CalendarDays, FileText, AlertCircle, Image as ImageIcon, Code } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-// ✅ Correct Import from your actions folder
 import { getCustomFields, deleteCustomField } from '@/actions/custom-field-management';
-
-// ✅ Correct Import from your components folder
 import CustomFieldForm from '../components/custom-field-form';
 
+// 1. Define the Custom Field Interface
+export interface CustomFieldDef {
+  id: string;
+  name: string;
+  type: 'TEXT' | 'LONG_TEXT' | 'DROPDOWN' | 'DATE' | 'IMAGE' | 'RICH_TEXT';
+  options: string[];
+  reportLayout?: string;
+}
+
 export default function CustomFieldsTab() {
-  const [fields, setFields] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingField, setEditingField] = useState<any>(null);
+  const [editingField, setEditingField] = useState<CustomFieldDef | null>(null);
 
-  useEffect(() => { loadData(); }, []);
+  // 2. Fetch Data with React Query
+  const { data: fields = [], isLoading, isError } = useQuery<CustomFieldDef[]>({
+    queryKey: ['custom-fields'],
+    queryFn: async () => await getCustomFields(),
+  });
 
-  async function loadData() {
-    try {
-      const data = await getCustomFields();
-      setFields(data);
-    } catch (error) {
-      toast.error("Failed to load custom fields");
-    } finally {
-      setLoading(false);
+  // 3. Handle Deletions with useMutation
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await deleteCustomField(id);
+    },
+    onSuccess: () => {
+      toast.success("Field deleted");
+      queryClient.invalidateQueries({ queryKey: ['custom-fields'] });
+    },
+    onError: () => {
+      toast.error("Error deleting field");
     }
+  });
+
+  function handleDelete(id: string) {
+    if (!window.confirm("Delete this field? It will be removed from all tests using it.")) return;
+    deleteMutation.mutate(id);
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm("Delete this field? It will be removed from all tests using it.")) return;
-    try {
-        await deleteCustomField(id);
-        toast.success("Field deleted");
-        loadData();
-    } catch (error) {
-        toast.error("Error deleting field");
-    }
-  }
-
-  function handleEdit(field: any) {
+  function handleEdit(field: CustomFieldDef) {
     setEditingField(field);
     setIsDialogOpen(true);
   }
@@ -54,12 +61,15 @@ export default function CustomFieldsTab() {
     setIsDialogOpen(true);
   }
 
+  // Updated to include the new IMAGE and RICH_TEXT types we added earlier
   const getTypeIcon = (type: string) => {
     switch(type) {
         case 'TEXT': return <Type className="h-3 w-3 mr-1 text-blue-600"/>;
         case 'LONG_TEXT': return <AlignLeft className="h-3 w-3 mr-1 text-orange-600"/>;
         case 'DROPDOWN': return <List className="h-3 w-3 mr-1 text-purple-600"/>;
         case 'DATE': return <CalendarDays className="h-3 w-3 mr-1 text-green-600"/>;
+        case 'IMAGE': return <ImageIcon className="h-3 w-3 mr-1 text-pink-600"/>;
+        case 'RICH_TEXT': return <Code className="h-3 w-3 mr-1 text-teal-600"/>;
         default: return <FileText className="h-3 w-3 mr-1"/>;
     }
   };
@@ -83,10 +93,12 @@ export default function CustomFieldsTab() {
               </DialogTitle>
             </DialogHeader>
             <CustomFieldForm 
-                initialData={editingField}
+                key={editingField ? editingField.id : 'new'} 
+                initialData={editingField || undefined}
                 onSuccess={() => {
                     setIsDialogOpen(false);
-                    loadData();
+                    // Invalidating the cache immediately updates the table
+                    queryClient.invalidateQueries({ queryKey: ['custom-fields'] });
                 }} 
             />
           </DialogContent>
@@ -105,8 +117,16 @@ export default function CustomFieldsTab() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {loading ? (
+            {isLoading ? (
                <TableRow><TableCell colSpan={4} className="text-center h-24 text-muted-foreground">Loading Fields...</TableCell></TableRow>
+            ) : isError ? (
+               <TableRow>
+                 <TableCell colSpan={4} className="text-center h-24 text-red-500">
+                   <div className="flex items-center justify-center gap-2">
+                     <AlertCircle className="h-4 w-4" /> Failed to load custom fields. Please refresh.
+                   </div>
+                 </TableCell>
+               </TableRow>
             ) : fields.length === 0 ? (
                <TableRow><TableCell colSpan={4} className="text-center h-24 text-muted-foreground">No custom fields defined yet.</TableCell></TableRow>
             ) : (
@@ -120,14 +140,21 @@ export default function CustomFieldsTab() {
                     </span>
                   </TableCell>
                   <TableCell className="text-xs text-slate-500">
-                    {field.type === 'DROPDOWN' ? field.options.join(', ') : '-'}
+                    {field.type === 'DROPDOWN' ? field.options?.join(', ') : '-'}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
                         <Button variant="ghost" size="icon" onClick={() => handleEdit(field)} className="h-8 w-8 text-slate-400 hover:text-blue-600">
                            <Pencil className="h-3.5 w-3.5" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(field.id)} className="h-8 w-8 text-slate-400 hover:text-red-600">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => handleDelete(field.id)} 
+                          // Disables this specific trash can while it's processing
+                          disabled={deleteMutation.isPending && deleteMutation.variables === field.id}
+                          className="h-8 w-8 text-slate-400 hover:text-red-600"
+                        >
                            <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                     </div>
