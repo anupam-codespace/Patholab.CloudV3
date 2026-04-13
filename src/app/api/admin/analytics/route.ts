@@ -1,180 +1,216 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { startOfDay, endOfDay, subDays, eachDayOfInterval, format, parseISO, eachMonthOfInterval } from 'date-fns';
+import prisma from '@/lib/prisma';
+import { format, eachDayOfInterval, isSameDay } from 'date-fns';
 
-export const dynamic = 'force-dynamic';
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const fromStr = searchParams.get('from');
+  const toStr = searchParams.get('to');
 
-export async function GET(req: Request) {
+  if (!fromStr || !toStr) {
+    return NextResponse.json({ error: 'Missing date range' }, { status: 400 });
+  }
+
+  const from = new Date(fromStr);
+  const to = new Date(toStr);
+
   try {
-    const { searchParams } = new URL(req.url);
-    
-    // 1. Dynamic Date Filtering Logic
-    const fromParam = searchParams.get('from');
-    const toParam = searchParams.get('to');
-    
-    // Default to Last 30 Days if no filters provided
-    const endDate = toParam ? endOfDay(parseISO(toParam)) : endOfDay(new Date());
-    const startDate = fromParam ? startOfDay(parseISO(fromParam)) : startOfDay(subDays(new Date(), 30));
-
-    const dateFilter = {
-      createdAt: {
-        gte: startDate,
-        lte: endDate,
-      },
-    };
-
-    // 2. Parallel "Big Data" Aggregation
+    // ==========================================
+    // 1. MASSIVE PARALLEL DATA FETCHING
+    // ==========================================
     const [
-      // A. Financials
-      totalRevenue,
-      revenueGraphRaw,
-      
-      // B. Operational Counts
-      totalTests,
-      totalPatients,
-      activeLabs,
-      
-      // C. Demographics & Segmentation
-      usersByRole,
+      dailyPayments,
+      subscriptions,
+      activeLabsCount,
+      trialLabsCount,
+      testsCount,
+      patientsCount,
+      samplesTotal,
+      samplesRejected,
+      tatTests,
       labsByState,
-      patientsByGender,
-      
-      // D. Performance
-      topLabsRaw,
-      testStatusDistribution
+      popularTestsData,
+      patientGenders,
+      patientsForAge,
+      userRoles,
+      topLabsData
     ] = await Promise.all([
-      // Revenue Sum
-      prisma.payment.aggregate({ 
-        where: { status: 'SUCCESS', ...dateFilter }, 
-        _sum: { amount: true } 
+      // Financials
+      prisma.payment.findMany({
+        where: { status: 'SUCCESS', createdAt: { gte: from, lte: to } },
+        select: { amount: true, createdAt: true }
+      }),
+      prisma.subscription.findMany({
+        where: { status: 'ACTIVE' },
+        include: { plan: true }
       }),
       
-      // Revenue Graph Data
-      prisma.payment.findMany({
-        where: { status: 'SUCCESS', ...dateFilter },
-        select: { amount: true, createdAt: true },
-        orderBy: { createdAt: 'asc' }
+      // SaaS KPIs
+      prisma.lab.count({ where: { isActive: true, deletedAt: null } }),
+      prisma.subscription.count({ where: { status: 'TRIAL' } }),
+      
+      // Medical Volumes
+      prisma.test.count({ where: { createdAt: { gte: from, lte: to }, deletedAt: null } }),
+      prisma.patient.count({ where: { createdAt: { gte: from, lte: to }, deletedAt: null } }),
+      prisma.sample.count({ where: { createdAt: { gte: from, lte: to }, deletedAt: null } }),
+      prisma.sample.count({ where: { status: 'REJECTED', createdAt: { gte: from, lte: to }, deletedAt: null } }),
+      
+      // Operational Efficiency (Turnaround Time)
+      prisma.test.findMany({
+        where: { 
+          status: 'APPROVED', 
+          approvedAt: { not: null }, 
+          sampleCollectedAt: { not: null },
+          createdAt: { gte: from, lte: to },
+          deletedAt: null
+        },
+        select: { sampleCollectedAt: true, approvedAt: true }
       }),
 
-      // Counts
-      prisma.test.count({ where: dateFilter }),
-      prisma.patient.count({ where: dateFilter }),
-      prisma.lab.count({ where: { isActive: true, ...dateFilter } }),
-
-      // User Roles
-      prisma.user.groupBy({
-        by: ['role'],
-        where: dateFilter,
-        _count: { role: true }
-      }),
-
-      // Geographic Distribution (Labs by State)
+      // Demographics & Charts
       prisma.lab.groupBy({
         by: ['state'],
-        where: dateFilter,
-        _count: { state: true }
+        _count: { state: true },
+        where: { deletedAt: null },
+        orderBy: { _count: { state: 'desc' } },
+        take: 5
       }),
-
-      // Patient Demographics
+      prisma.test.groupBy({
+        by: ['testName'],
+        _count: { testName: true },
+        where: { createdAt: { gte: from, lte: to }, deletedAt: null },
+        orderBy: { _count: { testName: 'desc' } },
+        take: 10
+      }),
       prisma.patient.groupBy({
         by: ['gender'],
-        where: dateFilter,
-        _count: { gender: true }
+        _count: { gender: true },
+        where: { gender: { not: null }, createdAt: { gte: from, lte: to }, deletedAt: null }
+      }),
+      prisma.patient.findMany({
+        where: { age: { not: null }, createdAt: { gte: from, lte: to }, deletedAt: null },
+        select: { age: true }
+      }),
+      prisma.user.groupBy({
+        by: ['role'],
+        _count: { role: true },
+        where: { deletedAt: null }
       }),
 
-      // Top Performing Labs
+      // Top Performers Matrix
       prisma.lab.findMany({
-        take: 5,
-        where: { isActive: true }, // Top labs usually based on all-time or filtered activity
-        include: {
-          _count: { select: { tests: true } },
-          invoices: { 
-            where: { status: 'PAID', ...dateFilter } 
+        where: { deletedAt: null },
+        select: {
+          id: true,
+          name: true,
+          state: true,
+          _count: { select: { tests: { where: { createdAt: { gte: from, lte: to } } } } },
+          invoices: {
+            where: { status: 'PAID', createdAt: { gte: from, lte: to } },
+            select: { grandTotal: true }
           }
         }
-      }),
-      
-      // Test Status Funnel
-      prisma.test.groupBy({
-        by: ['status'],
-        where: dateFilter,
-        _count: { status: true }
       })
     ]);
 
-    // 3. Advanced Data Processing
+    // ==========================================
+    // 2. COMPLEX DATA TRANSFORMATIONS
+    // ==========================================
 
-    // A. Generate Graph Data (Fill in missing dates with 0)
-    // Determine if we should group by Day or Month based on range size
-    const daysDiff = (endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24);
-    const isLongRange = daysDiff > 60; 
-    
-    let chartData = [];
-    
-    if (isLongRange) {
-        // Group by Month
-        const months = eachMonthOfInterval({ start: startDate, end: endDate });
-        chartData = months.map(month => {
-            const monthKey = format(month, 'yyyy-MM');
-            const total = revenueGraphRaw
-                .filter(p => format(p.createdAt, 'yyyy-MM') === monthKey)
-                .reduce((sum, p) => sum + p.amount, 0);
-            return { date: format(month, 'MMM yyyy'), revenue: total };
-        });
-    } else {
-        // Group by Day
-        const days = eachDayOfInterval({ start: startDate, end: endDate });
-        chartData = days.map(day => {
-            const dayKey = format(day, 'yyyy-MM-dd');
-            const total = revenueGraphRaw
-                .filter(p => format(p.createdAt, 'yyyy-MM-dd') === dayKey)
-                .reduce((sum, p) => sum + p.amount, 0);
-            return { date: format(day, 'MMM dd'), revenue: total };
-        });
-    }
+    // A. Revenue Calculations
+    const totalRevenue = dailyPayments.reduce((sum, p) => sum + Number(p.amount), 0);
+    const totalMRR = subscriptions.reduce((sum, sub) => sum + Number(sub.plan.price), 0);
 
-    // B. Calculate Patient Age Segments (Requires fetching DOBs, simplified here to raw count)
-    // For production speed, we usually pre-calculate this or use a raw SQL query.
-    // Here we simulate the distribution based on the total count for visualization.
-    const ageDistribution = [
-        { name: '0-18', value: Math.round(totalPatients * 0.15) },
-        { name: '19-35', value: Math.round(totalPatients * 0.35) },
-        { name: '36-50', value: Math.round(totalPatients * 0.30) },
-        { name: '50+', value: Math.round(totalPatients * 0.20) },
-    ];
+    // B. Revenue Over Time (Fills missing days with 0 for smooth charts)
+    const daysInterval = eachDayOfInterval({ start: from, end: to });
+    const revenueOverTime = daysInterval.map(day => {
+      const paymentsOnDay = dailyPayments.filter(p => isSameDay(new Date(p.createdAt), day));
+      const dailyTotal = paymentsOnDay.reduce((sum, p) => sum + Number(p.amount), 0);
+      return {
+        date: format(day, 'MMM dd'),
+        revenue: dailyTotal
+      };
+    });
 
-    // C. Process Top Labs by Revenue (in filtered range)
-    const topLabs = topLabsRaw
-        .map(lab => ({
-            name: lab.name,
-            location: `${lab.city}, ${lab.state}`,
-            tests: lab._count.tests,
-            revenue: lab.invoices.reduce((sum, inv) => sum + inv.grandTotal, 0)
-        }))
-        .sort((a, b) => b.revenue - a.revenue);
+    // C. Revenue By SaaS Plan
+    const revenueByPlanMap = new Map<string, number>();
+    subscriptions.forEach(sub => {
+       const planName = sub.plan.name;
+       const price = Number(sub.plan.price);
+       revenueByPlanMap.set(planName, (revenueByPlanMap.get(planName) || 0) + price);
+    });
+    const revenueByPlan = Array.from(revenueByPlanMap, ([name, value]) => ({ name, value }));
 
+    // D. Operational Metrics (TAT & Rejection Rates)
+    let totalTatMs = 0;
+    tatTests.forEach(t => {
+      // Calculate difference between Sample Collection and Report Approval
+      totalTatMs += t.approvedAt!.getTime() - t.sampleCollectedAt!.getTime();
+    });
+    const avgTatHrs = tatTests.length > 0 ? (totalTatMs / tatTests.length) / (1000 * 60 * 60) : 0;
+    const avgTatString = `${avgTatHrs.toFixed(1)}h`;
+
+    const rejectionRatePercent = samplesTotal > 0 ? (samplesRejected / samplesTotal) * 100 : 0;
+    const rejectionRateString = `${rejectionRatePercent.toFixed(1)}%`;
+
+    // E. Demographics Grouping (Age Buckets)
+    const ageGroups = { '0-18': 0, '19-35': 0, '36-50': 0, '51-65': 0, '65+': 0 };
+    patientsForAge.forEach(p => {
+      const age = p.age!;
+      if (age <= 18) ageGroups['0-18']++;
+      else if (age <= 35) ageGroups['19-35']++;
+      else if (age <= 50) ageGroups['36-50']++;
+      else if (age <= 65) ageGroups['51-65']++;
+      else ageGroups['65+']++;
+    });
+
+    // F. Top Performers (Calculated dynamically based on actual collected invoices)
+    const formattedTopPerformers = topLabsData
+      .map(lab => {
+        const labRevenue = lab.invoices.reduce((sum, inv) => sum + Number(inv.grandTotal), 0);
+        return {
+          name: lab.name,
+          location: lab.state || 'N/A',
+          tests: lab._count.tests,
+          revenue: labRevenue
+        };
+      })
+      .sort((a, b) => b.revenue - a.revenue) // Sort by highest revenue
+      .slice(0, 10); // Return Top 10
+
+    // ==========================================
+    // 3. FINAL JSON PAYLOAD
+    // ==========================================
     return NextResponse.json({
-        kpi: {
-            revenue: totalRevenue._sum.amount || 0,
-            tests: totalTests,
-            patients: totalPatients,
-            activeLabs: activeLabs
+      kpi: {
+        revenue: totalRevenue,
+        mrr: totalMRR,
+        activeLabs: activeLabsCount,
+        trialLabs: trialLabsCount,
+        tests: testsCount,
+        patients: patientsCount,
+        avgTat: avgTatString,
+        rejectionRate: rejectionRateString
+      },
+      charts: {
+        revenueOverTime,
+        revenueByPlan,
+        popularTests: popularTestsData.map(t => ({ name: t.testName, value: t._count.testName })),
+        geoData: labsByState.map(s => ({ name: s.state || 'Unknown', value: s._count.state })),
+        demographics: {
+          gender: patientGenders.map(g => ({ name: g.gender, value: g._count.gender })),
+          age: Object.entries(ageGroups).map(([name, value]) => ({ name, value }))
         },
-        charts: {
-            revenueOverTime: chartData,
-            testStatus: testStatusDistribution.map(t => ({ name: t.status, value: t._count.status })),
-            userRoles: usersByRole.map(u => ({ name: u.role, value: u._count.role })),
-            geoData: labsByState.map(s => ({ name: s.state, value: s._count.state })),
-            demographics: {
-                gender: patientsByGender.map(g => ({ name: g.gender || 'Unknown', value: g._count.gender })),
-                age: ageDistribution
-            }
-        },
-        topPerformers: topLabs
+        userRoles: userRoles.map(r => ({
+          name: r.role.replace('_', ' '),
+          value: r._count.role
+        }))
+      },
+      topPerformers: formattedTopPerformers
     });
 
   } catch (error) {
-    console.error('Advanced Analytics Error:', error);
-    return NextResponse.json({ error: 'Failed to process analytics' }, { status: 500 });
+    console.error('Advanced Analytics Fetch Error:', error);
+    return NextResponse.json({ error: 'Failed to process analytics data' }, { status: 500 });
   }
 }

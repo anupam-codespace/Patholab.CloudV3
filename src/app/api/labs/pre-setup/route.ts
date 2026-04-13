@@ -9,7 +9,12 @@ export async function POST(req: Request) {
       address, city, state, pincode, phone, email 
     } = body;
 
-    // Use a transaction to ensure both operations succeed or fail together
+    // Basic validation
+    if (!userId || !labName || !licenseNumber) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+
+    // Use a transaction to ensure all operations succeed or fail together
     const result = await prisma.$transaction(async (tx) => {
       
       // 1. Create the Lab Record
@@ -29,7 +34,35 @@ export async function POST(req: Request) {
         }
       });
 
-      // 2. Update User Progress
+      // 2. Create the default Main Branch for this Lab
+      const mainBranch = await tx.branch.create({
+        data: {
+          labId: lab.id,
+          name: "Main Branch",
+          isMainBranch: true,
+          address,
+          city,
+          state,
+          pincode,
+          phone,
+          email,
+          isActive: true,
+        }
+      });
+
+      // 3. Automatically assign the Owner as Staff to the Main Branch
+      await tx.labStaff.create({
+        data: {
+          labId: lab.id,
+          userId: userId,
+          branchId: mainBranch.id,
+          position: "Lab Owner",
+          department: "Management",
+          isActive: true,
+        }
+      });
+
+      // 4. Update User Progress
       // This flags the user as having finished Step 4
       await tx.user.update({
         where: { id: userId },

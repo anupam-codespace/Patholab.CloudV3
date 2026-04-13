@@ -4,75 +4,140 @@ import { getCurrentUser } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
-// GET: Fetch Lab Settings for the logged-in user
+// ============================================================================
+// GET: Fetch ALL Lab Settings (Branches, Subscription Limits, Configs)
+// ============================================================================
 export async function GET(req: NextRequest) {
   try {
     const user = await getCurrentUser();
     
-    // Security Check
     if (!user || !user.labId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Fetch the lab details
     const lab = await prisma.lab.findUnique({
       where: { id: user.labId },
+      include: {
+        owner: {
+          select: { name: true, email: true, phone: true }
+        },
+        branches: {
+          orderBy: { createdAt: 'asc' }
+        },
+        subscription: {
+          include: {
+            plan: true,
+            currentUsage: true
+          }
+        }
+      }
     });
 
     if (!lab) {
-      return NextResponse.json({ error: 'Lab not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Workspace not found' }, { status: 404 });
     }
 
     return NextResponse.json({ lab });
   } catch (error) {
-    console.error('Error fetching lab settings:', error);
+    console.error('[SETTINGS_GET_ERROR]', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
 
-// PUT: Update Lab Settings
+// ============================================================================
+// PUT: Update Global Lab Settings & Communication Modules
+// ============================================================================
 export async function PUT(req: NextRequest) {
   try {
     const user = await getCurrentUser();
     
-    // Security Check
     if (!user || !user.labId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await req.json();
 
-    // Update the lab record
-    const updatedLab = await prisma.lab.update({
-      where: { id: user.labId },
-      data: {
-        name: body.name,
-        email: body.email,
-        phone: body.phone,
-        
-        address: body.address,
-        city: body.city,
-        state: body.state,
-        pincode: body.pincode,
-        
-        licenseNumber: body.licenseNumber,
-        registrationNo: body.registrationNo,
-        taxId: body.taxId,
-        gstNumber: body.gstNumber,
-        panNumber: body.panNumber,
-        
-        logo: body.logo,
-        
-        // Commission Settings
-        commissionType: body.commissionType,
-        defaultDoctorCommission: parseFloat(body.defaultDoctorCommission || 0),
-        defaultAgencyCommission: parseFloat(body.defaultAgencyCommission || 0),
-      },
+    // Use a transaction to ensure data consistency across potential multiple table updates
+    const result = await prisma.$transaction(async (tx) => {
+      
+      // 1. Update the Global Lab Master Record
+      const updatedLab = await tx.lab.update({
+        where: { id: user.labId },
+        data: {
+          // General Details
+          name: body.name,
+          email: body.email,
+          phone: body.phone,
+          address: body.address,
+          city: body.city,
+          state: body.state,
+          pincode: body.pincode,
+          
+          // Legal & Banking
+          licenseNumber: body.licenseNumber,
+          registrationNo: body.registrationNo,
+          taxId: body.taxId,
+          gstNumber: body.gstNumber,
+          panNumber: body.panNumber,
+          entityType: body.entityType, 
+          bankName: body.bankName,
+          accountNumber: body.accountNumber,
+          ifscCode: body.ifscCode,
+          accountHolder: body.accountHolder,
+
+          // Branding Assets
+          logo: body.logo,
+          letterhead: body.letterhead,
+          footer: body.footer,
+          signature: body.signature,
+          
+          // Commissions
+          commissionType: body.commissionType,
+          defaultDoctorCommission: body.defaultDoctorCommission ? parseFloat(body.defaultDoctorCommission.toString()) : null,
+          defaultAgencyCommission: body.defaultAgencyCommission ? parseFloat(body.defaultAgencyCommission.toString()) : null,
+
+          // Communication Modules (WhatsApp & SMS)
+          whatsappApiKey: body.whatsappApiKey,
+          whatsappPhoneId: body.whatsappPhoneId,
+          smsApiKey: body.smsApiKey,
+          smsSenderId: body.smsSenderId,
+        },
+      });
+
+      // 2. Smart Sync: Update the "Main Branch" location automatically if requested
+      if (body.syncMainBranch) {
+        const mainBranch = await tx.branch.findFirst({
+          where: { labId: user.labId, isMainBranch: true }
+        });
+
+        if (mainBranch) {
+          await tx.branch.update({
+            where: { id: mainBranch.id },
+            data: {
+              address: body.address,
+              city: body.city,
+              state: body.state,
+              pincode: body.pincode,
+              phone: body.phone,
+              email: body.email,
+            }
+          });
+        }
+      }
+
+      return updatedLab;
     });
 
-    return NextResponse.json({ lab: updatedLab, message: "Settings updated successfully" });
-  } catch (error) {
-    console.error('Error updating lab settings:', error);
+    return NextResponse.json({ 
+      lab: result, 
+      message: "Workspace settings optimized successfully." 
+    });
+
+  } catch (error: any) {
+    console.error('[SETTINGS_PUT_ERROR]', error);
+    if (error.code === 'P2002') {
+      return NextResponse.json({ error: 'License number or email collision detected.' }, { status: 409 });
+    }
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
