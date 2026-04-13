@@ -21,8 +21,11 @@ import {
   ChevronRight,
   Bell,
   Server,
-    Database,
+  Database,
   Files,
+  PlusSquare,
+  Activity,
+  Trash2,
 } from "lucide-react";
 import {
   Tooltip,
@@ -30,43 +33,50 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-// ✅ IMPORT SCROLL AREA
 import { ScrollArea } from "@/components/ui/scroll-area";
+import Image from "next/image"; // Added for optimized logo rendering
 
 // Navigation Data
 const navGroups = [
   {
     title: "Overview",
     items: [
-      { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
+      { name: "Command Center", href: "/admin", icon: LayoutDashboard },
       { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
       { name: "Leads", href: "/admin/leads", icon: Mail },
     ],
   },
   {
-    title: "Management",
+    title: "Tenant Management",
     items: [
-      { name: "Labs & Tenants", href: "/admin/labs", icon: Building2 },
+      { name: "Labs & Usage", href: "/admin/labs", icon: Building2 },
       { name: "Global Users", href: "/admin/users", icon: Users },
-      { name: "SaaS Plans", href: "/admin/plans", icon: Box },
-      { name: "Plan Usage", href: "/admin/plan-usage", icon: Database },
-      { name: "Notifications", href: "/admin/notifications", icon: Bell },
+      { name: "Master Catalog", href: "/admin/catalog", icon: Database },
     ],
   },
-
   {
-    title: "Finance",
+    title: "Monetization",
     items: [
+      { name: "SaaS Plans", href: "/admin/plans", icon: Box },
+      { name: "Add-Ons", href: "/admin/addons", icon: PlusSquare },
       { name: "Subscriptions", href: "/admin/subscriptions", icon: CreditCard },
       { name: "Invoices", href: "/admin/invoices", icon: Receipt },
     ],
   },
   {
+    title: "Audit & Compliance",
+    items: [
+      { name: "Activity Logs", href: "/admin/activity", icon: Activity },
+      { name: "Recycle Bin", href: "/admin/archives", icon: Trash2 },
+    ],
+  },
+  {
     title: "System",
     items: [
-      { name: "Support", href: "/admin/support", icon: LifeBuoy },
-      { name: "Config", href: "/admin/settings", icon: Settings },
-      { name: "Pages", href: "/admin/pages", icon: Files },
+      { name: "Notifications", href: "/admin/notifications", icon: Bell },
+      { name: "Support Tickets", href: "/admin/support", icon: LifeBuoy },
+      { name: "Global Config", href: "/admin/settings", icon: Settings },
+      { name: "CMS Pages", href: "/admin/pages", icon: Files },
     ],
   },
 ];
@@ -83,13 +93,19 @@ export default function AdminSidebar({
   const pathname = usePathname();
   const router = useRouter();
   const [systemStatus, setSystemStatus] = useState<any>(null);
+  const [systemConfig, setSystemConfig] = useState<any>(null); // State for branding
 
-  // Fetch System Status on Mount
+  // Fetch System Status & Config on Mount
   useEffect(() => {
-    fetch("/api/system/status")
-      .then((res) => res.json())
-      .then((data) => setSystemStatus(data))
-      .catch((err) => console.error("Status fetch failed", err));
+    Promise.all([
+      fetch("/api/system/status").then((res) => (res.ok ? res.json() : null)),
+      fetch("/api/system/config").then((res) => (res.ok ? res.json() : null)), // Assuming you create this endpoint to return SystemConfig
+    ])
+      .then(([statusData, configData]) => {
+        if (statusData) setSystemStatus(statusData);
+        if (configData) setSystemConfig(configData);
+      })
+      .catch((err) => console.error("Initialization fetch failed", err));
   }, []);
 
   const handleLogout = async () => {
@@ -109,18 +125,32 @@ export default function AdminSidebar({
           "bg-slate-900 text-slate-300 fixed h-full left-0 top-0 z-50 flex flex-col border-r border-slate-800 transition-all duration-300 ease-in-out",
           collapsed ? "w-20" : "w-64",
         )}>
-        {/* 1. Header & System Info */}
+        {/* 1. Header & Dynamic Branding */}
         <div
           className={cn(
             "border-b border-slate-800 flex flex-col transition-all",
             collapsed ? "p-4 items-center" : "p-6",
           )}>
           <div className="flex items-center gap-3 mb-2">
-            <ShieldCheck className="text-blue-500 h-8 w-8 shrink-0" />
+            {/* Dynamic Logo Rendering */}
+            {systemConfig?.systemLogo ? (
+              <div className="relative h-8 w-8 shrink-0">
+                <Image
+                  src={systemConfig.systemLogo}
+                  alt="System Logo"
+                  fill
+                  className="object-contain rounded-md"
+                />
+              </div>
+            ) : (
+              <ShieldCheck className="text-blue-500 h-8 w-8 shrink-0" />
+            )}
+
             {!collapsed && (
-              <div>
-                <h2 className="text-lg font-bold text-white tracking-tight leading-none">
-                  Super Admin
+              <div className="overflow-hidden">
+                {/* Dynamic System Name */}
+                <h2 className="text-lg font-bold text-white tracking-tight leading-none truncate">
+                  {systemConfig?.systemName || "Super Admin"}
                 </h2>
                 <span className="text-[10px] text-blue-400 font-mono uppercase">
                   Root Access
@@ -166,7 +196,6 @@ export default function AdminSidebar({
         </div>
 
         {/* 2. Navigation Links with ScrollArea */}
-        {/* ✅ THE FIX: Replaced <nav> with <ScrollArea> */}
         <ScrollArea className="flex-1">
           <nav className="p-3 space-y-6">
             {navGroups.map((group) => (

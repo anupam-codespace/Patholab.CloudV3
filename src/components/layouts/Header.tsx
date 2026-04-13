@@ -8,6 +8,7 @@ import {
   CreditCard,
   FlaskConical,
   ChevronRight,
+  ChevronDown,
   HelpCircle,
   Phone,
   Mail,
@@ -17,6 +18,9 @@ import {
   Receipt,
   TestTube,
   LifeBuoy,
+  Building2,
+  MapPin,
+  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter, usePathname } from "next/navigation";
@@ -45,6 +49,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import NotificationDropdown from "@/components/layouts/NotificationDropdown";
 
+// ✅ UPDATED: Added Branch typings to the Header Props
 interface HeaderProps {
   user: {
     name: string;
@@ -52,6 +57,8 @@ interface HeaderProps {
     avatar?: string | null;
     role?: string;
     lab?: { name: string } | null;
+    currentBranch?: { id: string; name: string; isMainBranch?: boolean } | null;
+    branches?: { id: string; name: string; isMainBranch?: boolean }[];
   };
 }
 
@@ -74,7 +81,14 @@ export function Header({ user }: HeaderProps) {
     }
   };
 
-  // ✅ Fallback to prevent .split() crash
+  // ✅ Branch Switching Logic (Placeholder for your state/context manager)
+  const handleSwitchBranch = (branchId: string, branchName: string) => {
+    // Here you would typically set a cookie, update a global context, or append a ?branchId= query param
+    toast.success(`Switched workspace to ${branchName}`);
+    // router.refresh(); // Refresh to load data for the new branch
+  };
+
+  // Fallback to prevent .split() crash
   const userName = user?.name || "User";
   const initials = userName
     .split(" ")
@@ -84,6 +98,11 @@ export function Header({ user }: HeaderProps) {
     .substring(0, 2);
 
   const labName = user?.lab?.name || "Super Admin";
+  const currentBranchName = user?.currentBranch?.name || "Main Branch";
+  // Fallback branches array if not provided by backend yet
+  const availableBranches = user?.branches || [
+    { id: "1", name: "Main Branch", isMainBranch: true },
+  ];
 
   const getPageTitle = (path: string) => {
     const segments = path.split("/").filter(Boolean);
@@ -119,18 +138,82 @@ export function Header({ user }: HeaderProps) {
     <div className="sticky top-4 z-40 px-4 md:px-8 pointer-events-none">
       {/* Floating Header Container */}
       <header className="pointer-events-auto h-16 w-full max-w-screen-2xl mx-auto flex items-center justify-between rounded-2xl bg-white/80 backdrop-blur-xl border border-slate-200/60 shadow-sm pr-4 pl-14 sm:pr-6 md:pl-16">
-        {/* 1. LEFT SIDE: BRANDING & BREADCRUMBS */}
-        <div className="flex items-center gap-3 overflow-hidden whitespace-nowrap">
+        {/* 1. LEFT SIDE: BRANDING, BRANCH SWITCHER & BREADCRUMBS */}
+        <div className="flex items-center gap-2 overflow-hidden whitespace-nowrap">
           <Link
             href="/lab-owner/patients"
-            className="flex items-center justify-center h-10 w-10 bg-emerald-500/10 rounded-xl border border-emerald-500/20 group transition-all hover:bg-emerald-500/20">
+            className="flex items-center justify-center h-10 w-10 bg-emerald-500/10 rounded-xl border border-emerald-500/20 group transition-all hover:bg-emerald-500/20 mr-1">
             <FlaskConical className="h-5 w-5 text-emerald-600 group-hover:scale-110 transition-transform" />
           </Link>
 
           <div className="hidden sm:flex items-center gap-2">
-            <span className="font-extrabold text-sm text-slate-900 tracking-tight uppercase">
-              {labName}
-            </span>
+            {/* ✅ NEW: BRANCH SWITCHER DROPDOWN */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="h-10 px-2.5 py-1.5 flex items-center gap-2 hover:bg-slate-100 rounded-xl border border-transparent hover:border-slate-200 transition-all text-left">
+                  <div className="bg-slate-100 p-1.5 rounded-lg hidden lg:block">
+                    <Building2 className="w-4 h-4 text-slate-500" />
+                  </div>
+                  <div className="flex flex-col items-start justify-center">
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-0.5">
+                      {labName}
+                    </span>
+                    <span className="text-sm font-extrabold text-slate-900 tracking-tight leading-none flex items-center gap-1.5">
+                      {currentBranchName}{" "}
+                      <ChevronDown className="w-3 h-3 text-slate-400" />
+                    </span>
+                  </div>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="start"
+                className="w-64 rounded-2xl shadow-xl border border-slate-200 p-2 animate-in zoom-in-95 duration-200">
+                <DropdownMenuLabel className="text-xs font-bold text-slate-400 uppercase tracking-widest px-2 pb-2">
+                  Switch Workspace
+                </DropdownMenuLabel>
+                <div className="space-y-1">
+                  {availableBranches.map((branch) => {
+                    const isActive = currentBranchName === branch.name;
+                    return (
+                      <DropdownMenuItem
+                        key={branch.id}
+                        onClick={() =>
+                          handleSwitchBranch(branch.id, branch.name)
+                        }
+                        className={`cursor-pointer rounded-xl px-3 py-2.5 flex items-center justify-between transition-colors ${isActive ? "bg-emerald-50 text-emerald-900 focus:bg-emerald-50" : "hover:bg-slate-50 focus:bg-slate-50"}`}>
+                        <div className="flex items-center gap-3">
+                          <MapPin
+                            className={`h-4 w-4 ${isActive ? "text-emerald-500" : "text-slate-400"}`}
+                          />
+                          <div className="flex flex-col">
+                            <span className="font-bold text-sm leading-none">
+                              {branch.name}
+                            </span>
+                            {branch.isMainBranch && (
+                              <span className="text-[10px] text-slate-400 font-medium mt-1">
+                                Main Headquarters
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        {isActive && (
+                          <Check className="h-4 w-4 text-emerald-600" />
+                        )}
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </div>
+                <DropdownMenuSeparator className="my-2 bg-slate-100" />
+                <Link href="/lab-owner/settings?tab=branches">
+                  <DropdownMenuItem className="cursor-pointer rounded-xl px-3 py-2.5 text-slate-600 hover:text-slate-900 hover:bg-slate-50 focus:bg-slate-50 font-bold text-sm flex items-center">
+                    <Settings className="w-4 h-4 mr-2 text-slate-400" />
+                    Manage Branches
+                  </DropdownMenuItem>
+                </Link>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             <ChevronRight className="h-4 w-4 text-slate-300" />
 
@@ -139,10 +222,15 @@ export function Header({ user }: HeaderProps) {
             </span>
           </div>
 
-          {/* Mobile Fallback Title */}
-          <span className="sm:hidden text-sm font-extrabold text-slate-900 tracking-tight truncate max-w-[120px]">
-            {currentPage}
-          </span>
+          {/* Mobile Fallback Title (Shows Branch + Page) */}
+          <div className="sm:hidden flex flex-col justify-center max-w-[140px]">
+            <span className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest leading-none mb-0.5 truncate">
+              {currentBranchName}
+            </span>
+            <span className="text-sm font-extrabold text-slate-900 tracking-tight leading-none truncate">
+              {currentPage}
+            </span>
+          </div>
         </div>
 
         {/* 2. CENTER/RIGHT: ACTIONS */}
@@ -274,7 +362,6 @@ export function Header({ user }: HeaderProps) {
           </Popover>
 
           {/* 🔔 NOTIFICATION DROPDOWN */}
-          {/* Assuming NotificationDropdown has its own internal styling, wrapping it slightly */}
           <div className="flex items-center justify-center h-10 w-10 rounded-xl hover:bg-slate-100 transition-colors">
             <NotificationDropdown />
           </div>

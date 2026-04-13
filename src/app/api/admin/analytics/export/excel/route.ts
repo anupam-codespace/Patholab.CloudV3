@@ -1,110 +1,180 @@
-export const dynamic = 'force-dynamic';
-
 import { NextResponse } from 'next/server';
-import { getAnalyticsData } from '@/lib/analytics-service';
-import { parseISO, startOfDay, endOfDay } from 'date-fns';
-import ExcelJS from 'exceljs';
+import prisma from '@/lib/prisma';
+import * as XLSX from 'xlsx';
 
-export async function GET(req: Request) {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const fromStr = searchParams.get('from');
+  const toStr = searchParams.get('to');
+
+  if (!fromStr || !toStr) {
+    return NextResponse.json({ error: 'Missing date parameters' }, { status: 400 });
+  }
+
+  const from = new Date(fromStr);
+  const to = new Date(toStr);
+
   try {
-    const { searchParams } = new URL(req.url);
-    const from = searchParams.get('from');
-    const to = searchParams.get('to');
-
-    if (!from || !to) {
-      return NextResponse.json({ error: 'Date range required' }, { status: 400 });
-    }
-
-    // 1. Fetch Data
-    const data = await getAnalyticsData(
-      startOfDay(parseISO(from)),
-      endOfDay(parseISO(to))
-    );
-
-    // 2. Create Workbook
-    const workbook = new ExcelJS.Workbook();
-    workbook.creator = 'Patholab System';
-    workbook.lastModifiedBy = 'Admin';
-    workbook.created = new Date();
-
-    // --- SHEET 1: SUMMARY ---
-    const summarySheet = workbook.addWorksheet('Executive Summary');
+    // ==========================================
+    // 1. OPTIMIZED PARALLEL DATA FETCHING
+    // ==========================================
     
-    // Styling Helper
-    const headerStyle = { font: { bold: true, size: 12, color: { argb: 'FFFFFFFF' } }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } } } as any;
-
-    summarySheet.columns = [
-      { header: 'Metric', key: 'metric', width: 30 },
-      { header: 'Value', key: 'value', width: 20 },
-    ];
-    
-    // Apply Header Style
-    summarySheet.getRow(1).eachCell((cell) => { cell.style = headerStyle; });
-
-    summarySheet.addRows([
-      { metric: 'Report Generated', value: new Date().toLocaleString() },
-      { metric: 'Date Range From', value: from },
-      { metric: 'Date Range To', value: to },
-      { metric: '', value: '' }, // Spacer
-      { metric: 'Total Revenue Generated', value: data.kpi.revenue },
-      { metric: 'Total Tests Processed', value: data.kpi.tests },
-      { metric: 'Active Laboratories', value: data.kpi.activeLabs },
-    ]);
-
-    // Format Currency Cell
-    summarySheet.getCell('B5').numFmt = '₹#,##0.00';
-
-    // --- SHEET 2: TOP LABS ---
-    const labsSheet = workbook.addWorksheet('Lab Performance');
-    labsSheet.columns = [
-      { header: 'Lab Name', key: 'name', width: 30 },
-      { header: 'Owner', key: 'owner', width: 20 },
-      { header: 'Email', key: 'email', width: 30 },
-      { header: 'Location', key: 'location', width: 25 },
-      { header: 'Tests Run', key: 'tests', width: 15 },
-      { header: 'Revenue Contributed', key: 'revenue', width: 20 },
-    ];
-    labsSheet.getRow(1).eachCell((cell) => { cell.style = headerStyle; });
-
-    data.topLabs.forEach(lab => {
-      labsSheet.addRow({
-        name: lab.name,
-        owner: lab.owner,
-        email: lab.email,
-        location: `${lab.city}, ${lab.state}`,
-        tests: lab.tests,
-        revenue: lab.revenue
-      });
-    });
-    labsSheet.getColumn('revenue').numFmt = '₹#,##0.00';
-
-    // --- SHEET 3: REVENUE LOGS ---
-    const revSheet = workbook.addWorksheet('Revenue Logs');
-    revSheet.columns = [
-      { header: 'Date', key: 'date', width: 20 },
-      { header: 'Transaction ID', key: 'id', width: 30 },
-      { header: 'Amount', key: 'amount', width: 15 },
-    ];
-    revSheet.getRow(1).eachCell((cell) => { cell.style = headerStyle; });
-
-    data.revenueList.forEach(log => {
-      revSheet.addRow(log);
-    });
-    revSheet.getColumn('amount').numFmt = '₹#,##0.00';
-
-    // 3. Generate Buffer
-    const buffer = await workbook.xlsx.writeBuffer();
-
-    // 4. Return Response
-    return new NextResponse(buffer, {
-      headers: {
-        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'Content-Disposition': `attachment; filename="analytics_report_${from}_${to}.xlsx"`
+    // Step A: Fetch basic lab data & simple counts (No heavy nested arrays)
+    const labsPromise = prisma.lab.findMany({
+      where: { deletedAt: null },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        owner: { select: { name: true, email: true, phone: true } },
+        subscription: { include: { plan: true } },
+        _count: {
+          select: {
+            branches: { where: { deletedAt: null } },
+            staff: { where: { isActive: true } },
+            analyzers: { where: { isActive: true } },
+            customTestTemplates: true,
+            patients: { where: { createdAt: { gte: from, lte: to }, deletedAt: null } },
+            tests: { where: { createdAt: { gte: from, lte: to }, deletedAt: null } },
+            samples: { where: { createdAt: { gte: from, lte: to }, deletedAt: null } },
+            invoices: { where: { createdAt: { gte: from, lte: to }, deletedAt: null } },
+          }
+        }
       }
     });
 
-  } catch (error) {
-    console.error('Export Error:', error);
-    return NextResponse.json({ error: 'Export failed' }, { status: 500 });
+    // Step B: Ask PostgreSQL to calculate invoice totals per lab (Lightning Fast)
+    const invoiceTotalsPromise = prisma.invoice.groupBy({
+      by: ['labId', 'status'],
+      _sum: { grandTotal: true },
+      where: { createdAt: { gte: from, lte: to }, deletedAt: null }
+    });
+
+    // Step C: Ask PostgreSQL to count rejected samples per lab
+    const rejectedSamplesPromise = prisma.sample.groupBy({
+      by: ['labId'],
+      _count: { id: true },
+      where: { status: 'REJECTED', createdAt: { gte: from, lte: to }, deletedAt: null }
+    });
+
+    // Execute all queries concurrently
+    const [labs, invoiceTotals, rejectedSamples] = await Promise.all([
+      labsPromise,
+      invoiceTotalsPromise,
+      rejectedSamplesPromise
+    ]);
+
+    // ==========================================
+    // 2. DATA TRANSFORMATION FOR EXCEL SHEETS
+    // ==========================================
+    
+    const overviewData: any[] = [];
+    const performanceData: any[] = [];
+    const configData: any[] = [];
+
+    labs.forEach((lab) => {
+      // --- Match aggregated financial data to this lab ---
+      const labInvoices = invoiceTotals.filter(inv => inv.labId === lab.id);
+      const totalInvoiced = labInvoices.reduce((sum, inv) => sum + Number(inv._sum.grandTotal || 0), 0);
+      const paidRevenue = labInvoices
+        .filter(inv => inv.status === 'PAID')
+        .reduce((sum, inv) => sum + Number(inv._sum.grandTotal || 0), 0);
+
+      // --- Match aggregated operational data to this lab ---
+      const rejectedData = rejectedSamples.find(s => s.labId === lab.id);
+      const rejectedSamplesCount = rejectedData?._count.id || 0;
+      
+      const totalSamples = lab._count.samples;
+      const rejectionRate = totalSamples > 0 
+        ? ((rejectedSamplesCount / totalSamples) * 100).toFixed(2) + '%' 
+        : '0%';
+
+      // SHEET 1: Master Overview & Subscriptions
+      overviewData.push({
+        'Lab ID': lab.id,
+        'Lab Name': lab.name,
+        'License Number': lab.licenseNumber || 'N/A',
+        'Owner Name': lab.owner?.name || 'N/A',
+        'Owner Email': lab.owner?.email || 'N/A',
+        'Owner Phone': lab.owner?.phone || lab.phone || 'N/A',
+        'City': lab.city,
+        'State': lab.state,
+        'Joined Date': lab.createdAt.toLocaleDateString('en-IN'),
+        'Account Status': lab.isActive ? 'Active' : 'Inactive',
+        'Subscription Plan': lab.subscription?.plan?.name || 'No Plan',
+        'Subscription Status': lab.subscription?.status || 'PENDING',
+        'MRR (₹)': Number(lab.subscription?.plan?.price || 0)
+      });
+
+      // SHEET 2: Medical & Financial Performance (Period Specific)
+      performanceData.push({
+        'Lab Name': lab.name,
+        'New Patients': lab._count.patients,
+        'Tests Processed': lab._count.tests,
+        'Samples Collected': totalSamples,
+        'Samples Rejected': rejectedSamplesCount,
+        'Rejection Rate': rejectionRate,
+        'Invoices Generated': lab._count.invoices,
+        'Total Billed (₹)': totalInvoiced,
+        'Revenue Collected (₹)': paidRevenue,
+        'Pending/Overdue (₹)': totalInvoiced - paidRevenue
+      });
+
+      // SHEET 3: Architecture & System Settings
+      configData.push({
+        'Lab Name': lab.name,
+        'Active Branches': lab._count.branches,
+        'Active Staff': lab._count.staff,
+        'IoT Analyzers Linked': lab._count.analyzers,
+        'Custom Tests Created': lab._count.customTestTemplates,
+        'Default Doctor Comm. (%)': Number(lab.defaultDoctorCommission || 0),
+        'Default Agency Comm. (%)': Number(lab.defaultAgencyCommission || 0),
+        'Commission Type': lab.commissionType || 'PERCENTAGE',
+        'GST Number': lab.gstNumber || 'Not Provided',
+        'PAN Number': lab.panNumber || 'Not Provided'
+      });
+    });
+
+    // ==========================================
+    // 3. WORKBOOK GENERATION
+    // ==========================================
+    const workbook = XLSX.utils.book_new();
+
+    const wsOverview = XLSX.utils.json_to_sheet(overviewData);
+    const wsPerformance = XLSX.utils.json_to_sheet(performanceData);
+    const wsConfig = XLSX.utils.json_to_sheet(configData);
+
+    // Auto-size columns for better readability
+    const setColWidths = (ws: XLSX.WorkSheet, data: any[]) => {
+      if (data.length === 0) return;
+      const keys = Object.keys(data[0]);
+      ws['!cols'] = keys.map(key => ({ wch: Math.max(key.length + 5, 15) })); // Added +5 padding
+    };
+    
+    setColWidths(wsOverview, overviewData);
+    setColWidths(wsPerformance, performanceData);
+    setColWidths(wsConfig, configData);
+
+    XLSX.utils.book_append_sheet(workbook, wsOverview, 'Master Overview');
+    XLSX.utils.book_append_sheet(workbook, wsPerformance, 'Period Performance');
+    XLSX.utils.book_append_sheet(workbook, wsConfig, 'System Configs');
+
+    // Convert to Buffer
+    const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+    return new NextResponse(buffer, {
+      status: 200,
+      headers: {
+        'Content-Disposition': `attachment; filename="Patholab_GodMode_Export_${Date.now()}.xlsx"`,
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      },
+    });
+
+  } catch (error: any) {
+    console.error('Super Admin Excel Export Error:', error);
+    
+    // Send a cleaner error message back to the frontend
+    return NextResponse.json(
+      { error: error.message || 'Database query failed during Excel generation' }, 
+      { status: 500 }
+    );
   }
 }

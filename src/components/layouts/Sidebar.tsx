@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -11,7 +11,6 @@ import {
   FileText,
   Settings,
   CreditCard,
-  LifeBuoy,
   Building2,
   FlaskConical,
   Truck,
@@ -25,7 +24,6 @@ import {
   BarChart3,
   ShieldCheck,
   UserCog,
-  Mail,
   UserPlus,
   ClipboardList,
   ChevronDown,
@@ -47,10 +45,17 @@ interface SidebarProps {
   role: "LAB_OWNER" | "TECHNICIAN" | "RECEPTIONIST";
 }
 
-type NavItem = { name: string; href: string; icon: any; badge?: string };
-type NavGroup = { title: string; items: NavItem[] };
+type NavItem = {
+  name: string;
+  href: string;
+  icon: any;
+  badge?: string;
+  reqModule?: string;
+};
+type NavGroup = { title: string; items: NavItem[]; reqModule?: string };
 
-// --- NAVIGATION DATA (Preserved exactly as provided) ---
+// --- NAVIGATION DATA ---
+// We map specific items and groups to their required SaaS Plan module keys
 const labOwnerNav: NavGroup[] = [
   {
     title: "Front Desk",
@@ -78,9 +83,24 @@ const labOwnerNav: NavGroup[] = [
         href: "/lab-owner/test-management",
         icon: TestTube,
       },
-      { name: "Machines (IoT)", href: "/lab-owner/analyzers", icon: Cpu },
-      { name: "Inventory & Stock", href: "/lab-owner/inventory", icon: Box },
-      { name: "Logistics / Trips", href: "/lab-owner/logistics", icon: Truck },
+      {
+        name: "Machines (IoT)",
+        href: "/lab-owner/analyzers",
+        icon: Cpu,
+        reqModule: "hasMachineIoT",
+      },
+      {
+        name: "Inventory & Stock",
+        href: "/lab-owner/inventory",
+        icon: Box,
+        reqModule: "hasInventory",
+      },
+      {
+        name: "Logistics / Trips",
+        href: "/lab-owner/logistics",
+        icon: Truck,
+        reqModule: "hasLogistics",
+      },
       {
         name: "Report Templates",
         href: "/lab-owner/settings/templates",
@@ -91,6 +111,7 @@ const labOwnerNav: NavGroup[] = [
   },
   {
     title: "Radiology (RIS)",
+    reqModule: "hasRadiology", // Entire group hides if false
     items: [
       {
         name: "Dashboard",
@@ -143,6 +164,7 @@ const labOwnerNav: NavGroup[] = [
   },
   {
     title: "Business Growth",
+    reqModule: "hasB2bBilling", // Entire group hides if false
     items: [
       {
         name: "Doctors & Referrals",
@@ -189,13 +211,23 @@ const technicianNav: NavGroup[] = [
   {
     title: "Lab",
     items: [
-      { name: "Machine Results", href: "/technician/analyzers", icon: Cpu },
+      {
+        name: "Machine Results",
+        href: "/technician/analyzers",
+        icon: Cpu,
+        reqModule: "hasMachineIoT",
+      },
       {
         name: "AI Validations",
         href: "/technician/ai-review",
         icon: BrainCircuit,
       },
-      { name: "Inventory Request", href: "/technician/inventory", icon: Box },
+      {
+        name: "Inventory Request",
+        href: "/technician/inventory",
+        icon: Box,
+        reqModule: "hasInventory",
+      },
     ],
   },
   {
@@ -225,7 +257,12 @@ const receptionistNav: NavGroup[] = [
         href: "/receptionist/appointments",
         icon: FileText,
       },
-      { name: "Home Collection", href: "/receptionist/logistics", icon: Truck },
+      {
+        name: "Home Collection",
+        href: "/receptionist/logistics",
+        icon: Truck,
+        reqModule: "hasLogistics",
+      },
     ],
   },
   {
@@ -257,17 +294,68 @@ const roleNavMap = {
 
 export function Sidebar({ role }: SidebarProps) {
   const pathname = usePathname();
-  const navigation = roleNavMap[role] || [];
+  const rawNavigation = roleNavMap[role] || [];
 
   const [isOpen, setIsOpen] = useState(false);
-
+  const [modules, setModules] = useState<Record<string, boolean>>({});
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
     {
       "Front Desk": true,
       "Lab Operations": true,
       "Finance & Admin": true,
+      "Radiology (RIS)": true,
+      "Business Growth": true,
     },
   );
+
+  // --- DYNAMIC MODULE FETCHING ---
+  useEffect(() => {
+    const fetchModules = async () => {
+      try {
+        const res = await fetch("/api/lab-owner/settings");
+        if (res.ok) {
+          const data = await res.json();
+          const plan = data?.lab?.subscription?.plan || {};
+
+          // Map DB plan flags to our local module state
+          setModules({
+            hasInventory: !!plan.hasInventory,
+            hasRadiology: !!plan.hasRadiology,
+            hasMachineIoT: !!plan.hasMachineIoT,
+            hasB2bBilling: !!plan.hasB2bBilling,
+            hasLogistics: !!plan.hasLogistics,
+          });
+        }
+      } catch (error) {
+        console.error("Failed to load active modules:", error);
+      }
+    };
+
+    fetchModules();
+
+    // Listen for cross-component refresh trigger
+    window.addEventListener("modules-updated", fetchModules);
+    return () => window.removeEventListener("modules-updated", fetchModules);
+  }, []);
+
+  // --- FILTER NAVIGATION BASED ON ACTIVE MODULES ---
+  const navigation = rawNavigation
+    .map((group) => {
+      // Drop entire group if missing required module
+      if (group.reqModule && !modules[group.reqModule]) return null;
+
+      // Filter individual items within the group
+      const filteredItems = group.items.filter((item) => {
+        if (item.reqModule && !modules[item.reqModule]) return false;
+        return true;
+      });
+
+      // Drop group if all items were filtered out
+      if (filteredItems.length === 0) return null;
+
+      return { ...group, items: filteredItems };
+    })
+    .filter(Boolean) as NavGroup[];
 
   const toggleGroup = (title: string) => {
     setExpandedGroups((prev) => ({
@@ -312,7 +400,7 @@ export function Sidebar({ role }: SidebarProps) {
           isOpen ? "translate-x-0" : "-translate-x-full",
         )}>
         {/* 1. Brand Header */}
-        <div className="flex h-20 items-center justify-between px-5 border-b border-slate-800/60 bg-slate-950">
+        <div className="flex h-20 items-center justify-between px-5 border-b border-slate-800/60 bg-slate-950 shrink-0">
           <div className="flex items-center gap-3">
             <div className="bg-emerald-500/10 border border-emerald-500/20 p-2 rounded-xl">
               <FlaskConical className="h-5 w-5 text-emerald-400" />
@@ -355,7 +443,7 @@ export function Sidebar({ role }: SidebarProps) {
                     className={cn(
                       "space-y-1 overflow-hidden transition-all duration-300 ease-in-out pl-3 border-l border-slate-800 ml-2.5",
                       isGroupOpen
-                        ? "max-h-[500px] opacity-100 mt-2"
+                        ? "max-h-[800px] opacity-100 mt-2"
                         : "max-h-0 opacity-0",
                     )}>
                     {group.items.map((item) => {
@@ -406,7 +494,7 @@ export function Sidebar({ role }: SidebarProps) {
         </ScrollArea>
 
         {/* 3. Bottom Profile Footer */}
-        <div className="border-t border-slate-800/60 p-5 bg-slate-900/50">
+        <div className="border-t border-slate-800/60 p-5 bg-slate-900/50 shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-sm text-white font-black shadow-lg">
@@ -429,6 +517,16 @@ export function Sidebar({ role }: SidebarProps) {
               title="Secure Log Out">
               <LogOut className="h-4 w-4" />
             </Button>
+          </div>
+
+          {/* System Footer Details */}
+          <div className="mt-4 pt-3 border-t border-slate-800 flex flex-col items-center justify-center space-y-1">
+            <span className="text-[10px] text-slate-500 font-bold tracking-widest uppercase">
+              Version 3.0.1
+            </span>
+            <span className="text-[11px] text-slate-400 flex items-center gap-1 font-semibold tracking-wide">
+              Proudly made in India <span className="text-sm">🇮🇳</span>
+            </span>
           </div>
         </div>
       </aside>

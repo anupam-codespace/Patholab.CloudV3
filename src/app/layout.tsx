@@ -2,28 +2,99 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
+import prisma from "@/lib/prisma"; // Adjust this path to your Prisma client
+import { GoogleAnalytics } from "@next/third-parties/google"; // npm i @next/third-parties
 
 const inter = Inter({ subsets: ["latin"] });
 
-export const metadata: Metadata = {
-  title: "Patholab | Cloud LIMS Software",
-  description: "Advanced Lab Management System",
-  // Fixes the "metadataBase" warning
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-  ),
-};
+// 1. DYNAMIC METADATA GENERATION
+export async function generateMetadata(): Promise<Metadata> {
+  try {
+    const config = await prisma.systemConfig.findFirst();
 
-export default function RootLayout({
+    // Fallbacks if the Super Admin hasn't set anything up yet
+    const title = config?.seoTitle || config?.systemName || "Patholab Cloud";
+    const description =
+      config?.seoDescription || "Advanced Lab Management System";
+    const faviconUrl = config?.favicon || "/favicon.ico";
+
+    return {
+      title: title,
+      description: description,
+      keywords:
+        config?.seoKeywords || "LIMS, Pathology Software, Cloud Lab, RIS",
+      metadataBase: new URL(
+        process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+      ),
+      icons: {
+        icon: faviconUrl,
+        shortcut: faviconUrl,
+        apple: faviconUrl,
+      },
+      openGraph: {
+        title: title,
+        description: description,
+        siteName: config?.systemName || "Patholab Cloud",
+        images: config?.ogImage ? [{ url: config.ogImage }] : [],
+        type: "website",
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: title,
+        description: description,
+        images: config?.ogImage ? [config.ogImage] : [],
+      },
+    };
+  } catch (error) {
+    // Safe fallback if the database connection fails during build/render
+    return {
+      title: "Patholab | Cloud LIMS Software",
+      description: "Advanced Lab Management System",
+      metadataBase: new URL(
+        process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+      ),
+    };
+  }
+}
+
+// 2. ROOT LAYOUT COMPONENT
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // Fetch config again to inject global branding & scripts
+  // (Next.js automatically caches this, so it won't hit the DB twice)
+  let config = null;
+  try {
+    config = await prisma.systemConfig.findFirst();
+  } catch (error) {
+    console.error("Failed to load system config in layout:", error);
+  }
+
   return (
     <html lang="en">
+      <head>
+        {/* Inject Dynamic Brand Colors */}
+        {config && (
+          <style>
+            {`
+              :root {
+                --primary: ${config.primaryColor || "#3b82f6"};
+                --secondary: ${config.secondaryColor || "#8b5cf6"};
+              }
+            `}
+          </style>
+        )}
+      </head>
       <body className={inter.className}>
         {/* Wrap everything in the Client-Side Provider */}
         <Providers>{children}</Providers>
+
+        {/* Inject Google Analytics if the Super Admin provided an ID */}
+        {config?.googleAnalyticsId && (
+          <GoogleAnalytics gaId={config.googleAnalyticsId} />
+        )}
       </body>
     </html>
   );
