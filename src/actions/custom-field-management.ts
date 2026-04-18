@@ -69,7 +69,7 @@ export async function saveCustomField(data: {
       });
     }
 
-    revalidatePath('/lab-owner/test-management');
+    revalidatePath('/workspace/test-management');
     return { success: true };
 
   } catch (error: any) {
@@ -90,7 +90,7 @@ export async function deleteCustomField(id: string) {
     await prisma.customFieldDefinition.delete({
       where: { id, labId }
     });
-    revalidatePath('/lab-owner/test-management');
+    revalidatePath('/workspace/test-management');
     return { success: true };
   } catch (error: any) {
     console.error("Delete Custom Field Error:", error);

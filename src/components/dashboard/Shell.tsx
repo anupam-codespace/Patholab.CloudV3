@@ -32,11 +32,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const NAV_ITEMS = [
-  { label: "Dashboard", icon: LayoutDashboard, href: "/lab-owner" },
-  { label: "Accession", icon: TestTube, href: "/lab-owner/accession" },
-  { label: "Patients", icon: Users, href: "/lab-owner/patients" },
-  { label: "Finance", icon: FileText, href: "/lab-owner/finance" },
-  { label: "Settings", icon: Settings, href: "/lab-owner/settings" },
+  { label: "Dashboard", icon: LayoutDashboard, href: "/workspace" },
+  { label: "Accession", icon: TestTube, href: "/workspace/accession" },
+  { label: "Patients", icon: Users, href: "/workspace/patients" },
+  { label: "Finance", icon: FileText, href: "/workspace/finance" },
+  { label: "Settings", icon: Settings, href: "/workspace/settings" },
 ];
 
 export default function Shell({ children }: { children: React.ReactNode }) {

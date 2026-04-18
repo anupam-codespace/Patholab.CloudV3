@@ -149,6 +149,8 @@ model Lab {
   id String @id @default(cuid())
 
   name           String
+  labCode        String?  @unique // ADD THIS: 3-character alpha code (e.g., "GLO")
+  upiId          String?          // ADD THIS: Admin's UPI ID for invoice QR codes
   address        String
   city           String
   state          String
@@ -227,6 +229,7 @@ model Branch {
   
   name          String   
   code          String?  
+  branchCode String?          // ADD THIS: 2-digit branch code (e.g., "01")
   isMainBranch  Boolean  @default(false)
   
   address       String
@@ -260,6 +263,7 @@ model LabStaff {
   labId      String
   lab        Lab     @relation(fields: [labId], references: [id], onDelete: Cascade)
   userId     String
+  employeeId String? @unique  // ADD THIS: 9-digit generated ID (e.g., GLO010001)
   user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   branchId   String?

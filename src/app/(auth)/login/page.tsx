@@ -84,7 +84,7 @@ export default function LoginPage() {
       const role = result.user?.role || "";
 
       if (role === "LAB_OWNER") {
-        router.push("/lab-owner/patients");
+        router.push("/workspace/patients");
       } else if (role === "SUPER_ADMIN") {
         router.push("/admin");
       } else if (result.redirect) {
@@ -110,7 +110,7 @@ export default function LoginPage() {
         {/* Abstract Background Gradients */}
         <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-indigo-600/30 rounded-full blur-[120px] pointer-events-none"></div>
         <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-violet-600/20 rounded-full blur-[120px] pointer-events-none"></div>
-        
+
         {/* Subtle Grid Overlay */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none"></div>
 
@@ -132,7 +132,8 @@ export default function LoginPage() {
             The intelligent operating system for modern diagnostic centers.
           </h2>
           <p className="text-lg text-slate-400 font-light">
-            Automate reporting, scale your B2B network, and manage your IoT analyzers with zero latency.
+            Automate reporting, scale your B2B network, and manage your IoT
+            analyzers with zero latency.
           </p>
         </div>
 
@@ -147,7 +148,6 @@ export default function LoginPage() {
       */}
       <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-6 sm:p-12 relative">
         <div className="w-full max-w-[400px] space-y-10">
-          
           {/* Mobile-only Logo */}
           <div className="lg:hidden flex items-center gap-2.5 mb-8">
             <div className="bg-indigo-50 p-2 rounded-lg border border-indigo-100">
@@ -168,7 +168,6 @@ export default function LoginPage() {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            
             {/* Form Group: Email */}
             <div className="space-y-2">
               <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
@@ -179,7 +178,9 @@ export default function LoginPage() {
                 <Input
                   {...register("email")}
                   className={`pl-11 h-12 rounded-xl bg-slate-50/50 border-slate-200 text-slate-900 font-medium focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-300 ${
-                    errors.email ? "border-red-300 focus:border-red-500 focus:ring-red-500/10 bg-red-50/30" : ""
+                    errors.email
+                      ? "border-red-300 focus:border-red-500 focus:ring-red-500/10 bg-red-50/30"
+                      : ""
                   }`}
                   placeholder="doctor@clinic.com"
                 />
@@ -200,8 +201,7 @@ export default function LoginPage() {
                 </Label>
                 <Link
                   href="/forgot-password"
-                  className="text-xs text-indigo-600 hover:text-indigo-700 font-bold transition-colors"
-                >
+                  className="text-xs text-indigo-600 hover:text-indigo-700 font-bold transition-colors">
                   Forgot password?
                 </Link>
               </div>
@@ -211,16 +211,21 @@ export default function LoginPage() {
                   {...register("password")}
                   type={showPass ? "text" : "password"}
                   className={`pl-11 pr-11 h-12 rounded-xl bg-slate-50/50 border-slate-200 text-slate-900 font-medium focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-300 ${
-                    errors.password ? "border-red-300 focus:border-red-500 focus:ring-red-500/10 bg-red-50/30" : ""
+                    errors.password
+                      ? "border-red-300 focus:border-red-500 focus:ring-red-500/10 bg-red-50/30"
+                      : ""
                   }`}
                   placeholder="••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPass(!showPass)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors"
-                >
-                  {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors">
+                  {showPass ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
               {errors.password && (
@@ -241,8 +246,7 @@ export default function LoginPage() {
               />
               <label
                 htmlFor="remember"
-                className="text-sm font-semibold text-slate-600 cursor-pointer select-none"
-              >
+                className="text-sm font-semibold text-slate-600 cursor-pointer select-none">
                 Keep me signed in for 30 days
               </label>
             </div>
@@ -252,8 +256,7 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 className="w-full h-12 rounded-xl text-sm font-bold bg-slate-900 hover:bg-indigo-600 text-white shadow-md hover:shadow-xl hover:shadow-indigo-500/20 transition-all duration-300 active:scale-[0.98]"
-                disabled={loading}
-              >
+                disabled={loading}>
                 {loading ? (
                   <Loader2 className="animate-spin h-5 w-5" />
                 ) : (
@@ -271,27 +274,31 @@ export default function LoginPage() {
               Don't have a lab account?{" "}
               <Link
                 href="/register"
-                className="text-indigo-600 font-bold hover:text-indigo-800 transition-colors"
-              >
+                className="text-indigo-600 font-bold hover:text-indigo-800 transition-colors">
                 Start 03-Day Free Trial
               </Link>
             </p>
 
             <div className="flex items-center gap-6 text-xs font-semibold text-slate-400">
-              <Link href="/privacy-policy" className="hover:text-slate-800 transition-colors">
+              <Link
+                href="/privacy-policy"
+                className="hover:text-slate-800 transition-colors">
                 Privacy
               </Link>
               <span className="h-1 w-1 rounded-full bg-slate-300"></span>
-              <Link href="/terms-conditions" className="hover:text-slate-800 transition-colors">
+              <Link
+                href="/terms-conditions"
+                className="hover:text-slate-800 transition-colors">
                 Terms
               </Link>
               <span className="h-1 w-1 rounded-full bg-slate-300"></span>
-              <Link href="/contact" className="hover:text-slate-800 transition-colors">
+              <Link
+                href="/contact"
+                className="hover:text-slate-800 transition-colors">
                 Support
               </Link>
             </div>
           </div>
-
         </div>
       </div>
     </div>

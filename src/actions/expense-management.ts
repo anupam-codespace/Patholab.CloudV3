@@ -133,7 +133,7 @@ export async function addManualExpense(data: {
     await prisma.expense.create({
         data: { ...data, labId }
     });
-    revalidatePath('/lab-owner/expenses');
+    revalidatePath('/workspace/expenses');
     return { success: true };
 }
 
@@ -142,6 +142,6 @@ export async function deleteManualExpense(id: string) {
     await prisma.expense.delete({
         where: { id, labId }
     });
-    revalidatePath('/lab-owner/expenses');
+    revalidatePath('/workspace/expenses');
     return { success: true };
 }

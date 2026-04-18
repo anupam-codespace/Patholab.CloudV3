@@ -95,7 +95,7 @@ export async function createDoctor(data: {
     }
   });
   
-  revalidatePath('/lab-owner/doctors');
+  revalidatePath('/workspace/doctors');
 }
 
 export async function updateDoctor(id: string, data: {
@@ -136,7 +136,7 @@ export async function updateDoctor(id: string, data: {
     }
   });
   
-  revalidatePath('/lab-owner/doctors');
+  revalidatePath('/workspace/doctors');
 }
 
 export async function deleteDoctor(id: string) {
@@ -145,5 +145,5 @@ export async function deleteDoctor(id: string) {
   await prisma.doctor.delete({
     where: { id, labId }
   });
-  revalidatePath('/lab-owner/doctors');
+  revalidatePath('/workspace/doctors');
 }

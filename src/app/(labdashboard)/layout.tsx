@@ -32,7 +32,7 @@ export default function DashboardLayout({
       // Only verify this for Lab Owners (Admins/Staff usually don't pay directly)
       if (user.role === "LAB_OWNER") {
         try {
-          const res = await fetch("/api/lab-owner/subscription/details");
+          const res = await fetch("/api/workspace/subscription/details");
 
           if (res.ok) {
             const data = await res.json();
@@ -84,15 +84,21 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/50">
-      {/* Sidebar is fixed/overlay */}
+    // 1. Outer wrapper locks the screen height to 100vh and uses flex-row
+    <div className="flex h-screen w-full overflow-hidden bg-slate-50">
+      {/* 2. Sidebar sits on the left (relative on desktop, fixed on mobile) */}
       <Sidebar role={user.role} />
 
-      {/* Main Content */}
-      <div className="w-full min-h-screen">
+      {/* 3. Main content area takes up the rest of the width and stacks vertically */}
+      <div className="flex flex-1 flex-col overflow-hidden relative">
+        {/* 4. Topbar/Header is pinned to the top of this column */}
         <Header user={user} />
 
-        <main className="p-6">{children}</main>
+        {/* 5. Children (the page content) scrolls independently underneath the Header */}
+        {/* Removed p-6 from main so page components can handle their own edge-to-edge designs if needed */}
+        <main className="flex-1 overflow-y-auto w-full relative z-0">
+          {children}
+        </main>
       </div>
     </div>
   );

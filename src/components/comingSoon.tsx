@@ -1,11 +1,17 @@
 // components/ComingSoon.tsx
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft, Rocket, Bell, Sparkles, LayoutDashboard } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  ArrowLeft,
+  Rocket,
+  Bell,
+  Sparkles,
+  LayoutDashboard,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface ComingSoonProps {
   featureName?: string;
@@ -19,19 +25,19 @@ interface ComingSoonProps {
 }
 
 export default function ComingSoon({
-  featureName = 'Coming Soon',
+  featureName = "Coming Soon",
   description = "We're working hard to bring you this exciting new feature!",
   highlights = [
-    'Enhanced functionality designed with you in mind',
-    'Streamlined workflows to save you time',
-    'Powerful tools to improve your lab management',
-    'Seamless integration with existing features',
+    "Enhanced functionality designed with you in mind",
+    "Streamlined workflows to save you time",
+    "Powerful tools to improve your lab management",
+    "Seamless integration with existing features",
   ],
   showNotification = true,
   onNotifyClick,
-  dashboardText = 'Back to Dashboard',
-  dashboardHref = '/lab-owner',
-  funFact = 'Innovation in lab technology has reduced testing times by up to 80% in recent years!',
+  dashboardText = "Back to Dashboard",
+  dashboardHref = "/workspace",
+  funFact = "Innovation in lab technology has reduced testing times by up to 80% in recent years!",
 }: ComingSoonProps) {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
@@ -47,7 +53,7 @@ export default function ComingSoon({
       onNotifyClick();
     } else {
       // Default behavior - you can customize this
-      alert('Notification feature coming soon!');
+      alert("Notification feature coming soon!");
     }
   };
 
@@ -114,8 +120,7 @@ export default function ComingSoon({
             <Button
               onClick={handleNotifyClick}
               size="lg"
-              className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all"
-            >
+              className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all">
               <Bell className="w-4 h-4 mr-2" />
               Notify Me
             </Button>
@@ -128,8 +133,7 @@ export default function ComingSoon({
           <Button
             asChild
             size="lg"
-            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all"
-          >
+            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all">
             <Link href={dashboardHref} className="flex items-center gap-2">
               <LayoutDashboard className="w-5 h-5" />
               {dashboardText}
@@ -141,8 +145,7 @@ export default function ComingSoon({
             size="lg"
             variant="outline"
             className="border-2 border-purple-500 text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-950 transition-all"
-            onClick={() => router.back()}
-          >
+            onClick={() => router.back()}>
             <div className="flex items-center gap-2">
               <ArrowLeft className="w-5 h-5" />
               Go Back

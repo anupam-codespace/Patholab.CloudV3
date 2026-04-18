@@ -21,6 +21,11 @@ import {
   Building2,
   MapPin,
   Check,
+  Menu,
+  Users,
+  BarChart3,
+  Scan,
+  Hash,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter, usePathname } from "next/navigation";
@@ -49,22 +54,104 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import NotificationDropdown from "@/components/layouts/NotificationDropdown";
 
-// ✅ UPDATED: Added Branch typings to the Header Props
+// --- PROPS ---
 interface HeaderProps {
   user: {
     name: string;
     email: string;
     avatar?: string | null;
     role?: string;
+    employeeId?: string | null; // ✅ ADDED EMPLOYEE ID
     lab?: { name: string } | null;
     currentBranch?: { id: string; name: string; isMainBranch?: boolean } | null;
     branches?: { id: string; name: string; isMainBranch?: boolean }[];
   };
 }
 
+// --- DYNAMIC SHORTCUTS GENERATOR ---
+const getQuickShortcuts = (role?: string) => {
+  switch (role) {
+    case "LAB_OWNER":
+    case "LAB_MANAGER":
+    case "SUPER_ADMIN":
+      return [
+        {
+          label: "New Patient",
+          href: "/workspace/registration",
+          icon: UserPlus,
+          color: "text-emerald-600",
+          bg: "hover:bg-emerald-100",
+          active: "bg-emerald-50",
+        },
+        {
+          label: "Add Staff",
+          href: "/workspace/staff",
+          icon: Users,
+          color: "text-blue-600",
+          bg: "hover:bg-blue-100",
+          active: "bg-blue-50",
+        },
+        {
+          label: "Reports",
+          href: "/dashboard",
+          icon: BarChart3,
+          color: "text-indigo-600",
+          bg: "hover:bg-indigo-100",
+          active: "bg-indigo-50",
+        },
+      ];
+    case "RECEPTIONIST":
+      return [
+        {
+          label: "Register Patient",
+          href: "/workspace/registration",
+          icon: UserPlus,
+          color: "text-emerald-600",
+          bg: "hover:bg-emerald-100",
+          active: "bg-emerald-50",
+        },
+        {
+          label: "Collect Payment",
+          href: "/workspace/billing",
+          icon: Receipt,
+          color: "text-amber-600",
+          bg: "hover:bg-amber-100",
+          active: "bg-amber-50",
+        },
+      ];
+    case "TECHNICIAN":
+      return [
+        {
+          label: "Accession Sample",
+          href: "/workspace/samples",
+          icon: Scan,
+          color: "text-blue-600",
+          bg: "hover:bg-blue-100",
+          active: "bg-blue-50",
+        },
+        {
+          label: "Live Worklist",
+          href: "/workspace/worklist",
+          icon: FlaskConical,
+          color: "text-rose-600",
+          bg: "hover:bg-rose-100",
+          active: "bg-rose-50",
+        },
+      ];
+    default:
+      return [];
+  }
+};
+
 export function Header({ user }: HeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const shortcuts = getQuickShortcuts(user?.role);
+
+  // ✅ FIRE EVENT TO TOGGLE SIDEBAR
+  const toggleSidebar = () => {
+    document.dispatchEvent(new Event("toggle-sidebar"));
+  };
 
   const handleLogout = async () => {
     try {
@@ -81,14 +168,10 @@ export function Header({ user }: HeaderProps) {
     }
   };
 
-  // ✅ Branch Switching Logic (Placeholder for your state/context manager)
   const handleSwitchBranch = (branchId: string, branchName: string) => {
-    // Here you would typically set a cookie, update a global context, or append a ?branchId= query param
     toast.success(`Switched workspace to ${branchName}`);
-    // router.refresh(); // Refresh to load data for the new branch
   };
 
-  // Fallback to prevent .split() crash
   const userName = user?.name || "User";
   const initials = userName
     .split(" ")
@@ -97,9 +180,8 @@ export function Header({ user }: HeaderProps) {
     .toUpperCase()
     .substring(0, 2);
 
-  const labName = user?.lab?.name || "Super Admin";
+  const labName = user?.lab?.name || "Patholab Cloud";
   const currentBranchName = user?.currentBranch?.name || "Main Branch";
-  // Fallback branches array if not provided by backend yet
   const availableBranches = user?.branches || [
     { id: "1", name: "Main Branch", isMainBranch: true },
   ];
@@ -109,7 +191,7 @@ export function Header({ user }: HeaderProps) {
     const lastSegment = segments[segments.length - 1];
 
     const routeMap: Record<string, string> = {
-      "lab-owner": "Dashboard",
+      workspace: "Dashboard",
       patients: "Patient Worklist",
       registration: "New Registration",
       billing: "Billing & Invoices",
@@ -121,6 +203,7 @@ export function Header({ user }: HeaderProps) {
       analyzers: "Analyzer Management",
       subscription: "Subscription Plan",
       support: "Help & Support",
+      staff: "Staff Directory",
     };
 
     if (!lastSegment) return "Dashboard";
@@ -136,18 +219,25 @@ export function Header({ user }: HeaderProps) {
 
   return (
     <div className="sticky top-4 z-40 px-4 md:px-8 pointer-events-none">
-      {/* Floating Header Container */}
-      <header className="pointer-events-auto h-16 w-full max-w-screen-2xl mx-auto flex items-center justify-between rounded-2xl bg-white/80 backdrop-blur-xl border border-slate-200/60 shadow-sm pr-4 pl-14 sm:pr-6 md:pl-16">
-        {/* 1. LEFT SIDE: BRANDING, BRANCH SWITCHER & BREADCRUMBS */}
+      <header className="pointer-events-auto h-16 w-full max-w-screen-2xl mx-auto flex items-center justify-between rounded-2xl bg-white/80 backdrop-blur-xl border border-slate-200/60 shadow-sm pr-4 pl-3 sm:pr-6 sm:pl-4">
+        {/* 1. LEFT SIDE: HAMBURGER, BRANDING & BREADCRUMBS */}
         <div className="flex items-center gap-2 overflow-hidden whitespace-nowrap">
+          {/* ✅ HAMBURGER MENU TOGGLE */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleSidebar}
+            className="text-slate-500 hover:bg-slate-100 rounded-xl mr-1 h-10 w-10 shrink-0">
+            <Menu className="h-5 w-5" />
+          </Button>
+
           <Link
-            href="/lab-owner/patients"
-            className="flex items-center justify-center h-10 w-10 bg-emerald-500/10 rounded-xl border border-emerald-500/20 group transition-all hover:bg-emerald-500/20 mr-1">
+            href="/dashboard"
+            className="hidden sm:flex items-center justify-center h-10 w-10 bg-emerald-500/10 rounded-xl border border-emerald-500/20 group transition-all hover:bg-emerald-500/20 mr-1 shrink-0">
             <FlaskConical className="h-5 w-5 text-emerald-600 group-hover:scale-110 transition-transform" />
           </Link>
 
           <div className="hidden sm:flex items-center gap-2">
-            {/* ✅ NEW: BRANCH SWITCHER DROPDOWN */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -206,7 +296,7 @@ export function Header({ user }: HeaderProps) {
                   })}
                 </div>
                 <DropdownMenuSeparator className="my-2 bg-slate-100" />
-                <Link href="/lab-owner/settings?tab=branches">
+                <Link href="/workspace/settings?tab=branches">
                   <DropdownMenuItem className="cursor-pointer rounded-xl px-3 py-2.5 text-slate-600 hover:text-slate-900 hover:bg-slate-50 focus:bg-slate-50 font-bold text-sm flex items-center">
                     <Settings className="w-4 h-4 mr-2 text-slate-400" />
                     Manage Branches
@@ -222,7 +312,7 @@ export function Header({ user }: HeaderProps) {
             </span>
           </div>
 
-          {/* Mobile Fallback Title (Shows Branch + Page) */}
+          {/* Mobile Fallback Title */}
           <div className="sm:hidden flex flex-col justify-center max-w-[140px]">
             <span className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest leading-none mb-0.5 truncate">
               {currentBranchName}
@@ -235,57 +325,41 @@ export function Header({ user }: HeaderProps) {
 
         {/* 2. CENTER/RIGHT: ACTIONS */}
         <div className="flex items-center gap-1.5 sm:gap-3">
-          {/* ⚡ QUICK ACTIONS BAR (Hidden on Mobile) */}
+          {/* ✅ DYNAMIC QUICK ACTIONS BAR */}
           <div className="hidden md:flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl p-1 mr-2">
             <TooltipProvider delayDuration={100}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Link href="/lab-owner/registration">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 rounded-lg text-slate-500 hover:text-emerald-700 hover:bg-emerald-100 transition-colors">
-                      <UserPlus className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                </TooltipTrigger>
-                <TooltipContent className="bg-slate-900 border-0 text-xs font-bold px-3 py-1.5 rounded-lg shadow-xl">
-                  New Patient
-                </TooltipContent>
-              </Tooltip>
-
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Link href="/lab-owner/billing">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 rounded-lg text-slate-500 hover:text-emerald-700 hover:bg-emerald-100 transition-colors">
-                      <Receipt className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                </TooltipTrigger>
-                <TooltipContent className="bg-slate-900 border-0 text-xs font-bold px-3 py-1.5 rounded-lg shadow-xl">
-                  Create Invoice
-                </TooltipContent>
-              </Tooltip>
-
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Link href="/lab-owner/test-management">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 rounded-lg text-slate-500 hover:text-emerald-700 hover:bg-emerald-100 transition-colors">
-                      <TestTube className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                </TooltipTrigger>
-                <TooltipContent className="bg-slate-900 border-0 text-xs font-bold px-3 py-1.5 rounded-lg shadow-xl">
-                  Test Catalog
-                </TooltipContent>
-              </Tooltip>
+              {shortcuts.map((shortcut, idx) => (
+                <Tooltip key={idx}>
+                  <TooltipTrigger asChild>
+                    <Link href={shortcut.href}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={`h-8 w-8 rounded-lg text-slate-500 transition-colors ${shortcut.bg} ${pathname.startsWith(shortcut.href) ? shortcut.active : ""}`}>
+                        <shortcut.icon
+                          className={`h-4 w-4 ${pathname.startsWith(shortcut.href) ? shortcut.color : ""}`}
+                        />
+                      </Button>
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-slate-900 border-0 text-xs font-bold px-3 py-1.5 rounded-lg shadow-xl">
+                    {shortcut.label}
+                  </TooltipContent>
+                </Tooltip>
+              ))}
             </TooltipProvider>
+          </div>
+
+          {/* ✅ EMPLOYEE ID BADGE */}
+          <div className="hidden lg:flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl h-10 mr-1">
+            <Hash className="h-3.5 w-3.5 text-slate-400" />
+            <span className="text-xs font-bold text-slate-700 tracking-wider font-mono">
+              {user?.employeeId ? (
+                user.employeeId
+              ) : (
+                <span className="text-amber-600">PENDING</span>
+              )}
+            </span>
           </div>
 
           {/* 🟢 HELP / SUPPORT POPUP */}
@@ -294,7 +368,7 @@ export function Header({ user }: HeaderProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-10 w-10 rounded-xl text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-all">
+                className="h-10 w-10 rounded-xl text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-all shrink-0">
                 <HelpCircle className="h-5 w-5" />
               </Button>
             </PopoverTrigger>
@@ -351,7 +425,7 @@ export function Header({ user }: HeaderProps) {
                 </div>
               </div>
               <div className="p-3 bg-slate-50 border-t border-slate-100">
-                <Link href="/lab-owner/support" passHref>
+                <Link href="/workspace/support" passHref>
                   <Button className="w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900 shadow-sm font-bold text-xs transition-all">
                     Open Support Center{" "}
                     <ExternalLink className="h-3 w-3 ml-2 text-slate-400" />
@@ -362,7 +436,7 @@ export function Header({ user }: HeaderProps) {
           </Popover>
 
           {/* 🔔 NOTIFICATION DROPDOWN */}
-          <div className="flex items-center justify-center h-10 w-10 rounded-xl hover:bg-slate-100 transition-colors">
+          <div className="flex items-center justify-center h-10 w-10 rounded-xl hover:bg-slate-100 transition-colors shrink-0">
             <NotificationDropdown />
           </div>
 
@@ -371,7 +445,7 @@ export function Header({ user }: HeaderProps) {
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="relative h-10 w-10 rounded-xl p-0 ml-1 border border-slate-200 shadow-sm hover:ring-4 ring-emerald-500/10 transition-all overflow-hidden">
+                className="relative h-10 w-10 rounded-xl p-0 ml-1 border border-slate-200 shadow-sm hover:ring-4 ring-emerald-500/10 transition-all overflow-hidden shrink-0">
                 <Avatar className="h-full w-full rounded-none">
                   <AvatarImage
                     src={user?.avatar || ""}
@@ -390,7 +464,7 @@ export function Header({ user }: HeaderProps) {
               align="end"
               forceMount>
               {/* Premium Dark Header */}
-              <DropdownMenuLabel className="font-normal p-5 bg-slate-900 text-white">
+              <DropdownMenuLabel className="font-normal p-5 bg-slate-900 text-white relative">
                 <div className="flex items-center gap-4">
                   <Avatar className="h-12 w-12 border-2 border-slate-700 rounded-xl shadow-inner">
                     <AvatarImage src={user?.avatar || ""} alt={userName} />
@@ -405,18 +479,25 @@ export function Header({ user }: HeaderProps) {
                     <p className="text-xs font-medium text-slate-400 truncate max-w-[150px]">
                       {user?.email}
                     </p>
-                    {user?.role && (
-                      <Badge className="mt-1.5 w-fit bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] uppercase tracking-widest font-black rounded-md px-1.5 py-0.5">
-                        {user.role.replace("_", " ")}
-                      </Badge>
-                    )}
+                    <div className="flex gap-2 mt-1.5">
+                      {user?.role && (
+                        <Badge className="w-fit bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] uppercase tracking-widest font-black rounded-md px-1.5 py-0.5">
+                          {user.role.replace("_", " ")}
+                        </Badge>
+                      )}
+                      {!user?.employeeId && (
+                        <Badge className="w-fit bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[9px] uppercase tracking-widest font-black rounded-md px-1.5 py-0.5">
+                          ID PENDING
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
               </DropdownMenuLabel>
 
               <div className="p-2 bg-white">
                 <DropdownMenuGroup>
-                  <Link href="/lab-owner/settings">
+                  <Link href="/workspace/settings">
                     <DropdownMenuItem className="cursor-pointer rounded-xl py-3 px-3 hover:bg-slate-50 focus:bg-slate-50 transition-colors">
                       <div className="bg-slate-100 p-1.5 rounded-lg mr-3">
                         <User className="h-4 w-4 text-slate-600" />
@@ -427,34 +508,39 @@ export function Header({ user }: HeaderProps) {
                     </DropdownMenuItem>
                   </Link>
 
-                  <Link href="/lab-owner/subscription">
-                    <DropdownMenuItem className="cursor-pointer rounded-xl py-3 px-3 hover:bg-slate-50 focus:bg-slate-50 transition-colors">
-                      <div className="bg-slate-100 p-1.5 rounded-lg mr-3">
-                        <CreditCard className="h-4 w-4 text-slate-600" />
-                      </div>
-                      <span className="font-bold text-sm text-slate-700">
-                        Billing & Plans
-                      </span>
-                    </DropdownMenuItem>
-                  </Link>
+                  {user?.role === "LAB_OWNER" && (
+                    <Link href="/workspace/subscription">
+                      <DropdownMenuItem className="cursor-pointer rounded-xl py-3 px-3 hover:bg-slate-50 focus:bg-slate-50 transition-colors">
+                        <div className="bg-slate-100 p-1.5 rounded-lg mr-3">
+                          <CreditCard className="h-4 w-4 text-slate-600" />
+                        </div>
+                        <span className="font-bold text-sm text-slate-700">
+                          Billing & Plans
+                        </span>
+                      </DropdownMenuItem>
+                    </Link>
+                  )}
 
-                  <Link href="/lab-owner/settings?tab=general">
-                    <DropdownMenuItem className="cursor-pointer rounded-xl py-3 px-3 hover:bg-slate-50 focus:bg-slate-50 transition-colors">
-                      <div className="bg-slate-100 p-1.5 rounded-lg mr-3">
-                        <Settings className="h-4 w-4 text-slate-600" />
-                      </div>
-                      <span className="font-bold text-sm text-slate-700">
-                        Lab Settings
-                      </span>
-                    </DropdownMenuItem>
-                  </Link>
+                  {(user?.role === "LAB_OWNER" ||
+                    user?.role === "LAB_MANAGER") && (
+                    <Link href="/workspace/settings?tab=general">
+                      <DropdownMenuItem className="cursor-pointer rounded-xl py-3 px-3 hover:bg-slate-50 focus:bg-slate-50 transition-colors">
+                        <div className="bg-slate-100 p-1.5 rounded-lg mr-3">
+                          <Settings className="h-4 w-4 text-slate-600" />
+                        </div>
+                        <span className="font-bold text-sm text-slate-700">
+                          Lab Settings
+                        </span>
+                      </DropdownMenuItem>
+                    </Link>
+                  )}
                 </DropdownMenuGroup>
 
                 <div className="h-px bg-slate-100 my-1 mx-2" />
 
                 <DropdownMenuItem
-                  className="cursor-pointer rounded-xl py-3 px-3 text-red-600 focus:text-red-700 focus:bg-red-50 transition-colors"
-                  onClick={handleLogout}>
+                  onClick={handleLogout}
+                  className="cursor-pointer rounded-xl py-3 px-3 text-red-600 focus:text-red-700 focus:bg-red-50 transition-colors">
                   <div className="bg-red-100 p-1.5 rounded-lg mr-3">
                     <LogOut className="h-4 w-4 text-red-600" />
                   </div>
