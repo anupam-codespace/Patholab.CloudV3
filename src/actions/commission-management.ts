@@ -83,6 +83,6 @@ export async function markCommissionAsPaid(commissionIds: string[], transactionR
     }
   });
 
-  revalidatePath('/lab-owner/commissions');
+  revalidatePath('/workspace/commissions');
   return { success: true };
 }

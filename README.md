@@ -396,7 +396,7 @@ Patholab/
 │   │   ├── (auth)/           # Auth pages (login, register, verify)
 │   │   ├── (dashboard)/      # Dashboard pages (role-based)
 │   │   │   ├── admin/        # Super admin dashboard
-│   │   │   ├── lab-owner/    # Lab owner dashboard
+│   │   │   ├── workspace/    # Lab owner dashboard
 │   │   │   ├── technician/   # Technician dashboard
 │   │   │   └── receptionist/ # Receptionist dashboard
 │   │   ├── api/              # API routes

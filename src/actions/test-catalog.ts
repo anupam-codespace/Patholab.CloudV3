@@ -107,7 +107,7 @@ export async function createTest(data: {
     }
   });
 
-  revalidatePath('/lab-owner/test-management');
+  revalidatePath('/workspace/test-management');
 }
 
 export async function updateTest(id: string, data: {
@@ -182,10 +182,10 @@ export async function updateTest(id: string, data: {
       }
     });
   
-    revalidatePath('/lab-owner/test-management');
+    revalidatePath('/workspace/test-management');
 }
 
 export async function deleteTest(id: string) {
     await prisma.testTemplate.delete({ where: { id } });
-    revalidatePath('/lab-owner/test-management');
+    revalidatePath('/workspace/test-management');
 }
