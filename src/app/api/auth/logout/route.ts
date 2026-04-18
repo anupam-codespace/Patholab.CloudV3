@@ -1,63 +1,49 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { revalidatePath } from 'next/cache';
 
 export async function POST(req: NextRequest) {
   try {
-    // 1. Audit Logging (Security)
-    // We capture who is logging out before we delete their session
+    // 1. Audit Logging
     const user = await getCurrentUser();
     const ip = req.headers.get('x-forwarded-for') || 'unknown';
-    const userAgent = req.headers.get('user-agent') || 'unknown';
 
     if (user) {
       await prisma.activityLog.create({
         data: {
-          userId: user.userId,
+          userId: user.id, // Make sure this matches your schema (user.id instead of user.userId)
           action: 'LOGOUT',
           entity: 'SESSION',
-          entityId: user.userId,
-          description: `User logged out from IP: ${ip}`,        },
-      }).catch(console.error); // Non-blocking logging
+          entityId: user.id,
+          description: `User logged out from IP: ${ip}`,
+        },
+      }).catch(console.error);
     }
 
-    // 2. Prepare the Redirect URL
-    // We want to move the user to the login page immediately
-    const loginUrl = new URL('/login', req.url);
-
-    // 3. Create the Redirect Response
-    // Status 303 (See Other) is standard for redirecting after a POST request
-    const response = NextResponse.redirect(loginUrl, { status: 303 });
-
-    // 4. "NUCLEAR" CACHE CLEARING
-    // This tells the browser to wipe LocalStorage, SessionStorage, and Cache
-    response.headers.set(
-      'Clear-Site-Data',
-      '"cookies", "storage", "executionContexts"'
+    // 2. Return a JSON success response (NOT a redirect)
+    const response = NextResponse.json(
+      { success: true, message: 'Logged out successfully' },
+      { status: 200 }
     );
 
-    // 5. DESTROY AUTH COOKIE (Immediate Expiration)
+    // 3. DESTROY AUTH COOKIE
     response.cookies.set({
       name: 'token',
       value: '',
       httpOnly: true,
-      expires: new Date(0), // Set date to 1970
+      expires: new Date(0), // Set to the past to instantly delete
       path: '/',
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax'
     });
 
-    // 6. CLEAR SERVER CACHE
-    // Ensure the next page load fetches fresh data
-    response.headers.set('Cache-Control', 'no-store, max-age=0');
-    revalidatePath('/', 'layout'); // Purge Next.js Server Cache
-
     return response;
 
   } catch (error) {
     console.error('Logout System Error:', error);
-    // Even if error, force redirect to login to avoid "stuck" state
-    return NextResponse.redirect(new URL('/login', req.url));
+    return NextResponse.json(
+      { success: false, message: 'Logout error' },
+      { status: 500 }
+    );
   }
 }
