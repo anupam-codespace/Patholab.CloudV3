@@ -108,7 +108,7 @@ export default function UpgradePage() {
 
           if (verifyRes.ok) {
             toast.success("Upgrade Successful! Redirecting...");
-            router.push("/lab-owner/dashboard");
+            router.push("/workspace/dashboard");
             router.refresh();
           } else {
             toast.error("Payment verification failed");
