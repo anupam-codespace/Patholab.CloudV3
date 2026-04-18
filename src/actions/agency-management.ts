@@ -95,7 +95,7 @@ export async function createAgency(data: {
     }
   });
   
-  revalidatePath('/lab-owner/agencies');
+  revalidatePath('/workspace/agencies');
 }
 
 export async function updateAgency(id: string, data: {
@@ -136,7 +136,7 @@ export async function updateAgency(id: string, data: {
     }
   });
   
-  revalidatePath('/lab-owner/agencies');
+  revalidatePath('/workspace/agencies');
 }
 
 export async function deleteAgency(id: string) {
@@ -144,5 +144,5 @@ export async function deleteAgency(id: string) {
   await prisma.agency.delete({
     where: { id, labId }
   });
-  revalidatePath('/lab-owner/agencies');
+  revalidatePath('/workspace/agencies');
 }

@@ -52,7 +52,7 @@ export async function saveTemplate(templateId: string | null, name: string, conf
     });
   }
 
-  revalidatePath('/lab-owner/settings/templates');
+  revalidatePath('/workspace/settings/templates');
   return { success: true };
 }
 
@@ -73,8 +73,8 @@ export async function setActiveTemplate(templateId: string) {
     })
   ]);
 
-  revalidatePath('/lab-owner/settings/templates');
-  revalidatePath('/lab-owner/reports/print'); // Ensure print page updates
+  revalidatePath('/workspace/settings/templates');
+  revalidatePath('/workspace/reports/print'); // Ensure print page updates
   return { success: true };
 }
 
@@ -87,6 +87,6 @@ export async function deleteTemplate(templateId: string) {
     where: { id: templateId, labId: user.labId }
   });
 
-  revalidatePath('/lab-owner/settings/templates');
+  revalidatePath('/workspace/settings/templates');
   return { success: true };
 }

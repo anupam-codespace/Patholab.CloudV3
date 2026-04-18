@@ -36,7 +36,7 @@ export async function createContainerType(data: {
         capColor: data.capColor,
       }
     });
-    revalidatePath('/lab-owner/test-management');
+    revalidatePath('/workspace/test-management');
     return { success: true };
   } catch (error) {
     console.error(error);
@@ -61,7 +61,7 @@ export async function updateContainerType(id: string, data: {
         capColor: data.capColor,
       }
     });
-    revalidatePath('/lab-owner/test-management');
+    revalidatePath('/workspace/test-management');
     return { success: true };
   } catch (error) {
     return { success: false, error: "Failed to update container" };
@@ -75,7 +75,7 @@ export async function deleteContainerType(id: string) {
     await prisma.containerType.delete({
       where: { id, labId }
     });
-    revalidatePath('/lab-owner/test-management');
+    revalidatePath('/workspace/test-management');
     return { success: true };
   } catch (error) {
     return { success: false, error: "Failed to delete container" };

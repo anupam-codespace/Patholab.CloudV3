@@ -64,7 +64,7 @@ export const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 export const DASHBOARD_ROUTES = {
   SUPER_ADMIN: '/admin',
-  LAB_OWNER: '/lab-owner',
+  LAB_OWNER: '/workspace',
   TECHNICIAN: '/technician',
   RECEPTIONIST: '/receptionist',
 };

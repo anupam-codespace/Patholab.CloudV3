@@ -27,7 +27,7 @@ export async function getDepartments() {
 export async function createDepartment(data: { name: string; code?: string }) {
   const labId = await getLabId();
   await prisma.department.create({ data: { ...data, labId } });
-  revalidatePath('/lab-owner/test-management');
+  revalidatePath('/workspace/test-management');
 }
 
 export async function updateDepartment(id: string, data: { name: string }) {
@@ -36,13 +36,13 @@ export async function updateDepartment(id: string, data: { name: string }) {
         where: { id, labId },
         data
     });
-    revalidatePath('/lab-owner/test-management');
+    revalidatePath('/workspace/test-management');
 }
 
 export async function deleteDepartment(id: string) {
   const labId = await getLabId();
   await prisma.department.delete({ where: { id, labId } });
-  revalidatePath('/lab-owner/test-management');
+  revalidatePath('/workspace/test-management');
 }
 
 // ==========================================
@@ -60,7 +60,7 @@ export async function getSampleTypes() {
 export async function createSampleType(data: { name: string; code?: string }) {
   const labId = await getLabId();
   await prisma.sampleType.create({ data: { ...data, labId } });
-  revalidatePath('/lab-owner/test-management');
+  revalidatePath('/workspace/test-management');
 }
 
 export async function updateSampleType(id: string, data: { name: string }) {
@@ -69,13 +69,13 @@ export async function updateSampleType(id: string, data: { name: string }) {
         where: { id, labId },
         data
     });
-    revalidatePath('/lab-owner/test-management');
+    revalidatePath('/workspace/test-management');
 }
 
 export async function deleteSampleType(id: string) {
   const labId = await getLabId();
   await prisma.sampleType.delete({ where: { id, labId } });
-  revalidatePath('/lab-owner/test-management');
+  revalidatePath('/workspace/test-management');
 }
 
 // ==========================================
@@ -93,7 +93,7 @@ export async function getTestHeadings() {
 export async function createTestHeading(name: string) {
   const labId = await getLabId();
   await prisma.testHeading.create({ data: { name, labId } });
-  revalidatePath('/lab-owner/test-management');
+  revalidatePath('/workspace/test-management');
 }
 
 export async function updateTestHeading(id: string, name: string) {
@@ -102,13 +102,13 @@ export async function updateTestHeading(id: string, name: string) {
         where: { id, labId },
         data: { name }
     });
-    revalidatePath('/lab-owner/test-management');
+    revalidatePath('/workspace/test-management');
 }
 
 export async function deleteTestHeading(id: string) {
     const labId = await getLabId();
     await prisma.testHeading.delete({ where: { id, labId } });
-    revalidatePath('/lab-owner/test-management');
+    revalidatePath('/workspace/test-management');
 }
 
 // ==========================================

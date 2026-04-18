@@ -106,7 +106,7 @@ export async function createParameter(data: {
     }
   });
 
-  revalidatePath('/lab-owner/test-management');
+  revalidatePath('/workspace/test-management');
 }
 
 // --- 3. UPDATE PARAMETER ---
@@ -200,7 +200,7 @@ export async function updateParameter(id: string, data: {
       }
     });
   
-    revalidatePath('/lab-owner/test-management');
+    revalidatePath('/workspace/test-management');
   }
 
 // --- 4. DELETE PARAMETER ---
@@ -209,5 +209,5 @@ export async function deleteParameter(id: string) {
   await prisma.labTestParameter.delete({
     where: { id, labId }
   });
-  revalidatePath('/lab-owner/test-management');
+  revalidatePath('/workspace/test-management');
 }

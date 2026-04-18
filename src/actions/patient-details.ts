@@ -60,6 +60,6 @@ export async function updatePatientDetails(patientId: string, data: any) {
     }
   });
 
-  revalidatePath('/lab-owner/patients');
-  revalidatePath(`/lab-owner/patients/${patientId}`);
+  revalidatePath('/workspace/patients');
+  revalidatePath(`/workspace/patients/${patientId}`);
 }
