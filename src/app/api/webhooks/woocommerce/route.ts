@@ -5,9 +5,6 @@ import bcrypt from "bcryptjs";
 import { Resend } from "resend";
 import { addMonths, addYears } from "date-fns";
 
-// Initialize Resend with your API Key from .env
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 // Helper to generate a secure 8-character temporary password
 const generateTempPassword = () => crypto.randomBytes(4).toString("hex");
 
@@ -19,6 +16,14 @@ const generateLabCode = (name: string) => {
 
 export async function POST(req: NextRequest) {
   try {
+    // ✅ FIX: Initialize Resend INSIDE the route so it doesn't crash the Next.js build
+    const resendApiKey = process.env.RESEND_API_KEY;
+    if (!resendApiKey) {
+      console.error("Critical Error: Missing RESEND_API_KEY in .env");
+      return NextResponse.json({ error: "Server misconfiguration" }, { status: 500 });
+    }
+    const resend = new Resend(resendApiKey);
+
     // 1. Verify WooCommerce Signature
     const signature = req.headers.get("x-wc-webhook-signature");
     const rawBody = await req.text();
@@ -64,7 +69,7 @@ export async function POST(req: NextRequest) {
     let isYearly = false;
     let hasSetupAddon = false;
 
-    // --- NEW: Track unlocked features and capacity boosters ---
+    // Track unlocked features and capacity boosters
     const unlockedFeatures: string[] = [];
     let extraBranches = 0;
     let extraStaff = 0;
@@ -180,7 +185,7 @@ export async function POST(req: NextRequest) {
         }
       });
 
-      // D. Create the Subscription & Usage Tracker (NEW ADD-ON LOGIC HERE)
+      // D. Create the Subscription & Usage Tracker
       const subscription = await tx.subscription.create({
         data: {
           labId: lab.id,
@@ -189,10 +194,10 @@ export async function POST(req: NextRequest) {
           startDate: startDate,
           endDate: endDate,
           
-          unlockedFeatures: unlockedFeatures, // Saves the ADDON_ array
-          boosterBranches: extraBranches,     // Saves extra branches
-          boosterStaff: extraStaff,           // Saves extra staff
-          boosterStorage: extraStorage,       // Saves extra storage
+          unlockedFeatures: unlockedFeatures, 
+          boosterBranches: extraBranches,     
+          boosterStaff: extraStaff,           
+          boosterStorage: extraStorage,       
         }
       });
 
