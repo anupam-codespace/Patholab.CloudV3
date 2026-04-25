@@ -372,6 +372,7 @@ model Subscription {
 
   planId String
   plan   Plan   @relation(fields: [planId], references: [id])
+  unlockedFeatures String[] @default([]) // e.g., ["ADDON_INVENTORY", "ADDON_RADIOLOGY"]
 
   status SubStatus @default(TRIAL)
 

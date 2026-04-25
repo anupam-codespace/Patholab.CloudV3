@@ -72,6 +72,7 @@
     "react-hot-toast": "^2.4.1",
     "react-rnd": "^10.5.2",
     "recharts": "^2.15.4",
+    "resend": "^6.12.2",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
     "use-debounce": "^10.0.6",
