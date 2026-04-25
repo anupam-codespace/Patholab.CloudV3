@@ -7,20 +7,21 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
   try {
     const user = await getCurrentUser();
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    
+    // ✅ THE FIX: Checking for user.userId instead of user.id
+    if (!user || !user.userId) {
+      return NextResponse.json({ error: 'Unauthorized or missing User ID' }, { status: 401 });
     }
 
     // Fetch fresh data from DB
     const dbUser = await prisma.user.findUnique({
-      where: { id: user.id },
+      where: { id: user.userId }, // ✅ THE FIX: Passing user.userId
       select: {
         id: true,
         name: true,
         email: true, 
         phone: true, 
         avatar: true,
-        // Explicitly excluding password
       }
     });
 
@@ -38,13 +39,13 @@ export async function GET(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const user = await getCurrentUser();
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    
+    // ✅ THE FIX: Checking for user.userId instead of user.id
+    if (!user || !user.userId) {
+      return NextResponse.json({ error: 'Unauthorized or missing User ID' }, { status: 401 });
     }
 
     const body = await req.json();
-
-    // ✅ Explicitly destructure to prevent payload mix-ups
     const { name, phone, email, avatar } = body;
 
     // Optional: Validation to prevent saving an email in the phone field again
@@ -53,11 +54,11 @@ export async function PUT(req: NextRequest) {
     }
 
     const updatedUser = await prisma.user.update({
-      where: { id: user.id },
+      where: { id: user.userId }, // ✅ THE FIX: Passing user.userId
       data: {
         name: name,
-        phone: phone, // Updates the phone column
-        email: email, // ✅ ALLOWED: Updates the email column (To fix empty/wrong email)
+        phone: phone, 
+        email: email, 
         avatar: avatar,
       },
       select: {

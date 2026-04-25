@@ -59,26 +59,52 @@ export async function POST(req: NextRequest) {
     const labNameMeta = order.meta_data.find((m: any) => m.key === "lab_name");
     const labName = labNameMeta?.value || order.billing.company || `${customerName} Diagnostics`;
 
-    // 4. Analyze Line Items for Plans and Add-ons based on your CSV SKUs
+    // 4. Analyze Line Items for Plans, Add-ons, and Boosters
     let mainPlanSku = "";
     let isYearly = false;
     let hasSetupAddon = false;
 
-    // Loop through the cart to find what they bought
+    // --- NEW: Track unlocked features and capacity boosters ---
+    const unlockedFeatures: string[] = [];
+    let extraBranches = 0;
+    let extraStaff = 0;
+    let extraStorage = 0;
+    const purchasedItemNames: string[] = []; // For the welcome email
+
+    // Loop through the cart to find exactly what they bought
     order.line_items.forEach((item: any) => {
       const sku = item.sku || "";
+      
+      // A. Detect Core Plan
       if (sku.includes("BASIC") || sku.includes("GROWTH") || sku.includes("PREMIUM")) {
         mainPlanSku = sku;
         if (sku.includes("YEARLY")) isYearly = true;
+        purchasedItemNames.push(item.name);
       }
-      if (sku === "SUPPORT_SETUP") hasSetupAddon = true;
+      
+      // B. Detect Support Setup
+      if (sku === "SUPPORT_SETUP") {
+        hasSetupAddon = true;
+        purchasedItemNames.push(item.name);
+      }
+
+      // C. Detect Feature Add-ons (e.g., ADDON_INVENTORY, ADDON_RADIOLOGY)
+      if (sku.startsWith("ADDON_")) {
+        unlockedFeatures.push(sku);
+        purchasedItemNames.push(item.name);
+      }
+
+      // D. Detect Capacity Boosters
+      if (sku === "BOOSTER_BRANCH_1") extraBranches += 1;
+      if (sku === "BOOSTER_STAFF_5") extraStaff += 5;
+      if (sku === "BOOSTER_STORAGE_10") extraStorage += 10.0;
     });
 
     if (!mainPlanSku) {
       return NextResponse.json({ error: "No valid SaaS plan found in order" }, { status: 400 });
     }
 
-    // Find the Plan in Prisma (Ensure your DB Plan names match the SKUs, e.g., "GROWTH_MONTHLY")
+    // Find the Plan in Prisma
     const plan = await prisma.plan.findUnique({
       where: { name: mainPlanSku }
     });
@@ -154,7 +180,7 @@ export async function POST(req: NextRequest) {
         }
       });
 
-      // D. Create the Subscription & Usage Tracker
+      // D. Create the Subscription & Usage Tracker (NEW ADD-ON LOGIC HERE)
       const subscription = await tx.subscription.create({
         data: {
           labId: lab.id,
@@ -162,6 +188,11 @@ export async function POST(req: NextRequest) {
           status: "ACTIVE",
           startDate: startDate,
           endDate: endDate,
+          
+          unlockedFeatures: unlockedFeatures, // Saves the ADDON_ array
+          boosterBranches: extraBranches,     // Saves extra branches
+          boosterStaff: extraStaff,           // Saves extra staff
+          boosterStorage: extraStorage,       // Saves extra storage
         }
       });
 
@@ -182,6 +213,16 @@ export async function POST(req: NextRequest) {
       });
     });
 
+    // Generate the HTML list for unlocked add-ons to show in the email
+    const addonListHtml = purchasedItemNames.length > 1 
+      ? `<div style="margin-top: 20px; font-size: 14px; color: #475569;">
+           <strong>Unlocked Modules & Services:</strong>
+           <ul style="margin-top: 5px; padding-left: 20px;">
+             ${purchasedItemNames.map(name => `<li>${name}</li>`).join('')}
+           </ul>
+         </div>`
+      : '';
+
     // 7. SEND THE CINEMATIC WELCOME EMAIL
     await resend.emails.send({
       from: "Patholab Cloud <support@patholab.cloud>", 
@@ -198,6 +239,8 @@ export async function POST(req: NextRequest) {
             <p style="font-size: 16px;">Hello <strong>${customerName}</strong>,</p>
             <p style="font-size: 16px; line-height: 1.6;">Thank you for upgrading to the <strong>${plan.displayName}</strong>. Your laboratory workspace for <strong>${labName}</strong> has been successfully provisioned and is ready for use.</p>
             
+            ${addonListHtml}
+
             <div style="background-color: #f8fafc; border-left: 4px solid #059669; padding: 20px; border-radius: 4px; margin: 25px 0;">
               <p style="margin: 0 0 10px 0; font-size: 15px;"><strong>Secure Login URL:</strong> <br>
                  <a href="https://app.patholab.cloud/login" style="color: #059669; text-decoration: none; font-weight: bold;">https://app.patholab.cloud/login</a>
