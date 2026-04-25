@@ -23,7 +23,7 @@ const publicPrefixes = [
   '/api/book-demo',
   '/api/plans',
   '/terms-conditions',
-  '/api/webhooks',
+  '/api/webhooks', // Keeps it universally whitelisted just in case
   '/privacy-policy',
   '/shipping-policy',
   '/contact-us',
@@ -131,6 +131,14 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\..*|api/payments/webhook).*)',
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - api/webhooks (bypasses middleware entirely for fast WooCommerce syncing)
+     * - .*\\..* (matches any file with a dot, e.g., .svg, .png)
+     */
+    '/((?!_next/static|_next/image|favicon.ico|api/webhooks|.*\\..*).*)',
   ],
 };
