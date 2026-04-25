@@ -17,7 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Trash2, GripVertical, Save, Loader2, Search, AlertCircle, Beaker } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { CustomFieldSelector } from './custom-field-selector';
+import  CustomFieldSelector  from './custom-field-selector';
 
 // --- 1. TYPES & ZOD SCHEMA ---
 type Option = { id: string; name: string; code?: string };
