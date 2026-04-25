@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 import { addMonths, addYears } from "date-fns";
 
 // Helper to generate a secure 8-character temporary password
@@ -16,14 +16,6 @@ const generateLabCode = (name: string) => {
 
 export async function POST(req: NextRequest) {
   try {
-    // ✅ FIX: Initialize Resend INSIDE the route so it doesn't crash the Next.js build
-    const resendApiKey = process.env.RESEND_API_KEY;
-    if (!resendApiKey) {
-      console.error("Critical Error: Missing RESEND_API_KEY in .env");
-      return NextResponse.json({ error: "Server misconfiguration" }, { status: 500 });
-    }
-    const resend = new Resend(resendApiKey);
-
     // 1. Verify WooCommerce Signature
     const signature = req.headers.get("x-wc-webhook-signature");
     const rawBody = await req.text();
@@ -228,9 +220,19 @@ export async function POST(req: NextRequest) {
          </div>`
       : '';
 
-    // 7. SEND THE CINEMATIC WELCOME EMAIL
-    await resend.emails.send({
-      from: "Patholab Cloud <support@patholab.cloud>", 
+    // 7. CONFIGURE NODEMAILER & SEND WELCOME EMAIL
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT) || 465,
+      secure: Number(process.env.SMTP_PORT) === 465, // true for 465, false for other ports
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_FROM || '"Patholab Cloud" <patholab@globizhub.com>',
       to: customerEmail,
       subject: `🚀 Welcome to Patholab Cloud, ${customerName}!`,
       html: `
@@ -266,7 +268,7 @@ export async function POST(req: NextRequest) {
       `,
     });
 
-    console.log(`[SUCCESS] Provisioned ${labName} and emailed ${customerEmail}`);
+    console.log(`[SUCCESS] Provisioned ${labName} and emailed ${customerEmail} via Nodemailer`);
     return NextResponse.json({ success: true }, { status: 200 });
 
   } catch (error: any) {
