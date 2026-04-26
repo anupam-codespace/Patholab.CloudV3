@@ -26,6 +26,7 @@ import {
   PlusSquare,
   Activity,
   Trash2,
+  HardDriveDownload,
 } from "lucide-react";
 import {
   Tooltip,
@@ -59,8 +60,10 @@ const navGroups = [
     items: [
       { name: "SaaS Plans", href: "/admin/plans", icon: Box },
       { name: "Add-Ons", href: "/admin/addons", icon: PlusSquare },
+      { name: "Payment Methods", href: "/admin/payments", icon: CreditCard },
       { name: "Subscriptions", href: "/admin/subscriptions", icon: CreditCard },
       { name: "Invoices", href: "/admin/invoices", icon: Receipt },
+      { name: "Webhooks", href: "/admin/webhooks", icon: HardDriveDownload },
     ],
   },
   {
