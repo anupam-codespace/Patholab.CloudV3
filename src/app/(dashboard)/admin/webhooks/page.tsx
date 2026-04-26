@@ -1,3 +1,4 @@
+// src/app/admin/webhooks/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -9,6 +10,9 @@ import {
   XCircle,
   Eye,
   X,
+  RefreshCw,
+    HardDriveDownload,
+  Activity,
 } from "lucide-react";
 
 type WebhookLog = {
@@ -26,6 +30,14 @@ export default function DetailedWebhooksPage() {
   const [loading, setLoading] = useState(true);
   const [selectedPayload, setSelectedPayload] = useState<any | null>(null);
 
+  // Manual Sync State
+  const [syncOrderId, setSyncOrderId] = useState("");
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+
   const fetchLogs = async () => {
     try {
       const res = await fetch("/api/admin/webhooks");
@@ -42,34 +54,73 @@ export default function DetailedWebhooksPage() {
 
   useEffect(() => {
     fetchLogs();
-    // Auto-refresh every 30 seconds to catch live WooCommerce orders
-    const interval = setInterval(fetchLogs, 30000);
+    const interval = setInterval(fetchLogs, 30000); // Auto-refresh every 30 seconds
     return () => clearInterval(interval);
   }, []);
+
+  const handleManualSync = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!syncOrderId) return;
+
+    setIsSyncing(true);
+    setSyncMessage(null);
+
+    try {
+      const res = await fetch("/api/admin/sync-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId: syncOrderId }),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        setSyncMessage({
+          type: "success",
+          text: data.message || "Order synced successfully!",
+        });
+        setSyncOrderId("");
+        fetchLogs();
+      } else {
+        setSyncMessage({
+          type: "error",
+          text: data.error || "Failed to sync order.",
+        });
+      }
+    } catch (error) {
+      setSyncMessage({
+        type: "error",
+        text: "Network error occurred during manual sync.",
+      });
+    } finally {
+      setIsSyncing(false);
+      // Clear message after 5 seconds
+      setTimeout(() => setSyncMessage(null), 5000);
+    }
+  };
 
   const StatusBadge = ({ status }: { status: WebhookLog["status"] }) => {
     switch (status) {
       case "SUCCESS":
         return (
-          <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+          <span className="flex w-fit items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
             <CheckCircle2 size={14} /> Success
           </span>
         );
       case "FAILED":
         return (
-          <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+          <span className="flex w-fit items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
             <XCircle size={14} /> Failed
           </span>
         );
       case "IGNORED":
         return (
-          <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
+          <span className="flex w-fit items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-800 border border-slate-200">
             <AlertCircle size={14} /> Ignored
           </span>
         );
       default:
         return (
-          <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+          <span className="flex w-fit items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200">
             <Clock size={14} /> Pending
           </span>
         );
@@ -78,14 +129,18 @@ export default function DetailedWebhooksPage() {
 
   if (loading)
     return (
-      <div className="flex h-[50vh] items-center justify-center text-slate-500 animate-pulse">
-        Loading flight recorder data...
+      <div className="flex flex-col h-[50vh] items-center justify-center text-slate-500 space-y-4">
+        <RefreshCw className="animate-spin text-blue-600" size={32} />
+        <p className="animate-pulse font-medium">
+          Loading flight recorder data...
+        </p>
       </div>
     );
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 relative">
-      <div className="flex items-center justify-between">
+    <div className="max-w-7xl mx-auto space-y-6 relative pb-12">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">
             WooCommerce Webhook Ledger
@@ -96,16 +151,74 @@ export default function DetailedWebhooksPage() {
         </div>
         <button
           onClick={fetchLogs}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium">
+          className="flex items-center justify-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition text-sm font-medium shadow-sm">
+          <RefreshCw size={16} />
           Refresh Logs
         </button>
       </div>
 
+      {/* Manual Sync Tool */}
+      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-end gap-6 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-1 h-full bg-blue-600"></div>
+        <div className="flex-1">
+          <h2 className="text-sm font-bold text-slate-800 mb-1 flex items-center gap-2">
+            <HardDriveDownload size={16} className="text-blue-600" />
+            Manual Order Sync
+          </h2>
+          <p className="text-xs text-slate-500 mb-4">
+            If a WooCommerce webhook was missed due to downtime, enter the Order
+            ID here to force database provisioning.
+          </p>
+          <form
+            onSubmit={handleManualSync}
+            className="flex flex-col sm:flex-row gap-3">
+            <input
+              type="text"
+              placeholder="e.g., 10452"
+              value={syncOrderId}
+              onChange={(e) => setSyncOrderId(e.target.value)}
+              className="w-full sm:max-w-xs px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-all text-sm"
+            />
+            <button
+              type="submit"
+              disabled={isSyncing || !syncOrderId}
+              className="flex items-center justify-center gap-2 px-5 py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+              {isSyncing ? (
+                <>
+                  <RefreshCw size={16} className="animate-spin" />
+                  Syncing...
+                </>
+              ) : (
+                "Force Sync Order"
+              )}
+            </button>
+          </form>
+        </div>
+
+        {/* Sync Status Message */}
+        {syncMessage && (
+          <div
+            className={`px-4 py-3 rounded-lg border text-sm w-full md:w-auto md:max-w-md flex items-start gap-2 ${
+              syncMessage.type === "success"
+                ? "bg-green-50 border-green-200 text-green-800"
+                : "bg-red-50 border-red-200 text-red-800"
+            }`}>
+            {syncMessage.type === "success" ? (
+              <CheckCircle2 size={16} className="mt-0.5 shrink-0" />
+            ) : (
+              <XCircle size={16} className="mt-0.5 shrink-0" />
+            )}
+            <span className="leading-tight">{syncMessage.text}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Webhooks Table */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-sm font-medium text-slate-600">
+              <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider font-semibold text-slate-500">
                 <th className="p-4">Timestamp</th>
                 <th className="p-4">Event Source</th>
                 <th className="p-4">Status</th>
@@ -116,8 +229,11 @@ export default function DetailedWebhooksPage() {
             <tbody className="divide-y divide-slate-200">
               {logs.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-slate-500">
-                    No webhook events logged yet. Waiting for orders...
+                  <td
+                    colSpan={5}
+                    className="p-12 text-center text-slate-500 flex flex-col items-center justify-center">
+                    <Activity size={32} className="text-slate-300 mb-3" />
+                    <p>No webhook events logged yet. Waiting for orders...</p>
                   </td>
                 </tr>
               ) : (
@@ -133,8 +249,8 @@ export default function DetailedWebhooksPage() {
                     </td>
                     <td className="p-4">
                       <div className="flex flex-col">
-                        <span className="font-mono text-xs font-semibold text-slate-700">
-                          {log.source}
+                        <span className="font-mono text-xs font-bold text-slate-700">
+                          {log.source || "WOOCOMMERCE"}
                         </span>
                         <span className="font-mono text-xs text-slate-500 mt-0.5">
                           {log.event}
@@ -144,10 +260,10 @@ export default function DetailedWebhooksPage() {
                     <td className="p-4">
                       <StatusBadge status={log.status} />
                     </td>
-                    <td className="p-4 text-sm max-w-xs truncate">
+                    <td className="p-4 text-sm max-w-[250px]">
                       {log.errorMessage ? (
                         <span
-                          className="text-red-600 font-medium"
+                          className="text-red-600 font-medium line-clamp-2"
                           title={log.errorMessage}>
                           {log.errorMessage}
                         </span>
@@ -160,7 +276,7 @@ export default function DetailedWebhooksPage() {
                     <td className="p-4 text-right">
                       <button
                         onClick={() => setSelectedPayload(log.payload)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors">
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors border border-blue-100">
                         <Eye size={14} />
                         View Payload
                       </button>
@@ -175,20 +291,30 @@ export default function DetailedWebhooksPage() {
 
       {/* JSON PAYLOAD MODAL */}
       {selectedPayload && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50">
-              <h3 className="font-semibold text-slate-800">
-                Raw Webhook Payload
-              </h3>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded bg-slate-800 flex items-center justify-center">
+                  <span className="text-white font-mono text-xs">{"{ }"}</span>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-slate-800 text-sm">
+                    Raw Webhook Payload
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Unmodified JSON data received from source
+                  </p>
+                </div>
+              </div>
               <button
                 onClick={() => setSelectedPayload(null)}
-                className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors">
+                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
                 <X size={20} />
               </button>
             </div>
-            <div className="p-4 overflow-y-auto bg-slate-900 flex-1">
-              <pre className="text-xs text-green-400 font-mono leading-relaxed whitespace-pre-wrap break-words">
+            <div className="p-4 overflow-y-auto bg-slate-900 flex-1 custom-scrollbar">
+              <pre className="text-[13px] text-green-400 font-mono leading-relaxed whitespace-pre-wrap break-words">
                 {JSON.stringify(selectedPayload, null, 2)}
               </pre>
             </div>
