@@ -1921,3 +1921,24 @@ enum FieldType {
   IMAGE 
   RICH_TEXT 
 }
+
+model WebhookLog {
+  id           String        @id @default(cuid())
+  source       String        @default("WOOCOMMERCE")
+  event        String
+  payload      Json
+  status       WebhookStatus @default(PENDING)
+  errorMessage String?       @db.Text
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum WebhookStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  IGNORED
+}
