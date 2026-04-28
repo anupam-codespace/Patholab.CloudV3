@@ -27,9 +27,12 @@ import {
   AlertCircle,
   Globe,
   Building2,
+  IndianRupee,
 } from "lucide-react";
 import toast from "react-hot-toast";
+
 import TestForm from "../components/test-form";
+import PricingOverrideModal from "../components/pricing-modal"; // Assuming you kept this component!
 
 // --- TYPESCRIPT INTERFACES ---
 export interface InventoryItem {
@@ -62,13 +65,16 @@ export interface Department {
   name: string;
 }
 
-// Updated to match the new API response
 export interface Test {
   id: string;
   name: string;
   code: string;
-  isGlobal: boolean; // CRITICAL ADDITION
+  isGlobal: boolean;
   effectivePrice: number;
+  effectiveB2BPrice: number;
+  effectiveTat: string;
+  isActive: boolean;
+  hasOverride: boolean;
   _count?: { parameters: number };
   department?: Department;
   containerType?: ContainerType;
@@ -81,17 +87,15 @@ interface AggregatedReagent {
   totalQuantity: number;
 }
 
-// 1. Fetching Function hitting our new API Route
-const fetchLocalTests = async (): Promise<Test[]> => {
-  const res = await fetch("/api/workspace/test-catalog");
+// --- API FUNCTIONS ---
+const fetchTests = async (): Promise<Test[]> => {
+  const res = await fetch("/api/workspace/test-catalog"); // Using our unified API
   if (!res.ok) throw new Error("Failed to fetch tests");
   const data = await res.json();
   return data.tests || [];
 };
 
-// 2. Delete Function
 const deleteLocalTest = async (id: string) => {
-  // Assuming you have a DELETE method on your catalog route, or point this to your specific delete API.
   const res = await fetch(`/api/workspace/test-catalog?id=${id}`, {
     method: "DELETE",
   });
@@ -102,8 +106,11 @@ const deleteLocalTest = async (id: string) => {
 export default function TestsTab() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  // Modals State
+  const [isTestFormOpen, setIsTestFormOpen] = useState(false);
   const [editingTest, setEditingTest] = useState<Test | null>(null);
+  const [pricingTest, setPricingTest] = useState<Test | null>(null);
 
   // --- FETCH DATA ---
   const {
@@ -111,8 +118,8 @@ export default function TestsTab() {
     isLoading,
     isError,
   } = useQuery<Test[]>({
-    queryKey: ["local-tests-catalog"],
-    queryFn: fetchLocalTests,
+    queryKey: ["unified-tests"],
+    queryFn: fetchTests,
   });
 
   // --- MUTATIONS ---
@@ -120,31 +127,35 @@ export default function TestsTab() {
     mutationFn: deleteLocalTest,
     onSuccess: () => {
       toast.success("Test deleted successfully");
-      queryClient.invalidateQueries({ queryKey: ["local-tests-catalog"] });
+      queryClient.invalidateQueries({ queryKey: ["unified-tests"] });
     },
-    onError: () => {
-      toast.error("Failed to delete test");
-    },
+    onError: () => toast.error("Failed to delete test"),
   });
 
   function handleDelete(id: string) {
     if (
       !window.confirm(
-        "Are you sure you want to permanently delete this test? This action cannot be undone.",
+        "Are you sure you want to permanently delete this custom test?",
       )
     )
       return;
     deleteMutation.mutate(id);
   }
 
-  function handleEdit(test: Test) {
-    setEditingTest(test);
-    setIsDialogOpen(true);
+  function handleActionClick(test: Test) {
+    if (test.isGlobal) {
+      // Global tests only allow pricing overrides
+      setPricingTest(test);
+    } else {
+      // Local tests allow full editing
+      setEditingTest(test);
+      setIsTestFormOpen(true);
+    }
   }
 
   function handleAddNew() {
     setEditingTest(null);
-    setIsDialogOpen(true);
+    setIsTestFormOpen(true);
   }
 
   const filteredTests = tests.filter(
@@ -164,53 +175,63 @@ export default function TestsTab() {
           />
           <Input
             placeholder="Search tests by name or code..."
-            className="pl-10 focus-visible:ring-blue-500 border-slate-300"
+            className="pl-10 focus-visible:ring-blue-500 border-slate-300 shadow-sm"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
 
-        <Dialog
-          open={isDialogOpen}
-          onOpenChange={(open) => {
-            setIsDialogOpen(open);
-            if (!open) setEditingTest(null);
-          }}>
-          <Button
-            onClick={handleAddNew}
-            className="bg-blue-600 hover:bg-blue-700 shadow-sm shrink-0 w-full sm:w-auto">
-            <Plus className="mr-2 h-4 w-4" /> Create Custom Test
-          </Button>
-
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0 border-0">
-            <DialogHeader className="px-6 py-4 border-b bg-slate-50 sticky top-0 z-10">
-              <DialogTitle className="text-xl">
-                {editingTest
-                  ? `Edit Test: ${editingTest.name}`
-                  : "Create New Test Master"}
-              </DialogTitle>
-            </DialogHeader>
-            <div className="p-6">
-              {/* Ensure your TestForm supports the new Schema structure */}
-              <TestForm
-                key={editingTest ? editingTest.id : "new"}
-                initialData={editingTest || undefined}
-                onSuccess={() => {
-                  setIsDialogOpen(false);
-                  queryClient.invalidateQueries({
-                    queryKey: ["local-tests-catalog"],
-                  });
-                }}
-              />
-            </div>
-          </DialogContent>
-        </Dialog>
+        <Button
+          onClick={handleAddNew}
+          className="bg-blue-600 hover:bg-blue-700 shadow-sm shrink-0 w-full sm:w-auto transition-all">
+          <Plus className="mr-2 h-4 w-4" /> Create Custom Test
+        </Button>
       </div>
 
-      {/* TABLE */}
+      {/* FULL TEST FORM MODAL (For Local Tests & New Tests) */}
+      <Dialog
+        open={isTestFormOpen}
+        onOpenChange={(open) => {
+          setIsTestFormOpen(open);
+          if (!open) setEditingTest(null);
+        }}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0 border-0">
+          <DialogHeader className="px-6 py-4 border-b bg-slate-50 sticky top-0 z-10">
+            <DialogTitle className="text-xl text-slate-800">
+              {editingTest
+                ? `Edit Custom Test: ${editingTest.name}`
+                : "Create New Custom Test"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="p-6">
+            <TestForm
+              key={editingTest ? editingTest.id : "new"}
+              initialData={editingTest || undefined}
+              onSuccess={() => {
+                setIsTestFormOpen(false);
+                queryClient.invalidateQueries({ queryKey: ["unified-tests"] });
+              }}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* PRICING OVERRIDE MODAL (For Global Tests) */}
+      {pricingTest && (
+        <PricingOverrideModal
+          test={pricingTest}
+          onClose={() => setPricingTest(null)}
+          onSuccess={() => {
+            setPricingTest(null);
+            queryClient.invalidateQueries({ queryKey: ["unified-tests"] });
+          }}
+        />
+      )}
+
+      {/* DATA TABLE */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <Table className="min-w-[900px]">
+        <div className="overflow-x-auto custom-scrollbar">
+          <Table className="min-w-[1000px]">
             <TableHeader>
               <TableRow className="bg-slate-50 border-b border-slate-200 hover:bg-slate-50">
                 <TableHead className="w-[100px] font-semibold text-slate-600">
@@ -228,8 +249,8 @@ export default function TestsTab() {
                 <TableHead className="font-semibold text-slate-600">
                   Auto-Reagents
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600">
-                  Price (₹)
+                <TableHead className="text-right font-semibold text-slate-600">
+                  Patient Price
                 </TableHead>
                 <TableHead className="text-right font-semibold text-slate-600">
                   Actions
@@ -242,7 +263,7 @@ export default function TestsTab() {
                   <TableCell
                     colSpan={7}
                     className="text-center h-32 text-slate-500 animate-pulse">
-                    Loading test database...
+                    Loading test catalog...
                   </TableCell>
                 </TableRow>
               ) : isError ? (
@@ -268,7 +289,7 @@ export default function TestsTab() {
                 </TableRow>
               ) : (
                 filteredTests.map((t) => {
-                  // Reagent Aggregation
+                  // Reagent Aggregation Logic
                   const aggregatedReagents = (t.components || []).reduce<
                     Record<string, AggregatedReagent>
                   >((acc, comp) => {
@@ -289,22 +310,28 @@ export default function TestsTab() {
                   return (
                     <TableRow
                       key={t.id}
-                      className={`hover:bg-slate-50/80 transition-colors ${t.isGlobal ? "bg-slate-50/30" : ""}`}>
+                      className={`hover:bg-slate-50/80 transition-colors ${!t.isActive ? "opacity-60 bg-slate-50" : ""}`}>
                       <TableCell>
-                        <span className="font-mono text-xs font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded">
+                        <span className="font-mono text-xs font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded border border-slate-200 shadow-sm">
                           {t.code}
                         </span>
                       </TableCell>
+
                       <TableCell>
-                        <div className="font-semibold text-slate-900 text-sm">
+                        <div className="font-bold text-slate-900 text-sm flex items-center gap-2">
                           {t.name}
+                          {!t.isActive && (
+                            <span className="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                              Inactive
+                            </span>
+                          )}
                         </div>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[11px] text-slate-500">
+                          <span className="text-[11px] text-slate-500 font-medium">
                             {t.department?.name || "General"}
                           </span>
                           <span className="text-slate-300">•</span>
-                          <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-medium">
+                          <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-medium border border-slate-200">
                             {t._count?.parameters || 0} parameters
                           </span>
                         </div>
@@ -322,7 +349,6 @@ export default function TestsTab() {
                         )}
                       </TableCell>
 
-                      {/* Tube Visual Indicator */}
                       <TableCell>
                         {t.containerType ? (
                           <div className="flex items-center gap-2">
@@ -333,7 +359,7 @@ export default function TestsTab() {
                                   t.containerType.capColor || "#ccc",
                               }}
                             />
-                            <span className="text-xs text-slate-700 font-medium">
+                            <span className="text-xs text-slate-700 font-semibold">
                               {t.containerType.code}
                             </span>
                           </div>
@@ -344,19 +370,20 @@ export default function TestsTab() {
                         )}
                       </TableCell>
 
-                      {/* DISPLAY AGGREGATED REAGENTS */}
                       <TableCell>
                         {reagentList.length > 0 ? (
                           <div className="flex flex-col gap-1.5 max-w-[200px]">
                             {reagentList.map((r, idx) => (
                               <div
                                 key={idx}
-                                className="inline-flex items-center gap-1.5 text-[10px] font-medium text-emerald-700 bg-emerald-50 px-2 py-1 rounded border border-emerald-100">
-                                <Beaker className="w-3 h-3 text-emerald-500 shrink-0" />
-                                <span className="truncate" title={r.name}>
-                                  {r.name}
-                                </span>
-                                <span className="font-bold border-l border-emerald-200 pl-1.5 ml-auto">
+                                className="inline-flex items-center justify-between gap-2 text-[10px] font-medium text-emerald-700 bg-emerald-50 px-2 py-1 rounded border border-emerald-100">
+                                <div className="flex items-center gap-1.5 truncate">
+                                  <Beaker className="w-3 h-3 text-emerald-500 shrink-0" />
+                                  <span className="truncate" title={r.name}>
+                                    {r.name}
+                                  </span>
+                                </div>
+                                <span className="font-bold border-l border-emerald-200 pl-1.5 shrink-0">
                                   {r.totalQuantity.toFixed(2)} {r.unit}
                                 </span>
                               </div>
@@ -369,22 +396,37 @@ export default function TestsTab() {
                         )}
                       </TableCell>
 
-                      <TableCell className="font-semibold text-slate-900">
-                        ₹{Number(t.effectivePrice || t.price).toFixed(2)}
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1 font-bold text-slate-900 text-sm">
+                          <IndianRupee size={14} className="text-slate-400" />
+                          {Number(t.effectivePrice || t.price).toFixed(2)}
+                        </div>
+                        {t.hasOverride && (
+                          <div className="text-[10px] text-blue-600 font-semibold mt-0.5">
+                            Custom Price
+                          </div>
+                        )}
                       </TableCell>
 
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
+                          {/* DYNAMIC EDIT BUTTON */}
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleEdit(t)}
+                            onClick={() => handleActionClick(t)}
                             className="text-slate-400 hover:text-blue-600 hover:bg-blue-50 h-8 w-8 transition-colors"
-                            title={t.isGlobal ? "View Details" : "Edit Test"}>
-                            <Pencil className="h-4 w-4" />
+                            title={
+                              t.isGlobal ? "Edit Pricing" : "Edit Test Details"
+                            }>
+                            {t.isGlobal ? (
+                              <IndianRupee className="h-4 w-4" />
+                            ) : (
+                              <Pencil className="h-4 w-4" />
+                            )}
                           </Button>
 
-                          {/* Disable Delete button if it's a Global Test */}
+                          {/* DELETE BUTTON (Disabled for Global) */}
                           <Button
                             variant="ghost"
                             size="icon"
