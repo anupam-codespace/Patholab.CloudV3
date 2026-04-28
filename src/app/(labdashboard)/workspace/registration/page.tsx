@@ -35,6 +35,17 @@ import { Separator } from "@/components/ui/separator";
 import toast from "react-hot-toast";
 import { format } from "date-fns";
 
+// --- SAFE DATE FORMATTER ---
+const safeFormatDate = (dateValue: string | Date | null | undefined) => {
+  if (!dateValue) return "Unknown Date";
+
+  const d = new Date(dateValue);
+  // Check if the resulting date object is actually valid
+  if (isNaN(d.getTime())) return "Invalid Date";
+
+  return format(d, "dd MMM yyyy");
+};
+
 export default function RegistrationSearchPage() {
   const router = useRouter();
 
@@ -44,7 +55,7 @@ export default function RegistrationSearchPage() {
   const [results, setResults] = useState<any[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
 
-  // --- SEARCH HANDLER (Preserved 100%) ---
+  // --- SEARCH HANDLER ---
   const handleSearch = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!query.trim()) return;
@@ -65,7 +76,7 @@ export default function RegistrationSearchPage() {
     }
   };
 
-  // --- ACTIONS (Preserved 100%) ---
+  // --- ACTIONS ---
   const proceedToAccession = (patientId: string) => {
     router.push(
       `/workspace/accession?patientId=${patientId}&doc=Self&agency=Direct`,
@@ -327,10 +338,7 @@ export default function RegistrationSearchPage() {
                                   </span>
                                   <span className="text-[10px] font-medium text-slate-500 flex items-center gap-1 mt-0.5">
                                     <Calendar className="h-3 w-3" />{" "}
-                                    {format(
-                                      new Date(t.createdAt),
-                                      "dd MMM yyyy",
-                                    )}
+                                    {safeFormatDate(t.createdAt)}
                                   </span>
                                 </div>
                               </div>
@@ -382,17 +390,14 @@ export default function RegistrationSearchPage() {
                                     #{inv.invoiceNumber}
                                   </p>
                                   <p className="text-[10px] font-medium text-slate-500 mt-0.5">
-                                    {format(
-                                      new Date(inv.createdAt),
-                                      "dd MMM yyyy",
-                                    )}
+                                    {safeFormatDate(inv.createdAt)}
                                   </p>
                                 </div>
                               </div>
                               <div className="flex items-center justify-between sm:justify-end gap-6 sm:w-auto w-full border-t sm:border-0 border-slate-100 pt-3 sm:pt-0 mt-1 sm:mt-0">
                                 <div className="text-left sm:text-right">
                                   <p className="font-black text-sm text-slate-900">
-                                    ₹{inv.grandTotal?.toFixed(2)}
+                                    ₹{Number(inv.grandTotal || 0).toFixed(2)}
                                   </p>
                                 </div>
                                 <Badge
