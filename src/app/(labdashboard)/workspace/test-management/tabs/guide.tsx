@@ -1,190 +1,221 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { 
-  Building2, FlaskConical, Box, Type, FileText, 
-  List, Beaker, CheckCircle2, AlertCircle, Lightbulb
-} from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+import {
+  Globe,
+  Building2,
+  IndianRupee,
+  ListTree,
+  TestTube,
+  FlaskConical,
+  Layers,
+  FileText,
+  Info,
+  Lightbulb,
+} from "lucide-react";
 
 export default function GuideTab() {
   return (
-    <div className="max-w-5xl mx-auto space-y-8 pb-10 animate-in fade-in duration-500">
-      
-      {/* 1. HERO SECTION */}
-      <div className="text-center space-y-4 py-8">
-        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
-          Master Your Test Menu 🚀
-        </h1>
-        <p className="text-lg text-slate-500 max-w-2xl mx-auto">
-          Building a robust Laboratory Information System starts with a strong foundation. 
-          Follow this <strong>step-by-step roadmap</strong> to set up your test catalog correctly.
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-5xl">
+      {/* Welcome Banner */}
+      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 md:p-8 text-white shadow-md">
+        <h2 className="text-2xl font-bold mb-2">
+          Welcome to the Master Data Dictionary
+        </h2>
+        <p className="text-blue-100 max-w-3xl leading-relaxed">
+          This module is the brain of your diagnostic center. Here you can
+          manage your entire test menu, configure your pricing, and define
+          exactly how reports should be generated. Read this quick guide to
+          understand how the platform works.
         </p>
       </div>
 
-      {/* 2. THE ROADMAP CONTAINER */}
-      <div className="relative border-l-4 border-slate-200 ml-6 md:ml-12 space-y-12 pl-8 md:pl-12">
-        
-        {/* STEP 1: MASTER DATA */}
-        <div className="relative">
-          <div className="absolute -left-[3.25rem] md:-left-[4.25rem] bg-blue-600 text-white rounded-full p-2 border-4 border-slate-50 shadow-sm z-10">
-            <Building2 className="w-6 h-6" />
-          </div>
-          <Card className="border-blue-100 shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="pb-3">
-              <Badge className="w-fit mb-2 bg-blue-100 text-blue-700 hover:bg-blue-200 border-none">Step 1: The Foundation</Badge>
-              <CardTitle className="text-xl text-slate-800">Master Data Setup</CardTitle>
-              <CardDescription>
-                Before creating tests, define the basic vocabulary of your lab.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-3">
-              <div className="p-4 bg-slate-50 rounded-lg border border-slate-100 transition-colors hover:bg-white hover:border-blue-200">
-                <div className="flex items-center gap-2 font-semibold text-slate-700 mb-1">
-                  <Building2 className="w-4 h-4 text-blue-500"/> Departments
-                </div>
-                <p className="text-xs text-slate-500">Create broad categories like Hematology, Biochemistry, or Serology.</p>
-              </div>
-              <div className="p-4 bg-slate-50 rounded-lg border border-slate-100 transition-colors hover:bg-white hover:border-purple-200">
-                <div className="flex items-center gap-2 font-semibold text-slate-700 mb-1">
-                  <FlaskConical className="w-4 h-4 text-purple-500"/> Sample Types
-                </div>
-                <p className="text-xs text-slate-500">Define specimens: Whole Blood, Serum, Urine, Swab, etc.</p>
-              </div>
-              <div className="p-4 bg-slate-50 rounded-lg border border-slate-100 transition-colors hover:bg-white hover:border-orange-200">
-                <div className="flex items-center gap-2 font-semibold text-slate-700 mb-1">
-                  <Box className="w-4 h-4 text-orange-500"/> Containers
-                </div>
-                <p className="text-xs text-slate-500">List your tubes: Lavender Top (EDTA), Red Top, Sterile Container.</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* STEP 2: REPORT STRUCTURE */}
-        <div className="relative">
-          <div className="absolute -left-[3.25rem] md:-left-[4.25rem] bg-indigo-600 text-white rounded-full p-2 border-4 border-slate-50 shadow-sm z-10">
-            <Type className="w-6 h-6" />
-          </div>
-          <Card className="border-indigo-100 shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="pb-3">
-              <Badge className="w-fit mb-2 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 border-none">Step 2: Structure</Badge>
-              <CardTitle className="text-xl text-slate-800">Headings & Custom Fields</CardTitle>
-              <CardDescription>
-                Prepare how your PDF report will look. Group parameters or add extra notes.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2">
-              <div className="flex gap-4 bg-slate-50 p-4 rounded-lg border border-slate-100">
-                <div className="mt-1"><Type className="w-5 h-5 text-indigo-500"/></div>
-                <div>
-                  <h4 className="font-semibold text-sm text-slate-700">Report Headings</h4>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Use these to group parameters on the report. <br/>
-                    <em>Example: "Differential Count", "Lipid Profile"</em>
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-4 bg-slate-50 p-4 rounded-lg border border-slate-100">
-                <div className="mt-1"><FileText className="w-5 h-5 text-pink-500"/></div>
-                <div>
-                  <h4 className="font-semibold text-sm text-slate-700">Custom Fields (Optional)</h4>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Need extra inputs? Create fields for "Clinical History", "Methodology Notes", or even "Images/Graphs".
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* STEP 3: PARAMETERS */}
-        <div className="relative">
-          <div className="absolute -left-[3.25rem] md:-left-[4.25rem] bg-emerald-600 text-white rounded-full p-2 border-4 border-slate-50 shadow-sm z-10">
-            <List className="w-6 h-6" />
-          </div>
-          <Card className="border-emerald-100 shadow-sm hover:shadow-md transition-shadow ring-1 ring-emerald-50">
-            <CardHeader className="pb-3">
-              <Badge className="w-fit mb-2 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border-none">Step 3: The Building Blocks</Badge>
-              <CardTitle className="text-xl text-slate-800 flex items-center gap-2">
-                Define Parameters <span className="text-sm font-normal text-slate-400">(Most Important)</span>
-              </CardTitle>
-              <CardDescription>
-                Create individual analytes. A test like "CBC" is made of many parameters like Hb, WBC, RBC.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="bg-emerald-50/50 p-4 rounded-md border border-emerald-100 text-sm text-slate-700">
-                <div className="flex items-start gap-3">
-                  <Lightbulb className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="block text-emerald-800 mb-1">Pro Tip: Reference Ranges</strong>
-                    Be very specific here. You can set ranges by <strong>Age, Gender, or Custom labels</strong> (e.g., "Child", "Diabetic"). 
-                    <br/>
-                    For text-based results (like Blood Group), use the <strong>Report Display Text</strong> field to define what is "Normal".
-                  </div>
-                </div>
-              </div>
-              <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-slate-600 pl-2 mt-4">
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500"/> Define Unit (mg/dL, %, etc.)</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500"/> Set Input Type (Number vs Text)</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500"/> Add Low/High Panic Values</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500"/> Configure Age Groups</li>
-              </ul>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* STEP 4: CREATE TEST */}
-        <div className="relative">
-          <div className="absolute -left-[3.25rem] md:-left-[4.25rem] bg-slate-900 text-white rounded-full p-2 border-4 border-slate-50 shadow-sm z-10">
-            <Beaker className="w-6 h-6" />
-          </div>
-          <Card className="border-slate-200 shadow-lg bg-slate-900 text-white">
-            <CardHeader className="pb-3">
-              <Badge className="w-fit mb-2 bg-slate-700 text-slate-200 border-none">Step 4: The Final Product</Badge>
-              <CardTitle className="text-xl text-white">Create the Test</CardTitle>
-              <CardDescription className="text-slate-400">
-                This is the billable item you select when registering a patient.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm text-slate-300">
-                Combine everything you built! Select a Department, Sample Type, and Tube. Then, <strong>map your Parameters</strong>.
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* CONCEPT 1: Global vs Local */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+            <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+              <Globe size={24} />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-slate-800">
+                Global vs. Local Scope
+              </h3>
+              <p className="text-xs text-slate-500 font-medium mt-0.5">
+                Understanding the badges
               </p>
-              
-              <div className="grid gap-3 md:grid-cols-2">
-                <div className="bg-slate-800 p-4 rounded-lg border border-slate-700">
-                  <h5 className="font-bold text-sm mb-1 text-slate-200">Single Parameter Test</h5>
-                  <p className="text-xs text-slate-400">e.g. "Hemoglobin". Just map one parameter. The system auto-handles the rest.</p>
-                </div>
-                <div className="bg-slate-800 p-4 rounded-lg border border-slate-700">
-                  <h5 className="font-bold text-sm mb-1 text-slate-200">Profile / Panel</h5>
-                  <p className="text-xs text-slate-400">e.g. "CBC" or "Liver Function Test". Map multiple parameters and group them under Headings.</p>
-                </div>
+            </div>
+          </div>
+          <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
+            <p>
+              To save you weeks of manual data entry, Patholab Cloud comes
+              pre-loaded with thousands of standard tests, parameters, and
+              departments.
+            </p>
+            <div className="flex items-start gap-3 bg-slate-50 p-3 rounded-lg border border-slate-100">
+              <Globe className="text-indigo-500 shrink-0 mt-0.5" size={16} />
+              <div>
+                <strong className="text-slate-800">Global Master Data:</strong>{" "}
+                Items with this badge are provided by the platform. You cannot
+                delete or edit their core details (to ensure system stability),
+                but you <em>can</em> override their pricing.
               </div>
-
-              <Separator className="bg-slate-700 my-4"/>
-              
-              <div className="flex items-center gap-2 text-sm text-orange-300 font-medium">
-                <AlertCircle className="w-4 h-4"/>
-                Don't forget to set the Price and Turnaround Time (TAT)!
+            </div>
+            <div className="flex items-start gap-3 bg-slate-50 p-3 rounded-lg border border-slate-100">
+              <Building2
+                className="text-emerald-500 shrink-0 mt-0.5"
+                size={16}
+              />
+              <div>
+                <strong className="text-slate-800">Local Custom Data:</strong>{" "}
+                Items with this badge were created specifically by your lab.
+                Only your staff can see them, and you have full control to edit
+                or delete them.
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
 
-      </div>
+        {/* CONCEPT 2: Pricing Overrides */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+            <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
+              <IndianRupee size={24} />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-slate-800">
+                Managing Your Pricing
+              </h3>
+              <p className="text-xs text-slate-500 font-medium mt-0.5">
+                The Catalog Tab
+              </p>
+            </div>
+          </div>
+          <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
+            <p>
+              You don't need to recreate the "Complete Blood Count" test just to
+              change its price!
+            </p>
+            <ul className="list-disc pl-5 space-y-2">
+              <li>
+                Go to the <strong>Catalog & Pricing</strong> tab.
+              </li>
+              <li>Find any Global or Local test.</li>
+              <li>
+                Click <strong>Manage Pricing</strong> to set your specific
+                Patient Price, B2B/Agency Price, and Turnaround Time (TAT).
+              </li>
+            </ul>
+            <div className="bg-amber-50 text-amber-800 p-3 rounded-lg flex gap-2 text-xs border border-amber-100 mt-2">
+              <Lightbulb className="shrink-0 mt-0.5" size={14} />
+              <p>
+                Your pricing overrides are private to your lab. Changing a
+                Global Test's price will not affect other labs on the platform.
+              </p>
+            </div>
+          </div>
+        </div>
 
-      {/* FOOTER NOTE */}
-      <div className="text-center pt-8">
-        <p className="text-slate-500 text-sm">
-          Need more help? Check the documentation or contact support.
-        </p>
-      </div>
+        {/* CONCEPT 3: Hierarchy of Creating a Test */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4 md:col-span-2">
+          <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+            <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+              <ListTree size={24} />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-slate-800">
+                How to Build a Custom Test
+              </h3>
+              <p className="text-xs text-slate-500 font-medium mt-0.5">
+                The step-by-step workflow
+              </p>
+            </div>
+          </div>
 
+          <div className="text-sm text-slate-600 mb-4">
+            If you need to offer a highly specialized test that isn't in our
+            Global Master catalog, you must build it from the bottom up. Follow
+            this exact order:
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Step 1 */}
+            <div className="border border-slate-200 rounded-xl p-4 bg-slate-50/50 relative overflow-hidden">
+              <div className="absolute top-0 right-0 bg-slate-200 text-slate-600 font-bold text-[10px] px-2 py-1 rounded-bl-lg">
+                STEP 1
+              </div>
+              <FlaskConical className="text-slate-400 mb-3" size={20} />
+              <h4 className="font-bold text-slate-800 mb-1">Base Categories</h4>
+              <p className="text-xs text-slate-500">
+                Ensure your required <strong>Department</strong> (e.g.,
+                Immunology), <strong>Sample Type</strong> (e.g., Serum), and{" "}
+                <strong>Container</strong> (e.g., SST Tube) exist first.
+              </p>
+            </div>
+
+            {/* Step 2 */}
+            <div className="border border-slate-200 rounded-xl p-4 bg-slate-50/50 relative overflow-hidden">
+              <div className="absolute top-0 right-0 bg-slate-200 text-slate-600 font-bold text-[10px] px-2 py-1 rounded-bl-lg">
+                STEP 2
+              </div>
+              <ListTree className="text-blue-500 mb-3" size={20} />
+              <h4 className="font-bold text-slate-800 mb-1">
+                Create Parameters
+              </h4>
+              <p className="text-xs text-slate-500">
+                Go to the <strong>Parameters</strong> tab. Create the individual
+                ingredients (e.g., T3, T4, TSH) and set their reference ranges
+                and units.
+              </p>
+            </div>
+
+            {/* Step 3 */}
+            <div className="border border-slate-200 rounded-xl p-4 bg-slate-50/50 relative overflow-hidden">
+              <div className="absolute top-0 right-0 bg-slate-200 text-slate-600 font-bold text-[10px] px-2 py-1 rounded-bl-lg">
+                STEP 3
+              </div>
+              <Layers className="text-purple-500 mb-3" size={20} />
+              <h4 className="font-bold text-slate-800 mb-1">Create Headings</h4>
+              <p className="text-xs text-slate-500">
+                If your report needs sections (e.g., "Thyroid Profile" above the
+                results), create them in the <strong>Headings</strong> tab.
+              </p>
+            </div>
+
+            {/* Step 4 */}
+            <div className="border border-blue-200 rounded-xl p-4 bg-blue-50 relative overflow-hidden shadow-sm">
+              <div className="absolute top-0 right-0 bg-blue-600 text-white font-bold text-[10px] px-2 py-1 rounded-bl-lg">
+                STEP 4
+              </div>
+              <FileText className="text-blue-600 mb-3" size={20} />
+              <h4 className="font-bold text-blue-900 mb-1">Build the Test</h4>
+              <p className="text-xs text-blue-700/80">
+                Go to <strong>Local Tests</strong>. Create the test, attach the
+                parameters you made in Step 2, and set the price.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* CONCEPT 4: Custom Fields */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4 md:col-span-2 flex items-start gap-4">
+          <div className="p-3 bg-slate-100 text-slate-600 rounded-full shrink-0">
+            <Info size={20} />
+          </div>
+          <div>
+            <h3 className="text-base font-bold text-slate-800 mb-1">
+              What are Custom Fields?
+            </h3>
+            <p className="text-sm text-slate-600 leading-relaxed">
+              Sometimes you need to collect extra information from a patient at
+              the front desk before running a test (e.g., "Last Menstrual Period
+              Date", "Fasting Duration", or "Clinical History"). Create these in
+              the <strong>Custom Fields</strong> tab, and then link them to
+              specific tests. The receptionist will be forced to fill them out
+              during patient registration!
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

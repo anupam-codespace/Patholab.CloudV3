@@ -31,7 +31,7 @@ export default function InvoicePage() {
         const json = await res.json();
         setData(json);
       } catch (e) {
-        console.error(e);
+        console.error("Invoice Fetch Error:", e);
         setError(true);
       } finally {
         setLoading(false);
@@ -82,10 +82,25 @@ export default function InvoicePage() {
     );
   }
 
-  // Calculations
-  const subTotal = data.amount / 1.18;
-  const taxAmount = data.amount - subTotal;
-  const provider = data.providerDetails || {}; // Your System Config
+  // ==========================================
+  // FIX: Safe Number Conversions for Prisma Decimals
+  // ==========================================
+  const provider = data.providerDetails || {};
+
+  // Force Prisma string decimals into standard JS Numbers
+  const totalAmount = Number(data.amount) || 0;
+  const taxRatePercentage = Number(provider.taxRate) || 18; // Default 18% GST
+
+  // Math: Total = SubTotal + (SubTotal * TaxRate)  =>  SubTotal = Total / (1 + TaxRate/100)
+  const subTotal = totalAmount / (1 + taxRatePercentage / 100);
+  const taxAmount = totalAmount - subTotal;
+
+  // Safe Date Fallback
+  const invoiceDate = data.invoiceDate
+    ? new Date(data.invoiceDate)
+    : data.createdAt
+      ? new Date(data.createdAt)
+      : new Date();
 
   return (
     <div className="min-h-screen bg-zinc-50/80 py-8 px-4 md:py-12 md:px-8 flex flex-col items-center print:bg-white print:p-0 print:block">
@@ -167,7 +182,8 @@ export default function InvoicePage() {
                     Invoice Number
                   </p>
                   <p className="font-mono font-bold text-zinc-900">
-                    {data.invoiceNumber || data.id.slice(-8).toUpperCase()}
+                    {data.invoiceNumber ||
+                      String(data.id).slice(-8).toUpperCase()}
                   </p>
                 </div>
                 <div>
@@ -175,10 +191,7 @@ export default function InvoicePage() {
                     Date of Issue
                   </p>
                   <p className="font-bold text-zinc-900">
-                    {format(
-                      new Date(data.invoiceDate || data.createdAt),
-                      "dd MMM, yyyy",
-                    )}
+                    {format(invoiceDate, "dd MMM, yyyy")}
                   </p>
                 </div>
                 <div className="col-span-2 md:mt-2">
@@ -217,25 +230,33 @@ export default function InvoicePage() {
             <div className="text-zinc-900">
               <p className="font-black text-xl flex items-center gap-2 mb-2">
                 <Building2 className="h-5 w-5 text-zinc-400" />
-                {data.billingSnapshot?.labName ||
+                {data.billingSnapshot?.billing?.company ||
                   data.subscription?.lab?.name ||
                   "Valued Customer"}
               </p>
               <div className="text-sm text-zinc-500 space-y-1 font-medium pl-7 max-w-sm">
                 <p>
-                  {data.billingSnapshot?.billingAddress ||
+                  {data.billingSnapshot?.billing?.address_1 ||
                     data.subscription?.lab?.address ||
                     "Address not provided"}
                 </p>
                 <p>
-                  {data.billingSnapshot?.state || data.subscription?.lab?.state}{" "}
+                  {data.billingSnapshot?.billing?.state ||
+                    data.subscription?.lab?.state}{" "}
                   -{" "}
-                  {data.billingSnapshot?.pincode ||
+                  {data.billingSnapshot?.billing?.postcode ||
                     data.subscription?.lab?.pincode}
                 </p>
-                {data.billingSnapshot?.gstNumber && (
+                {data.billingSnapshot?.meta_data?.find(
+                  (m: any) => m.key === "gst_number",
+                )?.value && (
                   <p className="font-bold text-zinc-800 pt-1">
-                    GSTIN: {data.billingSnapshot.gstNumber}
+                    GSTIN:{" "}
+                    {
+                      data.billingSnapshot.meta_data.find(
+                        (m: any) => m.key === "gst_number",
+                      ).value
+                    }
                   </p>
                 )}
               </div>
@@ -275,7 +296,7 @@ export default function InvoicePage() {
                       </div>
                       <div>
                         <p className="font-bold text-zinc-900 text-base">
-                          {data.billingSnapshot?.planName ||
+                          {data.billingSnapshot?.line_items?.[0]?.name ||
                             data.subscription?.plan?.displayName ||
                             "Subscription Plan"}
                         </p>
@@ -286,9 +307,7 @@ export default function InvoicePage() {
                     </div>
                   </td>
                   <td className="py-6 text-center text-sm font-bold text-zinc-600">
-                    {data.billingSnapshot?.billingCycle ||
-                      data.subscription?.plan?.billingCycle ||
-                      "Monthly"}
+                    {data.subscription?.plan?.billingCycle || "Monthly"}
                   </td>
                   <td className="py-6 text-right text-sm font-bold text-zinc-600">
                     <span className="text-zinc-400 font-normal mr-1">
@@ -317,7 +336,7 @@ export default function InvoicePage() {
                 </span>
               </div>
               <div className="flex justify-between text-sm font-medium text-zinc-500">
-                <span>GST ({provider.taxRate || 18}%)</span>
+                <span>GST ({taxRatePercentage}%)</span>
                 <span className="font-bold text-zinc-800">
                   {provider.currencySymbol || "₹"} {taxAmount.toFixed(2)}
                 </span>
@@ -331,7 +350,7 @@ export default function InvoicePage() {
                   <span className="text-xl text-indigo-400 font-bold mr-1">
                     {provider.currencySymbol || "₹"}
                   </span>
-                  {data.amount.toFixed(2)}
+                  {totalAmount.toFixed(2)}
                 </span>
               </div>
             </div>
@@ -344,7 +363,9 @@ export default function InvoicePage() {
                 Transaction ID
               </p>
               <p className="text-xs font-mono font-bold text-zinc-600">
-                {data.razorpayPaymentId || "N/A"}
+                {data.razorpayPaymentId ||
+                  data.billingSnapshot?.transaction_id ||
+                  "N/A"}
               </p>
             </div>
             <div className="text-left md:text-right">
