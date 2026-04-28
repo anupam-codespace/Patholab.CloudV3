@@ -25,6 +25,8 @@ import {
   History,
   ChevronRight,
   MousePointer2,
+  MapPin,
+  Badge,
 } from "lucide-react";
 import { format } from "date-fns";
 import toast from "react-hot-toast";

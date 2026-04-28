@@ -26,7 +26,10 @@ import {
   Server,
   LayoutTemplate,
   ScanBarcode,
-  CheckSquare
+  CheckSquare,
+  ClipboardCheck, // Added for Results
+  Send,           // Added for Report Dispatch
+  History         // Added for Audit Logs
 } from "lucide-react";
 
 export type NavItem = {
@@ -55,10 +58,18 @@ export const adminNav: NavGroup[] = [
     ],
   },
   {
-    title: "Operations",
+    title: "Clinical Operations",
     items: [
+      { name: "Patient Registration", href: "/workspace/registration", icon: UserPlus, badge: "New" },
       { name: "Patient Directory", href: "/workspace/patients", icon: Users },
       { name: "Test Catalog", href: "/workspace/test-management", icon: TestTube },
+      { name: "Worklist & Results", href: "/workspace/results", icon: ClipboardCheck, badge: "Live" },
+      { name: "Report Dispatch", href: "/workspace/reports", icon: Send },
+    ],
+  },
+  {
+    title: "Resources & Logistics",
+    items: [
       { name: "Inventory & Stock", href: "/workspace/inventory", icon: Box, reqModule: "hasInventory" },
       { name: "Logistics / Trips", href: "/workspace/logistics", icon: Truck, reqModule: "hasLogistics" },
     ],
@@ -78,6 +89,7 @@ export const adminNav: NavGroup[] = [
       { name: "Report Templates", href: "/workspace/settings/templates", icon: LayoutTemplate },
       { name: "Staff Management", href: "/workspace/staff", icon: UserCog },
       { name: "Lab Settings", href: "/workspace/settings", icon: Settings },
+      { name: "Audit & Compliance", href: "/workspace/audit-logs", icon: History }, // ✅ NEW: Full Audit Trail
       { name: "My Subscription", href: "/workspace/subscription", icon: ShieldCheck },
     ],
   },
@@ -101,7 +113,7 @@ export const receptionistNav: NavGroup[] = [
     title: "Billing & Dispatch",
     items: [
       { name: "Invoices & Payments", href: "/workspace/billing", icon: Receipt },
-      { name: "Print / Dispatch", href: "/workspace/dispatch", icon: FileText },
+      { name: "Report Dispatch", href: "/workspace/reports", icon: Send }, // ✅ NEW: Receptionists need to send reports!
     ],
   },
 ];
@@ -115,7 +127,7 @@ export const technicianNav: NavGroup[] = [
     items: [
       { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
       { name: "Sample Accessioning", href: "/workspace/samples", icon: ScanBarcode },
-      { name: "Pending Worklist", href: "/workspace/worklist", icon: FlaskConical, badge: "Live" },
+      { name: "Worklist & Results", href: "/workspace/results", icon: ClipboardCheck, badge: "Live" }, // ✅ NEW: Points to our new Results page
     ],
   },
   {
@@ -150,7 +162,8 @@ export const radiologyNav: NavGroup = {
 };
 
 // Attach Radiology to Admin navigation if they have the module
-adminNav.splice(2, 0, radiologyNav);
+// (Note: Splice index changed to 3 to accommodate the new "Resources" split)
+adminNav.splice(3, 0, radiologyNav);
 
 // Map standard database roles to their specific navigation configurations
 export const roleNavMap: Record<string, NavGroup[]> = {
