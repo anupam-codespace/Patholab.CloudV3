@@ -58,7 +58,7 @@ export const adminNav: NavGroup[] = [
     title: "Operations",
     items: [
       { name: "Patient Directory", href: "/workspace/patients", icon: Users },
-      { name: "Test Catalog", href: "/workspace/catalog", icon: TestTube },
+      { name: "Test Catalog", href: "/workspace/test-management", icon: TestTube },
       { name: "Inventory & Stock", href: "/workspace/inventory", icon: Box, reqModule: "hasInventory" },
       { name: "Logistics / Trips", href: "/workspace/logistics", icon: Truck, reqModule: "hasLogistics" },
     ],
