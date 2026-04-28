@@ -15,7 +15,6 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get('search') || '';
     const status = searchParams.get('status') || 'ALL';
 
-    // 1. Build Filter
     const whereClause: any = {
       labId: user.labId,
       ...(status !== 'ALL' && { status: status as any }),
@@ -26,7 +25,6 @@ export async function GET(req: NextRequest) {
       ] : undefined
     };
 
-    // 2. Fetch Data
     const [tests, total] = await Promise.all([
       prisma.test.findMany({
         where: whereClause,
@@ -35,15 +33,12 @@ export async function GET(req: NextRequest) {
         orderBy: { createdAt: 'desc' },
         include: {
           patient: { select: { id: true, name: true, phone: true, gender: true, age: true, patientId: true } },
-          doctor: { select: { name: true } }, // Referral
-          // If you have a sample relation, include it here
-          // samples: { select: { collectedAt: true, collectedBy: true, location: true } } 
+          doctor: { select: { name: true } },
         }
       }),
       prisma.test.count({ where: whereClause })
     ]);
 
-    // 3. Format Response
     const formattedTests = tests.map(t => ({
       id: t.id,
       testNumber: t.testNumber,
@@ -54,7 +49,6 @@ export async function GET(req: NextRequest) {
       priority: t.priority,
       createdAt: t.createdAt,
       reportUrl: t.reportUrl,
-      
       patient: {
         id: t.patient.id,
         name: t.patient.name,
@@ -62,25 +56,17 @@ export async function GET(req: NextRequest) {
         phone: t.patient.phone,
         pid: t.patient.patientId
       },
-      
-      // Mocking sample data if not in your schema yet, or map from t.samples
       collection: {
         by: 'Phlebo A.',
         at: t.sampleCollectedAt || t.createdAt,
         location: 'Home Collection' 
       },
-      
       refBy: t.doctor?.name || 'Self'
     }));
 
     return NextResponse.json({
       data: formattedTests,
-      pagination: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit)
-      }
+      pagination: { total, page, limit, totalPages: Math.ceil(total / limit) }
     });
 
   } catch (error: any) {
