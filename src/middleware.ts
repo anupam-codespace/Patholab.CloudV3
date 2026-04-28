@@ -9,7 +9,8 @@ const publicRoutes = [
   '/verify-otp', 
   '/forgot-password', 
   '/pricing',
-  '/unauthorized'
+  '/unauthorized',
+  '/shared'
 ];
 
 // Routes that logged-in users should NEVER see (they get bounced to dashboard)

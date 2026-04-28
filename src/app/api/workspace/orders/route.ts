@@ -22,7 +22,8 @@ export async function POST(req: NextRequest) {
         collectedAt,
         notes,
         tests, 
-        financials 
+        financials,
+        isUrgent // ✅ NEW: Extract Urgent flag from Accession UI
     } = body;
 
     const finalCollectionDate = collectedAt ? new Date(collectedAt) : new Date();
@@ -40,13 +41,11 @@ export async function POST(req: NextRequest) {
     if (doctorId && doctorId !== 'Self') {
         if (isDbId(doctorId)) {
             finalDoctorId = doctorId; 
-            // ✅ FETCH: Include custom overrides
             doctorData = await prisma.doctor.findUnique({ 
                 where: { id: doctorId },
                 include: { customTestCommissions: true }
             });
         } else {
-            // ✅ FETCH: Include custom overrides
             const doc = await prisma.doctor.findFirst({
                 where: { labId: user.labId, name: { equals: doctorId, mode: 'insensitive' } },
                 include: { customTestCommissions: true }
@@ -66,13 +65,11 @@ export async function POST(req: NextRequest) {
     if (agencyName && agencyName !== 'Direct') {
         if (isDbId(agencyName)) {
             finalAgencyId = agencyName;
-            // ✅ FETCH: Include custom overrides
             agencyData = await prisma.agency.findUnique({ 
                 where: { id: agencyName },
                 include: { customTestCommissions: true } 
             });
         } else {
-            // ✅ FETCH: Include custom overrides
             const agency = await prisma.agency.findFirst({
                 where: { labId: user.labId, agencyName: { equals: agencyName, mode: 'insensitive' } },
                 include: { customTestCommissions: true }
@@ -100,10 +97,11 @@ export async function POST(req: NextRequest) {
     const templateIds = tests.filter((t: any) => t.type !== 'PARAMETER').map((t: any) => t.id);
     const parameterIds = tests.filter((t: any) => t.type === 'PARAMETER').map((t: any) => t.id);
 
+    // ✅ FIXED: Included sampleType so we can pull its strict ID 
     const [dbTemplates, dbParameters] = await Promise.all([
         prisma.testTemplate.findMany({
             where: { id: { in: templateIds } },
-            include: { containerType: true, parameters: { include: { parameter: true } } }
+            include: { containerType: true, sampleType: true, parameters: { include: { parameter: true } } }
         }),
         prisma.labTestParameter.findMany({
             where: { id: { in: parameterIds } },
@@ -131,7 +129,8 @@ export async function POST(req: NextRequest) {
             id: param.id,
             name: param.name,
             code: param.code,
-            containerTypeId: param.containerTypeId || 'generic',
+            containerTypeId: param.containerTypeId || null,
+            sampleTypeId: null, // standalone params usually inherit from the template level
             containerType: param.containerType,
             parameters: [{ parameter: param, order: 1 }],
             _finalPrice: inputItem?.price || param.price,
@@ -182,14 +181,22 @@ export async function POST(req: NextRequest) {
 
       for (const group of sampleGroups) {
           const uniqueSampleId = `${dateStr}-${Math.floor(1000 + Math.random() * 9000)}`;
+          
+          // ✅ FIXED: Get strict relational IDs from the grouped tests
+          const firstTest = group.tests[0];
+          const containerTypeId = firstTest?.containerTypeId || null;
+          const sampleTypeId = firstTest?.sampleTypeId || null;
 
           await tx.sample.create({
               data: {
                   labId: user.labId,
                   patientId: patientId,
                   sampleId: uniqueSampleId,
-                  sampleType: "Unknown", 
-                  containerType: group.containerCode, 
+                  
+                  // Replacing old plain-text strings with correct relational IDs
+                  sampleTypeId: sampleTypeId, 
+                  containerTypeId: containerTypeId, 
+                  
                   status: 'COLLECTED', 
                   collectedAt: finalCollectionDate,
                   collectedBy: collectedBy || "Self", 
@@ -198,12 +205,11 @@ export async function POST(req: NextRequest) {
                           const testPrice = Number(item._finalPrice);
                           const commissionsToCreate = [];
                           
-                          // ✅ THE COMMISSION WATERFALL LOGIC - DOCTORS
+                          // -- DOCTOR COMMISSIONS --
                           if (doctorData) {
                               let docRate = doctorData.commissionRate;
                               let docType = doctorData.commissionType;
 
-                              // 1. Check for specific test override
                               if (item._type === 'TEMPLATE' && doctorData.customTestCommissions) {
                                   const customOverride = doctorData.customTestCommissions.find((c: any) => c.testTemplateId === item.id);
                                   if (customOverride) {
@@ -212,7 +218,6 @@ export async function POST(req: NextRequest) {
                                   }
                               }
 
-                              // 2. Apply commission if a rate exists and is greater than 0
                               if (docRate !== undefined && docRate !== null && docRate > 0) {
                                   const amt = docType === 'PERCENTAGE' 
                                       ? (testPrice * docRate) / 100 
@@ -228,12 +233,11 @@ export async function POST(req: NextRequest) {
                               }
                           }
 
-                          // ✅ THE COMMISSION WATERFALL LOGIC - AGENCIES
+                          // -- AGENCY COMMISSIONS --
                           if (agencyData) {
                               let agencyRate = agencyData.commissionRate;
                               let agencyType = agencyData.commissionType;
 
-                              // 1. Check for specific test override
                               if (item._type === 'TEMPLATE' && agencyData.customTestCommissions) {
                                   const customOverride = agencyData.customTestCommissions.find((c: any) => c.testTemplateId === item.id);
                                   if (customOverride) {
@@ -242,7 +246,6 @@ export async function POST(req: NextRequest) {
                                   }
                               }
 
-                              // 2. Apply commission if a rate exists and is greater than 0
                               if (agencyRate !== undefined && agencyRate !== null && agencyRate > 0) {
                                   const amt = agencyType === 'PERCENTAGE' 
                                       ? (testPrice * agencyRate) / 100 
@@ -271,6 +274,7 @@ export async function POST(req: NextRequest) {
                               price: testPrice,
                               finalPrice: testPrice,
                               status: 'PENDING',
+                              priority: isUrgent ? 'URGENT' : 'NORMAL', // ✅ NEW: Maps to Enum
                               doctorId: finalDoctorId,
                               referredBy: finalReferredBy,
                               agencyId: finalAgencyId,

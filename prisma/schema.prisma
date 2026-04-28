@@ -16,14 +16,14 @@ datasource db {
 // ==========================================
 
 model SystemConfig {
-  id            String  @id @default(cuid())
+  id              String  @id @default(cuid())
   
   // 1. Core Branding
-  systemName    String  @default("Patholab Cloud")
-  systemLogo    String? // Main dashboard logo
-  favicon       String? // Browser tab icon
-  primaryColor  String  @default("#3b82f6")
-  secondaryColor String @default("#8b5cf6")
+  systemName      String  @default("Patholab Cloud")
+  systemLogo      String? // Main dashboard logo
+  favicon         String? // Browser tab icon
+  primaryColor    String  @default("#3b82f6")
+  secondaryColor  String  @default("#8b5cf6")
 
   // 2. Global SEO & Marketing
   seoTitle          String? @default("Patholab Cloud - Modern LIMS")
@@ -49,10 +49,10 @@ model SystemConfig {
   taxRate       Decimal @default(18.0) @db.Decimal(5, 2)
 
   // 5. Integrations & API Keys
-  enableABDM       Boolean @default(false)
-  abdmClientId     String?
-  abdmClientSecret String?
-  razorpayKeyId    String?
+  enableABDM        Boolean @default(false)
+  abdmClientId      String?
+  abdmClientSecret  String?
+  razorpayKeyId     String?
   razorpayKeySecret String?
 
   smtpHost     String?
@@ -149,8 +149,8 @@ model Lab {
   id String @id @default(cuid())
 
   name           String
-  labCode        String?  @unique // ADD THIS: 3-character alpha code (e.g., "GLO")
-  upiId          String?          // ADD THIS: Admin's UPI ID for invoice QR codes
+  labCode        String?  @unique // 3-character alpha code (e.g., "GLO")
+  upiId          String?          // Admin's UPI ID for invoice QR codes
   address        String
   city           String
   state          String
@@ -229,7 +229,7 @@ model Branch {
   
   name          String   
   code          String?  
-  branchCode String?          // ADD THIS: 2-digit branch code (e.g., "01")
+  branchCode String?          // 2-digit branch code (e.g., "01")
   isMainBranch  Boolean  @default(false)
   
   address       String
@@ -263,7 +263,7 @@ model LabStaff {
   labId      String
   lab        Lab     @relation(fields: [labId], references: [id], onDelete: Cascade)
   userId     String
-  employeeId String? @unique  // ADD THIS: 9-digit generated ID (e.g., GLO010001)
+  employeeId String? @unique  // 9-digit generated ID (e.g., GLO010001)
   user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   branchId   String?
@@ -289,13 +289,13 @@ model LabStaff {
 model Plan {
   id          String  @id @default(cuid())
   name        String  @unique 
-  displayName String 
+  displayName String  
   description String?
 
   price        Decimal      @db.Decimal(10, 2)
   currency     String       @default("INR")
   billingCycle BillingCycle @default(MONTHLY)
-  razorpayId   String? 
+  razorpayId   String?  
 
   maxTestsPerMonth Int   @default(100) 
   maxPatientsTotal Int   @default(1000) 
@@ -340,12 +340,12 @@ enum BillingCycle {
 
 model AddOn {
   id          String  @id @default(cuid())
-  name        String 
+  name        String  
   description String? 
 
   price      Decimal @db.Decimal(10, 2)
   currency   String  @default("INR")
-  razorpayId String? 
+  razorpayId String?  
 
   type  AddOnType
   value Int 
@@ -366,13 +366,13 @@ enum AddOnType {
 }
 
 model Subscription {
-  id     String @id @default(cuid())
-  labId  String @unique
-  lab    Lab    @relation(fields: [labId], references: [id], onDelete: Cascade)
+  id      String @id @default(cuid())
+  labId   String @unique
+  lab     Lab    @relation(fields: [labId], references: [id], onDelete: Cascade)
 
   planId String
   plan   Plan   @relation(fields: [planId], references: [id])
-  unlockedFeatures String[] @default([]) // e.g., ["ADDON_INVENTORY", "ADDON_RADIOLOGY"]
+  unlockedFeatures String[] @default([]) 
 
   status SubStatus @default(TRIAL)
 
@@ -488,6 +488,8 @@ model SampleType {
   code String? 
 
   testTemplates TestTemplate[] 
+  patientSamples Sample[]      // Inverse relation added for Strong Typings
+  
   createdAt     DateTime @default(now())
 
   @@unique([labId, name])
@@ -505,6 +507,7 @@ model ContainerType {
 
   templates  TestTemplate[]
   parameters LabTestParameter[]
+  patientSamples Sample[]      // Inverse relation added for Strong Typings
 
   createdAt DateTime @default(now())
 
@@ -554,10 +557,13 @@ model LabTestParameter {
   code      String 
   unit      String? 
 
+  // FIX 1: Derived Parameters
+  isDerived Boolean @default(false)
+  formula   String? 
+
   inputType ParameterInputType @default(NUMBER)
   decimals  Int                @default(2) 
   method    String? 
-  formula   String? 
   price     Decimal            @default(0.00) @db.Decimal(10, 2)
   options   String[] 
 
@@ -646,6 +652,7 @@ model TestTemplate {
   departmentId String?
   department   Department? @relation(fields: [departmentId], references: [id])
 
+  // FIX 3: Strong Relational Typings for Container and Sample
   sampleTypeId String?
   sampleType   SampleType? @relation(fields: [sampleTypeId], references: [id])
 
@@ -655,6 +662,8 @@ model TestTemplate {
   name        String
   printName   String?
   code        String
+  @@unique([labId, code])
+
   description String?
 
   price    Decimal  @db.Decimal(10, 2)
@@ -680,6 +689,10 @@ model TestTemplate {
   agencyCommissions AgencyTestCommission[]
   labPricing        LabTestPricing[]
 
+  // FIX 2: Test Bundle Relations
+  bundleItems   TestTemplateBundle[] @relation("BundleParent")
+  partOfBundles TestTemplateBundle[] @relation("BundleChild")
+
   referenceData Json?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -687,6 +700,22 @@ model TestTemplate {
   @@index([departmentId])
   @@index([labId])
 }
+
+// Intermediate table for Bundling Tests (FIX 2)
+model TestTemplateBundle {
+  id        String       @id @default(cuid())
+  
+  parentId  String
+  parent    TestTemplate @relation("BundleParent", fields: [parentId], references: [id], onDelete: Cascade)
+  
+  childId   String
+  child     TestTemplate @relation("BundleChild", fields: [childId], references: [id], onDelete: Cascade)
+
+  order     Int          @default(0) 
+
+  @@unique([parentId, childId])
+}
+
 
 model LabTestPricing {
   id             String       @id @default(cuid())
@@ -792,8 +821,12 @@ model Sample {
   patientId String
   patient   Patient @relation(fields: [patientId], references: [id])
 
-  sampleType    String 
-  containerType String? 
+  // FIX 3: Strong Relational Models
+  sampleTypeId    String?
+  sampleType      SampleType?    @relation(fields: [sampleTypeId], references: [id])
+
+  containerTypeId String?
+  containerType   ContainerType? @relation(fields: [containerTypeId], references: [id])
 
   collectionMode    CollectionMode @default(LAB_VISIT)
   collectedAt       DateTime?
@@ -895,7 +928,8 @@ model Test {
 
   testTemplateId String?
   testTemplate   TestTemplate? @relation(fields: [testTemplateId], references: [id])
-
+  report     Report?
+  
   invoiceId String?
   invoice   Invoice? @relation(fields: [invoiceId], references: [id])
 
@@ -935,8 +969,8 @@ model Test {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime? // Medical compliance soft-delete
 
-  commissions    Commission[]
-  results        TestResultParameter[]
+  commissions   Commission[]
+  results       TestResultParameter[]
   inventoryUsage InventoryTransaction[]
   aiPrediction   AIPrediction?
   customResults  TestResultCustomField[]
@@ -946,10 +980,19 @@ model Test {
   @@index([labId, status, createdAt]) // Dashboard optimization
 }
 
+// FIX 6: Enum for Result Flagging Engine
+enum ResultFlag {
+  NORMAL
+  LOW
+  HIGH
+  CRITICAL_LOW
+  CRITICAL_HIGH
+}
+
 model TestResultParameter {
-  id     String @id @default(cuid())
-  testId String
-  test   Test   @relation(fields: [testId], references: [id], onDelete: Cascade)
+  id      String @id @default(cuid())
+  testId  String
+  test    Test   @relation(fields: [testId], references: [id], onDelete: Cascade)
 
   parameterName String
   value         String
@@ -960,8 +1003,12 @@ model TestResultParameter {
   refRangeMax  Float?
   refRangeText String?
 
-  isAbnormal Boolean @default(false)
-  isCritical Boolean @default(false)
+  isAbnormal    Boolean    @default(false)
+  isCritical    Boolean    @default(false)
+  
+  // FIX 6: Result Flagging Engine
+  flag          ResultFlag @default(NORMAL)
+  isHighlighted Boolean    @default(false) 
 
   analyzerId  String?
   analyzer    LabAnalyzer? @relation(fields: [analyzerId], references: [id])
@@ -1037,9 +1084,9 @@ model Doctor {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  tests       Test[]       @relation("DoctorReferral")
-  commissions Commission[]
-  patients    Patient[]    @relation("PatientDefaultDoctor")
+  tests        Test[]       @relation("DoctorReferral")
+  commissions  Commission[]
+  patients     Patient[]    @relation("PatientDefaultDoctor")
 
   @@unique([labId, registrationNo])
   @@index([labId])
@@ -1068,10 +1115,10 @@ model Agency {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  tests       Test[]       @relation("AgencyReferral")
-  commissions Commission[]
-  invoices    Invoice[]
-  patients    Patient[]    @relation("PatientDefaultAgency")
+  tests        Test[]       @relation("AgencyReferral")
+  commissions  Commission[]
+  invoices     Invoice[]
+  patients     Patient[]    @relation("PatientDefaultAgency")
   customTestCommissions AgencyTestCommission[]
 
   @@index([labId])
@@ -1154,6 +1201,8 @@ model Report {
   id        String @id @default(cuid())
   labId     String
   lab       Lab    @relation(fields: [labId], references: [id])
+  testId    String? @unique
+  test      Test?   @relation(fields: [testId], references: [id])
 
   patientId String
   patient   Patient @relation(fields: [patientId], references: [id])
@@ -1168,7 +1217,19 @@ model Report {
   pathologist   User?   @relation("PathologistReports", fields: [pathologistId], references: [id])
 
   reportUrl String? 
-  status    ReportStatus @default(GENERATED)
+  
+  // FIX 5: PDF Versioning, Amendments & Signature Locks
+  pdfUrl          String?
+  version         Int          @default(1)
+  
+  status          ReportStatus @default(DRAFT) 
+  isSigned        Boolean      @default(false)
+  signedById      String?
+  signedAt        DateTime?
+  
+  isAmended       Boolean      @default(false)
+  amendmentReason String?
+  previousPdfUrl  String?
 
   approvedAt DateTime?
 
@@ -1181,8 +1242,11 @@ model Report {
 }
 
 enum ReportStatus {
+  DRAFT
   GENERATED
   APPROVED
+  FINAL
+  AMENDED
   PRINTED
   SENT_TO_PATIENT
 }
@@ -1192,7 +1256,7 @@ model ReportTemplate {
   labId     String
   lab       Lab    @relation(fields: [labId], references: [id], onDelete: Cascade)
 
-  name     String  @default("Standard Clinical Report")
+  name      String  @default("Standard Clinical Report")
   isActive Boolean @default(false) 
 
   pageSize    String @default("A4") 
@@ -1674,8 +1738,28 @@ model DicomSettings {
 }
 
 // ==========================================
-// SUPPORT, LOGS & MISC
+// SUPPORT, AUDITS, LOGS & MISC
 // ==========================================
+
+// FIX 4: Medical Audit Trail (Compliance)
+model AuditLog {
+  id        String   @id @default(cuid())
+  labId     String
+  userId    String   // Direct String reference to prevent hard cascade issues on user deletion
+  
+  entity    String   // e.g., "TEST_RESULT", "PATIENT", "INVENTORY"
+  entityId  String   // The ID of the specific record
+  action    String   // e.g., "CREATE", "UPDATE", "DELETE", "SIGN", "AMEND"
+  
+  oldData   Json?    // Snapshot before change
+  newData   Json?    // Snapshot after change
+  
+  ipAddress String?
+  
+  createdAt DateTime @default(now())
+
+  @@index([labId, entity, entityId])
+}
 
 model SupportTicket {
   id           String @id @default(cuid())

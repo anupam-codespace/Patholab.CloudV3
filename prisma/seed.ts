@@ -1,179 +1,172 @@
-import { PrismaClient, BillingCycle } from '@prisma/client';
+import { PrismaClient, Gender, TestType } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Starting database seed for WooCommerce Plans...');
+  console.log("🚀 Seeding Clinical Master...");
 
-  // ==========================================
-  // 1. BASIC PLAN (Tier 1)
-  // ==========================================
-  const basicFeatures = JSON.stringify([
-    "1 Branch Location",
-    "Patient Registration & Billing",
-    "Lab Tests & Standard Reports",
-    "Barcode Generation on Bills",
-    "Up to 1,200 tests/month"
-  ]);
+  // ================================
+  // 1. DEPARTMENTS
+  // ================================
+  const deptList = [
+    { name: 'Hematology', code: 'HEM' },
+    { name: 'Biochemistry', code: 'BIO' },
+    { name: 'Immunology', code: 'IMM' },
+    { name: 'Clinical Pathology', code: 'CP' },
+    { name: 'Hormones', code: 'HOR' },
+    { name: 'Microbiology', code: 'MIC' },
+    { name: 'Coagulation', code: 'COAG' }
+  ];
 
-  await prisma.plan.upsert({
-    where: { name: 'BASIC_MONTHLY' },
-    update: {},
-    create: {
-      name: 'BASIC_MONTHLY', // MUST MATCH WOOCOMMERCE SKU EXACTLY
-      displayName: 'Patholab Cloud - Basic (Monthly)',
-      description: 'The perfect plan for independent labs starting their digital journey.',
-      price: 299,
-      billingCycle: BillingCycle.MONTHLY,
-      maxTestsPerMonth: 1200,
-      maxPatientsTotal: 5000,
-      maxStaff: 3,
-      maxStorageGB: 1.0,
-      maxBranches: 1,
-      hasB2bBilling: false,
-      hasWhatsapp: false,
-      hasExpenses: true,
-      features: basicFeatures,
-    },
-  });
+  const depts: any = {};
 
-  await prisma.plan.upsert({
-    where: { name: 'BASIC_YEARLY' },
-    update: {},
-    create: {
-      name: 'BASIC_YEARLY',
-      displayName: 'Patholab Cloud - Basic (Yearly)',
-      description: 'The perfect plan for independent labs starting their digital journey.',
-      price: 2870,
-      billingCycle: BillingCycle.YEARLY,
-      maxTestsPerMonth: 1200,
-      maxPatientsTotal: 5000,
-      maxStaff: 3,
-      maxStorageGB: 1.0,
-      maxBranches: 1,
-      hasB2bBilling: false,
-      hasWhatsapp: false,
-      hasExpenses: true,
-      features: basicFeatures,
-    },
-  });
+  for (const d of deptList) {
+    let record = await prisma.department.findFirst({
+      where: { name: d.name, isGlobal: true }
+    });
 
-  // ==========================================
-  // 2. GROWTH PLAN (Tier 2 - Most Popular)
-  // ==========================================
-  const growthFeatures = JSON.stringify([
-    "Up to 2 Branch Locations",
-    "Everything in Basic",
-    "Custom Report Formats & Letterheads",
-    "QR Code on Bills & Final Reports",
-    "Up to 5,000 tests/month"
-  ]);
+    if (!record) {
+      record = await prisma.department.create({
+        data: { ...d, isGlobal: true }
+      });
+    }
 
-  await prisma.plan.upsert({
-    where: { name: 'GROWTH_MONTHLY' },
-    update: {},
-    create: {
-      name: 'GROWTH_MONTHLY',
-      displayName: 'Patholab Cloud - Growth (Monthly)',
-      description: 'The engine for scaling labs. Build trust with custom reporting.',
-      price: 399,
-      billingCycle: BillingCycle.MONTHLY,
-      isPopular: true,
-      maxTestsPerMonth: 5000,
-      maxPatientsTotal: 25000,
-      maxStaff: 8,
-      maxStorageGB: 5.0,
-      maxBranches: 2,
-      hasB2bBilling: false,
-      hasWhatsapp: false,
-      hasExpenses: true,
-      features: growthFeatures,
-    },
-  });
+    depts[d.code] = record;
+  }
 
-  await prisma.plan.upsert({
-    where: { name: 'GROWTH_YEARLY' },
-    update: {},
-    create: {
-      name: 'GROWTH_YEARLY',
-      displayName: 'Patholab Cloud - Growth (Yearly)',
-      description: 'The engine for scaling labs. Build trust with custom reporting.',
-      price: 3830,
-      billingCycle: BillingCycle.YEARLY,
-      isPopular: true,
-      maxTestsPerMonth: 5000,
-      maxPatientsTotal: 25000,
-      maxStaff: 8,
-      maxStorageGB: 5.0,
-      maxBranches: 2,
-      hasB2bBilling: false,
-      hasWhatsapp: false,
-      hasExpenses: true,
-      features: growthFeatures,
-    },
-  });
+  // ================================
+  // 2. SAMPLE TYPES
+  // ================================
+  const samples: any = {};
+  const sampleList = [
+    { name: 'Whole Blood (EDTA)', code: 'WB' },
+    { name: 'Serum', code: 'SERUM' },
+    { name: 'Fluoride Plasma', code: 'FLU' },
+    { name: 'Urine', code: 'URINE' }
+  ];
 
-  // ==========================================
-  // 3. PREMIUM PLAN (Tier 3 - Enterprise)
-  // ==========================================
-  const premiumFeatures = JSON.stringify([
-    "Up to 3 Branch Locations",
-    "Everything in Growth",
-    "Doctor & Agency Referral Management",
-    "Automated WhatsApp Delivery",
-    "Up to 15,000 tests/month"
-  ]);
+  for (const s of sampleList) {
+    let record = await prisma.sampleType.findFirst({
+      where: { name: s.name, isGlobal: true }
+    });
 
-  await prisma.plan.upsert({
-    where: { name: 'PREMIUM_MONTHLY' },
-    update: {},
-    create: {
-      name: 'PREMIUM_MONTHLY',
-      displayName: 'Patholab Cloud - Premium (Monthly)',
-      description: 'Enterprise power. Automate B2B referrals and report delivery logistics.',
-      price: 499,
-      billingCycle: BillingCycle.MONTHLY,
-      maxTestsPerMonth: 15000,
-      maxPatientsTotal: 100000,
-      maxStaff: 20,
-      maxStorageGB: 15.0,
-      maxBranches: 3,
-      hasB2bBilling: true,  // Unlocks B2B Module
-      hasWhatsapp: true,    // Unlocks Auto-WhatsApp
-      hasExpenses: true,
-      features: premiumFeatures,
-    },
-  });
+    if (!record) {
+      record = await prisma.sampleType.create({
+        data: { ...s, isGlobal: true }
+      });
+    }
 
-  await prisma.plan.upsert({
-    where: { name: 'PREMIUM_YEARLY' },
-    update: {},
-    create: {
-      name: 'PREMIUM_YEARLY',
-      displayName: 'Patholab Cloud - Premium (Yearly)',
-      description: 'Enterprise power. Automate B2B referrals and report delivery logistics.',
-      price: 4790,
-      billingCycle: BillingCycle.YEARLY,
-      maxTestsPerMonth: 15000,
-      maxPatientsTotal: 100000,
-      maxStaff: 20,
-      maxStorageGB: 15.0,
-      maxBranches: 3,
-      hasB2bBilling: true,  // Unlocks B2B Module
-      hasWhatsapp: true,    // Unlocks Auto-WhatsApp
-      hasExpenses: true,
-      features: premiumFeatures,
-    },
-  });
+    samples[s.code] = record;
+  }
 
-  console.log('✅ Seeding completed successfully. All WooCommerce SKUs are mapped!');
+  // ================================
+  // 3. CONTAINERS
+  // ================================
+  const containers: any = {};
+  const containerList = [
+    { name: 'EDTA Tube', code: 'EDTA' },
+    { name: 'Plain Tube', code: 'PLAIN' },
+    { name: 'Fluoride Tube', code: 'FLU' },
+    { name: 'Urine Container', code: 'URINE' }
+  ];
+
+  for (const c of containerList) {
+    let record = await prisma.containerType.findFirst({
+      where: { name: c.name, isGlobal: true }
+    });
+
+    if (!record) {
+      record = await prisma.containerType.create({
+        data: { ...c, isGlobal: true }
+      });
+    }
+
+    containers[c.code] = record;
+  }
+
+  // ================================
+  // 4. PARAMETERS
+  // ================================
+  const createdParams: any = {};
+
+  const params = [
+    { name: 'Hemoglobin', code: 'HB', unit: 'g/dL', ranges: [{ gender: Gender.MALE, low: 13, high: 17 }, { gender: Gender.FEMALE, low: 12, high: 15 }] },
+    { name: 'WBC Count', code: 'WBC', unit: '/cumm', ranges: [{ gender: Gender.BOTH, low: 4000, high: 11000 }] },
+    { name: 'Platelets', code: 'PLT', unit: '/cumm', ranges: [{ gender: Gender.BOTH, low: 150000, high: 450000 }] },
+  ];
+
+  for (const p of params) {
+    let record = await prisma.labTestParameter.findFirst({
+      where: { code: p.code, isGlobal: true }
+    });
+
+    if (!record) {
+      record = await prisma.labTestParameter.create({
+        data: {
+          name: p.name,
+          code: p.code,
+          unit: p.unit,
+          isGlobal: true,
+          referenceRanges: {
+            create: p.ranges.map(r => ({
+              gender: r.gender,
+              lowValue: r.low,
+              highValue: r.high
+            }))
+          }
+        }
+      });
+    }
+
+    createdParams[p.code] = record;
+  }
+
+  // ================================
+  // 5. TEST TEMPLATES
+  // ================================
+  const tests = [
+    {
+      name: 'CBC',
+      code: 'CBC',
+      dept: 'HEM',
+      sample: 'WB',
+      container: 'EDTA',
+      params: ['HB', 'WBC', 'PLT']
+    }
+  ];
+
+  for (const t of tests) {
+    let template = await prisma.testTemplate.findFirst({
+      where: { code: t.code, isGlobal: true }
+    });
+
+    if (!template) {
+      template = await prisma.testTemplate.create({
+        data: {
+          name: t.name,
+          code: t.code,
+          isGlobal: true,
+          type: t.params.length > 1 ? TestType.BUNDLE : TestType.SINGLE,
+          departmentId: depts[t.dept].id,
+          sampleTypeId: samples[t.sample].id,
+          containerTypeId: containers[t.container].id,
+          price: 300
+        }
+      });
+
+      for (let i = 0; i < t.params.length; i++) {
+        await prisma.testTemplateParameter.create({
+          data: {
+            templateId: template.id,
+            parameterId: createdParams[t.params[i]].id,
+            order: i
+          }
+        });
+      }
+    }
+  }
+
+  console.log("✅ DONE: Seeded successfully");
 }
 
-main()
-  .catch((e) => {
-    console.error('❌ Error during seeding:', e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+main().finally(() => prisma.$disconnect());
