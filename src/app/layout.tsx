@@ -1,11 +1,21 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
+import InstallPWA from "@/components/InstallPWA"; // ✅ ADDED PWA Component
 import prisma from "@/lib/prisma"; // Adjust this path to your Prisma client
 import { GoogleAnalytics } from "@next/third-parties/google"; // npm i @next/third-parties
 
 const inter = Inter({ subsets: ["latin"] });
+
+// ✅ PWA VIEWPORT CONFIGURATION
+export const viewport: Viewport = {
+  themeColor: "#3b82f6",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false, // Recommended for a native app feel
+};
 
 // 1. DYNAMIC METADATA GENERATION
 export async function generateMetadata(): Promise<Metadata> {
@@ -26,6 +36,13 @@ export async function generateMetadata(): Promise<Metadata> {
       metadataBase: new URL(
         process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
       ),
+      // ✅ ADDED PWA MANIFEST & APPLE APP SETTINGS
+      manifest: "/manifest.json",
+      appleWebApp: {
+        capable: true,
+        statusBarStyle: "default",
+        title: config?.systemName || "Patholab",
+      },
       icons: {
         icon: faviconUrl,
         shortcut: faviconUrl,
@@ -53,6 +70,7 @@ export async function generateMetadata(): Promise<Metadata> {
       metadataBase: new URL(
         process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
       ),
+      manifest: "/manifest.json", // Ensure it's in the fallback too
     };
   }
 }
@@ -90,6 +108,9 @@ export default async function RootLayout({
       <body className={inter.className}>
         {/* Wrap everything in the Client-Side Provider */}
         <Providers>{children}</Providers>
+
+        {/* ✅ INJECT PWA INSTALL POPUP */}
+        <InstallPWA />
 
         {/* Inject Google Analytics if the Super Admin provided an ID */}
         {config?.googleAnalyticsId && (
