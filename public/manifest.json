@@ -1,0 +1,49 @@
+{
+  "name": "Patholab Cloud LIMS",
+  "short_name": "Patholab",
+  "description": "Modern, cloud-based Laboratory Information Management System for efficient sample tracking and report dispatch.",
+  "start_url": "/dashboard",
+  "id": "/?source=pwa",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f8fafc",
+  "theme_color": "#3b82f6",
+  "categories": ["medical", "productivity", "business"],
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Pending Worklist",
+      "short_name": "Worklist",
+      "description": "Enter and approve pending lab results",
+      "url": "/workspace/results",
+      "icons": [{"src": "/icons/icon-192x192.png", "sizes": "192x192"}]
+    },
+    {
+      "name": "New Registration",
+      "short_name": "Register",
+      "description": "Register a new patient",
+      "url": "/workspace/registration",
+      "icons": [{"src": "/icons/icon-192x192.png", "sizes": "192x192"}]
+    },
+    {
+      "name": "Report Dispatch",
+      "short_name": "Dispatch",
+      "description": "Share reports via WhatsApp or Email",
+      "url": "/workspace/reports",
+      "icons": [{"src": "/icons/icon-192x192.png", "sizes": "192x192"}]
+    }
+  ]
+}
