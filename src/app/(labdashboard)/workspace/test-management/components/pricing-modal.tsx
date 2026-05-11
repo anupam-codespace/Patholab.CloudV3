@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { X, Save, AlertCircle } from "lucide-react";
+import toast from "react-hot-toast"; // ✅ Added for better UX
 
 type PricingModalProps = {
   test: any;
@@ -25,7 +26,8 @@ export default function PricingOverrideModal({
     setSaving(true);
 
     try {
-      const res = await fetch("/api/workspace/tests", {
+      // ✅ FIX: Pointed to the Catalog API, not the Patient Orders API
+      const res = await fetch("/api/workspace/test-catalog", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -38,12 +40,14 @@ export default function PricingOverrideModal({
       });
 
       if (res.ok) {
+        toast.success("Pricing override saved successfully!");
         onSuccess();
       } else {
-        alert("Failed to update pricing override.");
+        const errorData = await res.json();
+        toast.error(errorData.error || "Failed to update pricing override.");
       }
     } catch (error) {
-      alert("Network error.");
+      toast.error("Network error. Please check your connection.");
     } finally {
       setSaving(false);
     }

@@ -32,7 +32,7 @@ import {
 import toast from "react-hot-toast";
 
 import TestForm from "../components/test-form";
-import PricingOverrideModal from "../components/pricing-modal"; // Assuming you kept this component!
+import PricingOverrideModal from "../components/pricing-modal";
 
 // --- TYPESCRIPT INTERFACES ---
 export interface InventoryItem {
@@ -69,6 +69,7 @@ export interface Test {
   id: string;
   name: string;
   code: string;
+  price?: number; // Ensuring base price is known to the form
   isGlobal: boolean;
   effectivePrice: number;
   effectiveB2BPrice: number;
@@ -142,15 +143,15 @@ export default function TestsTab() {
     deleteMutation.mutate(id);
   }
 
+  // ✅ FIX: Allow full editing for ALL tests
   function handleActionClick(test: Test) {
-    if (test.isGlobal) {
-      // Global tests only allow pricing overrides
-      setPricingTest(test);
-    } else {
-      // Local tests allow full editing
-      setEditingTest(test);
-      setIsTestFormOpen(true);
-    }
+    setEditingTest(test);
+    setIsTestFormOpen(true);
+  }
+
+  // (Optional) Keep this if you want a dedicated quick-price button alongside the full edit button
+  function handleQuickPriceClick(test: Test) {
+    setPricingTest(test);
   }
 
   function handleAddNew() {
@@ -188,7 +189,7 @@ export default function TestsTab() {
         </Button>
       </div>
 
-      {/* FULL TEST FORM MODAL (For Local Tests & New Tests) */}
+      {/* FULL TEST FORM MODAL (For Both Local & Global Tests) */}
       <Dialog
         open={isTestFormOpen}
         onOpenChange={(open) => {
@@ -196,10 +197,14 @@ export default function TestsTab() {
           if (!open) setEditingTest(null);
         }}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0 border-0">
-          <DialogHeader className="px-6 py-4 border-b bg-slate-50 sticky top-0 z-10">
+          <DialogHeader className="px-6 py-4 border-b bg-slate-50 sticky top-0 z-10 flex flex-row items-center gap-2">
+            {/* Show a globe icon in the title if editing a master test */}
+            {editingTest?.isGlobal && (
+              <Globe className="h-5 w-5 text-blue-600" />
+            )}
             <DialogTitle className="text-xl text-slate-800">
               {editingTest
-                ? `Edit Custom Test: ${editingTest.name}`
+                ? `Edit ${editingTest.isGlobal ? "Master Catalog" : "Custom"} Test: ${editingTest.name}`
                 : "Create New Custom Test"}
             </DialogTitle>
           </DialogHeader>
@@ -207,8 +212,14 @@ export default function TestsTab() {
             <TestForm
               key={editingTest ? editingTest.id : "new"}
               initialData={editingTest || undefined}
-              onSuccess={() => {
+              onSuccess={(result) => {
                 setIsTestFormOpen(false);
+                // The backend API will return { forked: true/false } based on logic
+                if (result?.forked) {
+                  toast.success("A customized local copy has been created!");
+                } else {
+                  toast.success("Test overrides saved successfully!");
+                }
                 queryClient.invalidateQueries({ queryKey: ["unified-tests"] });
               }}
             />
@@ -216,7 +227,7 @@ export default function TestsTab() {
         </DialogContent>
       </Dialog>
 
-      {/* PRICING OVERRIDE MODAL (For Global Tests) */}
+      {/* PRICING OVERRIDE MODAL (For Quick Price Updates) */}
       {pricingTest && (
         <PricingOverrideModal
           test={pricingTest}
@@ -339,11 +350,15 @@ export default function TestsTab() {
 
                       <TableCell>
                         {t.isGlobal ? (
-                          <span className="inline-flex items-center gap-1.5 text-[11px] font-medium bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-md border border-indigo-100">
+                          <span
+                            className="inline-flex items-center gap-1.5 text-[11px] font-medium bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-md border border-indigo-100"
+                            title="Master Catalog Test">
                             <Globe size={12} /> Global
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1.5 text-[11px] font-medium bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-md border border-emerald-100">
+                          <span
+                            className="inline-flex items-center gap-1.5 text-[11px] font-medium bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-md border border-emerald-100"
+                            title="Customized for your lab">
                             <Building2 size={12} /> Local
                           </span>
                         )}
@@ -399,7 +414,7 @@ export default function TestsTab() {
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1 font-bold text-slate-900 text-sm">
                           <IndianRupee size={14} className="text-slate-400" />
-                          {Number(t.effectivePrice || t.price).toFixed(2)}
+                          {Number(t.effectivePrice || t.price || 0).toFixed(2)}
                         </div>
                         {t.hasOverride && (
                           <div className="text-[10px] text-blue-600 font-semibold mt-0.5">
@@ -410,20 +425,26 @@ export default function TestsTab() {
 
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                          {/* DYNAMIC EDIT BUTTON */}
+                          {/* QUICK PRICE OVERRIDE BUTTON */}
+                          {t.isGlobal && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleQuickPriceClick(t)}
+                              className="text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 h-8 w-8 transition-colors"
+                              title="Quick Price Override">
+                              <IndianRupee className="h-4 w-4" />
+                            </Button>
+                          )}
+
+                          {/* FULL EDIT BUTTON (Now available for all tests) */}
                           <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => handleActionClick(t)}
                             className="text-slate-400 hover:text-blue-600 hover:bg-blue-50 h-8 w-8 transition-colors"
-                            title={
-                              t.isGlobal ? "Edit Pricing" : "Edit Test Details"
-                            }>
-                            {t.isGlobal ? (
-                              <IndianRupee className="h-4 w-4" />
-                            ) : (
-                              <Pencil className="h-4 w-4" />
-                            )}
+                            title="Full Edit">
+                            <Pencil className="h-4 w-4" />
                           </Button>
 
                           {/* DELETE BUTTON (Disabled for Global) */}
@@ -440,7 +461,7 @@ export default function TestsTab() {
                             title={
                               t.isGlobal
                                 ? "Cannot delete global master tests"
-                                : "Delete Test"
+                                : "Delete Local Test"
                             }>
                             <Trash2 className="h-4 w-4" />
                           </Button>
