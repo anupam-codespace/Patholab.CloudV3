@@ -31,7 +31,7 @@ const publicPrefixes = [
   '/refund-policy',
   '/book-demo',
   '/pages',
-  '/verify' 
+  '/api/verify' 
 ];
 
 export async function middleware(request: NextRequest) {
