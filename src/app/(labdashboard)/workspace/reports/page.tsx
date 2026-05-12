@@ -122,6 +122,7 @@ export default function ReportsDispatchPage() {
         body: JSON.stringify({
           action: "public_download",
           reportId: report.id,
+          phone: report.patient.phone,
           verificationUrl: verifyUrl,
         }),
       });
