@@ -3,88 +3,89 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const id = params.id;
+    const { id } = params;
 
-    // 1. Try to find it as a specific TEST ID
-    const test = await prisma.test.findUnique({
+    let test = null;
+    let patient = null;
+    let lab = null;
+
+    // 1. SMART SEARCH: Try Report ID (This is what the Dispatch Page generates)
+    const report = await prisma.report.findUnique({
       where: { id },
-      select: {
-        id: true,
-        testName: true,
-        approvedAt: true,
-        status: true,
-        lab: { select: { name: true, city: true, phone: true, email: true } },
-        patient: { select: { name: true, age: true, ageUnit: true, gender: true, patientId: true } }
+      include: { test: { include: { lab: true, patient: true } } }
+    });
+    if (report && report.test) {
+      test = report.test;
+      patient = report.test.patient;
+      lab = report.test.lab;
+    }
+
+    // 2. SMART SEARCH: Try Test ID
+    if (!test) {
+      test = await prisma.test.findUnique({
+        where: { id },
+        include: { lab: true, patient: true }
+      });
+      if (test) {
+        patient = test.patient;
+        lab = test.lab;
+      }
+    }
+
+    // 3. SMART SEARCH: Try Patient ID
+    if (!test) {
+      patient = await prisma.patient.findUnique({
+        where: { id },
+        include: { tests: { take: 1, orderBy: { createdAt: 'desc' }, include: { lab: true } } }
+      });
+      if (patient && patient.tests.length > 0) {
+        test = patient.tests[0];
+        lab = test.lab;
+      }
+    }
+
+    // 4. SMART SEARCH: Try Invoice ID
+    if (!test) {
+      const invoice = await prisma.invoice.findUnique({
+        where: { id },
+        include: { tests: { take: 1, include: { lab: true, patient: true } } }
+      });
+      if (invoice && invoice.tests.length > 0) {
+        test = invoice.tests[0];
+        patient = invoice.tests[0].patient;
+        lab = invoice.tests[0].lab;
+      }
+    }
+
+    // If no test or patient data is found across any table, reject the verification
+    if (!test || !patient) {
+      return NextResponse.json({ error: "No valid report found for this QR code." }, { status: 404 });
+    }
+
+    // Return the safe, sanitized payload to the public verification screen
+    return NextResponse.json({
+      id: id, 
+      patient: {
+        name: patient.name,
+        patientId: patient.patientId,
+        age: patient.age,
+        ageUnit: patient.ageUnit,
+        gender: patient.gender,
+      },
+      lab: {
+        name: lab?.name || "Verified Laboratory",
+        city: lab?.city || lab?.address || "Medical District",
+      },
+      test: {
+        testName: test.testName || "Clinical Report",
+        approvedAt: test.approvedAt || test.createdAt,
       }
     });
 
-    if (test) {
-      return NextResponse.json({
-        id: test.id,
-        lab: test.lab,
-        patient: test.patient,
-        test: { testName: test.testName, approvedAt: test.approvedAt }
-      }, { status: 200 });
-    }
-
-    // 2. Try to find it as a PATIENT ID (Returns their latest test)
-    const patient = await prisma.patient.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        name: true,
-        age: true,
-        ageUnit: true,
-        gender: true,
-        patientId: true,
-        lab: { select: { name: true, city: true, phone: true, email: true } },
-        tests: { 
-          select: { testName: true, approvedAt: true },
-          take: 1, // Just grab the primary test for the verification display
-          orderBy: { createdAt: 'desc' }
-        }
-      }
-    });
-
-    if (patient) {
-      return NextResponse.json({
-        id: patient.id,
-        lab: patient.lab,
-        patient: { name: patient.name, age: patient.age, ageUnit: patient.ageUnit, gender: patient.gender, patientId: patient.patientId },
-        test: patient.tests[0] || { testName: "Laboratory Report", approvedAt: new Date() }
-      }, { status: 200 });
-    }
-
-    // 3. Try to find it as an INVOICE / ORDER ID
-    const invoice = await prisma.invoice.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        patient: { select: { name: true, age: true, ageUnit: true, gender: true, patientId: true } },
-        lab: { select: { name: true, city: true, phone: true, email: true } },
-        tests: { select: { testName: true, approvedAt: true }, take: 1 }
-      }
-    });
-
-    if (invoice) {
-       return NextResponse.json({
-        id: invoice.id,
-        lab: invoice.lab,
-        patient: invoice.patient,
-        test: invoice.tests[0] || { testName: "Laboratory Report", approvedAt: new Date() }
-      }, { status: 200 });
-    }
-
-    // If it's not in any of those tables, the QR code is genuinely invalid.
-    return NextResponse.json({ error: "Report not found or invalid QR code." }, { status: 404 });
-    
   } catch (error) {
-    console.error("Verify API Error:", error);
+    console.error("Verification API Error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
