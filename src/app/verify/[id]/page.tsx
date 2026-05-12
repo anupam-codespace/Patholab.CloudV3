@@ -14,7 +14,10 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import toast from "react-hot-toast";
 
+// --- FETCH VERIFICATION DATA ---
 const fetchVerificationData = async (id: string) => {
   const res = await fetch(`/api/verify/${id}`);
   if (!res.ok) throw new Error("Failed to verify report");
@@ -24,7 +27,9 @@ const fetchVerificationData = async (id: string) => {
 export default function VerifyReportPage() {
   const params = useParams();
   const id = params.id as string;
+  const [isDownloading, setIsDownloading] = useState(false);
 
+  // React Query to fetch the visual data
   const {
     data: report,
     isLoading,
@@ -32,8 +37,43 @@ export default function VerifyReportPage() {
   } = useQuery({
     queryKey: ["verify", id],
     queryFn: () => fetchVerificationData(id),
-    retry: false, // Don't retry if it's a 404 (invalid QR)
+    retry: false,
   });
+
+  // --- TRIGGER SECURE PDF GENERATION ---
+  const handleDownload = async () => {
+    setIsDownloading(true);
+    const toastId = toast.loading("Securely generating your digital PDF...");
+    try {
+      const res = await fetch("/api/reports/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "public_download",
+          reportId: id,
+          verificationUrl: window.location.href,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to generate PDF");
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+
+      const safePatientName =
+        report.patient?.name?.replace(/[^a-zA-Z0-9]/g, "_").toUpperCase() ||
+        "PATIENT";
+      a.download = `Report_${safePatientName}.pdf`;
+      a.click();
+
+      toast.success("Download Complete!", { id: toastId });
+    } catch (e) {
+      toast.error("Failed to download PDF.", { id: toastId });
+    }
+    setIsDownloading(false);
+  };
 
   if (isLoading) {
     return (
@@ -57,15 +97,10 @@ export default function VerifyReportPage() {
         </h1>
         <p className="text-slate-600 max-w-md">
           We could not find a valid digital report associated with this QR code.
-          The document may have been altered or the link has expired.
         </p>
       </div>
     );
   }
-
-  // Construct a clean filename for the download (e.g., Report_John_Doe.pdf)
-  const safePatientName = report.patient.name.replace(/[^a-zA-Z0-9]/g, "_");
-  const downloadUrl = `/shared/${report.id}/Report_${safePatientName}.pdf`;
 
   return (
     <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 flex justify-center items-start">
@@ -80,8 +115,8 @@ export default function VerifyReportPage() {
             <h1 className="text-2xl font-bold text-white tracking-wide">
               Authentic Report
             </h1>
-            <p className="text-emerald-100 mt-1 flex items-center justify-center gap-1 text-sm">
-              <ShieldCheck size={14} /> Digitally Signed & Verified
+            <p className="text-emerald-100 mt-1 flex items-center justify-center gap-1 text-sm font-medium">
+              <ShieldCheck size={16} /> Digitally Signed & Verified
             </p>
           </div>
         </div>
@@ -97,9 +132,11 @@ export default function VerifyReportPage() {
                 Issued By
               </p>
               <h2 className="text-lg font-bold text-slate-900 leading-tight">
-                {report.lab.name}
+                {report.lab?.name || "Verified Laboratory"}
               </h2>
-              <p className="text-sm text-slate-500 mt-0.5">{report.lab.city}</p>
+              <p className="text-sm text-slate-500 mt-0.5">
+                {report.lab?.city || "Healthcare Facility"}
+              </p>
             </div>
           </div>
 
@@ -112,68 +149,52 @@ export default function VerifyReportPage() {
               <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">
                 Patient Details
               </p>
-              <div className="grid grid-cols-2 gap-y-2 mt-2">
+              <div className="grid grid-cols-2 gap-y-3 mt-2">
                 <div>
-                  <p className="text-xs text-slate-500">Name</p>
-                  <p className="font-bold text-slate-900">
-                    {report.patient.name}
+                  <p className="text-[10px] uppercase text-slate-500 font-bold mb-0.5">
+                    Name
+                  </p>
+                  <p className="font-bold text-slate-900 text-sm">
+                    {report.patient?.name}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500">UHID</p>
-                  <p className="font-bold text-slate-900">
-                    {report.patient.patientId}
+                  <p className="text-[10px] uppercase text-slate-500 font-bold mb-0.5">
+                    Patient ID (UHID)
+                  </p>
+                  <p className="font-bold text-slate-900 text-sm">
+                    {report.patient?.patientId}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500">Age / Sex</p>
-                  <p className="font-semibold text-slate-700">
-                    {report.patient.age} {report.patient.ageUnit} /{" "}
-                    {report.patient.gender}
+                  <p className="text-[10px] uppercase text-slate-500 font-bold mb-0.5">
+                    Age / Gender
+                  </p>
+                  <p className="font-semibold text-slate-700 text-sm">
+                    {report.patient?.age} {report.patient?.ageUnit} /{" "}
+                    {report.patient?.gender}
                   </p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* TEST INFO */}
-          <div className="flex items-start gap-4">
-            <div className="bg-purple-50 p-3 rounded-xl text-purple-600 shrink-0">
-              <FileText size={24} />
-            </div>
-            <div className="flex-1">
-              <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">
-                Investigation
-              </p>
-              <h3 className="font-bold text-slate-900">
-                {report.test.testName}
-              </h3>
-              <p className="text-sm text-slate-500 mt-1">
-                Approved:{" "}
-                {report.test.approvedAt
-                  ? format(
-                      new Date(report.test.approvedAt),
-                      "dd MMM yyyy, hh:mm a",
-                    )
-                  : "-"}
-              </p>
-            </div>
-          </div>
-
           {/* DOWNLOAD BUTTON */}
           <div className="pt-6">
-            <a
-              href={downloadUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block w-full">
-              <Button className="w-full h-14 text-lg bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-xl transition-all font-bold">
-                <Download className="mr-2 h-5 w-5" /> Download Digital PDF
-              </Button>
-            </a>
-            <p className="text-center text-xs text-slate-400 mt-4">
-              This digital document carries the exact same legal validity as
-              your physical printed report.
+            <Button
+              onClick={handleDownload}
+              disabled={isDownloading}
+              className="w-full h-14 text-lg bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-blue-600/30 transition-all font-bold">
+              {isDownloading ? (
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              ) : (
+                <Download className="mr-2 h-5 w-5" />
+              )}
+              {isDownloading ? "Generating PDF..." : "Download Digital PDF"}
+            </Button>
+            <p className="text-center text-xs text-slate-400 mt-4 leading-relaxed">
+              This digital document carries the exact same legal and medical
+              validity as your physical printed report.
             </p>
           </div>
         </div>

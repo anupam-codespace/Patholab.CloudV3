@@ -15,6 +15,7 @@ import {
   FileEdit,
   Share2,
   FileWarning,
+  Loader2,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -74,17 +75,14 @@ export default function ReportsDispatchPage() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Modals
+  // Modals & Active States
   const [shareReport, setShareReport] = useState<Report | null>(null);
   const [amendReport, setAmendReport] = useState<Report | null>(null);
   const [amendmentReason, setAmendmentReason] = useState("");
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   // Fetch Reports
-  const {
-    data: reports = [],
-    isLoading,
-    isError,
-  } = useQuery<Report[]>({
+  const { data: reports = [], isLoading } = useQuery<Report[]>({
     queryKey: ["lab-reports"],
     queryFn: fetchReports,
   });
@@ -110,8 +108,46 @@ export default function ReportsDispatchPage() {
   });
 
   // --- HANDLERS ---
+
+  // 1. Dynamic Server-Side PDF Download
+  const handleDownload = async (report: Report) => {
+    setDownloadingId(report.id);
+    const toastId = toast.loading("Securely generating PDF...");
+    try {
+      const verifyUrl = `${window.location.origin}/verify/${report.id}`;
+
+      const res = await fetch("/api/reports/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "public_download",
+          reportId: report.id,
+          verificationUrl: verifyUrl,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to generate PDF");
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+
+      const safePatientName = report.patient.name
+        .replace(/[^a-zA-Z0-9]/g, "_")
+        .toUpperCase();
+      a.download = `Report_${safePatientName}.pdf`;
+      a.click();
+
+      toast.success("Download Complete!", { id: toastId });
+    } catch (e) {
+      toast.error("Failed to download PDF.", { id: toastId });
+    }
+    setDownloadingId(null);
+  };
+
+  // 2. Verification Link WhatsApp Share
   const handleWhatsAppShare = (report: Report) => {
-    if (!report.pdfUrl) return toast.error("PDF not generated yet.");
     if (!report.patient.phone)
       return toast.error("Patient has no phone number.");
 
@@ -119,7 +155,8 @@ export default function ReportsDispatchPage() {
     let phone = report.patient.phone.replace(/\D/g, "");
     if (phone.length === 10) phone = `91${phone}`;
 
-    const message = `Hello ${report.patient.name},\n\nYour lab test report is ready. You can securely download it here:\n${report.pdfUrl}\n\nThank you,\nPatholab Cloud`;
+    const verifyUrl = `${window.location.origin}/verify/${report.id}`;
+    const message = `Hello ${report.patient.name},\n\nYour lab test report is ready. You can securely view and download it here:\n${verifyUrl}\n\nThank you,\nPatholab Cloud`;
     const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 
     window.open(whatsappUrl, "_blank");
@@ -127,13 +164,14 @@ export default function ReportsDispatchPage() {
     setShareReport(null);
   };
 
+  // 3. Verification Link Email Share
   const handleEmailShare = (report: Report) => {
-    if (!report.pdfUrl) return toast.error("PDF not generated yet.");
     if (!report.patient.email)
       return toast.error("Patient has no email address.");
 
+    const verifyUrl = `${window.location.origin}/verify/${report.id}`;
     const subject = `Your Lab Test Report - Patholab Cloud`;
-    const body = `Hello ${report.patient.name},\n\nYour lab test report is ready. You can securely download it using the link below:\n\n${report.pdfUrl}\n\nThank you,\nPatholab Cloud`;
+    const body = `Hello ${report.patient.name},\n\nYour lab test report is ready. You can securely view and download it using the link below:\n\n${verifyUrl}\n\nThank you,\nPatholab Cloud`;
     const mailtoUrl = `mailto:${report.patient.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
     window.location.href = mailtoUrl;
@@ -216,7 +254,7 @@ export default function ReportsDispatchPage() {
             Report Dispatch
           </h1>
           <p className="text-base text-muted-foreground mt-1">
-            Download, amend, and instantly share finalized reports with
+            Download, amend, and instantly share verified report links with
             patients.
           </p>
         </div>
@@ -309,18 +347,18 @@ export default function ReportsDispatchPage() {
 
                   <TableCell className="text-right">
                     <div className="flex justify-end items-center gap-2">
-                      {/* Simple Download Button */}
+                      {/* Dynamic Download Button */}
                       <Button
                         variant="outline"
                         size="sm"
-                        className="border-slate-200 text-slate-700 hover:bg-slate-100"
-                        onClick={() =>
-                          report.pdfUrl
-                            ? window.open(report.pdfUrl, "_blank")
-                            : toast.error("PDF not ready")
-                        }
-                        disabled={!report.pdfUrl}>
-                        <Download className="h-4 w-4 mr-2 text-blue-600" />{" "}
+                        className="border-slate-200 text-slate-700 hover:bg-slate-100 w-[110px]"
+                        onClick={() => handleDownload(report)}
+                        disabled={downloadingId === report.id}>
+                        {downloadingId === report.id ? (
+                          <Loader2 className="h-4 w-4 mr-2 text-blue-600 animate-spin" />
+                        ) : (
+                          <Download className="h-4 w-4 mr-2 text-blue-600" />
+                        )}
                         Download
                       </Button>
 
@@ -334,13 +372,13 @@ export default function ReportsDispatchPage() {
                         <FileEdit className="h-4 w-4" />
                       </Button>
 
-                      {/* Share Button (Opens Big Modal) */}
+                      {/* Share Button */}
                       <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => setShareReport(report)}
                         className="text-slate-400 hover:text-green-600 hover:bg-green-50 h-9 w-9"
-                        title="Share with Patient">
+                        title="Share Verification Link">
                         <Share2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -362,14 +400,15 @@ export default function ReportsDispatchPage() {
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 mb-4">
             <Share2 className="h-6 w-6 text-green-600" />
           </div>
-          <DialogTitle className="text-2xl mb-2">Share Report</DialogTitle>
+          <DialogTitle className="text-2xl mb-2">Share Report Link</DialogTitle>
           <DialogDescription className="text-base mb-6">
-            Send <strong>v{shareReport?.version}.0</strong> report to{" "}
+            Send a secure verification link for{" "}
+            <strong>v{shareReport?.version}.0</strong> to{" "}
             <strong>{shareReport?.patient.name}</strong>.
           </DialogDescription>
 
           <div className="grid grid-cols-1 gap-4">
-            {/* GIANT WHATSAPP BUTTON */}
+            {/* WHATSAPP BUTTON */}
             <Button
               size="lg"
               className="w-full bg-[#25D366] hover:bg-[#1DA851] text-white text-lg h-16 shadow-lg shadow-green-200"
@@ -377,7 +416,7 @@ export default function ReportsDispatchPage() {
               <MessageCircle className="mr-3 h-6 w-6" /> Send via WhatsApp
             </Button>
 
-            {/* GIANT EMAIL BUTTON */}
+            {/* EMAIL BUTTON */}
             <Button
               size="lg"
               variant="outline"
