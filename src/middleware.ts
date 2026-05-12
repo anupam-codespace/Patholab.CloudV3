@@ -10,7 +10,7 @@ const publicRoutes = [
   '/forgot-password', 
   '/pricing',
   '/unauthorized',
-  '/verify'
+  '/verify',
 ];
 
 // Routes that logged-in users should NEVER see (they get bounced to dashboard)
@@ -31,7 +31,8 @@ const publicPrefixes = [
   '/refund-policy',
   '/book-demo',
   '/pages',
-  '/api/verify' 
+  '/api/verify',
+  '/verify',
 ];
 
 export async function middleware(request: NextRequest) {
