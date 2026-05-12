@@ -22,17 +22,15 @@ import {
   GripVertical,
   Type,
   Table2,
-  UserSquare,
   QrCode,
   SplitSquareHorizontal,
   Barcode,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
-// ✅ Import Server Actions (Assume these exist)
+// ✅ Import Server Actions
 import { getTemplateById, saveTemplate } from "@/actions/report-settings";
 
-// --- DATA DICTIONARY ---
 const MERGE_TAGS = [
   { label: "Patient Name", tag: "{{patient.name}}" },
   { label: "Patient Age", tag: "{{patient.age}}" },
@@ -46,23 +44,47 @@ const DEFAULT_CONFIG = {
     show: true,
     mode: "standard",
     title: "GLOBIZ PATHOLAB",
-    subTitle: "123 Health Avenue, Medical District",
+    subTitle: "Medical District",
     html: "",
     height: 150,
   },
-  body: [
-    { id: "block-1", type: "PATIENT_INFO" },
-    { id: "block-2", type: "RESULTS_TABLE" },
-  ],
+  patientBlock: {
+    showBarcode: true,
+    showName: true,
+    showPatientId: true,
+    showSentBy: true,
+    showAgeSex: true,
+    showEmployeeId: true,
+    showRefDoctor: true,
+    showSampleCollection: true,
+    showReportReleased: true,
+  },
+  body: [{ id: "block-2", type: "RESULTS_TABLE" }],
   footer: {
     show: true,
     mode: "standard",
     text: "**Sample has been collected outside the laboratory. The results pertain to the sample received.",
+    html: "",
     isoMarkUrls: [],
-    signatures: [],
+    signatures: [
+      {
+        name: "Dr. A. Jalil",
+        qualifications: "MBBS, DCP",
+        title: "Consultant Pathologist",
+        imageUrl: "",
+        show: true,
+      },
+      {
+        name: "Dr. V.M. Somasunder",
+        qualifications: "MBBS, MD, FRHS",
+        title: "Consultant Microbiologist",
+        imageUrl: "",
+        show: true,
+      },
+    ],
     height: 100,
   },
-  branding: { primaryColor: "#2563eb" },
+  branding: { primaryColor: "#000000" },
 };
 
 export default function TemplateBuilderPage() {
@@ -78,10 +100,8 @@ export default function TemplateBuilderPage() {
   const [config, setConfig] = useState<any>(DEFAULT_CONFIG);
   const [activeTab, setActiveTab] = useState("header");
 
-  // --- DRAG & DROP STATE ---
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
 
-  // --- 1. LOAD DATA ---
   useEffect(() => {
     const init = async () => {
       setDataLoading(true);
@@ -96,27 +116,14 @@ export default function TemplateBuilderPage() {
           if (!loadedConfig) loadedConfig = {};
 
           if (!loadedConfig.body) loadedConfig.body = DEFAULT_CONFIG.body;
+          if (!loadedConfig.patientBlock)
+            loadedConfig.patientBlock = DEFAULT_CONFIG.patientBlock;
           if (!loadedConfig.footer) loadedConfig.footer = {};
           if (!loadedConfig.footer.isoMarkUrls)
             loadedConfig.footer.isoMarkUrls = [];
-          if (!Array.isArray(loadedConfig.footer.signatures)) {
-            loadedConfig.footer.signatures = [
-              {
-                title: "Consultant Pathologist",
-                name: "Dr. A. Jalil",
-                qualifications: "MBBS, DCP",
-                imageUrl: "",
-                show: true,
-              },
-              {
-                title: "Consultant Microbiologist",
-                name: "Dr. V.M. Somasunder",
-                qualifications: "MBBS, MD, FRHS",
-                imageUrl: "",
-                show: true,
-              },
-            ];
-          }
+          if (!Array.isArray(loadedConfig.footer.signatures))
+            loadedConfig.footer.signatures = DEFAULT_CONFIG.footer.signatures;
+
           setConfig(loadedConfig);
         } else {
           toast.error("Template not found");
@@ -130,7 +137,6 @@ export default function TemplateBuilderPage() {
     init();
   }, [templateId, router]);
 
-  // --- 2. SAVE HANDLER ---
   const handleSave = async () => {
     if (!templateName.trim())
       return toast.error("Please enter a template name");
@@ -146,7 +152,6 @@ export default function TemplateBuilderPage() {
     }
   };
 
-  // --- 3. DYNAMIC BODY HANDLERS ---
   const addBlock = (type: string) =>
     setConfig({
       ...config,
@@ -171,7 +176,16 @@ export default function TemplateBuilderPage() {
     setConfig({ ...config, body: n });
   };
 
-  // --- 4. DRAG & DROP LOGIC ---
+  const togglePatientField = (field: string, value: boolean) => {
+    setConfig({
+      ...config,
+      patientBlock: {
+        ...(config.patientBlock || DEFAULT_CONFIG.patientBlock),
+        [field]: value,
+      },
+    });
+  };
+
   const onDragStart = (e: React.DragEvent, index: number) => {
     setDraggedIdx(index);
     e.dataTransfer.effectAllowed = "move";
@@ -191,7 +205,6 @@ export default function TemplateBuilderPage() {
     setConfig({ ...config, body: n });
   };
 
-  // --- HELPER HANDLERS ---
   const handleFileUpload = (
     e: React.ChangeEvent<HTMLInputElement>,
     section: "header" | "footer" | "branding",
@@ -207,10 +220,22 @@ export default function TemplateBuilderPage() {
       }));
     reader.readAsDataURL(file);
   };
+
   const updateSignatory = (index: number, key: string, value: any) => {
     const newSigs = [...(config.footer.signatures || [])];
     if (newSigs[index]) newSigs[index][key] = value;
     setConfig({ ...config, footer: { ...config.footer, signatures: newSigs } });
+  };
+
+  const handleSigUpload = (
+    index: number,
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => updateSignatory(index, "imageUrl", reader.result);
+    reader.readAsDataURL(file);
   };
 
   if (dataLoading)
@@ -220,9 +245,11 @@ export default function TemplateBuilderPage() {
       </div>
     );
 
+  const patientBlockConfig = config.patientBlock || DEFAULT_CONFIG.patientBlock;
+
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-slate-50">
-      {/* --- TOP BAR --- */}
+      {/* TOP BAR */}
       <div className="bg-white border-b px-6 py-4 flex justify-between items-center shrink-0 shadow-sm z-10">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => router.back()}>
@@ -254,7 +281,7 @@ export default function TemplateBuilderPage() {
       </div>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* --- LEFT PANEL: CONTROLS --- */}
+        {/* LEFT PANEL: CONTROLS */}
         <div className="w-1/3 overflow-y-auto p-6 border-r bg-white custom-scrollbar flex flex-col gap-6">
           <Tabs
             value={activeTab}
@@ -267,12 +294,12 @@ export default function TemplateBuilderPage() {
               <TabsTrigger value="branding">Brand</TabsTrigger>
             </TabsList>
 
-            {/* --- HEADER TAB --- */}
+            {/* HEADER TAB */}
             <TabsContent value="header" className="space-y-4">
               <Card>
                 <CardContent className="pt-6 space-y-4">
                   <div className="flex justify-between items-center">
-                    <Label>Show Header</Label>
+                    <Label>Show Graphic Header</Label>
                     <Switch
                       checked={config.header?.show}
                       onCheckedChange={(c) =>
@@ -294,10 +321,17 @@ export default function TemplateBuilderPage() {
                           })
                         }
                         className={`text-xs py-1.5 font-medium rounded-sm capitalize flex items-center justify-center gap-1 ${config.header?.mode === mode ? "bg-white shadow text-blue-600" : "text-slate-500"}`}>
+                        {mode === "standard" && (
+                          <LayoutTemplate className="h-3 w-3" />
+                        )}
+                        {mode === "html" && <Code className="h-3 w-3" />}
+                        {mode === "image" && <ImageIcon className="h-3 w-3" />}
                         {mode}
                       </button>
                     ))}
                   </div>
+
+                  {/* STANDARD MODE HEADER */}
                   {config.header?.mode === "standard" && (
                     <>
                       <div className="space-y-2">
@@ -342,9 +376,43 @@ export default function TemplateBuilderPage() {
                       </div>
                     </>
                   )}
-                  {config.header?.mode === "image" && (
+
+                  {/* HTML MODE HEADER */}
+                  {config.header?.mode === "html" && (
                     <div className="space-y-2">
-                      <Label>Header Image Height (px)</Label>
+                      <Label>Header HTML Code</Label>
+                      <Textarea
+                        className="text-xs font-mono"
+                        value={config.header?.html}
+                        onChange={(e) =>
+                          setConfig({
+                            ...config,
+                            header: { ...config.header, html: e.target.value },
+                          })
+                        }
+                        rows={6}
+                        placeholder="<div class='p-4 text-center'>Custom HTML Header</div>"
+                      />
+                    </div>
+                  )}
+
+                  {/* IMAGE MODE HEADER */}
+                  {config.header?.mode === "image" && (
+                    <div className="space-y-3">
+                      <Label>Upload Full Header Image</Label>
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) =>
+                          handleFileUpload(e, "header", "fullImage")
+                        }
+                      />
+                      <div className="flex justify-between items-center mt-2">
+                        <Label className="text-xs">Header Height (px)</Label>
+                        <span className="text-xs text-slate-500 font-bold">
+                          {config.header?.height || 150}px
+                        </span>
+                      </div>
                       <input
                         type="range"
                         min="50"
@@ -366,17 +434,94 @@ export default function TemplateBuilderPage() {
                   )}
                 </CardContent>
               </Card>
+
+              {/* PATIENT INFO TOGGLES (Always available in Header Tab) */}
+              <div className="space-y-3 pt-6 border-t mt-6">
+                <Label className="text-xs font-bold uppercase text-slate-500">
+                  Patient Details (Repeats on every page)
+                </Label>
+                <div className="grid grid-cols-2 gap-3 bg-slate-50 p-4 border rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs">Barcode</Label>
+                    <Switch
+                      checked={patientBlockConfig.showBarcode !== false}
+                      onCheckedChange={(c) =>
+                        togglePatientField("showBarcode", c)
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs">Patient ID</Label>
+                    <Switch
+                      checked={patientBlockConfig.showPatientId !== false}
+                      onCheckedChange={(c) =>
+                        togglePatientField("showPatientId", c)
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs">Sent By (Agency)</Label>
+                    <Switch
+                      checked={patientBlockConfig.showSentBy !== false}
+                      onCheckedChange={(c) =>
+                        togglePatientField("showSentBy", c)
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs">Age / Sex</Label>
+                    <Switch
+                      checked={patientBlockConfig.showAgeSex !== false}
+                      onCheckedChange={(c) =>
+                        togglePatientField("showAgeSex", c)
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs">Employee ID</Label>
+                    <Switch
+                      checked={patientBlockConfig.showEmployeeId !== false}
+                      onCheckedChange={(c) =>
+                        togglePatientField("showEmployeeId", c)
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs">Ref. Doctor</Label>
+                    <Switch
+                      checked={patientBlockConfig.showRefDoctor !== false}
+                      onCheckedChange={(c) =>
+                        togglePatientField("showRefDoctor", c)
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs">Sample Date</Label>
+                    <Switch
+                      checked={
+                        patientBlockConfig.showSampleCollection !== false
+                      }
+                      onCheckedChange={(c) =>
+                        togglePatientField("showSampleCollection", c)
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs">Report Released</Label>
+                    <Switch
+                      checked={patientBlockConfig.showReportReleased !== false}
+                      onCheckedChange={(c) =>
+                        togglePatientField("showReportReleased", c)
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
             </TabsContent>
 
-            {/* --- BODY TAB --- */}
+            {/* BODY TAB */}
             <TabsContent value="body" className="space-y-6">
               <div className="grid grid-cols-2 gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => addBlock("PATIENT_INFO")}>
-                  <UserSquare className="h-4 w-4 mr-2" /> Patient Grid
-                </Button>
                 <Button
                   variant="outline"
                   size="sm"
@@ -396,9 +541,10 @@ export default function TemplateBuilderPage() {
                   <SplitSquareHorizontal className="h-4 w-4 mr-2" /> Spacer
                 </Button>
               </div>
-              <div className="space-y-3">
+
+              <div className="space-y-3 pt-2">
                 <Label className="text-xs font-bold uppercase text-slate-500">
-                  Document Layout
+                  Document Layout blocks
                 </Label>
                 {config.body?.map((block: any, idx: number) => (
                   <div
@@ -451,7 +597,7 @@ export default function TemplateBuilderPage() {
               </div>
             </TabsContent>
 
-            {/* --- FOOTER TAB --- */}
+            {/* FOOTER TAB */}
             <TabsContent value="footer" className="space-y-4">
               <Card>
                 <CardContent className="pt-6 space-y-6">
@@ -467,65 +613,190 @@ export default function TemplateBuilderPage() {
                       }
                     />
                   </div>
-                  {/* Signatories Setup */}
-                  <div className="space-y-4 pt-4 border-t">
-                    <Label>Signatories</Label>
-                    {config.footer?.signatures?.map((sig: any, idx: number) => (
-                      <div
-                        key={idx}
-                        className="border p-3 rounded-lg bg-slate-50 space-y-3 relative">
-                        <Input
-                          value={sig.name}
-                          onChange={(e) =>
-                            updateSignatory(idx, "name", e.target.value)
-                          }
-                          className="h-8 text-xs bg-white"
-                          placeholder="Doctor Name (e.g. Dr. A. Jalil)"
-                        />
-                        <Input
-                          value={sig.qualifications}
-                          onChange={(e) =>
-                            updateSignatory(
-                              idx,
-                              "qualifications",
-                              e.target.value,
-                            )
-                          }
-                          className="h-8 text-xs bg-white"
-                          placeholder="Qualifications (e.g. MBBS, DCP)"
-                        />
-                        <Input
-                          value={sig.title}
-                          onChange={(e) =>
-                            updateSignatory(idx, "title", e.target.value)
-                          }
-                          className="h-8 text-xs bg-white"
-                          placeholder="Title (e.g. Consultant Pathologist)"
-                        />
-                        <label className="cursor-pointer text-xs bg-white border px-2 py-1 rounded shadow-sm hover:bg-slate-100 inline-block w-full text-center">
-                          Upload Signature Image
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                const reader = new FileReader();
-                                reader.onloadend = () =>
-                                  updateSignatory(
-                                    idx,
-                                    "imageUrl",
-                                    reader.result,
-                                  );
-                                reader.readAsDataURL(file);
-                              }
-                            }}
-                            className="hidden"
-                          />
-                        </label>
-                      </div>
+
+                  <div className="grid grid-cols-3 bg-slate-100 p-1 rounded-md gap-1">
+                    {["standard", "html", "image"].map((mode) => (
+                      <button
+                        key={mode}
+                        onClick={() =>
+                          setConfig({
+                            ...config,
+                            footer: { ...config.footer, mode },
+                          })
+                        }
+                        className={`text-xs py-1.5 font-medium rounded-sm capitalize flex items-center justify-center gap-1 ${config.footer?.mode === mode ? "bg-white shadow text-blue-600" : "text-slate-500"}`}>
+                        {mode === "standard" && (
+                          <LayoutTemplate className="h-3 w-3" />
+                        )}
+                        {mode === "html" && <Code className="h-3 w-3" />}
+                        {mode === "image" && <ImageIcon className="h-3 w-3" />}
+                        {mode}
+                      </button>
                     ))}
                   </div>
+
+                  {/* STANDARD MODE FOOTER */}
+                  {config.footer?.mode === "standard" && (
+                    <div className="space-y-4 pt-4 border-t">
+                      <div className="flex justify-between items-center">
+                        <Label>Signatories</Label>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() =>
+                            setConfig((p: any) => ({
+                              ...p,
+                              footer: {
+                                ...p.footer,
+                                signatures: [
+                                  ...(p.footer.signatures || []),
+                                  {
+                                    name: "Dr. New",
+                                    qualifications: "MBBS",
+                                    title: "Designation",
+                                    show: true,
+                                  },
+                                ],
+                              },
+                            }))
+                          }>
+                          <Plus className="h-3 w-3 mr-1" /> Add
+                        </Button>
+                      </div>
+                      {config.footer?.signatures?.map(
+                        (sig: any, idx: number) => (
+                          <div
+                            key={idx}
+                            className="border p-3 rounded-lg bg-slate-50 space-y-3 relative">
+                            <button
+                              onClick={() =>
+                                setConfig((p: any) => ({
+                                  ...p,
+                                  footer: {
+                                    ...p.footer,
+                                    signatures: p.footer.signatures.filter(
+                                      (_: any, i: number) => i !== idx,
+                                    ),
+                                  },
+                                }))
+                              }
+                              className="absolute top-2 right-2 text-slate-400 hover:text-red-500">
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                            <Input
+                              value={sig.name}
+                              onChange={(e) =>
+                                updateSignatory(idx, "name", e.target.value)
+                              }
+                              className="h-8 text-xs bg-white"
+                              placeholder="Doctor Name (e.g. Dr. A. Jalil.)"
+                            />
+                            <Input
+                              value={sig.qualifications}
+                              onChange={(e) =>
+                                updateSignatory(
+                                  idx,
+                                  "qualifications",
+                                  e.target.value,
+                                )
+                              }
+                              className="h-8 text-xs bg-white"
+                              placeholder="Qualifications (e.g. MBBS, DCP)"
+                            />
+                            <Input
+                              value={sig.title}
+                              onChange={(e) =>
+                                updateSignatory(idx, "title", e.target.value)
+                              }
+                              className="h-8 text-xs bg-white"
+                              placeholder="Designation (e.g. Consultant Pathologist)"
+                            />
+                            <div className="flex items-center gap-3 pt-1">
+                              <div className="h-10 w-24 border bg-white flex items-center justify-center overflow-hidden rounded">
+                                {sig.imageUrl ? (
+                                  <img
+                                    src={sig.imageUrl}
+                                    className="h-full object-contain"
+                                  />
+                                ) : (
+                                  <span className="text-[9px] text-slate-300">
+                                    No Sig
+                                  </span>
+                                )}
+                              </div>
+                              <label className="cursor-pointer text-xs bg-white border px-2 py-1 rounded shadow-sm hover:bg-slate-100 flex-1 text-center">
+                                Upload Signature Image
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(e) => handleSigUpload(idx, e)}
+                                  className="hidden"
+                                />
+                              </label>
+                            </div>
+                          </div>
+                        ),
+                      )}
+                    </div>
+                  )}
+
+                  {/* HTML MODE FOOTER */}
+                  {config.footer?.mode === "html" && (
+                    <div className="space-y-2 pt-4 border-t">
+                      <Label>Footer HTML Code</Label>
+                      <Textarea
+                        className="text-xs font-mono"
+                        value={config.footer?.html}
+                        onChange={(e) =>
+                          setConfig({
+                            ...config,
+                            footer: { ...config.footer, html: e.target.value },
+                          })
+                        }
+                        rows={6}
+                        placeholder="<div class='p-4 text-center'>Custom HTML Footer</div>"
+                      />
+                    </div>
+                  )}
+
+                  {/* IMAGE MODE FOOTER */}
+                  {config.footer?.mode === "image" && (
+                    <div className="space-y-3 pt-4 border-t">
+                      <Label>Upload Full Footer Image</Label>
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) =>
+                          handleFileUpload(e, "footer", "fullImage")
+                        }
+                      />
+                      <div className="flex justify-between items-center mt-2">
+                        <Label className="text-xs">Footer Height (px)</Label>
+                        <span className="text-xs text-slate-500 font-bold">
+                          {config.footer?.height || 100}px
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min="50"
+                        max="300"
+                        step="10"
+                        value={config.footer?.height || 100}
+                        onChange={(e) =>
+                          setConfig({
+                            ...config,
+                            footer: {
+                              ...config.footer,
+                              height: parseInt(e.target.value),
+                            },
+                          })
+                        }
+                        className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+                      />
+                    </div>
+                  )}
+
+                  {/* DISCLAIMER TEXT (Available in all modes) */}
                   <div className="space-y-2 pt-4 border-t">
                     <Label>Footer Disclaimer Text</Label>
                     <Textarea
@@ -544,7 +815,7 @@ export default function TemplateBuilderPage() {
               </Card>
             </TabsContent>
 
-            {/* --- BRANDING TAB --- */}
+            {/* BRANDING TAB */}
             <TabsContent value="branding" className="space-y-4">
               <Card>
                 <CardContent className="pt-6 space-y-4">
@@ -585,135 +856,174 @@ export default function TemplateBuilderPage() {
           </Tabs>
         </div>
 
-        {/* ========================================================= */}
-        {/* --- RIGHT PANEL: HIGH FIDELITY LIVE PREVIEW (REPLICA) --- */}
-        {/* ========================================================= */}
+        {/* --- RIGHT PANEL: HIGH FIDELITY LIVE PREVIEW --- */}
         <div className="w-2/3 bg-slate-300 flex justify-center p-8 overflow-y-auto custom-scrollbar">
           <div
-            className="bg-white shadow-2xl relative flex flex-col transition-all duration-300"
+            className="bg-white shadow-2xl relative flex flex-col font-sans text-slate-900"
             style={{
               width: "210mm",
               minHeight: "297mm",
               padding: config.header?.show ? "10mm" : "0 10mm 10mm 10mm",
+              borderTop:
+                config.header?.mode === "image"
+                  ? "none"
+                  : `8px solid ${config.branding?.primaryColor || "#000000"}`,
             }}>
-            {/* 1. HEADER (Toggleable) */}
-            {config.header?.show && (
-              <div
-                className="w-full mb-4 border-b-2 pb-4"
-                style={{ borderColor: config.branding?.primaryColor }}>
-                {config.header?.mode === "image" ? (
-                  <div
-                    className="w-full bg-slate-100 flex items-center justify-center text-slate-400"
-                    style={{ height: `${config.header.height || 150}px` }}>
-                    {config.header.fullImage ? (
-                      <img
-                        src={config.header.fullImage}
-                        className="w-full h-full object-cover"
-                        alt="Header"
-                      />
-                    ) : (
-                      "Full Header Image"
-                    )}
-                  </div>
-                ) : (
-                  <div className="flex justify-between items-center">
-                    {config.header?.logoUrl ? (
-                      <img
-                        src={config.header.logoUrl}
-                        className="h-16 object-contain"
-                        alt="Logo"
-                      />
-                    ) : (
-                      <div className="h-16 w-32 bg-slate-50 border rounded flex items-center justify-center text-xs text-slate-400">
-                        Logo
+            {/* 1. FIXED HEADER ZONE */}
+            <div className="w-full">
+              {/* Graphic Header */}
+              {config.header?.show && (
+                <div
+                  className="w-full mb-4 border-b-2 pb-4"
+                  style={{ borderColor: config.branding?.primaryColor }}>
+                  {config.header?.mode === "image" ? (
+                    <div
+                      className="w-full bg-slate-100 flex items-center justify-center text-slate-400 overflow-hidden"
+                      style={{ height: `${config.header.height || 150}px` }}>
+                      {config.header.fullImage ? (
+                        <img
+                          src={config.header.fullImage}
+                          className="w-full h-full object-contain"
+                          alt="Header"
+                        />
+                      ) : (
+                        "Full Header Image Preview"
+                      )}
+                    </div>
+                  ) : config.header?.mode === "html" ? (
+                    <div
+                      className="w-full"
+                      dangerouslySetInnerHTML={{
+                        __html:
+                          config.header.html ||
+                          "<div class='text-slate-400 text-center py-4 border border-dashed'>Custom HTML Header Area</div>",
+                      }}
+                    />
+                  ) : (
+                    <div className="flex justify-between items-center">
+                      {config.header?.logoUrl ? (
+                        <img
+                          src={config.header.logoUrl}
+                          className="h-16 object-contain"
+                          alt="Logo"
+                        />
+                      ) : (
+                        <div className="h-16 w-32 bg-slate-50 border rounded flex items-center justify-center text-xs text-slate-400">
+                          Logo
+                        </div>
+                      )}
+                      <div className="text-right">
+                        <h1
+                          className="text-2xl font-bold uppercase tracking-wide"
+                          style={{ color: config.branding?.primaryColor }}>
+                          {config.header?.title}
+                        </h1>
+                        <p className="text-sm text-slate-600">
+                          {config.header?.subTitle}
+                        </p>
                       </div>
-                    )}
-                    <div className="text-right">
-                      <h1
-                        className="text-2xl font-bold uppercase tracking-wide"
-                        style={{ color: config.branding?.primaryColor }}>
-                        {config.header?.title}
-                      </h1>
-                      <p className="text-sm text-slate-600">
-                        {config.header?.subTitle}
-                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+              {!config.header?.show && (
+                <div
+                  style={{ height: `${config.header?.height || 150}px` }}></div>
+              )}
+
+              {/* Patient Details (Fixed inside header zone) */}
+              <div className="mb-6 break-inside-avoid">
+                {patientBlockConfig.showBarcode !== false && (
+                  <div className="flex justify-between items-start mb-4 mt-2">
+                    <div className="flex flex-col items-center">
+                      <Barcode
+                        value="Z82328"
+                        height={35}
+                        width={1.5}
+                        fontSize={10}
+                        displayValue={true}
+                        margin={0}
+                      />
                     </div>
                   </div>
                 )}
+                <div className="grid grid-cols-2 gap-4 text-[13px] border-b pb-4 border-slate-300">
+                  <div className="space-y-1.5">
+                    {patientBlockConfig.showName !== false && (
+                      <div className="grid grid-cols-[100px_auto]">
+                        <span className="font-bold text-slate-600">Name</span>
+                        <span className="font-bold uppercase">
+                          : MR. ETTIYAPPAN .D
+                        </span>
+                      </div>
+                    )}
+                    {patientBlockConfig.showPatientId !== false && (
+                      <div className="grid grid-cols-[100px_auto]">
+                        <span className="font-bold text-slate-600">
+                          Patient ID
+                        </span>
+                        <span>: Z82328 300326</span>
+                      </div>
+                    )}
+                    {patientBlockConfig.showSentBy !== false && (
+                      <div className="grid grid-cols-[100px_auto]">
+                        <span className="font-bold text-slate-600">
+                          Sent By
+                        </span>
+                        <span>: FARIDA PRIME TANNERY</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-1.5">
+                    {patientBlockConfig.showAgeSex !== false && (
+                      <div className="grid grid-cols-[130px_auto]">
+                        <span className="font-bold text-slate-600">
+                          Age/Sex
+                        </span>
+                        <span className="font-bold">: 57 Yrs. / M</span>
+                      </div>
+                    )}
+                    {patientBlockConfig.showEmployeeId !== false && (
+                      <div className="grid grid-cols-[130px_auto]">
+                        <span className="font-bold text-slate-600">
+                          Employee ID
+                        </span>
+                        <span>: w000384</span>
+                      </div>
+                    )}
+                    {patientBlockConfig.showRefDoctor !== false && (
+                      <div className="grid grid-cols-[130px_auto]">
+                        <span className="font-bold text-slate-600">
+                          Ref. Doctor
+                        </span>
+                        <span>: Dr. Sarah Smith</span>
+                      </div>
+                    )}
+                    {patientBlockConfig.showSampleCollection !== false && (
+                      <div className="grid grid-cols-[130px_auto]">
+                        <span className="font-bold text-slate-600">
+                          Sample Collection
+                        </span>
+                        <span>: 30/03/2026 18:47:44</span>
+                      </div>
+                    )}
+                    {patientBlockConfig.showReportReleased !== false && (
+                      <div className="grid grid-cols-[130px_auto]">
+                        <span className="font-bold text-slate-600">
+                          Report Released
+                        </span>
+                        <span>: 31/03/2026 09:32:17</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-            )}
-            {!config.header?.show && (
-              <div
-                style={{ height: `${config.header?.height || 150}px` }}></div>
-            )}
+            </div>
 
             {/* 2. DYNAMIC BODY BLOCKS */}
             <div className="flex-1 flex flex-col">
               {config.body?.map((block: any) => {
                 switch (block.type) {
-                  case "PATIENT_INFO":
-                    return (
-                      <div key={block.id} className="mb-6">
-                        <div className="flex justify-between items-start mb-4">
-                          <div className="flex flex-col items-center">
-                            <Barcode className="h-10 w-40 text-slate-800 stroke-1" />
-                            <span className="text-xs font-mono mt-1">
-                              Z82328 300326
-                            </span>
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4 text-[13px] border-b pb-4 border-slate-300">
-                          <div className="space-y-1.5">
-                            <div className="grid grid-cols-[100px_auto]">
-                              <span className="font-bold text-slate-600">
-                                Name
-                              </span>
-                              <span className="font-bold">
-                                : MR. ETTIYAPPAN .D
-                              </span>
-                            </div>
-                            <div className="grid grid-cols-[100px_auto]">
-                              <span className="font-bold text-slate-600">
-                                Patient ID
-                              </span>
-                              <span>: Z82328 300326</span>
-                            </div>
-                            <div className="grid grid-cols-[100px_auto]">
-                              <span className="font-bold text-slate-600">
-                                Sent By
-                              </span>
-                              <span>: FARIDA PRIME TANNERY PVT LTD</span>
-                            </div>
-                          </div>
-                          <div className="space-y-1.5">
-                            <div className="grid grid-cols-[140px_auto]">
-                              <span className="font-bold text-slate-600">
-                                Age/Sex
-                              </span>
-                              <span className="font-bold">: 57 Yrs. / M</span>
-                            </div>
-                            <div className="grid grid-cols-[140px_auto]">
-                              <span className="font-bold text-slate-600">
-                                Employee ID
-                              </span>
-                              <span>: w000384</span>
-                            </div>
-                            <div className="grid grid-cols-[140px_auto]">
-                              <span className="font-bold text-slate-600">
-                                Sample Collection
-                              </span>
-                              <span>: 30/03/2026 18:47:44</span>
-                            </div>
-                            <div className="grid grid-cols-[140px_auto]">
-                              <span className="font-bold text-slate-600">
-                                Report Released
-                              </span>
-                              <span>: 31/03/2026 09:32:17</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
                   case "RESULTS_TABLE":
                     return (
                       <div key={block.id} className="mb-6">
@@ -729,10 +1039,16 @@ export default function TemplateBuilderPage() {
                               style={{
                                 borderColor: config.branding?.primaryColor,
                               }}>
-                              <th className="py-2 text-left w-2/5">Test</th>
-                              <th className="py-2 text-left w-1/5">Result</th>
-                              <th className="py-2 text-left w-1/5">Unit</th>
-                              <th className="py-2 text-left w-1/5">
+                              <th className="py-2 text-left w-2/5 font-bold">
+                                Test
+                              </th>
+                              <th className="py-2 text-left w-1/5 font-bold">
+                                Result
+                              </th>
+                              <th className="py-2 text-left w-1/5 font-bold">
+                                Unit
+                              </th>
+                              <th className="py-2 text-left w-1/5 font-bold">
                                 Biological Ref. Range
                               </th>
                             </tr>
@@ -754,31 +1070,28 @@ export default function TemplateBuilderPage() {
                             </tr>
                             <tr className="border-b border-slate-100">
                               <td className="py-2 font-medium">S. G. O. T</td>
-                              <td className="py-2 font-bold text-red-600">
-                                52.3 *
+                              <td className="py-2 font-bold text-slate-900">
+                                22.3
                               </td>
                               <td className="py-2 text-slate-600">IU/L</td>
                               <td className="py-2 text-slate-600">0-40 IU/L</td>
                             </tr>
-                            <tr className="border-b border-slate-100">
-                              <td className="py-2 font-medium">
-                                S. Alkaline Phosphatase
-                              </td>
-                              <td className="py-2 font-bold text-slate-900">
-                                66.0
-                              </td>
-                              <td className="py-2 text-slate-600">IU/L</td>
-                              <td className="py-2 text-slate-600">
-                                25-140 IU/L
-                              </td>
-                            </tr>
                           </tbody>
                         </table>
-                        <div className="mt-4 text-xs text-slate-600 italic">
-                          Kindly correlate clinically.
-                          <br />
-                          (Collected At: 30/03/2026 18:47:44, Reported At:
-                          31/03/2026 10:03:56)
+                        <div className="mt-4 text-[11px] text-slate-700 space-y-1">
+                          <p>
+                            <span className="font-bold">NOTE:</span> Kindly
+                            correlate clinically.
+                          </p>
+                          <p>
+                            <span className="font-bold">IMPRESSION:</span> Test
+                            parameters are within normal biological limits.
+                          </p>
+                          <p className="text-[10px] text-slate-500 mt-2 italic">
+                            (Collected At: 30/03/2026 18:47:44, Received At:
+                            30/03/2026 18:47:44, Reported At: 31/03/2026
+                            10:03:56)
+                          </p>
                         </div>
                       </div>
                     );
@@ -806,62 +1119,87 @@ export default function TemplateBuilderPage() {
                     return null;
                 }
               })}
+              <div className="text-center mt-8 mb-6 break-inside-avoid">
+                <span className="text-xs font-bold text-slate-400 border-t border-b border-slate-200 py-1 px-4 tracking-widest uppercase">
+                  *** End of Report ***
+                </span>
+              </div>
             </div>
 
-            {/* 3. FOOTER (Signatures & QR) */}
+            {/* 3. FOOTER (Signatures & Modes) */}
             {config.footer?.show && (
               <div
-                className="mt-auto pt-4 border-t-2 flex justify-between items-end"
+                className="mt-auto pt-4 border-t-2 w-full flex flex-col justify-end"
                 style={{ borderColor: config.branding?.primaryColor }}>
-                <div className="flex flex-col items-center">
-                  <div className="border p-1 rounded-md bg-white shadow-sm">
-                    <QrCode className="h-16 w-16 text-slate-800" />
+                {config.footer?.mode === "image" ? (
+                  <div
+                    className="w-full bg-slate-100 flex items-center justify-center text-slate-400 overflow-hidden"
+                    style={{ height: `${config.footer.height || 100}px` }}>
+                    {config.footer.fullImage ? (
+                      <img
+                        src={config.footer.fullImage}
+                        className="w-full h-full object-contain"
+                        alt="Footer"
+                      />
+                    ) : (
+                      "Full Footer Image Preview"
+                    )}
                   </div>
-                  <span className="text-[9px] text-slate-500 mt-1 font-bold tracking-wider">
-                    SCAN TO VERIFY
-                  </span>
-                </div>
-                <div className="flex gap-8">
-                  {config.footer?.signatures?.map(
-                    (sig: any, idx: number) =>
-                      sig.show && (
-                        <div
-                          key={idx}
-                          className="flex flex-col items-center min-w-[150px]">
-                          <div className="h-16 flex items-end justify-center mb-1">
-                            {sig.imageUrl ? (
-                              <img
-                                src={sig.imageUrl}
-                                className="h-full object-contain"
-                                alt="Sig"
-                              />
-                            ) : (
-                              <div className="text-[10px] text-slate-300 border border-dashed px-4 py-2">
-                                Signature Area
-                              </div>
-                            )}
+                ) : config.footer?.mode === "html" ? (
+                  <div
+                    className="w-full"
+                    dangerouslySetInnerHTML={{
+                      __html:
+                        config.footer.html ||
+                        "<div class='text-slate-400 text-center py-4 border border-dashed'>Custom HTML Footer Area</div>",
+                    }}
+                  />
+                ) : (
+                  <div className="flex justify-around items-end w-full">
+                    {config.footer?.signatures?.map(
+                      (sig: any, idx: number) =>
+                        sig.show && (
+                          <div
+                            key={idx}
+                            className="flex flex-col items-center min-w-[150px]">
+                            <div className="h-16 flex items-end justify-center mb-1">
+                              {sig.imageUrl ? (
+                                <img
+                                  src={sig.imageUrl}
+                                  className="h-full object-contain"
+                                  alt="Sig"
+                                />
+                              ) : (
+                                <div className="text-[10px] text-slate-300 border border-dashed px-4 py-2">
+                                  Signature Area
+                                </div>
+                              )}
+                            </div>
+                            <div className="w-full text-center">
+                              <p className="font-bold text-[12px] text-slate-800">
+                                {sig.name || "Doctor Name"}
+                              </p>
+                              <p className="text-[10px] text-slate-600 leading-tight">
+                                {sig.qualifications || "Qualifications"}
+                              </p>
+                              <p className="font-bold text-[10px] text-slate-800 uppercase mt-0.5">
+                                {sig.title || "Designation"}
+                              </p>
+                            </div>
                           </div>
-                          <div className="w-full text-center">
-                            <p className="font-bold text-xs text-slate-800">
-                              {sig.name || "Doctor Name"}
-                            </p>
-                            <p className="text-[10px] text-slate-600">
-                              {sig.qualifications || "Qualifications"}
-                            </p>
-                            <p className="font-bold text-[10px] text-slate-800 uppercase mt-0.5">
-                              {sig.title || "Designation"}
-                            </p>
-                          </div>
-                        </div>
-                      ),
-                  )}
-                </div>
+                        ),
+                    )}
+                  </div>
+                )}
+
+                <div
+                  className="text-[10px] text-center text-slate-500 mt-6 pb-2 border-t border-slate-200 pt-2"
+                  dangerouslySetInnerHTML={{
+                    __html: config.footer?.text || "",
+                  }}
+                />
               </div>
             )}
-            <div
-              className="text-[10px] text-center text-slate-500 mt-4 pb-2 border-t pt-2"
-              dangerouslySetInnerHTML={{ __html: config.footer?.text || "" }}
-            />
           </div>
         </div>
       </div>
