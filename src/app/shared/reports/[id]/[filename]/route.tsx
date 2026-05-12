@@ -8,285 +8,405 @@ import {
   StyleSheet,
   renderToStream,
   Image,
-} from "@react-pdf/renderer"; // ✅ Added Image
-import QRCode from "qrcode"; // ✅ Added QRCode
+  Font,
+} from "@react-pdf/renderer";
+import QRCode from "qrcode";
 
 export const dynamic = "force-dynamic";
 
-// --- 1. STYLING ---
-const styles = StyleSheet.create({
-  page: {
-    padding: 40,
-    fontFamily: "Helvetica",
-    fontSize: 10,
-    color: "#1e293b",
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    borderBottomWidth: 2,
-    borderBottomColor: "#3b82f6",
-    paddingBottom: 15,
-    marginBottom: 20,
-  },
-  labName: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#1e3a8a",
-    marginBottom: 4,
-  },
-  labText: { fontSize: 9, color: "#64748b", marginBottom: 2 },
-  title: {
-    fontSize: 16,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 15,
-    textTransform: "uppercase",
-    letterSpacing: 1,
-  },
+// ============================================================================
+// 1. DYNAMIC PDF COMPONENT
+// ============================================================================
 
-  patientBox: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    backgroundColor: "#f8fafc",
-    padding: 15,
-    borderRadius: 6,
-    marginBottom: 25,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-  },
-  infoCol: { flexDirection: "column", gap: 4 },
-  label: { fontWeight: "bold", color: "#64748b", fontSize: 8 },
-  value: {
-    fontSize: 11,
-    fontWeight: "bold",
-    color: "#0f172a",
-    marginBottom: 8,
-  },
-
-  table: { width: "100%", marginBottom: 30 },
-  tableHeader: {
-    flexDirection: "row",
-    backgroundColor: "#f1f5f9",
-    padding: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#cbd5e1",
-    fontWeight: "bold",
-  },
-  tableRow: {
-    flexDirection: "row",
-    padding: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f8fafc",
-  },
-  colParam: { width: "40%" },
-  colResult: { width: "20%", fontWeight: "bold" },
-  colUnit: { width: "15%", color: "#64748b" },
-  colRef: { width: "25%", color: "#64748b" },
-
-  flagHigh: { color: "#dc2626" },
-  flagLow: { color: "#2563eb" },
-
-  footer: { position: "absolute", bottom: 40, left: 40, right: 40 },
-  signatureBox: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 40,
-    alignItems: "flex-end",
-  },
-  signLine: {
-    width: 140,
-    borderTopWidth: 1,
-    borderTopColor: "#94a3b8",
-    paddingTop: 5,
-    textAlign: "center",
-    fontSize: 8,
-    fontWeight: "bold",
-  },
-
-  // ✅ QR CODE STYLING
-  qrSection: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    marginTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: "#e2e8f0",
-    paddingTop: 10,
-  },
-  qrImage: { width: 60, height: 60 },
-  qrText: { fontSize: 7, color: "#94a3b8", flex: 1 },
-});
-
-// --- 2. TEMPLATE ---
-const MedicalReportPDF = ({
+const DynamicReportPDF = ({
   report,
   test,
   lab,
   patient,
   qrCodeDataUri,
-}: any) => (
-  <Document>
-    <Page size="A4" style={styles.page}>
-      {/* HEADER */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.labName}>{lab.name}</Text>
-          <Text style={styles.labText}>
-            {lab.address}, {lab.city}, {lab.state} - {lab.pincode}
-          </Text>
-          <Text style={styles.labText}>
-            Phone: {lab.phone} | Email: {lab.email}
-          </Text>
-        </View>
-        <View style={{ alignItems: "flex-end" }}>
-          <Text style={styles.labText}>License No: {lab.licenseNumber}</Text>
-          <Text style={styles.labText}>GSTIN: {lab.gstNumber || "N/A"}</Text>
-        </View>
-      </View>
+  config,
+}: any) => {
+  const {
+    layout,
+    branding,
+    header,
+    qrCode,
+    patientBlock,
+    bodyOptions,
+    body,
+    footer,
+  } = config;
 
-      <Text style={styles.title}>{test.testName} Report</Text>
+  // Map JSON config to React-PDF Styles
+  const styles = StyleSheet.create({
+    page: {
+      paddingTop: layout?.margins?.top * 2.83 || 30, // mm to pt conversion
+      paddingBottom: layout?.margins?.bottom * 2.83 || 120,
+      paddingLeft: layout?.margins?.left * 2.83 || 30,
+      paddingRight: layout?.margins?.right * 2.83 || 30,
+      fontFamily: "Helvetica",
+      fontSize: branding?.globalFontSize || 10,
+      color: "#1e293b",
+    },
+    // Header
+    headerZone: {
+      marginBottom: 15,
+      borderBottomWidth: header?.mode === "image" ? 0 : 2,
+      borderBottomColor: branding?.primaryColor || "#000",
+      paddingBottom: 10,
+      position: "relative",
+    },
+    headerImage: {
+      width: "100%",
+      height: header?.height || 120,
+      objectFit: "contain",
+    },
+    labTitle: {
+      fontSize: 20,
+      fontWeight: "bold",
+      color: branding?.primaryColor,
+      textTransform: "uppercase",
+    },
 
-      {/* PATIENT INFO */}
-      <View style={styles.patientBox}>
-        <View style={styles.infoCol}>
-          <Text style={styles.label}>PATIENT NAME</Text>
-          <Text style={styles.value}>{patient.name}</Text>
-          <Text style={styles.label}>AGE / GENDER</Text>
-          <Text style={styles.value}>
-            {patient.age} {patient.ageUnit} / {patient.gender}
-          </Text>
-        </View>
-        <View style={styles.infoCol}>
-          <Text style={styles.label}>UHID</Text>
-          <Text style={styles.value}>{patient.patientId}</Text>
-          <Text style={styles.label}>SAMPLE ID</Text>
-          <Text style={styles.value}>{test.testNumber}</Text>
-        </View>
-        <View style={styles.infoCol}>
-          <Text style={styles.label}>REFERRED BY</Text>
-          <Text style={styles.value}>
-            {test.doctor?.name || test.referredBy || "Self"}
-          </Text>
-          <Text style={styles.label}>DATE COLLECTED</Text>
-          <Text style={styles.value}>
-            {new Date(
-              test.sampleCollectedAt || report.createdAt,
-            ).toLocaleDateString()}
-          </Text>
-        </View>
-      </View>
+    // QR Code Absolute Positioning
+    qrContainer: {
+      position: "absolute",
+      width: qrCode?.size || 60,
+      height: qrCode?.size || 60,
+    },
 
-      {/* RESULTS TABLE */}
-      <View style={styles.table}>
-        <View style={styles.tableHeader}>
-          <Text style={styles.colParam}>Parameter</Text>
-          <Text style={styles.colResult}>Result</Text>
-          <Text style={styles.colUnit}>Unit</Text>
-          <Text style={styles.colRef}>Ref. Range</Text>
-        </View>
-        {test.results.map((r: any, i: number) => (
-          <View key={i} style={styles.tableRow}>
-            <Text style={styles.colParam}>{r.parameterName}</Text>
+    // Patient Block
+    patientBox: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginBottom: 20,
+      borderBottomWidth: 1,
+      borderBottomColor: "#cbd5e1",
+      paddingBottom: 10,
+      fontSize: patientBlock?.fontSize || 11,
+    },
+    patientCol: { flexDirection: "column", gap: 3, flex: 1 },
+    fieldLabel: {
+      fontWeight: "bold",
+      color: branding?.secondaryColor || "#64748b",
+      fontSize: 8,
+    },
+
+    // Body
+    deptHeader: {
+      backgroundColor: "#f1f5f9",
+      padding: 4,
+      textAlign: "center",
+      fontSize: 10,
+      fontWeight: "bold",
+      marginVertical: 10,
+      borderTopWidth: 1,
+      borderBottomWidth: 1,
+      borderColor: "#cbd5e1",
+      textTransform: "uppercase",
+    },
+    tableHeader: {
+      flexDirection: "row",
+      borderBottomWidth: 2,
+      borderTopWidth: 2,
+      borderColor: branding?.primaryColor,
+      paddingVertical: 5,
+      fontWeight: "bold",
+      fontSize: bodyOptions?.tableFontSize || 10,
+    },
+    tableRow: {
+      flexDirection: "row",
+      paddingVertical: 5,
+      borderBottomWidth: 1,
+      borderBottomColor: "#f1f5f9",
+      fontSize: bodyOptions?.tableFontSize || 10,
+    },
+
+    // Footer
+    footerZone: {
+      position: "absolute",
+      bottom: layout?.margins?.bottom * 2.83 || 30,
+      left: layout?.margins?.left * 2.83 || 30,
+      right: layout?.margins?.right * 2.83 || 30,
+      paddingTop: 10,
+      borderTopWidth: 2,
+      borderTopColor: branding?.primaryColor,
+    },
+    signatureRow: {
+      flexDirection: "row",
+      justifyContent: "space-around",
+      marginTop: 10,
+    },
+    sigBlock: { alignItems: "center" },
+    footerImg: {
+      width: "100%",
+      height: 40,
+      objectFit: "contain",
+      marginTop: 10,
+    },
+  });
+
+  return (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        {/* BACKGROUND WATERMARK */}
+        {branding?.watermarkUrl && (
+          <View
+            style={{
+              position: "absolute",
+              top: "25%",
+              left: "10%",
+              opacity: branding.watermarkOpacity || 0.1,
+            }}>
+            <Image src={branding.watermarkUrl} style={{ width: 400 }} />
+          </View>
+        )}
+
+        {/* 1. HEADER */}
+        {header?.show && (
+          <View style={styles.headerZone}>
+            {/* Dynamic QR: Header Position */}
+            {qrCode?.show && qrCode.position.startsWith("header") && (
+              <View
+                style={[
+                  styles.qrContainer,
+                  {
+                    right: qrCode.position === "header-right" ? 0 : "auto",
+                    left: qrCode.position === "header-left" ? 0 : "auto",
+                  },
+                ]}>
+                <Image src={qrCodeDataUri} />
+              </View>
+            )}
+
+            {header.mode === "image" ? (
+              <Image src={header.fullImage} style={styles.headerImage} />
+            ) : (
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                {header.logoUrl && (
+                  <Image
+                    src={header.logoUrl}
+                    style={{ height: 50, width: 80, objectFit: "contain" }}
+                  />
+                )}
+                <View style={{ marginLeft: header.logoUrl ? 10 : 0 }}>
+                  <Text style={styles.labTitle}>
+                    {header.title || lab.name}
+                  </Text>
+                  <Text style={{ fontSize: 9 }}>
+                    {header.subTitle || lab.address}
+                  </Text>
+                </View>
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* 2. PATIENT DEMOGRAPHICS */}
+        {patientBlock?.show && (
+          <View style={styles.patientBox}>
+            <View style={styles.patientCol}>
+              {patientBlock.showName && (
+                <Text>
+                  <Text style={styles.fieldLabel}>Name: </Text>
+                  {patient.name}
+                </Text>
+              )}
+              {patientBlock.showAgeSex && (
+                <Text>
+                  <Text style={styles.fieldLabel}>Age/Sex: </Text>
+                  {patient.age} / {patient.gender}
+                </Text>
+              )}
+            </View>
+            <View style={styles.patientCol}>
+              {patientBlock.showPatientId && (
+                <Text>
+                  <Text style={styles.fieldLabel}>UHID: </Text>
+                  {patient.patientId}
+                </Text>
+              )}
+              {patientBlock.showRefDoctor && (
+                <Text>
+                  <Text style={styles.fieldLabel}>Ref By: </Text>
+                  {test.doctor?.name || "Self"}
+                </Text>
+              )}
+            </View>
+          </View>
+        )}
+
+        {/* 3. DYNAMIC CONTENT BLOCKS */}
+        {body?.map((block: any, i: number) => {
+          if (block.type === "RESULTS_TABLE") {
+            return (
+              <View key={i} style={{ marginBottom: 15 }}>
+                {bodyOptions?.groupDepartmentWise && test.department && (
+                  <Text style={styles.deptHeader}>{test.department.name}</Text>
+                )}
+                <Text
+                  style={{
+                    fontSize: 12,
+                    fontWeight: "bold",
+                    color: branding?.primaryColor,
+                    marginBottom: 8,
+                    textAlign: "center",
+                  }}>
+                  {test.testName}
+                </Text>
+
+                <View style={styles.tableHeader}>
+                  <Text style={{ width: "40%" }}>Parameter</Text>
+                  <Text style={{ width: "20%" }}>Result</Text>
+                  <Text style={{ width: "15%" }}>Unit</Text>
+                  <Text style={{ width: "25%" }}>Ref. Range</Text>
+                </View>
+
+                {test.results.map((res: any, idx: number) => (
+                  <View key={idx} style={styles.tableRow}>
+                    <Text style={{ width: "40%" }}>{res.parameterName}</Text>
+                    <Text
+                      style={{
+                        width: "20%",
+                        fontWeight: "bold",
+                        color: res.isAbnormal ? "#dc2626" : "#1e293b",
+                      }}>
+                      {res.value}
+                    </Text>
+                    <Text style={{ width: "15%", color: "#64748b" }}>
+                      {res.unit}
+                    </Text>
+                    <Text
+                      style={{
+                        width: "25%",
+                        color: "#64748b",
+                        fontSize: (bodyOptions?.tableFontSize || 10) - 2,
+                      }}>
+                      {res.refRangeText}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            );
+          }
+          if (block.type === "SPACER")
+            return <View key={i} style={{ height: block.height || 20 }} />;
+          return null;
+        })}
+
+        {/* 4. FOOTER ZONE */}
+        {footer?.show && (
+          <View style={styles.footerZone} fixed>
+            <View style={styles.signatureRow}>
+              {footer.signatures?.map(
+                (sig: any, idx: number) =>
+                  sig.show && (
+                    <View
+                      key={idx}
+                      style={[styles.sigBlock, { width: sig.width || 120 }]}>
+                      {sig.imageUrl && (
+                        <Image src={sig.imageUrl} style={{ height: 40 }} />
+                      )}
+                      <Text style={{ fontWeight: "bold" }}>{sig.name}</Text>
+                      <Text style={{ fontSize: 7 }}>{sig.title}</Text>
+                    </View>
+                  ),
+              )}
+
+              {/* Dynamic QR: Footer Position */}
+              {qrCode?.show && qrCode.position.startsWith("footer") && (
+                <View style={{ alignItems: "center" }}>
+                  <Image
+                    src={qrCodeDataUri}
+                    style={{ width: qrCode.size, height: qrCode.size }}
+                  />
+                </View>
+              )}
+            </View>
+
+            {footer.footerBottomImage && (
+              <Image src={footer.footerBottomImage} style={styles.footerImg} />
+            )}
             <Text
-              style={[
-                styles.colResult,
-                r.flag !== "NORMAL"
-                  ? r.flag.includes("HIGH")
-                    ? styles.flagHigh
-                    : styles.flagLow
-                  : {},
-              ]}>
-              {r.value} {r.flag !== "NORMAL" ? `(${r.flag[0]})` : ""}
-            </Text>
-            <Text style={styles.colUnit}>{r.unit || "-"}</Text>
-            <Text style={styles.colRef}>
-              {r.refRangeMin !== null
-                ? `${r.refRangeMin}-${r.refRangeMax}`
-                : r.refRangeText || "-"}
+              style={{
+                fontSize: 7,
+                textAlign: "center",
+                marginTop: 10,
+                color: "#94a3b8",
+              }}>
+              {footer.text}
             </Text>
           </View>
-        ))}
-      </View>
+        )}
+      </Page>
+    </Document>
+  );
+};
 
-      {/* FOOTER & SIGNATURE SECTION */}
-      <View style={styles.footer}>
-        <View style={styles.signatureBox}>
-          <Text style={styles.signLine}>Technician Signature</Text>
-          <Text style={styles.signLine}>Lab Director</Text>
-        </View>
+// ============================================================================
+// 2. THE GET HANDLER
+// ============================================================================
 
-        {/* ✅ DYNAMIC QR CODE SECTION */}
-        <View style={styles.qrSection}>
-          {qrCodeDataUri && (
-            <Image src={qrCodeDataUri} style={styles.qrImage} />
-          )}
-          <View>
-            <Text style={styles.qrText}>
-              Scan to verify the original digital report. This report is
-              re-issued and digitally signed.
-            </Text>
-            <Text style={[styles.qrText, { marginTop: 2 }]}>
-              Report ID: {report.id} | Version: {report.version}.0
-            </Text>
-          </View>
-        </View>
-      </View>
-    </Page>
-  </Document>
-);
-
-// --- 3. GET HANDLER ---
 export async function GET(
   req: NextRequest,
   { params }: { params: { id: string; filename: string } },
 ) {
   try {
-    const reportId = params.id;
     const report = await prisma.report.findUnique({
-      where: { id: reportId },
+      where: { id: params.id },
       include: {
         lab: true,
         patient: true,
         test: {
-          include: { results: { orderBy: { order: "asc" } }, doctor: true },
+          include: {
+            results: { orderBy: { order: "asc" } },
+            doctor: true,
+            testTemplate: { include: { department: true } },
+          },
         },
       },
     });
 
-    if (!report || !report.test) {
-      return new NextResponse(JSON.stringify({ error: "Data not found" }), {
-        status: 404,
-      });
-    }
+    if (!report)
+      return NextResponse.json({ error: "Report not found" }, { status: 404 });
 
-    // ✅ GENERATE QR CODE (Pointing to this exact URL)
-    const reportUrl = req.url;
-    const qrCodeDataUri = await QRCode.toDataURL(reportUrl, {
-      margin: 1,
-      width: 200,
-      color: { dark: "#1e3a8a", light: "#ffffff" },
+    // Fetch the Lab's active design template
+    const template = await prisma.reportTemplate.findFirst({
+      where: { labId: report.labId, isActive: true },
     });
 
-    const pdfStream = await renderToStream(
-      <MedicalReportPDF
+    const config = template?.config
+      ? typeof template.config === "string"
+        ? JSON.parse(template.config)
+        : template.config
+      : {};
+
+    // Map Department
+    if (report.test?.testTemplate?.department) {
+      (report.test as any).department = report.test.testTemplate.department;
+    }
+
+    // Generate Verification QR (Linking back to this report's URL)
+    const protocol = req.headers.get("x-forwarded-proto") || "http";
+    const host = req.headers.get("host");
+    const verificationUrl = `${protocol}://${host}/verify/${report.id}`;
+    const qrCodeDataUri = await QRCode.toDataURL(verificationUrl, {
+      margin: 1,
+      width: 200,
+    });
+
+    const stream = await renderToStream(
+      <DynamicReportPDF
         report={report}
         test={report.test}
         lab={report.lab}
         patient={report.patient}
         qrCodeDataUri={qrCodeDataUri}
+        config={config}
       />,
     );
 
-    const webStream = new ReadableStream({
-      start(controller) {
-        pdfStream.on("data", (chunk) => controller.enqueue(chunk));
-        pdfStream.on("end", () => controller.close());
-        pdfStream.on("error", (err) => controller.error(err));
-      },
-    });
-
-    return new NextResponse(webStream, {
+    return new NextResponse(stream as any, {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `inline; filename="${params.filename}"`,
@@ -294,8 +414,9 @@ export async function GET(
     });
   } catch (err) {
     console.error(err);
-    return new NextResponse(JSON.stringify({ error: "Internal Error" }), {
-      status: 500,
-    });
+    return NextResponse.json(
+      { error: "Failed to generate PDF" },
+      { status: 500 },
+    );
   }
 }

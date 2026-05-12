@@ -1,35 +1,217 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { Badge } from "@/components/ui/badge";
+import {
   Save,
   Loader2,
-  X,
-  Plus,
-  Trash2,
-  Code,
-  Image as ImageIcon,
-  LayoutTemplate,
   ArrowLeft,
   GripVertical,
   Type,
   Table2,
   QrCode,
   SplitSquareHorizontal,
-  Barcode,
+  Trash2,
+  Plus,
+  Image as ImageIcon,
+  LayoutTemplate,
+  Code,
+  Settings,
+  Eye,
+  Download,
+  Upload,
+  Barcode as BarcodeIcon,
+  Move,
+  X,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
-// ✅ Import Server Actions
+// ✅ 1. Reverted to standard 'qrcode' package
+import QRCode from "qrcode";
+import Barcode from "react-barcode";
+import { Rnd } from "react-rnd";
+
 import { getTemplateById, saveTemplate } from "@/actions/report-settings";
+
+// ============================================================================
+// 1. ENTERPRISE TYPESCRIPT INTERFACES
+// ============================================================================
+
+export interface MarginConfig {
+  top: number;
+  bottom: number;
+  left: number;
+  right: number;
+}
+export interface BorderConfig {
+  show: boolean;
+  weight: number;
+  color: string;
+  padding: number;
+}
+export interface BrandingConfig {
+  primaryColor: string;
+  secondaryColor: string;
+  globalFontSize: number;
+  fontFamily: string;
+  watermarkUrl: string;
+  watermarkOpacity: number;
+}
+export interface HeaderConfig {
+  show: boolean;
+  mode: "standard" | "html" | "image";
+  title: string;
+  subTitle: string;
+  logoUrl: string;
+  fullImage: string;
+  html: string;
+  height: number;
+}
+export interface QRCodeConfig {
+  show: boolean;
+  mode: "preset" | "custom";
+  position: string;
+  x: number;
+  y: number;
+  size: number;
+  showPageNumber: boolean;
+  margin: number;
+}
+export interface BarcodeConfig {
+  show: boolean;
+  position: "left" | "center" | "right";
+  height: number;
+  scale: number;
+}
+export interface PatientBlockConfig {
+  show: boolean;
+  fontSize: number;
+  barcode: BarcodeConfig;
+  showName: boolean;
+  showPatientId: boolean;
+  showSentBy: boolean;
+  showAgeSex: boolean;
+  showEmployeeId: boolean;
+  showRefDoctor: boolean;
+  showSampleCollection: boolean;
+  showReportReleased: boolean;
+}
+export interface BodyOptionsConfig {
+  groupDepartmentWise: boolean;
+  tableFontSize: number;
+  showBiologicalRef: boolean;
+  showTestTimestamps: boolean;
+} // ✅ Added showTestTimestamps
+export interface BodyBlock {
+  id: string;
+  type: "TEXT" | "RESULTS_TABLE" | "SPACER" | "IMAGE";
+  content?: string;
+  height?: number;
+  imageUrl?: string;
+  imageScale?: number;
+}
+export interface Signatory {
+  id: string;
+  name: string;
+  qualifications: string;
+  title: string;
+  imageUrl: string;
+  show: boolean;
+  width: number;
+}
+export interface FooterConfig {
+  show: boolean;
+  mode: "standard" | "html" | "image";
+  text: string;
+  html: string;
+  fullImage: string;
+  footerBottomImage: string;
+  signatures: Signatory[];
+  height: number;
+}
+
+export interface TemplateConfig {
+  layout: { margins: MarginConfig; border: BorderConfig };
+  branding: BrandingConfig;
+  header: HeaderConfig;
+  qrCode: QRCodeConfig;
+  patientBlock: PatientBlockConfig;
+  bodyOptions: BodyOptionsConfig;
+  body: BodyBlock[];
+  footer: FooterConfig;
+}
+
+// ============================================================================
+// 2. ASYNC QR CODE WRAPPER COMPONENT
+// ============================================================================
+// Since the standard 'qrcode' package generates a data URL asynchronously,
+// we wrap it in a small component for the live preview.
+const AsyncQRCode = ({
+  value,
+  size,
+  showPageNumber,
+}: {
+  value: string;
+  size: number;
+  showPageNumber: boolean;
+}) => {
+  const [src, setSrc] = useState<string>("");
+
+  useEffect(() => {
+    QRCode.toDataURL(value, {
+      margin: 0,
+      width: size - 8,
+      color: { dark: "#0f172a", light: "#ffffff" },
+    })
+      .then(setSrc)
+      .catch(console.error);
+  }, [value, size]);
+
+  if (!src)
+    return (
+      <div
+        style={{ width: size, height: size }}
+        className="bg-slate-100 animate-pulse border shadow-sm"
+      />
+    );
+
+  return (
+    <div
+      className="flex flex-col items-center bg-white p-1 border shadow-sm"
+      style={{ width: size, height: size + (showPageNumber ? 15 : 0) }}>
+      <img
+        src={src}
+        alt="QR Code"
+        style={{ width: size - 8, height: size - 8 }}
+      />
+      {showPageNumber && (
+        <span className="text-[8px] mt-1 font-bold text-slate-500 whitespace-nowrap">
+          Page 1 of 1
+        </span>
+      )}
+    </div>
+  );
+};
+
+// ============================================================================
+// 3. DEFAULT CONFIGURATION
+// ============================================================================
 
 const MERGE_TAGS = [
   { label: "Patient Name", tag: "{{patient.name}}" },
@@ -37,19 +219,46 @@ const MERGE_TAGS = [
   { label: "Patient Gender", tag: "{{patient.gender}}" },
   { label: "Patient ID", tag: "{{patient.patientId}}" },
   { label: "Sample ID", tag: "{{sample.sampleId}}" },
+  { label: "Current Date", tag: "{{system.currentDate}}" },
 ];
 
-const DEFAULT_CONFIG = {
+const DEFAULT_CONFIG: TemplateConfig = {
+  layout: {
+    margins: { top: 10, bottom: 10, left: 10, right: 10 },
+    border: { show: false, weight: 2, color: "#1e3a8a", padding: 5 },
+  },
+  branding: {
+    primaryColor: "#1e3a8a",
+    secondaryColor: "#475569",
+    globalFontSize: 10,
+    fontFamily: "Helvetica, Arial, sans-serif",
+    watermarkUrl: "",
+    watermarkOpacity: 0.1,
+  },
   header: {
     show: true,
     mode: "standard",
     title: "GLOBIZ PATHOLAB",
-    subTitle: "Medical District",
+    subTitle: "Advanced Diagnostics Center",
+    logoUrl: "",
+    fullImage: "",
     html: "",
-    height: 150,
+    height: 120,
+  },
+  qrCode: {
+    show: true,
+    mode: "preset",
+    position: "header-right",
+    x: 650,
+    y: 50,
+    size: 60,
+    margin: 10,
+    showPageNumber: true,
   },
   patientBlock: {
-    showBarcode: true,
+    show: true,
+    fontSize: 12,
+    barcode: { show: true, position: "center", height: 35, scale: 1.2 },
     showName: true,
     showPatientId: true,
     showSentBy: true,
@@ -59,886 +268,1450 @@ const DEFAULT_CONFIG = {
     showSampleCollection: true,
     showReportReleased: true,
   },
-  body: [{ id: "block-2", type: "RESULTS_TABLE" }],
+  bodyOptions: {
+    groupDepartmentWise: true,
+    tableFontSize: 11,
+    showBiologicalRef: true,
+    showTestTimestamps: true,
+  }, // ✅ Default to true
+  body: [{ id: `block-${Date.now()}`, type: "RESULTS_TABLE" }],
   footer: {
     show: true,
     mode: "standard",
-    text: "**Sample has been collected outside the laboratory. The results pertain to the sample received.",
+    text: "**This is an electronically generated report and does not require a physical signature.**",
     html: "",
-    isoMarkUrls: [],
+    fullImage: "",
+    footerBottomImage: "",
+    height: 120,
     signatures: [
       {
+        id: "sig-1",
         name: "Dr. A. Jalil",
-        qualifications: "MBBS, DCP",
-        title: "Consultant Pathologist",
+        qualifications: "MBBS, MD",
+        title: "Chief Pathologist",
         imageUrl: "",
         show: true,
-      },
-      {
-        name: "Dr. V.M. Somasunder",
-        qualifications: "MBBS, MD, FRHS",
-        title: "Consultant Microbiologist",
-        imageUrl: "",
-        show: true,
+        width: 150,
       },
     ],
-    height: 100,
   },
-  branding: { primaryColor: "#000000" },
 };
 
-export default function TemplateBuilderPage() {
+// ============================================================================
+// 4. MAIN BUILDER COMPONENT
+// ============================================================================
+
+export default function UltimateTemplateBuilder() {
   const params = useParams();
   const router = useRouter();
   const templateId = params.id === "new" ? null : (params.id as string);
 
-  const [loading, setLoading] = useState(false);
   const [dataLoading, setDataLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [templateName, setTemplateName] = useState(
     "Enterprise Clinical Report",
   );
-  const [config, setConfig] = useState<any>(DEFAULT_CONFIG);
+  const [config, setConfig] = useState<TemplateConfig>(DEFAULT_CONFIG);
   const [activeTab, setActiveTab] = useState("header");
-
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
+  const [purePreviewMode, setPurePreviewMode] = useState(false);
+  const [showJsonEditor, setShowJsonEditor] = useState(false);
+  const [jsonInput, setJsonInput] = useState("");
 
   useEffect(() => {
     const init = async () => {
       setDataLoading(true);
       if (templateId) {
-        const data = await getTemplateById(templateId);
-        if (data) {
-          setTemplateName(data.name);
-          let loadedConfig =
-            typeof data.config === "string"
-              ? JSON.parse(data.config)
-              : data.config;
-          if (!loadedConfig) loadedConfig = {};
-
-          if (!loadedConfig.body) loadedConfig.body = DEFAULT_CONFIG.body;
-          if (!loadedConfig.patientBlock)
-            loadedConfig.patientBlock = DEFAULT_CONFIG.patientBlock;
-          if (!loadedConfig.footer) loadedConfig.footer = {};
-          if (!loadedConfig.footer.isoMarkUrls)
-            loadedConfig.footer.isoMarkUrls = [];
-          if (!Array.isArray(loadedConfig.footer.signatures))
-            loadedConfig.footer.signatures = DEFAULT_CONFIG.footer.signatures;
-
-          setConfig(loadedConfig);
-        } else {
-          toast.error("Template not found");
-          router.push("/workspace/settings/templates");
+        try {
+          const data = await getTemplateById(templateId);
+          if (data) {
+            setTemplateName(data.name);
+            let parsed =
+              typeof data.config === "string"
+                ? JSON.parse(data.config)
+                : data.config;
+            setConfig(deepMerge(DEFAULT_CONFIG, parsed));
+          }
+        } catch (error) {
+          toast.error("Failed to load template");
         }
-      } else {
-        setConfig(DEFAULT_CONFIG);
       }
       setDataLoading(false);
     };
     init();
-  }, [templateId, router]);
+  }, [templateId]);
+
+  const deepMerge = (target: any, source: any) => {
+    const output = { ...target };
+    if (isObject(target) && isObject(source)) {
+      Object.keys(source).forEach((key) => {
+        if (isObject(source[key])) {
+          if (!(key in target)) Object.assign(output, { [key]: source[key] });
+          else output[key] = deepMerge(target[key], source[key]);
+        } else {
+          Object.assign(output, { [key]: source[key] });
+        }
+      });
+    }
+    return output;
+  };
+  const isObject = (item: any) =>
+    item && typeof item === "object" && !Array.isArray(item);
 
   const handleSave = async () => {
-    if (!templateName.trim())
-      return toast.error("Please enter a template name");
-    setLoading(true);
+    if (!templateName.trim()) return toast.error("Template name is required.");
+    setSaving(true);
     try {
       await saveTemplate(templateId, templateName, config);
       toast.success("Template Saved Successfully!");
       if (!templateId) router.push("/workspace/settings/templates");
     } catch (e) {
-      toast.error("Save failed");
+      toast.error("Failed to save template.");
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
-  const addBlock = (type: string) =>
-    setConfig({
-      ...config,
-      body: [
-        ...(config.body || []),
-        { id: `block-${Date.now()}`, type, content: "" },
-      ],
-    });
-  const removeBlock = (index: number) => {
-    const n = [...config.body];
-    n.splice(index, 1);
-    setConfig({ ...config, body: n });
-  };
-  const updateBlock = (index: number, content: string) => {
-    const n = [...config.body];
-    n[index].content = content;
-    setConfig({ ...config, body: n });
-  };
-  const insertMergeTag = (index: number, tag: string) => {
-    const n = [...config.body];
-    n[index].content = (n[index].content || "") + tag + " ";
-    setConfig({ ...config, body: n });
+  const updateConfig = (
+    section: keyof TemplateConfig,
+    key: string,
+    value: any,
+  ) => {
+    setConfig((prev: any) => ({
+      ...prev,
+      [section]: { ...prev[section], [key]: value },
+    }));
   };
 
-  const togglePatientField = (field: string, value: boolean) => {
-    setConfig({
-      ...config,
-      patientBlock: {
-        ...(config.patientBlock || DEFAULT_CONFIG.patientBlock),
-        [field]: value,
+  const updateNestedConfig = (
+    section: keyof TemplateConfig,
+    subSection: string,
+    key: string,
+    value: any,
+  ) => {
+    setConfig((prev: any) => ({
+      ...prev,
+      [section]: {
+        ...prev[section],
+        [subSection]: { ...prev[section][subSection], [key]: value },
       },
-    });
-  };
-
-  const onDragStart = (e: React.DragEvent, index: number) => {
-    setDraggedIdx(index);
-    e.dataTransfer.effectAllowed = "move";
-    (e.target as HTMLElement).style.opacity = "0.5";
-  };
-  const onDragEnd = (e: React.DragEvent) => {
-    (e.target as HTMLElement).style.opacity = "1";
-    setDraggedIdx(null);
-  };
-  const onDragOver = (index: number) => {
-    if (draggedIdx === null || draggedIdx === index) return;
-    const n = [...config.body];
-    const item = n[draggedIdx];
-    n.splice(draggedIdx, 1);
-    n.splice(index, 0, item);
-    setDraggedIdx(index);
-    setConfig({ ...config, body: n });
+    }));
   };
 
   const handleFileUpload = (
     e: React.ChangeEvent<HTMLInputElement>,
-    section: "header" | "footer" | "branding",
+    section: keyof TemplateConfig,
     key: string,
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onloadend = () =>
-      setConfig((prev: any) => ({
-        ...prev,
-        [section]: { ...prev[section], [key]: reader.result },
-      }));
+    reader.onloadend = () => updateConfig(section, key, reader.result);
     reader.readAsDataURL(file);
   };
 
-  const updateSignatory = (index: number, key: string, value: any) => {
-    const newSigs = [...(config.footer.signatures || [])];
-    if (newSigs[index]) newSigs[index][key] = value;
-    setConfig({ ...config, footer: { ...config.footer, signatures: newSigs } });
-  };
-
-  const handleSigUpload = (
-    index: number,
+  const handleBlockImageUpload = (
     e: React.ChangeEvent<HTMLInputElement>,
+    blockIndex: number,
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onloadend = () => updateSignatory(index, "imageUrl", reader.result);
+    reader.onloadend = () => {
+      const newBody = [...config.body];
+      newBody[blockIndex].imageUrl = reader.result as string;
+      setConfig({ ...config, body: newBody });
+    };
     reader.readAsDataURL(file);
   };
 
-  if (dataLoading)
-    return (
-      <div className="h-screen flex items-center justify-center">
-        <Loader2 className="animate-spin text-blue-600" />
-      </div>
-    );
+  // ============================================================================
+  // 5. SIDEBAR RENDERERS
+  // ============================================================================
 
-  const patientBlockConfig = config.patientBlock || DEFAULT_CONFIG.patientBlock;
+  const renderSetupTab = () => (
+    <div className="space-y-6 animate-in fade-in">
+      <Card className="shadow-none border-slate-200">
+        <CardHeader className="pb-3 bg-slate-50">
+          <CardTitle className="text-sm">Page Layout (A4)</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-4 space-y-4">
+          <Label className="text-xs font-bold text-slate-500 uppercase">
+            Margins (mm)
+          </Label>
+          <div className="grid grid-cols-4 gap-2">
+            {["top", "bottom", "left", "right"].map((m) => (
+              <div key={m}>
+                <Label className="text-[10px] capitalize">{m}</Label>
+                <Input
+                  type="number"
+                  value={(config.layout.margins as any)[m]}
+                  onChange={(e) =>
+                    updateNestedConfig(
+                      "layout",
+                      "margins",
+                      m,
+                      Number(e.target.value),
+                    )
+                  }
+                  className="text-xs h-8"
+                />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
-  return (
-    <div className="flex flex-col h-screen overflow-hidden bg-slate-50">
-      {/* TOP BAR */}
-      <div className="bg-white border-b px-6 py-4 flex justify-between items-center shrink-0 shadow-sm z-10">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.back()}>
-            <ArrowLeft className="h-5 w-5 text-slate-500" />
-          </Button>
-          <div>
-            <Label className="text-xs text-slate-500 uppercase tracking-wider font-bold">
-              Template Name
-            </Label>
-            <Input
-              value={templateName}
-              onChange={(e) => setTemplateName(e.target.value)}
-              className="h-8 w-64 font-semibold text-lg border-none shadow-none px-0 focus-visible:ring-0 bg-transparent"
-              placeholder="Enter template name..."
+      <Card className="shadow-none border-slate-200">
+        <CardHeader className="pb-3 bg-slate-50 flex flex-row items-center justify-between">
+          <CardTitle className="text-sm">Page Border</CardTitle>
+          <Switch
+            checked={config.layout.border.show}
+            onCheckedChange={(c) =>
+              updateNestedConfig("layout", "border", "show", c)
+            }
+          />
+        </CardHeader>
+        {config.layout.border.show && (
+          <CardContent className="pt-4 space-y-4">
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <Label className="text-xs">Border Inset (Padding)</Label>
+                <span className="text-xs font-mono">
+                  {config.layout.border.padding}px
+                </span>
+              </div>
+              <Slider
+                min={0}
+                max={50}
+                step={1}
+                value={[config.layout.border.padding]}
+                onValueChange={(v) =>
+                  updateNestedConfig("layout", "border", "padding", v[0])
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <Label className="text-xs">Border Weight</Label>
+                <span className="text-xs font-mono">
+                  {config.layout.border.weight}px
+                </span>
+              </div>
+              <Slider
+                min={1}
+                max={10}
+                step={1}
+                value={[config.layout.border.weight]}
+                onValueChange={(v) =>
+                  updateNestedConfig("layout", "border", "weight", v[0])
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Border Color</Label>
+              <div className="flex gap-2">
+                <Input
+                  type="color"
+                  className="w-12 h-8 p-0 border-none rounded cursor-pointer"
+                  value={config.layout.border.color}
+                  onChange={(e) =>
+                    updateNestedConfig(
+                      "layout",
+                      "border",
+                      "color",
+                      e.target.value,
+                    )
+                  }
+                />
+                <Input
+                  className="h-8 text-xs font-mono flex-1"
+                  value={config.layout.border.color}
+                  onChange={(e) =>
+                    updateNestedConfig(
+                      "layout",
+                      "border",
+                      "color",
+                      e.target.value,
+                    )
+                  }
+                />
+              </div>
+            </div>
+          </CardContent>
+        )}
+      </Card>
+
+      <Card className="shadow-none border-slate-200">
+        <CardHeader className="pb-3 bg-slate-50">
+          <CardTitle className="text-sm">Typography & Watermark</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-4 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-xs">Primary Color</Label>
+              <div className="flex gap-2">
+                <Input
+                  type="color"
+                  className="w-8 h-8 p-0 border-none rounded"
+                  value={config.branding.primaryColor}
+                  onChange={(e) =>
+                    updateConfig("branding", "primaryColor", e.target.value)
+                  }
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Secondary Color</Label>
+              <div className="flex gap-2">
+                <Input
+                  type="color"
+                  className="w-8 h-8 p-0 border-none rounded"
+                  value={config.branding.secondaryColor}
+                  onChange={(e) =>
+                    updateConfig("branding", "secondaryColor", e.target.value)
+                  }
+                />
+              </div>
+            </div>
+          </div>
+          <div className="space-y-2 pt-2 border-t">
+            <div className="flex justify-between">
+              <Label className="text-xs">Global Font Size</Label>
+              <span className="text-xs font-mono">
+                {config.branding.globalFontSize}px
+              </span>
+            </div>
+            <Slider
+              min={6}
+              max={16}
+              step={1}
+              value={[config.branding.globalFontSize]}
+              onValueChange={(v) =>
+                updateConfig("branding", "globalFontSize", v[0])
+              }
             />
           </div>
-        </div>
-        <Button
-          onClick={handleSave}
-          disabled={loading}
-          className="bg-blue-600 hover:bg-blue-700">
-          {loading ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <Save className="mr-2 h-4 w-4" />
-          )}{" "}
-          Save Configuration
-        </Button>
+          <div className="space-y-2 pt-4 border-t">
+            <Label className="text-xs">Upload Background Watermark</Label>
+            <Input
+              type="file"
+              accept="image/*"
+              onChange={(e) => handleFileUpload(e, "branding", "watermarkUrl")}
+              className="text-xs"
+            />
+            {config.branding.watermarkUrl && (
+              <div className="space-y-2 mt-2">
+                <div className="flex justify-between">
+                  <Label className="text-[10px]">Opacity</Label>
+                  <span className="text-[10px]">
+                    {Math.round(config.branding.watermarkOpacity * 100)}%
+                  </span>
+                </div>
+                <Slider
+                  min={0.05}
+                  max={1}
+                  step={0.05}
+                  value={[config.branding.watermarkOpacity]}
+                  onValueChange={(v) =>
+                    updateConfig("branding", "watermarkOpacity", v[0])
+                  }
+                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-red-500 text-xs px-0"
+                  onClick={() => updateConfig("branding", "watermarkUrl", "")}>
+                  Remove Watermark
+                </Button>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderHeaderTab = () => (
+    <div className="space-y-6 animate-in fade-in">
+      <div className="flex justify-between items-center bg-blue-50 p-3 rounded-lg border border-blue-100">
+        <Label className="font-bold text-blue-900">Enable Header Zone</Label>
+        <Switch
+          checked={config.header.show}
+          onCheckedChange={(c) => updateConfig("header", "show", c)}
+        />
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* LEFT PANEL: CONTROLS */}
-        <div className="w-1/3 overflow-y-auto p-6 border-r bg-white custom-scrollbar flex flex-col gap-6">
-          <Tabs
-            value={activeTab}
-            onValueChange={setActiveTab}
-            className="w-full">
-            <TabsList className="w-full grid grid-cols-4 mb-6">
-              <TabsTrigger value="header">Header</TabsTrigger>
-              <TabsTrigger value="body">Body</TabsTrigger>
-              <TabsTrigger value="footer">Footer</TabsTrigger>
-              <TabsTrigger value="branding">Brand</TabsTrigger>
-            </TabsList>
-
-            {/* HEADER TAB */}
-            <TabsContent value="header" className="space-y-4">
-              <Card>
-                <CardContent className="pt-6 space-y-4">
-                  <div className="flex justify-between items-center">
-                    <Label>Show Graphic Header</Label>
-                    <Switch
-                      checked={config.header?.show}
-                      onCheckedChange={(c) =>
-                        setConfig({
-                          ...config,
-                          header: { ...config.header, show: c },
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="grid grid-cols-3 bg-slate-100 p-1 rounded-md gap-1">
-                    {["standard", "html", "image"].map((mode) => (
-                      <button
-                        key={mode}
-                        onClick={() =>
-                          setConfig({
-                            ...config,
-                            header: { ...config.header, mode },
-                          })
-                        }
-                        className={`text-xs py-1.5 font-medium rounded-sm capitalize flex items-center justify-center gap-1 ${config.header?.mode === mode ? "bg-white shadow text-blue-600" : "text-slate-500"}`}>
-                        {mode === "standard" && (
-                          <LayoutTemplate className="h-3 w-3" />
-                        )}
-                        {mode === "html" && <Code className="h-3 w-3" />}
-                        {mode === "image" && <ImageIcon className="h-3 w-3" />}
-                        {mode}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* STANDARD MODE HEADER */}
-                  {config.header?.mode === "standard" && (
-                    <>
-                      <div className="space-y-2">
-                        <Label>Title</Label>
-                        <Input
-                          value={config.header?.title}
-                          onChange={(e) =>
-                            setConfig({
-                              ...config,
-                              header: {
-                                ...config.header,
-                                title: e.target.value,
-                              },
-                            })
-                          }
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Subtitle</Label>
-                        <Input
-                          value={config.header?.subTitle}
-                          onChange={(e) =>
-                            setConfig({
-                              ...config,
-                              header: {
-                                ...config.header,
-                                subTitle: e.target.value,
-                              },
-                            })
-                          }
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Logo</Label>
-                        <Input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) =>
-                            handleFileUpload(e, "header", "logoUrl")
-                          }
-                        />
-                      </div>
-                    </>
+      {config.header.show && (
+        <Card className="shadow-none border-slate-200">
+          <CardContent className="pt-4 space-y-4">
+            <div className="grid grid-cols-3 bg-slate-100 p-1 rounded-md gap-1">
+              {(["standard", "html", "image"] as const).map((mode) => (
+                <button
+                  key={mode}
+                  onClick={() => updateConfig("header", "mode", mode)}
+                  className={`text-xs py-1.5 font-medium rounded-sm capitalize flex items-center justify-center gap-1 ${config.header.mode === mode ? "bg-white shadow text-blue-600" : "text-slate-500"}`}>
+                  {mode === "standard" && (
+                    <LayoutTemplate className="h-3 w-3" />
                   )}
+                  {mode === "html" && <Code className="h-3 w-3" />}
+                  {mode === "image" && <ImageIcon className="h-3 w-3" />} {mode}
+                </button>
+              ))}
+            </div>
 
-                  {/* HTML MODE HEADER */}
-                  {config.header?.mode === "html" && (
-                    <div className="space-y-2">
-                      <Label>Header HTML Code</Label>
-                      <Textarea
-                        className="text-xs font-mono"
-                        value={config.header?.html}
-                        onChange={(e) =>
-                          setConfig({
-                            ...config,
-                            header: { ...config.header, html: e.target.value },
-                          })
-                        }
-                        rows={6}
-                        placeholder="<div class='p-4 text-center'>Custom HTML Header</div>"
-                      />
+            {config.header.mode === "standard" && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-xs">Main Title</Label>
+                  <Input
+                    value={config.header.title}
+                    onChange={(e) =>
+                      updateConfig("header", "title", e.target.value)
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Subtitle</Label>
+                  <Input
+                    value={config.header.subTitle}
+                    onChange={(e) =>
+                      updateConfig("header", "subTitle", e.target.value)
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Lab Logo</Label>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileUpload(e, "header", "logoUrl")}
+                    className="text-xs"
+                  />
+                </div>
+              </div>
+            )}
+
+            {config.header.mode === "html" && (
+              <div className="space-y-2 animate-in fade-in">
+                <Label className="text-xs">Raw HTML</Label>
+                <Textarea
+                  value={config.header.html}
+                  onChange={(e) =>
+                    updateConfig("header", "html", e.target.value)
+                  }
+                  className="font-mono text-xs h-32"
+                  placeholder="<div style='text-align: center'>Header</div>"
+                />
+              </div>
+            )}
+
+            {config.header.mode === "image" && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-xs">Full Graphic Header</Label>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileUpload(e, "header", "fullImage")}
+                    className="text-xs"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <Label className="text-xs">Height</Label>
+                    <span className="text-xs">{config.header.height}px</span>
+                  </div>
+                  <Slider
+                    min={50}
+                    max={400}
+                    step={5}
+                    value={[config.header.height]}
+                    onValueChange={(v) =>
+                      updateConfig("header", "height", v[0])
+                    }
+                  />
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* QR CODE SETTINGS */}
+      <Card className="shadow-none border-slate-200">
+        <CardHeader className="pb-2 bg-slate-50 flex flex-row items-center justify-between">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <QrCode size={16} /> Report QR Verification
+          </CardTitle>
+          <Switch
+            checked={config.qrCode.show}
+            onCheckedChange={(c) => updateConfig("qrCode", "show", c)}
+          />
+        </CardHeader>
+        {config.qrCode.show && (
+          <CardContent className="pt-4 space-y-4">
+            <div className="space-y-2">
+              <Label className="text-xs">Positioning Mode</Label>
+              <Select
+                value={config.qrCode.mode}
+                onValueChange={(v) => updateConfig("qrCode", "mode", v)}>
+                <SelectTrigger className="h-8 text-xs bg-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="preset">Preset Margins</SelectItem>
+                  <SelectItem value="custom">Free Drag & Drop</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {config.qrCode.mode === "preset" ? (
+              <div className="space-y-4 animate-in fade-in">
+                <div className="space-y-2">
+                  <Label className="text-xs">Placement</Label>
+                  <Select
+                    value={config.qrCode.position}
+                    onValueChange={(v) =>
+                      updateConfig("qrCode", "position", v)
+                    }>
+                    <SelectTrigger className="h-8 text-xs bg-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="header-right">
+                        Header - Top Right
+                      </SelectItem>
+                      <SelectItem value="header-left">
+                        Header - Top Left
+                      </SelectItem>
+                      <SelectItem value="footer-right">
+                        Footer - Bottom Right
+                      </SelectItem>
+                      <SelectItem value="footer-left">
+                        Footer - Bottom Left
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <Label className="text-[10px]">Margin Edge</Label>
+                    <span>{config.qrCode.margin}px</span>
+                  </div>
+                  <Slider
+                    min={0}
+                    max={50}
+                    step={2}
+                    value={[config.qrCode.margin]}
+                    onValueChange={(v) =>
+                      updateConfig("qrCode", "margin", v[0])
+                    }
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="bg-blue-50 border border-blue-200 p-3 rounded text-[10px] text-blue-800 flex gap-2">
+                <Move size={14} className="shrink-0" /> Drag the QR code freely
+                in the preview panel to set its absolute coordinates.
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <Label className="text-[10px]">QR Size</Label>
+                  <span>{config.qrCode.size}px</span>
+                </div>
+                <Slider
+                  min={30}
+                  max={150}
+                  step={5}
+                  value={[config.qrCode.size]}
+                  onValueChange={(v) => updateConfig("qrCode", "size", v[0])}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-2 border-t">
+              <Label className="text-xs font-bold text-slate-600">
+                Show Page Numbers below QR
+              </Label>
+              <Switch
+                checked={config.qrCode.showPageNumber}
+                onCheckedChange={(c) =>
+                  updateConfig("qrCode", "showPageNumber", c)
+                }
+              />
+            </div>
+          </CardContent>
+        )}
+      </Card>
+    </div>
+  );
+
+  const renderPatientTab = () => (
+    <div className="space-y-6 animate-in fade-in">
+      <div className="flex justify-between items-center bg-blue-50 p-3 rounded-lg border border-blue-100">
+        <Label className="font-bold text-blue-900">Show Demographics</Label>
+        <Switch
+          checked={config.patientBlock.show}
+          onCheckedChange={(c) => updateConfig("patientBlock", "show", c)}
+        />
+      </div>
+
+      {config.patientBlock.show && (
+        <>
+          <Card className="shadow-none border-slate-200">
+            <CardHeader className="pb-2 bg-slate-50 flex flex-row items-center justify-between">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <BarcodeIcon size={16} /> Sample Barcode
+              </CardTitle>
+              <Switch
+                checked={config.patientBlock.barcode.show}
+                onCheckedChange={(c) =>
+                  updateNestedConfig("patientBlock", "barcode", "show", c)
+                }
+              />
+            </CardHeader>
+            {config.patientBlock.barcode.show && (
+              <CardContent className="pt-4 space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-xs">Alignment</Label>
+                  <Select
+                    value={config.patientBlock.barcode.position}
+                    onValueChange={(v) =>
+                      updateNestedConfig(
+                        "patientBlock",
+                        "barcode",
+                        "position",
+                        v,
+                      )
+                    }>
+                    <SelectTrigger className="h-8 text-xs bg-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="left">Left</SelectItem>
+                      <SelectItem value="center">Center</SelectItem>
+                      <SelectItem value="right">Right</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <Label className="text-[10px]">Height</Label>
+                      <span>{config.patientBlock.barcode.height}px</span>
                     </div>
-                  )}
-
-                  {/* IMAGE MODE HEADER */}
-                  {config.header?.mode === "image" && (
-                    <div className="space-y-3">
-                      <Label>Upload Full Header Image</Label>
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) =>
-                          handleFileUpload(e, "header", "fullImage")
-                        }
-                      />
-                      <div className="flex justify-between items-center mt-2">
-                        <Label className="text-xs">Header Height (px)</Label>
-                        <span className="text-xs text-slate-500 font-bold">
-                          {config.header?.height || 150}px
-                        </span>
-                      </div>
-                      <input
-                        type="range"
-                        min="50"
-                        max="400"
-                        step="10"
-                        value={config.header?.height || 150}
-                        onChange={(e) =>
-                          setConfig({
-                            ...config,
-                            header: {
-                              ...config.header,
-                              height: parseInt(e.target.value),
-                            },
-                          })
-                        }
-                        className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
-                      />
+                    <Slider
+                      min={20}
+                      max={80}
+                      step={5}
+                      value={[config.patientBlock.barcode.height]}
+                      onValueChange={(v) =>
+                        updateNestedConfig(
+                          "patientBlock",
+                          "barcode",
+                          "height",
+                          v[0],
+                        )
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <Label className="text-[10px]">Scale</Label>
+                      <span>{config.patientBlock.barcode.scale}x</span>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* PATIENT INFO TOGGLES (Always available in Header Tab) */}
-              <div className="space-y-3 pt-6 border-t mt-6">
-                <Label className="text-xs font-bold uppercase text-slate-500">
-                  Patient Details (Repeats on every page)
-                </Label>
-                <div className="grid grid-cols-2 gap-3 bg-slate-50 p-4 border rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xs">Barcode</Label>
-                    <Switch
-                      checked={patientBlockConfig.showBarcode !== false}
-                      onCheckedChange={(c) =>
-                        togglePatientField("showBarcode", c)
-                      }
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xs">Patient ID</Label>
-                    <Switch
-                      checked={patientBlockConfig.showPatientId !== false}
-                      onCheckedChange={(c) =>
-                        togglePatientField("showPatientId", c)
-                      }
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xs">Sent By (Agency)</Label>
-                    <Switch
-                      checked={patientBlockConfig.showSentBy !== false}
-                      onCheckedChange={(c) =>
-                        togglePatientField("showSentBy", c)
-                      }
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xs">Age / Sex</Label>
-                    <Switch
-                      checked={patientBlockConfig.showAgeSex !== false}
-                      onCheckedChange={(c) =>
-                        togglePatientField("showAgeSex", c)
-                      }
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xs">Employee ID</Label>
-                    <Switch
-                      checked={patientBlockConfig.showEmployeeId !== false}
-                      onCheckedChange={(c) =>
-                        togglePatientField("showEmployeeId", c)
-                      }
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xs">Ref. Doctor</Label>
-                    <Switch
-                      checked={patientBlockConfig.showRefDoctor !== false}
-                      onCheckedChange={(c) =>
-                        togglePatientField("showRefDoctor", c)
-                      }
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xs">Sample Date</Label>
-                    <Switch
-                      checked={
-                        patientBlockConfig.showSampleCollection !== false
-                      }
-                      onCheckedChange={(c) =>
-                        togglePatientField("showSampleCollection", c)
-                      }
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xs">Report Released</Label>
-                    <Switch
-                      checked={patientBlockConfig.showReportReleased !== false}
-                      onCheckedChange={(c) =>
-                        togglePatientField("showReportReleased", c)
+                    <Slider
+                      min={0.5}
+                      max={3}
+                      step={0.1}
+                      value={[config.patientBlock.barcode.scale]}
+                      onValueChange={(v) =>
+                        updateNestedConfig(
+                          "patientBlock",
+                          "barcode",
+                          "scale",
+                          v[0],
+                        )
                       }
                     />
                   </div>
                 </div>
-              </div>
-            </TabsContent>
+              </CardContent>
+            )}
+          </Card>
 
-            {/* BODY TAB */}
-            <TabsContent value="body" className="space-y-6">
-              <div className="grid grid-cols-2 gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => addBlock("TEXT")}>
-                  <Type className="h-4 w-4 mr-2" /> Text Block
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => addBlock("RESULTS_TABLE")}>
-                  <Table2 className="h-4 w-4 mr-2" /> Results Table
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => addBlock("SPACER")}>
-                  <SplitSquareHorizontal className="h-4 w-4 mr-2" /> Spacer
-                </Button>
+          <Card className="shadow-none border-slate-200">
+            <CardContent className="pt-4 space-y-4">
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <Label className="text-xs font-bold uppercase">
+                    Font Size
+                  </Label>
+                  <span>{config.patientBlock.fontSize}px</span>
+                </div>
+                <Slider
+                  min={8}
+                  max={18}
+                  step={1}
+                  value={[config.patientBlock.fontSize]}
+                  onValueChange={(v) =>
+                    updateConfig("patientBlock", "fontSize", v[0])
+                  }
+                />
               </div>
 
-              <div className="space-y-3 pt-2">
-                <Label className="text-xs font-bold uppercase text-slate-500">
-                  Document Layout blocks
-                </Label>
-                {config.body?.map((block: any, idx: number) => (
-                  <div
-                    key={block.id}
-                    draggable
-                    onDragStart={(e) => onDragStart(e, idx)}
-                    onDragOver={() => onDragOver(idx)}
-                    onDragEnd={onDragEnd}
-                    className="bg-white border rounded-lg p-3 shadow-sm group cursor-move hover:border-blue-400 transition-colors">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <GripVertical className="h-4 w-4 text-slate-300" />
-                        <span className="text-xs font-bold text-slate-700 uppercase">
-                          {block.type.replace("_", " ")}
-                        </span>
-                      </div>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-6 w-6 text-slate-400 hover:text-red-500"
-                        onClick={() => removeBlock(idx)}>
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                    {block.type === "TEXT" && (
-                      <div
-                        className="space-y-2 mt-3 cursor-text"
-                        draggable={false}
-                        onDragStart={(e) => e.preventDefault()}>
-                        <Textarea
-                          value={block.content}
-                          onChange={(e) => updateBlock(idx, e.target.value)}
-                          placeholder="Type here or insert merge tags..."
-                          className="text-xs font-mono min-h-[80px]"
-                        />
-                        <div className="flex flex-wrap gap-1">
-                          {MERGE_TAGS.map((tag) => (
-                            <button
-                              key={tag.tag}
-                              onClick={() => insertMergeTag(idx, tag.tag)}
-                              className="text-[10px] bg-slate-100 border text-slate-600 px-1.5 py-0.5 rounded hover:bg-blue-50">
-                              + {tag.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+              <Label className="text-xs font-bold text-slate-500 uppercase mt-4 block">
+                Visible Fields
+              </Label>
+              <div className="grid grid-cols-2 gap-3 bg-slate-50 p-4 border rounded-lg">
+                {[
+                  { k: "showName", l: "Patient Name" },
+                  { k: "showPatientId", l: "Patient ID / UHID" },
+                  { k: "showAgeSex", l: "Age & Gender" },
+                  { k: "showEmployeeId", l: "Employee ID" },
+                  { k: "showSentBy", l: "Agency / B2B" },
+                  { k: "showRefDoctor", l: "Ref. Doctor" },
+                  { k: "showSampleCollection", l: "Collection Time" },
+                  { k: "showReportReleased", l: "Reporting Time" },
+                ].map((f) => (
+                  <div key={f.k} className="flex items-center justify-between">
+                    <Label className="text-[10px] cursor-pointer" htmlFor={f.k}>
+                      {f.l}
+                    </Label>
+                    <Switch
+                      id={f.k}
+                      checked={(config.patientBlock as any)[f.k]}
+                      onCheckedChange={(c) =>
+                        updateConfig("patientBlock", f.k, c)
+                      }
+                    />
                   </div>
                 ))}
               </div>
-            </TabsContent>
+            </CardContent>
+          </Card>
+        </>
+      )}
+    </div>
+  );
 
-            {/* FOOTER TAB */}
-            <TabsContent value="footer" className="space-y-4">
-              <Card>
-                <CardContent className="pt-6 space-y-6">
-                  <div className="flex justify-between items-center">
-                    <Label>Show Footer</Label>
-                    <Switch
-                      checked={config.footer?.show}
-                      onCheckedChange={(c) =>
-                        setConfig({
-                          ...config,
-                          footer: { ...config.footer, show: c },
-                        })
-                      }
-                    />
-                  </div>
+  const renderBodyTab = () => (
+    <div className="space-y-6 animate-in fade-in">
+      <Card className="shadow-none border-slate-200">
+        <CardHeader className="pb-3 bg-slate-50">
+          <CardTitle className="text-sm">Table Settings</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="text-xs">Group by Department</Label>
+              <p className="text-[9px] text-slate-500">
+                Adds headers like BIOCHEMISTRY
+              </p>
+            </div>
+            <Switch
+              checked={config.bodyOptions.groupDepartmentWise}
+              onCheckedChange={(c) =>
+                updateConfig("bodyOptions", "groupDepartmentWise", c)
+              }
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="text-xs">Show Ref Ranges</Label>
+            </div>
+            <Switch
+              checked={config.bodyOptions.showBiologicalRef}
+              onCheckedChange={(c) =>
+                updateConfig("bodyOptions", "showBiologicalRef", c)
+              }
+            />
+          </div>
+          {/* ✅ Added Test Timestamps Toggle */}
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="text-xs">Show Test Timestamps</Label>
+              <p className="text-[9px] text-slate-500">
+                Collected, Received, Reported below table
+              </p>
+            </div>
+            <Switch
+              checked={config.bodyOptions.showTestTimestamps}
+              onCheckedChange={(c) =>
+                updateConfig("bodyOptions", "showTestTimestamps", c)
+              }
+            />
+          </div>
+          <div className="space-y-2 pt-2 border-t">
+            <div className="flex justify-between">
+              <Label className="text-xs">Table Font Size</Label>
+              <span>{config.bodyOptions.tableFontSize}px</span>
+            </div>
+            <Slider
+              min={8}
+              max={16}
+              step={1}
+              value={[config.bodyOptions.tableFontSize]}
+              onValueChange={(v) =>
+                updateConfig("bodyOptions", "tableFontSize", v[0])
+              }
+            />
+          </div>
+        </CardContent>
+      </Card>
 
-                  <div className="grid grid-cols-3 bg-slate-100 p-1 rounded-md gap-1">
-                    {["standard", "html", "image"].map((mode) => (
+      <div className="space-y-2">
+        <Label className="text-xs font-bold uppercase text-slate-500">
+          Document Flow Blocks
+        </Label>
+        <div className="grid grid-cols-4 gap-2 pb-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-[10px] px-1"
+            onClick={() =>
+              setConfig({
+                ...config,
+                body: [
+                  ...config.body,
+                  { id: `b-${Date.now()}`, type: "TEXT", content: "" },
+                ],
+              })
+            }>
+            <Type className="h-3 w-3 mr-1" /> Text
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-[10px] px-1"
+            onClick={() =>
+              setConfig({
+                ...config,
+                body: [
+                  ...config.body,
+                  { id: `b-${Date.now()}`, type: "RESULTS_TABLE" },
+                ],
+              })
+            }>
+            <Table2 className="h-3 w-3 mr-1" /> Table
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-[10px] px-1"
+            onClick={() =>
+              setConfig({
+                ...config,
+                body: [
+                  ...config.body,
+                  { id: `b-${Date.now()}`, type: "SPACER", height: 20 },
+                ],
+              })
+            }>
+            <SplitSquareHorizontal className="h-3 w-3 mr-1" /> Space
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-[10px] px-1"
+            onClick={() =>
+              setConfig({
+                ...config,
+                body: [
+                  ...config.body,
+                  {
+                    id: `b-${Date.now()}`,
+                    type: "IMAGE",
+                    imageUrl: "",
+                    imageScale: 100,
+                  },
+                ],
+              })
+            }>
+            <ImageIcon className="h-3 w-3 mr-1" /> Image
+          </Button>
+        </div>
+
+        <div className="space-y-3">
+          {config.body.map((block, idx) => (
+            <div
+              key={block.id}
+              draggable
+              onDragStart={(e) => {
+                setDraggedIdx(idx);
+                e.dataTransfer.effectAllowed = "move";
+              }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                if (draggedIdx !== null && draggedIdx !== idx) {
+                  const n = [...config.body];
+                  const item = n[draggedIdx];
+                  n.splice(draggedIdx, 1);
+                  n.splice(idx, 0, item);
+                  setDraggedIdx(idx);
+                  setConfig({ ...config, body: n });
+                }
+              }}
+              onDragEnd={() => setDraggedIdx(null)}
+              className="bg-white border border-slate-200 rounded-lg p-3 shadow-sm group cursor-move hover:border-blue-400 hover:shadow-md transition-all">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <GripVertical className="h-4 w-4 text-slate-300" />
+                  <Badge
+                    variant="secondary"
+                    className="text-[9px] uppercase font-bold">
+                    {block.type.replace("_", " ")}
+                  </Badge>
+                </div>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-5 w-5 text-slate-400 hover:text-red-500"
+                  onClick={() => {
+                    const n = [...config.body];
+                    n.splice(idx, 1);
+                    setConfig({ ...config, body: n });
+                  }}>
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
+
+              {block.type === "TEXT" && (
+                <div
+                  className="space-y-2 mt-2 cursor-text"
+                  draggable={false}
+                  onDragStart={(e) => e.preventDefault()}>
+                  <Textarea
+                    value={block.content}
+                    onChange={(e) => {
+                      const n = [...config.body];
+                      n[idx].content = e.target.value;
+                      setConfig({ ...config, body: n });
+                    }}
+                    placeholder="Type here..."
+                    className="text-xs font-mono min-h-[60px]"
+                  />
+                  <div className="flex flex-wrap gap-1">
+                    {MERGE_TAGS.map((tag) => (
                       <button
-                        key={mode}
-                        onClick={() =>
-                          setConfig({
-                            ...config,
-                            footer: { ...config.footer, mode },
-                          })
-                        }
-                        className={`text-xs py-1.5 font-medium rounded-sm capitalize flex items-center justify-center gap-1 ${config.footer?.mode === mode ? "bg-white shadow text-blue-600" : "text-slate-500"}`}>
-                        {mode === "standard" && (
-                          <LayoutTemplate className="h-3 w-3" />
-                        )}
-                        {mode === "html" && <Code className="h-3 w-3" />}
-                        {mode === "image" && <ImageIcon className="h-3 w-3" />}
-                        {mode}
+                        key={tag.tag}
+                        onClick={() => {
+                          const n = [...config.body];
+                          n[idx].content =
+                            (n[idx].content || "") + tag.tag + " ";
+                          setConfig({ ...config, body: n });
+                        }}
+                        className="text-[8px] bg-slate-100 border text-slate-600 px-1.5 py-0.5 rounded hover:bg-blue-50">
+                        + {tag.label}
                       </button>
                     ))}
                   </div>
-
-                  {/* STANDARD MODE FOOTER */}
-                  {config.footer?.mode === "standard" && (
-                    <div className="space-y-4 pt-4 border-t">
-                      <div className="flex justify-between items-center">
-                        <Label>Signatories</Label>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() =>
-                            setConfig((p: any) => ({
-                              ...p,
-                              footer: {
-                                ...p.footer,
-                                signatures: [
-                                  ...(p.footer.signatures || []),
-                                  {
-                                    name: "Dr. New",
-                                    qualifications: "MBBS",
-                                    title: "Designation",
-                                    show: true,
-                                  },
-                                ],
-                              },
-                            }))
-                          }>
-                          <Plus className="h-3 w-3 mr-1" /> Add
-                        </Button>
-                      </div>
-                      {config.footer?.signatures?.map(
-                        (sig: any, idx: number) => (
-                          <div
-                            key={idx}
-                            className="border p-3 rounded-lg bg-slate-50 space-y-3 relative">
-                            <button
-                              onClick={() =>
-                                setConfig((p: any) => ({
-                                  ...p,
-                                  footer: {
-                                    ...p.footer,
-                                    signatures: p.footer.signatures.filter(
-                                      (_: any, i: number) => i !== idx,
-                                    ),
-                                  },
-                                }))
-                              }
-                              className="absolute top-2 right-2 text-slate-400 hover:text-red-500">
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                            <Input
-                              value={sig.name}
-                              onChange={(e) =>
-                                updateSignatory(idx, "name", e.target.value)
-                              }
-                              className="h-8 text-xs bg-white"
-                              placeholder="Doctor Name (e.g. Dr. A. Jalil.)"
-                            />
-                            <Input
-                              value={sig.qualifications}
-                              onChange={(e) =>
-                                updateSignatory(
-                                  idx,
-                                  "qualifications",
-                                  e.target.value,
-                                )
-                              }
-                              className="h-8 text-xs bg-white"
-                              placeholder="Qualifications (e.g. MBBS, DCP)"
-                            />
-                            <Input
-                              value={sig.title}
-                              onChange={(e) =>
-                                updateSignatory(idx, "title", e.target.value)
-                              }
-                              className="h-8 text-xs bg-white"
-                              placeholder="Designation (e.g. Consultant Pathologist)"
-                            />
-                            <div className="flex items-center gap-3 pt-1">
-                              <div className="h-10 w-24 border bg-white flex items-center justify-center overflow-hidden rounded">
-                                {sig.imageUrl ? (
-                                  <img
-                                    src={sig.imageUrl}
-                                    className="h-full object-contain"
-                                  />
-                                ) : (
-                                  <span className="text-[9px] text-slate-300">
-                                    No Sig
-                                  </span>
-                                )}
-                              </div>
-                              <label className="cursor-pointer text-xs bg-white border px-2 py-1 rounded shadow-sm hover:bg-slate-100 flex-1 text-center">
-                                Upload Signature Image
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  onChange={(e) => handleSigUpload(idx, e)}
-                                  className="hidden"
-                                />
-                              </label>
-                            </div>
-                          </div>
-                        ),
-                      )}
-                    </div>
-                  )}
-
-                  {/* HTML MODE FOOTER */}
-                  {config.footer?.mode === "html" && (
-                    <div className="space-y-2 pt-4 border-t">
-                      <Label>Footer HTML Code</Label>
-                      <Textarea
-                        className="text-xs font-mono"
-                        value={config.footer?.html}
-                        onChange={(e) =>
-                          setConfig({
-                            ...config,
-                            footer: { ...config.footer, html: e.target.value },
-                          })
-                        }
-                        rows={6}
-                        placeholder="<div class='p-4 text-center'>Custom HTML Footer</div>"
-                      />
-                    </div>
-                  )}
-
-                  {/* IMAGE MODE FOOTER */}
-                  {config.footer?.mode === "image" && (
-                    <div className="space-y-3 pt-4 border-t">
-                      <Label>Upload Full Footer Image</Label>
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) =>
-                          handleFileUpload(e, "footer", "fullImage")
-                        }
-                      />
-                      <div className="flex justify-between items-center mt-2">
-                        <Label className="text-xs">Footer Height (px)</Label>
-                        <span className="text-xs text-slate-500 font-bold">
-                          {config.footer?.height || 100}px
-                        </span>
-                      </div>
-                      <input
-                        type="range"
-                        min="50"
-                        max="300"
-                        step="10"
-                        value={config.footer?.height || 100}
-                        onChange={(e) =>
-                          setConfig({
-                            ...config,
-                            footer: {
-                              ...config.footer,
-                              height: parseInt(e.target.value),
-                            },
-                          })
-                        }
-                        className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
-                      />
-                    </div>
-                  )}
-
-                  {/* DISCLAIMER TEXT (Available in all modes) */}
-                  <div className="space-y-2 pt-4 border-t">
-                    <Label>Footer Disclaimer Text</Label>
-                    <Textarea
-                      className="text-xs"
-                      value={config.footer?.text}
-                      onChange={(e) =>
-                        setConfig({
-                          ...config,
-                          footer: { ...config.footer, text: e.target.value },
-                        })
-                      }
-                      rows={3}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* BRANDING TAB */}
-            <TabsContent value="branding" className="space-y-4">
-              <Card>
-                <CardContent className="pt-6 space-y-4">
-                  <div className="space-y-2">
-                    <Label>Primary Color</Label>
-                    <div className="flex gap-2 mt-2">
-                      <Input
-                        type="color"
-                        className="w-12 h-10 p-1"
-                        value={config.branding?.primaryColor}
-                        onChange={(e) =>
-                          setConfig({
-                            ...config,
-                            branding: {
-                              ...config.branding,
-                              primaryColor: e.target.value,
-                            },
-                          })
-                        }
-                      />
-                      <Input
-                        value={config.branding?.primaryColor}
-                        onChange={(e) =>
-                          setConfig({
-                            ...config,
-                            branding: {
-                              ...config.branding,
-                              primaryColor: e.target.value,
-                            },
-                          })
-                        }
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
-
-        {/* --- RIGHT PANEL: HIGH FIDELITY LIVE PREVIEW --- */}
-        <div className="w-2/3 bg-slate-300 flex justify-center p-8 overflow-y-auto custom-scrollbar">
-          <div
-            className="bg-white shadow-2xl relative flex flex-col font-sans text-slate-900"
-            style={{
-              width: "210mm",
-              minHeight: "297mm",
-              padding: config.header?.show ? "10mm" : "0 10mm 10mm 10mm",
-              borderTop:
-                config.header?.mode === "image"
-                  ? "none"
-                  : `8px solid ${config.branding?.primaryColor || "#000000"}`,
-            }}>
-            {/* 1. FIXED HEADER ZONE */}
-            <div className="w-full">
-              {/* Graphic Header */}
-              {config.header?.show && (
+                </div>
+              )}
+              {block.type === "SPACER" && (
                 <div
-                  className="w-full mb-4 border-b-2 pb-4"
-                  style={{ borderColor: config.branding?.primaryColor }}>
-                  {config.header?.mode === "image" ? (
-                    <div
-                      className="w-full bg-slate-100 flex items-center justify-center text-slate-400 overflow-hidden"
-                      style={{ height: `${config.header.height || 150}px` }}>
-                      {config.header.fullImage ? (
-                        <img
-                          src={config.header.fullImage}
-                          className="w-full h-full object-contain"
-                          alt="Header"
-                        />
-                      ) : (
-                        "Full Header Image Preview"
-                      )}
-                    </div>
-                  ) : config.header?.mode === "html" ? (
-                    <div
-                      className="w-full"
-                      dangerouslySetInnerHTML={{
-                        __html:
-                          config.header.html ||
-                          "<div class='text-slate-400 text-center py-4 border border-dashed'>Custom HTML Header Area</div>",
-                      }}
-                    />
-                  ) : (
-                    <div className="flex justify-between items-center">
-                      {config.header?.logoUrl ? (
-                        <img
-                          src={config.header.logoUrl}
-                          className="h-16 object-contain"
-                          alt="Logo"
-                        />
-                      ) : (
-                        <div className="h-16 w-32 bg-slate-50 border rounded flex items-center justify-center text-xs text-slate-400">
-                          Logo
-                        </div>
-                      )}
-                      <div className="text-right">
-                        <h1
-                          className="text-2xl font-bold uppercase tracking-wide"
-                          style={{ color: config.branding?.primaryColor }}>
-                          {config.header?.title}
-                        </h1>
-                        <p className="text-sm text-slate-600">
-                          {config.header?.subTitle}
-                        </p>
-                      </div>
+                  className="flex items-center gap-4 mt-2 px-2 cursor-auto"
+                  draggable={false}
+                  onDragStart={(e) => e.preventDefault()}>
+                  <Label className="text-xs whitespace-nowrap">Height</Label>
+                  <Slider
+                    min={5}
+                    max={200}
+                    step={5}
+                    value={[block.height || 20]}
+                    onValueChange={(v) => {
+                      const n = [...config.body];
+                      n[idx].height = v[0];
+                      setConfig({ ...config, body: n });
+                    }}
+                  />
+                </div>
+              )}
+              {block.type === "IMAGE" && (
+                <div
+                  className="space-y-2 mt-2 cursor-auto"
+                  draggable={false}
+                  onDragStart={(e) => e.preventDefault()}>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleBlockImageUpload(e, idx)}
+                    className="text-[10px] h-7"
+                  />
+                  {block.imageUrl && (
+                    <div className="flex items-center gap-4 mt-2">
+                      <Label className="text-[10px]">Scale</Label>
+                      <Slider
+                        min={10}
+                        max={100}
+                        step={5}
+                        value={[block.imageScale || 100]}
+                        onValueChange={(v) => {
+                          const n = [...config.body];
+                          n[idx].imageScale = v[0];
+                          setConfig({ ...config, body: n });
+                        }}
+                      />
                     </div>
                   )}
                 </div>
               )}
-              {!config.header?.show && (
-                <div
-                  style={{ height: `${config.header?.height || 150}px` }}></div>
-              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 
-              {/* Patient Details (Fixed inside header zone) */}
-              <div className="mb-6 break-inside-avoid">
-                {patientBlockConfig.showBarcode !== false && (
-                  <div className="flex justify-between items-start mb-4 mt-2">
-                    <div className="flex flex-col items-center">
+  const renderFooterTab = () => (
+    <div className="space-y-6 animate-in fade-in pb-10">
+      <div className="flex justify-between items-center bg-blue-50 p-3 rounded-lg border border-blue-100">
+        <Label className="font-bold text-blue-900">Enable Footer</Label>
+        <Switch
+          checked={config.footer.show}
+          onCheckedChange={(c) => updateConfig("footer", "show", c)}
+        />
+      </div>
+      {config.footer.show && (
+        <Card className="shadow-none border-slate-200">
+          <CardContent className="pt-4 space-y-6">
+            <div className="grid grid-cols-3 bg-slate-100 p-1 rounded-md gap-1">
+              {(["standard", "html", "image"] as const).map((mode) => (
+                <button
+                  key={mode}
+                  onClick={() => updateConfig("footer", "mode", mode)}
+                  className={`text-xs py-1.5 font-medium rounded-sm capitalize flex items-center justify-center gap-1 ${config.footer.mode === mode ? "bg-white shadow text-blue-600" : "text-slate-500"}`}>
+                  {mode === "standard" && (
+                    <LayoutTemplate className="h-3 w-3" />
+                  )}
+                  {mode === "html" && <Code className="h-3 w-3" />}
+                  {mode === "image" && <ImageIcon className="h-3 w-3" />} {mode}
+                </button>
+              ))}
+            </div>
+
+            {config.footer.mode === "standard" && (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <Label className="text-xs font-bold text-slate-500 uppercase">
+                    Signatories
+                  </Label>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-xs"
+                    onClick={() => {
+                      const newSigs = [
+                        ...config.footer.signatures,
+                        {
+                          id: `sig-${Date.now()}`,
+                          name: "New Dr",
+                          qualifications: "",
+                          title: "",
+                          imageUrl: "",
+                          show: true,
+                          width: 120,
+                        },
+                      ];
+                      updateConfig("footer", "signatures", newSigs);
+                    }}>
+                    <Plus className="h-3 w-3 mr-1" /> Add
+                  </Button>
+                </div>
+                {config.footer.signatures.map((sig, idx) => (
+                  <div
+                    key={sig.id}
+                    className="border border-slate-200 p-3 rounded-lg bg-slate-50 relative space-y-3">
+                    <div className="flex justify-between items-center mb-1">
+                      <Switch
+                        checked={sig.show}
+                        onCheckedChange={(c) => {
+                          const n = [...config.footer.signatures];
+                          n[idx].show = c;
+                          updateConfig("footer", "signatures", n);
+                        }}
+                      />
+                      <button
+                        onClick={() => {
+                          const n = [...config.footer.signatures];
+                          n.splice(idx, 1);
+                          updateConfig("footer", "signatures", n);
+                        }}
+                        className="text-slate-400 hover:text-red-500">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input
+                        value={sig.name}
+                        onChange={(e) => {
+                          const n = [...config.footer.signatures];
+                          n[idx].name = e.target.value;
+                          updateConfig("footer", "signatures", n);
+                        }}
+                        className="h-8 text-xs bg-white"
+                        placeholder="Name"
+                      />
+                      <Input
+                        value={sig.qualifications}
+                        onChange={(e) => {
+                          const n = [...config.footer.signatures];
+                          n[idx].qualifications = e.target.value;
+                          updateConfig("footer", "signatures", n);
+                        }}
+                        className="h-8 text-xs bg-white"
+                        placeholder="Qualifications"
+                      />
+                      <Input
+                        value={sig.title}
+                        onChange={(e) => {
+                          const n = [...config.footer.signatures];
+                          n[idx].title = e.target.value;
+                          updateConfig("footer", "signatures", n);
+                        }}
+                        className="h-8 text-xs bg-white col-span-2"
+                        placeholder="Designation"
+                      />
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-20 border bg-white flex items-center justify-center overflow-hidden rounded shrink-0">
+                        {sig.imageUrl ? (
+                          <img
+                            src={sig.imageUrl}
+                            className="h-full object-contain"
+                          />
+                        ) : (
+                          <span className="text-[9px] text-slate-300">Img</span>
+                        )}
+                      </div>
+                      <div className="space-y-2 flex-1">
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const f = e.target.files?.[0];
+                            if (f) {
+                              const r = new FileReader();
+                              r.onloadend = () => {
+                                const n = [...config.footer.signatures];
+                                n[idx].imageUrl = r.result as string;
+                                updateConfig("footer", "signatures", n);
+                              };
+                              r.readAsDataURL(f);
+                            }
+                          }}
+                          className="h-7 text-[10px]"
+                        />
+                        <div className="flex items-center gap-2">
+                          <Label className="text-[9px] whitespace-nowrap">
+                            Width ({sig.width}px)
+                          </Label>
+                          <Slider
+                            min={50}
+                            max={250}
+                            step={10}
+                            value={[sig.width]}
+                            onValueChange={(v) => {
+                              const n = [...config.footer.signatures];
+                              n[idx].width = v[0];
+                              updateConfig("footer", "signatures", n);
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <div className="space-y-2 pt-4 border-t">
+                  <Label className="text-xs font-bold text-slate-500 uppercase">
+                    Bottom Image (Accreditations)
+                  </Label>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) =>
+                      handleFileUpload(e, "footer", "footerBottomImage")
+                    }
+                    className="text-xs"
+                  />
+                </div>
+              </div>
+            )}
+
+            {config.footer.mode === "html" && (
+              <div className="space-y-2">
+                <Label className="text-xs">Raw HTML</Label>
+                <Textarea
+                  value={config.footer.html}
+                  onChange={(e) =>
+                    updateConfig("footer", "html", e.target.value)
+                  }
+                  className="font-mono text-xs h-32"
+                  placeholder="<div style='text-align: center'>Footer</div>"
+                />
+              </div>
+            )}
+            {config.footer.mode === "image" && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-xs">Footer Graphic</Label>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileUpload(e, "footer", "fullImage")}
+                    className="text-xs"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <Label className="text-xs">Height</Label>
+                    <span className="text-xs">{config.footer.height}px</span>
+                  </div>
+                  <Slider
+                    min={50}
+                    max={400}
+                    step={5}
+                    value={[config.footer.height]}
+                    onValueChange={(v) =>
+                      updateConfig("footer", "height", v[0])
+                    }
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-2 pt-4 border-t">
+              <Label className="text-xs font-bold text-slate-500 uppercase">
+                Disclaimer Text
+              </Label>
+              <Textarea
+                value={config.footer.text}
+                onChange={(e) => updateConfig("footer", "text", e.target.value)}
+                className="text-[10px]"
+                rows={3}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+
+  // ============================================================================
+  // 6. THE A4 LIVE PREVIEW ENGINE
+  // ============================================================================
+
+  const renderPreview = () => {
+    const m = config.layout.margins;
+    const marginStr = `${m.top}mm ${m.right}mm ${m.bottom}mm ${m.left}mm`;
+
+    // ✅ Updated QR Renderer handling standard `qrcode` npm package internally
+    const RenderQR = ({ position }: { position: string }) => {
+      if (!config.qrCode.show) return null;
+
+      const isCustom = config.qrCode.mode === "custom";
+      if (!isCustom && config.qrCode.position !== position) return null;
+      if (isCustom && position !== "custom") return null;
+
+      const qrContent = (
+        <AsyncQRCode
+          value="https://patholab.cloud/verify/123"
+          size={config.qrCode.size}
+          showPageNumber={config.qrCode.showPageNumber}
+        />
+      );
+
+      if (isCustom && !purePreviewMode) {
+        return (
+          <Rnd
+            size={{ width: config.qrCode.size, height: "auto" }}
+            position={{ x: config.qrCode.x, y: config.qrCode.y }}
+            onDragStop={(e, d) => {
+              updateConfig("qrCode", "x", d.x);
+              updateConfig("qrCode", "y", d.y);
+            }}
+            bounds="parent"
+            className="z-50 border-2 border-dashed border-blue-500 bg-blue-50/50 hover:cursor-move flex flex-col items-center justify-center">
+            {qrContent}
+          </Rnd>
+        );
+      }
+
+      const qrStyle: any = { position: "absolute", zIndex: 50 };
+      if (isCustom) {
+        qrStyle.left = config.qrCode.x;
+        qrStyle.top = config.qrCode.y;
+      } else {
+        if (position.includes("header"))
+          qrStyle.top = `calc(${m.top}mm + ${config.qrCode.margin}px)`;
+        if (position.includes("footer"))
+          qrStyle.bottom = `calc(${m.bottom}mm + ${config.qrCode.margin}px)`;
+        if (position.includes("left"))
+          qrStyle.left = `calc(${m.left}mm + ${config.qrCode.margin}px)`;
+        if (position.includes("right"))
+          qrStyle.right = `calc(${m.right}mm + ${config.qrCode.margin}px)`;
+      }
+
+      return <div style={qrStyle}>{qrContent}</div>;
+    };
+
+    return (
+      <div className="flex-1 bg-slate-300 overflow-y-auto custom-scrollbar flex justify-center py-10 relative">
+        <div className="absolute top-4 right-8 flex gap-2 z-50">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowJsonEditor(true)}
+            className="bg-white shadow-sm hover:text-blue-600">
+            <Code className="w-4 h-4 mr-2" /> JSON
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPurePreviewMode(!purePreviewMode)}
+            className={`bg-white shadow-sm ${purePreviewMode ? "text-blue-600 border-blue-400" : ""}`}>
+            <Eye className="w-4 h-4 mr-2" />{" "}
+            {purePreviewMode ? "Edit Mode" : "Print Preview"}
+          </Button>
+        </div>
+
+        {/* THE PAPER */}
+        <div
+          className="bg-white shadow-2xl relative flex flex-col transition-all duration-300 ease-in-out overflow-hidden"
+          style={{
+            width: "210mm",
+            minHeight: "297mm",
+            padding: marginStr,
+            fontFamily: config.branding.fontFamily,
+            fontSize: `${config.branding.globalFontSize}px`,
+            color: "#1e293b",
+          }}>
+          {/* Absolute Page Border */}
+          {config.layout.border.show && (
+            <div
+              className="absolute pointer-events-none"
+              style={{
+                top: config.layout.border.padding,
+                bottom: config.layout.border.padding,
+                left: config.layout.border.padding,
+                right: config.layout.border.padding,
+                border: `${config.layout.border.weight}px solid ${config.layout.border.color}`,
+                zIndex: 10,
+              }}></div>
+          )}
+
+          {/* Absolute Watermark */}
+          {config.branding.watermarkUrl && (
+            <div className="absolute inset-0 z-0 pointer-events-none flex items-center justify-center">
+              <img
+                src={config.branding.watermarkUrl}
+                style={{
+                  opacity: config.branding.watermarkOpacity,
+                  maxWidth: "80%",
+                  maxHeight: "80%",
+                  objectFit: "contain",
+                }}
+                alt="watermark"
+              />
+            </div>
+          )}
+
+          {/* Absolute QR Codes */}
+          <RenderQR position="header-right" />
+          <RenderQR position="header-left" />
+          <RenderQR position="footer-right" />
+          <RenderQR position="footer-left" />
+          <RenderQR position="custom" />
+
+          <div className="relative z-10 flex flex-col h-full w-full">
+            {/* HEADER ZONE */}
+            {config.header.show && (
+              <div
+                className={`w-full mb-4 pb-4 ${purePreviewMode ? "" : "border-dashed hover:bg-slate-50/50 cursor-pointer"} ${config.header.mode === "image" ? "" : "border-b-[3px]"}`}
+                style={{
+                  borderColor: purePreviewMode
+                    ? config.branding.primaryColor
+                    : "#cbd5e1",
+                  borderBottomColor: config.branding.primaryColor,
+                }}>
+                {config.header.mode === "image" ? (
+                  <div
+                    className="w-full bg-slate-100 flex items-center justify-center text-slate-400 overflow-hidden"
+                    style={{ height: `${config.header.height}px` }}>
+                    {config.header.fullImage ? (
+                      <img
+                        src={config.header.fullImage}
+                        className="w-full h-full object-cover"
+                        alt="Header"
+                      />
+                    ) : (
+                      "100% Header Image Area"
+                    )}
+                  </div>
+                ) : config.header.mode === "html" ? (
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html:
+                        config.header.html ||
+                        "<div class='text-center py-4'>Custom HTML Header</div>",
+                    }}
+                  />
+                ) : (
+                  <div className="flex items-center relative pr-[80px]">
+                    {config.header.logoUrl ? (
+                      <img
+                        src={config.header.logoUrl}
+                        className="h-16 object-contain"
+                        alt="Logo"
+                      />
+                    ) : (
+                      <div className="h-16 w-32 bg-slate-100 border rounded flex items-center justify-center text-xs text-slate-400">
+                        Logo
+                      </div>
+                    )}
+                    <div className="flex-1 px-4">
+                      <h1
+                        className="text-2xl font-bold uppercase tracking-wide"
+                        style={{ color: config.branding.primaryColor }}>
+                        {config.header.title || "LAB TITLE"}
+                      </h1>
+                      <p
+                        className="text-sm font-medium"
+                        style={{ color: config.branding.secondaryColor }}>
+                        {config.header.subTitle || "Lab Subtitle"}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* PATIENT BLOCK ZONE */}
+            {config.patientBlock.show && (
+              <div
+                className={`mb-6 break-inside-avoid ${purePreviewMode ? "" : "border border-dashed border-transparent hover:border-slate-300 p-2 -mx-2 rounded"}`}>
+                {config.patientBlock.barcode.show && (
+                  <div
+                    className="mb-4 mt-2"
+                    style={{
+                      textAlign: config.patientBlock.barcode.position as any,
+                    }}>
+                    <div
+                      className="inline-block"
+                      style={{
+                        transform: `scale(${config.patientBlock.barcode.scale})`,
+                        transformOrigin:
+                          config.patientBlock.barcode.position === "center"
+                            ? "center"
+                            : config.patientBlock.barcode.position,
+                      }}>
                       <Barcode
-                        value="Z82328"
-                        height={35}
+                        value="Z-992384"
+                        height={config.patientBlock.barcode.height}
                         width={1.5}
                         fontSize={10}
                         displayValue={true}
@@ -947,262 +1720,467 @@ export default function TemplateBuilderPage() {
                     </div>
                   </div>
                 )}
-                <div className="grid grid-cols-2 gap-4 text-[13px] border-b pb-4 border-slate-300">
+                <div
+                  className="grid grid-cols-2 gap-x-8 gap-y-1 border-b pb-4"
+                  style={{
+                    fontSize: `${config.patientBlock.fontSize}px`,
+                    borderColor: config.branding.primaryColor,
+                  }}>
                   <div className="space-y-1.5">
-                    {patientBlockConfig.showName !== false && (
-                      <div className="grid grid-cols-[100px_auto]">
-                        <span className="font-bold text-slate-600">Name</span>
+                    {config.patientBlock.showName && (
+                      <div className="flex">
+                        <span
+                          className="w-28 font-bold"
+                          style={{ color: config.branding.secondaryColor }}>
+                          Patient Name
+                        </span>
                         <span className="font-bold uppercase">
-                          : MR. ETTIYAPPAN .D
+                          : MR. JOHN DOE
                         </span>
                       </div>
                     )}
-                    {patientBlockConfig.showPatientId !== false && (
-                      <div className="grid grid-cols-[100px_auto]">
-                        <span className="font-bold text-slate-600">
+                    {config.patientBlock.showPatientId && (
+                      <div className="flex">
+                        <span
+                          className="w-28 font-bold"
+                          style={{ color: config.branding.secondaryColor }}>
                           Patient ID
                         </span>
-                        <span>: Z82328 300326</span>
+                        <span>: UHID-992384</span>
                       </div>
                     )}
-                    {patientBlockConfig.showSentBy !== false && (
-                      <div className="grid grid-cols-[100px_auto]">
-                        <span className="font-bold text-slate-600">
+                    {config.patientBlock.showSentBy && (
+                      <div className="flex">
+                        <span
+                          className="w-28 font-bold"
+                          style={{ color: config.branding.secondaryColor }}>
                           Sent By
                         </span>
-                        <span>: FARIDA PRIME TANNERY</span>
+                        <span>: CITY HOSPITAL</span>
                       </div>
                     )}
                   </div>
                   <div className="space-y-1.5">
-                    {patientBlockConfig.showAgeSex !== false && (
-                      <div className="grid grid-cols-[130px_auto]">
-                        <span className="font-bold text-slate-600">
-                          Age/Sex
+                    {config.patientBlock.showAgeSex && (
+                      <div className="flex">
+                        <span
+                          className="w-32 font-bold"
+                          style={{ color: config.branding.secondaryColor }}>
+                          Age / Gender
                         </span>
-                        <span className="font-bold">: 57 Yrs. / M</span>
+                        <span className="font-bold">: 45 Yrs / Male</span>
                       </div>
                     )}
-                    {patientBlockConfig.showEmployeeId !== false && (
-                      <div className="grid grid-cols-[130px_auto]">
-                        <span className="font-bold text-slate-600">
+                    {config.patientBlock.showEmployeeId && (
+                      <div className="flex">
+                        <span
+                          className="w-32 font-bold"
+                          style={{ color: config.branding.secondaryColor }}>
                           Employee ID
                         </span>
-                        <span>: w000384</span>
+                        <span>: EMP-001</span>
                       </div>
                     )}
-                    {patientBlockConfig.showRefDoctor !== false && (
-                      <div className="grid grid-cols-[130px_auto]">
-                        <span className="font-bold text-slate-600">
+                    {config.patientBlock.showRefDoctor && (
+                      <div className="flex">
+                        <span
+                          className="w-32 font-bold"
+                          style={{ color: config.branding.secondaryColor }}>
                           Ref. Doctor
                         </span>
                         <span>: Dr. Sarah Smith</span>
                       </div>
                     )}
-                    {patientBlockConfig.showSampleCollection !== false && (
-                      <div className="grid grid-cols-[130px_auto]">
-                        <span className="font-bold text-slate-600">
-                          Sample Collection
+                    {config.patientBlock.showSampleCollection && (
+                      <div className="flex">
+                        <span
+                          className="w-32 font-bold"
+                          style={{ color: config.branding.secondaryColor }}>
+                          Sample Collected
                         </span>
-                        <span>: 30/03/2026 18:47:44</span>
+                        <span>: 12/05/2026 08:30 AM</span>
                       </div>
                     )}
-                    {patientBlockConfig.showReportReleased !== false && (
-                      <div className="grid grid-cols-[130px_auto]">
-                        <span className="font-bold text-slate-600">
+                    {config.patientBlock.showReportReleased && (
+                      <div className="flex">
+                        <span
+                          className="w-32 font-bold"
+                          style={{ color: config.branding.secondaryColor }}>
                           Report Released
                         </span>
-                        <span>: 31/03/2026 09:32:17</span>
+                        <span>: 12/05/2026 02:15 PM</span>
                       </div>
                     )}
                   </div>
                 </div>
               </div>
-            </div>
+            )}
 
-            {/* 2. DYNAMIC BODY BLOCKS */}
-            <div className="flex-1 flex flex-col">
-              {config.body?.map((block: any) => {
-                switch (block.type) {
-                  case "RESULTS_TABLE":
-                    return (
-                      <div key={block.id} className="mb-6">
-                        <h2
-                          className="text-center font-bold text-lg mb-4 underline uppercase"
-                          style={{ color: config.branding?.primaryColor }}>
-                          Liver Function Test
-                        </h2>
-                        <table className="w-full text-[13px]">
-                          <thead>
-                            <tr
-                              className="border-b-2 border-t-2"
-                              style={{
-                                borderColor: config.branding?.primaryColor,
-                              }}>
-                              <th className="py-2 text-left w-2/5 font-bold">
-                                Test
+            {/* BODY ZONE */}
+            <div className="flex-1 flex flex-col min-h-[200px]">
+              {config.body.map((block, i) => (
+                <div
+                  key={block.id}
+                  className={`${purePreviewMode ? "" : "border border-dashed border-transparent hover:border-blue-300 relative group"}`}>
+                  {!purePreviewMode && (
+                    <div className="absolute -left-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 cursor-move text-slate-400">
+                      <GripVertical size={14} />
+                    </div>
+                  )}
+
+                  {block.type === "RESULTS_TABLE" && (
+                    <div className="mb-6 w-full break-inside-avoid">
+                      {config.bodyOptions.groupDepartmentWise && (
+                        <div className="bg-slate-100 font-bold py-1.5 px-3 mb-4 text-[12px] uppercase text-center border-y border-slate-300 tracking-wider">
+                          BIOCHEMISTRY
+                        </div>
+                      )}
+                      <h2
+                        className="text-center font-bold text-lg mb-4 underline uppercase tracking-wide"
+                        style={{ color: config.branding.primaryColor }}>
+                        Liver Function Test
+                      </h2>
+                      <table
+                        className="w-full border-collapse"
+                        style={{
+                          fontSize: `${config.bodyOptions.tableFontSize}px`,
+                        }}>
+                        <thead
+                          className="border-y-2 text-left"
+                          style={{ borderColor: config.branding.primaryColor }}>
+                          <tr>
+                            <th className="py-2.5 px-1 font-bold">
+                              Test Parameter
+                            </th>
+                            <th className="py-2.5 px-1 font-bold">Result</th>
+                            <th className="py-2.5 px-1 font-bold">Unit</th>
+                            {config.bodyOptions.showBiologicalRef && (
+                              <th className="py-2.5 px-1 font-bold">
+                                Bio. Ref. Range
                               </th>
-                              <th className="py-2 text-left w-1/5 font-bold">
-                                Result
-                              </th>
-                              <th className="py-2 text-left w-1/5 font-bold">
-                                Unit
-                              </th>
-                              <th className="py-2 text-left w-1/5 font-bold">
-                                Biological Ref. Range
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr className="border-b border-slate-100">
-                              <td className="py-2 font-medium">
-                                S. Bilirubin (Total)
+                            )}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr className="border-b border-slate-100">
+                            <td className="py-2.5 px-1 font-medium">
+                              Bilirubin (Total)
+                            </td>
+                            <td className="py-2.5 px-1 font-bold">0.50</td>
+                            <td className="py-2.5 px-1 text-slate-500">
+                              mg/dl
+                            </td>
+                            {config.bodyOptions.showBiologicalRef && (
+                              <td className="py-2.5 px-1 text-slate-500">
+                                0.2 - 1.2
                               </td>
-                              <td className="py-2 font-bold text-slate-900">
-                                0.50
+                            )}
+                          </tr>
+                          <tr className="border-b border-slate-100">
+                            <td className="py-2.5 px-1 font-medium">
+                              S. G. O. T (AST)
+                            </td>
+                            <td className="py-2.5 px-1 font-bold text-red-600">
+                              45.2 (H)
+                            </td>
+                            <td className="py-2.5 px-1 text-slate-500">IU/L</td>
+                            {config.bodyOptions.showBiologicalRef && (
+                              <td className="py-2.5 px-1 text-slate-500">
+                                0 - 40
                               </td>
-                              <td className="py-2 text-slate-600">mg/dl</td>
-                              <td className="py-2 text-slate-600">
-                                Adults: 0.2-1.2
-                                <br />
-                                Infants: 1.2-12
-                              </td>
-                            </tr>
-                            <tr className="border-b border-slate-100">
-                              <td className="py-2 font-medium">S. G. O. T</td>
-                              <td className="py-2 font-bold text-slate-900">
-                                22.3
-                              </td>
-                              <td className="py-2 text-slate-600">IU/L</td>
-                              <td className="py-2 text-slate-600">0-40 IU/L</td>
-                            </tr>
-                          </tbody>
-                        </table>
-                        <div className="mt-4 text-[11px] text-slate-700 space-y-1">
+                            )}
+                          </tr>
+                        </tbody>
+                      </table>
+
+                      {/* ✅ NEW: TEST METADATA / TIMESTAMPS FOOTER */}
+                      {config.bodyOptions.showTestTimestamps && (
+                        <div className="mt-4 text-[10px] text-slate-500 italic space-y-1">
                           <p>
-                            <span className="font-bold">NOTE:</span> Kindly
-                            correlate clinically.
-                          </p>
-                          <p>
-                            <span className="font-bold">IMPRESSION:</span> Test
-                            parameters are within normal biological limits.
-                          </p>
-                          <p className="text-[10px] text-slate-500 mt-2 italic">
-                            (Collected At: 30/03/2026 18:47:44, Received At:
-                            30/03/2026 18:47:44, Reported At: 31/03/2026
-                            10:03:56)
+                            (Collected At: 12/05/2026 08:30 AM, Received At:
+                            12/05/2026 09:15 AM, Reported At: 12/05/2026 02:15
+                            PM)
                           </p>
                         </div>
-                      </div>
-                    );
-                  case "TEXT":
-                    return (
-                      <div
-                        key={block.id}
-                        className="text-sm whitespace-pre-wrap leading-relaxed mb-4"
-                        dangerouslySetInnerHTML={{
-                          __html: block.content
-                            ? block.content.replace(
-                                /\{\{.*?\}\}/g,
-                                (m: string) =>
-                                  `<span class="bg-blue-100 text-blue-800 px-1 py-0.5 rounded font-mono text-[10px]">${m}</span>`,
-                              )
-                            : "Empty Text Block",
-                        }}
-                      />
-                    );
-                  case "SPACER":
-                    return (
-                      <div key={block.id} style={{ height: "20px" }}></div>
-                    );
-                  default:
-                    return null;
-                }
-              })}
-              <div className="text-center mt-8 mb-6 break-inside-avoid">
-                <span className="text-xs font-bold text-slate-400 border-t border-b border-slate-200 py-1 px-4 tracking-widest uppercase">
+                      )}
+                    </div>
+                  )}
+
+                  {block.type === "TEXT" && (
+                    <div
+                      className="mb-4 whitespace-pre-wrap leading-relaxed"
+                      style={{
+                        fontSize: `${config.branding.globalFontSize}px`,
+                      }}
+                      dangerouslySetInnerHTML={{
+                        __html: block.content
+                          ? block.content.replace(
+                              /\{\{.*?\}\}/g,
+                              (m) =>
+                                `<span class="${purePreviewMode ? "" : "bg-blue-100 text-blue-800"} font-bold">${m}</span>`,
+                            )
+                          : !purePreviewMode
+                            ? "<span class='text-slate-300 italic'>Empty Text Block...</span>"
+                            : "",
+                      }}
+                    />
+                  )}
+                  {block.type === "SPACER" && (
+                    <div
+                      style={{ height: `${block.height || 20}px` }}
+                      className={`${purePreviewMode ? "" : "bg-blue-50/50 flex items-center justify-center text-[10px] text-blue-400"}`}>
+                      {!purePreviewMode && `${block.height}px Spacer`}
+                    </div>
+                  )}
+                  {block.type === "IMAGE" && (
+                    <div
+                      className={`flex justify-center mb-4 ${!block.imageUrl && !purePreviewMode ? "h-32 bg-slate-100 border border-dashed flex items-center justify-center text-slate-400" : ""}`}>
+                      {block.imageUrl ? (
+                        <img
+                          src={block.imageUrl}
+                          style={{
+                            width: `${block.imageScale || 100}%`,
+                            objectFit: "contain",
+                          }}
+                          alt="Content"
+                        />
+                      ) : (
+                        !purePreviewMode && "Image Block"
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              <div className="text-center mt-auto mb-6 break-inside-avoid">
+                <span className="text-[10px] font-bold text-slate-400 border-t border-b border-slate-200 py-1 px-8 tracking-widest uppercase">
                   *** End of Report ***
                 </span>
               </div>
             </div>
 
-            {/* 3. FOOTER (Signatures & Modes) */}
-            {config.footer?.show && (
+            {/* FOOTER ZONE */}
+            {config.footer.show && (
               <div
-                className="mt-auto pt-4 border-t-2 w-full flex flex-col justify-end"
-                style={{ borderColor: config.branding?.primaryColor }}>
-                {config.footer?.mode === "image" ? (
+                className={`mt-auto pt-4 relative ${purePreviewMode ? "" : "border border-dashed border-transparent hover:border-slate-300 p-2 -mx-2 rounded"} ${config.footer.mode === "image" ? "" : "border-t-2"}`}
+                style={{ borderTopColor: config.branding.primaryColor }}>
+                {config.footer.mode === "image" ? (
                   <div
                     className="w-full bg-slate-100 flex items-center justify-center text-slate-400 overflow-hidden"
-                    style={{ height: `${config.footer.height || 100}px` }}>
+                    style={{ height: `${config.footer.height}px` }}>
                     {config.footer.fullImage ? (
                       <img
                         src={config.footer.fullImage}
-                        className="w-full h-full object-contain"
+                        className="w-full h-full object-cover"
                         alt="Footer"
                       />
                     ) : (
-                      "Full Footer Image Preview"
+                      "Footer Image Area"
                     )}
                   </div>
-                ) : config.footer?.mode === "html" ? (
+                ) : config.footer.mode === "html" ? (
                   <div
-                    className="w-full"
                     dangerouslySetInnerHTML={{
                       __html:
                         config.footer.html ||
-                        "<div class='text-slate-400 text-center py-4 border border-dashed'>Custom HTML Footer Area</div>",
+                        "<div class='text-center py-4'>Custom HTML Footer</div>",
                     }}
                   />
                 ) : (
-                  <div className="flex justify-around items-end w-full">
-                    {config.footer?.signatures?.map(
-                      (sig: any, idx: number) =>
-                        sig.show && (
-                          <div
-                            key={idx}
-                            className="flex flex-col items-center min-w-[150px]">
-                            <div className="h-16 flex items-end justify-center mb-1">
-                              {sig.imageUrl ? (
-                                <img
-                                  src={sig.imageUrl}
-                                  className="h-full object-contain"
-                                  alt="Sig"
-                                />
-                              ) : (
-                                <div className="text-[10px] text-slate-300 border border-dashed px-4 py-2">
-                                  Signature Area
-                                </div>
-                              )}
+                  <div className="w-full flex flex-col items-center">
+                    <div className="flex justify-around items-end w-full mb-4 px-10">
+                      {config.footer.signatures.map(
+                        (sig, idx) =>
+                          sig.show && (
+                            <div
+                              key={idx}
+                              className="flex flex-col items-center"
+                              style={{ width: `${sig.width}px` }}>
+                              <div className="h-16 flex items-end justify-center mb-1">
+                                {sig.imageUrl ? (
+                                  <img
+                                    src={sig.imageUrl}
+                                    className="h-full object-contain"
+                                    alt="Sig"
+                                  />
+                                ) : (
+                                  !purePreviewMode && (
+                                    <div className="text-[10px] text-slate-300 border border-dashed px-4 py-2 w-full text-center">
+                                      Sig
+                                    </div>
+                                  )
+                                )}
+                              </div>
+                              <div className="w-full text-center border-t border-slate-300 pt-1">
+                                <p className="font-bold text-[11px] text-slate-900 leading-tight whitespace-nowrap">
+                                  {sig.name || "Doctor Name"}
+                                </p>
+                                {sig.qualifications && (
+                                  <p className="text-[9px] text-slate-600 leading-tight whitespace-nowrap">
+                                    {sig.qualifications}
+                                  </p>
+                                )}
+                                {sig.title && (
+                                  <p className="font-bold text-[9px] text-slate-800 uppercase mt-0.5 whitespace-nowrap">
+                                    {sig.title}
+                                  </p>
+                                )}
+                              </div>
                             </div>
-                            <div className="w-full text-center">
-                              <p className="font-bold text-[12px] text-slate-800">
-                                {sig.name || "Doctor Name"}
-                              </p>
-                              <p className="text-[10px] text-slate-600 leading-tight">
-                                {sig.qualifications || "Qualifications"}
-                              </p>
-                              <p className="font-bold text-[10px] text-slate-800 uppercase mt-0.5">
-                                {sig.title || "Designation"}
-                              </p>
-                            </div>
-                          </div>
-                        ),
+                          ),
+                      )}
+                    </div>
+                    {config.footer.footerBottomImage && (
+                      <div className="w-full flex justify-center mt-2 border-t border-slate-100 pt-3">
+                        <img
+                          src={config.footer.footerBottomImage}
+                          className="max-h-16 object-contain"
+                          alt="Accreditation"
+                        />
+                      </div>
                     )}
                   </div>
                 )}
-
                 <div
-                  className="text-[10px] text-center text-slate-500 mt-6 pb-2 border-t border-slate-200 pt-2"
-                  dangerouslySetInnerHTML={{
-                    __html: config.footer?.text || "",
-                  }}
+                  className="text-[9px] text-center mt-4 pb-2 pt-2 border-t border-slate-200"
+                  style={{ color: config.branding.secondaryColor }}
+                  dangerouslySetInnerHTML={{ __html: config.footer.text || "" }}
                 />
               </div>
             )}
           </div>
         </div>
       </div>
+    );
+  };
+
+  return (
+    <div className="flex h-screen overflow-hidden">
+      {/* Sidebar Controls */}
+      <div className="w-[400px] border-r bg-white flex flex-col shrink-0 z-20 shadow-xl">
+        <div className="p-4 border-b bg-slate-50 flex items-center justify-between shrink-0">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => router.back()}
+            className="h-8 w-8">
+            <ArrowLeft size={16} />
+          </Button>
+          <Input
+            value={templateName}
+            onChange={(e) => setTemplateName(e.target.value)}
+            className="h-8 font-bold border-transparent bg-transparent text-center focus-visible:ring-1"
+            placeholder="Template Name"
+          />
+          <Button
+            onClick={handleSave}
+            disabled={saving}
+            size="sm"
+            className="bg-blue-600 h-8">
+            {saving ? (
+              <Loader2 className="animate-spin" size={14} />
+            ) : (
+              <Save size={14} className="mr-1" />
+            )}{" "}
+            Save
+          </Button>
+        </div>
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-4">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid grid-cols-5 h-9 mb-6 bg-slate-100/50 p-1">
+              <TabsTrigger value="setup" className="text-[10px] px-1">
+                <Settings size={12} className="mr-1" /> Setup
+              </TabsTrigger>
+              <TabsTrigger value="header" className="text-[10px] px-1">
+                Header
+              </TabsTrigger>
+              <TabsTrigger value="patient" className="text-[10px] px-1">
+                Patient
+              </TabsTrigger>
+              <TabsTrigger value="body" className="text-[10px] px-1">
+                Body
+              </TabsTrigger>
+              <TabsTrigger value="footer" className="text-[10px] px-1">
+                Footer
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="setup" className="m-0">
+              {renderSetupTab()}
+            </TabsContent>
+            <TabsContent value="header" className="m-0">
+              {renderHeaderTab()}
+            </TabsContent>
+            <TabsContent value="patient" className="m-0">
+              {renderPatientTab()}
+            </TabsContent>
+            <TabsContent value="body" className="m-0">
+              {renderBodyTab()}
+            </TabsContent>
+            <TabsContent value="footer" className="m-0">
+              {renderFooterTab()}
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
+
+      {renderPreview()}
+
+      {/* JSON Editor Modal */}
+      {showJsonEditor && (
+        <div className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <Card className="w-full max-w-3xl shadow-2xl animate-in zoom-in-95">
+            <CardHeader className="flex flex-row justify-between items-center pb-4 border-b">
+              <CardTitle className="flex items-center gap-2">
+                <Code size={18} /> JSON Configuration (Advanced)
+              </CardTitle>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowJsonEditor(false)}>
+                <X size={18} />
+              </Button>
+            </CardHeader>
+            <CardContent className="pt-4 space-y-4">
+              <p className="text-xs text-slate-500">
+                Copy this JSON to backup your template, or paste JSON from
+                another environment to import it.
+              </p>
+              <Textarea
+                value={jsonInput || JSON.stringify(config, null, 2)}
+                onChange={(e) => setJsonInput(e.target.value)}
+                className="font-mono text-[10px] h-[50vh] bg-slate-900 text-green-400 p-4 custom-scrollbar"
+                spellCheck={false}
+              />
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    navigator.clipboard.writeText(
+                      JSON.stringify(config, null, 2),
+                    )
+                  }>
+                  <Download size={14} className="mr-2" /> Copy State
+                </Button>
+                <Button
+                  onClick={() => {
+                    try {
+                      setConfig(
+                        deepMerge(DEFAULT_CONFIG, JSON.parse(jsonInput)),
+                      );
+                      setShowJsonEditor(false);
+                      toast.success("JSON Applied!");
+                    } catch {
+                      toast.error("Invalid JSON!");
+                    }
+                  }}
+                  className="bg-emerald-600 hover:bg-emerald-700">
+                  <Upload size={14} className="mr-2" /> Apply JSON
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
