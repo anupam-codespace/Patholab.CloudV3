@@ -32,6 +32,7 @@ const publicPrefixes = [
   '/book-demo',
   '/pages',
   '/api/verify',
+  '/api/reports/generate',
   '/verify',
 ];
 

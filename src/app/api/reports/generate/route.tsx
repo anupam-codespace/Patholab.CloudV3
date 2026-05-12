@@ -828,11 +828,28 @@ export async function POST(req: NextRequest) {
       }
 
       // If it's not found in ANY of those tables, return 404
-      if (!test)
+      if (!test) {
         return NextResponse.json(
           { error: "Report not found" },
           { status: 404 },
         );
+      }
+
+      // ====================================================================
+      // 🔒 VAULT SECURITY: STRICT PHONE NUMBER VERIFICATION
+      // ====================================================================
+      // Strip everything except numbers, and grab the last 10 digits
+      const dbPhoneClean = (test.patient.phone || "").replace(/\D/g, '').slice(-10);
+      const inputPhoneClean = (payload.phone || "").replace(/\D/g, '').slice(-10);
+
+      // If the frontend didn't pass a matching phone number, DENY access
+      if (dbPhoneClean !== inputPhoneClean) {
+        return NextResponse.json(
+          { error: "Unauthorized. Incorrect mobile number." }, 
+          { status: 401 }
+        );
+      }
+      // ====================================================================
 
       // Generate the QR Code string safely
       const qrCodeDataUrl = await QRCode.toDataURL(payload.verificationUrl, {
