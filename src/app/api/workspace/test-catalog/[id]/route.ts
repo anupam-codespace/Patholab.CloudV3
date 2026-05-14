@@ -25,19 +25,50 @@ export async function PUT(
     // SCENARIO A: Editing an already LOCAL test
     // ==========================================
     if (!existingTest.isGlobal) {
-      const updatedLocalTest = await prisma.testTemplate.update({
-        where: { id: testTemplateId },
-        data: {
-          name: body.name,
-          price: body.price,
-          b2bPrice: body.b2bPrice,
-          cost: body.cost,
-          sampleTypeId: body.sampleTypeId,
-          containerTypeId: body.containerTypeId,
-          tat: body.tat,
-          method: body.method,
+      if (existingTest.labId !== user.labId) {
+        return NextResponse.json({ error: "Unauthorized to edit this test" }, { status: 403 });
+      }
+
+      const updatedLocalTest = await prisma.$transaction(async (tx) => {
+        // 1. Update core details
+        const updated = await tx.testTemplate.update({
+          where: { id: testTemplateId },
+          data: {
+            name: body.name,
+            code: body.code,
+            printName: body.printName || null,
+            departmentId: body.departmentId,
+            sampleTypeId: body.sampleTypeId,
+            containerTypeId: body.containerTypeId || null,
+            price: body.price,
+            b2bPrice: body.b2bPrice || 0,
+            cost: body.cost || 0,
+            tat: body.tat,
+            method: body.method,
+            isActive: body.isActive
+          }
+        });
+
+        // 2. Wipe old parameters
+        await tx.testTemplateParameter.deleteMany({
+          where: { templateId: testTemplateId }
+        });
+
+        // 3. Insert newly arranged parameters
+        if (body.components && body.components.length > 0) {
+          await tx.testTemplateParameter.createMany({
+            data: body.components.map((c: any) => ({
+              templateId: testTemplateId,
+              parameterId: c.parameterId,
+              headingId: c.headingId,
+              order: c.order
+            }))
+          });
         }
+
+        return updated;
       });
+
       return NextResponse.json({ success: true, forked: false, test: updatedLocalTest });
     }
 
@@ -48,6 +79,8 @@ export async function PUT(
     // 2. Diff Check: Did they change core clinical details, or just the price?
     const isCoreChanged = 
       body.name !== existingTest.name ||
+      body.code !== existingTest.code ||
+      body.departmentId !== existingTest.departmentId ||
       body.sampleTypeId !== existingTest.sampleTypeId ||
       body.containerTypeId !== existingTest.containerTypeId ||
       body.method !== existingTest.method ||
@@ -61,7 +94,8 @@ export async function PUT(
           price: body.price,
           b2bPrice: body.b2bPrice || 0,
           cost: body.cost || 0,
-          tat: body.tat
+          tat: body.tat,
+          isActive: body.isActive
         },
         create: {
           labId: user.labId,
@@ -69,7 +103,8 @@ export async function PUT(
           price: body.price,
           b2bPrice: body.b2bPrice || 0,
           cost: body.cost || 0,
-          tat: body.tat
+          tat: body.tat,
+          isActive: body.isActive !== undefined ? body.isActive : true
         }
       });
 
@@ -86,32 +121,34 @@ export async function PUT(
       const cloned = await tx.testTemplate.create({
         data: {
           labId: user.labId,
-          isGlobal: false,         // ✅ Explicitly local
+          isGlobal: false,         
+          forkedFromId: existingTest.id, // 🔗 THE SECRET LINK: This hides the global duplicate!
           name: body.name,
-          code: existingTest.code, 
+          code: body.code, 
+          printName: body.printName || null,
           price: body.price,
-          b2bPrice: body.b2bPrice,
-          cost: body.cost,
+          b2bPrice: body.b2bPrice || 0,
+          cost: body.cost || 0,
           tat: body.tat,
           method: body.method,
           type: existingTest.type,
           categoryId: existingTest.categoryId,
-          departmentId: existingTest.departmentId,
+          departmentId: body.departmentId,
           sampleTypeId: body.sampleTypeId,
-          containerTypeId: body.containerTypeId,
+          containerTypeId: body.containerTypeId || null,
+          isActive: body.isActive
         }
       });
 
-      // 2. Clone the Parameters
-      const paramsToClone = body.parameters || existingTest.parameters;
-      
-      for (const p of paramsToClone) {
-        await tx.testTemplateParameter.create({
-          data: {
+      // 2. Clone the Parameters from the form submission
+      if (body.components && body.components.length > 0) {
+        await tx.testTemplateParameter.createMany({
+          data: body.components.map((c: any) => ({
             templateId: cloned.id,
-            parameterId: p.parameterId,
-            order: p.order
-          }
+            parameterId: c.parameterId,
+            headingId: c.headingId,
+            order: c.order
+          }))
         });
       }
 
