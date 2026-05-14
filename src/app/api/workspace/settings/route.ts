@@ -97,10 +97,10 @@ export async function PUT(req: NextRequest) {
           defaultAgencyCommission: body.defaultAgencyCommission ? parseFloat(body.defaultAgencyCommission.toString()) : null,
 
           // Communication Modules (WhatsApp & SMS)
-          whatsappApiKey: body.whatsappApiKey,
-          whatsappPhoneId: body.whatsappPhoneId,
-          smsApiKey: body.smsApiKey,
-          smsSenderId: body.smsSenderId,
+          // whatsappApiKey: body.whatsappApiKey,
+          // whatsappPhoneId: body.whatsappPhoneId,
+          // smsApiKey: body.smsApiKey,
+          // smsSenderId: body.smsSenderId,
         },
       });
 

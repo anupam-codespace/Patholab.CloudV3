@@ -88,6 +88,8 @@ export const adminNav: NavGroup[] = [
     items: [
       { name: "Report Templates", href: "/workspace/settings/templates", icon: LayoutTemplate },
       { name: "Staff Management", href: "/workspace/staff", icon: UserCog },
+      { name: "Invoices & Payments", href: "/workspace/billing", icon: Receipt },
+
       { name: "Lab Settings", href: "/workspace/settings", icon: Settings },
       { name: "Audit & Compliance", href: "/workspace/audit-logs", icon: History }, // ✅ NEW: Full Audit Trail
       { name: "My Subscription", href: "/workspace/subscription", icon: ShieldCheck },

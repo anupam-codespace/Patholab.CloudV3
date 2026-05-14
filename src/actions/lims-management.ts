@@ -18,7 +18,12 @@ async function getLabId() {
 export async function getDepartments() {
   const labId = await getLabId();
   return await prisma.department.findMany({
-    where: { labId },
+    where: { 
+      OR: [
+        { labId: labId },
+        { isGlobal: true }
+      ]
+    },
     orderBy: { displayOrder: 'asc' },
     include: { _count: { select: { testTemplates: true } } }
   });
@@ -52,7 +57,12 @@ export async function deleteDepartment(id: string) {
 export async function getSampleTypes() {
   const labId = await getLabId();
   return await prisma.sampleType.findMany({
-    where: { labId },
+    where: { 
+      OR: [
+        { labId: labId },
+        { isGlobal: true }
+      ]
+    },
     orderBy: { name: 'asc' }
   });
 }
@@ -85,7 +95,12 @@ export async function deleteSampleType(id: string) {
 export async function getTestHeadings() {
   const labId = await getLabId();
   return await prisma.testHeading.findMany({
-    where: { labId },
+    where: { 
+      OR: [
+        { labId: labId },
+        { isGlobal: true }
+      ]
+    },
     orderBy: { name: 'asc' }
   });
 }
@@ -118,7 +133,14 @@ export async function deleteTestHeading(id: string) {
 export async function getContainerTypes() {
   const labId = await getLabId();
   return await prisma.containerType.findMany({
-    where: { labId },
+    where: { 
+      OR: [
+        { labId: labId },
+        { isGlobal: true }
+      ]
+    },
     orderBy: { name: 'asc' }
   });
 }
+
+// ... Create, Update, Delete for containers if you have them ...

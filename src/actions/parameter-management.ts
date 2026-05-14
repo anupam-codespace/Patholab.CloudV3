@@ -15,12 +15,19 @@ async function getLabId() {
 export async function getParameters() {
   const labId = await getLabId();
   return await prisma.labTestParameter.findMany({
-    where: { labId },
+    where: { 
+      // 👇 THIS IS THE FIX: Fetch local lab parameters AND global master parameters
+      OR: [
+        { labId: labId },
+        { isGlobal: true }
+      ],
+      isActive: true // Optional: Only fetch active ones for the dropdowns
+    },
     orderBy: { name: 'asc' },
     include: {
       referenceRanges: true,
       containerType: true,
-      reagents: { include: { inventoryItem: true } } // ✅ ADDED: Fetch mapped reagents
+      reagents: { include: { inventoryItem: true } } 
     }
   });
 }
