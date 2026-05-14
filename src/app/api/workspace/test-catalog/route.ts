@@ -28,6 +28,7 @@ export async function GET(req: NextRequest) {
       include: {
         category: { select: { name: true } },
         department: { select: { name: true } },
+        sampleType: { select: { name: true } }, // Included for completeness
         containerType: { select: { code: true, capColor: true } },
         _count: { select: { parameters: true } },
         labPricing: {
@@ -58,7 +59,16 @@ export async function GET(req: NextRequest) {
         type: test.type,
         isGlobal: test.isGlobal,
         category: test.category?.name || "Uncategorized",
+        
+        // 👇 ADDED: Pass the raw IDs and data so the Edit Form can load them!
+        departmentId: test.departmentId, 
+        sampleTypeId: test.sampleTypeId,
+        containerTypeId: test.containerTypeId,
+        method: test.method,
+        cost: Number(test.cost || 0),
+        
         department: test.department || null,
+        sampleType: test.sampleType || null,
         containerType: test.containerType || null,
         _count: test._count,
         price: Number(test.price), 
