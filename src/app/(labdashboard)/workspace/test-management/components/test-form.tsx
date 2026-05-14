@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useQuery } from "@tanstack/react-query";
 
-import { createTest } from "@/actions/test-catalog"; // Kept for creation
+import { createTest } from "@/actions/test-catalog";
 import {
   getDepartments,
   getSampleTypes,
@@ -35,7 +35,7 @@ import {
   AlertCircle,
   Beaker,
   Globe,
-} from "lucide-react"; // ✅ ADDED Globe
+} from "lucide-react";
 import toast from "react-hot-toast";
 import CustomFieldSelector from "./custom-field-selector";
 
@@ -70,7 +70,7 @@ type TestFormData = z.infer<typeof testSchema>;
 
 // --- 2. MAIN COMPONENT ---
 interface TestFormProps {
-  onSuccess: (result?: any) => void; // ✅ UPDATED: Accepts result payload
+  onSuccess: (result?: any) => void;
   initialData?: any;
 }
 
@@ -81,6 +81,7 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
   const [paramLibrary, setParamLibrary] = useState<any[]>([]);
   const [paramSearch, setParamSearch] = useState("");
   const [customFieldIds, setCustomFieldIds] = useState<string[]>([]);
+  const [isLoadingRefs, setIsLoadingRefs] = useState(true);
 
   // Standardized React Query for Containers
   const { data: containers } = useQuery({
@@ -89,19 +90,40 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
     staleTime: 1000 * 60 * 5,
   });
 
-  // Load Reference Data
+  // Load Reference Data (ROBUST PROMISE.ALLSETTLED FIX)
   useEffect(() => {
-    Promise.all([
-      getDepartments(),
-      getSampleTypes(),
-      getTestHeadings(),
-      getParameters(),
-    ]).then(([d, s, h, p]) => {
-      setDepartments(d);
-      setSamples(s);
-      setHeadings(h);
-      setParamLibrary(p);
-    });
+    const loadData = async () => {
+      setIsLoadingRefs(true);
+      try {
+        const [d, s, h, p] = await Promise.allSettled([
+          getDepartments(),
+          getSampleTypes(),
+          getTestHeadings(),
+          getParameters(),
+        ]);
+
+        if (d.status === "fulfilled") setDepartments(d.value);
+        else console.error("Dept Fetch Failed:", d.reason);
+
+        if (s.status === "fulfilled") setSamples(s.value);
+        else console.error("Sample Fetch Failed:", s.reason);
+
+        if (h.status === "fulfilled") setHeadings(h.value);
+
+        if (p.status === "fulfilled") {
+          setParamLibrary(p.value);
+        } else {
+          console.error("Param Fetch Failed:", p.reason);
+          toast.error("Could not load parameters library");
+        }
+      } catch (err) {
+        console.error("Critical Reference Load Error:", err);
+      } finally {
+        setIsLoadingRefs(false);
+      }
+    };
+
+    loadData();
   }, []);
 
   // 3. Form Setup with Zod Resolver
@@ -153,7 +175,7 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
         name: initialData.name,
         code: initialData.code,
         printName: initialData.printName || "",
-        departmentId: initialData.departmentId || initialData.department?.id, // Handle nested objects
+        departmentId: initialData.departmentId || initialData.department?.id,
         sampleTypeId: initialData.sampleTypeId,
         containerTypeId:
           initialData.containerTypeId || initialData.containerType?.id || "",
@@ -190,7 +212,7 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
     }
   }, [watchedComponents, paramLibrary, setValue, getValues]);
 
-  // 5. Submit Handler (✅ UPDATED: Uses our new Diff & Fork API)
+  // 5. Submit Handler
   const onSubmit = async (data: TestFormData) => {
     try {
       const payload = {
@@ -202,14 +224,12 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
           order: index + 1,
         })),
         customFieldIds: customFieldIds,
-        // The formState isDirty lets the backend know if the user actually clicked around
         parametersChanged: isDirty,
       };
 
       let result = null;
 
       if (initialData?.id) {
-        // Edit Mode -> Send to our Diff & Fork API
         const response = await fetch(
           `/api/workspace/test-catalog/${initialData.id}`,
           {
@@ -226,12 +246,11 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
 
         result = await response.json();
       } else {
-        // Create Mode -> Standard Server Action
         await createTest(payload);
         toast.success("Test created successfully!");
       }
 
-      onSuccess(result); // Pass the payload up so the table can trigger the "Forked" toast
+      onSuccess(result);
     } catch (error: any) {
       toast.error(error.message || "Failed to save test");
       console.error(error);
@@ -265,7 +284,6 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      {/* ✅ ADDED: GLOBAL WARNING BANNER */}
       {initialData?.isGlobal && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex gap-3">
           <Globe className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
@@ -478,8 +496,11 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
         {/* --- TAB: PARAMETER MAPPING --- */}
         <TabsContent value="parameters" className="space-y-4 pt-4">
           <div className="p-4 bg-slate-50 border rounded-lg space-y-3">
-            <Label className="text-xs font-semibold uppercase text-muted-foreground">
-              Add Parameters
+            <Label className="text-xs font-semibold uppercase text-muted-foreground flex items-center justify-between">
+              <span>Add Parameters</span>
+              {isLoadingRefs && (
+                <Loader2 className="h-3 w-3 animate-spin text-blue-500" />
+              )}
             </Label>
             <div className="relative">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -683,7 +704,7 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
         </Button>
         <Button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isSubmitting || isLoadingRefs}
           className="bg-blue-600 hover:bg-blue-700">
           {isSubmitting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
