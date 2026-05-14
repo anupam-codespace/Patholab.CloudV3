@@ -23,7 +23,6 @@ import ParametersTab from "./tabs/parameters-tab";
 import CustomFieldsTab from "./tabs/custom-fields-tab";
 import ContainersTab from "./tabs/containers-tab";
 import GuideTab from "./tabs/guide";
-// Note: CatalogTab has been safely removed since we unified the UI!
 
 function TestManagementContent() {
   const router = useRouter();
@@ -41,6 +40,12 @@ function TestManagementContent() {
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
+  // Reusable High-Contrast Class for Standard Tabs
+  const standardTabClass =
+    "shrink-0 whitespace-nowrap flex items-center px-4 py-2.5 h-10 rounded-md transition-all font-medium text-sm border shadow-sm " +
+    "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900 " +
+    "data-[state=active]:bg-blue-700 data-[state=active]:text-white data-[state=active]:border-blue-700 data-[state=active]:shadow-md";
+
   return (
     <div className="flex-1 space-y-4 md:space-y-6 p-4 md:p-6 pt-6 max-w-[1600px] mx-auto w-full">
       {/* Page Header - Scales down on mobile */}
@@ -48,7 +53,7 @@ function TestManagementContent() {
         <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">
           Test Management
         </h1>
-        <p className="text-sm md:text-base text-muted-foreground max-w-3xl">
+        <p className="text-sm md:text-base text-slate-500 max-w-3xl">
           Manage your test menu, parameters, reference ranges, and global
           pricing overrides.
         </p>
@@ -59,108 +64,99 @@ function TestManagementContent() {
         onValueChange={handleTabChange}
         className="w-full space-y-4 md:space-y-6">
         {/* MOBILE RESPONSIVE TAB LIST */}
-        <div className="w-full overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-          <TabsList className="flex h-auto w-max md:w-full justify-start gap-2 bg-transparent p-0">
-            {/* Unified Tests & Pricing Tab */}
-            <TabsTrigger
-              value="tests"
-              className="shrink-0 whitespace-nowrap data-[state=active]:bg-blue-600 data-[state=active]:text-white px-4 py-2.5 h-10 border shadow-sm rounded-md transition-all">
+        <div className="w-full overflow-x-auto pb-3 -mx-4 px-4 md:mx-0 md:px-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <TabsList className="flex h-auto w-max md:w-full justify-start gap-2.5 bg-transparent p-0">
+            <TabsTrigger value="tests" className={standardTabClass}>
               <FileText className="mr-2 h-4 w-4" /> Tests & Pricing
             </TabsTrigger>
 
-            <TabsTrigger
-              value="parameters"
-              className="shrink-0 whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-4 py-2.5 h-10 border shadow-sm rounded-md transition-all">
+            <TabsTrigger value="parameters" className={standardTabClass}>
               <ListTree className="mr-2 h-4 w-4" /> Parameters
             </TabsTrigger>
 
-            <TabsTrigger
-              value="custom-fields"
-              className="shrink-0 whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-4 py-2.5 h-10 border shadow-sm rounded-md transition-all">
+            <TabsTrigger value="custom-fields" className={standardTabClass}>
               <TableProperties className="mr-2 h-4 w-4" /> Custom Fields
             </TabsTrigger>
 
-            <TabsTrigger
-              value="headings"
-              className="shrink-0 whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-4 py-2.5 h-10 border shadow-sm rounded-md transition-all">
+            <TabsTrigger value="headings" className={standardTabClass}>
               <Layers className="mr-2 h-4 w-4" /> Headings
             </TabsTrigger>
 
-            <TabsTrigger
-              value="containers"
-              className="shrink-0 whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-4 py-2.5 h-10 border shadow-sm rounded-md transition-all">
+            <TabsTrigger value="containers" className={standardTabClass}>
               <Cylinder className="mr-2 h-4 w-4" /> Containers
             </TabsTrigger>
 
-            <TabsTrigger
-              value="samples"
-              className="shrink-0 whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-4 py-2.5 h-10 border shadow-sm rounded-md transition-all">
+            <TabsTrigger value="samples" className={standardTabClass}>
               <TestTube className="mr-2 h-4 w-4" /> Sample Types
             </TabsTrigger>
 
-            <TabsTrigger
-              value="departments"
-              className="shrink-0 whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-4 py-2.5 h-10 border shadow-sm rounded-md transition-all">
+            <TabsTrigger value="departments" className={standardTabClass}>
               <FlaskConical className="mr-2 h-4 w-4" /> Departments
             </TabsTrigger>
 
-            {/* GUIDE TAB */}
+            {/* GUIDE TAB (Distinctive Green Theme) */}
             <TabsTrigger
               value="guide"
-              className="shrink-0 whitespace-nowrap md:ml-auto bg-slate-100 data-[state=active]:bg-emerald-600 data-[state=active]:text-white border-emerald-200 text-emerald-700 px-4 py-2.5 h-10 border shadow-sm rounded-md transition-all">
+              className={
+                "shrink-0 whitespace-nowrap flex items-center md:ml-auto px-4 py-2.5 h-10 rounded-md transition-all font-medium text-sm border shadow-sm " +
+                "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 hover:text-emerald-800 " +
+                "data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:border-emerald-600 data-[state=active]:shadow-md"
+              }>
               <BookOpen className="mr-2 h-4 w-4" /> How to Use
             </TabsTrigger>
           </TabsList>
         </div>
 
         {/* --- TAB CONTENT AREAS --- */}
-        <TabsContent
-          value="tests"
-          className="space-y-4 border-none p-0 mt-2 md:mt-0 outline-none focus-visible:ring-0">
-          <TestsTab />
-        </TabsContent>
+        <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-0 md:p-1 overflow-hidden">
+          <TabsContent
+            value="tests"
+            className="m-0 border-none p-0 outline-none focus-visible:ring-0">
+            <TestsTab />
+          </TabsContent>
 
-        <TabsContent
-          value="parameters"
-          className="space-y-4 border-none p-0 mt-2 md:mt-0 outline-none focus-visible:ring-0">
-          <ParametersTab />
-        </TabsContent>
+          <TabsContent
+            value="parameters"
+            className="m-0 border-none p-0 outline-none focus-visible:ring-0">
+            <ParametersTab />
+          </TabsContent>
 
-        <TabsContent
-          value="custom-fields"
-          className="space-y-4 border-none p-0 mt-2 md:mt-0 outline-none focus-visible:ring-0">
-          <CustomFieldsTab />
-        </TabsContent>
+          <TabsContent
+            value="custom-fields"
+            className="m-0 border-none p-0 outline-none focus-visible:ring-0">
+            <CustomFieldsTab />
+          </TabsContent>
 
-        <TabsContent
-          value="headings"
-          className="border-none p-0 mt-2 md:mt-0 outline-none focus-visible:ring-0">
-          <HeadingsTab />
-        </TabsContent>
+          <TabsContent
+            value="headings"
+            className="m-0 border-none p-0 outline-none focus-visible:ring-0">
+            <HeadingsTab />
+          </TabsContent>
 
-        <TabsContent
-          value="containers"
-          className="border-none p-0 mt-2 md:mt-0 outline-none focus-visible:ring-0">
-          <ContainersTab />
-        </TabsContent>
+          <TabsContent
+            value="containers"
+            className="m-0 border-none p-0 outline-none focus-visible:ring-0">
+            <ContainersTab />
+          </TabsContent>
 
-        <TabsContent
-          value="samples"
-          className="border-none p-0 mt-2 md:mt-0 outline-none focus-visible:ring-0">
-          <SamplesTab />
-        </TabsContent>
+          <TabsContent
+            value="samples"
+            className="m-0 border-none p-0 outline-none focus-visible:ring-0">
+            <SamplesTab />
+          </TabsContent>
 
-        <TabsContent
-          value="departments"
-          className="border-none p-0 mt-2 md:mt-0 outline-none focus-visible:ring-0">
-          <DepartmentsTab />
-        </TabsContent>
+          <TabsContent
+            value="departments"
+            className="m-0 border-none p-0 outline-none focus-visible:ring-0">
+            <DepartmentsTab />
+          </TabsContent>
 
-        <TabsContent
-          value="guide"
-          className="border-none p-0 mt-2 md:mt-0 outline-none focus-visible:ring-0">
-          <GuideTab />
-        </TabsContent>
+          <TabsContent
+            value="guide"
+            className="m-0 border-none p-0 outline-none focus-visible:ring-0">
+            <GuideTab />
+          </TabsContent>
+        </div>
       </Tabs>
     </div>
   );
