@@ -5,7 +5,7 @@ import { getDataFromToken } from "@/lib/auth";
 export const dynamic = 'force-dynamic';
 
 // ==========================================
-// 1. GET: Fetch Catalog with Deep Includes
+// 1. GET: Fetch Catalog with Fork Hiding Logic
 // ==========================================
 export async function GET(req: NextRequest) {
   try {
@@ -14,9 +14,15 @@ export async function GET(req: NextRequest) {
 
     const tests = await prisma.testTemplate.findMany({
       where: {
+        isActive: true,
         OR: [
-          { isGlobal: true },
-          { labId: user.labId }
+          // 1. Fetch all local custom tests/forks for this lab
+          { labId: user.labId },
+          // 2. Fetch all Global tests... EXCEPT ones this lab has already forked!
+          { 
+            isGlobal: true,
+            forks: { none: { labId: user.labId } }
+          }
         ]
       },
       include: {
@@ -28,15 +34,12 @@ export async function GET(req: NextRequest) {
           where: { labId: user.labId },
           select: { price: true, b2bPrice: true, tat: true, isActive: true }
         },
-        // 👇 The Deep Fetch for Auto-Reagents
         parameters: {
           include: {
             parameter: {
               include: {
                 reagents: {
-                  include: {
-                    inventoryItem: true
-                  }
+                  include: { inventoryItem: true }
                 }
               }
             }
@@ -58,13 +61,13 @@ export async function GET(req: NextRequest) {
         department: test.department || null,
         containerType: test.containerType || null,
         _count: test._count,
-        price: Number(test.price), // Keep base price for reference
+        price: Number(test.price), 
         effectivePrice: override ? Number(override.price) : Number(test.price),
         effectiveB2BPrice: override && override.b2bPrice ? Number(override.b2bPrice) : Number(test.b2bPrice || 0),
         effectiveTat: override?.tat || test.tat || "24 Hours",
         isActive: override ? override.isActive : test.isActive,
         hasOverride: !!override,
-        components: test.parameters // Map for the UI
+        components: test.parameters 
       };
     });
 
@@ -76,7 +79,7 @@ export async function GET(req: NextRequest) {
 }
 
 // ==========================================
-// 2. PUT: Handle Quick Pricing Overrides
+// 2. PUT: Handle Quick Pricing Overrides from Datatable
 // ==========================================
 export async function PUT(req: NextRequest) {
   try {
@@ -124,20 +127,17 @@ export async function DELETE(req: NextRequest) {
     const user = await getDataFromToken(req);
     if (!user || !user.labId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    // Extract ID from the URL query params: /api/workspace/test-catalog?id=123
     const { searchParams } = new URL(req.url);
     const testId = searchParams.get("id");
 
     if (!testId) return NextResponse.json({ error: "Test ID is required" }, { status: 400 });
 
-    // Ensure they aren't trying to delete a global test
     const test = await prisma.testTemplate.findUnique({ where: { id: testId } });
     
     if (!test) return NextResponse.json({ error: "Test not found" }, { status: 404 });
     if (test.isGlobal) return NextResponse.json({ error: "Cannot delete global tests" }, { status: 403 });
     if (test.labId !== user.labId) return NextResponse.json({ error: "Unauthorized to delete this test" }, { status: 403 });
 
-    // Delete the local test
     await prisma.testTemplate.delete({
       where: { id: testId }
     });

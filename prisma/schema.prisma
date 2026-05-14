@@ -692,6 +692,10 @@ model TestTemplate {
   // FIX 2: Test Bundle Relations
   bundleItems   TestTemplateBundle[] @relation("BundleParent")
   partOfBundles TestTemplateBundle[] @relation("BundleChild")
+  
+  forkedFromId    String?
+  forkedFrom      TestTemplate?  @relation("TemplateOverrides", fields: [forkedFromId], references: [id])
+  forks           TestTemplate[] @relation("TemplateOverrides")
 
   referenceData Json?
   createdAt     DateTime @default(now())
