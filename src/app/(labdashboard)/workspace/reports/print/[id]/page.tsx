@@ -3,9 +3,16 @@
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Loader2, Download, FileText } from "lucide-react";
+import {
+  Loader2,
+  Download,
+  FileText,
+  History,
+  Calendar,
+  FileCheck2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import toast from "react-hot-toast";
 import Barcode from "react-barcode";
 import QRCode from "qrcode";
@@ -117,7 +124,7 @@ export default function ClinicalReportPage() {
   const params = useParams();
   const id = params.id as string;
 
-  const [isDownloading, setIsDownloading] = useState(false);
+  const [isDownloading, setIsDownloading] = useState<string | null>(null); // Track which invoice is downloading
   const [verificationUrl, setVerificationUrl] = useState("");
 
   const { data: patient, isLoading } = useQuery({
@@ -129,25 +136,57 @@ export default function ClinicalReportPage() {
     setVerificationUrl(`${window.location.origin}/verify/${id}`);
   }, [id]);
 
+  // =======================================================================
+  // 🧠 SMART GROUPING: Group tests by Invoice/Visit and find the Latest
+  // =======================================================================
+  const groupedVisits = useMemo(() => {
+    if (!patient || !patient.tests) return [];
+
+    const validTests = patient.tests.filter((t: any) => t.status !== "PENDING");
+
+    // Group by Invoice ID (Fallback to date if unbilled)
+    const visitsMap: Record<string, any> = {};
+
+    validTests.forEach((test: any) => {
+      const invId = test.invoiceId || "UNBILLED";
+      const invNo = test.invoice?.invoiceNumber || "Unbilled Visit";
+      const date = test.approvedAt || test.createdAt;
+
+      if (!visitsMap[invId]) {
+        visitsMap[invId] = {
+          invoiceId: invId,
+          invoiceNumber: invNo,
+          date: date,
+          formattedDate: format(new Date(date), "dd MMM yyyy, hh:mm a"),
+          tests: [],
+        };
+      }
+      visitsMap[invId].tests.push(test);
+    });
+
+    // Sort by newest date first
+    return Object.values(visitsMap).sort(
+      (a: any, b: any) =>
+        new Date(b.date).getTime() - new Date(a.date).getTime(),
+    );
+  }, [patient]);
+
   if (isLoading)
     return (
       <div className="h-screen flex items-center justify-center">
         <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
       </div>
     );
-  if (!patient)
-    return (
-      <div className="p-10 text-center text-red-500">Report not found</div>
-    );
-
-  const validTests =
-    patient.tests?.filter((t: any) => t.status !== "PENDING") || [];
-  if (validTests.length === 0)
+  if (!patient || groupedVisits.length === 0)
     return (
       <div className="p-10 text-center text-slate-500">
-        No completed tests available.
+        No completed tests available for this patient.
       </div>
     );
+
+  // The very first item in the sorted array is the Latest Visit
+  const latestVisit = groupedVisits[0];
+  const pastVisits = groupedVisits.slice(1);
 
   const activeTemplate = patient.lab?.reportTemplates?.[0];
   const config = getSafeConfig(activeTemplate);
@@ -161,8 +200,8 @@ export default function ClinicalReportPage() {
   } = config.branding;
   const pb = config.patientBlock;
 
-  // --- DYNAMIC TIMESTAMPS & VARIABLES ---
-  const primaryTest = validTests[0];
+  // --- DYNAMIC TIMESTAMPS FOR LATEST PREVIEW ---
+  const primaryTest = latestVisit.tests[0];
   const barcodeValue =
     primaryTest?.sample?.sampleId || patient.patientId || "UNKNOWN";
   const refDoctorName =
@@ -179,34 +218,49 @@ export default function ClinicalReportPage() {
     ? format(new Date(primaryTest.approvedAt), "dd/MM/yy HH:mm:ss")
     : format(new Date(), "dd/MM/yy HH:mm:ss");
 
-  // --- PDF DOWNLOAD TRIGGER ---
-  const handleDownload = async () => {
-    setIsDownloading(true);
-    const toastId = toast.loading("Building High-Fidelity PDF Document...");
+  // --- PDF DOWNLOAD TRIGGER (Accepts a specific visit's tests) ---
+  const handleDownload = async (visit: any) => {
+    setIsDownloading(visit.invoiceId);
+    const toastId = toast.loading(
+      `Building PDF for Invoice ${visit.invoiceNumber}...`,
+    );
     try {
-      // 1. Pre-generate QR Code as Base64 for the PDF engine
       const qrCodeDataUrl = await QRCode.toDataURL(verificationUrl, {
         margin: 0,
         color: { dark: "#0f172a", light: "#ffffff" },
       });
 
-      // 2. Build Payload
+      // ONLY pass the tests belonging to THIS specific visit!
       const payload = {
         patient,
         lab: patient.lab,
-        validTests,
+        validTests: visit.tests,
         config,
         qrCodeDataUrl,
-        barcodeValue,
+        barcodeValue: visit.tests[0]?.sample?.sampleId || patient.patientId,
         timestamps: {
-          collected: sampleCollectedAt,
-          received: sampleReceivedAt,
-          reported: reportApprovedAt,
-          refDoctor: refDoctorName,
+          collected: visit.tests[0]?.sampleCollectedAt
+            ? format(
+                new Date(visit.tests[0].sampleCollectedAt),
+                "dd/MM/yy HH:mm:ss",
+              )
+            : "-",
+          received: visit.tests[0]?.sampleReceivedAt
+            ? format(
+                new Date(visit.tests[0].sampleReceivedAt),
+                "dd/MM/yy HH:mm:ss",
+              )
+            : "-",
+          reported: visit.tests[0]?.approvedAt
+            ? format(new Date(visit.tests[0].approvedAt), "dd/MM/yy HH:mm:ss")
+            : format(new Date(), "dd/MM/yy HH:mm:ss"),
+          refDoctor:
+            visit.tests[0]?.doctor?.user?.name ||
+            visit.tests[0]?.referredBy ||
+            "Self",
         },
       };
 
-      // 3. Post to API
       const res = await fetch("/api/reports/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -215,24 +269,20 @@ export default function ClinicalReportPage() {
 
       if (!res.ok) throw new Error("Failed to generate PDF");
 
-      // 4. Force File Download with Patient Name & ID
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
 
       const safeName = patient.name.replace(/[^a-zA-Z0-9]/g, "_").toUpperCase();
-      const safeId = patient.patientId
-        .replace(/[^a-zA-Z0-9]/g, "_")
-        .toUpperCase();
-      a.download = `Report_${safeName}_${safeId}.pdf`; // e.g., Report_JOHN_DOE_P_0001.pdf
+      a.download = `Report_${safeName}_${visit.invoiceNumber}.pdf`;
 
       a.click();
       toast.success("PDF Download Complete!", { id: toastId });
     } catch (e) {
       toast.error("Failed to build PDF.", { id: toastId });
     }
-    setIsDownloading(false);
+    setIsDownloading(null);
   };
 
   // --- PREVIEW QR COMPONENT ---
@@ -296,17 +346,22 @@ export default function ClinicalReportPage() {
   return (
     <div className="flex flex-col items-center py-10 bg-slate-900 min-h-screen">
       {/* ============================================================== */}
-      {/* TOP ACTION BAR                                                 */}
-      {/* ============================================================== */}
-      <div className="w-[210mm] flex justify-between items-center mb-6 sticky top-4 z-50 bg-white/95 backdrop-blur-md p-4 rounded-xl shadow-xl border border-slate-200">
-        <div className="flex items-center gap-3">
-          <div className="bg-blue-100 p-2 rounded-lg text-blue-600">
-            <FileText size={24} />
+      // TOP ACTION BAR (Latest Report) //
+      ==============================================================
+      <div className="w-[210mm] flex justify-between items-center mb-4 sticky top-4 z-50 bg-white/95 backdrop-blur-md p-4 rounded-xl shadow-xl border border-blue-200">
+        <div className="flex items-center gap-4">
+          <div className="bg-blue-600 p-3 rounded-lg text-white shadow-inner">
+            <FileCheck2 size={28} />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-slate-800">Report Preview</h1>
-            <p className="text-xs font-medium text-slate-500 uppercase tracking-widest">
-              {patient.patientId}
+            <h1 className="text-xl font-black text-slate-800 flex items-center gap-2">
+              Latest Report{" "}
+              <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full uppercase tracking-wider">
+                {latestVisit.invoiceNumber}
+              </span>
+            </h1>
+            <p className="text-sm font-medium text-slate-500 mt-1 flex items-center gap-1.5">
+              <Calendar className="w-4 h-4" /> {latestVisit.formattedDate}
             </p>
           </div>
         </div>
@@ -314,24 +369,60 @@ export default function ClinicalReportPage() {
         <Button
           size="lg"
           className="bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all h-12 px-6 rounded-xl font-bold text-md"
-          onClick={handleDownload}
-          disabled={isDownloading}>
-          {isDownloading ? (
+          onClick={() => handleDownload(latestVisit)}
+          disabled={isDownloading === latestVisit.invoiceId}>
+          {isDownloading === latestVisit.invoiceId ? (
             <Loader2 className="h-5 w-5 animate-spin mr-2" />
           ) : (
             <Download className="h-5 w-5 mr-2" />
           )}
-          Download Official PDF
+          Download Latest PDF
         </Button>
       </div>
-
-      <p className="text-slate-400 text-sm mb-6 flex items-center">
-        Showing visual preview of Page 1. Click download to generate the
-        paginated PDF.
-      </p>
-
       {/* ============================================================== */}
-      {/* A4 REPORT PREVIEW CANVAS                                       */}
+      // HISTORICAL REPORTS SECTION //
+      ==============================================================
+      {pastVisits.length > 0 && (
+        <div className="w-[210mm] bg-slate-800 border border-slate-700 p-4 rounded-xl mb-6 shadow-md">
+          <h3 className="text-slate-300 font-bold uppercase tracking-wider text-xs mb-3 flex items-center gap-2">
+            <History className="w-4 h-4" /> Previous Lab Visits
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {pastVisits.map((visit: any) => (
+              <div
+                key={visit.invoiceId}
+                className="bg-slate-700/50 hover:bg-slate-700 border border-slate-600 rounded-lg p-3 flex justify-between items-center transition-colors">
+                <div>
+                  <p className="text-slate-200 text-sm font-bold">
+                    {visit.invoiceNumber}
+                  </p>
+                  <p className="text-slate-400 text-xs mt-0.5">
+                    {visit.formattedDate}
+                  </p>
+                </div>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="bg-slate-600 hover:bg-blue-600 text-white border-0 h-8"
+                  onClick={() => handleDownload(visit)}
+                  disabled={isDownloading === visit.invoiceId}>
+                  {isDownloading === visit.invoiceId ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Download className="w-4 h-4" />
+                  )}
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      <p className="text-slate-400 text-sm mb-6 flex items-center bg-slate-800 px-4 py-2 rounded-full border border-slate-700">
+        👀 Showing visual preview of the{" "}
+        <strong>Latest Report ({latestVisit.invoiceNumber})</strong>.
+      </p>
+      {/* ============================================================== */}
+      {/* A4 REPORT PREVIEW CANVAS (Shows LATEST tests only)             */}
       {/* ============================================================== */}
       <div
         style={{
@@ -344,7 +435,6 @@ export default function ClinicalReportPage() {
           boxSizing: "border-box",
         }}
         className="bg-white shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative flex flex-col mx-auto overflow-hidden rounded-sm">
-        {/* Dynamic Border */}
         {config.layout.border.show && (
           <div
             className="absolute pointer-events-none"
@@ -360,7 +450,6 @@ export default function ClinicalReportPage() {
           />
         )}
 
-        {/* Dynamic Watermark */}
         {watermarkUrl && (
           <div
             className="pointer-events-none flex items-center justify-center z-0 absolute inset-0"
@@ -399,7 +488,6 @@ export default function ClinicalReportPage() {
                 <div dangerouslySetInnerHTML={{ __html: config.header.html }} />
               ) : (
                 <div className="flex justify-between items-start w-full mt-2">
-                  {/* Left QR */}
                   <div className="shrink-0 mr-4">
                     <PreviewQR position="header-left" />
                   </div>
@@ -430,7 +518,6 @@ export default function ClinicalReportPage() {
                     </div>
                   </div>
 
-                  {/* Right QR */}
                   <div className="shrink-0 ml-4">
                     <PreviewQR position="header-right" />
                   </div>
@@ -575,7 +662,8 @@ export default function ClinicalReportPage() {
               if (block.type === "RESULTS_TABLE") {
                 return (
                   <div key={block.id}>
-                    {validTests.map((test: any) => {
+                    {/* 👇 THIS IS THE KEY FIX: We only map over latestVisit.tests now! 👇 */}
+                    {latestVisit.tests.map((test: any) => {
                       if (!test.results || test.results.length === 0)
                         return null;
                       return (

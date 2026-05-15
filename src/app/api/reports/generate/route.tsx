@@ -114,11 +114,9 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
   const { branding, layout, header, footer, patientBlock, bodyOptions, body } =
     config;
 
-  // Measurement Converters
-  const pt = (mm: number) => (mm || 0) * 2.8346; // Millimeters to Points (Margins)
-  const pxToPt = (px: number) => (px || 0) * 0.75; // Screen Pixels to Print Points (Sliders/Drag)
+  const pt = (mm: number) => (mm || 0) * 2.8346;
+  const pxToPt = (px: number) => (px || 0) * 0.75;
 
-  // Safe Margin & Sizing Variables
   const mTop = pt(layout?.margins?.top ?? 10);
   const mBottom = pt(layout?.margins?.bottom ?? 10);
   const mLeft = pt(layout?.margins?.left ?? 10);
@@ -231,6 +229,14 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
     },
   });
 
+  const getRangeString = (res: any) => {
+    if (res.refRangeText) return res.refRangeText;
+    if (res.refRangeMin !== null && res.refRangeMax !== null) {
+      return `${res.refRangeMin} - ${res.refRangeMax}`;
+    }
+    return "-";
+  };
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -241,7 +247,6 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
           </View>
         )}
 
-        {/* CUSTOM POSITIONED QR CODE */}
         {config.qrCode?.show && config.qrCode.mode === "custom" && (
           <View
             style={{
@@ -273,7 +278,6 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
           </View>
         )}
 
-        {/* HEADER */}
         {header.show && (
           <View style={styles.headerZone} fixed>
             {header.mode === "image" && header.fullImage ? (
@@ -357,7 +361,6 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
           </View>
         )}
 
-        {/* PATIENT BLOCK */}
         {patientBlock.show && (
           <View style={styles.patientBlock}>
             <View style={styles.patientCol}>
@@ -417,7 +420,6 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
           </View>
         )}
 
-        {/* DYNAMIC BODY */}
         {body.map((block: any, idx: number) => {
           if (block.type === "SPACER")
             return (
@@ -489,7 +491,6 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
                             )}
                           </View>
 
-                          {/* Print First Result */}
                           <View style={styles.tableRow}>
                             <Text style={{ width: "40%" }}>
                               {test.results[0].parameterName}
@@ -515,14 +516,13 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
                                   fontSize: bodyOptions.tableFontSize - 2,
                                   color: "#64748b",
                                 }}>
-                                {test.results[0].refRangeText}
+                                {getRangeString(test.results[0])}
                               </Text>
                             )}
                           </View>
                         </View>
                       )}
 
-                      {/* Remaining Rows */}
                       {hasResults &&
                         test.results.length > 1 &&
                         test.results.slice(1).map((res: any, i: number) => (
@@ -551,13 +551,12 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
                                   fontSize: bodyOptions.tableFontSize - 2,
                                   color: "#64748b",
                                 }}>
-                                {res.refRangeText}
+                                {getRangeString(res)}
                               </Text>
                             )}
                           </View>
                         ))}
 
-                      {/* Timestamps */}
                       {bodyOptions.showTestTimestamps && (
                         <View wrap={false}>
                           <Text
@@ -610,7 +609,6 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
                     justifyContent: "space-between",
                     alignItems: "flex-end",
                   }}>
-                  {/* Left Footer QR */}
                   {config.qrCode?.show &&
                   config.qrCode.mode === "preset" &&
                   config.qrCode.position === "footer-left" ? (
@@ -637,7 +635,6 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
                     <View style={{ width: qrSize }} />
                   )}
 
-                  {/* Signatures */}
                   <View
                     style={{
                       flexDirection: "row",
@@ -690,7 +687,6 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
                     )}
                   </View>
 
-                  {/* Right Footer QR */}
                   {config.qrCode?.show &&
                   config.qrCode.mode === "preset" &&
                   config.qrCode.position === "footer-right" ? (
@@ -765,120 +761,152 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
 };
 
 // ============================================================================
-// MAIN API HANDLER
+// MAIN API HANDLER (Smart Searching for Multiple Tests)
 // ============================================================================
 export async function POST(req: NextRequest) {
   try {
     const payload = await req.json();
     let finalPayload = payload;
 
-    // --- SECURE PUBLIC DOWNLOAD INTERCEPT ---
-    if (payload.action === "public_download") {
-      const id = payload.reportId;
+    // --- SECURE PUBLIC & INTERNAL DOWNLOAD INTERCEPT ---
+    if (
+      payload.action === "public_download" ||
+      payload.action === "generate_invoice_report"
+    ) {
+      const id = payload.reportId || payload.invoiceId || payload.patientId;
 
       const includeQuery = {
         lab: { include: { reportTemplates: true } },
         patient: true,
-        results: true,
+        results: {
+          orderBy: { order: "asc" }, // Preserve exact parameter structure
+        },
         testTemplate: { include: { department: true } },
         sample: true,
         doctor: { include: { user: true } },
         agency: true,
       };
 
-      let test = null;
+      let fetchedTests: any[] = [];
 
-      // 1. SMART SEARCH: Try Report ID
-      const report = await prisma.report.findUnique({
+      // 1. SMART SEARCH: Try Invoice ID (Groups all tests for a single visit)
+      const invoice = await prisma.invoice.findUnique({
         where: { id },
-        include: { test: { include: includeQuery } },
+        include: { tests: { include: includeQuery } },
       });
-      if (report && report.test) test = report.test;
+      if (invoice && invoice.tests.length > 0) fetchedTests = invoice.tests;
 
-      // 2. SMART SEARCH: Try Test ID
-      if (!test) {
-        test = await prisma.test.findUnique({
+      // 2. SMART SEARCH: Try Report ID (Single specific test)
+      if (fetchedTests.length === 0) {
+        const report = await prisma.report.findUnique({
+          where: { id },
+          include: { test: { include: includeQuery } },
+        });
+        if (report && report.test) fetchedTests = [report.test];
+      }
+
+      // 3. SMART SEARCH: Try Test ID (Single specific test)
+      if (fetchedTests.length === 0) {
+        const singleTest = await prisma.test.findUnique({
           where: { id },
           include: includeQuery,
         });
+        if (singleTest) fetchedTests = [singleTest];
       }
 
-      // 3. SMART SEARCH: Try Patient ID
-      if (!test) {
-        const patient = await prisma.patient.findUnique({
-          where: { id },
-          include: {
-            tests: {
-              take: 1,
-              orderBy: { createdAt: "desc" },
+      // 4. SMART SEARCH: Try Patient ID -> Get Latest Visit!
+      if (fetchedTests.length === 0) {
+        // Find the most recent test to find their latest invoice
+        const latestTest = await prisma.test.findFirst({
+          where: { patientId: id },
+          orderBy: { createdAt: "desc" },
+        });
+
+        if (latestTest) {
+          if (latestTest.invoiceId) {
+            const latestInvoice = await prisma.invoice.findUnique({
+              where: { id: latestTest.invoiceId },
+              include: { tests: { include: includeQuery } },
+            });
+            if (latestInvoice && latestInvoice.tests.length > 0)
+              fetchedTests = latestInvoice.tests;
+          } else {
+            // Unbilled test fallback
+            const populatedTest = await prisma.test.findUnique({
+              where: { id: latestTest.id },
               include: includeQuery,
-            },
-          },
-        });
-        if (patient && patient.tests.length > 0) test = patient.tests[0];
-      }
-
-      // 4. SMART SEARCH: Try Invoice ID
-      if (!test) {
-        const invoice = await prisma.invoice.findUnique({
-          where: { id },
-          include: { tests: { take: 1, include: includeQuery } },
-        });
-        if (invoice && invoice.tests.length > 0) test = invoice.tests[0];
+            });
+            if (populatedTest) fetchedTests = [populatedTest];
+          }
+        }
       }
 
       // If it's not found in ANY of those tables, return 404
-      if (!test) {
+      if (fetchedTests.length === 0) {
         return NextResponse.json(
-          { error: "Report not found" },
+          { error: "No completed tests found for this visit." },
           { status: 404 },
         );
       }
 
-      // ====================================================================
-      // 🔒 VAULT SECURITY: STRICT PHONE NUMBER VERIFICATION
-      // ====================================================================
-      // Strip everything except numbers, and grab the last 10 digits
-      const dbPhoneClean = (test.patient.phone || "").replace(/\D/g, '').slice(-10);
-      const inputPhoneClean = (payload.phone || "").replace(/\D/g, '').slice(-10);
+      const primaryTest = fetchedTests[0];
 
-      // If the frontend didn't pass a matching phone number, DENY access
-      if (dbPhoneClean !== inputPhoneClean) {
-        return NextResponse.json(
-          { error: "Unauthorized. Incorrect mobile number." }, 
-          { status: 401 }
-        );
+      // ====================================================================
+      // 🔒 VAULT SECURITY: STRICT PHONE NUMBER VERIFICATION (Only for public)
+      // ====================================================================
+      if (payload.action === "public_download") {
+        const dbPhoneClean = (primaryTest.patient.phone || "")
+          .replace(/\D/g, "")
+          .slice(-10);
+        const inputPhoneClean = (payload.phone || "")
+          .replace(/\D/g, "")
+          .slice(-10);
+
+        if (dbPhoneClean !== inputPhoneClean) {
+          return NextResponse.json(
+            { error: "Unauthorized. Incorrect mobile number." },
+            { status: 401 },
+          );
+        }
       }
       // ====================================================================
 
-      // Generate the QR Code string safely
-      const qrCodeDataUrl = await QRCode.toDataURL(payload.verificationUrl, {
-        margin: 0,
-        color: { dark: "#0f172a", light: "#ffffff" },
-      });
+      const qrCodeDataUrl = await QRCode.toDataURL(
+        payload.verificationUrl || "https://patholab.cloud/verify",
+        {
+          margin: 0,
+          color: { dark: "#0f172a", light: "#ffffff" },
+        },
+      );
 
-      // Build the final payload
       finalPayload = {
-        patient: test.patient,
-        lab: test.lab,
-        validTests: [test],
-        config: getSafeConfig(test.lab?.reportTemplates?.[0]?.config),
+        patient: primaryTest.patient,
+        lab: primaryTest.lab,
+        validTests: fetchedTests, // 🎯 Passes ALL tests from this visit
+        config: getSafeConfig(primaryTest.lab?.reportTemplates?.[0]?.config),
         qrCodeDataUrl,
-        barcodeValue: test.sample?.sampleId || test.patient.patientId,
+        barcodeValue:
+          primaryTest.sample?.sampleId || primaryTest.patient.patientId,
         timestamps: {
-          collected: test.sampleCollectedAt
-            ? format(new Date(test.sampleCollectedAt), "dd/MM/yy HH:mm:ss")
+          collected: primaryTest.sampleCollectedAt
+            ? format(
+                new Date(primaryTest.sampleCollectedAt),
+                "dd/MM/yy HH:mm:ss",
+              )
             : "-",
-          received: test.sampleReceivedAt
-            ? format(new Date(test.sampleReceivedAt), "dd/MM/yy HH:mm:ss")
+          received: primaryTest.sampleReceivedAt
+            ? format(
+                new Date(primaryTest.sampleReceivedAt),
+                "dd/MM/yy HH:mm:ss",
+              )
             : "-",
-          reported: test.approvedAt
-            ? format(new Date(test.approvedAt), "dd/MM/yy HH:mm:ss")
+          reported: primaryTest.approvedAt
+            ? format(new Date(primaryTest.approvedAt), "dd/MM/yy HH:mm:ss")
             : "-",
           refDoctor:
-            test.doctor?.user?.name ||
-            test.referredBy ||
-            test.agency?.agencyName ||
+            primaryTest.doctor?.user?.name ||
+            primaryTest.referredBy ||
+            primaryTest.agency?.agencyName ||
             "Self",
         },
       };

@@ -35,6 +35,8 @@ import {
   AlertCircle,
   Beaker,
   Globe,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import CustomFieldSelector from "./custom-field-selector";
@@ -82,6 +84,9 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
   const [paramSearch, setParamSearch] = useState("");
   const [customFieldIds, setCustomFieldIds] = useState<string[]>([]);
   const [isLoadingRefs, setIsLoadingRefs] = useState(true);
+
+  // Drag and Drop State
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   // Standardized React Query for Containers
   const { data: containers } = useQuery({
@@ -155,7 +160,8 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
+  // Extract 'move' from useFieldArray to handle the reordering
+  const { fields, append, remove, move } = useFieldArray({
     control,
     name: "components",
   });
@@ -221,7 +227,7 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
         components: data.components.map((c, index) => ({
           parameterId: c.parameterId,
           headingId: c.headingId === "none" ? null : c.headingId,
-          order: index + 1,
+          order: index + 1, // Order is inherently saved based on array position!
         })),
         customFieldIds: customFieldIds,
         parametersChanged: isDirty,
@@ -263,6 +269,27 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
       append({ parameterId: param.id, name: param.name, headingId: "none" });
       setParamSearch("");
     }
+  };
+
+  // --- DRAG AND DROP HANDLERS ---
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    e.dataTransfer.setData("text/plain", index.toString());
+    e.dataTransfer.effectAllowed = "move";
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault(); // Necessary to allow dropping
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    const dragIndex = Number(e.dataTransfer.getData("text/plain"));
+    if (dragIndex !== dropIndex) {
+      move(dragIndex, dropIndex); // Hook form's move utility
+    }
+    setDraggedIndex(null);
   };
 
   // LIVE REAGENT AGGREGATION FOR PREVIEW
@@ -558,12 +585,23 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
                 </span>
               )}
             </div>
-            <div className="space-y-2 max-h-[300px] overflow-y-auto">
+
+            <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
               {fields.map((field, index) => (
                 <div
                   key={field.id}
-                  className="flex items-center gap-3 bg-white p-2 border rounded shadow-sm group">
-                  <GripVertical className="h-4 w-4 text-slate-300 cursor-move" />
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, index)}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDrop={(e) => handleDrop(e, index)}
+                  onDragEnd={() => setDraggedIndex(null)}
+                  className={`flex items-center gap-3 bg-white p-2 border rounded shadow-sm group transition-all
+                    ${draggedIndex === index ? "opacity-50" : "opacity-100 hover:border-blue-400"}
+                  `}>
+                  <div className="cursor-grab active:cursor-grabbing p-1">
+                    <GripVertical className="h-5 w-5 text-slate-400 hover:text-slate-600" />
+                  </div>
+
                   <div className="flex-1 grid grid-cols-2 gap-4 items-center">
                     <span className="font-medium text-sm">{field.name}</span>
                     <Select
@@ -571,7 +609,7 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
                       onValueChange={(v) =>
                         setValue(`components.${index}.headingId`, v)
                       }>
-                      <SelectTrigger className="h-7 text-xs">
+                      <SelectTrigger className="h-8 text-xs">
                         <SelectValue placeholder="No Heading" />
                       </SelectTrigger>
                       <SelectContent>
@@ -584,13 +622,34 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
                       </SelectContent>
                     </Select>
                   </div>
+
+                  {/* Fallback Manual Reorder Buttons for Mobile Accessibility */}
+                  <div className="flex flex-col items-center ml-2 border-l pl-2">
+                    <button
+                      type="button"
+                      onClick={() => index > 0 && move(index, index - 1)}
+                      disabled={index === 0}
+                      className="text-slate-400 hover:text-blue-600 disabled:opacity-30 disabled:hover:text-slate-400">
+                      <ChevronUp className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        index < fields.length - 1 && move(index, index + 1)
+                      }
+                      disabled={index === fields.length - 1}
+                      className="text-slate-400 hover:text-blue-600 disabled:opacity-30 disabled:hover:text-slate-400">
+                      <ChevronDown className="h-4 w-4" />
+                    </button>
+                  </div>
+
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
                     onClick={() => remove(index)}
-                    className="h-6 w-6 text-red-400 hover:text-red-600">
-                    <Trash2 className="h-3 w-3" />
+                    className="h-8 w-8 ml-1 text-red-400 hover:text-red-600 hover:bg-red-50">
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               ))}
