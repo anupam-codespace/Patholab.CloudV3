@@ -176,6 +176,12 @@ model Lab {
   signature  String?
   isActive   Boolean @default(true)
 
+  // ✅ ADDED: Missing Messaging Integration Keys
+  whatsappApiKey   String?
+  whatsappPhoneId  String?
+  smsApiKey        String?
+  smsSenderId      String?
+
   defaultDoctorCommission Decimal?       @default(10.0) @db.Decimal(5, 2)
   defaultAgencyCommission Decimal?       @default(5.0) @db.Decimal(5, 2)
   commissionType          CommissionType @default(PERCENTAGE)
@@ -231,6 +237,12 @@ model Branch {
   code          String?  
   branchCode String?          // 2-digit branch code (e.g., "01")
   isMainBranch  Boolean  @default(false)
+
+  // ✅ ADDED: Branch-Specific Branding
+  logo          String?
+  letterhead    String?
+  footer        String?
+  signature     String?
   
   address       String
   city          String
@@ -552,12 +564,16 @@ model LabTestParameter {
   lab      Lab?    @relation(fields: [labId], references: [id])
   isGlobal Boolean @default(false)
 
+  // ✅ ADDED: The missing self-relation fields for the Parameter Forking logic!
+  forkedFromId    String?
+  forkedFrom      LabTestParameter?  @relation("ParamOverrides", fields: [forkedFromId], references: [id])
+  forks           LabTestParameter[] @relation("ParamOverrides")
+
   name      String 
   printName String? 
   code      String 
   unit      String? 
 
-  // FIX 1: Derived Parameters
   isDerived Boolean @default(false)
   formula   String? 
 
@@ -652,7 +668,6 @@ model TestTemplate {
   departmentId String?
   department   Department? @relation(fields: [departmentId], references: [id])
 
-  // FIX 3: Strong Relational Typings for Container and Sample
   sampleTypeId String?
   sampleType   SampleType? @relation(fields: [sampleTypeId], references: [id])
 
@@ -676,6 +691,9 @@ model TestTemplate {
   duration     Int?
   requirements String?
 
+  // ✅ ADDED: Predefined Notes feature
+  predefinedNotes Json?
+
   type      TestType @default(SINGLE)
   isActive  Boolean  @default(true)
   isNabl    Boolean  @default(false)
@@ -689,7 +707,6 @@ model TestTemplate {
   agencyCommissions AgencyTestCommission[]
   labPricing        LabTestPricing[]
 
-  // FIX 2: Test Bundle Relations
   bundleItems   TestTemplateBundle[] @relation("BundleParent")
   partOfBundles TestTemplateBundle[] @relation("BundleChild")
   
@@ -705,7 +722,6 @@ model TestTemplate {
   @@index([labId])
 }
 
-// Intermediate table for Bundling Tests (FIX 2)
 model TestTemplateBundle {
   id        String       @id @default(cuid())
   
@@ -825,7 +841,6 @@ model Sample {
   patientId String
   patient   Patient @relation(fields: [patientId], references: [id])
 
-  // FIX 3: Strong Relational Models
   sampleTypeId    String?
   sampleType      SampleType?    @relation(fields: [sampleTypeId], references: [id])
 
@@ -943,6 +958,9 @@ model Test {
   testName String
   testCode String
 
+  // ✅ ADDED: Instance specific notes
+  resultNotes Json?      
+
   status   TestStatus   @default(PENDING)
   priority TestPriority @default(NORMAL)
 
@@ -973,8 +991,8 @@ model Test {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime? // Medical compliance soft-delete
 
-  commissions   Commission[]
-  results       TestResultParameter[]
+  commissions    Commission[]
+  results        TestResultParameter[]
   inventoryUsage InventoryTransaction[]
   aiPrediction   AIPrediction?
   customResults  TestResultCustomField[]
@@ -984,7 +1002,6 @@ model Test {
   @@index([labId, status, createdAt]) // Dashboard optimization
 }
 
-// FIX 6: Enum for Result Flagging Engine
 enum ResultFlag {
   NORMAL
   LOW
@@ -1010,7 +1027,6 @@ model TestResultParameter {
   isAbnormal    Boolean    @default(false)
   isCritical    Boolean    @default(false)
   
-  // FIX 6: Result Flagging Engine
   flag          ResultFlag @default(NORMAL)
   isHighlighted Boolean    @default(false) 
 

@@ -29,6 +29,8 @@ import {
   AlertCircle,
   FileText,
   Beaker,
+  Globe,
+  BugPlay,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useQuery } from "@tanstack/react-query";
@@ -45,23 +47,31 @@ enum ParameterInputType {
 // Custom parser to handle empty number inputs safely
 const optionalNumber = z
   .union([z.coerce.number(), z.literal("")])
-  .transform((e) => (e === "" ? null : e));
+  .transform((e) => (e === "" || Number.isNaN(e) ? null : e));
 
 const parameterSchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z.string().min(1, "Parameter Name is required"),
   code: z.string().min(1, "Short code is required"),
   containerTypeId: z.string().optional(),
   inputType: z.nativeEnum(ParameterInputType),
   unit: z.string().optional(),
-  price: z.coerce.number().min(0).default(0),
-  decimals: z.coerce.number().min(0).default(2),
+
+  price: z.coerce
+    .number({ invalid_type_error: "Must be a valid number" })
+    .min(0, "Cannot be negative")
+    .catch(0),
+  decimals: z.coerce.number().min(0, "Cannot be negative").catch(2),
+
+  // Method and Formula are completely optional
   formula: z.string().optional(),
   method: z.string().optional(),
 
   reagents: z.array(
     z.object({
-      inventoryItemId: z.string().min(1, "Item is required"),
-      quantity: z.coerce.number().min(0.001, "Must be > 0"),
+      inventoryItemId: z
+        .string()
+        .min(1, "Inventory item selection is required"),
+      quantity: z.coerce.number().min(0.001, "Quantity must be greater than 0"),
     }),
   ),
 
@@ -81,13 +91,19 @@ const parameterSchema = z.object({
       }),
     )
     .superRefine((ranges, ctx) => {
-      // Cross-field validation for CUSTOM gender
       ranges.forEach((range, index) => {
         if (range.gender === "CUSTOM" && !range.customLabel) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: "Required",
+            message: "Custom label is required",
             path: [index, "customLabel"],
+          });
+        }
+        if (range.minAge > range.maxAge) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Min > Max",
+            path: [index, "minAge"],
           });
         }
       });
@@ -168,49 +184,159 @@ export default function ParameterForm({
 
   const inputType = watch("inputType");
 
+  // 🔴 DATA HYDRATION: Fetch all ranges and reagents safely
   useEffect(() => {
     if (initialData) {
+      // 1. Strip Prisma 'id' from Ranges to prevent React Hook Form crashes
+      const formattedRanges =
+        initialData.referenceRanges?.length > 0
+          ? initialData.referenceRanges.map((r: any) => ({
+              gender: r.gender || "BOTH",
+              customLabel: r.customLabel || "",
+              minAge: Number(r.minAge || 0),
+              maxAge: Number(r.maxAge || 100),
+              ageUnit: r.ageUnit || "YEAR",
+              lowValue: r.lowValue ?? "",
+              highValue: r.highValue ?? "",
+              criticalLow: r.criticalLow ?? "",
+              criticalHigh: r.criticalHigh ?? "",
+              textValue: r.textValue || "",
+            }))
+          : [defaultRange];
+
+      // 2. Strip Prisma 'id' from Reagents and cast Decimals
+      const formattedReagents =
+        initialData.reagents?.length > 0
+          ? initialData.reagents.map((r: any) => ({
+              inventoryItemId: r.inventoryItemId,
+              quantity: Number(r.quantity || 0),
+            }))
+          : [];
+
+      // 3. Reset the form strictly with matching Schema fields
       reset({
-        ...initialData,
-        price: initialData.price || 0,
-        containerTypeId: initialData.containerTypeId || "",
-        reagents: initialData.reagents || [],
-        ranges:
-          initialData.referenceRanges?.length > 0
-            ? initialData.referenceRanges
-            : [defaultRange],
+        name: initialData.name || "",
+        code: initialData.code || "",
+        unit: initialData.unit || "",
+        inputType: initialData.inputType || ParameterInputType.NUMBER,
+
+        // Safely cast Prisma Decimals to JavaScript Numbers
+        price: Number(initialData.price || 0),
+        decimals: Number(initialData.decimals || 2),
+
+        // Convert "NA" back to empty strings for a clean editing experience
+        method: initialData.method === "NA" ? "" : initialData.method || "",
+        formula: initialData.formula === "NA" ? "" : initialData.formula || "",
+
+        containerTypeId: initialData.containerTypeId || "generic",
+        reagents: formattedReagents,
+        ranges: formattedRanges,
       });
     }
   }, [initialData, reset]);
 
   const onSubmit = async (data: ParameterFormData) => {
     try {
+      // ✅ INTERCEPT: Inject "NA" if method or formula are empty!
+      const submitPayload = {
+        ...data,
+        method: data.method?.trim() ? data.method : "NA",
+        formula: data.formula?.trim() ? data.formula : "NA",
+      };
+
       if (initialData && initialData.id) {
-        await updateParameter(initialData.id, data);
-        toast.success("Parameter updated successfully!");
+        const res = await updateParameter(initialData.id, submitPayload);
+        if (res?.error) throw new Error(res.error); // Catch duplicate code error
+        toast.success(
+          initialData.isGlobal
+            ? "Local override created!"
+            : "Parameter updated successfully!",
+        );
       } else {
-        await createParameter(data);
+        const res = await createParameter(submitPayload);
+        if (res?.error) throw new Error(res.error); // Catch duplicate code error
         toast.success("Parameter created successfully!");
       }
       onSuccess();
-    } catch (error) {
-      toast.error("Failed to save parameter.");
-      console.error(error);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to save parameter.");
     }
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {/* 🔴 DEVELOPER DEBUGGER (Safely stripped of circular 'ref' objects) */}
+      {Object.keys(errors).length > 0 && (
+        <div className="p-4 bg-slate-900 text-red-400 rounded-lg text-xs font-mono overflow-auto border border-red-900 shadow-inner max-h-48">
+          <div className="flex items-center gap-2 mb-2 text-white font-bold pb-2 border-b border-slate-700">
+            <BugPlay className="w-4 h-4 text-rose-500" /> Validation Debugger
+            (Under the hood)
+          </div>
+          <pre>
+            {JSON.stringify(
+              errors,
+              (key, value) => (key === "ref" ? undefined : value),
+              2,
+            )}
+          </pre>
+        </div>
+      )}
+
+      {/* GLOBAL WARNING BANNER */}
+      {initialData?.isGlobal && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex gap-3">
+          <Globe className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
+          <div>
+            <h4 className="text-blue-800 font-semibold text-sm">
+              Global Master Parameter
+            </h4>
+            <p className="text-blue-700 text-xs mt-1 leading-relaxed">
+              You are editing a master catalog parameter. If you modify its
+              details or reference ranges, a customized local copy will
+              automatically be generated specifically for your laboratory to
+              protect the master catalog.
+            </p>
+          </div>
+        </div>
+      )}
+
       <Tabs defaultValue="core" className="w-full">
+        {/* SMART TABS: Highlight Red on Error */}
         <TabsList className="grid w-full grid-cols-4 bg-slate-100 p-1 rounded-lg">
-          <TabsTrigger value="core">Core</TabsTrigger>
-          <TabsTrigger value="ranges" disabled={inputType !== "NUMBER"}>
-            Ranges
+          <TabsTrigger
+            value="core"
+            className={
+              errors.name || errors.code || errors.price || errors.decimals
+                ? "text-red-600 font-bold bg-red-50/50"
+                : ""
+            }>
+            Core{" "}
+            {(errors.name || errors.code || errors.price || errors.decimals) &&
+              "*"}
           </TabsTrigger>
-          <TabsTrigger value="formula" disabled={inputType !== "NUMBER"}>
-            Formula
+          <TabsTrigger
+            value="ranges"
+            disabled={inputType !== "NUMBER"}
+            className={
+              errors.ranges ? "text-red-600 font-bold bg-red-50/50" : ""
+            }>
+            Ranges {errors.ranges && "*"}
           </TabsTrigger>
-          <TabsTrigger value="reagents">Inventory</TabsTrigger>
+          <TabsTrigger
+            value="formula"
+            disabled={inputType !== "NUMBER"}
+            className={
+              errors.formula ? "text-red-600 font-bold bg-red-50/50" : ""
+            }>
+            Formula {errors.formula && "*"}
+          </TabsTrigger>
+          <TabsTrigger
+            value="reagents"
+            className={
+              errors.reagents ? "text-red-600 font-bold bg-red-50/50" : ""
+            }>
+            Inventory {errors.reagents && "*"}
+          </TabsTrigger>
         </TabsList>
 
         {/* --- TAB: CORE --- */}
@@ -223,10 +349,10 @@ export default function ParameterForm({
               <Input
                 {...register("name")}
                 placeholder="e.g. Hemoglobin"
-                className={errors.name ? "border-red-500" : ""}
+                className={errors.name ? "border-red-500 bg-red-50" : ""}
               />
               {errors.name && (
-                <span className="text-xs text-red-500">
+                <span className="text-[10px] font-bold text-red-500">
                   {errors.name.message}
                 </span>
               )}
@@ -238,21 +364,26 @@ export default function ParameterForm({
               <Input
                 {...register("code")}
                 placeholder="e.g. HGB"
-                className={errors.code ? "border-red-500" : ""}
+                className={errors.code ? "border-red-500 bg-red-50" : ""}
               />
               {errors.code && (
-                <span className="text-xs text-red-500">
+                <span className="text-[10px] font-bold text-red-500">
                   {errors.code.message}
                 </span>
               )}
             </div>
           </div>
+
           <div className="space-y-2">
             <label className="text-sm font-medium">Tube / Container</label>
             <Select
-              onValueChange={(val) => setValue("containerTypeId", val)}
+              onValueChange={(val) =>
+                setValue("containerTypeId", val === "generic" ? "" : val)
+              }
               defaultValue={
-                getValues("containerTypeId") || initialData?.containerTypeId
+                getValues("containerTypeId") ||
+                initialData?.containerTypeId ||
+                "generic"
               }
               key={initialData?.containerTypeId}>
               <SelectTrigger>
@@ -269,9 +400,12 @@ export default function ParameterForm({
               </SelectContent>
             </Select>
           </div>
+
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Input Type</label>
+              <label className="text-sm font-medium flex items-center gap-1">
+                Input Type <span className="text-red-500">*</span>
+              </label>
               <Select
                 onValueChange={(val) =>
                   setValue("inputType", val as ParameterInputType)
@@ -298,28 +432,47 @@ export default function ParameterForm({
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Price (₹)</label>
+              <label className="text-sm font-medium flex items-center gap-1">
+                Price (₹) <span className="text-red-500">*</span>
+              </label>
               <Input
                 type="number"
                 step="0.01"
                 {...register("price")}
                 placeholder="0.00"
+                className={errors.price ? "border-red-500 bg-red-50" : ""}
               />
+              {errors.price && (
+                <span className="text-[10px] font-bold text-red-500">
+                  {errors.price.message}
+                </span>
+              )}
             </div>
           </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Method</label>
-              <Input {...register("method")} placeholder="e.g. Photometry" />
+              <Input
+                {...register("method")}
+                placeholder="e.g. Photometry (Optional)"
+              />
             </div>
             {inputType === "NUMBER" && (
               <div className="space-y-2">
-                <label className="text-sm font-medium">Decimal Places</label>
+                <label className="text-sm font-medium flex items-center gap-1">
+                  Decimal Places <span className="text-red-500">*</span>
+                </label>
                 <Input
                   type="number"
                   {...register("decimals")}
-                  className="w-24"
+                  className={`w-24 ${errors.decimals ? "border-red-500 bg-red-50" : ""}`}
                 />
+                {errors.decimals && (
+                  <span className="text-[10px] font-bold text-red-500 block">
+                    {errors.decimals.message}
+                  </span>
+                )}
               </div>
             )}
           </div>
@@ -341,17 +494,15 @@ export default function ParameterForm({
 
             {fields.map((field, index) => {
               const rangeErrs = errors.ranges?.[index] as any;
-              const errLow = rangeErrs?.lowValue;
-              const errHigh = rangeErrs?.highValue;
               const currentGender = watch(`ranges.${index}.gender`);
               const isCustom = currentGender === "CUSTOM";
 
               return (
                 <Card
                   key={field.id}
-                  className={`relative shadow-sm overflow-hidden ${errLow || errHigh ? "border-red-300 ring-1 ring-red-100" : "border-slate-200"}`}>
+                  className={`relative shadow-sm overflow-hidden ${rangeErrs ? "border-red-300 ring-1 ring-red-100" : "border-slate-200"}`}>
                   <div
-                    className={`absolute top-0 left-0 w-1 h-full ${errLow || errHigh ? "bg-red-500" : "bg-blue-500"}`}></div>
+                    className={`absolute top-0 left-0 w-1 h-full ${rangeErrs ? "bg-red-500" : "bg-blue-500"}`}></div>
                   <Button
                     type="button"
                     variant="ghost"
@@ -378,8 +529,9 @@ export default function ParameterForm({
 
                     <div className="grid grid-cols-12 gap-3 items-end border-b pb-4 border-slate-100">
                       <div className="col-span-3 space-y-1">
-                        <label className="text-xs text-slate-500 font-medium">
-                          Gender / Condition
+                        <label className="text-xs text-slate-500 font-medium flex items-center gap-1">
+                          Gender / Condition{" "}
+                          <span className="text-red-500">*</span>
                         </label>
                         <Select
                           onValueChange={(v: any) => {
@@ -407,48 +559,59 @@ export default function ParameterForm({
                       <div className="col-span-3 space-y-1">
                         <label
                           className={`text-xs font-medium flex items-center gap-1 ${isCustom ? "text-blue-700" : "text-slate-300"}`}>
-                          Custom Label
+                          Custom Label{" "}
+                          {isCustom && <span className="text-red-500">*</span>}
                         </label>
                         <Input
                           {...register(`ranges.${index}.customLabel`)}
                           disabled={!isCustom}
-                          className={`h-8 text-xs transition-colors ${isCustom ? "bg-yellow-50 border-yellow-300 text-slate-900" : "bg-slate-100 border-slate-200 text-slate-400"}`}
+                          className={`h-8 text-xs transition-colors ${isCustom ? "bg-yellow-50 border-yellow-300 text-slate-900" : "bg-slate-100 border-slate-200 text-slate-400"} ${rangeErrs?.customLabel ? "border-red-500" : ""}`}
                           placeholder={
-                            isCustom
-                              ? "e.g. Child, High Risk"
-                              : "Select Custom first"
+                            isCustom ? "e.g. High Risk" : "Select Custom first"
                           }
                         />
                         {rangeErrs?.customLabel && (
-                          <span className="text-[10px] text-red-600 font-bold">
+                          <span className="text-[10px] text-red-600 font-bold block">
                             {rangeErrs.customLabel.message}
                           </span>
                         )}
                       </div>
 
                       <div className="col-span-2 space-y-1">
-                        <label className="text-xs text-slate-500 font-medium">
+                        <label className="text-xs text-slate-500 font-medium flex items-center gap-1">
                           Min Age <span className="text-red-500">*</span>
                         </label>
                         <Input
                           type="number"
                           {...register(`ranges.${index}.minAge`)}
-                          className="h-8 text-xs"
+                          className={`h-8 text-xs ${rangeErrs?.minAge ? "border-red-500 bg-red-50" : ""}`}
                         />
+                        {rangeErrs?.minAge && (
+                          <span className="text-[10px] text-red-600 font-bold block">
+                            {rangeErrs.minAge.message}
+                          </span>
+                        )}
                       </div>
+
                       <div className="col-span-2 space-y-1">
-                        <label className="text-xs text-slate-500 font-medium">
+                        <label className="text-xs text-slate-500 font-medium flex items-center gap-1">
                           Max Age <span className="text-red-500">*</span>
                         </label>
                         <Input
                           type="number"
                           {...register(`ranges.${index}.maxAge`)}
-                          className="h-8 text-xs"
+                          className={`h-8 text-xs ${rangeErrs?.maxAge ? "border-red-500 bg-red-50" : ""}`}
                         />
+                        {rangeErrs?.maxAge && (
+                          <span className="text-[10px] text-red-600 font-bold block">
+                            {rangeErrs.maxAge.message}
+                          </span>
+                        )}
                       </div>
+
                       <div className="col-span-2 space-y-1">
-                        <label className="text-xs text-slate-500 font-medium">
-                          Unit
+                        <label className="text-xs text-slate-500 font-medium flex items-center gap-1">
+                          Unit <span className="text-red-500">*</span>
                         </label>
                         <Select
                           onValueChange={(v: any) =>
@@ -476,9 +639,14 @@ export default function ParameterForm({
                           type="number"
                           step="0.01"
                           {...register(`ranges.${index}.lowValue`)}
-                          className={`h-8 text-xs ${errLow ? "border-red-500 bg-red-50 focus-visible:ring-red-500" : "bg-white"}`}
+                          className={`h-8 text-xs ${rangeErrs?.lowValue ? "border-red-500 bg-red-50" : "bg-white"}`}
                           placeholder="0"
                         />
+                        {rangeErrs?.lowValue && (
+                          <span className="text-[10px] text-red-600 font-bold block">
+                            {rangeErrs.lowValue.message}
+                          </span>
+                        )}
                       </div>
                       <div className="space-y-1">
                         <label className="text-xs font-bold text-slate-700">
@@ -488,9 +656,14 @@ export default function ParameterForm({
                           type="number"
                           step="0.01"
                           {...register(`ranges.${index}.highValue`)}
-                          className={`h-8 text-xs ${errHigh ? "border-red-500 bg-red-50 focus-visible:ring-red-500" : "bg-white"}`}
+                          className={`h-8 text-xs ${rangeErrs?.highValue ? "border-red-500 bg-red-50" : "bg-white"}`}
                           placeholder="0"
                         />
+                        {rangeErrs?.highValue && (
+                          <span className="text-[10px] text-red-600 font-bold block">
+                            {rangeErrs.highValue.message}
+                          </span>
+                        )}
                       </div>
                       <div className="space-y-1">
                         <label className="text-xs font-bold text-red-600">
@@ -539,16 +712,19 @@ export default function ParameterForm({
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium">Calculation Formula</label>
-            <Input {...register("formula")} placeholder="e.g. (TP - ALB)" />
+            <Input
+              {...register("formula")}
+              placeholder="e.g. (TP - ALB) (Optional)"
+            />
           </div>
         </TabsContent>
 
         {/* --- TAB: INVENTORY / REAGENTS --- */}
         <TabsContent value="reagents" className="pt-4 space-y-4">
           <div className="p-4 bg-emerald-50 text-emerald-800 rounded-md text-sm mb-4">
-            <strong>Auto-Consumption:</strong> Any items linked here will be
-            automatically deducted from your active inventory batches whenever
-            this test parameter is marked as completed.
+            <strong>Auto-Consumption:</strong> Items linked here are
+            automatically deducted from active inventory when this parameter is
+            completed.
           </div>
 
           <div className="space-y-3">
@@ -563,10 +739,11 @@ export default function ParameterForm({
               return (
                 <div
                   key={field.id}
-                  className="flex items-start gap-3 bg-white p-3 rounded-lg border border-slate-200 shadow-sm relative group">
+                  className={`flex items-start gap-3 bg-white p-3 rounded-lg border shadow-sm relative group ${reagentErrors ? "border-red-300 bg-red-50/30" : "border-slate-200"}`}>
                   <div className="flex-1 space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700">
-                      Inventory Catalog Item *
+                    <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
+                      Inventory Catalog Item{" "}
+                      <span className="text-red-500">*</span>
                     </label>
                     <Select
                       onValueChange={(v) =>
@@ -574,7 +751,7 @@ export default function ParameterForm({
                       }
                       defaultValue={(field as any).inventoryItemId}>
                       <SelectTrigger
-                        className={`bg-slate-50 ${reagentErrors?.inventoryItemId ? "border-red-500" : ""}`}>
+                        className={`bg-slate-50 ${reagentErrors?.inventoryItemId ? "border-red-500 ring-1 ring-red-200" : ""}`}>
                         <SelectValue placeholder="Search or select an item..." />
                       </SelectTrigger>
                       <SelectContent>
@@ -588,11 +765,16 @@ export default function ParameterForm({
                         ))}
                       </SelectContent>
                     </Select>
+                    {reagentErrors?.inventoryItemId && (
+                      <span className="text-[10px] text-red-600 font-bold block">
+                        {reagentErrors.inventoryItemId.message}
+                      </span>
+                    )}
                   </div>
 
                   <div className="w-1/3 space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700">
-                      Quantity per Test *
+                    <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
+                      Quantity per Test <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <Input
@@ -600,13 +782,18 @@ export default function ParameterForm({
                         step="0.001"
                         min="0"
                         {...register(`reagents.${index}.quantity`)}
-                        className={`pr-16 ${reagentErrors?.quantity ? "border-red-500" : ""}`}
+                        className={`pr-16 ${reagentErrors?.quantity ? "border-red-500 bg-red-50" : ""}`}
                         placeholder="0.0"
                       />
                       <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-xs text-slate-400 font-medium">
                         {unitLabel}
                       </div>
                     </div>
+                    {reagentErrors?.quantity && (
+                      <span className="text-[10px] text-red-600 font-bold block">
+                        {reagentErrors.quantity.message}
+                      </span>
+                    )}
                   </div>
 
                   <Button
@@ -646,7 +833,11 @@ export default function ParameterForm({
           ) : (
             <Save className="mr-2 h-4 w-4" />
           )}
-          {initialData ? "Update Parameter" : "Save Parameter"}
+          {initialData?.isGlobal
+            ? "Save Local Override"
+            : initialData
+              ? "Update Parameter"
+              : "Save Parameter"}
         </Button>
       </div>
 
@@ -655,7 +846,8 @@ export default function ParameterForm({
         <div className="p-3 bg-red-50 border border-red-200 rounded text-red-600 text-sm flex items-center gap-2 animate-pulse">
           <AlertCircle className="w-5 h-5" />
           <strong>Validation Error:</strong> Please fill in all required fields
-          marked in red.
+          marked with <span className="text-red-500 font-bold">*</span>. Check
+          the tabs above!
         </div>
       )}
     </form>

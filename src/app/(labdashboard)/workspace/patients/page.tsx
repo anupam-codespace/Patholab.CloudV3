@@ -29,6 +29,7 @@ import {
   FileBadge,
   AlertCircle,
   Receipt,
+  TestTube,
 } from "lucide-react";
 import { differenceInHours, differenceInMinutes } from "date-fns";
 import toast from "react-hot-toast";
@@ -813,6 +814,15 @@ export default function PatientWorklistPage() {
                             <DropdownMenuContent
                               align="end"
                               className="w-48 p-1.5 shadow-xl border-slate-100 rounded-xl">
+                              {/* --- NEW ADD TEST OPTION --- */}
+                              <Link
+                                href={`/workspace/accession?patientId=${patient.id}`}>
+                                <DropdownMenuItem className="cursor-pointer font-medium rounded-lg text-slate-700 py-2">
+                                  <TestTube className="mr-2 h-4 w-4 text-emerald-500" />{" "}
+                                  Add Test
+                                </DropdownMenuItem>
+                              </Link>
+
                               <Link
                                 href={`/workspace/workflow/results/${patient.id}`}>
                                 <DropdownMenuItem className="cursor-pointer font-medium rounded-lg text-slate-700 py-2">
@@ -820,6 +830,7 @@ export default function PatientWorklistPage() {
                                   Enter Results
                                 </DropdownMenuItem>
                               </Link>
+
                               {invoice && (
                                 <Link href={`/workspace/billing/${invoice.id}`}>
                                   <DropdownMenuItem className="cursor-pointer font-medium rounded-lg text-slate-700 py-2">
