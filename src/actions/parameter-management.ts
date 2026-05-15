@@ -20,7 +20,7 @@ export async function getParameters() {
       OR: [
         // 1. Fetch local lab parameters
         { labId: labId },
-        // 2. Fetch global master parameters... EXCEPT ones already forked by this lab!
+        // 2. 🔗 THIS HIDES THE GLOBAL FORK: Fetch global master parameters EXCEPT ones already forked by this lab
         { 
           isGlobal: true,
           forks: { none: { labId: labId } }
@@ -195,7 +195,7 @@ export async function updateParameter(id: string, data: {
           data: {
             labId: labId,
             isGlobal: false,
-            forkedFromId: existingParam.id, // 🔗 The Secret Link to hide the global one!
+            forkedFromId: existingParam.id, // 🔗 THIS CREATES THE LINK SO IT HIDES FROM THE TABLE
             name: data.name,
             code: codeUpper,
             printName: data.printName || data.name,

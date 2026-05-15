@@ -1,75 +1,65 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { getDataFromToken } from "@/lib/auth";
 
-// --- GET: List All Parameters ---
-export async function GET(req: Request) {
+export const dynamic = 'force-dynamic';
+
+export async function GET(req: NextRequest) {
   try {
+    // 1. Secure Authentication
+    const user = await getDataFromToken(req);
+    if (!user || !user.labId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(req.url);
     const query = searchParams.get('query') || '';
 
-    // TODO: Replace with dynamic session.user.labId
-    const lab = await prisma.lab.findFirst(); 
-    if (!lab) return NextResponse.json({ error: "Lab not found" }, { status: 404 });
-
+    // 2. Fetch with Fork-Hiding Logic & Search
     const parameters = await prisma.labTestParameter.findMany({
       where: {
-        labId: lab.id,
-        isActive: true, // Only show active ones
+        isActive: true, // Only show active parameters
+        
+        // A. Handle the Global vs Local Forking visibility
         OR: [
-          { name: { contains: query, mode: 'insensitive' } },
-          { code: { contains: query, mode: 'insensitive' } }
-        ]
+          { labId: user.labId }, // Show my local custom parameters
+          { 
+            isGlobal: true,
+            forks: { none: { labId: user.labId } } // Show globals ONLY if I haven't forked them
+          }
+        ],
+        
+        // B. Handle the Search Bar filtering (if a query exists)
+        ...(query ? {
+          AND: [
+            {
+              OR: [
+                { name: { contains: query, mode: 'insensitive' } },
+                { code: { contains: query, mode: 'insensitive' } }
+              ]
+            }
+          ]
+        } : {})
       },
       orderBy: { name: 'asc' },
+      
+      // 3. Deep Fetch for the Datatable and Edit Form Hydration
       include: {
-        // Optional: Include ranges if you need to show them in the list
-        referenceRanges: true 
-      }
-    });
-
-    return NextResponse.json(parameters);
-  } catch (error) {
-    return NextResponse.json({ error: "Failed to fetch parameters" }, { status: 500 });
-  }
-}
-
-// --- POST: Create New (Same as before, included for completeness) ---
-export async function POST(req: Request) {
-  try {
-    const lab = await prisma.lab.findFirst();
-    if (!lab) return NextResponse.json({ error: "No Lab found" }, { status: 404 });
-
-    const body = await req.json();
-    const { name, code, unit, inputType, options, ranges } = body;
-
-    if (!name || !code) return NextResponse.json({ error: "Name/Code required" }, { status: 400 });
-
-    const parameter = await prisma.labTestParameter.create({
-      data: {
-        labId: lab.id,
-        name,
-        code: code.toUpperCase(),
-        unit,
-        inputType,
-        options: options || [],
-        referenceRanges: {
-          create: ranges?.map((r: any) => ({
-            gender: r.gender,
-            minAge: Number(r.minAge) * 365,
-            maxAge: Number(r.maxAge) * 365,
-            lowValue: r.lowValue ? Number(r.lowValue) : null,
-            highValue: r.highValue ? Number(r.highValue) : null,
-            criticalLow: r.criticalLow ? Number(r.criticalLow) : null,
-            criticalHigh: r.criticalHigh ? Number(r.criticalHigh) : null,
-            textValue: r.textValue
-          }))
+        referenceRanges: true,
+        containerType: { 
+          select: { code: true, name: true, capColor: true } 
+        },
+        reagents: {
+          include: {
+            inventoryItem: { select: { name: true, usageUnit: true } }
+          }
         }
       }
     });
 
-    return NextResponse.json(parameter);
-  } catch (error: any) {
-    console.error("CREATE ERROR:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ parameters }, { status: 200 });
+  } catch (error) {
+    console.error("Fetch Parameters Error:", error);
+    return NextResponse.json({ error: "Failed to fetch parameters" }, { status: 500 });
   }
 }
