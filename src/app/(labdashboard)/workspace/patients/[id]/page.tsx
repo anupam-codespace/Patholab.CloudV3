@@ -199,12 +199,21 @@ export default function PatientDetailPage() {
                 </Button>
               </>
             ) : (
-              <Button
-                onClick={() => setIsEditing(true)}
-                variant="outline"
-                className="w-full sm:w-auto h-11 rounded-xl border-indigo-200 text-indigo-700 hover:bg-indigo-50 font-medium transition-colors">
-                <Edit2 className="h-4 w-4 mr-2" /> Edit Profile
-              </Button>
+              <>
+                <Button
+                  onClick={() =>
+                    router.push(`/workspace/accession?patientId=${patient.id}`)
+                  }
+                  className="w-full sm:w-auto h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-500/20 font-bold transition-all">
+                  <FlaskConical className="h-4 w-4 mr-2" /> Add Test
+                </Button>
+                <Button
+                  onClick={() => setIsEditing(true)}
+                  variant="outline"
+                  className="w-full sm:w-auto h-11 rounded-xl border-indigo-200 text-indigo-700 hover:bg-indigo-50 font-medium transition-colors">
+                  <Edit2 className="h-4 w-4 mr-2" /> Edit Profile
+                </Button>
+              </>
             )}
           </div>
         </div>
@@ -243,7 +252,7 @@ export default function PatientDetailPage() {
                 </div>
 
                 {/* EDITABLE FIELDS */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-1.5">
                     <Label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">
                       Age
@@ -276,6 +285,28 @@ export default function PatientDetailPage() {
                         <SelectItem value="Years">Years</SelectItem>
                         <SelectItem value="Months">Months</SelectItem>
                         <SelectItem value="Days">Days</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">
+                      Gender
+                    </Label>
+                    <Select
+                      value={formData.gender || "UNKNOWN"}
+                      onValueChange={(v) =>
+                        setFormData({ ...formData, gender: v })
+                      }
+                      disabled={!isEditing}>
+                      <SelectTrigger
+                        className={`h-11 rounded-xl transition-colors ${isEditing ? "bg-white border-indigo-200 focus:ring-indigo-500/20" : "bg-slate-50 border-transparent text-slate-700"}`}>
+                        <SelectValue placeholder="Gender" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="MALE">Male</SelectItem>
+                        <SelectItem value="FEMALE">Female</SelectItem>
+                        <SelectItem value="OTHER">Other</SelectItem>
+                        <SelectItem value="UNKNOWN">Unknown</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -323,7 +354,6 @@ export default function PatientDetailPage() {
 
                 <div className="h-px bg-slate-100 my-4" />
 
-                {/* IDs & Clinical Baseline (Fixed: Now actually rendered) */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1">
@@ -556,7 +586,8 @@ export default function PatientDetailPage() {
                             <div className="flex items-center gap-6">
                               <div className="text-right hidden sm:block">
                                 <p className="text-base font-black text-slate-900">
-                                  ₹{inv.grandTotal?.toFixed(2)}
+                                  {/* SAFELY PARSED DECIMAL */}₹
+                                  {Number(inv.grandTotal || 0).toFixed(2)}
                                 </p>
                                 <p
                                   className={`text-[10px] font-bold uppercase tracking-wider mt-0.5 ${inv.status === "PAID" ? "text-emerald-600" : "text-red-500"}`}>
@@ -612,12 +643,18 @@ export default function PatientDetailPage() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-bold text-slate-900 truncate">
-                                {sample.sampleType}
+                                {/* FIX: Safely parse relations to avoid object rendering crashes */}
+                                {sample.sampleType?.name ||
+                                  sample.sampleType ||
+                                  "Unknown"}
                               </p>
                               <p className="text-xs font-medium text-slate-500 mt-0.5 flex items-center gap-2">
                                 <Hash className="h-3 w-3" /> {sample.sampleId}
                                 <span className="text-slate-300">•</span>
-                                Tube: {sample.containerType || "N/A"}
+                                Tube:{" "}
+                                {sample.containerType?.name ||
+                                  sample.containerType ||
+                                  "N/A"}
                               </p>
                             </div>
                             <Badge
