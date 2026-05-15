@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import ParameterForm from "../components/parameter-form";
+import { deleteParameter } from "@/actions/parameter-management"; // ✅ IMPORTED SERVER ACTION
 
 // --- TYPESCRIPT INTERFACES ---
 export interface InventoryItem {
@@ -56,26 +57,17 @@ export interface Parameter {
   unit?: string;
   inputType: "NUMBER" | "TEXT" | "LONG_TEXT" | "DROPDOWN" | "HEADING";
   price?: number;
-  isGlobal: boolean; // CRITICAL ADDITION FOR SAAS
+  isGlobal: boolean;
   containerType?: ContainerType;
   reagents?: Reagent[];
 }
 
-// 1. Fetching Function hitting the multi-tenant API Route
+// 1. Fetching Function hitting the secure API Route
 const fetchParameters = async (): Promise<Parameter[]> => {
   const res = await fetch("/api/workspace/parameters");
   if (!res.ok) throw new Error("Failed to fetch parameters");
   const data = await res.json();
   return data.parameters || [];
-};
-
-// 2. Delete Function
-const deleteLocalParameter = async (id: string) => {
-  const res = await fetch(`/api/workspace/parameters?id=${id}`, {
-    method: "DELETE",
-  });
-  if (!res.ok) throw new Error("Failed to delete");
-  return true;
 };
 
 export default function ParametersTab() {
@@ -92,19 +84,26 @@ export default function ParametersTab() {
     isLoading,
     isError,
   } = useQuery<Parameter[]>({
-    queryKey: ["local-parameters"],
+    queryKey: ["parameters"], // ✅ FIX: This now perfectly matches the form's invalidation key!
     queryFn: fetchParameters,
   });
 
   // --- MUTATIONS ---
   const deleteMutation = useMutation({
-    mutationFn: deleteLocalParameter,
+    mutationFn: async (id: string) => {
+      // ✅ FIX: Use the Server Action for secure deletion with soft-error handling
+      const res = await deleteParameter(id);
+      if (res?.error) throw new Error(res.error);
+      return res;
+    },
     onSuccess: () => {
       toast.success("Parameter deleted successfully");
-      queryClient.invalidateQueries({ queryKey: ["local-parameters"] });
+      queryClient.invalidateQueries({ queryKey: ["parameters"] }); // ✅ Refreshes the table
     },
-    onError: () => {
-      toast.error("Error deleting parameter. It may be in use by a test.");
+    onError: (error: any) => {
+      toast.error(
+        error.message || "Error deleting parameter. It may be in use.",
+      );
     },
   });
 
@@ -172,14 +171,14 @@ export default function ParametersTab() {
             </DialogHeader>
 
             <div className="p-6">
-              {/* Ensure your ParameterForm expects the updated schema */}
               <ParameterForm
                 key={editingParam ? editingParam.id : "new"}
                 initialData={editingParam || undefined}
                 onSuccess={() => {
                   setIsDialogOpen(false);
+                  // ✅ FIX: Force the table to refresh to hide the global parameter instantly
                   queryClient.invalidateQueries({
-                    queryKey: ["local-parameters"],
+                    queryKey: ["parameters"],
                   });
                 }}
               />
