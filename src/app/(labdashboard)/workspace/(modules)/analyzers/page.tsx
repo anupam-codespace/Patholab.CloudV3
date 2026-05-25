@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
-import { cookies, headers } from "next/headers";
-import { verifyToken } from "@/lib/auth";
+import { headers } from "next/headers";
+import { getSession } from "@/lib/auth";
+import { authorizeAccess } from "@/lib/auth-guard";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
@@ -23,29 +24,43 @@ import {
 } from "lucide-react";
 
 export default async function AnalyzerPage() {
-  // 1. AUTHENTICATION & DATA FETCHING
-  const token = cookies().get("token")?.value;
-  if (!token) redirect("/login");
+  // ==========================================
+  // 1. AUTHENTICATION & ENTERPRISE GUARD
+  // ==========================================
+  const session = await getSession();
 
-  const payload = await verifyToken(token);
-  const labId = payload?.labId as string;
-
-  if (!labId) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px] p-8">
-        <div className="bg-rose-50 border border-rose-100 p-6 rounded-2xl flex items-center gap-4 text-rose-600 font-bold shadow-sm">
-          <ShieldCheck className="w-6 h-6" />
-          Error: No Lab association found for this account.
-        </div>
-      </div>
-    );
+  if (!session || !session.userId || !session.labId) {
+    redirect("/login");
   }
 
+  // SECURE THE PAGE: This completely prevents URL manual typing access
+  // The guard will automatically redirect them if they fail the checks.
+  await authorizeAccess({
+    userId: session.userId,
+    labId: session.labId,
+    requiredFeature: "hasMachineIoT", // TIER 1: Lab must pay for IoT Integrations
+    // requiredPermission: "settings:manage" // TIER 2: Optional - restrict to managers only
+  });
+
+  const labId = session.labId;
+
+  // ==========================================
+  // 2. DATA FETCHING
+  // ==========================================
   const lab = await prisma.lab.findUnique({
     where: { id: labId },
   });
 
-  if (!lab) redirect("/login");
+  if (!lab) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px] p-8">
+        <div className="bg-rose-50 border border-rose-100 p-6 rounded-2xl flex items-center gap-4 text-rose-600 font-bold shadow-sm">
+          <ShieldCheck className="w-6 h-6" />
+          Error: Lab identity missing or corrupted.
+        </div>
+      </div>
+    );
+  }
 
   const headersList = headers();
   const host = headersList.get("host") || "localhost:3000";
@@ -80,6 +95,9 @@ export default async function AnalyzerPage() {
     take: 10,
   });
 
+  // ==========================================
+  // 3. RENDER UI
+  // ==========================================
   return (
     <div className="min-h-screen bg-[#fafafa] p-4 md:p-8 lg:p-12 font-sans selection:bg-indigo-100">
       {/* HEADER SECTION */}
@@ -190,7 +208,6 @@ export default async function AnalyzerPage() {
 
             <div className="flex items-center justify-between mb-10">
               <h2 className="text-xs font-black uppercase tracking-[0.2em] text-indigo-400 flex items-center gap-2">
-                {/* Fixed Animation: No styled-jsx needed */}
                 <RefreshCcw className="w-4 h-4 animate-[spin_8s_linear_infinite]" />{" "}
                 Cloud Status
               </h2>

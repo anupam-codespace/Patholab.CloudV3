@@ -11,15 +11,22 @@ const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'fallback-secret-key-change-this'
 );
 
-// ✅ UPDATED: Payload type to include Onboarding & Active Status
+// ✅ UPDATED: Payload type to include Branch Isolation & Enterprise Roles
 export interface JWTPayload extends JoseJWTPayload {
+  id?: string;                  
   userId: string;
   email: string;
   role: string;
   labId?: string;
-  isActive?: boolean;           // 👈 Added
-  onboardingStatus?: string;    // 👈 Added
-  [key: string]: any;           // Allow extra properties
+  branchId?: string | null;     
+  isActive?: boolean;           
+  onboardingStatus?: string;    
+  
+  // 👇 Added for 3-Tier Enterprise Security Guard
+  permissions?: string[];
+  unlockedFeatures?: string[];
+  
+  [key: string]: any;           
 }
 
 // =====================
@@ -31,7 +38,7 @@ export async function hashPassword(password: string): Promise<string> {
 
 export async function verifyPassword(
   password: string,
-   hashedPassword: string
+  hashedPassword: string
 ): Promise<boolean> {
   return compare(password, hashedPassword);
 }
@@ -100,6 +107,11 @@ export async function getCurrentUser(): Promise<JWTPayload | null> {
   } catch {
     return null;
   }
+}
+
+// ✅ ADDED: Alias for getSession to match the new Enterprise layout files perfectly
+export async function getSession(): Promise<JWTPayload | null> {
+  return getCurrentUser();
 }
 
 export async function removeAuthCookie() {
