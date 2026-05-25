@@ -16,7 +16,7 @@ import {
   ExternalLink,
   UserPlus,
   Receipt,
-  TestTube,
+  Scan,
   LifeBuoy,
   Building2,
   MapPin,
@@ -24,7 +24,6 @@ import {
   Menu,
   Users,
   BarChart3,
-  Scan,
   Hash,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -61,7 +60,7 @@ interface HeaderProps {
     email: string;
     avatar?: string | null;
     role?: string;
-    employeeId?: string | null; // ✅ ADDED EMPLOYEE ID
+    employeeId?: string | null;
     lab?: { name: string } | null;
     currentBranch?: { id: string; name: string; isMainBranch?: boolean } | null;
     branches?: { id: string; name: string; isMainBranch?: boolean }[];
@@ -148,7 +147,10 @@ export function Header({ user }: HeaderProps) {
   const pathname = usePathname();
   const shortcuts = getQuickShortcuts(user?.role);
 
-  // ✅ FIRE EVENT TO TOGGLE SIDEBAR
+  // ✅ Only Owners and Super Admins can switch branches
+  const canSwitchBranch =
+    user?.role === "LAB_OWNER" || user?.role === "SUPER_ADMIN";
+
   const toggleSidebar = () => {
     document.dispatchEvent(new Event("toggle-sidebar"));
   };
@@ -168,8 +170,16 @@ export function Header({ user }: HeaderProps) {
     }
   };
 
+  // ✅ Actually switch the branch by setting a cookie the backend can read
   const handleSwitchBranch = (branchId: string, branchName: string) => {
-    toast.success(`Switched workspace to ${branchName}`);
+    if (branchId === "ALL") {
+      document.cookie = "activeBranchId=; Max-Age=0; path=/;"; // Clear cookie to view all
+      toast.success(`Switched to Master God-View`);
+    } else {
+      document.cookie = `activeBranchId=${branchId}; path=/; max-age=86400`; // 1 day
+      toast.success(`Switched workspace to ${branchName}`);
+    }
+    router.refresh(); // Refresh the page to trigger new data fetch
   };
 
   const userName = user?.name || "User";
@@ -182,9 +192,7 @@ export function Header({ user }: HeaderProps) {
 
   const labName = user?.lab?.name || "Patholab Cloud";
   const currentBranchName = user?.currentBranch?.name || "Main Branch";
-  const availableBranches = user?.branches || [
-    { id: "1", name: "Main Branch", isMainBranch: true },
-  ];
+  const availableBranches = user?.branches || [];
 
   const getPageTitle = (path: string) => {
     const segments = path.split("/").filter(Boolean);
@@ -217,12 +225,32 @@ export function Header({ user }: HeaderProps) {
 
   const currentPage = getPageTitle(pathname);
 
+  // --- BRANCH BADGE COMPONENT ---
+  const BranchDisplay = () => (
+    <div
+      className={`h-10 px-2.5 py-1.5 flex items-center gap-2 rounded-xl border border-transparent transition-all text-left ${canSwitchBranch ? "hover:bg-slate-100 hover:border-slate-200" : ""}`}>
+      <div className="bg-slate-100 p-1.5 rounded-lg hidden lg:block">
+        <Building2 className="w-4 h-4 text-slate-500" />
+      </div>
+      <div className="flex flex-col items-start justify-center">
+        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-0.5">
+          {labName}
+        </span>
+        <span className="text-sm font-extrabold text-slate-900 tracking-tight leading-none flex items-center gap-1.5">
+          {currentBranchName}
+          {canSwitchBranch && (
+            <ChevronDown className="w-3 h-3 text-slate-400" />
+          )}
+        </span>
+      </div>
+    </div>
+  );
+
   return (
     <div className="sticky top-4 z-40 px-4 md:px-8 pointer-events-none">
       <header className="pointer-events-auto h-16 w-full max-w-screen-2xl mx-auto flex items-center justify-between rounded-2xl bg-white/80 backdrop-blur-xl border border-slate-200/60 shadow-sm pr-4 pl-3 sm:pr-6 sm:pl-4">
         {/* 1. LEFT SIDE: HAMBURGER, BRANDING & BREADCRUMBS */}
         <div className="flex items-center gap-2 overflow-hidden whitespace-nowrap">
-          {/* ✅ HAMBURGER MENU TOGGLE */}
           <Button
             variant="ghost"
             size="icon"
@@ -238,72 +266,88 @@ export function Header({ user }: HeaderProps) {
           </Link>
 
           <div className="hidden sm:flex items-center gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="h-10 px-2.5 py-1.5 flex items-center gap-2 hover:bg-slate-100 rounded-xl border border-transparent hover:border-slate-200 transition-all text-left">
-                  <div className="bg-slate-100 p-1.5 rounded-lg hidden lg:block">
-                    <Building2 className="w-4 h-4 text-slate-500" />
-                  </div>
-                  <div className="flex flex-col items-start justify-center">
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-0.5">
-                      {labName}
-                    </span>
-                    <span className="text-sm font-extrabold text-slate-900 tracking-tight leading-none flex items-center gap-1.5">
-                      {currentBranchName}{" "}
-                      <ChevronDown className="w-3 h-3 text-slate-400" />
-                    </span>
-                  </div>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="start"
-                className="w-64 rounded-2xl shadow-xl border border-slate-200 p-2 animate-in zoom-in-95 duration-200">
-                <DropdownMenuLabel className="text-xs font-bold text-slate-400 uppercase tracking-widest px-2 pb-2">
-                  Switch Workspace
-                </DropdownMenuLabel>
-                <div className="space-y-1">
-                  {availableBranches.map((branch) => {
-                    const isActive = currentBranchName === branch.name;
-                    return (
-                      <DropdownMenuItem
-                        key={branch.id}
-                        onClick={() =>
-                          handleSwitchBranch(branch.id, branch.name)
-                        }
-                        className={`cursor-pointer rounded-xl px-3 py-2.5 flex items-center justify-between transition-colors ${isActive ? "bg-emerald-50 text-emerald-900 focus:bg-emerald-50" : "hover:bg-slate-50 focus:bg-slate-50"}`}>
-                        <div className="flex items-center gap-3">
-                          <MapPin
-                            className={`h-4 w-4 ${isActive ? "text-emerald-500" : "text-slate-400"}`}
-                          />
-                          <div className="flex flex-col">
-                            <span className="font-bold text-sm leading-none">
-                              {branch.name}
-                            </span>
-                            {branch.isMainBranch && (
-                              <span className="text-[10px] text-slate-400 font-medium mt-1">
-                                Main Headquarters
-                              </span>
-                            )}
-                          </div>
+            {/* ✅ CONDITIONALLY RENDER DROPDOWN OR STATIC BADGE */}
+            {canSwitchBranch ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="focus:outline-none">
+                    <BranchDisplay />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="start"
+                  className="w-64 rounded-2xl shadow-xl border border-slate-200 p-2 animate-in zoom-in-95 duration-200">
+                  <DropdownMenuLabel className="text-xs font-bold text-slate-400 uppercase tracking-widest px-2 pb-2">
+                    Switch Workspace
+                  </DropdownMenuLabel>
+                  <div className="space-y-1">
+                    {/* Master View Option for Owners */}
+                    <DropdownMenuItem
+                      onClick={() => handleSwitchBranch("ALL", "All Branches")}
+                      className={`cursor-pointer rounded-xl px-3 py-2.5 flex items-center justify-between transition-colors ${currentBranchName === "All Branches" ? "bg-emerald-50 text-emerald-900" : "hover:bg-slate-50"}`}>
+                      <div className="flex items-center gap-3">
+                        <Building2
+                          className={`h-4 w-4 ${currentBranchName === "All Branches" ? "text-emerald-500" : "text-slate-400"}`}
+                        />
+                        <div className="flex flex-col">
+                          <span className="font-bold text-sm leading-none">
+                            Global Master View
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-medium mt-1">
+                            See all lab data
+                          </span>
                         </div>
-                        {isActive && (
-                          <Check className="h-4 w-4 text-emerald-600" />
-                        )}
-                      </DropdownMenuItem>
-                    );
-                  })}
-                </div>
-                <DropdownMenuSeparator className="my-2 bg-slate-100" />
-                <Link href="/workspace/settings?tab=branches">
-                  <DropdownMenuItem className="cursor-pointer rounded-xl px-3 py-2.5 text-slate-600 hover:text-slate-900 hover:bg-slate-50 focus:bg-slate-50 font-bold text-sm flex items-center">
-                    <Settings className="w-4 h-4 mr-2 text-slate-400" />
-                    Manage Branches
-                  </DropdownMenuItem>
-                </Link>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                      </div>
+                      {currentBranchName === "All Branches" && (
+                        <Check className="h-4 w-4 text-emerald-600" />
+                      )}
+                    </DropdownMenuItem>
+
+                    <DropdownMenuSeparator className="my-1 bg-slate-100" />
+
+                    {availableBranches.map((branch) => {
+                      const isActive = currentBranchName === branch.name;
+                      return (
+                        <DropdownMenuItem
+                          key={branch.id}
+                          onClick={() =>
+                            handleSwitchBranch(branch.id, branch.name)
+                          }
+                          className={`cursor-pointer rounded-xl px-3 py-2.5 flex items-center justify-between transition-colors ${isActive ? "bg-blue-50 text-blue-900 focus:bg-blue-50" : "hover:bg-slate-50 focus:bg-slate-50"}`}>
+                          <div className="flex items-center gap-3">
+                            <MapPin
+                              className={`h-4 w-4 ${isActive ? "text-blue-500" : "text-slate-400"}`}
+                            />
+                            <div className="flex flex-col">
+                              <span className="font-bold text-sm leading-none">
+                                {branch.name}
+                              </span>
+                              {branch.isMainBranch && (
+                                <span className="text-[10px] text-slate-400 font-medium mt-1">
+                                  Headquarters
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          {isActive && (
+                            <Check className="h-4 w-4 text-blue-600" />
+                          )}
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </div>
+                  <DropdownMenuSeparator className="my-2 bg-slate-100" />
+                  <Link href="/workspace/settings?tab=branches">
+                    <DropdownMenuItem className="cursor-pointer rounded-xl px-3 py-2.5 text-slate-600 hover:text-slate-900 hover:bg-slate-50 focus:bg-slate-50 font-bold text-sm flex items-center">
+                      <Settings className="w-4 h-4 mr-2 text-slate-400" />
+                      Manage Branches
+                    </DropdownMenuItem>
+                  </Link>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <BranchDisplay />
+            )}
 
             <ChevronRight className="h-4 w-4 text-slate-300" />
 
@@ -325,7 +369,6 @@ export function Header({ user }: HeaderProps) {
 
         {/* 2. CENTER/RIGHT: ACTIONS */}
         <div className="flex items-center gap-1.5 sm:gap-3">
-          {/* ✅ DYNAMIC QUICK ACTIONS BAR */}
           <div className="hidden md:flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl p-1 mr-2">
             <TooltipProvider delayDuration={100}>
               {shortcuts.map((shortcut, idx) => (
@@ -350,7 +393,6 @@ export function Header({ user }: HeaderProps) {
             </TooltipProvider>
           </div>
 
-          {/* ✅ EMPLOYEE ID BADGE */}
           <div className="hidden lg:flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl h-10 mr-1">
             <Hash className="h-3.5 w-3.5 text-slate-400" />
             <span className="text-xs font-bold text-slate-700 tracking-wider font-mono">
@@ -362,7 +404,6 @@ export function Header({ user }: HeaderProps) {
             </span>
           </div>
 
-          {/* 🟢 HELP / SUPPORT POPUP */}
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -410,37 +451,14 @@ export function Header({ user }: HeaderProps) {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors">
-                  <div className="bg-amber-50 p-2.5 rounded-lg text-amber-600">
-                    <Clock className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                      Operating Hours
-                    </p>
-                    <p className="text-sm font-bold text-slate-900">
-                      Mon-Sat, 9am - 7pm
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="p-3 bg-slate-50 border-t border-slate-100">
-                <Link href="/workspace/support" passHref>
-                  <Button className="w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900 shadow-sm font-bold text-xs transition-all">
-                    Open Support Center{" "}
-                    <ExternalLink className="h-3 w-3 ml-2 text-slate-400" />
-                  </Button>
-                </Link>
               </div>
             </PopoverContent>
           </Popover>
 
-          {/* 🔔 NOTIFICATION DROPDOWN */}
           <div className="flex items-center justify-center h-10 w-10 rounded-xl hover:bg-slate-100 transition-colors shrink-0">
             <NotificationDropdown />
           </div>
 
-          {/* 👤 USER DROPDOWN */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -463,7 +481,6 @@ export function Header({ user }: HeaderProps) {
               className="w-72 mt-3 p-0 rounded-2xl shadow-xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200"
               align="end"
               forceMount>
-              {/* Premium Dark Header */}
               <DropdownMenuLabel className="font-normal p-5 bg-slate-900 text-white relative">
                 <div className="flex items-center gap-4">
                   <Avatar className="h-12 w-12 border-2 border-slate-700 rounded-xl shadow-inner">
@@ -483,11 +500,6 @@ export function Header({ user }: HeaderProps) {
                       {user?.role && (
                         <Badge className="w-fit bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] uppercase tracking-widest font-black rounded-md px-1.5 py-0.5">
                           {user.role.replace("_", " ")}
-                        </Badge>
-                      )}
-                      {!user?.employeeId && (
-                        <Badge className="w-fit bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[9px] uppercase tracking-widest font-black rounded-md px-1.5 py-0.5">
-                          ID PENDING
                         </Badge>
                       )}
                     </div>
