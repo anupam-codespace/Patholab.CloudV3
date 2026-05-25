@@ -165,7 +165,7 @@ export default function ReportsDispatchPage() {
     setShareReport(null);
   };
 
-  // 3. Verification Link Email Share
+  // 3. Verification Link Email Share (Gmail Specific)
   const handleEmailShare = (report: Report) => {
     if (!report.patient.email)
       return toast.error("Patient has no email address.");
@@ -173,9 +173,13 @@ export default function ReportsDispatchPage() {
     const verifyUrl = `${window.location.origin}/verify/${report.id}`;
     const subject = `Your Lab Test Report - Patholab Cloud`;
     const body = `Hello ${report.patient.name},\n\nYour lab test report is ready. You can securely view and download it using the link below:\n\n${verifyUrl}\n\nThank you,\nPatholab Cloud`;
-    const mailtoUrl = `mailto:${report.patient.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
-    window.location.href = mailtoUrl;
+    // Explicit Gmail URL
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
+      report.patient.email,
+    )}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+    window.open(gmailUrl, "_blank");
     setShareReport(null);
   };
 

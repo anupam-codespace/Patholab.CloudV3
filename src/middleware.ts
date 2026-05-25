@@ -11,6 +11,8 @@ const publicRoutes = [
   '/pricing',
   '/unauthorized',
   '/verify',
+  '/upgrade',
+
 ];
 
 // Routes that logged-in users should NEVER see (they get bounced to dashboard)

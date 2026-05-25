@@ -6,20 +6,14 @@ import { useRouter } from "next/navigation";
 import {
   DollarSign,
   Activity,
-  AlertTriangle,
-  Plus,
-  Clock,
   ArrowUpRight,
   ArrowDownRight,
   Wallet,
   Receipt,
   CheckCircle2,
   Package,
-  Building2,
   MapPin,
-  Phone,
-  Mail,
-  FileCheck,
+  Clock,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -125,24 +119,29 @@ export default function LabOwnerDashboard() {
       </div>
     );
 
-  const { kpi, charts, alerts, labDetails, recentPatients } = data || {};
+  const { kpi, charts, alerts, recentPatients, user } = data || {};
+
+  // Resolve the names safely
+  const userName = user?.name || "Manager";
+  const branchName =
+    user?.branchName || data?.labDetails?.name || "Main Branch";
 
   return (
     <div className="space-y-6 p-4 md:p-8 min-h-screen bg-slate-50/50">
-      {/* HEADER */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+      {/* HEADER: Personalized Welcome */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            Lab Overview
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
+            Welcome back, {userName} 👋
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Monitor your financial and operational health.
+          <p className="text-sm font-bold text-indigo-600 mt-1.5 flex items-center gap-1.5 bg-indigo-50 w-max px-2.5 py-1 rounded-md">
+            <MapPin className="w-3.5 h-3.5" /> {branchName}
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <Select value={dateRange} onValueChange={setDateRange}>
-            <SelectTrigger className="w-[180px] bg-slate-50 border-slate-200 shadow-sm">
+            <SelectTrigger className="w-[180px] bg-slate-50 border-slate-200 shadow-sm font-medium">
               <SelectValue placeholder="Select period" />
             </SelectTrigger>
             <SelectContent>
@@ -466,155 +465,86 @@ export default function LabOwnerDashboard() {
         </Card>
       </div>
 
-      {/* LAB PROFILE & RECENT PATIENTS ROW */}
-      <div className="grid gap-6 md:grid-cols-3">
-        {/* Lab Details Profile */}
-        <Card className="shadow-sm border-slate-200 bg-white">
-          <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/50">
-            <CardTitle className="text-slate-800 flex items-center gap-2 text-base">
-              <Building2 className="h-5 w-5 text-indigo-600" /> Lab Details
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-5 space-y-5">
-            <div>
-              <h3 className="font-bold text-slate-900 text-lg leading-tight">
-                {labDetails?.name}
-              </h3>
-              <div className="flex items-center gap-2 mt-1.5 text-xs text-slate-500">
-                <FileCheck className="h-3.5 w-3.5" /> License:{" "}
-                <span className="font-medium text-slate-700">
-                  {labDetails?.licenseNumber}
-                </span>
-              </div>
-            </div>
-
-            <div className="space-y-3 text-sm text-slate-600">
-              <div className="flex items-start gap-3">
-                <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-slate-400" />
-                <span className="leading-snug">{labDetails?.address}</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <Phone className="h-4 w-4 shrink-0 text-slate-400" />
-                <span>{labDetails?.phone}</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <Mail className="h-4 w-4 shrink-0 text-slate-400" />
-                <span className="truncate">{labDetails?.email}</span>
-              </div>
-            </div>
-
-            <Button
-              variant="outline"
-              className="w-full text-indigo-600 border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 mt-2 transition-colors"
-              onClick={() => router.push("/workspace/settings")}>
-              Edit Profile Details
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Recent Patients */}
-        <Card className="md:col-span-2 shadow-sm border-slate-200 bg-white">
-          <CardHeader className="pb-3 border-b border-slate-100 flex flex-row justify-between items-center bg-slate-50/50">
-            <CardTitle className="text-base text-slate-800">
-              Recent Patients
-            </CardTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-blue-600 hover:bg-blue-50"
-              onClick={() => router.push("/workspace/patients")}>
-              View All
-            </Button>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <div className="space-y-2">
-              {recentPatients?.length > 0 ? (
-                recentPatients.map((patient: any) => (
-                  <div
-                    key={patient.id}
-                    className="flex items-center justify-between group cursor-pointer hover:bg-slate-50 p-2 -mx-2 rounded-lg transition-colors border border-transparent hover:border-slate-100"
-                    onClick={() =>
-                      router.push(`/workspace/patients/${patient.id}`)
-                    }>
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-10 w-10 bg-blue-50 border border-blue-100 text-blue-600 font-bold shadow-sm">
-                        <AvatarFallback>
-                          {patient.name.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">
-                          {patient.name}
-                        </p>
-                        <p className="text-[11px] font-medium text-slate-500 mt-0.5">
-                          {patient.contact} • {patient.details}
-                        </p>
-                      </div>
+      {/* RECENT PATIENTS - Full Width */}
+      <Card className="shadow-sm border-slate-200 bg-white w-full">
+        <CardHeader className="pb-3 border-b border-slate-100 flex flex-row justify-between items-center bg-slate-50/50">
+          <CardTitle className="text-base text-slate-800">
+            Recent Patients
+          </CardTitle>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-blue-600 hover:bg-blue-50 font-bold"
+            onClick={() => router.push("/workspace/patients")}>
+            View All Patients &rarr;
+          </Button>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {recentPatients?.length > 0 ? (
+              recentPatients.map((patient: any) => (
+                <div
+                  key={patient.id}
+                  className="flex items-center justify-between group cursor-pointer hover:bg-slate-50 p-3 rounded-xl transition-colors border border-slate-100 hover:border-blue-200 shadow-sm"
+                  onClick={() =>
+                    router.push(`/workspace/patients/${patient.id}`)
+                  }>
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-10 w-10 bg-blue-50 border border-blue-100 text-blue-600 font-bold shadow-sm">
+                      <AvatarFallback>{patient.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">
+                        {patient.name}
+                      </p>
+                      <p className="text-[11px] font-medium text-slate-500 mt-0.5">
+                        {patient.contact} • {patient.details}
+                      </p>
                     </div>
-                    <Badge
-                      variant="secondary"
-                      className="text-[10px] bg-white border shadow-sm text-slate-600 px-2 py-1">
-                      {patient.testsCount} Tests Recorded
-                    </Badge>
                   </div>
-                ))
-              ) : (
-                <div className="text-center text-sm text-slate-500 py-10 flex flex-col items-center gap-2">
-                  <div className="bg-slate-50 p-3 rounded-full mb-1">
-                    <Activity className="h-6 w-6 text-slate-300" />
-                  </div>
-                  No recent patients found.
+                  <Badge
+                    variant="secondary"
+                    className="text-[10px] bg-white border shadow-sm text-slate-600 px-2 py-1">
+                    {patient.testsCount} Tests
+                  </Badge>
                 </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+              ))
+            ) : (
+              <div className="col-span-full text-center text-sm text-slate-500 py-10 flex flex-col items-center gap-2">
+                <div className="bg-slate-50 p-3 rounded-full mb-1">
+                  <Activity className="h-6 w-6 text-slate-300" />
+                </div>
+                No recent patients found.
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* --- MODAL FOR LAB SETUP --- */}
-      <Dialog open={showSetupModal} onOpenChange={() => {}}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Complete Lab Setup</DialogTitle>
-            <DialogDescription>
-              Please provide your lab details to continue.
-            </DialogDescription>
-          </DialogHeader>
-          <form
-            onSubmit={setupForm.handleSubmit(onSetupSubmit)}
-            className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Lab Name</Label>
-              <Input
-                {...setupForm.register("labName")}
-                placeholder="e.g. City Labs"
-              />
-            </div>
-            <DialogFooter>
-              <Button type="submit">Save Details</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      
     </div>
   );
 }
 
 function DashboardSkeleton() {
   return (
-    <div className="p-8 space-y-8">
-      <div className="flex justify-between">
-        <Skeleton className="h-10 w-48" />
-        <Skeleton className="h-10 w-32" />
+    <div className="p-8 space-y-8 min-h-screen bg-slate-50/50">
+      <div className="flex flex-col md:flex-row justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-5 w-32" />
+        </div>
+        <Skeleton className="h-10 w-[180px]" />
       </div>
       <div className="grid gap-4 md:grid-cols-4">
         {[1, 2, 3, 4].map((i) => (
-          <Skeleton key={i} className="h-32" />
+          <Skeleton key={i} className="h-32 rounded-xl" />
         ))}
       </div>
       <div className="grid gap-6 lg:grid-cols-3">
-        <Skeleton className="col-span-2 h-[400px]" />
-        <Skeleton className="col-span-1 h-[400px]" />
+        <Skeleton className="col-span-2 h-[400px] rounded-xl" />
+        <Skeleton className="col-span-1 h-[400px] rounded-xl" />
       </div>
     </div>
   );
