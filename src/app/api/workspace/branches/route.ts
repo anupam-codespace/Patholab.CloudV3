@@ -5,7 +5,30 @@ import { getCurrentUser } from '@/lib/auth';
 export const dynamic = 'force-dynamic';
 
 // ============================================================================
-// POST: Create a New Branch (Enforces SaaS Plan Limits)
+// GET: Fetch all Branches (Used for Dropdowns & Tables)
+// ============================================================================
+export async function GET(req: NextRequest) {
+  try {
+    const user = await getCurrentUser();
+    if (!user || !user.labId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const branches = await prisma.branch.findMany({
+      where: { 
+        labId: user.labId,
+        isActive: true 
+      },
+      orderBy: { createdAt: "asc" }
+    });
+
+    return NextResponse.json(branches, { status: 200 });
+  } catch (error) {
+    console.error('[BRANCH_GET_ERROR]', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}
+
+// ============================================================================
+// POST: Create a New Branch (Enforces SaaS Plan Limits & Generates branchCode)
 // ============================================================================
 export async function POST(req: NextRequest) {
   try {
@@ -29,6 +52,7 @@ export async function POST(req: NextRequest) {
 
     // 2. ENFORCE SAAS LIMITS
     const currentBranchCount = lab.branches.length;
+    // NOTE: If you consider the main lab as "1", make sure your logic accounts for it!
     const maxAllowedBranches = lab.subscription.plan.maxBranches + (lab.subscription.boosterBranches || 0);
 
     if (currentBranchCount >= maxAllowedBranches) {
@@ -37,12 +61,18 @@ export async function POST(req: NextRequest) {
       }, { status: 403 });
     }
 
-    // 3. Create the Branch
+    // 3. AUTO-GENERATE 2-DIGIT BRANCH CODE (e.g., "02", "03")
+    // This is required for the 9-digit Employee ID generation in the Staff API!
+    const nextBranchNum = currentBranchCount + 1; 
+    const generatedBranchCode = nextBranchNum.toString().padStart(2, '0');
+
+    // 4. Create the Branch
     const newBranch = await prisma.branch.create({
       data: {
         labId: user.labId,
         name: body.name,
         code: body.code || null,
+        branchCode: generatedBranchCode, // ✅ Injected for Staff IDs
         isMainBranch: body.isMainBranch || false,
         address: body.address,
         city: body.city,
@@ -54,7 +84,7 @@ export async function POST(req: NextRequest) {
       }
     });
 
-    // 4. If this is set as Main Branch, strip the flag from older branches
+    // 5. If this is set as Main Branch, strip the flag from older branches
     if (body.isMainBranch) {
       await prisma.branch.updateMany({
         where: { labId: user.labId, id: { not: newBranch.id } },

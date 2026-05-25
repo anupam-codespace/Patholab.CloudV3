@@ -22,6 +22,7 @@ import {
   Edit,
   ActivitySquare,
   Clock,
+  GitBranch,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { format } from "date-fns";
@@ -54,16 +55,17 @@ import {
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-// --- VALIDATION SCHEMAS ---
+// --- 1. UPDATED VALIDATION SCHEMA ---
 const staffSchema = z.object({
   name: z.string().min(2, "Name is required"),
-  email: z.string().email("Invalid email").optional(), // Optional for edits
+  email: z.string().email("Invalid email").optional(),
   phone: z.string().min(10, "Invalid phone"),
   password: z.string().optional(),
   role: z.enum(["TECHNICIAN", "RECEPTIONIST", "DOCTOR", "LAB_MANAGER"]),
   position: z.string().min(2, "Position title required"),
   department: z.string().optional(),
   salary: z.coerce.number().min(0).optional(),
+  branchId: z.string().optional(), // ✅ Added branchId to the schema
 });
 
 type StaffFormValues = z.infer<typeof staffSchema>;
@@ -85,7 +87,7 @@ export default function StaffManagementPage() {
   }>({ isOpen: false, staff: null });
   const [search, setSearch] = useState("");
 
-  // 1. FETCH STAFF
+  // --- FETCH QUERIES ---
   const { data: staffList = [], isLoading } = useQuery({
     queryKey: ["staff-directory"],
     queryFn: async () => {
@@ -95,7 +97,18 @@ export default function StaffManagementPage() {
     },
   });
 
-  // 2. ADD STAFF MUTATION
+  // ✅ New Query: Fetch available branches for the dropdowns
+  const { data: branches = [] } = useQuery({
+    queryKey: ["branches"],
+    queryFn: async () => {
+      const res = await fetch("/api/workspace/branches");
+      if (!res.ok) return [];
+      const data = await res.json();
+      return Array.isArray(data) ? data : data.branches || [];
+    },
+  });
+
+  // --- MUTATIONS ---
   const addMutation = useMutation({
     mutationFn: async (data: StaffFormValues) => {
       const res = await fetch("/api/workspace/staff", {
@@ -115,7 +128,6 @@ export default function StaffManagementPage() {
     onError: (err: Error) => toast.error(err.message),
   });
 
-  // 3. UPDATE / ACTION MUTATION
   const actionMutation = useMutation({
     mutationFn: async (data: {
       staffId: string;
@@ -131,7 +143,7 @@ export default function StaffManagementPage() {
       if (!res.ok) throw new Error((await res.json()).error || "Action failed");
       return res.json();
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (data) => {
       toast.success(data.message || "Updated successfully");
       setIsPasswordOpen({ isOpen: false, staff: null });
       setEditData({ isOpen: false, staff: null });
@@ -368,6 +380,7 @@ export default function StaffManagementPage() {
       {/* --- MODALS --- */}
       <AddStaffModal
         open={isAddOpen}
+        branches={branches}
         onOpenChange={setIsAddOpen}
         onSubmit={addMutation.mutate}
         isLoading={addMutation.isPending}
@@ -376,6 +389,7 @@ export default function StaffManagementPage() {
       <EditStaffModal
         open={editData.isOpen}
         staff={editData.staff}
+        branches={branches}
         onClose={() => setEditData({ isOpen: false, staff: null })}
         onSubmit={(data: any) =>
           actionMutation.mutate({ ...data, action: "UPDATE_DETAILS" })
@@ -410,7 +424,13 @@ export default function StaffManagementPage() {
 // ==========================================
 // SUB-COMPONENT: ADD STAFF MODAL
 // ==========================================
-function AddStaffModal({ open, onOpenChange, onSubmit, isLoading }: any) {
+function AddStaffModal({
+  open,
+  branches,
+  onOpenChange,
+  onSubmit,
+  isLoading,
+}: any) {
   const form = useForm<StaffFormValues>({
     resolver: zodResolver(staffSchema),
     defaultValues: {
@@ -422,6 +442,7 @@ function AddStaffModal({ open, onOpenChange, onSubmit, isLoading }: any) {
       position: "",
       department: "",
       salary: undefined,
+      branchId: "",
     },
   });
 
@@ -451,16 +472,44 @@ function AddStaffModal({ open, onOpenChange, onSubmit, isLoading }: any) {
               <Input {...form.register("phone")} className="h-10 rounded-xl" />
             </div>
           </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-slate-700">
-              Email (Login ID)
-            </Label>
-            <Input
-              {...form.register("email")}
-              type="email"
-              className="h-10 rounded-xl"
-            />
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold text-slate-700">
+                Email (Login ID)
+              </Label>
+              <Input
+                {...form.register("email")}
+                type="email"
+                className="h-10 rounded-xl"
+              />
+            </div>
+
+            {/* ✅ NEW: Branch Selection Dropdown */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold text-slate-700">
+                Branch Assignment
+              </Label>
+              <Select
+                onValueChange={(val: any) =>
+                  form.setValue("branchId", val === "main" ? "" : val)
+                }
+                value={form.watch("branchId") || "main"}>
+                <SelectTrigger className="h-10 rounded-xl">
+                  <SelectValue placeholder="Select Branch" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl">
+                  <SelectItem value="main">Main Branch</SelectItem>
+                  {branches.map((b: any) => (
+                    <SelectItem key={b.id} value={b.id}>
+                      {b.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label className="text-xs font-bold text-slate-700">
@@ -529,7 +578,14 @@ function AddStaffModal({ open, onOpenChange, onSubmit, isLoading }: any) {
 // ==========================================
 // SUB-COMPONENT: EDIT STAFF MODAL
 // ==========================================
-function EditStaffModal({ open, staff, onClose, onSubmit, isLoading }: any) {
+function EditStaffModal({
+  open,
+  staff,
+  branches,
+  onClose,
+  onSubmit,
+  isLoading,
+}: any) {
   const form = useForm<StaffFormValues>({
     resolver: zodResolver(staffSchema),
   });
@@ -543,12 +599,19 @@ function EditStaffModal({ open, staff, onClose, onSubmit, isLoading }: any) {
         position: staff.position,
         department: staff.department || "",
         salary: staff.salary ? Number(staff.salary) : undefined,
+        branchId: staff.branchId || "", // ✅ Hydrate Branch Data
       });
     }
   }, [open, staff, form]);
 
   const submitHandler = (data: any) => {
-    onSubmit({ staffId: staff.id, userId: staff.user.id, ...data });
+    // If the branchId is empty (Main Branch), make sure to pass null/undefined appropriately
+    onSubmit({
+      staffId: staff.id,
+      userId: staff.user.id,
+      ...data,
+      branchId: data.branchId || null,
+    });
   };
 
   return (
@@ -581,6 +644,7 @@ function EditStaffModal({ open, staff, onClose, onSubmit, isLoading }: any) {
               <Input {...form.register("phone")} className="h-10 rounded-xl" />
             </div>
           </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label className="text-xs font-bold text-slate-700">
@@ -610,16 +674,32 @@ function EditStaffModal({ open, staff, onClose, onSubmit, isLoading }: any) {
               />
             </div>
           </div>
+
           <div className="grid grid-cols-2 gap-4">
+            {/* ✅ NEW: Branch Selection Dropdown for Edits */}
             <div className="space-y-1.5">
               <Label className="text-xs font-bold text-slate-700">
-                Department
+                Branch Assignment
               </Label>
-              <Input
-                {...form.register("department")}
-                className="h-10 rounded-xl"
-              />
+              <Select
+                onValueChange={(val: any) =>
+                  form.setValue("branchId", val === "main" ? "" : val)
+                }
+                value={form.watch("branchId") || "main"}>
+                <SelectTrigger className="h-10 rounded-xl">
+                  <SelectValue placeholder="Select Branch" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl">
+                  <SelectItem value="main">Main Branch</SelectItem>
+                  {branches.map((b: any) => (
+                    <SelectItem key={b.id} value={b.id}>
+                      {b.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+
             <div className="space-y-1.5">
               <Label className="text-xs font-bold text-slate-700">Salary</Label>
               <Input
@@ -629,6 +709,7 @@ function EditStaffModal({ open, staff, onClose, onSubmit, isLoading }: any) {
               />
             </div>
           </div>
+
           <div className="pt-4 border-t border-slate-100 flex justify-end gap-3">
             <Button
               type="button"
@@ -736,7 +817,7 @@ function ActivityLogModal({ open, staff, onClose }: any) {
       if (!res.ok) throw new Error("Failed to fetch logs");
       return res.json();
     },
-    enabled: !!staff?.user?.id && open, // Only fetch when modal is open
+    enabled: !!staff?.user?.id && open,
   });
 
   return (
