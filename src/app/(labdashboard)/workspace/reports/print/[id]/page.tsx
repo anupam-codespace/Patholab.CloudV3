@@ -10,6 +10,8 @@ import {
   History,
   Calendar,
   FileCheck2,
+  MessageCircle,
+  Mail,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect, useMemo } from "react";
@@ -124,7 +126,7 @@ export default function ClinicalReportPage() {
   const params = useParams();
   const id = params.id as string;
 
-  const [isDownloading, setIsDownloading] = useState<string | null>(null); // Track which invoice is downloading
+  const [isDownloading, setIsDownloading] = useState<string | null>(null);
   const [verificationUrl, setVerificationUrl] = useState("");
 
   const { data: patient, isLoading } = useQuery({
@@ -184,7 +186,6 @@ export default function ClinicalReportPage() {
       </div>
     );
 
-  // The very first item in the sorted array is the Latest Visit
   const latestVisit = groupedVisits[0];
   const pastVisits = groupedVisits.slice(1);
 
@@ -200,7 +201,6 @@ export default function ClinicalReportPage() {
   } = config.branding;
   const pb = config.patientBlock;
 
-  // --- DYNAMIC TIMESTAMPS FOR LATEST PREVIEW ---
   const primaryTest = latestVisit.tests[0];
   const barcodeValue =
     primaryTest?.sample?.sampleId || patient.patientId || "UNKNOWN";
@@ -218,7 +218,34 @@ export default function ClinicalReportPage() {
     ? format(new Date(primaryTest.approvedAt), "dd/MM/yy HH:mm:ss")
     : format(new Date(), "dd/MM/yy HH:mm:ss");
 
-  // --- PDF DOWNLOAD TRIGGER (Accepts a specific visit's tests) ---
+  // --- SHARE HANDLERS ---
+  const handleWhatsAppShare = () => {
+    if (!patient.phone) return toast.error("Patient has no phone number.");
+
+    let phone = patient.phone.replace(/\D/g, "");
+    if (phone.length === 10) phone = `91${phone}`;
+
+    const message = `Hello ${patient.name},\n\nYour lab test report is ready. You can securely view and download it here:\n${verificationUrl}\n\nThank you,\nPatholab Cloud`;
+    const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+
+    window.open(whatsappUrl, "_blank");
+  };
+
+  const handleEmailShare = () => {
+    if (!patient.email) return toast.error("Patient has no email address.");
+
+    const subject = `Your Lab Test Report - Patholab Cloud`;
+    const body = `Hello ${patient.name},\n\nYour lab test report is ready. You can securely view and download it using the link below:\n\n${verificationUrl}\n\nThank you,\nPatholab Cloud`;
+
+    // Explicit Gmail URL
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
+      patient.email,
+    )}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+    window.open(gmailUrl, "_blank");
+  };
+
+  // --- PDF DOWNLOAD TRIGGER ---
   const handleDownload = async (visit: any) => {
     setIsDownloading(visit.invoiceId);
     const toastId = toast.loading(
@@ -230,7 +257,6 @@ export default function ClinicalReportPage() {
         color: { dark: "#0f172a", light: "#ffffff" },
       });
 
-      // ONLY pass the tests belonging to THIS specific visit!
       const payload = {
         patient,
         lab: patient.lab,
@@ -346,8 +372,8 @@ export default function ClinicalReportPage() {
   return (
     <div className="flex flex-col items-center py-10 bg-slate-900 min-h-screen">
       {/* ============================================================== */}
-      // TOP ACTION BAR (Latest Report) //
-      ==============================================================
+      {/* TOP ACTION BAR (Latest Report)                                 */}
+      {/* ============================================================== */}
       <div className="w-[210mm] flex justify-between items-center mb-4 sticky top-4 z-50 bg-white/95 backdrop-blur-md p-4 rounded-xl shadow-xl border border-blue-200">
         <div className="flex items-center gap-4">
           <div className="bg-blue-600 p-3 rounded-lg text-white shadow-inner">
@@ -366,22 +392,46 @@ export default function ClinicalReportPage() {
           </div>
         </div>
 
-        <Button
-          size="lg"
-          className="bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all h-12 px-6 rounded-xl font-bold text-md"
-          onClick={() => handleDownload(latestVisit)}
-          disabled={isDownloading === latestVisit.invoiceId}>
-          {isDownloading === latestVisit.invoiceId ? (
-            <Loader2 className="h-5 w-5 animate-spin mr-2" />
-          ) : (
-            <Download className="h-5 w-5 mr-2" />
-          )}
-          Download Latest PDF
-        </Button>
+        <div className="flex items-center gap-2">
+          {/* Share via WhatsApp Button */}
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={handleWhatsAppShare}
+            className="h-12 border-[#25D366] text-[#25D366] hover:bg-[#25D366] hover:text-white transition-colors rounded-xl px-4"
+            title="Share via WhatsApp">
+            <MessageCircle className="h-5 w-5" />
+          </Button>
+
+          {/* Share via Email (Gmail) Button */}
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={handleEmailShare}
+            className="h-12 border-blue-500 text-blue-600 hover:bg-blue-50 transition-colors rounded-xl px-4"
+            title="Share via Email">
+            <Mail className="h-5 w-5" />
+          </Button>
+
+          {/* Existing Download Button */}
+          <Button
+            size="lg"
+            className="bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all h-12 px-6 rounded-xl font-bold text-md"
+            onClick={() => handleDownload(latestVisit)}
+            disabled={isDownloading === latestVisit.invoiceId}>
+            {isDownloading === latestVisit.invoiceId ? (
+              <Loader2 className="h-5 w-5 animate-spin mr-2" />
+            ) : (
+              <Download className="h-5 w-5 mr-2" />
+            )}
+            Download Latest PDF
+          </Button>
+        </div>
       </div>
+
       {/* ============================================================== */}
-      // HISTORICAL REPORTS SECTION //
-      ==============================================================
+      {/* HISTORICAL REPORTS SECTION                                     */}
+      {/* ============================================================== */}
       {pastVisits.length > 0 && (
         <div className="w-[210mm] bg-slate-800 border border-slate-700 p-4 rounded-xl mb-6 shadow-md">
           <h3 className="text-slate-300 font-bold uppercase tracking-wider text-xs mb-3 flex items-center gap-2">
@@ -662,7 +712,6 @@ export default function ClinicalReportPage() {
               if (block.type === "RESULTS_TABLE") {
                 return (
                   <div key={block.id}>
-                    {/* 👇 THIS IS THE KEY FIX: We only map over latestVisit.tests now! 👇 */}
                     {latestVisit.tests.map((test: any) => {
                       if (!test.results || test.results.length === 0)
                         return null;
