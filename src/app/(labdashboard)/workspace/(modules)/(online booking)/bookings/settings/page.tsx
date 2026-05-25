@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import { ArrowLeft, Globe, ShieldCheck } from "lucide-react";
 import PortalSettings from "./PortalSettings"; // This will be the form component we create next
-// Import your auth helper - adjust path as needed
+// Import your auth helper - adjust path as neededaf
 import { verifyToken } from "@/lib/auth";
 
 const prisma = new PrismaClient();
