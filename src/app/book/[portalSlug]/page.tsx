@@ -40,7 +40,7 @@ export default async function PublicBookingPage({
       name: true,
       code: true,
       price: true,
-      tatHours: true,
+      tat: true,
       description: true,
       preRequistes: true,
       category: { select: { name: true } },

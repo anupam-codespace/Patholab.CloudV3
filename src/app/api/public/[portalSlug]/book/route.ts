@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient, CollectionMode } from "@prisma/client";
+import { PrismaClient, Prisma } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -11,27 +11,27 @@ export async function POST(
     const body = await req.json();
     const {
       name, email, phone, gender, dateOfBirth,
-      testTemplateIds, // Array of test IDs selected
-      collectionMode, address, pincode,
+      testTemplateIds, collectionMode, address, pincode,
       appointmentDate, timeSlot
     } = body;
 
-    // 1. Validate Lab via portalSlug
+    // 1. Validate Lab
     const lab = await prisma.lab.findUnique({
       where: { portalSlug: params.portalSlug },
     });
     if (!lab) return NextResponse.json({ error: "Lab not found" }, { status: 404 });
 
-    // 2. Fetch Selected Tests & Calculate Totals
+    // 2. Fetch Tests & Financials
     const templates = await prisma.testTemplate.findMany({
       where: { id: { in: testTemplateIds }, labId: lab.id }
     });
     
-    let subtotal = 0;
-    templates.forEach(t => { subtotal += Number(t.price); });
-    const grandTotal = subtotal; // Add Tax/Delivery fee logic here if needed
+    // Financial calculations
+    const subtotal = templates.reduce((acc, t) => acc + Number(t.price), 0);
+    const tax = 0; // Add your tax logic here
+    const grandTotal = subtotal + tax;
 
-    // 3. Determine Branch for Home Collection Logistics
+    // 3. Logic for Logistics Branch
     let assignedBranchId = null;
     if (collectionMode === "HOME_COLLECTION" && pincode) {
       const serviceArea = await prisma.serviceArea.findFirst({
@@ -43,62 +43,54 @@ export async function POST(
       assignedBranchId = serviceArea.branchId;
     }
 
-    // 4. Massive Transaction: Create User -> Patient -> Invoice -> Appointment -> Tests
+    // 4. Atomic Transaction
     const result = await prisma.$transaction(async (tx) => {
       
-      // A. Find or Create User (Portal Login Account)
+      // A. Create/Find User & Patient
       let user = await tx.user.findFirst({ where: { phone } });
       if (!user) {
         user = await tx.user.create({
-          data: {
-            name, phone, email,
-            password: "TEMPORARY_PASSWORD", // Should generate a random one and send via SMS
-            role: "PATIENT",
-            isActive: true,
-          }
+          data: { name, phone, email, password: "temp", role: "PATIENT", isActive: true }
         });
       }
 
-      // B. Find or Create Patient (Clinical Profile)
       let patient = await tx.patient.findFirst({ where: { labId: lab.id, phone } });
       if (!patient) {
         patient = await tx.patient.create({
           data: {
-            labId: lab.id,
-            branchId: assignedBranchId,
-            userId: user.id,
-            patientId: `PAT-${Date.now()}`, // Or use your custom ID generator
-            name, phone, email, gender, address, pincode,
-            dateOfBirth: new Date(dateOfBirth),
+            labId: lab.id, branchId: assignedBranchId, userId: user.id,
+            patientId: `PAT-${Date.now()}`, name, phone, email, gender, 
+            address, pincode, dateOfBirth: new Date(dateOfBirth),
           }
         });
       }
 
-      // C. Create Invoice (Pending Payment)
+      // B. Create Invoice (WITH taxableAmount)
       const invoice = await tx.invoice.create({
         data: {
           labId: lab.id,
           branchId: assignedBranchId,
           patientId: patient.id,
           invoiceNumber: `INV-${Date.now()}`,
-          subtotal,
-          totalTax: 0,
-          grandTotal,
+          subtotal: new Prisma.Decimal(subtotal),
+          totalTax: new Prisma.Decimal(tax),
+          grandTotal: new Prisma.Decimal(grandTotal),
+          taxableAmount: new Prisma.Decimal(subtotal), // ✅ FIXED: Required field added
           status: "PENDING",
           paymentStatus: "PENDING",
           items: {
             create: templates.map(t => ({
               description: t.name,
-              unitPrice: t.price,
-              taxRate: 0,
-              taxAmount: 0,
-              total: t.price
+              unitPrice: new Prisma.Decimal(t.price),
+              taxRate: new Prisma.Decimal(0),
+              taxAmount: new Prisma.Decimal(0),
+              total: new Prisma.Decimal(t.price)
             }))
           }
         }
       });
 
-      // D. Create Logistics Appointment
+      // C. Create Appointment
       const appointment = await tx.appointment.create({
         data: {
           labId: lab.id,
@@ -111,11 +103,11 @@ export async function POST(
           pincode,
           appointmentDate: new Date(appointmentDate),
           timeSlot,
-          status: "PENDING_PAYMENT" // Waiting for payment gateway
+          status: "PENDING_PAYMENT"
         }
       });
 
-      // E. Generate Clinical Test Records
+      // D. Generate Tests
       await tx.test.createMany({
         data: templates.map(t => ({
           labId: lab.id,
