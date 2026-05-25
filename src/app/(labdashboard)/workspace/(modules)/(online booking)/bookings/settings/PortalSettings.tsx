@@ -67,7 +67,7 @@ export default function PortalSettings({
           </label>
           <div className="flex items-center">
             <span className="bg-gray-100 border border-r-0 rounded-l-md px-3 py-2 text-gray-500 text-sm">
-              patholab.cloud/book/
+              app.patholab.cloud/book/
             </span>
             <input
               type="text"
