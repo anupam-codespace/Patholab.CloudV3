@@ -28,50 +28,54 @@ export default function DashboardLayout({
         return;
       }
 
-      // 3. Subscription & Trial Expiry Check
-      // Only verify this for Lab Owners (Admins/Staff usually don't pay directly)
+      // 3. Wallet Health Check (Pay-As-You-Go)
+      // We check this silently. We DO NOT redirect if expired or empty,
+      // because the owner needs access to the dashboard to recharge.
       if (user.role === "LAB_OWNER") {
         try {
-          const res = await fetch("/api/workspace/subscription/details");
+          const res = await fetch("/api/workspace/wallet/details");
 
           if (res.ok) {
             const data = await res.json();
-            const currentPlan = data?.currentPlan;
 
-            if (currentPlan?.endDate) {
-              const expiryDate = new Date(currentPlan.endDate);
-              const now = new Date();
+            // Skip checks if they haven't set up the lab yet
+            if (
+              data.status !== "NO_WALLET" &&
+              data.status !== "PENDING_SETUP"
+            ) {
+              // A. Check Validity Expiration
+              if (data.validityEndDate) {
+                const expiryDate = new Date(data.validityEndDate);
+                if (expiryDate < new Date()) {
+                  toast.error(
+                    "Wallet validity expired. Please recharge your wallet to resume clinical operations.",
+                    { id: "wallet-expired", duration: 6000 },
+                  );
+                }
+              }
 
-              // If today is past the end date
-              if (expiryDate < now) {
-                const isTrial = currentPlan.status === "TRIAL";
-
+              // B. Check Empty Balance
+              if (Number(data.balance) <= 0) {
                 toast.error(
-                  isTrial
-                    ? "Free Trial Ended. Please upgrade to continue."
-                    : "Subscription Expired. Please renew your plan.",
+                  "Wallet balance is empty. Paid actions like Patient Registration are currently locked. Please recharge.",
+                  { id: "wallet-empty", duration: 6000 },
                 );
-
-                // Redirect to the standalone upgrade page
-                router.replace("/upgrade");
-                return;
               }
             }
           }
         } catch (error) {
-          console.error("Subscription check failed", error);
+          console.error("Wallet validation check failed", error);
         }
       }
 
-      // If we pass all checks, stop the loading state
+      // 4. End loading state
       setIsChecking(false);
     };
 
     checkAccess();
   }, [isLoading, isAuthenticated, router, user]);
 
-  // Show loader while checking Auth OR Subscription status
-  // This prevents the dashboard from "flashing" before redirecting expired users
+  // Show loader while checking Auth
   if (
     isLoading ||
     (isAuthenticated && user?.role === "LAB_OWNER" && isChecking)
@@ -95,7 +99,6 @@ export default function DashboardLayout({
         <Header user={user} />
 
         {/* 5. Children (the page content) scrolls independently underneath the Header */}
-        {/* Removed p-6 from main so page components can handle their own edge-to-edge designs if needed */}
         <main className="flex-1 overflow-y-auto w-full relative z-0">
           {children}
         </main>

@@ -1,440 +1,488 @@
-import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+"use client";
+
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import {
-  IndianRupee,
-  Users,
-  FlaskConical,
-  AlertCircle,
+  DollarSign,
   Activity,
-  CheckCircle2,
+  ArrowUpRight,
+  Wallet,
+  Package,
+  MapPin,
   Clock,
-  Box,
-  Receipt,
-  TrendingDown,
-  Briefcase,
-  Stethoscope,
-  FileText,
-  UserCheck,
-  ClipboardList,
-  Send,
+  AlertTriangle,
+  Users,
 } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import toast from "react-hot-toast";
+
+// UI Components
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
-// --- HELPER: Get Start and End of Today ---
-const getTodayRange = () => {
-  const start = new Date();
-  start.setHours(0, 0, 0, 0);
-  const end = new Date();
-  end.setHours(23, 59, 59, 999);
-  return { gte: start, lte: end };
-};
+// --- SCHEMA FOR LAB SETUP ---
+const labSetupSchema = z.object({
+  labName: z.string().min(2, "Name required"),
+  licenseNumber: z.string().min(3, "License required"),
+});
 
-// --- HELPER: Get Start and End of Current Month ---
-const getMonthRange = () => {
-  const start = new Date();
-  start.setDate(1);
-  start.setHours(0, 0, 0, 0);
-  const end = new Date();
-  end.setMonth(end.getMonth() + 1, 0);
-  end.setHours(23, 59, 59, 999);
-  return { gte: start, lte: end };
-};
+const formatCurrency = (val: number) =>
+  new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  }).format(val);
 
-export default async function MultiRoleDashboard() {
-  const user = await getCurrentUser();
-  if (!user || !user.labId) redirect("/login");
+export default function LabOwnerDashboard() {
+  const router = useRouter();
+  const [dateRange, setDateRange] = useState("30D");
+  const [showSetupModal, setShowSetupModal] = useState(false);
+  const setupForm = useForm({ resolver: zodResolver(labSetupSchema) });
 
-  const today = getTodayRange();
-  const thisMonth = getMonthRange();
-  const labId = user.labId;
+  // 1. DATA FETCHING
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ["lab-dashboard", dateRange],
+    queryFn: async () => {
+      const res = await fetch(`/api/labs/dashboard?range=${dateRange}`);
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Failed to load");
+      return json;
+    },
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+  });
 
-  let stats: any = {};
-  let recentActivity: any = [];
+  useEffect(() => {
+    if (data?.status === "PENDING_SETUP") setShowSetupModal(true);
+  }, [data]);
 
-  // ==========================================
-  // 1. LAB OWNER / MANAGER DASHBOARD
-  // ==========================================
-  if (user.role === "LAB_OWNER" || user.role === "LAB_MANAGER") {
-    // Fire all database queries concurrently for maximum speed!
-    const [
-      revenueTodayAgg,
-      revenueMonthAgg,
-      expenseMonthAgg,
-      unpaidInvoicesCount,
-      testsTodayCount,
-      pendingEntryCount,
-      reportsReadyCount,
-      lowStockCount,
-      staffCount,
-      doctorCount,
-      agencyCount,
-      patientsTodayCount,
-    ] = await Promise.all([
-      // Financials
-      prisma.invoice.aggregate({
-        _sum: { grandTotal: true },
-        where: { labId, createdAt: today, status: { not: "CANCELLED" } },
-      }),
-      prisma.invoice.aggregate({
-        _sum: { grandTotal: true },
-        where: { labId, createdAt: thisMonth, status: { not: "CANCELLED" } },
-      }),
-      prisma.expense.aggregate({
-        _sum: { amount: true },
-        where: { labId, date: thisMonth },
-      }),
-      prisma.invoice.count({ where: { labId, status: "PENDING" } }),
+  // 2. ENHANCED FORM SUBMISSION
+  const onSetupSubmit = async (formData: any) => {
+    try {
+      const res = await fetch("/api/labs/setup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
 
-      // Operations
-      prisma.test.count({ where: { labId, createdAt: today } }),
-      prisma.test.count({
-        where: { labId, status: { in: ["IN_PROGRESS", "SAMPLE_COLLECTED"] } },
-      }), // Waiting for entry
-      prisma.report.count({
-        where: { labId, status: { in: ["GENERATED", "APPROVED"] } },
-      }), // Ready to dispatch
-      prisma.inventoryBatch.count({
-        where: { labId, currentQuantity: { lte: 10 } },
-      }),
+      const json = await res.json();
 
-      // Network & HR
-      prisma.labStaff.count({ where: { labId, isActive: true } }),
-      prisma.doctor.count({ where: { labId, isActive: true } }),
-      prisma.agency.count({ where: { labId, isActive: true } }),
-      prisma.patient.count({ where: { labId, createdAt: today } }),
-    ]);
+      if (!res.ok) {
+        // Throw the explicit server error message so the catch block can render it
+        throw new Error(
+          json.error || "Failed to process lab setup configuration.",
+        );
+      }
 
-    stats = {
-      revenueToday: revenueTodayAgg._sum.grandTotal || 0,
-      revenueMonth: revenueMonthAgg._sum.grandTotal || 0,
-      expenseMonth: expenseMonthAgg._sum.amount || 0,
-      unpaidInvoices: unpaidInvoicesCount,
-      testsToday: testsTodayCount,
-      pendingEntry: pendingEntryCount,
-      reportsReady: reportsReadyCount,
-      lowStock: lowStockCount,
-      totalStaff: staffCount,
-      totalDoctors: doctorCount,
-      totalAgencies: agencyCount,
-      patientsToday: patientsTodayCount,
-    };
+      toast.success("Lab Setup Complete! Welcome to your new workspace.");
+      setShowSetupModal(false);
+      refetch(); // Refresh dashboard data immediately
+    } catch (e: any) {
+      // Safely display the caught error message to the user
+      toast.error(
+        e.message || "An unexpected error occurred while saving details.",
+      );
+    }
+  };
 
-    recentActivity = await prisma.invoice.findMany({
-      where: { labId },
-      take: 5,
-      orderBy: { createdAt: "desc" },
-      include: { patient: { select: { name: true } } },
-    });
-  }
-
-  // ==========================================
-  // 2. RECEPTIONIST DASHBOARD
-  // ==========================================
-  else if (user.role === "RECEPTIONIST") {
-    const [registrationsToday, pendingInvoices, homeCollections] =
-      await Promise.all([
-        prisma.patient.count({ where: { labId, createdAt: today } }),
-        prisma.invoice.count({ where: { labId, status: "PENDING" } }),
-        prisma.appointment.count({
-          where: {
-            patient: { labId },
-            appointmentDate: today,
-            status: "SCHEDULED",
-          },
-        }),
-      ]);
-
-    stats = { registrationsToday, pendingInvoices, homeCollections };
-    recentActivity = await prisma.patient.findMany({
-      where: { labId },
-      take: 5,
-      orderBy: { createdAt: "desc" },
-    });
-  }
-
-  // ==========================================
-  // 3. TECHNICIAN DASHBOARD
-  // ==========================================
-  else if (user.role === "TECHNICIAN") {
-    const [pendingSamples, testsToApprove, criticalResults] = await Promise.all(
-      [
-        prisma.sample.count({
-          where: { labId, status: { in: ["COLLECTED", "RECEIVED"] } },
-        }),
-        prisma.test.count({ where: { labId, status: "COMPLETED" } }),
-        prisma.testResultParameter.count({
-          where: {
-            test: { labId },
-            isCritical: true,
-            test: { status: "IN_PROGRESS" },
-          },
-        }),
-      ],
+  if (isLoading) return <DashboardSkeleton />;
+  if (isError)
+    return (
+      <div className="p-10 text-center text-red-500 font-medium">
+        Failed to load dashboard data. Please try refreshing.
+      </div>
     );
 
-    stats = { pendingSamples, testsToApprove, criticalResults };
-    recentActivity = await prisma.test.findMany({
-      where: { labId, status: { in: ["IN_PROGRESS", "COMPLETED"] } },
-      take: 5,
-      orderBy: { updatedAt: "desc" },
-      include: { patient: { select: { name: true } } },
-    });
-  }
+  const { kpi, charts, alerts, recentPatients, labDetails } = data || {};
+  const branchName = labDetails?.name || "Main Branch";
 
-  // ==========================================
-  // UI RENDER
-  // ==========================================
+  // Wallet Low Balance Alert Threshold
+  const isLowBalance = (kpi?.walletBalance || 0) < 100;
+
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-          Welcome back, {user.name}
-        </h1>
-        <p className="text-slate-500 mt-1">
-          Here is what is happening in your lab today.
-        </p>
+    <div className="space-y-6 p-4 md:p-8 min-h-screen bg-slate-50/50">
+      {/* HEADER: Personalized Welcome */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
+            Dashboard Overview
+          </h1>
+          <p className="text-sm font-bold text-indigo-600 mt-1.5 flex items-center gap-1.5 bg-indigo-50 w-max px-2.5 py-1 rounded-md">
+            <MapPin className="w-3.5 h-3.5" /> {branchName}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Select value={dateRange} onValueChange={setDateRange}>
+            <SelectTrigger className="w-[180px] bg-slate-50 border-slate-200 shadow-sm font-medium">
+              <SelectValue placeholder="Select period" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="TODAY">Today</SelectItem>
+              <SelectItem value="7D">Last 7 Days</SelectItem>
+              <SelectItem value="30D">Last 30 Days</SelectItem>
+              <SelectItem value="MONTH">This Month</SelectItem>
+              <SelectItem value="YEAR">This Year</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      {/* 👑 OWNER SUPER-DASHBOARD */}
-      {(user.role === "LAB_OWNER" || user.role === "LAB_MANAGER") && (
-        <div className="space-y-8">
-          {/* Section 1: Financial Health */}
-          <div>
-            <h2 className="text-lg font-semibold text-slate-800 mb-3 flex items-center gap-2">
-              <IndianRupee className="w-5 h-5 text-green-600" /> Financial
-              Health
-            </h2>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <StatCard
-                title="Today's Revenue"
-                value={`₹${Number(stats.revenueToday).toLocaleString()}`}
-                icon={IndianRupee}
-                color="text-green-600"
-                bg="bg-green-100"
-              />
-              <StatCard
-                title="Monthly Revenue"
-                value={`₹${Number(stats.revenueMonth).toLocaleString()}`}
-                icon={Activity}
-                color="text-emerald-600"
-                bg="bg-emerald-100"
-              />
-              <StatCard
-                title="Monthly Expenses"
-                value={`₹${Number(stats.expenseMonth).toLocaleString()}`}
-                icon={TrendingDown}
-                color="text-rose-600"
-                bg="bg-rose-100"
-              />
-              <StatCard
-                title="Unpaid Invoices"
-                value={stats.unpaidInvoices}
-                icon={Receipt}
-                color="text-amber-600"
-                bg="bg-amber-100"
-              />
+      {/* FINANCIAL & KPI CARDS */}
+      <div className="grid gap-4 md:grid-cols-4">
+        {/* 1. Wallet Balance Card (NEW PAY-AS-YOU-GO FOCUS) */}
+        <Card
+          className={`border shadow-sm relative overflow-hidden ${isLowBalance ? "border-red-300 bg-red-50" : "border-indigo-200 bg-indigo-50"}`}>
+          <div
+            className={`absolute -right-4 -top-4 w-24 h-24 rounded-full opacity-50 ${isLowBalance ? "bg-red-100" : "bg-indigo-100"}`}></div>
+          <CardHeader className="pb-2">
+            <CardTitle
+              className={`text-[11px] font-bold uppercase flex items-center gap-1 ${isLowBalance ? "text-red-700" : "text-indigo-700"}`}>
+              <Wallet className="w-3 h-3" /> Wallet Balance
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div
+              className={`text-3xl font-black ${isLowBalance ? "text-red-900" : "text-indigo-900"}`}>
+              {formatCurrency(kpi?.walletBalance || 0)}
             </div>
-          </div>
-
-          {/* Section 2: Clinical Operations */}
-          <div>
-            <h2 className="text-lg font-semibold text-slate-800 mb-3 flex items-center gap-2">
-              <FlaskConical className="w-5 h-5 text-blue-600" /> Clinical
-              Operations
-            </h2>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <StatCard
-                title="Total Tests (Today)"
-                value={stats.testsToday}
-                icon={ClipboardList}
-                color="text-blue-600"
-                bg="bg-blue-100"
-              />
-              <StatCard
-                title="Pending Result Entry"
-                value={stats.pendingEntry}
-                icon={Clock}
-                color="text-amber-600"
-                bg="bg-amber-100"
-              />
-              <StatCard
-                title="Reports Ready"
-                value={stats.reportsReady}
-                icon={Send}
-                color="text-indigo-600"
-                bg="bg-indigo-100"
-              />
-              <StatCard
-                title="Low Stock Alerts"
-                value={stats.lowStock}
-                icon={Box}
-                color="text-red-600"
-                bg="bg-red-100"
-              />
+            <div className="flex items-center justify-between mt-2">
+              {isLowBalance && (
+                <span className="text-[10px] font-bold text-red-600 flex items-center">
+                  <AlertTriangle className="w-3 h-3 mr-1" /> Low Balance
+                </span>
+              )}
+              <Button
+                size="sm"
+                className={`h-7 text-xs ${isLowBalance ? "bg-red-600 hover:bg-red-700" : "bg-indigo-600 hover:bg-indigo-700"}`}
+                onClick={() => router.push("/workspace/wallet")}>
+                Recharge
+              </Button>
             </div>
-          </div>
+          </CardContent>
+        </Card>
 
-          {/* Section 3: Growth & Network */}
-          <div>
-            <h2 className="text-lg font-semibold text-slate-800 mb-3 flex items-center gap-2">
-              <Users className="w-5 h-5 text-purple-600" /> Growth & Network
-            </h2>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <StatCard
-                title="Patients Registered (Today)"
-                value={stats.patientsToday}
-                icon={Users}
-                color="text-purple-600"
-                bg="bg-purple-100"
-              />
-              <StatCard
-                title="Active Staff"
-                value={stats.totalStaff}
-                icon={UserCheck}
-                color="text-teal-600"
-                bg="bg-teal-100"
-              />
-              <StatCard
-                title="Referral Doctors"
-                value={stats.totalDoctors}
-                icon={Stethoscope}
-                color="text-cyan-600"
-                bg="bg-cyan-100"
-              />
-              <StatCard
-                title="B2B Agencies"
-                value={stats.totalAgencies}
-                icon={Briefcase}
-                color="text-sky-600"
-                bg="bg-sky-100"
-              />
+        {/* 2. Total Revenue */}
+        <Card className="border-slate-200 shadow-sm relative overflow-hidden bg-white">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-[11px] font-bold text-slate-500 uppercase flex items-center gap-1">
+              <DollarSign className="w-3 h-3" /> Total Revenue
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-black text-slate-900">
+              {formatCurrency(kpi?.revenue || 0)}
             </div>
-          </div>
-        </div>
-      )}
+            <p className="text-xs text-emerald-600 mt-1 flex items-center font-semibold">
+              <ArrowUpRight className="w-3 h-3 mr-1" /> Collected
+            </p>
+          </CardContent>
+        </Card>
 
-      {/* 🛎️ RECEPTIONIST WIDGETS */}
-      {user.role === "RECEPTIONIST" && (
-        <div className="grid gap-4 md:grid-cols-3">
-          <StatCard
-            title="Registered Today"
-            value={stats.registrationsToday}
-            icon={Users}
-            color="text-blue-600"
-            bg="bg-blue-100"
-          />
-          <StatCard
-            title="Pending Payments"
-            value={stats.pendingInvoices}
-            icon={Receipt}
-            color="text-amber-600"
-            bg="bg-amber-100"
-          />
-          <StatCard
-            title="Home Collections"
-            value={stats.homeCollections}
-            icon={Clock}
-            color="text-purple-600"
-            bg="bg-purple-100"
-          />
-        </div>
-      )}
+        {/* 3. Total Tests */}
+        <Card className="border-slate-200 shadow-sm relative overflow-hidden bg-white">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-[11px] font-bold text-slate-500 uppercase flex items-center gap-1">
+              <Activity className="w-3 h-3" /> Tests Performed
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-black text-slate-900">
+              {kpi?.totalTests || 0}
+            </div>
+            <p className="text-xs text-blue-600 mt-1 flex items-center font-semibold">
+              In selected period
+            </p>
+          </CardContent>
+        </Card>
 
-      {/* 🔬 TECHNICIAN WIDGETS */}
-      {user.role === "TECHNICIAN" && (
-        <div className="grid gap-4 md:grid-cols-3">
-          <StatCard
-            title="Samples to Process"
-            value={stats.pendingSamples}
-            icon={FlaskConical}
-            color="text-blue-600"
-            bg="bg-blue-100"
-          />
-          <StatCard
-            title="Needs Approval"
-            value={stats.testsToApprove}
-            icon={CheckCircle2}
-            color="text-amber-600"
-            bg="bg-amber-100"
-          />
-          <StatCard
-            title="Critical Flags"
-            value={stats.criticalResults}
-            icon={AlertCircle}
-            color="text-red-600"
-            bg="bg-red-100"
-          />
-        </div>
-      )}
+        {/* 4. Critical Alerts */}
+        <Card
+          className="border-orange-200 bg-orange-50/30 shadow-sm relative overflow-hidden cursor-pointer hover:border-orange-300 transition-colors"
+          onClick={() => router.push("/workspace/inventory")}>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-[11px] font-bold text-orange-600 uppercase flex items-center gap-1">
+              <Package className="w-3 h-3" /> Inventory Alerts
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-black text-orange-700">
+              {alerts?.inventory || 0}
+            </div>
+            <p className="text-xs text-orange-600 mt-1 font-semibold">
+              Low stock items
+            </p>
+          </CardContent>
+        </Card>
+      </div>
 
-      {/* --- DYNAMIC RECENT ACTIVITY SECTION --- */}
-      <Card className="col-span-4 mt-8">
-        <CardHeader>
-          <CardTitle>
-            {user.role === "LAB_OWNER"
-              ? "Recent Financial Transactions"
-              : user.role === "RECEPTIONIST"
-                ? "Recent Registrations"
-                : "Live Worklist Updates"}
+      {/* CHARTS ROW */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Financial Trend Chart */}
+        <Card className="shadow-sm border-slate-200 bg-white">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center justify-between">
+              Revenue Trend
+              <div className="flex items-center gap-1 text-[10px] font-medium uppercase tracking-wider text-slate-500">
+                <div className="w-2 h-2 rounded-full bg-emerald-500"></div>{" "}
+                Revenue
+              </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="h-[280px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={charts?.trend || []}>
+                <defs>
+                  <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  vertical={false}
+                  stroke="#e2e8f0"
+                />
+                <XAxis
+                  dataKey="date"
+                  axisLine={false}
+                  tickLine={false}
+                  className="text-xs text-slate-500"
+                  tickMargin={10}
+                />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  className="text-xs text-slate-500"
+                  tickFormatter={(v) => `₹${v}`}
+                  width={60}
+                />
+                <Tooltip
+                  contentStyle={{
+                    borderRadius: "8px",
+                    border: "none",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                  }}
+                />
+                <Area
+                  type="monotone"
+                  name="Revenue"
+                  dataKey="revenue"
+                  stroke="#10b981"
+                  strokeWidth={3}
+                  fill="url(#colorRev)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Test Volume Chart */}
+        <Card className="shadow-sm border-slate-200 bg-white">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center justify-between">
+              Test Volume Trend
+              <div className="flex items-center gap-1 text-[10px] font-medium uppercase tracking-wider text-slate-500">
+                <div className="w-2 h-2 rounded-full bg-blue-500"></div> Tests
+              </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="h-[280px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={charts?.trend || []}>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  vertical={false}
+                  stroke="#e2e8f0"
+                />
+                <XAxis
+                  dataKey="date"
+                  axisLine={false}
+                  tickLine={false}
+                  className="text-xs text-slate-500"
+                  tickMargin={10}
+                />
+                <Tooltip
+                  cursor={{ fill: "#f8fafc" }}
+                  contentStyle={{
+                    borderRadius: "8px",
+                    border: "none",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                  }}
+                />
+                <Bar
+                  dataKey="tests"
+                  name="Tests Performed"
+                  fill="#3b82f6"
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={40}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* RECENT PATIENTS */}
+      <Card className="shadow-sm border-slate-200 bg-white w-full">
+        <CardHeader className="pb-3 border-b border-slate-100 flex flex-row justify-between items-center bg-slate-50/50">
+          <CardTitle className="text-base text-slate-800 flex items-center gap-2">
+            <Users className="h-5 w-5 text-indigo-600" /> Recent Patients
           </CardTitle>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-indigo-600 hover:bg-indigo-50 font-bold"
+            onClick={() => router.push("/workspace/patients")}>
+            View All &rarr;
+          </Button>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {recentActivity.length === 0 ? (
-              <p className="text-sm text-slate-500">
-                No recent activity to display.
-              </p>
-            ) : (
-              recentActivity.map((item: any) => (
+        <CardContent className="pt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {recentPatients?.length > 0 ? (
+              recentPatients.map((patient: any) => (
                 <div
-                  key={item.id}
-                  className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
-                  <div>
-                    <p className="text-sm font-medium text-slate-900">
-                      {item.patient?.name || item.name || item.invoiceNumber}
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      {item.testName ||
-                        item.phone ||
-                        new Date(item.createdAt).toLocaleTimeString()}
-                    </p>
-                  </div>
-                  <div className="text-sm font-semibold">
-                    {item.grandTotal ? (
-                      `₹${Number(item.grandTotal).toLocaleString()}`
-                    ) : item.status ? (
-                      <span className="bg-slate-100 text-slate-700 px-2 py-1 rounded-md text-xs">
-                        {item.status}
-                      </span>
-                    ) : (
-                      "View"
-                    )}
+                  key={patient.id}
+                  className="flex items-center justify-between group cursor-pointer hover:bg-slate-50 p-3 rounded-xl transition-colors border border-slate-100 hover:border-indigo-200 shadow-sm"
+                  onClick={() =>
+                    router.push(`/workspace/patients/${patient.id}`)
+                  }>
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-10 w-10 bg-indigo-50 border border-indigo-100 text-indigo-600 font-bold shadow-sm">
+                      <AvatarFallback>{patient.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                        {patient.name}
+                      </p>
+                      <p className="text-[11px] font-medium text-slate-500 mt-0.5">
+                        {patient.phone}
+                      </p>
+                    </div>
                   </div>
                 </div>
               ))
+            ) : (
+              <div className="col-span-full text-center text-sm text-slate-500 py-10 flex flex-col items-center gap-2">
+                <div className="bg-slate-50 p-3 rounded-full mb-1">
+                  <Activity className="h-6 w-6 text-slate-300" />
+                </div>
+                No recent patients found.
+              </div>
             )}
           </div>
         </CardContent>
       </Card>
+
+      {/* --- MODAL FOR LAB SETUP --- */}
+      <Dialog open={showSetupModal} onOpenChange={setShowSetupModal}>
+        <DialogContent
+          className="sm:max-w-[425px]"
+          onInteractOutside={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle>Set Up Your Laboratory</DialogTitle>
+            <DialogDescription>
+              Please provide your lab's primary details to activate your
+              workspace.
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            onSubmit={setupForm.handleSubmit(onSetupSubmit)}
+            className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label>Laboratory Name</Label>
+              <Input
+                placeholder="e.g. Apex Diagnostics"
+                {...setupForm.register("labName")}
+              />
+              {setupForm.formState.errors.labName && (
+                <p className="text-xs text-red-500">
+                  {setupForm.formState.errors.labName.message as string}
+                </p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label>Clinical License Number</Label>
+              <Input
+                placeholder="e.g. LIC-2024-XXXX"
+                {...setupForm.register("licenseNumber")}
+              />
+              {setupForm.formState.errors.licenseNumber && (
+                <p className="text-xs text-red-500">
+                  {setupForm.formState.errors.licenseNumber.message as string}
+                </p>
+              )}
+            </div>
+            <DialogFooter className="pt-4">
+              <Button
+                type="submit"
+                disabled={setupForm.formState.isSubmitting}
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white">
+                {setupForm.formState.isSubmitting
+                  ? "Saving..."
+                  : "Complete Setup"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
-function StatCard({ title, value, icon: Icon, color, bg }: any) {
+function DashboardSkeleton() {
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-          {title}
-        </CardTitle>
-        <div className={`p-2 rounded-lg ${bg}`}>
-          <Icon className={`h-4 w-4 ${color}`} />
+    <div className="p-8 space-y-8 min-h-screen bg-slate-50/50 animate-pulse">
+      <div className="flex flex-col md:flex-row justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-64 rounded-md" />
+          <Skeleton className="h-5 w-32 rounded-md" />
         </div>
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold text-slate-900">{value}</div>
-      </CardContent>
-    </Card>
+        <Skeleton className="h-10 w-[180px] rounded-md" />
+      </div>
+      <div className="grid gap-4 md:grid-cols-4">
+        {[1, 2, 3, 4].map((i) => (
+          <Skeleton key={i} className="h-32 rounded-xl" />
+        ))}
+      </div>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Skeleton className="h-[350px] rounded-xl" />
+        <Skeleton className="h-[350px] rounded-xl" />
+      </div>
+    </div>
   );
 }

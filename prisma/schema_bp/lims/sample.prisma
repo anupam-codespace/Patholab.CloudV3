@@ -1,0 +1,78 @@
+model Sample {
+  id              String  @id @default(uuid())
+  labId           String
+  branchId        String?
+  patientId       String
+  sampleTypeId    String?
+  containerTypeId String?
+
+  sampleId       String
+  barcodeFormat  String         @default("CODE128")
+  collectionMode CollectionMode @default(LAB_VISIT)
+
+  collectedAt       DateTime?
+  collectedBy       String?
+  collectionLat     Float?
+  collectionLng     Float?
+  collectionAddress String?
+
+  courierName        String?
+  trackingNumber     String?
+  transitTemperature String?
+
+  status          SampleStatus @default(COLLECTED)
+  storageLocation String?
+  temperature     String?
+
+  receivedAt DateTime?
+  receivedBy String?
+  condition  String?
+
+  machineId       String?
+  rackPosition    String?
+  rejectionReason String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  lab           Lab            @relation(fields: [labId], references: [id])
+  branch        Branch?        @relation(fields: [branchId], references: [id])
+  patient       Patient        @relation(fields: [patientId], references: [id])
+  sampleType    SampleType?    @relation(fields: [sampleTypeId], references: [id])
+  containerType ContainerType? @relation(fields: [containerTypeId], references: [id])
+  tests         Test[]
+  timeline      SampleLog[]
+
+  @@unique([labId, sampleId])
+  @@index([sampleId])
+  @@index([labId, status, createdAt])
+}
+
+model SampleLog {
+  id        String       @id @default(uuid())
+  sampleId  String
+  status    SampleStatus
+  timestamp DateTime     @default(now())
+  actor     String
+  notes     String?
+  location  String?
+
+  sample Sample @relation(fields: [sampleId], references: [id])
+}
+
+enum SampleStatus {
+  COLLECTED
+  IN_TRANSIT
+  RECEIVED
+  PROCESSING
+  PROCESSED
+  STORED
+  REJECTED
+}
+
+enum CollectionMode {
+  LAB_VISIT
+  HOME_COLLECTION
+  HOSPITAL_PICKUP
+}

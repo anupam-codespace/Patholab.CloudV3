@@ -17,12 +17,15 @@ export interface JWTPayload extends JoseJWTPayload {
   userId: string;
   email: string;
   role: string;
-  labId?: string;
+  
+  // 👇 Allow null here so new Lab Owners can log in to see the Setup Modal
+  labId?: string | null;
   branchId?: string | null;     
+  
   isActive?: boolean;           
   onboardingStatus?: string;    
   
-  // 👇 Added for 3-Tier Enterprise Security Guard
+  // 3-Tier Enterprise Security Guard
   permissions?: string[];
   unlockedFeatures?: string[];
   

@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getDataFromToken } from '@/lib/auth';
 
-// --- 1. GET: Fetch Invoice Details ---
 export async function GET(
   req: NextRequest, 
   { params }: { params: Promise<{ id: string }> } 
@@ -20,72 +19,62 @@ export async function GET(
       },
       include: {
         patient: {
-            include: {
-                agency: true, 
-                doctor: {
-                    include: { user: true }
-                }
-            }
+          include: {
+            // ✅ correct relation names (capitalised)
+            Doctor: { select: { name: true } },
+            Agency: { select: { name: true } },
+          }
         }, 
         lab: true,     
         items: true,   
         
-        agency: {
-            select: { agencyName: true }
-        },
+        // Invoice → Agency relation
+        Agency: { select: { name: true } },
 
         tests: {
-            include: {
-                doctor: {
-                    include: { user: true } 
-                },
-                // ✅ ADDED: Fetch Sample to get collectedBy
-                sample: {
-                    select: { collectedBy: true }
-                }
-            }
+          include: {
+            // Test does not have doctor/agency relations yet, so we omit them.
+            // If you add them later, uncomment:
+            // doctor: { select: { name: true, user: { select: { name: true } } } },
+            // agency: { select: { name: true } },
+            sample: { select: { collectedBy: true } }
+          }
         }
       }
     });
 
     if (!invoice) return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
 
-    // --- SMART RESOLUTION LOGIC ---
-    
-    // A. Resolve Doctor Name
+    // Resolve names safely
     const primaryTest = invoice.tests?.[0];
-    
-    // Priority 1: Linked Doctor User Profile
-    const linkedDoctorName = primaryTest?.doctor?.user?.name || primaryTest?.doctor?.name;
-    
-    // Priority 2: Manual Text Entry (referredBy)
-    const manualReferral = primaryTest?.referredBy;
 
-    // Priority 3: Patient Default Doctor
-    const patientDoctorName = invoice.patient?.doctor?.user?.name;
-    
+    // 1. Doctor name
+    const linkedDoctorName = null; // will use manually entered string if present
+    const manualReferral = primaryTest?.referredBy;
+    const patientDoctorName = invoice.patient?.Doctor?.name; // corrected
+
     const finalDoctorName = linkedDoctorName || manualReferral || patientDoctorName || "Self";
 
-    // B. Resolve Agency Name
-    const invoiceAgencyName = invoice.agency?.agencyName;
-    const patientAgencyName = invoice.patient?.agency?.agencyName;
-    const testAgencyName = (primaryTest as any)?.agency?.agencyName; 
-    
+    // 2. Agency name
+    const invoiceAgencyName = invoice.Agency?.name;
+    const patientAgencyName = invoice.patient?.Agency?.name;
+    const testAgencyName = null; // no relation yet
+
     const finalAgencyName = invoiceAgencyName || patientAgencyName || testAgencyName || null;
 
-    // C. Resolve Test Descriptions
+    // 3. Test description
     const testNames = invoice.tests?.map(t => t.testName).join(", ");
 
-    // ✅ D. Resolve Collected By
+    // 4. Collected by
     const collectedBy = primaryTest?.sample?.collectedBy || null;
 
     const responseData = {
-        ...invoice,
-        doctor: { name: finalDoctorName }, 
-        agency: finalAgencyName ? { name: finalAgencyName } : null,
-        testDescription: testNames || null,
-        paymentMode: invoice.paymentMode,
-        collectedBy: collectedBy // ✅ Added to response
+      ...invoice,
+      doctor: { name: finalDoctorName },
+      agency: finalAgencyName ? { name: finalAgencyName } : null,
+      testDescription: testNames || null,
+      // paymentMode not yet in schema; omit or add later
+      collectedBy: collectedBy,
     };
 
     return NextResponse.json(responseData);
@@ -96,7 +85,6 @@ export async function GET(
   }
 }
 
-// --- 2. PATCH: Update Payment Status ---
 export async function PATCH(
   req: NextRequest, 
   { params }: { params: Promise<{ id: string }> }
@@ -107,14 +95,16 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await req.json();
-    const { status, paymentMode } = body; 
+    const { status, paymentMode } = body; // paymentMode currently not stored
+
+    // Build update data – only include fields that exist
+    const updateData: any = { status };
+    // If you add paymentMode column to Invoice model, uncomment:
+    // if (paymentMode) updateData.paymentMode = paymentMode;
 
     const updatedInvoice = await prisma.invoice.update({
       where: { id: id, labId: user.labId },
-      data: { 
-        status: status,
-        paymentMode: paymentMode || undefined
-      }
+      data: updateData,
     });
 
     return NextResponse.json(updatedInvoice);

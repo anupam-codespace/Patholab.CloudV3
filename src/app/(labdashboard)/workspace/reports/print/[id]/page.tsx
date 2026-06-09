@@ -6,7 +6,6 @@ import { format } from "date-fns";
 import {
   Loader2,
   Download,
-  FileText,
   History,
   Calendar,
   FileCheck2,
@@ -146,7 +145,6 @@ export default function ClinicalReportPage() {
 
     const validTests = patient.tests.filter((t: any) => t.status !== "PENDING");
 
-    // Group by Invoice ID (Fallback to date if unbilled)
     const visitsMap: Record<string, any> = {};
 
     validTests.forEach((test: any) => {
@@ -166,12 +164,46 @@ export default function ClinicalReportPage() {
       visitsMap[invId].tests.push(test);
     });
 
-    // Sort by newest date first
     return Object.values(visitsMap).sort(
       (a: any, b: any) =>
         new Date(b.date).getTime() - new Date(a.date).getTime(),
     );
   }, [patient]);
+
+  // ==========================================
+  // 🚀 SHARING LOGIC
+  // ==========================================
+  const handleWhatsAppShare = (visit: any) => {
+    if (!patient) return toast.error("Patient data not loaded");
+
+    let phone = patient.phone;
+    if (!phone) return toast.error("No phone number saved for this patient.");
+
+    phone = phone.replace(/\D/g, "");
+    if (phone.length === 10) phone = `91${phone}`;
+
+    const labName = patient.lab?.name || "Our Lab";
+    const message = `Hello ${patient.name},\n\nYour lab test report from *${labName}* (Visit: ${visit.invoiceNumber}) is ready.\n\nYou can view and securely download your report here:\n${verificationUrl}\n\nThank you for choosing us!`;
+    const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+
+    window.open(waUrl, "_blank");
+    toast.success("Opening WhatsApp...");
+  };
+
+  const handleEmailShare = (visit: any) => {
+    if (!patient) return toast.error("Patient data not loaded");
+
+    const email = patient.email;
+    if (!email) return toast.error("No email address saved for this patient.");
+
+    const labName = patient.lab?.name || "Our Lab";
+    const subject = `Your Lab Report from ${labName} - ${visit.invoiceNumber}`;
+    const body = `Hello ${patient.name},\n\nYour lab test report (Visit: ${visit.invoiceNumber}) is ready.\n\nYou can view and download your report securely here:\n\n${verificationUrl}\n\nThank you,\n${labName}`;
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+    window.open(gmailUrl, "_blank");
+    toast.success("Opening Email...");
+  };
 
   if (isLoading)
     return (
@@ -201,6 +233,7 @@ export default function ClinicalReportPage() {
   } = config.branding;
   const pb = config.patientBlock;
 
+  // --- DYNAMIC TIMESTAMPS FOR LATEST PREVIEW ---
   const primaryTest = latestVisit.tests[0];
   const barcodeValue =
     primaryTest?.sample?.sampleId || patient.patientId || "UNKNOWN";
@@ -217,33 +250,6 @@ export default function ClinicalReportPage() {
   const reportApprovedAt = primaryTest?.approvedAt
     ? format(new Date(primaryTest.approvedAt), "dd/MM/yy HH:mm:ss")
     : format(new Date(), "dd/MM/yy HH:mm:ss");
-
-  // --- SHARE HANDLERS ---
-  const handleWhatsAppShare = () => {
-    if (!patient.phone) return toast.error("Patient has no phone number.");
-
-    let phone = patient.phone.replace(/\D/g, "");
-    if (phone.length === 10) phone = `91${phone}`;
-
-    const message = `Hello ${patient.name},\n\nYour lab test report is ready. You can securely view and download it here:\n${verificationUrl}\n\nThank you,\nPatholab Cloud`;
-    const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-
-    window.open(whatsappUrl, "_blank");
-  };
-
-  const handleEmailShare = () => {
-    if (!patient.email) return toast.error("Patient has no email address.");
-
-    const subject = `Your Lab Test Report - Patholab Cloud`;
-    const body = `Hello ${patient.name},\n\nYour lab test report is ready. You can securely view and download it using the link below:\n\n${verificationUrl}\n\nThank you,\nPatholab Cloud`;
-
-    // Explicit Gmail URL
-    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
-      patient.email,
-    )}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-
-    window.open(gmailUrl, "_blank");
-  };
 
   // --- PDF DOWNLOAD TRIGGER ---
   const handleDownload = async (visit: any) => {
@@ -370,13 +376,13 @@ export default function ClinicalReportPage() {
   const m = config.layout.margins;
 
   return (
-    <div className="flex flex-col items-center py-10 bg-slate-900 min-h-screen">
+    <div className="flex flex-col items-center py-10 bg-slate-900 min-h-screen print:bg-white print:py-0 print:block">
       {/* ============================================================== */}
-      {/* TOP ACTION BAR (Latest Report)                                 */}
+      {/* TOP ACTION BAR (Latest Report) - 🚫 Hidden on Print */}
       {/* ============================================================== */}
-      <div className="w-[210mm] flex justify-between items-center mb-4 sticky top-4 z-50 bg-white/95 backdrop-blur-md p-4 rounded-xl shadow-xl border border-blue-200">
+      <div className="w-[210mm] print:hidden flex flex-col md:flex-row justify-between items-center mb-6 sticky top-4 z-50 bg-white/95 backdrop-blur-md p-4 rounded-xl shadow-xl border border-blue-200 gap-4">
         <div className="flex items-center gap-4">
-          <div className="bg-blue-600 p-3 rounded-lg text-white shadow-inner">
+          <div className="bg-blue-600 p-3 rounded-lg text-white shadow-inner hidden md:block">
             <FileCheck2 size={28} />
           </div>
           <div>
@@ -392,48 +398,43 @@ export default function ClinicalReportPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* Share via WhatsApp Button */}
+        {/* 🆕 ACTION BUTTONS (Print Removed) */}
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             variant="outline"
-            size="lg"
-            onClick={handleWhatsAppShare}
-            className="h-12 border-[#25D366] text-[#25D366] hover:bg-[#25D366] hover:text-white transition-colors rounded-xl px-4"
-            title="Share via WhatsApp">
-            <MessageCircle className="h-5 w-5" />
+            onClick={() => handleWhatsAppShare(latestVisit)}
+            className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 h-11 rounded-lg">
+            <MessageCircle className="w-4 h-4 md:mr-2" />
+            <span className="hidden md:inline">WhatsApp</span>
           </Button>
 
-          {/* Share via Email (Gmail) Button */}
           <Button
             variant="outline"
-            size="lg"
-            onClick={handleEmailShare}
-            className="h-12 border-blue-500 text-blue-600 hover:bg-blue-50 transition-colors rounded-xl px-4"
-            title="Share via Email">
-            <Mail className="h-5 w-5" />
+            onClick={() => handleEmailShare(latestVisit)}
+            className="text-blue-600 border-blue-200 hover:bg-blue-50 h-11 rounded-lg">
+            <Mail className="w-4 h-4 md:mr-2" />
+            <span className="hidden md:inline">Email</span>
           </Button>
 
-          {/* Existing Download Button */}
           <Button
-            size="lg"
-            className="bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all h-12 px-6 rounded-xl font-bold text-md"
+            className="bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all h-11 rounded-lg font-bold"
             onClick={() => handleDownload(latestVisit)}
             disabled={isDownloading === latestVisit.invoiceId}>
             {isDownloading === latestVisit.invoiceId ? (
-              <Loader2 className="h-5 w-5 animate-spin mr-2" />
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
             ) : (
-              <Download className="h-5 w-5 mr-2" />
+              <Download className="h-4 w-4 mr-2" />
             )}
-            Download Latest PDF
+            Download PDF
           </Button>
         </div>
       </div>
 
       {/* ============================================================== */}
-      {/* HISTORICAL REPORTS SECTION                                     */}
+      {/* HISTORICAL REPORTS SECTION - 🚫 Hidden on Print */}
       {/* ============================================================== */}
       {pastVisits.length > 0 && (
-        <div className="w-[210mm] bg-slate-800 border border-slate-700 p-4 rounded-xl mb-6 shadow-md">
+        <div className="w-[210mm] print:hidden bg-slate-800 border border-slate-700 p-4 rounded-xl mb-6 shadow-md">
           <h3 className="text-slate-300 font-bold uppercase tracking-wider text-xs mb-3 flex items-center gap-2">
             <History className="w-4 h-4" /> Previous Lab Visits
           </h3>
@@ -467,10 +468,12 @@ export default function ClinicalReportPage() {
           </div>
         </div>
       )}
-      <p className="text-slate-400 text-sm mb-6 flex items-center bg-slate-800 px-4 py-2 rounded-full border border-slate-700">
+
+      <p className="print:hidden text-slate-400 text-sm mb-6 flex items-center bg-slate-800 px-4 py-2 rounded-full border border-slate-700">
         👀 Showing visual preview of the{" "}
         <strong>Latest Report ({latestVisit.invoiceNumber})</strong>.
       </p>
+
       {/* ============================================================== */}
       {/* A4 REPORT PREVIEW CANVAS (Shows LATEST tests only)             */}
       {/* ============================================================== */}
@@ -484,7 +487,7 @@ export default function ClinicalReportPage() {
           color: "#1e293b",
           boxSizing: "border-box",
         }}
-        className="bg-white shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative flex flex-col mx-auto overflow-hidden rounded-sm">
+        className="bg-white shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative flex flex-col mx-auto overflow-hidden rounded-sm print:shadow-none print:m-0">
         {config.layout.border.show && (
           <div
             className="absolute pointer-events-none"
@@ -705,7 +708,7 @@ export default function ClinicalReportPage() {
             </div>
           )}
 
-          {/* --- PREVIEW RESULTS (Abridged for visual representation) --- */}
+          {/* --- PREVIEW RESULTS --- */}
           <div
             className={`flex-1 ${config.header.mode === "image" ? "px-6" : ""}`}>
             {config.body.map((block: any) => {

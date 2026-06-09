@@ -1,0 +1,48 @@
+model RadiologyStudy {
+  id            String  @id @default(uuid())
+  labId         String
+  branchId      String? // Made optional for cases where study is central/referral
+  patientId     String
+  modalityId    String
+  appointmentId String? @unique
+
+  // DICOM Integration Fields
+  accessionNumber  String  @unique
+  studyInstanceUid String? @unique
+
+  // Enterprise Enums (Replaces raw Strings)
+  status   RadiologyStatus   @default(SCHEDULED)
+  priority RadiologyPriority @default(ROUTINE)
+
+  // Clinical Metadata
+  scanName        String?
+  clinicalHistory String? @db.Text
+  isContrastUsed  Boolean @default(false)
+
+  // Relations
+  report   RadiologyReport?
+  modality Modality         @relation(fields: [modalityId], references: [id])
+  patient  Patient          @relation(fields: [patientId], references: [id])
+  lab      Lab              @relation(fields: [labId], references: [id])
+  branch   Branch?          @relation(fields: [branchId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([labId, status, priority])
+  @@index([accessionNumber])
+}
+
+enum RadiologyStatus {
+  SCHEDULED
+  IN_PROGRESS
+  IMAGES_AVAILABLE
+  REPORTED
+  CANCELLED
+}
+
+enum RadiologyPriority {
+  ROUTINE
+  STAT
+  URGENT
+}
