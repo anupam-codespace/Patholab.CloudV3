@@ -3,7 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
-import { ParameterInputType, Gender } from '@prisma/client';
+import { Gender } from '@prisma/client';
 
 async function getLabId() {
   const user = await getCurrentUser();
@@ -11,16 +11,14 @@ async function getLabId() {
   return user.labId;
 }
 
-// --- 1. GET ALL PARAMETERS (WITH FORK HIDING LOGIC) ---
+// --- 1. GET ALL PARAMETERS ---
 export async function getParameters() {
   const labId = await getLabId();
   return await prisma.labTestParameter.findMany({
     where: { 
       isActive: true, 
       OR: [
-        // 1. Fetch local lab parameters
         { labId: labId },
-        // 2. 🔗 THIS HIDES THE GLOBAL FORK: Fetch global master parameters EXCEPT ones already forked by this lab
         { 
           isGlobal: true,
           forks: { none: { labId: labId } }
@@ -42,13 +40,9 @@ export async function createParameter(data: {
   code: string;
   unit?: string;
   printName?: string;
-  inputType: ParameterInputType;
-  price?: number;
-  decimals?: number;
   method?: string;
   formula?: string;
   containerTypeId?: string;
-  options?: string[];
   ranges: {
     gender: Gender;
     minAge: number;
@@ -69,9 +63,13 @@ export async function createParameter(data: {
   const labId = await getLabId();
   const codeUpper = data.code.toUpperCase();
 
-  // ✅ SOFT ERROR CHECK: Prevent Unique Constraint Crash
+  // ✅ SAFELY PARSE CONTAINER ID
+  const validContainerId = data.containerTypeId && data.containerTypeId !== "generic" && data.containerTypeId.trim() !== "" 
+    ? data.containerTypeId 
+    : null;
+
   const existingCode = await prisma.labTestParameter.findFirst({
-    where: { labId, code: codeUpper }
+    where: { labId, code: codeUpper, isActive: true }
   });
   
   if (existingCode) {
@@ -82,18 +80,15 @@ export async function createParameter(data: {
     const parameter = await tx.labTestParameter.create({
       data: {
         labId,
-        isGlobal: false, // Ensures new custom creations are explicitly local
+        isGlobal: false, 
         name: data.name,
         code: codeUpper,
         printName: data.printName || data.name,
-        unit: data.unit,
-        inputType: data.inputType,
-        price: data.price || 0,
-        decimals: data.decimals || 2,
-        method: data.method,
-        formula: data.formula,
-        containerTypeId: data.containerTypeId || null,
-        options: data.options || [],
+        unit: data.unit || null,
+        method: data.method || null,
+        formula: data.formula || null,
+        containerTypeId: validContainerId, // Use sanitized ID
+        isActive: true
       }
     });
 
@@ -136,13 +131,9 @@ export async function updateParameter(id: string, data: {
     code: string;
     unit?: string;
     printName?: string;
-    inputType: ParameterInputType;
-    price?: number;
-    decimals?: number;
     method?: string;
     formula?: string;
     containerTypeId?: string;
-    options?: string[];
     ranges: {
       gender: Gender;
       minAge: number;
@@ -163,19 +154,23 @@ export async function updateParameter(id: string, data: {
     const labId = await getLabId(); 
     const codeUpper = data.code.toUpperCase();
 
-    // Find the original to check if it's global
+    // ✅ SAFELY PARSE CONTAINER ID
+    const validContainerId = data.containerTypeId && data.containerTypeId !== "generic" && data.containerTypeId.trim() !== "" 
+      ? data.containerTypeId 
+      : null;
+
     const existingParam = await prisma.labTestParameter.findUnique({
       where: { id }
     });
 
     if (!existingParam) return { error: "Parameter not found" };
 
-    // ✅ SOFT ERROR CHECK: Prevent Unique Constraint Crash on Update/Fork
     const duplicateCode = await prisma.labTestParameter.findFirst({
       where: { 
         labId: labId, 
         code: codeUpper,
-        NOT: { id: id } // Exclude the current parameter we are editing
+        isActive: true,
+        NOT: { id: id } 
       }
     });
 
@@ -185,32 +180,24 @@ export async function updateParameter(id: string, data: {
   
     await prisma.$transaction(async (tx) => {
       
-      // ==========================================
-      // SCENARIO A: EDITING A GLOBAL PARAMETER -> FORK IT
-      // ==========================================
+      // --- SCENARIO A: FORK ---
       if (existingParam.isGlobal) {
-        
-        // 1. Create Local Copy
         const clonedParam = await tx.labTestParameter.create({
           data: {
             labId: labId,
             isGlobal: false,
-            forkedFromId: existingParam.id, // 🔗 THIS CREATES THE LINK SO IT HIDES FROM THE TABLE
+            forkedFromId: existingParam.id, 
             name: data.name,
             code: codeUpper,
             printName: data.printName || data.name,
-            unit: data.unit,
-            inputType: data.inputType,
-            price: data.price || 0,
-            decimals: data.decimals || 2,
-            method: data.method,
-            formula: data.formula,
-            containerTypeId: data.containerTypeId || null,
-            options: data.options || [],
+            unit: data.unit || null,
+            method: data.method || null,
+            formula: data.formula || null,
+            containerTypeId: validContainerId, // Use sanitized ID
+            isActive: true
           }
         });
 
-        // 2. Clone Ranges to the NEW ID
         if (data.ranges && data.ranges.length > 0) {
           await tx.parameterReferenceRange.createMany({
             data: data.ranges.map(range => ({
@@ -229,7 +216,6 @@ export async function updateParameter(id: string, data: {
           });
         }
 
-        // 3. Clone Reagents to the NEW ID
         if (data.reagents && data.reagents.length > 0) {
           await tx.testParameterReagent.createMany({
             data: data.reagents.map(reagent => ({
@@ -241,31 +227,23 @@ export async function updateParameter(id: string, data: {
         }
       } 
       
-      // ==========================================
-      // SCENARIO B: EDITING A LOCAL PARAMETER -> DEEP UPDATE
-      // ==========================================
+      // --- SCENARIO B: DEEP UPDATE ---
       else {
         if (existingParam.labId !== labId) throw new Error("Unauthorized to edit this parameter");
 
-        // 1. Update Parent
         await tx.labTestParameter.update({
           where: { id: id }, 
           data: {
             name: data.name,
             code: codeUpper,
             printName: data.printName || data.name,
-            unit: data.unit,
-            inputType: data.inputType,
-            price: data.price || 0,
-            decimals: data.decimals || 2,
-            method: data.method,
-            formula: data.formula,
-            containerTypeId: data.containerTypeId || null,
-            options: data.options || [],
+            unit: data.unit || null,
+            method: data.method || null,
+            formula: data.formula || null,
+            containerTypeId: validContainerId, // Use sanitized ID
           }
         });
     
-        // 2. Wipe & Replace Ranges
         await tx.parameterReferenceRange.deleteMany({
           where: { parameterId: id }
         });
@@ -288,7 +266,6 @@ export async function updateParameter(id: string, data: {
           });
         }
 
-        // 3. Wipe & Replace Reagent Mappings
         await tx.testParameterReagent.deleteMany({
           where: { parameterId: id }
         });
@@ -313,15 +290,15 @@ export async function updateParameter(id: string, data: {
 export async function deleteParameter(id: string) {
   const labId = await getLabId();
 
-  // Security Check: Ensure they aren't trying to delete a global master parameter
   const existingParam = await prisma.labTestParameter.findUnique({ where: { id } });
   
   if (!existingParam) return { error: "Parameter not found." };
   if (existingParam.isGlobal) return { error: "Cannot delete a Global Master Parameter." };
   if (existingParam.labId !== labId) return { error: "Unauthorized." };
 
-  await prisma.labTestParameter.delete({
-    where: { id } 
+  await prisma.labTestParameter.update({
+    where: { id },
+    data: { isActive: false }
   });
   
   revalidatePath('/workspace/test-management');

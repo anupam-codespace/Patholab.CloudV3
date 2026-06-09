@@ -1,0 +1,60 @@
+model SystemConfig {
+  id             String  @id @default(uuid())
+  systemName     String  @default("Patholab Cloud")
+  systemLogo     String?
+  favicon        String?
+  primaryColor   String  @default("#3b82f6")
+  secondaryColor String  @default("#8b5cf6")
+
+  seoTitle          String? @default("Patholab Cloud - Modern LIMS")
+  seoDescription    String? @db.Text
+  seoKeywords       String?
+  ogImage           String?
+  googleAnalyticsId String?
+  facebookPixelId   String?
+  socialLinks       Json?
+
+  systemEmail   String?
+  systemPhone   String?
+  systemAddress String?
+
+  gstNumber      String?
+  panNumber      String?
+  invoicePrefix  String  @default("SAAS")
+  nextInvoiceNo  Int     @default(1)
+  currency       String  @default("INR")
+  currencySymbol String  @default("₹")
+  taxRate        Decimal @default(18.0) @db.Decimal(5, 2)
+
+  enableABDM        Boolean @default(false)
+  abdmClientId      String?
+  abdmClientSecret  String?
+  razorpayKeyId     String?
+  razorpayKeySecret String?
+
+  smtpHost     String?
+  smtpPort     Int?
+  smtpUser     String?
+  smtpPassword String?
+
+  landingPage         Json?
+  enablePatientPortal Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Page {
+  id          String  @id @default(uuid())
+  title       String
+  slug        String  @unique
+  content     String  @db.Text
+  metaTitle   String?
+  metaDesc    String?
+  isPublished Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+}

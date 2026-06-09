@@ -1,0 +1,24 @@
+model AIPrediction {
+  id              String   @id @default(uuid())
+  testId          String   @unique
+  summary         String   @db.Text
+  riskScore       Float?
+  recommendations Json?
+  modelUsed       String?
+  createdAt       DateTime @default(now())
+
+  test Test @relation(fields: [testId], references: [id])
+}
+
+model UsageMetric {
+  id             String @id @default(uuid())
+  subscriptionId String
+  month          Int
+  year           Int
+  testsCount     Int    @default(0)
+  storageUsedGB  Float  @default(0)
+
+  subscription Subscription @relation(fields: [subscriptionId], references: [id])
+
+  @@unique([subscriptionId, month, year])
+}

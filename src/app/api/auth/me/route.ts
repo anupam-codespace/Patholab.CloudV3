@@ -1,59 +1,95 @@
-// FILE: src/app/api/auth/me/route.ts
-// Get current user endpoint
-// ==========================================
-import { NextRequest, NextResponse } from 'next/server';
-import { getCurrentUser } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { getDataFromToken } from "@/lib/auth"; // Adjust if your token helper is named differently
 
-export async function GET(request: NextRequest) {
+export const dynamic = "force-dynamic";
+
+export async function GET(req: NextRequest) {
   try {
-    const currentUser = await getCurrentUser();
-    
-    if (!currentUser) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
+    // 1. Verify Session Token
+    const session = await getDataFromToken(req);
+    if (!session || !session.userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    
-    // Fetch full user data
+
+    // 2. Fetch User with Enterprise RBAC & Wallet Context
     const user = await prisma.user.findUnique({
-      where: { id: currentUser.userId },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        phone: true,
-        role: true,
-        avatar: true,
-        emailVerified: true,
-        isActive: true,
+      where: { id: session.userId },
+      include: {
+        // A. If LAB_OWNER, get their direct lab & wallet
         lab: {
-          select: {
-            id: true,
-            name: true,
-            subscription: {
-              include: {
-                plan: true,
-              },
-            },
+          include: {
+            wallet: true,
+            branches: { where: { isMainBranch: true } },
+          },
+        },
+        // B. If STAFF, get their active assignments
+        staffLabs: {
+          where: { isActive: true },
+          include: {
+            lab: { include: { wallet: true } },
+            branch: true,
           },
         },
       },
     });
-    
+
     if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
-    
-    return NextResponse.json({ user });
-  } catch (error) {
-    console.error('Get current user error:', error);
+
+    // 3. Resolve Lab, Branch, and Permissions Safely
+    let activeLab = null;
+    let activeBranch = null;
+    let permissions: string[] = [];
+
+    if (user.role === "LAB_OWNER") {
+      activeLab = user.lab || null;
+      activeBranch = user.lab?.branches?.[0] || null;
+      permissions = ["ALL"]; // Owners have unrestricted access to their lab
+    } else if (user.role !== "SUPER_ADMIN" && user.role !== "PATIENT") {
+      const primaryProfile = user.staffLabs[0];
+      activeLab = primaryProfile?.lab || null;
+      activeBranch = primaryProfile?.branch || null;
+      permissions = primaryProfile?.permissions || [];
+    }
+
+    // 4. Construct Hydration Payload for the Frontend
+    return NextResponse.json({
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatar: user.avatar,
+        isActive: user.isActive,
+        onboardingStatus: user.onboardingStatus,
+      },
+      // Safely pass Lab & Wallet data (null if owner hasn't finished onboarding)
+      lab: activeLab
+        ? {
+            id: activeLab.id,
+            name: activeLab.name,
+            portalSlug: activeLab.portalSlug,
+            branchId: activeBranch?.id || null,
+            branchName: activeBranch?.name || "Main Branch",
+            isLisIntegrationPaid: activeLab.wallet?.isLisIntegrationPaid || false,
+            // 💰 Include live wallet balance for the UI Header
+            wallet: activeLab.wallet
+              ? {
+                  balance: Number(activeLab.wallet.balance),
+                  isActive: activeLab.wallet.isActive,
+                  validityEndDate: activeLab.wallet.validityEndDate,
+                }
+              : null,
+          }
+        : null,
+      permissions,
+    });
+  } catch (error: any) {
+    console.error("Auth /me API Error:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch user data' },
+      { error: "Internal Server Error" },
       { status: 500 }
     );
   }

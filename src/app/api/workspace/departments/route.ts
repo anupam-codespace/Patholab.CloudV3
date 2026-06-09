@@ -4,7 +4,9 @@ import { getDataFromToken } from "@/lib/auth";
 
 export const dynamic = 'force-dynamic';
 
+// =========================================================================
 // 1. GET: Fetch Global Master + Local Custom Departments
+// =========================================================================
 export async function GET(req: NextRequest) {
   try {
     const user = await getDataFromToken(req);
@@ -18,40 +20,51 @@ export async function GET(req: NextRequest) {
         ]
       },
       include: {
-        // Automatically count how many test templates use this department
+        // ✅ Uses the exact auto-generated Prisma relation name for the TestTemplate model
         _count: {
-          select: { testTemplates: true }
+          select: { TestTemplate: true }
         }
       },
       orderBy: [
-        { isGlobal: 'desc' }, // Group global items at the top
+        { isGlobal: 'desc' },     // Group global items at the top
+        { displayOrder: 'asc' },  // Respect custom sorting from the schema
         { name: 'asc' }
       ]
     });
 
-    return NextResponse.json({ departments }, { status: 200 });
+    // Clean up the output for the frontend
+    const mappedDepartments = departments.map(d => ({
+      ...d,
+      templateCount: d._count?.TestTemplate || 0
+    }));
+
+    return NextResponse.json({ departments: mappedDepartments }, { status: 200 });
   } catch (error) {
     console.error("Departments Fetch Error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
 
+// =========================================================================
 // 2. POST: Create a new Local Custom Department
+// =========================================================================
 export async function POST(req: NextRequest) {
   try {
     const user = await getDataFromToken(req);
     if (!user || !user.labId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { name, code } = await req.json();
+    const body = await req.json();
+    const { name, code, displayOrder } = body;
 
     if (!name) return NextResponse.json({ error: "Department name is required" }, { status: 400 });
 
     const newDept = await prisma.department.create({
       data: {
         labId: user.labId,
-        isGlobal: false, // Security: Force false so labs cannot alter the global platform catalog
+        isGlobal: false, // 🔒 Security: Force false so labs cannot alter the global platform catalog
         name: name.trim(),
-        code: code ? code.trim().toUpperCase() : null
+        code: code ? code.trim().toUpperCase() : null,
+        displayOrder: displayOrder !== undefined ? parseInt(displayOrder) : 0
       }
     });
 
@@ -60,21 +73,25 @@ export async function POST(req: NextRequest) {
     if (error.code === 'P2002') {
       return NextResponse.json({ error: "A department with this name already exists in your lab." }, { status: 400 });
     }
+    console.error("Department Create Error:", error);
     return NextResponse.json({ error: "Failed to create department" }, { status: 500 });
   }
 }
 
+// =========================================================================
 // 3. PUT: Update an existing Local Custom Department
+// =========================================================================
 export async function PUT(req: NextRequest) {
   try {
     const user = await getDataFromToken(req);
     if (!user || !user.labId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { id, name, code } = await req.json();
+    const body = await req.json();
+    const { id, name, code, displayOrder } = body;
 
     if (!id || !name) return NextResponse.json({ error: "ID and Name are required" }, { status: 400 });
 
-    // SECURITY CHECK: Verify ownership and prevent editing global departments
+    // 🔒 SECURITY CHECK: Verify ownership and prevent editing global departments
     const existingDept = await prisma.department.findUnique({ where: { id } });
     
     if (!existingDept) return NextResponse.json({ error: "Department not found" }, { status: 404 });
@@ -86,7 +103,8 @@ export async function PUT(req: NextRequest) {
       where: { id },
       data: {
         name: name.trim(),
-        code: code ? code.trim().toUpperCase() : null
+        code: code ? code.trim().toUpperCase() : null,
+        displayOrder: displayOrder !== undefined ? parseInt(displayOrder) : existingDept.displayOrder
       }
     });
 
@@ -95,11 +113,14 @@ export async function PUT(req: NextRequest) {
     if (error.code === 'P2002') {
       return NextResponse.json({ error: "A department with this name already exists." }, { status: 400 });
     }
+    console.error("Department Update Error:", error);
     return NextResponse.json({ error: "Failed to update department" }, { status: 500 });
   }
 }
 
+// =========================================================================
 // 4. DELETE: Remove a Local Custom Department
+// =========================================================================
 export async function DELETE(req: NextRequest) {
   try {
     const user = await getDataFromToken(req);
@@ -110,7 +131,7 @@ export async function DELETE(req: NextRequest) {
 
     if (!id) return NextResponse.json({ error: "Department ID is required" }, { status: 400 });
 
-    // SECURITY CHECK: Verify ownership and prevent deleting global departments
+    // 🔒 SECURITY CHECK: Verify ownership and prevent deleting global departments
     const existingDept = await prisma.department.findUnique({ where: { id } });
     
     if (!existingDept) return NextResponse.json({ error: "Department not found" }, { status: 404 });
@@ -125,6 +146,7 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ success: true, message: "Department deleted" }, { status: 200 });
   } catch (error) {
     console.error("Delete Department Error:", error);
-    return NextResponse.json({ error: "Failed to delete department. It is likely currently attached to a test in your catalog." }, { status: 500 });
+    // Hard deletes will fail if there are tests attached because of foreign key constraints
+    return NextResponse.json({ error: "Failed to delete department. It is likely attached to an active test in your catalog." }, { status: 500 });
   }
 }
