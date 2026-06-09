@@ -47,191 +47,100 @@ export async function GET(req: NextRequest) {
 }
 
 // =========================================================================
-// POST: Create New Accession / Visit (SECURE WALLET VALIDATION)
+// POST: Optimized Accession Booking
 // =========================================================================
 export async function POST(req: NextRequest) {
   try {
     const user = await getDataFromToken(req);
-    if (!user || !user.labId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!user?.labId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
-    const { 
-      patientId, 
-      tests, 
-      doctorId, 
-      agencyId, 
-      subtotal, 
-      discountAmount, 
-      grandTotal 
-      // 🚫 Notice: We completely ignore 'isNewVisit' from the frontend now
-    } = body;
+    const { patientId, tests, doctorId, agencyId, subtotal, discountAmount, grandTotal } = body;
 
-    if (!patientId || !tests || tests.length === 0) {
-      return NextResponse.json({ error: 'Patient ID and at least one test are required.' }, { status: 400 });
-    }
-
-    // 1. 🛡️ SERVER-SIDE TRUTH: Did we already charge this patient today?
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0);
-
-    const existingDeductionToday = await prisma.walletDeduction.findFirst({
-        where: {
-            labId: user.labId,
-            patientId: patientId,
-            createdAt: { gte: startOfToday } // Checks if a deduction happened since midnight
-        }
-    });
-
-    const isActuallyNewVisit = !existingDeductionToday;
-
-    // 2. Validate Pay-As-You-Go Wallet Balance
+    // 1. Perform all preliminary logic OUTSIDE the transaction to keep it short
     const wallet = await prisma.labWallet.findUnique({ where: { labId: user.labId } });
     if (!wallet) return NextResponse.json({ error: "Wallet not initialized." }, { status: 400 });
 
-    const visitFee = Number(wallet.perPatientFee || 2.5);
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
 
-    // Block the transaction if it's a true new visit but funds are low
-    if (isActuallyNewVisit && Number(wallet.balance) < visitFee) {
-      return NextResponse.json({ 
-        error: "Insufficient wallet balance to start a new visit. Please recharge.",
-        required: visitFee 
-      }, { status: 402 });
-    }
-
-    // 3. Resolve Doctor & Agency
-    const isDbId = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
-    const finalDoctorId = doctorId && isDbId(doctorId) ? doctorId : null;
-    const finalAgencyId = agencyId && isDbId(agencyId) ? agencyId : null;
-
-    // 4. Generate Sequences (Invoice No)
-    const config = await prisma.systemConfig.findFirst();
-    const invPrefix = config?.invoicePrefix || "INV";
-    
-    // ✅ 5. ACID TRANSACTION: Process Booking & Secure Deduction
-    const accessionData = await prisma.$transaction(async (tx) => {
+    // 2. Wrap ONLY database-writing operations in the transaction
+    const result = await prisma.$transaction(async (tx) => {
         
-        // --- A. SECURE WALLET DEDUCTION ---
-        if (isActuallyNewVisit) {
-            await tx.labWallet.update({
-                where: { labId: user.labId },
-                data: { balance: { decrement: visitFee } }
-            });
+        // A. Check for existing fee today (only one DB call)
+        const existingDeduction = await tx.walletDeduction.findFirst({
+            where: { labId: user.labId, patientId, createdAt: { gte: startOfToday } }
+        });
+        const visitFee = Number(wallet.perPatientFee || 2.5);
+        const isNewVisit = !existingDeduction;
 
-            await tx.walletTransaction.create({
-                data: {
-                    labId: user.labId,
-                    type: 'DEDUCTION',
-                    amount: visitFee,
-                    closingBalance: Number(wallet.balance) - visitFee,
-                    description: `Visit Booking Fee for Patient ID: ${patientId}`
-                }
-            });
-
-            // Log the deduction for today so they aren't charged again if they add tests later
-            await tx.walletDeduction.create({
-                data: {
-                  labId: user.labId,
-                  patientId: patientId,
-                  date: new Date(),
-                  amount: visitFee
-                }
-            });
+        if (isNewVisit && Number(wallet.balance) < visitFee) {
+            throw new Error("INSUFFICIENT_FUNDS"); // Will trigger a catch block outside
         }
 
-        // --- B. CREATE INVOICE ---
-        const lastInvoice = await tx.invoice.findFirst({
-            where: { labId: user.labId },
-            orderBy: { createdAt: 'desc' }
-        });
-        const nextInvNum = lastInvoice ? parseInt(lastInvoice.invoiceNumber.split('-').pop() || '0') + 1 : 1;
-        const generatedInvoiceNumber = `${invPrefix}-${nextInvNum.toString().padStart(5, '0')}`;
+        if (isNewVisit) {
+            await tx.labWallet.update({ where: { labId: user.labId }, data: { balance: { decrement: visitFee } } });
+            await tx.walletDeduction.create({ data: { labId: user.labId, patientId, date: new Date(), amount: visitFee } });
+        }
 
+        // B. Generate Invoice Number (Keep logic simple)
+        const count = await tx.invoice.count({ where: { labId: user.labId } });
+        const invoiceNumber = `INV-${(count + 1).toString().padStart(5, '0')}`;
+
+        // C. Create Invoice AND Items in one go
         const invoice = await tx.invoice.create({
             data: {
                 labId: user.labId,
                 branchId: user.branchId,
-                patientId: patientId,
-                doctorId: finalDoctorId,
-                agencyId: finalAgencyId,
-                invoiceNumber: generatedInvoiceNumber,
-                subtotal: Number(subtotal || 0),
-                discount: Number(discountAmount || 0),
-                taxableAmount: Number(grandTotal || 0),
-                totalTax: 0.00,
-                grandTotal: Number(grandTotal || 0),
+                patientId,
+                invoiceNumber,
+                subtotal: Number(subtotal),
+                discount: Number(discountAmount),
+                taxableAmount: Number(grandTotal),
+                totalTax: 0,
+                grandTotal: Number(grandTotal),
                 status: 'PENDING',
                 paymentStatus: 'PENDING',
-                
                 items: {
                     create: tests.map((t: any) => ({
                         description: t.testName,
-                        unitPrice: Number(t.price || 0),
+                        unitPrice: Number(t.price),
                         quantity: 1,
-                        discount: 0,
                         taxRate: 0,
                         taxAmount: 0,
-                        total: Number(t.price || 0)
+                        total: Number(t.price)
                     }))
                 }
             }
         });
 
-        // --- C. CREATE TEST RECORDS ---
-        const createdTests = [];
-        for (let i = 0; i < tests.length; i++) {
-            const t = tests[i];
-            const testNumSequence = `${Date.now().toString().slice(-6)}${i}`;
-            
-            const testRecord = await tx.test.create({
-                data: {
-                    labId: user.labId,
-                    branchId: user.branchId,
-                    patientId: patientId,
-                    invoiceId: invoice.id,
-                    doctorId: finalDoctorId,
-                    agencyId: finalAgencyId,
-                    testNumber: `T-${testNumSequence}`,
-                    testCode: t.testCode,
-                    testName: t.testName,
-                    price: Number(t.price || 0),
-                    finalPrice: Number(t.price || 0),
-                    status: 'PENDING',
-                    priority: 'NORMAL'
-                }
-            });
-            createdTests.push(testRecord);
-        }
-
-        // --- D. DETAILED ACTIVITY LOG ---
-        await tx.activityLog.create({
-          data: {
-            labId: user.labId,
-            userId: user.id,
-            action: 'VISIT_CREATED',
-            entityType: 'INVOICE',
-            entity: 'VISIT',
-            entityId: invoice.id,
-            description: `Booked visit (${tests.length} tests). Invoice: ${generatedInvoiceNumber}.`,
-            details: { 
-              patientId, 
-              invoiceNumber: generatedInvoiceNumber, 
-              testCount: tests.length,
-              feeDeducted: isActuallyNewVisit ? visitFee : 0 
-            }
-          }
+        // D. Batch create tests
+        await tx.test.createMany({
+            data: tests.map((t: any, i: number) => ({
+                labId: user.labId,
+                branchId: user.branchId,
+                patientId,
+                invoiceId: invoice.id,
+                testNumber: `T-${Date.now()}-${i}`,
+                testCode: t.testCode,
+                testName: t.testName,
+                finalPrice: Number(t.price || 0),
+                price: Number(t.price),
+                status: 'PENDING'
+            }))
         });
 
-        return { invoice, tests: createdTests };
-    });
+        return invoice;
+    }, { timeout: 10000 }); // Increase timeout to 10s just in case
 
-    return NextResponse.json({ success: true, data: accessionData });
+    return NextResponse.json({ success: true, data: { invoice: result } });
 
   } catch (error: any) {
-    console.error("POST ACCESSION ERROR:", error);
-    if (error.code === 'P2002') {
-         return NextResponse.json({ error: "System busy generating unique IDs. Please click Save again." }, { status: 409 });
+    if (error.message === "INSUFFICIENT_FUNDS") {
+        return NextResponse.json({ error: "Insufficient wallet balance." }, { status: 402 });
     }
-    return NextResponse.json({ error: error.message || "Failed to create visit booking" }, { status: 500 });
+    console.error("POST ACCESSION ERROR:", error);
+    return NextResponse.json({ error: "Transaction failed." }, { status: 500 });
   }
 }
 
