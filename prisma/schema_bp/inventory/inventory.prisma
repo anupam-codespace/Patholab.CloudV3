@@ -1,0 +1,60 @@
+model InventoryItem {
+  id            String  @id @default(uuid())
+  labId         String
+  name          String
+  sku           String?
+  unitOfMeasure String // e.g., "ml", "box", "vial"
+  minimumStock  Int     @default(0)
+
+  batches InventoryBatch[]
+
+  lab                  Lab                    @relation(fields: [labId], references: [id])
+  deletedAt            DateTime?
+  TestParameterReagent TestParameterReagent[]
+}
+
+model InventoryBatch {
+  id       String  @id @default(uuid())
+  itemId   String
+  labId    String
+  branchId String?
+
+  batchNumber     String
+  expiryDate      DateTime?
+  currentQuantity Int       @default(0)
+
+  transactions InventoryTransaction[]
+
+  item InventoryItem @relation(fields: [itemId], references: [id])
+
+  @@unique([itemId, batchNumber])
+}
+
+model InventoryTransaction {
+  id      String @id @default(uuid())
+  batchId String
+
+  type           TransactionType
+  reason         ConsumptionReason? // Enterprise requirement for wastage/QC tracking
+  quantityChange Int // Positive for restock, negative for consumption
+
+  // Link to LIMS runtime if this was consumed by an actual test
+  testId String?
+
+  batch     InventoryBatch @relation(fields: [batchId], references: [id])
+  createdAt DateTime       @default(now())
+}
+
+enum TransactionType {
+  RESTOCK
+  CONSUMPTION
+  ADJUSTMENT
+}
+
+enum ConsumptionReason {
+  TEST_RUN
+  CALIBRATION
+  QC
+  WASTAGE_EXPIRED
+  WASTAGE_DAMAGED
+}

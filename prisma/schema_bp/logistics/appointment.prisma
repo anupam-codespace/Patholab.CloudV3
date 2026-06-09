@@ -1,0 +1,30 @@
+model Appointment {
+  id        String  @id @default(uuid())
+  labId     String
+  branchId  String?
+  patientId String
+  invoiceId String? @unique
+
+  source         String // "ONLINE_PORTAL", "WALK_IN", "B2B_AGENCY"
+  collectionMode String // "HOME_COLLECTION", "LAB_VISIT"
+
+  // Home Collection Details
+  collectionAddress String?  @db.Text
+  pincode           String?
+  appointmentDate   DateTime
+  timeSlot          String?
+  status            String   @default("SCHEDULED")
+
+  // Logistics tracking
+  phlebotomistId String?
+  tripId         String?
+
+  tests   Test[]
+  patient Patient @relation(fields: [patientId], references: [id])
+  lab     Lab     @relation(fields: [labId], references: [id])
+
+  createdAt            DateTime            @default(now())
+  Invoice              Invoice[]
+  HomeCollectionTrip   HomeCollectionTrip? @relation(fields: [homeCollectionTripId], references: [id])
+  homeCollectionTripId String?
+}

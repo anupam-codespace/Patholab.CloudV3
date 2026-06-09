@@ -5,7 +5,7 @@ import { getDataFromToken } from '@/lib/auth';
 export const dynamic = 'force-dynamic';
 
 // =========================================================================
-// GET: Fetch Patients (Kept unchanged)
+// GET: Fetch Patients (Enterprise DB Pagination & Branch Scoping)
 // =========================================================================
 export async function GET(req: NextRequest) {
   try {
@@ -17,8 +17,7 @@ export async function GET(req: NextRequest) {
     // --- PARAMS ---
     const search = searchParams.get('search')?.trim() || '';
     const field = searchParams.get('field') || 'all'; 
-    const pageParam = searchParams.get('page');
-    const page = parseInt(pageParam || '1');
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
     const limit = 20; 
     
     // --- FILTERS ---
@@ -28,10 +27,18 @@ export async function GET(req: NextRequest) {
     const agencyFilter = searchParams.get('agency');
     const statusFilter = searchParams.get('status');
 
-    // --- 1. BUILD QUERY ---
+    // --- 1. BUILD SECURE QUERY ---
     let where: any = {
       labId: user.labId,
+      // 🚫 REMOVED mergedIntoPatientId because it does not exist in schema
     };
+
+    // 🌍 ENTERPRISE: Branch Isolation vs Global Scope
+    if (user.role !== 'LAB_OWNER' && user.role !== 'SUPER_ADMIN' && user.branchId) {
+      where.AND = [
+        { OR: [{ branchId: user.branchId }, { isGlobal: true }, { branchId: null }] }
+      ];
+    }
 
     // --- SEARCH LOGIC ---
     if (search) {
@@ -46,21 +53,22 @@ export async function GET(req: NextRequest) {
         ]
       };
 
-      switch (field) {
-        case 'patientId': where.patientId = searchMode; break;
-        case 'name': where.name = searchMode; break;
-        case 'phone': where.phone = searchMode; break;
-        case 'srfId': where.srfId = searchMode; break;
-        case 'abha': where.abhaNumber = searchMode; break;
-        case 'testName': where.tests = { some: { testName: searchMode } }; break;
-        case 'invoiceId': where.invoices = { some: { invoiceNumber: searchMode } }; break;
-        case 'sampleId': where.tests = { some: { sample: sampleIdCondition } }; break;
-        case 'doctor': where.tests = { some: { doctor: { name: searchMode } } }; break;
-        case 'agency': where.tests = { some: { agency: { agencyName: searchMode } } }; break;
+      const searchCondition: any = {};
 
+      switch (field) {
+        case 'patientId': searchCondition.patientId = searchMode; break;
+        case 'name': searchCondition.name = searchMode; break;
+        case 'phone': searchCondition.phone = searchMode; break;
+        case 'srfId': searchCondition.srfId = searchMode; break;
+        case 'abha': searchCondition.abhaNumber = searchMode; break;
+        case 'testName': searchCondition.tests = { some: { testName: searchMode } }; break;
+        case 'invoiceId': searchCondition.invoices = { some: { invoiceNumber: searchMode } }; break;
+        case 'sampleId': searchCondition.tests = { some: { sample: sampleIdCondition } }; break;
+        case 'doctor': searchCondition.tests = { some: { doctor: { name: searchMode } } }; break;
+        case 'agency': searchCondition.tests = { some: { agency: { agencyName: searchMode } } }; break;
         case 'all':
         default:
-          where.OR = [
+          searchCondition.OR = [
             { name: searchMode },
             { phone: searchMode },
             { patientId: searchMode },
@@ -69,6 +77,8 @@ export async function GET(req: NextRequest) {
           ];
           break;
       }
+      
+      where.AND = where.AND ? [...where.AND, searchCondition] : [searchCondition];
     }
 
     // --- 2. APPLY FILTERS ---
@@ -87,46 +97,40 @@ export async function GET(req: NextRequest) {
       const statusCondition = statusFilter === 'PAID' 
         ? { invoices: { some: { status: 'PAID' } } }
         : { invoices: { some: { status: { not: 'PAID' } } } };
-      where.AND = [...(where.AND || []), statusCondition];
+      where.AND = where.AND ? [...where.AND, statusCondition] : [statusCondition];
     }
 
-    // --- 3. FETCH & SORT (SMART ACTIVITY SORT) ---
-    const rawPatients = await prisma.patient.findMany({
-      where,
-      orderBy: { updatedAt: 'desc' }, 
-      take: 500, 
-      include: {
-        doctor: true,
-        agency: true,
-        invoices: {
-          orderBy: { createdAt: 'desc' },
-          take: 1,
-          select: { id: true, invoiceNumber: true, grandTotal: true, discount: true, status: true, subtotal: true, createdAt: true }
-        },
-        tests: {
-          orderBy: { createdAt: 'desc' },
-          select: {
-            id: true, testCode: true, testName: true, status: true, createdAt: true,
-            referredBy: true, 
-            doctor: { select: { name: true } },
-            agency: { select: { agencyName: true } },
-            sample: { select: { sampleId: true } }
+    // --- 3. FETCH & DB-LEVEL PAGINATION ---
+    const [total, pagedPatients] = await Promise.all([
+      prisma.patient.count({ where }),
+      prisma.patient.findMany({
+        where,
+        orderBy: { updatedAt: 'desc' }, 
+        skip: (page - 1) * limit,
+        take: limit, 
+        include: {
+          user: { select: { name: true } }, 
+          doctor: true,
+          agency: true,
+          invoices: {
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+            select: { id: true, invoiceNumber: true, grandTotal: true, discount: true, status: true, subtotal: true, createdAt: true }
+          },
+          tests: {
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+            select: {
+              id: true, testCode: true, testName: true, status: true, createdAt: true,
+              referredBy: true, 
+              doctor: { select: { name: true } },
+              agency: { select: { agencyName: true } },
+              sample: { select: { sampleId: true } }
+            }
           }
         }
-      }
-    });
-
-    const sortedPatients = rawPatients.sort((a, b) => {
-        const dateA = new Date(a.tests?.[0]?.createdAt || a.updatedAt).getTime();
-        const dateB = new Date(b.tests?.[0]?.createdAt || b.updatedAt).getTime();
-        return dateB - dateA; 
-    });
-
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const pagedPatients = sortedPatients.slice(startIndex, endIndex);
-
-    const total = await prisma.patient.count({ where });
+      })
+    ]);
     
     return NextResponse.json({
       data: pagedPatients,
@@ -134,13 +138,13 @@ export async function GET(req: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error("API ERROR:", error);
+    console.error("GET API ERROR:", error);
     return NextResponse.json({ error: 'Fetch failed', details: error.message }, { status: 500 });
   }
 }
 
 // =========================================================================
-// POST: Register New Patient
+// POST: Register New Patient (With Pay-As-You-Go Fee Deduction)
 // =========================================================================
 export async function POST(req: NextRequest) {
   try {
@@ -149,62 +153,38 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
 
+    const safePhone = body.phone?.trim();
+    const safeName = body.name?.trim();
+    const safeAge = body.age ? parseInt(body.age) : null;
+
+    if (!safePhone || !safeName) {
+      return NextResponse.json({ error: 'Name and Phone number are required.' }, { status: 400 });
+    }
+
     // 1. Check Duplicates (Phone)
     const existing = await prisma.patient.findFirst({
-        where: { labId: user.labId, phone: body.phone }
+        where: { labId: user.labId, phone: safePhone }
     });
 
     if (existing) {
         return NextResponse.json({ error: 'Patient with this phone number already exists.', patient: existing }, { status: 409 });
     }
 
-    // ============================================================
-    // 🛑 2. SUBSCRIPTION CHECK (The Gatekeeper)
-    // ============================================================
-    const subscription = await prisma.subscription.findUnique({
-      where: { labId: user.labId },
-      include: { plan: true, currentUsage: true }
-    });
+    // 2. WALLET CHECK & REGISTRATION FEE CALCULATION
+    const wallet = await prisma.labWallet.findUnique({ where: { labId: user.labId } });
+    if (!wallet) return NextResponse.json({ error: "Wallet not initialized. Please contact support." }, { status: 400 });
 
-    if (!subscription) {
-       return NextResponse.json({ error: "No active subscription found." }, { status: 403 });
+    const fee = Number(wallet.perPatientFee || 2.5);
+    const totalDeduction = fee; // Total fee to deduct for registering a NEW patient
+
+    if (Number(wallet.balance) < totalDeduction) {
+      return NextResponse.json({ 
+        error: "Insufficient wallet balance. Please recharge to register new patients.",
+        required: totalDeduction 
+      }, { status: 402 });
     }
 
-    let usage = subscription.currentUsage;
-    if (!usage) {
-        console.log(`⚠️ Auto-fixing missing usage for Sub ID: ${subscription.id}`);
-        usage = await prisma.currentUsage.create({
-            data: {
-                subscriptionId: subscription.id,
-                testsUsed: 0,
-                patientsCount: 0,
-                staffCount: 1,
-                storageUsedGB: 0.0
-            }
-        });
-    }
-
-    if (subscription.status !== 'ACTIVE' && subscription.status !== 'TRIAL') {
-        return NextResponse.json({ error: "Your subscription is inactive. Please renew to add patients." }, { status: 403 });
-    }
-    
-    const planLimit = subscription.plan.maxPatientsTotal;
-    const boosterLimit = subscription.boosterPatients || 0;
-    
-    if (planLimit !== -1) { 
-        const totalLimit = planLimit + boosterLimit;
-        const currentCount = usage.patientsCount; 
-        
-        if (currentCount >= totalLimit) {
-             return NextResponse.json({ 
-                 error: `Patient limit reached (${currentCount}/${totalLimit}). Please upgrade your plan.` 
-             }, { status: 403 });
-        }
-    }
-
-    // ============================================================
-    // 3. GENERATE ID & PREPARE DATA
-    // ============================================================
+    // 3. GENERATE ID 
     const lastPatient = await prisma.patient.findFirst({
         where: { labId: user.labId },
         orderBy: { createdAt: 'desc' }, 
@@ -220,79 +200,101 @@ export async function POST(req: NextRequest) {
         }
     }
     const nextId = `P-${nextNumber.toString().padStart(5, '0')}`;
-
-    // ✅ FIX: Identifies both UUIDs and Prisma CUIDs
-    const isDbId = (str: string) => {
-        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
-        const isCuid = /^c[a-z0-9]{20,}$/i.test(str);
-        return isUuid || isCuid;
-    };
     
-    // Frontend sends either `doctorId` or `doctorName` depending on the payload structure
+    // 4. RESOLVE DOCTORS & AGENCIES
+    const isDbId = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str) || /^c[a-z0-9]{20,}$/i.test(str);
+    
+    let finalDoctorId = null;
+    let finalAgencyId = null;
     const incomingDoctor = body.doctorId || body.doctorName;
     const incomingAgency = body.agencyId || body.agencyName;
 
-    let finalDoctorId = null;
     if (incomingDoctor && incomingDoctor !== "Self") {
-        if (isDbId(incomingDoctor)) {
-            finalDoctorId = incomingDoctor;
-        } else {
-            const doc = await prisma.doctor.findFirst({
-                where: { 
-                    labId: user.labId,
-                    name: { equals: incomingDoctor, mode: 'insensitive' }
-                }
-            });
+        if (isDbId(incomingDoctor)) finalDoctorId = incomingDoctor;
+        else {
+            const doc = await prisma.doctor.findFirst({ where: { labId: user.labId, name: { equals: incomingDoctor, mode: 'insensitive' } } });
             if (doc) finalDoctorId = doc.id;
         }
     }
 
-    let finalAgencyId = null;
     if (incomingAgency && incomingAgency !== "Direct") {
-        if (isDbId(incomingAgency)) {
-            finalAgencyId = incomingAgency;
-        } else {
-            const ag = await prisma.agency.findFirst({
-                where: { 
-                    labId: user.labId,
-                    agencyName: { equals: incomingAgency, mode: 'insensitive' }
-                }
-            });
+        if (isDbId(incomingAgency)) finalAgencyId = incomingAgency;
+        else {
+            const ag = await prisma.agency.findFirst({ where: { labId: user.labId, agencyName: { equals: incomingAgency, mode: 'insensitive' } } });
             if (ag) finalAgencyId = ag.id;
         }
     }
 
-    // ============================================================
-    // ✅ 4. TRANSACTION: CREATE PATIENT + INCREMENT USAGE
-    // ============================================================
+    // 5. DOB CALCULATION
+    let calculatedDob = body.dateOfBirth ? new Date(body.dateOfBirth) : null;
+    if (!calculatedDob && safeAge && body.ageUnit) {
+      const tempDate = new Date();
+      if (body.ageUnit.toUpperCase().startsWith('Y')) tempDate.setFullYear(tempDate.getFullYear() - safeAge);
+      else if (body.ageUnit.toUpperCase().startsWith('M')) tempDate.setMonth(tempDate.getMonth() - safeAge);
+      else if (body.ageUnit.toUpperCase().startsWith('D')) tempDate.setDate(tempDate.getDate() - safeAge);
+      calculatedDob = tempDate;
+    }
+
+    const isGlobal = (user.role === 'LAB_OWNER' || user.role === 'LAB_MANAGER') ? (body.isGlobal === true) : false;
+
+    // ✅ 6. TRANSACTION: CREATE PATIENT + DEDUCT WALLET + AUDIT
     const newPatient = await prisma.$transaction(async (tx) => {
         // A. Create Patient
         const patient = await tx.patient.create({
             data: {
                 labId: user.labId,
+                branchId: isGlobal ? null : user.branchId,
+                userId: user.id,
                 patientId: nextId,
-                name: body.name,
-                age: parseInt(body.age),
-                ageUnit: body.ageUnit,
-                gender: body.gender,
-                phone: body.phone,
-                email: body.email || null,
-                address: body.address || null,
-                
-                srfId: body.srfId || null,
-                passportNumber: body.passport || null,
-                abhaNumber: body.abhaNumber || null, 
-                
-                // ✅ Saves the verified real UUIDs/CUIDs
+                name: safeName,
+                age: safeAge,
+                ageUnit: body.ageUnit || null,
+                dateOfBirth: calculatedDob, 
+                gender: body.gender ? (body.gender.toUpperCase() as any) : 'OTHER', 
+                phone: safePhone,
+                email: body.email?.trim() || null,
+                address: body.address?.trim() || null,
+                isGlobal: isGlobal,
+                srfId: body.srfId?.trim() || null,
+                passportNumber: body.passport?.trim() || null,
+                abhaNumber: body.abhaNumber?.trim() || null, 
                 doctorId: finalDoctorId,
                 agencyId: finalAgencyId
             }
         });
 
-        // B. Update Usage (Critical Step)
-        await tx.currentUsage.update({
-            where: { subscriptionId: subscription.id },
-            data: { patientsCount: { increment: 1 } }
+        // B. Wallet Deduction
+        await tx.labWallet.update({
+            where: { labId: user.labId },
+            data: { balance: { decrement: totalDeduction } }
+        });
+
+        await tx.walletTransaction.create({
+            data: {
+                labId: user.labId,
+                type: 'DEDUCTION',
+                amount: totalDeduction,
+                closingBalance: Number(wallet.balance) - totalDeduction,
+                description: `Patient Registration Fee: ${safeName}`
+            }
+        });
+
+        // C. Detailed Activity Log
+        await tx.activityLog.create({
+          data: {
+            labId: user.labId,
+            userId: user.id,
+            action: 'PATIENT_CREATED',
+            entityType: 'PATIENT',
+            entity: 'PATIENT',           
+            entityId: patient.id,
+            description: `New patient registered: ${patient.name} (${patient.phone})`, 
+            details: { 
+              name: patient.name, 
+              phone: patient.phone, 
+              feeDeducted: totalDeduction 
+            }
+          }
         });
 
         return patient;
@@ -303,11 +305,69 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error("REGISTRATION ERROR:", error);
     if (error.code === 'P2002') {
-        const target = error.meta?.target;
-        if (Array.isArray(target) && target.includes('patientId')) {
-             return NextResponse.json({ error: "ID Conflict. Please click Save again." }, { status: 409 });
-        }
+         return NextResponse.json({ error: "Race condition detected. Please click Save again." }, { status: 409 });
     }
     return NextResponse.json({ error: error.message || "Registration failed" }, { status: 500 });
+  }
+}
+
+// =========================================================================
+// PATCH: Merge Duplicate Patients (Strict Lab Owner Action)
+// =========================================================================
+export async function PATCH(req: NextRequest) {
+  try {
+    const user = await getDataFromToken(req);
+    if (!user || !user.labId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    // 🛡️ SECURITY: Only Owners and Managers can merge patient records
+    if (user.role !== 'LAB_OWNER' && user.role !== 'LAB_MANAGER') {
+       return NextResponse.json({ error: 'Only Lab Owners/Managers can merge patient records.' }, { status: 403 });
+    }
+
+    const { primaryId, secondaryId } = await req.json();
+    if (!primaryId || !secondaryId || primaryId === secondaryId) {
+      return NextResponse.json({ error: 'Invalid merge parameters.' }, { status: 400 });
+    }
+
+    // Run massive merge operation in a single ACID transaction
+    await prisma.$transaction(async (tx) => {
+      
+      // 1. Relink all tests
+      await tx.test.updateMany({
+        where: { patientId: secondaryId },
+        data: { patientId: primaryId }
+      });
+
+      // 2. Relink all invoices
+      await tx.invoice.updateMany({
+        where: { patientId: secondaryId },
+        data: { patientId: primaryId }
+      });
+
+      // 3. Delete the duplicate patient (Since mergedIntoPatientId is not in schema)
+      await tx.patient.delete({
+        where: { id: secondaryId }
+      });
+
+      // 📝 4. AUDIT LOG: Record the merge for compliance
+      await tx.activityLog.create({
+        data: {
+          labId: user.labId,
+          userId: user.id,
+          action: 'PATIENT_MERGED',
+          entityType: 'PATIENT',
+          entityId: primaryId,
+          entity: 'PATIENT', 
+          description: `Merged duplicate patient record into primary ID. Secondary record deleted.`,
+          details: { merged_from_id: secondaryId }
+        }
+      });
+    });
+
+    return NextResponse.json({ message: 'Patients merged successfully.' });
+
+  } catch (error: any) {
+    console.error("MERGE ERROR:", error);
+    return NextResponse.json({ error: "Merge failed" }, { status: 500 });
   }
 }

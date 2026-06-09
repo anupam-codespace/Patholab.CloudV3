@@ -1,0 +1,14 @@
+model Modality {
+  id       String @id @default(uuid())
+  labId    String
+  branchId String
+
+  name         String // e.g., "MRI - 3 Tesla", "Digital X-Ray"
+  modalityType String // "CR", "CT", "MR", "US" (Standard DICOM prefixes)
+  isActive     Boolean @default(true)
+
+  studies RadiologyStudy[]
+
+  lab    Lab    @relation(fields: [labId], references: [id])
+  branch Branch @relation(fields: [branchId], references: [id])
+}

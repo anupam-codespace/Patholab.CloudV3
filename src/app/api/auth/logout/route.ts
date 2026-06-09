@@ -4,34 +4,42 @@ import { prisma } from '@/lib/prisma';
 
 export async function POST(req: NextRequest) {
   try {
-    // 1. Audit Logging
+    // 1. Fetch User & IP for Audit Logging
     const user = await getCurrentUser();
     const ip = req.headers.get('x-forwarded-for') || 'unknown';
 
     if (user) {
-      await prisma.activityLog.create({
-        data: {
-          userId: user.id, // Make sure this matches your schema (user.id instead of user.userId)
-          action: 'LOGOUT',
-          entity: 'SESSION',
-          entityId: user.id,
-          description: `User logged out from IP: ${ip}`,
-        },
-      }).catch(console.error);
+      // Safely extract the ID from the token payload
+      const validUserId = user.userId || user.id;
+
+      if (validUserId) {
+        await prisma.activityLog.create({
+          data: {
+            userId: validUserId, 
+            action: 'LOGOUT',
+            entity: 'SESSION',
+            entityId: validUserId,
+            description: `User logged out from IP: ${ip}`,
+          },
+        }).catch((err) => {
+          // Non-blocking error catch: if logging fails, don't stop the user from logging out
+          console.error('[AUDIT LOG ERROR] Failed to log logout event:', err);
+        });
+      }
     }
 
-    // 2. Return a JSON success response (NOT a redirect)
+    // 2. Prepare JSON success response
     const response = NextResponse.json(
       { success: true, message: 'Logged out successfully' },
       { status: 200 }
     );
 
-    // 3. DESTROY AUTH COOKIE
+    // 3. DESTROY AUTH COOKIE SECURELY
     response.cookies.set({
       name: 'token',
       value: '',
       httpOnly: true,
-      expires: new Date(0), // Set to the past to instantly delete
+      expires: new Date(0), // Instantly expires the cookie
       path: '/',
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax'
@@ -42,7 +50,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error('Logout System Error:', error);
     return NextResponse.json(
-      { success: false, message: 'Logout error' },
+      { success: false, message: 'An error occurred during logout' },
       { status: 500 }
     );
   }

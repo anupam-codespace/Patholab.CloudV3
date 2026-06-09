@@ -17,10 +17,14 @@ import {
   Calendar,
   FlaskConical,
   AlertCircle,
+  WalletCards,
+  CheckCircle2,
+  Clock,
+  CreditCard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -30,7 +34,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import toast from "react-hot-toast";
 import { format } from "date-fns";
@@ -38,12 +41,9 @@ import { format } from "date-fns";
 // --- SAFE DATE FORMATTER ---
 const safeFormatDate = (dateValue: string | Date | null | undefined) => {
   if (!dateValue) return "Unknown Date";
-
   const d = new Date(dateValue);
-  // Check if the resulting date object is actually valid
   if (isNaN(d.getTime())) return "Invalid Date";
-
-  return format(d, "dd MMM yyyy");
+  return format(d, "dd MMM yyyy, hh:mm a");
 };
 
 export default function RegistrationSearchPage() {
@@ -78,8 +78,9 @@ export default function RegistrationSearchPage() {
 
   // --- ACTIONS ---
   const proceedToAccession = (patientId: string) => {
+    // We pass isNewVisit=true so your accession backend knows to deduct the Pay-As-You-Go fee
     router.push(
-      `/workspace/accession?patientId=${patientId}&doc=Self&agency=Direct`,
+      `/workspace/accession?patientId=${patientId}&isNewVisit=true&doc=Self&agency=Direct`,
     );
   };
 
@@ -102,19 +103,19 @@ export default function RegistrationSearchPage() {
             Patient Registration
           </h1>
           <p className="text-slate-500 font-medium max-w-lg mx-auto">
-            Search the database for existing records before initiating a new
-            visit to prevent duplicates.
+            Search the database to find existing records or register a
+            completely new patient profile.
           </p>
         </div>
 
         {/* The "Omnibar" Search */}
-        <div className="bg-white p-2 rounded-2xl shadow-lg shadow-indigo-500/5 border border-slate-200/80 flex flex-col sm:flex-row items-center gap-2 transition-all duration-300 focus-within:ring-4 focus-within:ring-indigo-500/10 focus-within:border-indigo-300 mx-auto w-full">
+        <div className="bg-white/80 backdrop-blur-xl p-2 rounded-2xl shadow-xl shadow-indigo-500/10 border border-slate-200/80 flex flex-col sm:flex-row items-center gap-2 transition-all duration-300 focus-within:ring-4 focus-within:ring-indigo-500/10 focus-within:border-indigo-300 mx-auto w-full">
           <form
             onSubmit={handleSearch}
             className="w-full flex flex-col sm:flex-row items-center gap-2">
             <div className="w-full sm:w-[160px] shrink-0 relative">
               <Select value={searchType} onValueChange={setSearchType}>
-                <SelectTrigger className="w-full h-12 border-0 bg-slate-50/50 hover:bg-slate-100 focus:ring-0 font-bold text-slate-700 rounded-xl text-sm transition-colors">
+                <SelectTrigger className="w-full h-12 border-0 bg-slate-100/50 hover:bg-slate-100 focus:ring-0 font-bold text-slate-700 rounded-xl text-sm transition-colors">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl shadow-xl border-slate-100">
@@ -201,12 +202,18 @@ export default function RegistrationSearchPage() {
                   </span>{" "}
                   in the database.
                 </p>
-                <Button
-                  onClick={createNewPatient}
-                  size="lg"
-                  className="w-full h-12 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 shadow-md shadow-indigo-500/25 rounded-xl font-bold text-base transition-all duration-300 hover:-translate-y-0.5">
-                  <UserPlus className="mr-2 h-5 w-5" /> Register New Patient
-                </Button>
+                <div className="space-y-3">
+                  <Button
+                    onClick={createNewPatient}
+                    size="lg"
+                    className="w-full h-12 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 shadow-md shadow-indigo-500/25 rounded-xl font-bold text-base transition-all duration-300 hover:-translate-y-0.5">
+                    <UserPlus className="mr-2 h-5 w-5" /> Register New Patient
+                  </Button>
+                  <p className="text-xs text-slate-400 font-medium flex items-center justify-center gap-1.5">
+                    <WalletCards className="h-3.5 w-3.5" /> Registration fee
+                    will be deducted
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -224,22 +231,19 @@ export default function RegistrationSearchPage() {
           return (
             <Card
               key={patient.id}
-              className="overflow-hidden border-0 shadow-lg shadow-slate-200/50 rounded-2xl animate-in fade-in slide-in-from-bottom-4 duration-500 hover:shadow-xl transition-all group">
+              className="overflow-hidden border-0 shadow-lg shadow-slate-200/50 rounded-2xl animate-in fade-in slide-in-from-bottom-4 duration-500 hover:shadow-xl transition-all group bg-white">
               <div className="grid grid-cols-1 lg:grid-cols-12">
                 {/* PATIENT INFO (Left) */}
                 <div className="col-span-12 lg:col-span-4 bg-gradient-to-br from-slate-50 to-slate-100/50 p-6 lg:p-8 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-slate-200/60 relative overflow-hidden">
-                  {/* Subtle Side Accent */}
                   <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-indigo-600" />
 
                   <div>
                     <div className="flex items-center gap-4 mb-6">
-                      <Avatar className="h-16 w-16 border-4 border-white shadow-sm">
-                        <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-violet-600 text-white font-bold text-xl">
-                          {initials}
-                        </AvatarFallback>
-                      </Avatar>
+                      <div className="h-16 w-16 bg-gradient-to-br from-indigo-500 to-violet-600 text-white font-bold text-xl rounded-full flex items-center justify-center border-4 border-white shadow-sm shrink-0">
+                        {initials}
+                      </div>
                       <div>
-                        <h3 className="text-xl font-bold text-slate-900 leading-tight">
+                        <h3 className="text-xl font-black text-slate-900 leading-tight">
                           {patient.name}
                         </h3>
                         <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mt-1">
@@ -255,7 +259,7 @@ export default function RegistrationSearchPage() {
                           <Fingerprint className="h-4 w-4 text-slate-400" />{" "}
                           Patient ID
                         </span>
-                        <span className="font-mono font-bold text-indigo-600">
+                        <span className="font-mono font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">
                           {patient.patientId}
                         </span>
                       </div>
@@ -271,13 +275,19 @@ export default function RegistrationSearchPage() {
                     </div>
                   </div>
 
-                  <div className="mt-8">
+                  <div className="mt-8 space-y-3">
                     <Button
                       onClick={() => proceedToAccession(patient.id)}
-                      className="w-full h-12 bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-md font-bold group-hover:shadow-lg transition-all">
-                      Start New Visit{" "}
-                      <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                      className="w-full h-12 bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-md font-bold group-hover:shadow-lg transition-all relative overflow-hidden">
+                      <span className="relative flex items-center gap-2">
+                        Start New Visit <ArrowRight className="h-4 w-4" />
+                      </span>
                     </Button>
+                    {/* 💰 DEDUCTION WARNING FOR EXISTING PATIENTS */}
+                    <div className="flex items-center justify-center gap-1.5 text-[11px] font-semibold text-slate-500 bg-slate-200/50 py-1.5 rounded-lg">
+                      <CreditCard className="h-3.5 w-3.5 text-indigo-500" />{" "}
+                      Standard visit fee applies
+                    </div>
                   </div>
                 </div>
 
@@ -286,11 +296,10 @@ export default function RegistrationSearchPage() {
                   <Tabs defaultValue="tests" className="w-full">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                       <h4 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                        <History className="h-5 w-5 text-indigo-500" /> Recent
+                        <History className="h-5 w-5 text-indigo-500" /> Clinical
                         History
                       </h4>
 
-                      {/* Premium Pill Tabs */}
                       <div className="bg-slate-100/80 p-1 rounded-xl inline-flex w-full sm:w-auto border border-slate-200/50">
                         <TabsList className="grid w-full sm:w-[240px] grid-cols-2 bg-transparent p-0 gap-1 h-auto">
                           <TabsTrigger
@@ -312,10 +321,13 @@ export default function RegistrationSearchPage() {
                       value="tests"
                       className="mt-0 focus-visible:outline-none">
                       {patient.tests?.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-10 text-center border-2 border-dashed border-slate-100 rounded-xl bg-slate-50/50">
+                        <div className="flex flex-col items-center justify-center py-10 text-center border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
                           <AlertCircle className="h-8 w-8 text-slate-300 mb-2" />
-                          <p className="text-sm font-medium text-slate-500">
+                          <p className="text-sm font-bold text-slate-500">
                             No test history found.
+                          </p>
+                          <p className="text-xs text-slate-400 mt-1">
+                            This patient has only been registered.
                           </p>
                         </div>
                       ) : (
@@ -323,44 +335,38 @@ export default function RegistrationSearchPage() {
                           {patient.tests?.slice(0, 5).map((t: any) => (
                             <div
                               key={t.id}
-                              className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-slate-100 rounded-xl hover:border-indigo-100 hover:shadow-sm transition-all gap-3">
+                              className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-slate-100 rounded-xl hover:border-indigo-100 hover:shadow-md transition-all gap-3">
                               <div className="flex items-center gap-4">
                                 <div
-                                  className={`p-2 rounded-lg ${t.status === "APPROVED" || t.status === "COMPLETED" ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"}`}>
+                                  className={`p-2.5 rounded-xl ${t.status === "APPROVED" || t.status === "COMPLETED" ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"}`}>
                                   <Activity className="h-4 w-4" />
                                 </div>
                                 <div>
                                   <span className="font-bold text-sm text-slate-900 block">
                                     {t.testName}{" "}
-                                    <span className="font-normal font-mono text-xs text-slate-400 ml-1">
+                                    <span className="font-normal font-mono text-[10px] text-slate-400 ml-1 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">
                                       [{t.testCode}]
                                     </span>
                                   </span>
-                                  <span className="text-[10px] font-medium text-slate-500 flex items-center gap-1 mt-0.5">
-                                    <Calendar className="h-3 w-3" />{" "}
+                                  <span className="text-[10px] font-medium text-slate-500 flex items-center gap-1 mt-1">
+                                    <Calendar className="h-3 w-3 opacity-70" />{" "}
                                     {safeFormatDate(t.createdAt)}
                                   </span>
                                 </div>
                               </div>
                               <Badge
                                 variant="outline"
-                                className={`border-none px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
-                                  t.status === "APPROVED" ||
-                                  t.status === "COMPLETED"
-                                    ? "bg-emerald-100 text-emerald-700"
-                                    : "bg-amber-100 text-amber-700"
-                                }`}>
+                                className={`border-none px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${t.status === "APPROVED" || t.status === "COMPLETED" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
+                                {t.status === "APPROVED" ||
+                                t.status === "COMPLETED" ? (
+                                  <CheckCircle2 className="w-3 h-3 mr-1 inline" />
+                                ) : (
+                                  <Clock className="w-3 h-3 mr-1 inline" />
+                                )}
                                 {t.status}
                               </Badge>
                             </div>
                           ))}
-                          {patient.tests?.length > 5 && (
-                            <div className="text-center pt-2">
-                              <span className="text-xs font-bold text-indigo-600 cursor-pointer hover:underline">
-                                View {patient.tests.length - 5} more tests...
-                              </span>
-                            </div>
-                          )}
                         </div>
                       )}
                     </TabsContent>
@@ -369,9 +375,9 @@ export default function RegistrationSearchPage() {
                       value="billing"
                       className="mt-0 focus-visible:outline-none">
                       {patient.invoices?.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-10 text-center border-2 border-dashed border-slate-100 rounded-xl bg-slate-50/50">
+                        <div className="flex flex-col items-center justify-center py-10 text-center border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
                           <Receipt className="h-8 w-8 text-slate-300 mb-2" />
-                          <p className="text-sm font-medium text-slate-500">
+                          <p className="text-sm font-bold text-slate-500">
                             No billing history found.
                           </p>
                         </div>
@@ -380,16 +386,17 @@ export default function RegistrationSearchPage() {
                           {patient.invoices?.slice(0, 5).map((inv: any) => (
                             <div
                               key={inv.id}
-                              className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-slate-100 rounded-xl hover:border-indigo-100 hover:shadow-sm transition-all gap-3">
+                              className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-slate-100 rounded-xl hover:border-indigo-100 hover:shadow-md transition-all gap-3">
                               <div className="flex items-center gap-4">
-                                <div className="p-2 rounded-lg bg-slate-50 border border-slate-100">
+                                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
                                   <Receipt className="h-4 w-4 text-slate-500" />
                                 </div>
                                 <div>
                                   <p className="font-bold text-sm text-slate-900 font-mono">
                                     #{inv.invoiceNumber}
                                   </p>
-                                  <p className="text-[10px] font-medium text-slate-500 mt-0.5">
+                                  <p className="text-[10px] font-medium text-slate-500 mt-1 flex items-center gap-1">
+                                    <Calendar className="h-3 w-3 opacity-70" />{" "}
                                     {safeFormatDate(inv.createdAt)}
                                   </p>
                                 </div>
@@ -402,11 +409,7 @@ export default function RegistrationSearchPage() {
                                 </div>
                                 <Badge
                                   variant="outline"
-                                  className={`border-none px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
-                                    inv.status === "PAID"
-                                      ? "bg-emerald-100 text-emerald-700"
-                                      : "bg-rose-100 text-rose-700"
-                                  }`}>
+                                  className={`border-none px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${inv.status === "PAID" ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>
                                   {inv.status}
                                 </Badge>
                               </div>

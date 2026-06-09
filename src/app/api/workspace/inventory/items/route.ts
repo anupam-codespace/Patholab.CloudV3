@@ -1,26 +1,27 @@
-import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { getDataFromToken } from "@/lib/auth";
 
-// Helper to get the Lab ID (Replace with your actual Auth logic later)
-async function getLabId() {
-  // Try to find the first available lab in the database for testing
-  const lab = await prisma.lab.findFirst();
-  return lab?.id;
-}
+export const dynamic = 'force-dynamic';
 
-export async function GET(req: Request) {
+// ==========================================
+// GET: Fetch Inventory Items with Batches
+// ==========================================
+export async function GET(req: NextRequest) {
   try {
-    const labId = await getLabId();
-    if (!labId) return NextResponse.json({ error: "No Lab found in database" }, { status: 400 });
+    // 🔒 Replaced mock function with real Enterprise Auth
+    const user = await getDataFromToken(req);
+    if (!user || !user.labId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const items = await prisma.inventoryItem.findMany({
-      where: { labId },
+      where: { labId: user.labId },
       include: {
         batches: {
           where: { currentQuantity: { gt: 0 } },
           orderBy: { expiryDate: 'asc' }
         },
-        supplier: true
+        // ✅ FIXED: Capital "S" to match the Prisma Schema exactly
+        Supplier: true 
       },
       orderBy: { name: 'asc' }
     });
@@ -28,14 +29,18 @@ export async function GET(req: Request) {
     return NextResponse.json(items);
   } catch (error: any) {
     console.error("Failed to fetch inventory items:", error);
-    return NextResponse.json({ error: error.message || "Failed to fetch items" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch items" }, { status: 500 });
   }
 }
 
-export async function POST(req: Request) {
+// ==========================================
+// POST: Create New Inventory Item
+// ==========================================
+export async function POST(req: NextRequest) {
   try {
-    const labId = await getLabId();
-    if (!labId) return NextResponse.json({ error: "No Lab found in database" }, { status: 400 });
+    // 🔒 Replaced mock function with real Enterprise Auth
+    const user = await getDataFromToken(req);
+    if (!user || !user.labId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await req.json();
     const { name, sku, category, purchaseUnit, usageUnit, conversionFactor, minStockLevel } = body;
@@ -46,9 +51,9 @@ export async function POST(req: Request) {
 
     const newItem = await prisma.inventoryItem.create({
       data: {
-        labId,
-        name,
-        sku: sku || null,
+        labId: user.labId,
+        name: name.trim(),
+        sku: sku ? sku.trim() : null,
         category: category || null,
         purchaseUnit: purchaseUnit || "Box",
         usageUnit: usageUnit || "ml",
@@ -60,9 +65,9 @@ export async function POST(req: Request) {
     return NextResponse.json(newItem);
   } catch (error: any) {
     console.error("Failed to create inventory item:", error);
-    // Handle unique constraint error if item name already exists
+    // Handle unique constraint error if item name/SKU already exists
     if (error.code === 'P2002') {
-      return NextResponse.json({ error: "An item with this name already exists." }, { status: 400 });
+      return NextResponse.json({ error: "An item with this name or SKU already exists in your lab." }, { status: 400 });
     }
     return NextResponse.json({ error: "Failed to create item" }, { status: 500 });
   }
