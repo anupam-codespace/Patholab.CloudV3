@@ -1,0 +1,75 @@
+// ==========================================
+// ENUMS (Place this near the top of your file)
+// ==========================================
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  BOTH
+}
+
+// ==========================================
+// PATIENT MODEL
+// ==========================================
+model Patient {
+  id       String  @id @default(uuid())
+  labId    String
+  branchId String? // Nullable if isGlobal is true
+  userId   String? // Audit: Tracks which user created this record
+
+  patientId String // Auto-generated Display ID (e.g., P-00001)
+  name      String
+
+  // Clinical Demographics
+  age         Int?
+  ageUnit     String? // "Years", "Months", "Days"
+  dateOfBirth DateTime?
+  gender      Gender    @default(OTHER) // Uses the Enum
+
+  // Contact Info
+  phone   String
+  email   String?
+  address String?
+
+  // 🌍 Enterprise: Multi-Branch Scope
+  isGlobal Boolean @default(false) // True = visible across all branches
+
+  // Government & External Identifiers
+  srfId          String?
+  passportNumber String?
+  abhaNumber     String?
+
+  // External Network
+  doctorId String?
+  agencyId String?
+
+  Doctor Doctor? @relation(fields: [doctorId], references: [id])
+  Agency Agency? @relation(fields: [agencyId], references: [id])
+
+  // 🔗 Enterprise: Merge Tracking (Audit Trail)
+  mergedIntoPatientId String?
+  mergedFrom          Patient[] @relation("PatientMergeHistory")
+  mergedInto          Patient?  @relation("PatientMergeHistory", fields: [mergedIntoPatientId], references: [id])
+
+  // Core System Relations
+  lab    Lab     @relation(fields: [labId], references: [id])
+  branch Branch? @relation(fields: [branchId], references: [id])
+  user   User?   @relation(fields: [userId], references: [id])
+
+  // Operational Relations (One-to-Many)
+  tests          Test[]
+  samples        Sample[]
+  appointments   Appointment[]
+  invoices       Invoice[]
+  RadiologyStudy RadiologyStudy[] // Required for your RIS module
+  activityLogs   ActivityLog[]
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Indexes for hyper-fast querying
+  @@unique([labId, patientId])
+  @@index([labId, phone])
+  @@index([branchId])
+}

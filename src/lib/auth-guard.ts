@@ -1,19 +1,5 @@
 import { redirect } from 'next/navigation';
-import { prisma } from '@/lib/prisma'; // Adjust to your prisma client path
-
-// ==========================================
-// 1. STRICT TYPING
-// ==========================================
-
-// Map these to your Plan boolean flags and string features
-export type SaasFeature = 
-  | 'hasInventory' 
-  | 'hasAnalytics' 
-  | 'hasB2bBilling' 
-  | 'hasLogistics' 
-  | 'hasRadiology'
-  | 'PREMIUM_SUPPORT'
-  | 'CUSTOM_BRANDING';
+import { prisma } from '@/lib/prisma';
 
 // Granular permissions for LabStaff
 export type AppPermission = 
@@ -24,100 +10,114 @@ export type AppPermission =
   | 'reports:view'
   | 'reports:sign'
   | 'finance:view'
-  | 'settings:manage';
+  | 'settings:manage'
+  | 'patient:create'; // Add specific billable actions
 
 interface GuardOptions {
   userId: string;
-  labId: string;
-  branchId?: string | null; // Optional: To check if staff is locked to a specific branch
-  requiredFeature?: SaasFeature;
+  labId?: string | null; // Allow null to support new owners in onboarding
+  branchId?: string | null; 
   requiredPermission?: AppPermission;
-  isApiRoute?: boolean; // Set to true if calling from route.ts so it doesn't redirect
+  isApiRoute?: boolean; 
 }
-
-// ==========================================
-// 2. THE MASTER GUARD FUNCTION
-// ==========================================
 
 export async function authorizeAccess({
   userId,
   labId,
   branchId,
-  requiredFeature,
   requiredPermission,
   isApiRoute = false,
 }: GuardOptions) {
   
-  // 1. Fetch Subscription and Staff Profile Concurrently for speed
-  const [subscription, staff] = await Promise.all([
-    prisma.subscription.findUnique({
-      where: { labId },
-      include: { plan: true },
-    }),
-    prisma.labStaff.findUnique({
-      where: { labId_userId: { labId, userId } },
-      include: { user: true },
-    }),
-  ]);
+  // 1. Fetch User with direct Lab (for Owners) OR Staff Profile (for Employees)
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      lab: { include: { wallet: true } }, 
+      staffLabs: {
+        where: labId ? { labId } : { isActive: true },
+        include: { lab: { include: { wallet: true } } }
+      }
+    }
+  });
 
-  // Handle Missing Core Data
-  if (!staff || !staff.user) {
-    if (isApiRoute) return { authorized: false, error: 'User not found in this Lab', status: 401 };
+  if (!user) {
+    if (isApiRoute) return { authorized: false, error: 'User not found', status: 401 };
     redirect('/login');
   }
 
-  // ==========================================
-  // TIER 1: SAAS SUBSCRIPTION CHECK
-  // ==========================================
-  if (requiredFeature && subscription) {
-    const { plan, unlockedFeatures } = subscription;
-    
-    // Check if the feature is a base Plan boolean (e.g., hasInventory: true)
-    const hasBaseBooleanFeature = (plan as any)[requiredFeature] === true;
-    
-    // Check if it's in the Plan's string features array
-    const hasPlanStringFeature = plan.features.includes(requiredFeature);
-    
-    // Check if it was manually unlocked for this specific subscription (Add-on/Override)
-    const hasUnlockedOverride = unlockedFeatures.includes(requiredFeature);
+  const isOwner = user.role === 'LAB_OWNER';
+  const isSuperAdmin = user.role === 'SUPER_ADMIN';
+  const isGodMode = isOwner || isSuperAdmin;
 
-    if (!hasBaseBooleanFeature && !hasPlanStringFeature && !hasUnlockedOverride) {
-      if (isApiRoute) return { authorized: false, error: 'Module not included in current subscription plan', status: 403 };
-      redirect('/upgrade');
+  // 2. Resolve Active Lab & Context Safely
+  let activeLab = null;
+  let staffProfile = null;
+
+  if (isOwner) {
+    activeLab = user.lab;
+  } else if (!isSuperAdmin) {
+    staffProfile = user.staffLabs[0];
+    activeLab = staffProfile?.lab;
+  }
+
+  // Handle Onboarding State (Owner with no lab yet MUST be allowed to pass to see the setup modal)
+  if (!activeLab && isOwner && !labId) {
+    return { authorized: true, user, isGodMode }; 
+  }
+
+  // Handle Missing Staff Connection
+  if (!isGodMode && (!staffProfile || (labId && staffProfile.labId !== labId))) {
+    if (isApiRoute) return { authorized: false, error: 'Unauthorized for this Lab', status: 403 };
+    redirect('/unauthorized');
+  }
+
+  const wallet = activeLab?.wallet;
+
+  // ==========================================
+  // TIER 1: WALLET HEALTH CHECK (PAY-AS-YOU-GO)
+  // ==========================================
+  // We do NOT block read access if the wallet is empty. We only block specific paid actions.
+  if (wallet) {
+    const isWalletExpired = wallet.validityEndDate && wallet.validityEndDate < new Date();
+    const isBalanceEmpty = Number(wallet.balance) <= 0;
+
+    // Define which granular permissions trigger a hard block when funds are empty
+    const paidActions = ['patient:create']; 
+
+    if ((isWalletExpired || isBalanceEmpty) && requiredPermission && paidActions.includes(requiredPermission)) {
+        if (isApiRoute) return { authorized: false, error: 'Wallet empty or expired. Please recharge.', status: 402 };
+        redirect('/workspace/wallet'); 
     }
   }
 
   // ==========================================
   // TIER 2: RBAC & GRANULAR PERMISSIONS
   // ==========================================
-  const userRole = staff.user.role;
-  const isGodMode = userRole === 'SUPER_ADMIN' || userRole === 'LAB_OWNER';
-
-  if (!isGodMode && requiredPermission) {
-    // Because we used PostgreSQL String[], this is just a standard array includes check
-    const hasPermission = staff.permissions.includes(requiredPermission);
+  if (!isGodMode && requiredPermission && staffProfile) {
+    const hasPermission = staffProfile.permissions.includes(requiredPermission);
 
     if (!hasPermission) {
       if (isApiRoute) return { authorized: false, error: 'Insufficient staff permissions', status: 403 };
-      redirect('/dashboard/unauthorized');
+      redirect('/unauthorized');
     }
   }
 
   // ==========================================
-  // TIER 3: BRANCH ISOLATION (Optional but Recommended)
+  // TIER 3: BRANCH ISOLATION
   // ==========================================
-  if (branchId && !isGodMode) {
-    // If the staff has a specific branchId assigned, they cannot access data of another branchId
-    if (staff.branchId && staff.branchId !== branchId) {
+  if (branchId && !isGodMode && staffProfile) {
+    if (staffProfile.branchId && staffProfile.branchId !== branchId) {
       if (isApiRoute) return { authorized: false, error: 'Cross-branch access denied', status: 403 };
-      redirect('/dashboard/unauthorized');
+      redirect('/unauthorized');
     }
   }
 
-  // Passed all checks!
   return { 
     authorized: true, 
-    staff, 
-    subscription 
+    user,
+    staffProfile, 
+    wallet,
+    activeLab
   };
 }

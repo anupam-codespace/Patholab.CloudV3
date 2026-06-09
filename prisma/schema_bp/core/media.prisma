@@ -1,0 +1,15 @@
+model MediaAsset {
+  id        String  @id @default(uuid())
+  labId     String
+  provider  String // "AWS_S3", "CLOUDFLARE_R2", "LOCAL"
+  bucket    String?
+  path      String // e.g., "/reports/2026/05/uuid.pdf"
+  mimeType  String
+  sizeBytes Int?
+
+  lab Lab @relation(fields: [labId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([labId])
+}

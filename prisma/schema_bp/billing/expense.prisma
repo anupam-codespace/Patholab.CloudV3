@@ -1,0 +1,18 @@
+model Expense {
+  id       String   @id @default(uuid())
+  labId    String
+  branchId String?
+  amount   Decimal  @db.Decimal(10, 2)
+  category String
+  date     DateTime @default(now())
+
+  title       String? // ✅ optional – e.g., "Monthly electricity bill"
+  paymentMode String? // ✅ optional – e.g., "CASH", "UPI", "BANK_TRANSFER"
+
+  lab       Lab      @relation(fields: [labId], references: [id])
+  branch    Branch?  @relation(fields: [branchId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([labId, date])
+}

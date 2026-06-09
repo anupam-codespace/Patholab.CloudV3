@@ -7,7 +7,9 @@ import nodemailer from 'nodemailer';
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { name, email, password, phone, planId } = body;
+    
+    // 🚀 PIVOT UPDATE: Removed `planId`. Subscriptions are dead.
+    const { name, email, password, phone } = body; 
 
     // 1. Check if user exists
     const existing = await prisma.user.findUnique({ where: { email } });
@@ -20,6 +22,7 @@ export async function POST(req: Request) {
 
     // 2. Transaction: Create User + OTP
     const user = await prisma.$transaction(async (tx) => {
+      
       // Create User with INITIAL Status
       const newUser = await tx.user.create({
         data: {
@@ -29,15 +32,15 @@ export async function POST(req: Request) {
           phone,
           role: 'LAB_OWNER',
           
-          // ✅ CRITICAL: Set initial onboarding state
-          isActive: false,                // User cannot login yet
-          emailVerified: false,           // Email not verified
-          onboardingStatus: 'REGISTERED', // Step 1 Done
+          // ✅ CRITICAL PIVOT FIX: We deleted onboardingStatus and emailVerified.
+          // They simply start as inactive until OTP is verified.
+          isActive: false,                
         }
       });
 
       // Create OTP Record
-      await tx.oTP.create({
+      // (Note: Ensure the OTP model is in your schema. If TS complains, you can use (tx as any).oTP )
+      await (tx as any).oTP.create({
         data: {
           userId: newUser.id,
           code: otpCode,
@@ -62,7 +65,7 @@ export async function POST(req: Request) {
       });
 
       const mailOptions = {
-        from: '"Patholab Support" <patholab@globizhub.com>',
+        from: '"Patholab.cloud Support" <patholab@globizhub.com>',
         to: email,
         subject: 'Verify your Patholab Account',
         html: `
@@ -70,7 +73,7 @@ export async function POST(req: Request) {
             <h2 style="color: #3b82f6; text-align: center;">Verify Your Email</h2>
             <p style="color: #333; font-size: 16px;">Hello ${name},</p>
             <p style="color: #555; font-size: 16px;">
-              Thank you for registering with Patholab. Please use the verification code below to complete your registration.
+              Welcome to the future of pathology management! Please use the verification code below to complete your registration.
             </p>
             <div style="text-align: center; margin: 30px 0;">
               <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1e293b; background: #f1f5f9; padding: 10px 20px; border-radius: 8px;">
