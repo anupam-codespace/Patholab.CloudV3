@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
     // --- 1. BUILD SECURE QUERY ---
     let where: any = {
       labId: user.labId,
-      // 🚫 REMOVED mergedIntoPatientId because it does not exist in schema
+      deletedAt: null
     };
 
     // 🌍 ENTERPRISE: Branch Isolation vs Global Scope
@@ -138,7 +138,7 @@ export async function GET(req: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error("GET API ERROR:", error);
+    console.error("GET PATIENT API ERROR:", error);
     return NextResponse.json({ error: 'Fetch failed', details: error.message }, { status: 500 });
   }
 }
@@ -184,7 +184,7 @@ export async function POST(req: NextRequest) {
       }, { status: 402 });
     }
 
-    // 3. GENERATE ID 
+    // 3. GENERATE ID (P-0001 Format)
     const lastPatient = await prisma.patient.findFirst({
         where: { labId: user.labId },
         orderBy: { createdAt: 'desc' }, 
@@ -245,7 +245,7 @@ export async function POST(req: NextRequest) {
                 labId: user.labId,
                 branchId: isGlobal ? null : user.branchId,
                 userId: user.id,
-                patientId: nextId,
+                patientId: nextId, // P-0001
                 name: safeName,
                 age: safeAge,
                 ageUnit: body.ageUnit || null,
@@ -269,13 +269,14 @@ export async function POST(req: NextRequest) {
             data: { balance: { decrement: totalDeduction } }
         });
 
+        // 🚨 CRITICAL FIX: The description must contain the Database UUID so the Accession Route can find it later!
         await tx.walletTransaction.create({
             data: {
                 labId: user.labId,
                 type: 'DEDUCTION',
                 amount: totalDeduction,
                 closingBalance: Number(wallet.balance) - totalDeduction,
-                description: `Patient Registration Fee: ${safeName}`
+                description: `Registration fee for: ${patient.name} [ID: ${patient.id}]`
             }
         });
 
@@ -344,7 +345,7 @@ export async function PATCH(req: NextRequest) {
         data: { patientId: primaryId }
       });
 
-      // 3. Delete the duplicate patient (Since mergedIntoPatientId is not in schema)
+      // 3. Delete the duplicate patient
       await tx.patient.delete({
         where: { id: secondaryId }
       });

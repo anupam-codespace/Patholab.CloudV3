@@ -180,13 +180,13 @@ model Lab {
   portalSlug              String?        @unique
   labCode                 String?        @unique
   upiId                   String?
-  address                 String
-  city                    String
-  state                   String
-  pincode                 String
+  address                 String?
+  city                    String?
+  state                   String?
+  pincode                 String?
   phone                   String
   email                   String
-  licenseNumber           String         @unique
+  licenseNumber           String?        @unique
   registrationNo          String?
   gstNumber               String?
   panNumber               String?
@@ -345,7 +345,6 @@ model LabWallet {
   isActive             Boolean             @default(true)
   isLisIntegrationPaid Boolean             @default(false)
   transactions         WalletTransaction[]
-  deductions           WalletDeduction[]
   createdAt            DateTime            @default(now())
   updatedAt            DateTime            @updatedAt
 }
@@ -368,19 +367,6 @@ enum TransactionType {
   DEDUCTION
   REFUND
   SETUP_FEE
-}
-
-model WalletDeduction {
-  id        String    @id @default(uuid())
-  labId     String
-  wallet    LabWallet @relation(fields: [labId], references: [labId], onDelete: Cascade)
-  patientId String
-  patient   Patient   @relation(fields: [patientId], references: [id])
-  date      DateTime  @db.Date
-  amount    Decimal   @db.Decimal(10, 2)
-  createdAt DateTime  @default(now())
-
-  @@unique([labId, patientId, date]) // mathematically prevents double-charging per day
 }
 
 // ==========================================
@@ -566,6 +552,7 @@ model Patient {
   abhaNumber         String?
   healthId           String?
   dataConsentGranted Boolean   @default(true)
+  deletedAt          DateTime?
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
@@ -575,7 +562,6 @@ model Patient {
   samples               Sample[]
   invoices              Invoice[]
   reports               Report[]
-  walletDeductions      WalletDeduction[]
   radiologyAppointments RadiologyAppointment[]
   radiologyStudies      RadiologyStudy[]
 

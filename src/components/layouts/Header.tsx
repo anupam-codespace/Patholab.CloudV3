@@ -6,14 +6,12 @@ import {
   User,
   Settings,
   CreditCard,
-  FlaskConical,
+  Activity, // Changed from FlaskConical to match Sidebar branding
   ChevronRight,
   ChevronDown,
   HelpCircle,
   Phone,
   Mail,
-  Clock,
-  ExternalLink,
   UserPlus,
   Receipt,
   Scan,
@@ -25,6 +23,7 @@ import {
   Users,
   BarChart3,
   Hash,
+  FlaskConical,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter, usePathname } from "next/navigation";
@@ -65,6 +64,8 @@ interface HeaderProps {
     currentBranch?: { id: string; name: string; isMainBranch?: boolean } | null;
     branches?: { id: string; name: string; isMainBranch?: boolean }[];
   };
+  // ✅ Added toggleSidebar prop to connect with WorkspaceLayout
+  toggleSidebar: () => void;
 }
 
 // --- DYNAMIC SHORTCUTS GENERATOR ---
@@ -92,7 +93,7 @@ const getQuickShortcuts = (role?: string) => {
         },
         {
           label: "Reports",
-          href: "/dashboard",
+          href: "/workspace/reports",
           icon: BarChart3,
           color: "text-indigo-600",
           bg: "hover:bg-indigo-100",
@@ -142,7 +143,7 @@ const getQuickShortcuts = (role?: string) => {
   }
 };
 
-export function Header({ user }: HeaderProps) {
+export function Header({ user, toggleSidebar }: HeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
   const shortcuts = getQuickShortcuts(user?.role);
@@ -151,22 +152,21 @@ export function Header({ user }: HeaderProps) {
   const canSwitchBranch =
     user?.role === "LAB_OWNER" || user?.role === "SUPER_ADMIN";
 
-  const toggleSidebar = () => {
-    document.dispatchEvent(new Event("toggle-sidebar"));
-  };
-
   const handleLogout = async () => {
+    const toastId = toast.loading("Logging out securely...");
     try {
       const response = await fetch("/api/auth/logout", { method: "POST" });
       if (response.ok) {
-        toast.success("Logged out successfully");
+        toast.success("Logged out successfully", { id: toastId });
         window.location.href = "/login";
       } else {
-        document.cookie = "token=; Max-Age=0; path=/;";
-        window.location.href = "/login";
+        throw new Error("Logout failed on server");
       }
     } catch (error) {
-      toast.error("Logout failed");
+      // Fallback cleanup if server fails
+      document.cookie = "token=; Max-Age=0; path=/;";
+      toast.success("Logged out", { id: toastId });
+      window.location.href = "/login";
     }
   };
 
@@ -247,26 +247,27 @@ export function Header({ user }: HeaderProps) {
   );
 
   return (
-    <div className="sticky top-4 z-40 px-4 md:px-8 pointer-events-none">
-      <header className="pointer-events-auto h-16 w-full max-w-screen-2xl mx-auto flex items-center justify-between rounded-2xl bg-white/80 backdrop-blur-xl border border-slate-200/60 shadow-sm pr-4 pl-3 sm:pr-6 sm:pl-4">
+    <div className="sticky top-0 z-40 px-2 sm:px-6 py-3 pointer-events-none">
+      <header className="pointer-events-auto h-16 w-full mx-auto flex items-center justify-between rounded-2xl bg-white/80 backdrop-blur-xl border border-slate-200 shadow-sm pr-3 pl-2 sm:pr-5 sm:pl-3 transition-all duration-300">
         {/* 1. LEFT SIDE: HAMBURGER, BRANDING & BREADCRUMBS */}
-        <div className="flex items-center gap-2 overflow-hidden whitespace-nowrap">
+        <div className="flex items-center gap-1.5 sm:gap-2 overflow-hidden whitespace-nowrap">
+          {/* ✅ Integrated toggleSidebar Prop */}
           <Button
             variant="ghost"
             size="icon"
             onClick={toggleSidebar}
-            className="text-slate-500 hover:bg-slate-100 rounded-xl mr-1 h-10 w-10 shrink-0">
+            className="text-slate-500 hover:bg-slate-100 hover:text-slate-900 rounded-xl h-10 w-10 shrink-0 transition-colors">
             <Menu className="h-5 w-5" />
           </Button>
 
+          {/* ✅ Updated to Match Sidebar Blue/Slate Theme */}
           <Link
-            href="/dashboard"
-            className="hidden sm:flex items-center justify-center h-10 w-10 bg-emerald-500/10 rounded-xl border border-emerald-500/20 group transition-all hover:bg-emerald-500/20 mr-1 shrink-0">
-            <FlaskConical className="h-5 w-5 text-emerald-600 group-hover:scale-110 transition-transform" />
+            href="/workspace"
+            className="hidden sm:flex items-center justify-center h-10 w-10 bg-blue-600/10 rounded-xl border border-blue-500/20 group transition-all hover:bg-blue-600/20 mr-1 shrink-0">
+            <Activity className="h-5 w-5 text-blue-600 group-hover:scale-110 transition-transform" />
           </Link>
 
           <div className="hidden sm:flex items-center gap-2">
-            {/* ✅ CONDITIONALLY RENDER DROPDOWN OR STATIC BADGE */}
             {canSwitchBranch ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -284,10 +285,10 @@ export function Header({ user }: HeaderProps) {
                     {/* Master View Option for Owners */}
                     <DropdownMenuItem
                       onClick={() => handleSwitchBranch("ALL", "All Branches")}
-                      className={`cursor-pointer rounded-xl px-3 py-2.5 flex items-center justify-between transition-colors ${currentBranchName === "All Branches" ? "bg-emerald-50 text-emerald-900" : "hover:bg-slate-50"}`}>
+                      className={`cursor-pointer rounded-xl px-3 py-2.5 flex items-center justify-between transition-colors ${currentBranchName === "All Branches" ? "bg-blue-50 text-blue-900" : "hover:bg-slate-50"}`}>
                       <div className="flex items-center gap-3">
                         <Building2
-                          className={`h-4 w-4 ${currentBranchName === "All Branches" ? "text-emerald-500" : "text-slate-400"}`}
+                          className={`h-4 w-4 ${currentBranchName === "All Branches" ? "text-blue-500" : "text-slate-400"}`}
                         />
                         <div className="flex flex-col">
                           <span className="font-bold text-sm leading-none">
@@ -299,7 +300,7 @@ export function Header({ user }: HeaderProps) {
                         </div>
                       </div>
                       {currentBranchName === "All Branches" && (
-                        <Check className="h-4 w-4 text-emerald-600" />
+                        <Check className="h-4 w-4 text-blue-600" />
                       )}
                     </DropdownMenuItem>
 
@@ -351,14 +352,14 @@ export function Header({ user }: HeaderProps) {
 
             <ChevronRight className="h-4 w-4 text-slate-300" />
 
-            <span className="text-sm font-semibold text-slate-500 flex items-center">
+            <span className="text-sm font-bold text-slate-600 flex items-center">
               {currentPage}
             </span>
           </div>
 
           {/* Mobile Fallback Title */}
-          <div className="sm:hidden flex flex-col justify-center max-w-[140px]">
-            <span className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest leading-none mb-0.5 truncate">
+          <div className="sm:hidden flex flex-col justify-center max-w-[140px] ml-1">
+            <span className="text-[9px] font-bold text-blue-600 uppercase tracking-widest leading-none mb-0.5 truncate">
               {currentBranchName}
             </span>
             <span className="text-sm font-extrabold text-slate-900 tracking-tight leading-none truncate">
@@ -368,8 +369,19 @@ export function Header({ user }: HeaderProps) {
         </div>
 
         {/* 2. CENTER/RIGHT: ACTIONS */}
-        <div className="flex items-center gap-1.5 sm:gap-3">
-          <div className="hidden md:flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl p-1 mr-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="hidden lg:flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl h-10 mr-1 shadow-sm">
+            <Hash className="h-3.5 w-3.5 text-slate-400" />
+            <span className="text-xs font-bold text-slate-700 tracking-wider font-mono">
+              {user?.employeeId ? (
+                user.employeeId
+              ) : (
+                <span className="text-amber-600">PENDING</span>
+              )}
+            </span>
+          </div>
+
+          <div className="hidden md:flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-xl p-1 mr-1 shadow-sm">
             <TooltipProvider delayDuration={100}>
               {shortcuts.map((shortcut, idx) => (
                 <Tooltip key={idx}>
@@ -393,17 +405,6 @@ export function Header({ user }: HeaderProps) {
             </TooltipProvider>
           </div>
 
-          <div className="hidden lg:flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl h-10 mr-1">
-            <Hash className="h-3.5 w-3.5 text-slate-400" />
-            <span className="text-xs font-bold text-slate-700 tracking-wider font-mono">
-              {user?.employeeId ? (
-                user.employeeId
-              ) : (
-                <span className="text-amber-600">PENDING</span>
-              )}
-            </span>
-          </div>
-
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -416,9 +417,9 @@ export function Header({ user }: HeaderProps) {
             <PopoverContent
               align="end"
               className="w-80 p-0 shadow-2xl border-0 rounded-2xl overflow-hidden animate-in zoom-in-95 data-[state=closed]:zoom-out-95 duration-200">
-              <div className="bg-slate-900 p-5">
+              <div className="bg-[#0f172a] p-5">
                 <h4 className="font-bold text-white flex items-center gap-2">
-                  <LifeBuoy className="w-4 h-4 text-emerald-400" /> Need Help?
+                  <LifeBuoy className="w-4 h-4 text-blue-400" /> Need Help?
                 </h4>
                 <p className="text-xs text-slate-400 mt-1 font-medium">
                   We're here to support your laboratory operations.
@@ -439,7 +440,7 @@ export function Header({ user }: HeaderProps) {
                   </div>
                 </div>
                 <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors">
-                  <div className="bg-emerald-50 p-2.5 rounded-lg text-emerald-600">
+                  <div className="bg-blue-50 p-2.5 rounded-lg text-blue-600">
                     <Mail className="h-4 w-4" />
                   </div>
                   <div>
@@ -447,7 +448,7 @@ export function Header({ user }: HeaderProps) {
                       Email Support
                     </p>
                     <p className="text-sm font-bold text-slate-900">
-                      support@patholab
+                      support@patholab.cloud
                     </p>
                   </div>
                 </div>
@@ -463,14 +464,14 @@ export function Header({ user }: HeaderProps) {
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="relative h-10 w-10 rounded-xl p-0 ml-1 border border-slate-200 shadow-sm hover:ring-4 ring-emerald-500/10 transition-all overflow-hidden shrink-0">
+                className="relative h-10 w-10 rounded-xl p-0 ml-1 border border-slate-200 shadow-sm hover:ring-4 ring-blue-500/10 transition-all overflow-hidden shrink-0">
                 <Avatar className="h-full w-full rounded-none">
                   <AvatarImage
                     src={user?.avatar || ""}
                     alt={userName}
                     className="object-cover"
                   />
-                  <AvatarFallback className="bg-slate-900 text-white font-bold text-xs rounded-none">
+                  <AvatarFallback className="bg-slate-800 text-white font-bold text-xs rounded-none">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
@@ -481,7 +482,8 @@ export function Header({ user }: HeaderProps) {
               className="w-72 mt-3 p-0 rounded-2xl shadow-xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200"
               align="end"
               forceMount>
-              <DropdownMenuLabel className="font-normal p-5 bg-slate-900 text-white relative">
+              {/* ✅ Matched Profile Header to Sidebar Background */}
+              <DropdownMenuLabel className="font-normal p-5 bg-[#0B1120] text-white relative">
                 <div className="flex items-center gap-4">
                   <Avatar className="h-12 w-12 border-2 border-slate-700 rounded-xl shadow-inner">
                     <AvatarImage src={user?.avatar || ""} alt={userName} />
@@ -496,9 +498,9 @@ export function Header({ user }: HeaderProps) {
                     <p className="text-xs font-medium text-slate-400 truncate max-w-[150px]">
                       {user?.email}
                     </p>
-                    <div className="flex gap-2 mt-1.5">
+                    <div className="flex gap-2 mt-2">
                       {user?.role && (
-                        <Badge className="w-fit bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] uppercase tracking-widest font-black rounded-md px-1.5 py-0.5">
+                        <Badge className="w-fit bg-blue-500/20 text-blue-400 border border-blue-500/30 text-[9px] uppercase tracking-widest font-black rounded-md px-1.5 py-0.5">
                           {user.role.replace("_", " ")}
                         </Badge>
                       )}

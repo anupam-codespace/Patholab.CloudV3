@@ -8,51 +8,121 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     
-    // 🚀 PIVOT UPDATE: Removed `planId`. Subscriptions are dead.
-    const { name, email, password, phone } = body; 
+    // 🚀 PIVOT UPDATE: Accept labName from the updated frontend
+    const { labName, name, email, password, phone } = body; 
 
-    // 1. Check if user exists
-    const existing = await prisma.user.findUnique({ where: { email } });
-    if (existing) {
-      return NextResponse.json({ error: 'Email already registered' }, { status: 409 });
+    if (!email || !password || !name) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
     const hashedPassword = await hash(password, 12);
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = addMinutes(new Date(), 15); // 15 min expiry
 
-    // 2. Transaction: Create User + OTP
-    const user = await prisma.$transaction(async (tx) => {
-      
-      // Create User with INITIAL Status
-      const newUser = await tx.user.create({
-        data: {
-          name,
-          email,
-          password: hashedPassword,
-          phone,
-          role: 'LAB_OWNER',
-          
-          // ✅ CRITICAL PIVOT FIX: We deleted onboardingStatus and emailVerified.
-          // They simply start as inactive until OTP is verified.
-          isActive: false,                
+    // 1. Check if user already exists
+    const existing = await prisma.user.findUnique({ where: { email } });
+    let targetUserId = "";
+
+    // ==========================================
+    // SCENARIO A: USER EXISTS
+    // ==========================================
+    if (existing) {
+      // If they are already active/verified, block registration
+      if (existing.isActive) {
+        return NextResponse.json(
+          { error: 'Email already registered and verified. Please log in.' }, 
+          { status: 409 }
+        );
+      }
+
+      // If they are NOT verified, update their details and send them a fresh OTP
+      const updatedUser = await prisma.$transaction(async (tx) => {
+        // Update their info in case they typed a different password/phone this time
+        const user = await tx.user.update({
+          where: { id: existing.id },
+          data: { name, phone, password: hashedPassword }
+        });
+
+        // Wipe old OTPs and create a new one
+        await (tx as any).oTP.deleteMany({ where: { userId: existing.id } });
+        
+        await (tx as any).oTP.create({
+          data: {
+            userId: existing.id,
+            code: otpCode,
+            type: 'EMAIL_VERIFICATION',
+            expiresAt,
+          }
+        });
+
+        // Update Lab name if it exists via relation
+        if (labName) {
+          try {
+            const userLab = await (tx as any).lab.findFirst({ where: { userId: existing.id } });
+            if (userLab) {
+              await (tx as any).lab.update({
+                where: { id: userLab.id },
+                data: { name: labName, phone }
+              });
+            }
+          } catch (e) {
+            // Silently ignore if relation varies
+          }
         }
+
+        return user;
       });
 
-      // Create OTP Record
-      // (Note: Ensure the OTP model is in your schema. If TS complains, you can use (tx as any).oTP )
-      await (tx as any).oTP.create({
-        data: {
-          userId: newUser.id,
-          code: otpCode,
-          type: 'EMAIL_VERIFICATION',
-          expiresAt: addMinutes(new Date(), 15), // 15 min expiry
-        }
+      targetUserId = updatedUser.id;
+    } 
+    
+    // ==========================================
+    // SCENARIO B: BRAND NEW USER
+    // ==========================================
+    else {
+      const newUser = await prisma.$transaction(async (tx) => {
+        // Create User with INITIAL Status
+        const createdUser = await tx.user.create({
+          data: {
+            name,
+            email,
+            password: hashedPassword,
+            phone,
+            role: 'LAB_OWNER',
+            isActive: false, // Starts as inactive until OTP is verified
+            
+            // ✅ Link the Lab creation directly through Prisma relation
+            ...(labName && {
+              lab: {
+                create: {
+                  name: labName,
+                  email: email,
+                  phone: phone,
+                }
+              }
+            })
+          }
+        });
+
+        // Create OTP Record
+        await (tx as any).oTP.create({
+          data: {
+            userId: createdUser.id,
+            code: otpCode,
+            type: 'EMAIL_VERIFICATION',
+            expiresAt, 
+          }
+        });
+
+        return createdUser;
       });
 
-      return newUser;
-    });
+      targetUserId = newUser.id;
+    }
 
-    // 3. Send Email via SMTP
+    // ==========================================
+    // 3. SEND VERIFICATION EMAIL VIA SMTP
+    // ==========================================
     try {
       const transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST,
@@ -98,10 +168,11 @@ export async function POST(req: Request) {
       // the frontend allows "Resend OTP" which handles retry.
     }
 
-    return NextResponse.json({ userId: user.id, email: user.email });
+    // Return the ID so the frontend can redirect to /verify?userId=...
+    return NextResponse.json({ success: true, userId: targetUserId, email: email }, { status: 201 });
 
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: 'Registration failed' }, { status: 500 });
+    console.error("Registration Logic Error:", error);
+    return NextResponse.json({ error: 'Registration failed. Please try again.' }, { status: 500 });
   }
 }
