@@ -19,7 +19,7 @@ function BarcodePrintContent() {
       return;
     }
 
-    fetch(`/api/workspace/barcodes/${invoiceId}`)
+    fetch(`/api/workspace/invoices/${invoiceId}/barcodes`)
       .then((res) => res.json())
       .then((data) => {
         setSamples(data);

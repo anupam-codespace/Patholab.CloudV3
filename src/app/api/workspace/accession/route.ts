@@ -57,43 +57,75 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { patientId, tests, doctorId, agencyId, subtotal, discountAmount, grandTotal } = body;
 
-    // 1. Perform all preliminary logic OUTSIDE the transaction to keep it short
+    // 1. Fetch wallet status outside transaction
     const wallet = await prisma.labWallet.findUnique({ where: { labId: user.labId } });
     if (!wallet) return NextResponse.json({ error: "Wallet not initialized." }, { status: 400 });
 
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0);
-
-    // 2. Wrap ONLY database-writing operations in the transaction
     const result = await prisma.$transaction(async (tx) => {
-        
-        // A. Check for existing fee today (only one DB call)
-        const existingDeduction = await tx.walletDeduction.findFirst({
-            where: { labId: user.labId, patientId, createdAt: { gte: startOfToday } }
+        const startOfToday = new Date();
+        startOfToday.setHours(0, 0, 0, 0);
+
+        // Fetch patient for a clean Ledger description
+        const patient = await tx.patient.findUnique({ where: { id: patientId } });
+        const patientName = patient?.name || "Unknown Patient";
+
+        // A. DEDUCTION CHECK: Look for exact ID pattern in today's transactions
+        const existingDeduction = await tx.walletTransaction.findFirst({
+            where: { 
+                labId: user.labId, 
+                type: 'DEDUCTION',
+                description: { contains: `[ID: ${patientId}]` }, 
+                createdAt: { gte: startOfToday } 
+            }
         });
+
         const visitFee = Number(wallet.perPatientFee || 2.5);
-        const isNewVisit = !existingDeduction;
 
-        if (isNewVisit && Number(wallet.balance) < visitFee) {
-            throw new Error("INSUFFICIENT_FUNDS"); // Will trigger a catch block outside
+        // B. ONLY DEDUCT IF NO PRIOR DEDUCTION FOUND TODAY
+        if (!existingDeduction) {
+            const currentWallet = await tx.labWallet.findUnique({ where: { labId: user.labId } });
+            if (Number(currentWallet?.balance) < visitFee) {
+                throw new Error("INSUFFICIENT_FUNDS");
+            }
+
+            const updatedWallet = await tx.labWallet.update({
+                where: { labId: user.labId },
+                data: { balance: { decrement: visitFee } }
+            });
+
+            // ✅ BEAUTIFUL FORMAT: Shows name to humans, contains ID for system checks
+            await tx.walletTransaction.create({
+                data: {
+                    labId: user.labId,
+                    type: 'DEDUCTION',
+                    amount: visitFee,
+                    closingBalance: updatedWallet.balance,
+                    description: `Registration fee for: ${patientName} [ID: ${patientId}]`,
+                }
+            });
         }
 
-        if (isNewVisit) {
-            await tx.labWallet.update({ where: { labId: user.labId }, data: { balance: { decrement: visitFee } } });
-            await tx.walletDeduction.create({ data: { labId: user.labId, patientId, date: new Date(), amount: visitFee } });
-        }
+        // C. DAILY VISIT ID GENERATION (Format: DDMMYY-XXXX)
+        const d = new Date();
+        const dd = String(d.getDate()).padStart(2, '0');
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const yy = String(d.getFullYear()).slice(2);
+        const datePrefix = `${dd}${mm}${yy}`; // e.g. "100626"
 
-        // B. Generate Invoice Number (Keep logic simple)
-        const count = await tx.invoice.count({ where: { labId: user.labId } });
-        const invoiceNumber = `INV-${(count + 1).toString().padStart(5, '0')}`;
+        const countToday = await tx.invoice.count({ 
+            where: { labId: user.labId, createdAt: { gte: startOfToday } } 
+        });
+        
+        // This is the "Visit Lab ID" -> e.g. "100626-0001"
+        const invoiceNumber = `${datePrefix}-${(countToday + 1).toString().padStart(4, '0')}`;
 
-        // C. Create Invoice AND Items in one go
+        // D. CREATE INVOICE
         const invoice = await tx.invoice.create({
             data: {
                 labId: user.labId,
                 branchId: user.branchId,
                 patientId,
-                invoiceNumber,
+                invoiceNumber, // Used as Visit ID
                 subtotal: Number(subtotal),
                 discount: Number(discountAmount),
                 taxableAmount: Number(grandTotal),
@@ -114,24 +146,56 @@ export async function POST(req: NextRequest) {
             }
         });
 
-        // D. Batch create tests
-        await tx.test.createMany({
-            data: tests.map((t: any, i: number) => ({
-                labId: user.labId,
-                branchId: user.branchId,
-                patientId,
-                invoiceId: invoice.id,
-                testNumber: `T-${Date.now()}-${i}`,
-                testCode: t.testCode,
-                testName: t.testName,
-                finalPrice: Number(t.price || 0),
-                price: Number(t.price),
-                status: 'PENDING'
-            }))
-        });
+        // E. CREATE TESTS (Individually to capture IDs)
+        const createdTests = [];
+        for (const [i, t] of tests.entries()) {
+            const test = await tx.test.create({
+                data: {
+                    labId: user.labId,
+                    branchId: user.branchId,
+                    patientId,
+                    invoiceId: invoice.id,
+                    testNumber: `T-${datePrefix}-${Math.floor(Math.random() * 10000)}`,
+                    testCode: t.testCode,
+                    testName: t.testName,
+                    finalPrice: Number(t.price || 0),
+                    price: Number(t.price),
+                    status: 'PENDING'
+                }
+            });
+            createdTests.push(test);
+        }
 
-        return invoice;
-    }, { timeout: 10000 }); // Increase timeout to 10s just in case
+        // F. LINK SAMPLES TO TESTS (Grouping by container)
+        const samplesToCreate = tests.reduce((acc: any, t: any) => {
+            const key = t.containerTypeId || 'default';
+            if (!acc[key]) acc[key] = [];
+            acc[key].push(t);
+            return acc;
+        }, {});
+
+        for (const [containerId, groupTests] of Object.entries(samplesToCreate)) {
+            await tx.sample.create({
+                data: {
+                    labId: user.labId,
+                    branchId: user.branchId,
+                    patientId,
+                    // Format sample barcode as VisitID-RandomDigit (e.g. 100626-0001-1)
+                    sampleId: `${invoiceNumber}-${Math.floor(Math.random() * 10)}`,
+                    containerTypeId: containerId === 'default' ? null : containerId,
+                    status: 'COLLECTED',
+                    tests: {
+                        connect: (groupTests as any[]).map((t: any) => ({
+                            // Safely look up the ID from our createdTests array
+                            id: createdTests.find(x => x.testCode === t.testCode)?.id
+                        }))
+                    }
+                }
+            });
+        }
+
+        return { ...invoice, tests: createdTests };
+    }, { timeout: 10000 });
 
     return NextResponse.json({ success: true, data: { invoice: result } });
 

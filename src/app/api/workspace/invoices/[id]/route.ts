@@ -20,23 +20,19 @@ export async function GET(
       include: {
         patient: {
           include: {
-            // ✅ correct relation names (capitalised)
-            Doctor: { select: { name: true } },
-            Agency: { select: { name: true } },
+            doctor: { select: { name: true } },
+            // ✅ FIX: Changed 'name' to 'agencyName'
+            agency: { select: { agencyName: true } },
           }
         }, 
         lab: true,     
         items: true,   
         
-        // Invoice → Agency relation
-        Agency: { select: { name: true } },
+        // ✅ FIX: Changed 'name' to 'agencyName'
+        agency: { select: { agencyName: true } },
 
         tests: {
           include: {
-            // Test does not have doctor/agency relations yet, so we omit them.
-            // If you add them later, uncomment:
-            // doctor: { select: { name: true, user: { select: { name: true } } } },
-            // agency: { select: { name: true } },
             sample: { select: { collectedBy: true } }
           }
         }
@@ -49,16 +45,17 @@ export async function GET(
     const primaryTest = invoice.tests?.[0];
 
     // 1. Doctor name
-    const linkedDoctorName = null; // will use manually entered string if present
+    const linkedDoctorName = null; 
     const manualReferral = primaryTest?.referredBy;
-    const patientDoctorName = invoice.patient?.Doctor?.name; // corrected
+    const patientDoctorName = invoice.patient?.doctor?.name; 
 
     const finalDoctorName = linkedDoctorName || manualReferral || patientDoctorName || "Self";
 
     // 2. Agency name
-    const invoiceAgencyName = invoice.Agency?.name;
-    const patientAgencyName = invoice.patient?.Agency?.name;
-    const testAgencyName = null; // no relation yet
+    // ✅ FIX: Access .agencyName instead of .name
+    const invoiceAgencyName = invoice.agency?.agencyName;
+    const patientAgencyName = invoice.patient?.agency?.agencyName;
+    const testAgencyName = null; 
 
     const finalAgencyName = invoiceAgencyName || patientAgencyName || testAgencyName || null;
 
@@ -73,7 +70,6 @@ export async function GET(
       doctor: { name: finalDoctorName },
       agency: finalAgencyName ? { name: finalAgencyName } : null,
       testDescription: testNames || null,
-      // paymentMode not yet in schema; omit or add later
       collectedBy: collectedBy,
     };
 
@@ -95,11 +91,12 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await req.json();
-    const { status, paymentMode } = body; // paymentMode currently not stored
+    const { status, paymentMode } = body; 
 
-    // Build update data – only include fields that exist
+    // Build update data
     const updateData: any = { status };
-    // If you add paymentMode column to Invoice model, uncomment:
+    
+    // Uncomment when added to schema:
     // if (paymentMode) updateData.paymentMode = paymentMode;
 
     const updatedInvoice = await prisma.invoice.update({

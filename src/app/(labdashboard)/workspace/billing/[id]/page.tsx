@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -10,35 +10,27 @@ import {
   Loader2,
   Phone,
   Mail,
-  LayoutTemplate,
   Palette,
-  Type,
   Download,
   QrCode,
-  Timer,
   XCircle,
-  FileText,
-  User,
-  Activity,
   CheckCircle2,
   ShieldCheck,
   History,
-  ChevronRight,
   MousePointer2,
   MapPin,
-  Badge,
+  Users,
+  Building2,
 } from "lucide-react";
 import { format } from "date-fns";
 import toast from "react-hot-toast";
 import Barcode from "react-barcode";
 
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Badge } from "@/components/ui/badge";
 import {
   Sheet,
   SheetContent,
@@ -55,14 +47,11 @@ import {
 } from "@/components/ui/select";
 
 export default function InvoiceDetailsPage() {
-  /** 🔒 RULE 1: PRESERVE ALL LOGIC */
   const params = useParams();
   const router = useRouter();
   const queryClient = useQueryClient();
   const invoiceId = params.id as string;
   const [isDownloading, setIsDownloading] = useState(false);
-  const [countdown, setCountdown] = useState(15);
-  const [isRedirectActive, setIsRedirectActive] = useState(true);
 
   const [config, setConfig] = useState({
     showHeader: true,
@@ -71,26 +60,7 @@ export default function InvoiceDetailsPage() {
     showSignature: true,
     accentColor: "blue",
     fontStyle: "sans",
-    headerStyle: "standard",
-    density: "comfortable",
   });
-
-  const [customNote, setCustomNote] = useState("");
-
-  useEffect(() => {
-    if (!isRedirectActive) return;
-    const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          router.push("/workspace/patients");
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [isRedirectActive, router]);
 
   const { data: invoice, isLoading } = useQuery({
     queryKey: ["invoice", invoiceId],
@@ -112,7 +82,7 @@ export default function InvoiceDetailsPage() {
       return res.json();
     },
     onSuccess: (data) => {
-      toast.success(`Marked as ${data.status}`);
+      toast.success(`Invoice marked as ${data.status}`);
       queryClient.invalidateQueries({ queryKey: ["invoice", invoiceId] });
     },
     onError: () => toast.error("Update failed"),
@@ -120,7 +90,6 @@ export default function InvoiceDetailsPage() {
 
   const handleDownloadPdf = async () => {
     setIsDownloading(true);
-    setIsRedirectActive(false);
     const element = document.getElementById("invoice-container");
     if (!element) return;
     try {
@@ -133,7 +102,7 @@ export default function InvoiceDetailsPage() {
         jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
       };
       await html2pdf().set(opt).from(element).save();
-      toast.success("PDF Downloaded");
+      toast.success("PDF Downloaded successfully");
     } catch (e) {
       toast.error("Failed to generate PDF");
     } finally {
@@ -145,8 +114,8 @@ export default function InvoiceDetailsPage() {
     return (
       <div className="h-screen flex items-center justify-center bg-slate-50">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
-          <p className="text-xs font-black uppercase tracking-widest text-slate-400">
+          <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
+          <p className="text-sm font-semibold text-slate-500">
             Loading secure document...
           </p>
         </div>
@@ -155,46 +124,49 @@ export default function InvoiceDetailsPage() {
 
   if (!invoice)
     return (
-      <div className="h-screen flex items-center justify-center font-bold text-rose-500 uppercase tracking-widest bg-slate-50">
-        <XCircle className="mr-2 h-5 w-5" /> Invoice not found
+      <div className="h-screen flex items-center justify-center font-bold text-rose-500 bg-slate-50">
+        <XCircle className="mr-2 h-6 w-6" /> Invoice not found
       </div>
     );
 
   const colors = {
     blue: {
-      bg: "bg-indigo-600",
-      text: "text-indigo-600",
-      light: "bg-indigo-50",
-      border: "border-indigo-100",
+      bg: "bg-blue-600",
+      text: "text-blue-600",
+      light: "bg-blue-50",
+      border: "border-blue-600",
+      muted: "text-blue-700",
     },
     green: {
       bg: "bg-emerald-600",
       text: "text-emerald-600",
       light: "bg-emerald-50",
-      border: "border-emerald-100",
+      border: "border-emerald-600",
+      muted: "text-emerald-700",
     },
     black: {
       bg: "bg-slate-900",
       text: "text-slate-900",
       light: "bg-slate-100",
-      border: "border-slate-200",
+      border: "border-slate-900",
+      muted: "text-slate-700",
     },
     violet: {
       bg: "bg-violet-600",
       text: "text-violet-600",
       light: "bg-violet-50",
-      border: "border-violet-100",
+      border: "border-violet-600",
+      muted: "text-violet-700",
     },
   }[config.accentColor as "blue" | "green" | "black" | "violet"] || {
-    bg: "bg-indigo-600",
-    text: "text-indigo-600",
-    light: "bg-indigo-50",
-    border: "border-indigo-100",
+    bg: "bg-blue-600",
+    text: "text-blue-600",
+    light: "bg-blue-50",
+    border: "border-blue-600",
+    muted: "text-blue-700",
   };
 
   const fontClass = config.fontStyle === "serif" ? "font-serif" : "font-sans";
-  const densityClass =
-    config.density === "compact" ? "py-1.5 text-[11px]" : "py-4 text-sm";
 
   return (
     <>
@@ -226,69 +198,43 @@ export default function InvoiceDetailsPage() {
         }
       `}</style>
 
-      <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 flex flex-col items-center pb-20 print:bg-white print:p-0">
-        {/* --- 🆕 AUTO-REDIRECT BANNER --- */}
-        {isRedirectActive && (
-          <div className="fixed top-0 left-0 right-0 bg-slate-900/95 backdrop-blur-md text-white z-[100] py-2.5 px-6 flex justify-between items-center border-b border-white/10 print:hidden animate-in slide-in-from-top duration-500">
-            <div className="flex items-center gap-3">
-              <div className="h-2 w-2 rounded-full bg-indigo-500 animate-ping" />
-              <p className="text-xs font-bold uppercase tracking-widest opacity-80">
-                Auto-Routing to Worklist in{" "}
-                <span className="text-indigo-400 font-black text-sm">
-                  {countdown}s
-                </span>
-              </p>
-            </div>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-8 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 text-white"
-              onClick={() => setIsRedirectActive(false)}>
-              <XCircle className="h-3.5 w-3.5 mr-1.5" /> Stop Timer
-            </Button>
-          </div>
-        )}
-
-        {/* --- MODERN DASHBOARD TOOLBAR --- */}
-        <div
-          className={`w-full max-w-[210mm] flex flex-col md:flex-row justify-between items-center mt-16 mb-8 px-4 md:px-0 gap-6 print:hidden transition-all ${isRedirectActive ? "translate-y-4" : "translate-y-0"}`}>
-          <div className="flex items-center gap-4 w-full md:w-auto">
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center pb-20 print:bg-white print:p-0">
+        {/* --- STICKY TOOLBAR --- */}
+        <div className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-xl border-b border-slate-200 px-4 md:px-8 py-3 flex flex-col md:flex-row justify-between items-center gap-4 print:hidden shadow-sm">
+          <div className="flex items-center gap-3 w-full md:w-auto">
             <Button
               variant="outline"
-              className="h-12 rounded-2xl bg-white border-none shadow-sm hover:shadow-md transition-all active:scale-95"
-              onClick={() => router.back()}>
-              <ArrowLeft className="h-4 w-4 mr-2" />{" "}
-              <span className="font-bold">Exit Preview</span>
+              className="h-10 rounded-xl bg-white shadow-sm hover:bg-slate-50 transition-all text-slate-700"
+              onClick={() => router.push("/workspace/patients")}>
+              <Users className="h-4 w-4 mr-2 text-slate-500" />
+              Patient Worklist
             </Button>
-            <div className="h-12 w-px bg-slate-200" />
-            <div className="flex flex-col">
-              <h1 className="text-sm font-black uppercase tracking-tighter text-slate-400">
-                Document ID
-              </h1>
-              <p className="font-mono text-sm font-bold text-slate-900">
-                INV-{invoice.invoiceNumber}
-              </p>
+            <div className="h-6 w-px bg-slate-200 hidden md:block" />
+            <div className="hidden md:flex flex-col">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                Invoice Record
+              </span>
+              <span className="font-mono text-sm font-bold text-slate-900">
+                #{invoice.invoiceNumber}
+              </span>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-3 w-full md:w-auto">
-            {/* Status Switcher Styled */}
-            <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl shadow-sm border border-slate-100">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                Payment
+            {/* Status Switcher */}
+            <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl shadow-sm border border-slate-200">
+              <span className="text-xs font-semibold text-slate-500 mr-1">
+                Status:
               </span>
               <Select
                 value={invoice.status}
-                onValueChange={(val) => {
-                  setIsRedirectActive(false);
-                  statusMutation.mutate(val);
-                }}
+                onValueChange={(val) => statusMutation.mutate(val)}
                 disabled={statusMutation.isPending}>
                 <SelectTrigger
-                  className={`h-8 border-none shadow-none text-xs font-black uppercase w-[90px] focus:ring-0 ${invoice.status === "PAID" ? "text-emerald-600" : "text-amber-600"}`}>
+                  className={`h-8 border-none shadow-none text-xs font-bold w-[110px] focus:ring-0 ${invoice.status === "PAID" ? "text-emerald-600 bg-emerald-50" : "text-amber-600 bg-amber-50"}`}>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="rounded-xl border-none shadow-2xl">
+                <SelectContent className="rounded-xl border-none shadow-xl">
                   <SelectItem
                     value="PENDING"
                     className="text-amber-600 font-bold">
@@ -297,7 +243,7 @@ export default function InvoiceDetailsPage() {
                   <SelectItem
                     value="PAID"
                     className="text-emerald-600 font-bold">
-                    Settled
+                    Paid
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -307,34 +253,31 @@ export default function InvoiceDetailsPage() {
               <SheetTrigger asChild>
                 <Button
                   variant="outline"
-                  className="h-12 w-12 rounded-2xl bg-white border-none shadow-sm">
-                  <Settings2 className="h-5 w-5" />
+                  className="h-10 w-10 rounded-xl bg-white shadow-sm">
+                  <Settings2 className="h-4 w-4 text-slate-600" />
                 </Button>
               </SheetTrigger>
-              <SheetContent className="overflow-y-auto w-[400px] border-none shadow-2xl rounded-l-[32px] p-8">
-                <SheetHeader className="mb-8">
-                  <SheetTitle className="text-2xl font-black tracking-tight">
-                    Invoice <span className="text-indigo-600">Studio</span>
+              <SheetContent className="w-[350px] border-none shadow-2xl rounded-l-[24px] p-6">
+                <SheetHeader className="mb-6">
+                  <SheetTitle className="text-xl font-bold tracking-tight">
+                    Invoice Settings
                   </SheetTitle>
-                  <p className="text-xs font-medium text-slate-500">
-                    Personalize document aesthetics and data density.
-                  </p>
                 </SheetHeader>
-                <div className="space-y-10">
-                  <div className="space-y-4">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                      <Palette className="h-4 w-4" /> Accent Palette
+                <div className="space-y-8">
+                  <div className="space-y-3">
+                    <Label className="text-xs font-semibold text-slate-500 flex items-center gap-2">
+                      <Palette className="h-4 w-4" /> Accent Theme
                     </Label>
-                    <div className="flex gap-4">
+                    <div className="flex gap-3">
                       {["blue", "green", "violet", "black"].map((c) => (
                         <button
                           key={c}
                           onClick={() =>
                             setConfig({ ...config, accentColor: c })
                           }
-                          className={`h-10 w-10 rounded-xl transition-all ${config.accentColor === c ? "ring-4 ring-slate-100 scale-110 shadow-lg" : "opacity-60"} ${
+                          className={`h-8 w-8 rounded-full transition-all ${config.accentColor === c ? "ring-2 ring-offset-2 ring-slate-400 scale-110 shadow-md" : "opacity-70 hover:opacity-100"} ${
                             c === "blue"
-                              ? "bg-indigo-600"
+                              ? "bg-blue-600"
                               : c === "green"
                                 ? "bg-emerald-600"
                                 : c === "violet"
@@ -345,11 +288,11 @@ export default function InvoiceDetailsPage() {
                       ))}
                     </div>
                   </div>
-                  <Separator className="opacity-50" />
-                  <div className="space-y-6">
+                  <Separator />
+                  <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <Label className="text-[11px] font-bold uppercase tracking-wide">
-                        Brand Header
+                      <Label className="text-sm font-medium text-slate-700">
+                        Lab Header
                       </Label>
                       <Switch
                         checked={config.showHeader}
@@ -359,8 +302,8 @@ export default function InvoiceDetailsPage() {
                       />
                     </div>
                     <div className="flex items-center justify-between">
-                      <Label className="text-[11px] font-bold uppercase tracking-wide">
-                        Signature Block
+                      <Label className="text-sm font-medium text-slate-700">
+                        Authorized Signature
                       </Label>
                       <Switch
                         checked={config.showSignature}
@@ -376,7 +319,7 @@ export default function InvoiceDetailsPage() {
 
             <Button
               variant="outline"
-              className="h-12 px-6 rounded-2xl bg-white border-none shadow-sm font-bold text-slate-600 active:scale-95 transition-all"
+              className="h-10 rounded-xl bg-white shadow-sm font-semibold text-slate-700"
               onClick={() =>
                 window.open(
                   `/workspace/print/barcodes?invoiceId=${invoice.id}`,
@@ -387,185 +330,222 @@ export default function InvoiceDetailsPage() {
             </Button>
 
             <Button
-              className="h-14 px-8 bg-slate-900 hover:bg-black text-white rounded-2xl shadow-xl shadow-slate-200 flex items-center gap-3 group"
+              variant="outline"
+              className="h-10 rounded-xl bg-white shadow-sm font-semibold text-slate-700"
+              onClick={handleDownloadPdf}
+              disabled={isDownloading}>
+              {isDownloading ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4 mr-2" />
+              )}
+              PDF
+            </Button>
+
+            <Button
+              className="h-10 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-md font-semibold"
               onClick={() => window.print()}>
-              <Printer className="h-5 w-5 group-hover:-translate-y-1 transition-transform" />
-              <span className="font-bold text-lg leading-none">
-                Print Invoice
-              </span>
+              <Printer className="h-4 w-4 mr-2" />
+              Print
             </Button>
           </div>
         </div>
 
-        {/* --- A4 INVOICE CONTAINER --- */}
+        {/* --- A4 INVOICE CONTAINER (PROFESSIONAL CLINICAL LOOK) --- */}
         <div
           id="invoice-container"
-          className={`bg-white shadow-[0_40px_100px_rgba(0,0,0,0.08)] mx-auto ${fontClass} text-slate-900 leading-normal box-border p-[20mm] relative overflow-hidden`}
+          className={`bg-white shadow-xl mt-8 mx-auto ${fontClass} text-slate-800 box-border p-[15mm] relative`}
           style={{ width: "210mm", minHeight: "297mm" }}>
-          {/* Subtle Background Mark for patholab.cloud */}
-          <div className="absolute top-[-5%] right-[-5%] w-[300px] h-[300px] bg-slate-50 rounded-full -z-10 blur-3xl opacity-50" />
-
           {/* DOCUMENT HEADER */}
           {config.showHeader && (
-            <div
-              className={`mb-12 ${config.headerStyle === "centered" ? "text-center" : "flex justify-between items-start"}`}>
-              <div
-                className={`${config.headerStyle === "centered" ? "mb-10" : "w-1/2"}`}>
+            <div className="flex justify-between items-start mb-8">
+              {/* Lab Info (Left) */}
+              <div className="flex items-start gap-4 max-w-[60%]">
                 {config.showLogo && (
                   <div
-                    className={`h-16 w-16 ${colors.light} rounded-2xl flex items-center justify-center text-3xl font-black ${colors.text} mb-4 ${config.headerStyle === "centered" ? "mx-auto" : ""}`}>
+                    className={`h-16 w-16 ${colors.bg} rounded-xl flex items-center justify-center text-3xl font-bold text-white shrink-0 shadow-sm`}>
                     {invoice.lab?.name?.charAt(0) || "L"}
                   </div>
                 )}
-                <h1
-                  className={`text-3xl font-black uppercase tracking-tighter ${colors.text}`}>
-                  {invoice.lab?.name || "Laboratory Name"}
-                </h1>
-                <div className="text-[11px] font-bold text-slate-400 mt-2 space-y-1.5 uppercase tracking-tighter leading-tight">
-                  <p className="flex items-center gap-2">
-                    <MapPin className="h-3 w-3 opacity-50" />{" "}
-                    {invoice.lab?.address}, {invoice.lab?.city}
-                  </p>
-                  <div
-                    className={`flex gap-4 ${config.headerStyle === "centered" ? "justify-center" : ""}`}>
+                <div>
+                  <h1 className="text-2xl font-bold text-slate-900 tracking-tight leading-none mb-2">
+                    {invoice.lab?.name || "Laboratory Name"}
+                  </h1>
+                  <div className="text-sm text-slate-600 space-y-1">
                     <p className="flex items-center gap-1.5">
-                      <Phone className="h-3 w-3 opacity-50" />{" "}
-                      {invoice.lab?.phone}
+                      <MapPin className="h-3.5 w-3.5 text-slate-400" />
+                      {invoice.lab?.address || "Lab Address Not Provided"}
                     </p>
-                    <p className="flex items-center gap-1.5">
-                      <Mail className="h-3 w-3 opacity-50" />{" "}
-                      {invoice.lab?.email}
-                    </p>
+                    <div className="flex gap-4">
+                      <p className="flex items-center gap-1.5">
+                        <Phone className="h-3.5 w-3.5 text-slate-400" />{" "}
+                        {invoice.lab?.phone || "N/A"}
+                      </p>
+                      <p className="flex items-center gap-1.5">
+                        <Mail className="h-3.5 w-3.5 text-slate-400" />{" "}
+                        {invoice.lab?.email || "N/A"}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div
-                className={`${config.headerStyle === "centered" ? "" : "text-right w-1/2"} flex flex-col items-end`}>
-                <h2 className="text-7xl font-black text-slate-50 tracking-tighter leading-none mb-4 uppercase select-none">
-                  Invoice
+              {/* Invoice Meta (Right) */}
+              <div className="text-right flex flex-col items-end">
+                <h2
+                  className={`text-2xl font-bold ${colors.text} uppercase tracking-wider mb-2`}>
+                  Tax Invoice
                 </h2>
-                <div className="mb-4 bg-white p-1 rounded-lg ring-1 ring-slate-100">
+                <div className="bg-white p-1 rounded-md border border-slate-100 mb-2">
                   <Barcode
                     value={invoice.invoiceNumber}
-                    height={40}
-                    width={1.4}
-                    fontSize={14}
+                    height={30}
+                    width={1.2}
+                    fontSize={12}
                     displayValue={false}
-                    margin={5}
+                    margin={0}
                   />
                 </div>
-                <div className="space-y-1">
-                  <p className={`font-mono text-xl font-black ${colors.text}`}>
-                    #{invoice.invoiceNumber}
-                  </p>
-                  <Badge
-                    className={`rounded h-6 text-[10px] font-black uppercase tracking-widest border-none ${invoice.status === "PAID" ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"}`}>
-                    {invoice.status === "PAID"
-                      ? "Full Settlement"
-                      : "Payment Awaiting"}
-                  </Badge>
-                </div>
+                <table className="text-sm">
+                  <tbody>
+                    <tr>
+                      <td className="text-slate-500 pr-3 pb-1 text-right">
+                        Invoice No:
+                      </td>
+                      <td className="font-mono font-bold text-slate-900 pb-1">
+                        {invoice.invoiceNumber}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="text-slate-500 pr-3 pb-1 text-right">
+                        Date:
+                      </td>
+                      <td className="font-semibold text-slate-900 pb-1">
+                        {format(
+                          new Date(invoice.createdAt),
+                          "dd MMM yyyy, hh:mm a",
+                        )}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           )}
 
-          <div className="grid grid-cols-3 gap-12 mb-12 py-10 border-y border-slate-100">
-            <div className="col-span-1">
-              <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] mb-4">
-                Bill To
-              </p>
-              <h3 className="text-xl font-black text-slate-800 tracking-tight mb-2">
-                {invoice.patient?.name}
+          <div
+            className={`h-1.5 w-full ${colors.bg} mb-8 rounded-full opacity-20`}
+          />
+
+          {/* PATIENT & REFERRAL INFO CARDS */}
+          <div className="grid grid-cols-2 gap-6 mb-8">
+            {/* Bill To Card */}
+            <div className="border border-slate-200 rounded-xl p-4 bg-slate-50/50">
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
+                Patient Details
               </h3>
-              <div className="text-[11px] font-bold text-slate-500 space-y-1 leading-relaxed">
-                <p>
-                  <span className="text-slate-300 w-16 inline-block uppercase tracking-tighter">
-                    ID
-                  </span>{" "}
-                  {invoice.patient?.patientId}
-                </p>
-                <p>
-                  <span className="text-slate-300 w-16 inline-block uppercase tracking-tighter">
-                    Demog
-                  </span>{" "}
-                  {invoice.patient?.age} {invoice.patient?.ageUnit} /{" "}
-                  {invoice.patient?.gender}
-                </p>
-                <p>
-                  <span className="text-slate-300 w-16 inline-block uppercase tracking-tighter">
-                    Contact
-                  </span>{" "}
-                  {invoice.patient?.phone}
-                </p>
-              </div>
+              <p className="text-lg font-bold text-slate-900 mb-2">
+                {invoice.patient?.name}
+              </p>
+              <table className="text-sm w-full">
+                <tbody>
+                  <tr>
+                    <td className="text-slate-500 py-1 w-24">Patient ID:</td>
+                    <td className="font-medium text-slate-900">
+                      {invoice.patient?.patientId}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="text-slate-500 py-1">Age / Sex:</td>
+                    <td className="font-medium text-slate-900">
+                      {invoice.patient?.age} {invoice.patient?.ageUnit} /{" "}
+                      {invoice.patient?.gender}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="text-slate-500 py-1">Contact:</td>
+                    <td className="font-medium text-slate-900">
+                      {invoice.patient?.phone}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
 
-            <div className="col-span-2 grid grid-cols-2 gap-y-6">
-              {[
-                {
-                  icon: History,
-                  label: "Booking Date",
-                  value: format(new Date(invoice.createdAt), "dd MMM, yyyy"),
-                },
-                {
-                  icon: ShieldCheck,
-                  label: "Referring MD",
-                  value: invoice.doctor?.name || "Self Referral",
-                },
-                {
-                  icon: MousePointer2,
-                  label: "Payment Mode",
-                  value: invoice.paymentMode || "Direct Cash",
-                },
-                {
-                  icon: CheckCircle2,
-                  label: "Collection",
-                  value: invoice.collectedBy || "In-Lab",
-                },
-              ].map((item, i) => (
-                <div key={i} className="space-y-1.5">
-                  <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest flex items-center gap-1.5">
-                    <item.icon className="h-2.5 w-2.5" /> {item.label}
-                  </p>
-                  <p className="text-[11px] font-black text-slate-700 uppercase tracking-tight">
-                    {item.value}
-                  </p>
-                </div>
-              ))}
+            {/* Clinical Info Card */}
+            <div className="border border-slate-200 rounded-xl p-4 bg-slate-50/50">
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
+                Clinical Reference
+              </h3>
+              <table className="text-sm w-full">
+                <tbody>
+                  <tr>
+                    <td className="text-slate-500 py-1 flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4" /> Referred By:
+                    </td>
+                    <td className="font-semibold text-slate-900">
+                      {invoice.doctor?.name || "Self Referral"}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="text-slate-500 py-1 flex items-center gap-2">
+                      <Building2 className="w-4 h-4" /> Agency/Client:
+                    </td>
+                    <td className="font-semibold text-slate-900">
+                      {invoice.agency?.name || "N/A"}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="text-slate-500 py-1 flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4" /> Collection:
+                    </td>
+                    <td className="font-semibold text-slate-900">
+                      {invoice.collectedBy || "In-Lab"}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
 
-          {/* TRANSACTION LEDGER */}
-          <div className="mb-12 min-h-[300px]">
-            <table className="w-full">
+          {/* SERVICES TABLE */}
+          <div className="mb-8 min-h-[250px]">
+            <table className="w-full text-sm border-collapse">
               <thead>
                 <tr
-                  className={`border-b-2 border-slate-900 text-slate-900 uppercase text-[10px] font-black tracking-widest`}>
-                  <th className="py-4 px-2 text-left w-12">#</th>
-                  <th className="py-4 px-2 text-left">Service Description</th>
-                  <th className="py-4 px-2 text-right">Unit Rate</th>
-                  <th className="py-4 px-2 text-right">Line Total</th>
+                  className={`${colors.light} ${colors.text} border-y ${colors.border}`}>
+                  <th className="py-3 px-4 text-left font-bold w-12">#</th>
+                  <th className="py-3 px-4 text-left font-bold">
+                    Investigation / Service Name
+                  </th>
+                  <th className="py-3 px-4 text-right font-bold w-32">
+                    Unit Price
+                  </th>
+                  <th className="py-3 px-4 text-right font-bold w-32">
+                    Amount
+                  </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-200">
                 {invoice.items?.map((item: any, i: number) => (
-                  <tr key={item.id} className="group">
-                    <td
-                      className={`px-2 font-mono font-bold text-slate-300 ${densityClass}`}>
-                      {i + 1}
+                  <tr
+                    key={item.id}
+                    className="hover:bg-slate-50 transition-colors">
+                    <td className="py-3 px-4 text-slate-500">{i + 1}</td>
+                    <td className="py-3 px-4 font-semibold text-slate-800">
+                      {item.description || "Laboratory Test"}
                     </td>
-                    <td
-                      className={`px-2 font-black text-slate-700 ${densityClass}`}>
-                      {item.description || "Investigation Service"}
+                    <td className="py-3 px-4 text-right text-slate-600">
+                      ₹
+                      {item.unitPrice?.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                      })}
                     </td>
-                    <td
-                      className={`px-2 text-right font-medium text-slate-400 tabular-nums ${densityClass}`}>
-                      ₹{item.unitPrice?.toLocaleString()}
-                    </td>
-                    <td
-                      className={`px-2 text-right font-black text-slate-900 tabular-nums ${densityClass}`}>
-                      ₹{item.total?.toLocaleString()}
+                    <td className="py-3 px-4 text-right font-semibold text-slate-900">
+                      ₹
+                      {item.total?.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                      })}
                     </td>
                   </tr>
                 ))}
@@ -573,86 +553,84 @@ export default function InvoiceDetailsPage() {
             </table>
           </div>
 
-          {/* FINANCIAL SUMMARY */}
-          <div className="flex justify-between items-start pt-10 border-t-2 border-slate-900">
-            <div className="w-1/2 space-y-4">
-              <div className="p-4 bg-slate-50 rounded-2xl">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
-                  Technical Disclosures
-                </p>
-                <ul className="text-[9px] font-bold text-slate-500 space-y-1 list-disc list-inside leading-relaxed uppercase tracking-tighter">
-                  <li>Report validity depends on clinical correlation.</li>
-                  <li>Samples processed in ISO certified environment.</li>
-                  <li>Document strictly for patient use & medical review.</li>
-                </ul>
-              </div>
-              {customNote && (
-                <div className="p-4 border-l-4 border-slate-200 italic text-[11px] font-medium text-slate-500">
-                  "{customNote}"
-                </div>
-              )}
+          {/* FINANCIALS & TERMS */}
+          <div className="flex justify-between items-start pt-4">
+            {/* Terms and Notes (Left) */}
+            <div className="w-1/2 pr-8">
+              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                Terms & Conditions
+              </h4>
+              <ul className="text-xs text-slate-500 space-y-1.5 list-disc pl-4">
+                <li>
+                  All laboratory reports are subject to clinical correlation by
+                  the referring physician.
+                </li>
+                <li>
+                  Partial or pending payments must be cleared before report
+                  generation.
+                </li>
+                <li>This is a computer-generated invoice.</li>
+              </ul>
             </div>
 
-            <div className="w-1/3 space-y-3">
-              <div className="flex justify-between items-center text-[11px] font-bold text-slate-400 uppercase tracking-widest">
-                <span>Gross Subtotal</span>
-                <span className="text-slate-900 tabular-nums">
-                  ₹{invoice.subtotal?.toLocaleString()}
-                </span>
-              </div>
-              {invoice.discount > 0 && (
-                <div className="flex justify-between items-center text-[11px] font-black text-rose-500 uppercase tracking-widest">
-                  <span>Discount Benefits</span>
-                  <span className="tabular-nums">
-                    - ₹{invoice.discount?.toLocaleString()}
+            {/* Totals (Right) */}
+            <div className="w-5/12 border border-slate-200 rounded-xl overflow-hidden">
+              <div className="p-4 space-y-3 bg-white">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-slate-600">Gross Total</span>
+                  <span className="font-semibold text-slate-900">
+                    ₹
+                    {invoice.subtotal?.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                    })}
                   </span>
                 </div>
-              )}
-              <Separator className="bg-slate-200" />
+                {invoice.discount > 0 && (
+                  <div className="flex justify-between items-center text-sm text-rose-600">
+                    <span>Discount</span>
+                    <span className="font-semibold">
+                      - ₹
+                      {invoice.discount?.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+                )}
+                {/* Add Taxes here if applicable in future */}
+              </div>
               <div
-                className={`flex justify-between items-center font-black ${colors.text} text-2xl tracking-tighter`}>
-                <span>Total Due</span>
-                <span className="tabular-nums">
-                  ₹{invoice.grandTotal?.toLocaleString()}
+                className={`${colors.light} p-4 border-t border-slate-200 flex justify-between items-center`}>
+                <span className={`text-base font-bold ${colors.muted}`}>
+                  Net Payable
+                </span>
+                <span className={`text-xl font-bold ${colors.text}`}>
+                  ₹
+                  {invoice.grandTotal?.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                  })}
                 </span>
               </div>
-              <div className="pt-2 text-right">
-                <p className="text-[8px] font-black uppercase text-slate-300 tracking-widest">
-                  Includes all relevant laboratory cess
-                </p>
+
+              {/* Payment Status Ribbon */}
+              <div
+                className={`text-center py-2 text-xs font-bold uppercase tracking-widest text-white ${invoice.status === "PAID" ? "bg-emerald-500" : "bg-amber-500"}`}>
+                {invoice.status === "PAID"
+                  ? "Payment Received"
+                  : "Payment Pending"}
               </div>
             </div>
           </div>
 
           {/* AUTHENTICATION FOOTER */}
-          <div className="mt-auto grid grid-cols-2 gap-20 items-end pt-16">
-            <div className="flex items-center gap-4 group opacity-10 print:hidden">
-              <div className="p-3 rounded-2xl bg-indigo-50 text-indigo-500">
-                <Activity className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-widest">
-                  Internal Hash
-                </p>
-                <p className="text-[9px] font-mono text-slate-400">
-                  {invoiceId.substring(0, 24)}
-                </p>
-              </div>
+          {config.showSignature && (
+            <div className="absolute bottom-[20mm] right-[20mm] text-right">
+              <div className="w-48 border-b border-slate-400 mb-2 mx-auto"></div>
+              <p className="text-sm font-bold text-slate-800">
+                Authorized Signatory
+              </p>
+              <p className="text-xs text-slate-500">{invoice.lab?.name}</p>
             </div>
-
-            {config.showSignature && (
-              <div className="text-right space-y-4">
-                <div className="inline-flex flex-col items-center border-t border-slate-300 pt-3 min-w-[200px]">
-                  <p className="text-[10px] font-black text-slate-900 uppercase tracking-[0.2em] leading-none mb-1">
-                    Laboratory Director
-                  </p>
-                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter italic">
-                    Authorized Digital Endorsement
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
+          )}
         </div>
       </div>
     </>
