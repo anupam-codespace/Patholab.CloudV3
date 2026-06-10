@@ -1,34 +1,53 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getCurrentUser } from '@/lib/auth';
+import { getDataFromToken } from '@/lib/auth';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { invoiceId: string } }
+  { params }: { params: Promise<{ id: string }> } // 'id' here is the sampleId
 ) {
   try {
-    const user = await getCurrentUser();
-    if (!user?.labId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // 1. Authenticate & Get Lab ID
+    const user = await getDataFromToken(req);
+    if (!user || !user.labId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-    // Logic: Find all Samples that contain tests belonging to this Invoice
-    const samples = await prisma.sample.findMany({
+    const { id: sampleId } = await params;
+
+    // 2. Fetch the specific Sample
+    const sample = await prisma.sample.findUnique({
       where: {
-        tests: {
-          some: {
-            invoiceId: params.invoiceId
-          }
-        }
+        id: sampleId,
+        labId: user.labId // Security Check
       },
       include: {
-        patient: true,
+        patient: {
+          select: {
+            name: true,
+            age: true,
+            ageUnit: true,
+            gender: true,
+            patientId: true
+          }
+        },
         tests: {
-            select: { testCode: true, testName: true }
+          select: { 
+            testCode: true, 
+            testName: true 
+          }
         }
       }
     });
 
-    return NextResponse.json(samples);
+    if (!sample) {
+      return NextResponse.json({ error: 'Sample barcode not found' }, { status: 404 });
+    }
+
+    return NextResponse.json(sample);
+
   } catch (error) {
-    return NextResponse.json({ error: "Failed to load barcodes" }, { status: 500 });
+    console.error("Fetch Single Barcode Error:", error);
+    return NextResponse.json({ error: "Failed to load barcode" }, { status: 500 });
   }
 }

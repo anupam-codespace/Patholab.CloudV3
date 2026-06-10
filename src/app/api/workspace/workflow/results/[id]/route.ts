@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getDataFromToken } from '@/lib/auth';
-import { consumeReagentsForTest } from '@/lib/inventoryEngine'; // ✅ 1. IMPORT THE ENGINE
+import { consumeReagentsForTest } from '@/lib/inventoryEngine'; // ✅ IMPORT THE ENGINE
+
+export const dynamic = 'force-dynamic';
 
 // Helper: Match Reference Range (Backend Logic for Accuracy)
 function getMatchingRange(parameter: any, patient: any) {
@@ -25,7 +27,9 @@ function getMatchingRange(parameter: any, patient: any) {
     return ageMatch || genderMatches[0] || parameter.referenceRanges[0];
 }
 
+// =========================================================================
 // GET: Fetch Worksheet / Report Data
+// =========================================================================
 export async function GET(
   req: NextRequest, 
   { params }: { params: Promise<{ id: string }> } 
@@ -58,12 +62,12 @@ export async function GET(
             customResults: true, 
             testTemplate: {
               include: {
-                sampleType: true,
+                SampleType: true,
                 parameters: {
                   include: { parameter: { include: { referenceRanges: true } } },
                   orderBy: { order: 'asc' }
                 },
-                customFields: { include: { fieldDef: true }, orderBy: { order: 'asc' } }
+                customFields: { include: { field: true }, orderBy: { order: 'asc' } }
               }
             },
           }
@@ -110,7 +114,9 @@ export async function GET(
   }
 }
 
-// POST: Save Results (Enhanced with Usage Tracking)
+// =========================================================================
+// POST: Save Results (Enhanced with Usage Tracking & Inventory)
+// =========================================================================
 export async function POST(
   req: NextRequest, 
   { params }: { params: Promise<{ id: string }> } 
@@ -122,7 +128,7 @@ export async function POST(
     const { id } = await params; 
     const { testId, results, customResults, action, notes, impression, sampleReceivedAt } = await req.json(); 
 
-    // 1. Fetch Test Context (Needed for Reference Ranges AND Status Check)
+    // 1. Fetch Test Context
     const testContext = await prisma.test.findUnique({
         where: { id: testId },
         include: {

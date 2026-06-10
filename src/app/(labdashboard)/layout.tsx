@@ -17,6 +17,9 @@ export default function DashboardLayout({
   const router = useRouter();
   const [isChecking, setIsChecking] = useState(true);
 
+  // ✅ ADDED: Sidebar toggle state (Hidden by default as requested)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   useEffect(() => {
     const checkAccess = async () => {
       // 1. Wait for Auth to load
@@ -29,8 +32,6 @@ export default function DashboardLayout({
       }
 
       // 3. Wallet Health Check (Pay-As-You-Go)
-      // We check this silently. We DO NOT redirect if expired or empty,
-      // because the owner needs access to the dashboard to recharge.
       if (user.role === "LAB_OWNER") {
         try {
           const res = await fetch("/api/workspace/wallet/details");
@@ -88,17 +89,26 @@ export default function DashboardLayout({
   }
 
   return (
-    // 1. Outer wrapper locks the screen height to 100vh and uses flex-row
     <div className="flex h-screen w-full overflow-hidden bg-slate-50">
-      {/* 2. Sidebar sits on the left (relative on desktop, fixed on mobile) */}
-      <Sidebar role={user.role} />
+      {/* ✅ 1. SIDEBAR: Passed the state and setter */}
+      <Sidebar
+        role={user.role}
+        subscription={user.subscription || null} // Pass subscription if you have it in user object
+        isOpen={isSidebarOpen}
+        setIsOpen={setIsSidebarOpen}
+      />
 
-      {/* 3. Main content area takes up the rest of the width and stacks vertically */}
-      <div className="flex flex-1 flex-col overflow-hidden relative">
-        {/* 4. Topbar/Header is pinned to the top of this column */}
-        <Header user={user} />
+      {/* ✅ 2. MAIN CONTENT: Shifts right automatically on desktop when sidebar opens */}
+      <div
+        className={`flex flex-1 flex-col overflow-hidden relative transition-all duration-300 ease-in-out ${
+          isSidebarOpen ? "lg:ml-[280px]" : "ml-0"
+        }`}>
+        {/* ✅ 3. HEADER: Passed the toggle function */}
+        <Header
+          user={user}
+          toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+        />
 
-        {/* 5. Children (the page content) scrolls independently underneath the Header */}
         <main className="flex-1 overflow-y-auto w-full relative z-0">
           {children}
         </main>
