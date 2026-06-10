@@ -579,39 +579,55 @@ enum Gender {
 }
 
 model Sample {
-  id                 String         @id @default(uuid())
-  labId              String
-  lab                Lab            @relation(fields: [labId], references: [id])
-  branchId           String?
-  branch             Branch?        @relation(fields: [branchId], references: [id])
-  sampleId           String
-  barcodeFormat      String         @default("CODE128")
-  patientId          String
-  patient            Patient        @relation(fields: [patientId], references: [id])
-  sampleTypeId       String?
-  sampleType         SampleType?    @relation(fields: [sampleTypeId], references: [id])
-  containerTypeId    String?
-  containerType      ContainerType? @relation(fields: [containerTypeId], references: [id])
-  collectionMode     CollectionMode @default(LAB_VISIT)
-  collectedAt        DateTime?
-  collectedBy        String?
+  id       String  @id @default(uuid())
+  labId    String
+  lab      Lab     @relation(fields: [labId], references: [id])
+  branchId String?
+  branch   Branch? @relation(fields: [branchId], references: [id])
+
+  // This is the Clinical ID generated when a sample is accepted
+  sampleId      String
+  barcodeFormat String @default("CODE128")
+
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id])
+
+  // ✅ CONNECTED: Direct link to the logistics visit (if home collection)
+  appointmentId String?
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
+
+  sampleTypeId    String?
+  sampleType      SampleType?    @relation(fields: [sampleTypeId], references: [id])
+  containerTypeId String?
+  containerType   ContainerType? @relation(fields: [containerTypeId], references: [id])
+
+  collectionMode CollectionMode @default(LAB_VISIT)
+
+  // Clinical Lifecycle
+  collectedAt DateTime?
+  collectedBy String?
+  status      SampleStatus @default(COLLECTED)
+  receivedAt  DateTime? // When it physically enters the lab
+  receivedBy  String?
+
+  // Logistics metadata
   collectionLat      Float?
   collectionLng      Float?
   collectionAddress  String?
   courierName        String?
   trackingNumber     String?
   transitTemperature String?
-  status             SampleStatus   @default(COLLECTED)
-  storageLocation    String?
-  temperature        String?
-  receivedAt         DateTime?
-  receivedBy         String?
-  condition          String?
-  machineId          String?
-  rackPosition       String?
-  rejectionReason    String?
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @updatedAt
+
+  // Lab Processing metadata
+  storageLocation String?
+  temperature     String?
+  condition       String? // e.g., "Hemolysed", "Lipemic"
+  machineId       String?
+  rackPosition    String?
+  rejectionReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   tests    Test[]
   timeline SampleLog[]
@@ -673,32 +689,46 @@ enum TripStatus {
 }
 
 model Appointment {
-  id                String              @id @default(uuid())
-  patientId         String
-  patient           Patient             @relation(fields: [patientId], references: [id])
-  labId             String
-  branchId          String?
-  branch            Branch?             @relation(fields: [branchId], references: [id])
-  source            BookingSource       @default(WALK_IN)
-  tripId            String?
-  trip              HomeCollectionTrip? @relation(fields: [tripId], references: [id])
-  appointmentDate   DateTime
-  timeSlot          String?
-  collectionMode    CollectionMode      @default(LAB_VISIT)
+  id String @id @default(uuid())
+
+  // Logistics
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id])
+  labId     String
+  branchId  String?
+  branch    Branch? @relation(fields: [branchId], references: [id])
+
+  // Trip & Route Scheduling
+  tripId     String?
+  trip       HomeCollectionTrip? @relation(fields: [tripId], references: [id])
+  routeOrder Int                 @default(0)
+
+  // Scheduling Details
+  source          BookingSource  @default(WALK_IN)
+  collectionMode  CollectionMode @default(LAB_VISIT)
+  appointmentDate DateTime
+  timeSlot        String? // e.g., "08:00 AM - 10:00 AM"
+
+  // Location
   collectionAddress String?
   pincode           String?
   latitude          Float?
   longitude         Float?
-  routeOrder        Int                 @default(0)
-  paymentCollected  Decimal?            @default(0.00) @db.Decimal(10, 2)
-  paymentMode       String?
-  invoiceId         String?             @unique
-  invoice           Invoice?            @relation(fields: [invoiceId], references: [id])
-  status            AppointmentStatus   @default(SCHEDULED)
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
 
-  tests Test[]
+  // Payment Snapshot at time of booking
+  paymentCollected Decimal? @default(0.00) @db.Decimal(10, 2)
+  paymentMode      String?
+  invoiceId        String?  @unique
+  invoice          Invoice? @relation(fields: [invoiceId], references: [id])
+
+  // Status tracking
+  status    AppointmentStatus @default(SCHEDULED)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  // Clinical Links
+  tests   Test[]
+  samples Sample[] // ✅ Link added so we can see what was collected during this visit
 }
 
 enum BookingSource {
@@ -714,40 +744,45 @@ enum AppointmentStatus {
   ASSIGNED
   EN_ROUTE
   ARRIVED
-  SAMPLE_COLLECTED
-  HANDED_OVER
   COMPLETED
   CANCELLED
   RESCHEDULED
+  SAMPLE_COLLECTED @map("DEPRECATED_SAMPLE_COLLECTED")
+  HANDED_OVER      @map("DEPRECATED_HANDED_OVER")
 }
 
 model Test {
-  id                  String        @id @default(uuid())
-  labId               String
-  lab                 Lab           @relation(fields: [labId], references: [id])
-  branchId            String?
-  branch              Branch?       @relation(fields: [branchId], references: [id])
-  testNumber          String
-  patientId           String
-  patient             Patient       @relation(fields: [patientId], references: [id])
-  categoryId          String?
-  category            TestCategory? @relation(fields: [categoryId], references: [id])
-  appointmentId       String?
-  appointment         Appointment?  @relation(fields: [appointmentId], references: [id])
-  invoiceId           String?
-  invoice             Invoice?      @relation(fields: [invoiceId], references: [id])
-  sampleId            String?
-  sample              Sample?       @relation(fields: [sampleId], references: [id])
+  id            String        @id @default(uuid())
+  labId         String
+  lab           Lab           @relation(fields: [labId], references: [id])
+  branchId      String?
+  branch        Branch?       @relation(fields: [branchId], references: [id])
+  testNumber    String
+  patientId     String
+  patient       Patient       @relation(fields: [patientId], references: [id])
+  categoryId    String?
+  category      TestCategory? @relation(fields: [categoryId], references: [id])
+  appointmentId String?
+  appointment   Appointment?  @relation(fields: [appointmentId], references: [id])
+  invoiceId     String?
+  invoice       Invoice?      @relation(fields: [invoiceId], references: [id])
+  sampleId      String?
+  sample        Sample?       @relation(fields: [sampleId], references: [id])
+
+  // ✅ ADDED: Link to TestTemplate (Crucial for result entry & reporting)
+  testTemplateId String?
+  testTemplate   TestTemplate? @relation(fields: [testTemplateId], references: [id])
+
   testName            String
   testCode            String
   resultNotes         Json?
-  status              TestStatus    @default(PENDING)
-  priority            TestPriority  @default(NORMAL)
+  status              TestStatus   @default(PENDING)
+  priority            TestPriority @default(NORMAL)
   referredBy          String?
   doctorId            String?
-  doctor              Doctor?       @relation("DoctorReferral", fields: [doctorId], references: [id])
+  doctor              Doctor?      @relation("DoctorReferral", fields: [doctorId], references: [id])
   agencyId            String?
-  agency              Agency?       @relation("AgencyReferral", fields: [agencyId], references: [id])
+  agency              Agency?      @relation("AgencyReferral", fields: [agencyId], references: [id])
   scheduledAt         DateTime?
   sampleCollectedAt   DateTime?
   processingStartedAt DateTime?
@@ -759,16 +794,20 @@ model Test {
   reportUrl           String?
   notes               String?
   impression          String?
-  price               Decimal       @db.Decimal(10, 2)
-  discount            Decimal       @default(0.00) @db.Decimal(10, 2)
-  finalPrice          Decimal       @db.Decimal(10, 2)
-  createdAt           DateTime      @default(now())
-  updatedAt           DateTime      @updatedAt
+  price               Decimal      @db.Decimal(10, 2)
+  discount            Decimal      @default(0.00) @db.Decimal(10, 2)
+  finalPrice          Decimal      @db.Decimal(10, 2)
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
 
   // Immutability: NO deletedAt
-  report         Report?
-  commissions    Commission[]
-  results        TestResultParameter[]
+  report      Report?
+  commissions Commission[]
+  results     TestResultParameter[]
+
+  // ✅ ADDED: Link to Custom Fields (If you are saving custom form data per test)
+  customResults TestResultCustomField[]
+
   inventoryUsage InventoryTransaction[]
   aiPrediction   AIPrediction?
 
@@ -1529,6 +1568,7 @@ model TestTemplate {
 
   parameters   TestTemplateParameter[]
   customFields TestTemplateCustomField[] // Add this line!
+  Test         Test[]
 
   @@index([labId])
 }
@@ -1578,4 +1618,21 @@ model TestTemplateCustomField {
   defaultValue String?
 
   @@unique([templateId, fieldId])
+}
+
+model TestResultCustomField {
+  id         String @id @default(uuid())
+  testId     String
+  test       Test   @relation(fields: [testId], references: [id], onDelete: Cascade)
+  fieldDefId String
+  // We use String here instead of a relation because definitions might get deleted/changed, 
+  // but historical clinical results MUST remain immutable.
+  value      String @db.Text
+  layout     Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([testId, fieldDefId])
+  @@index([testId])
 }
