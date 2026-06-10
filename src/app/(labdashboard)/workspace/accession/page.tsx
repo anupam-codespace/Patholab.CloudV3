@@ -18,7 +18,6 @@ import {
   User,
   FlaskConical,
   CreditCard,
-  ChevronRight,
   Plus,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
@@ -105,7 +104,7 @@ export default function AccessionPage() {
   const searchParams = useSearchParams();
 
   const patientId = searchParams.get("patientId");
-  const isNewVisit = searchParams.get("isNewVisit") === "true"; // Silently passed to backend
+  const isNewVisit = searchParams.get("isNewVisit") === "true";
   const doctorNameParam = searchParams.get("doc");
   const agencyNameParam = searchParams.get("agency");
   const paymentModeParam = searchParams.get("pay") || "CASH";
@@ -281,6 +280,7 @@ export default function AccessionPage() {
         Preparing Workspace...
       </div>
     );
+
   if (!data || !data.patient)
     return (
       <div className="h-[calc(100vh-60px)] flex items-center justify-center text-red-500 font-bold">
@@ -292,26 +292,27 @@ export default function AccessionPage() {
 
   return (
     <form
+      id="accession-form"
       onSubmit={handleSubmit(onSubmit)}
-      className="flex flex-col h-[100dvh] lg:h-[calc(100vh-60px)] bg-slate-50 overflow-hidden font-sans relative">
+      className="flex flex-col h-[calc(100vh-80px)] bg-slate-50 font-sans relative pb-20 lg:pb-0">
       {/* 🌟 STICKY TOP HEADER BAR */}
-      <div className="flex-none h-[72px] bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-4 lg:px-6 flex justify-between items-center shadow-sm z-30 sticky top-0">
+      <div className="flex-none h-[72px] bg-white border-b border-slate-200 px-4 lg:px-6 flex justify-between items-center shadow-sm z-30">
         <div className="flex items-center gap-3 lg:gap-4">
-          <div className="hidden sm:flex h-11 w-11 bg-indigo-100 text-indigo-700 font-bold text-base rounded-full items-center justify-center shadow-inner shrink-0">
+          <div className="hidden sm:flex h-11 w-11 bg-indigo-100 text-indigo-700 font-bold text-base rounded-xl items-center justify-center shadow-inner shrink-0">
             {initials}
           </div>
           <div>
-            <h1 className="font-black text-lg lg:text-xl text-slate-900 leading-tight truncate max-w-[200px] sm:max-w-md">
+            <h1 className="font-bold text-lg lg:text-xl text-slate-900 leading-tight truncate max-w-[200px] sm:max-w-md">
               {data.patient.name}
             </h1>
-            <div className="flex items-center gap-2 text-xs lg:text-sm font-bold text-slate-500 uppercase tracking-wide mt-0.5">
+            <div className="flex items-center gap-2 text-xs lg:text-sm font-semibold text-slate-500 mt-0.5">
               <span>
                 {data.patient.age} {data.patient.ageUnit || "Y"} •{" "}
                 {data.patient.gender}
               </span>
               <span className="hidden sm:inline text-slate-300">|</span>
-              <span className="hidden sm:inline text-indigo-600 font-mono bg-indigo-50 px-1.5 rounded">
-                {data.patient.patientId}
+              <span className="hidden sm:inline text-indigo-600 font-mono bg-indigo-50 px-2 rounded-md">
+                ID: {data.patient.patientId}
               </span>
             </div>
           </div>
@@ -323,24 +324,24 @@ export default function AccessionPage() {
               <span className="text-[10px] lg:text-xs font-bold text-slate-400 uppercase tracking-widest">
                 Referral
               </span>
-              <span className="text-sm lg:text-base font-black text-slate-700 flex items-center gap-1.5 truncate max-w-[120px] sm:max-w-xs">
-                <User className="w-4 h-4 opacity-50" /> {doctorNameParam}
+              <span className="text-sm font-bold text-slate-700 flex items-center gap-1.5 truncate max-w-[120px] sm:max-w-xs">
+                <User className="w-3.5 h-3.5 opacity-50" /> {doctorNameParam}
               </span>
             </div>
           )}
         </div>
       </div>
 
-      {/* 🧩 RESPONSIVE 3-COLUMN LAYOUT (Grid on Desktop, Stacked on Mobile) */}
-      <div className="flex-1 flex flex-col lg:grid lg:grid-cols-12 overflow-y-auto lg:overflow-hidden pb-24 lg:pb-0">
+      {/* 🧩 RESPONSIVE 3-COLUMN LAYOUT */}
+      <div className="flex-1 flex flex-col lg:grid lg:grid-cols-12 overflow-hidden">
         {/* 📚 LEFT: TEST CATALOG */}
-        <div className="lg:col-span-3 bg-white border-b lg:border-b-0 lg:border-r border-slate-200/80 flex flex-col min-h-[400px] lg:h-full z-10 shadow-sm">
-          <div className="p-4 border-b border-slate-100 space-y-3 bg-slate-50 flex-none sticky top-0 z-20">
+        <div className="lg:col-span-3 bg-white border-r border-slate-200 flex flex-col h-full z-10 shadow-sm overflow-hidden">
+          <div className="p-4 border-b border-slate-100 space-y-3 bg-slate-50 flex-none">
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
               <Input
-                placeholder="Search tests or codes..."
-                className="pl-9 h-11 bg-white border-slate-200 focus:border-indigo-500 focus:ring-indigo-500/20 rounded-xl text-sm font-medium shadow-sm"
+                placeholder="Search tests..."
+                className="pl-9 h-10 bg-white border-slate-200 focus:border-indigo-500 rounded-xl text-sm font-medium shadow-sm"
                 autoFocus
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -350,25 +351,25 @@ export default function AccessionPage() {
               defaultValue="ALL"
               className="w-full"
               onValueChange={(v) => setFilterType(v as any)}>
-              <TabsList className="w-full h-10 grid grid-cols-4 p-1 bg-slate-200/60 rounded-xl">
+              <TabsList className="w-full h-9 grid grid-cols-4 p-1 bg-slate-200/60 rounded-xl">
                 <TabsTrigger
                   value="ALL"
-                  className="text-xs font-bold rounded-lg">
+                  className="text-[10px] font-bold rounded-lg">
                   All
                 </TabsTrigger>
                 <TabsTrigger
                   value="SINGLE"
-                  className="text-xs font-bold rounded-lg">
+                  className="text-[10px] font-bold rounded-lg">
                   Tests
                 </TabsTrigger>
                 <TabsTrigger
                   value="PROFILE"
-                  className="text-xs font-bold rounded-lg">
+                  className="text-[10px] font-bold rounded-lg">
                   Pkg
                 </TabsTrigger>
                 <TabsTrigger
                   value="PARAMETER"
-                  className="text-xs font-bold rounded-lg">
+                  className="text-[10px] font-bold rounded-lg">
                   Param
                 </TabsTrigger>
               </TabsList>
@@ -381,29 +382,29 @@ export default function AccessionPage() {
                 <div
                   key={item.id}
                   onClick={() => addTest(item)}
-                  className="p-3.5 hover:bg-indigo-50/80 bg-white rounded-xl cursor-pointer group transition-all flex justify-between items-center border border-slate-100 hover:border-indigo-200 hover:shadow-sm">
+                  className="p-3 hover:bg-indigo-50 bg-white rounded-xl cursor-pointer group transition-all flex justify-between items-center border border-slate-100 hover:border-indigo-200">
                   <div className="space-y-1">
-                    <div className="font-bold text-sm lg:text-base text-slate-800 group-hover:text-indigo-700 leading-tight">
+                    <div className="font-semibold text-sm text-slate-800 leading-tight">
                       {item.name}
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge
                         variant="outline"
-                        className="text-[10px] text-slate-500 font-mono border-slate-200 bg-slate-50">
+                        className="text-[9px] text-slate-500 font-mono border-slate-200 bg-slate-50">
                         {item.code}
                       </Badge>
                       {item.type === "PROFILE" && (
-                        <Badge className="text-[10px] bg-purple-100 text-purple-700 border-0 uppercase px-2">
-                          Package
+                        <Badge className="text-[9px] bg-purple-100 text-purple-700 border-0 uppercase px-1.5">
+                          Pkg
                         </Badge>
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="font-black text-sm lg:text-base text-slate-700">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-sm text-slate-700">
                       ₹{item.price}
                     </span>
-                    <Plus className="w-5 h-5 text-indigo-400 group-hover:text-indigo-600 transition-colors" />
+                    <Plus className="w-4 h-4 text-indigo-400 group-hover:text-indigo-600" />
                   </div>
                 </div>
               ))}
@@ -412,21 +413,21 @@ export default function AccessionPage() {
         </div>
 
         {/* 🔬 CENTER: SELECTED CART */}
-        <div className="lg:col-span-5 xl:col-span-6 bg-slate-50/50 flex flex-col min-h-[300px] lg:h-full border-b lg:border-b-0 lg:border-r border-slate-200/80 relative">
+        <div className="lg:col-span-5 bg-slate-50/50 flex flex-col h-full border-r border-slate-200 relative overflow-hidden">
           <div
-            className={`p-4 border-b border-slate-200 flex justify-between items-center flex-none h-16 sticky top-0 z-20 transition-colors ${isUrgent ? "bg-red-50/90 backdrop-blur-sm" : "bg-white/90 backdrop-blur-sm"}`}>
+            className={`p-4 border-b border-slate-200 flex justify-between items-center flex-none h-14 transition-colors ${isUrgent ? "bg-red-50" : "bg-white"}`}>
             <div className="flex items-center gap-3">
               <h2
-                className={`font-black text-lg ${isUrgent ? "text-red-700" : "text-slate-800"}`}>
+                className={`font-bold text-base ${isUrgent ? "text-red-700" : "text-slate-800"}`}>
                 Cart ({selectedTests.length})
               </h2>
               {isUrgent && (
-                <Badge className="bg-red-500 text-white animate-pulse border-0 shadow-sm">
-                  <AlertTriangle className="w-3.5 h-3.5 mr-1" /> STAT
+                <Badge className="bg-red-500 text-white animate-pulse border-0 shadow-sm text-[10px]">
+                  <AlertTriangle className="w-3 h-3 mr-1" /> STAT
                 </Badge>
               )}
               {errors.tests && (
-                <span className="text-xs text-rose-600 font-bold px-2 py-1 bg-rose-100 rounded-md shadow-sm">
+                <span className="text-[10px] text-rose-600 font-bold px-2 py-1 bg-rose-100 rounded-md">
                   {errors.tests.message}
                 </span>
               )}
@@ -436,25 +437,24 @@ export default function AccessionPage() {
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="text-sm font-bold text-rose-600 hover:bg-rose-50 rounded-lg"
+                className="h-8 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-lg"
                 onClick={() => setValue("tests", [])}>
                 Clear All
               </Button>
             )}
           </div>
 
-          <div className="flex-1 overflow-auto p-4 lg:p-6 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
             {selectedTests.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full min-h-[250px] text-slate-400">
-                <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-sm mb-4">
-                  <FlaskConical className="h-10 w-10 text-slate-300" />
+              <div className="flex flex-col items-center justify-center h-full text-slate-400">
+                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-4">
+                  <FlaskConical className="h-8 w-8 text-slate-300" />
                 </div>
-                <span className="font-black text-slate-600 text-xl">
+                <span className="font-bold text-slate-600 text-lg">
                   Cart is Empty
                 </span>
-                <span className="text-sm font-medium text-center mt-2 max-w-sm">
-                  Search and tap on tests from the catalog to add them to this
-                  order.
+                <span className="text-xs font-medium text-center mt-1">
+                  Select tests from the catalog.
                 </span>
               </div>
             ) : (
@@ -462,28 +462,28 @@ export default function AccessionPage() {
                 {selectedTests.map((t: CatalogItem, idx: number) => (
                   <div
                     key={`${t.id}-${idx}`}
-                    className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between group hover:border-indigo-200 transition-colors">
+                    className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between group">
                     <div className="space-y-1">
-                      <div className="font-bold text-base text-slate-900">
+                      <div className="font-semibold text-sm text-slate-900">
                         {t.name}
                       </div>
-                      <div className="flex gap-3 text-xs font-semibold text-slate-500">
-                        <span>Sample: {t.sampleType?.name || "-"}</span>
+                      <div className="flex gap-2 text-[10px] font-semibold text-slate-500">
+                        <span>Spl: {t.sampleType?.name || "-"}</span>
                         <span>•</span>
                         <span>TAT: {t.tat || "-"}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
-                      <span className="font-black text-lg text-slate-900">
+                      <span className="font-bold text-base text-slate-900">
                         ₹{t.price}
                       </span>
                       <Button
                         type="button"
                         variant="ghost"
                         size="icon"
-                        className="h-10 w-10 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"
+                        className="h-8 w-8 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-lg"
                         onClick={() => removeTest(t.id)}>
-                        <Trash2 className="h-5 w-5" />
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
@@ -494,47 +494,47 @@ export default function AccessionPage() {
         </div>
 
         {/* 💳 RIGHT: FINANCIALS & BILLING */}
-        <div className="lg:col-span-4 xl:col-span-3 bg-white flex flex-col lg:h-full z-20 relative">
-          <div className="hidden lg:flex p-4 border-b border-slate-100 bg-indigo-50/30 flex-none h-16 items-center gap-2">
-            <Receipt className="h-5 w-5 text-indigo-600" />
-            <h3 className="font-black text-indigo-900 text-base">
+        <div className="lg:col-span-4 bg-white flex flex-col h-full z-20 relative overflow-hidden">
+          <div className="p-4 border-b border-slate-100 bg-slate-50 flex-none h-14 flex items-center gap-2">
+            <Receipt className="h-4 w-4 text-indigo-600" />
+            <h3 className="font-bold text-slate-800 text-sm">
               Checkout & Billing
             </h3>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-5 space-y-6 lg:pb-24 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto p-4 space-y-5 custom-scrollbar">
             {/* Financial Ledger */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-xs uppercase font-bold text-slate-500">
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-bold text-slate-500">
                   Gross Total
                 </Label>
                 <Input
                   readOnly
                   value={subTotal}
-                  className="h-12 bg-slate-50 font-black text-xl border-slate-200 text-slate-800 rounded-xl"
+                  className="h-10 bg-slate-50 font-bold text-lg border-slate-200 rounded-xl"
                   tabIndex={-1}
                 />
               </div>
-              <div className="space-y-2">
-                <Label className="text-xs uppercase font-bold text-slate-500">
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-bold text-slate-500">
                   Discount (₹)
                 </Label>
                 <Input
                   type="number"
                   {...register("discount")}
-                  className="h-12 text-rose-600 font-black text-xl focus-visible:ring-rose-500 border-slate-200 rounded-xl"
+                  className="h-10 text-rose-600 font-bold text-lg border-slate-200 rounded-xl"
                 />
                 <div className="flex gap-2 mt-1">
                   <Badge
                     variant="outline"
-                    className="text-[10px] px-2.5 h-6 cursor-pointer hover:bg-slate-100 text-slate-600 font-bold uppercase rounded-md"
+                    className="text-[9px] px-2 h-5 cursor-pointer hover:bg-slate-100 text-slate-600"
                     onClick={() => applyDiscountPercent(10)}>
                     10%
                   </Badge>
                   <Badge
                     variant="outline"
-                    className="text-[10px] px-2.5 h-6 cursor-pointer hover:bg-slate-100 text-slate-600 font-bold uppercase rounded-md"
+                    className="text-[9px] px-2 h-5 cursor-pointer hover:bg-slate-100 text-slate-600"
                     onClick={() => applyDiscountPercent(20)}>
                     20%
                   </Badge>
@@ -542,39 +542,41 @@ export default function AccessionPage() {
               </div>
             </div>
 
-            <div className="bg-slate-900 text-white rounded-2xl p-5 flex justify-between items-center shadow-xl relative overflow-hidden">
-              <div className="absolute -right-4 -top-4 opacity-10">
-                <CreditCard className="w-24 h-24" />
+            {/* Total Block */}
+            <div className="bg-slate-900 text-white rounded-2xl p-4 flex justify-between items-center shadow-lg relative overflow-hidden">
+              <div className="absolute -right-2 -top-2 opacity-10">
+                <CreditCard className="w-16 h-16" />
               </div>
               <div className="relative z-10 flex flex-col">
-                <span className="text-xs font-bold uppercase tracking-widest text-indigo-300">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-300">
                   Net Payable
                 </span>
-                <span className="font-black text-4xl tracking-tight mt-1">
+                <span className="font-black text-3xl mt-0.5">
                   ₹{netPayable}
                 </span>
               </div>
             </div>
 
+            {/* Payment & Mode */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-xs uppercase font-bold text-slate-500">
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-bold text-slate-500">
                   Paid Today
                 </Label>
                 <Input
                   type="number"
                   {...register("paidAmount")}
-                  className="h-12 border-emerald-300 bg-emerald-50 text-emerald-700 font-black text-xl focus-visible:ring-emerald-500 rounded-xl"
+                  className="h-10 border-emerald-300 bg-emerald-50 text-emerald-700 font-bold text-lg rounded-xl"
                 />
               </div>
-              <div className="space-y-2">
-                <Label className="text-xs uppercase font-bold text-slate-500">
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-bold text-slate-500">
                   Pay Mode
                 </Label>
                 <Select
                   onValueChange={(v) => setValue("paymentMode", v as any)}
                   defaultValue={watch("paymentMode")}>
-                  <SelectTrigger className="h-12 text-sm font-bold border-slate-200 rounded-xl">
+                  <SelectTrigger className="h-10 text-xs font-bold border-slate-200 rounded-xl">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
@@ -587,105 +589,106 @@ export default function AccessionPage() {
               </div>
             </div>
 
-            <div className="flex justify-between items-center text-base font-black border-t border-slate-100 pt-5">
+            <div className="flex justify-between items-center text-sm font-bold border-t border-slate-100 pt-4">
               <span className="text-slate-500">Balance Due</span>
               <span
                 className={
                   balance > 0
-                    ? "text-rose-600 text-xl"
-                    : "text-emerald-600 text-xl"
+                    ? "text-rose-600 text-lg font-black"
+                    : "text-emerald-600 text-lg font-black"
                 }>
                 ₹ {balance}
               </span>
             </div>
 
             {/* Logistics & Meta */}
-            <div className="space-y-5 pt-5 border-t border-slate-100">
-              <div className="space-y-2">
-                <Label className="text-xs uppercase font-bold text-slate-500">
+            <div className="space-y-4 pt-4 border-t border-slate-100">
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-bold text-slate-500">
                   Collector / Phleb.
                 </Label>
                 <div className="relative">
-                  <UserCheck className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                  <UserCheck className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <Input
                     {...register("collectedBy")}
-                    className="h-12 pl-11 text-base border-slate-200 bg-slate-50 focus:bg-white font-medium rounded-xl"
+                    className="h-10 pl-9 text-sm border-slate-200 bg-slate-50 rounded-xl"
                     placeholder="Staff Name..."
                   />
                 </div>
               </div>
 
-              <div className="flex gap-4">
-                <div className="flex items-center space-x-3 bg-slate-50 px-4 py-3 rounded-xl border border-slate-200 flex-1">
+              <div className="flex gap-3">
+                <div className="flex items-center space-x-2 bg-slate-50 px-3 py-2 rounded-xl border border-slate-200 flex-1">
                   <Checkbox
                     id="slip"
                     checked={watch("printSlip")}
                     onCheckedChange={(v) => setValue("printSlip", !!v)}
-                    className="w-5 h-5 rounded-[4px]"
+                    className="w-4 h-4 rounded-[4px]"
                   />
                   <label
                     htmlFor="slip"
-                    className="text-sm font-bold text-slate-700 cursor-pointer">
+                    className="text-xs font-bold text-slate-700 cursor-pointer">
                     Print Slip
                   </label>
                 </div>
-                <div className="flex items-center space-x-3 bg-slate-50 px-4 py-3 rounded-xl border border-slate-200 flex-1">
+                <div className="flex items-center space-x-2 bg-slate-50 px-3 py-2 rounded-xl border border-slate-200 flex-1">
                   <Checkbox
                     id="barcode"
                     checked={watch("printBarcode")}
                     onCheckedChange={(v) => setValue("printBarcode", !!v)}
-                    className="w-5 h-5 rounded-[4px]"
+                    className="w-4 h-4 rounded-[4px]"
                   />
                   <label
                     htmlFor="barcode"
-                    className="text-sm font-bold text-slate-700 cursor-pointer">
+                    className="text-xs font-bold text-slate-700 cursor-pointer">
                     Barcodes
                   </label>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-3 bg-rose-50 p-3 rounded-xl border border-rose-200 w-full">
+              <div className="flex items-center space-x-2 bg-rose-50 p-2.5 rounded-xl border border-rose-200 w-full">
                 <Checkbox
                   id="urgent"
                   checked={watch("isUrgent")}
                   onCheckedChange={(v) => setValue("isUrgent", !!v)}
-                  className="w-5 h-5 border-rose-400 data-[state=checked]:bg-rose-600"
+                  className="w-4 h-4 border-rose-400 data-[state=checked]:bg-rose-600"
                 />
                 <label
                   htmlFor="urgent"
-                  className="text-base text-rose-700 font-bold cursor-pointer select-none">
+                  className="text-sm text-rose-700 font-bold cursor-pointer select-none">
                   Mark Order as STAT (Urgent)
                 </label>
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-xs uppercase font-bold text-slate-500">
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase font-bold text-slate-500">
                   Internal Notes
                 </Label>
                 <Textarea
                   {...register("note")}
-                  placeholder="Clinical history, fasting..."
-                  className="h-20 text-sm resize-none border-slate-200 rounded-xl bg-slate-50 focus:bg-white"
+                  placeholder="Clinical history..."
+                  className="h-16 text-xs resize-none border-slate-200 rounded-xl bg-slate-50"
                 />
               </div>
             </div>
           </div>
 
           {/* DESKTOP STICKY BOTTOM BAR */}
-          <div className="hidden lg:flex p-4 border-t border-slate-200 bg-white flex-none z-30 shadow-[0_-10px_30px_-10px_rgba(0,0,0,0.05)]">
+          <div className="hidden lg:flex p-4 border-t border-slate-200 bg-white flex-none">
             <Button
               type="button"
               variant="outline"
-              className="w-1/3 h-14 font-bold text-slate-600 border-slate-200 rounded-xl mr-3"
+              className="w-1/3 h-12 font-bold text-slate-600 rounded-xl mr-3"
               onClick={() => router.back()}>
               Cancel
             </Button>
             <Button
               type="submit"
-              className="w-2/3 h-14 font-black text-lg bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-lg shadow-indigo-500/30"
+              form="accession-form" // ✅ LINKED FORM SUBMIT DIRECTLY
+              className="w-2/3 h-12 font-bold text-base bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md"
               disabled={submitMutation.isPending || selectedTests.length === 0}>
               {submitMutation.isPending ? (
-                <Loader2 className="w-6 h-6 animate-spin" />
+                <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
                 "Save & Generate Bill"
               )}
@@ -695,21 +698,22 @@ export default function AccessionPage() {
       </div>
 
       {/* 📱 MOBILE STICKY BOTTOM ACTION BAR */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-200 shadow-[0_-10px_30px_-10px_rgba(0,0,0,0.1)] z-50 flex items-center justify-between pb-safe">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-3 bg-white border-t border-slate-200 shadow-[0_-10px_30px_-10px_rgba(0,0,0,0.1)] z-50 flex items-center justify-between pb-safe">
         <div className="flex flex-col">
-          <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">
-            Total ({selectedTests.length} Items)
+          <span className="text-[10px] font-bold text-slate-500 uppercase">
+            Total ({selectedTests.length})
           </span>
-          <span className="text-2xl font-black text-indigo-700">
+          <span className="text-xl font-black text-indigo-700">
             ₹{netPayable}
           </span>
         </div>
         <Button
           type="submit"
-          className="h-14 px-8 font-black text-lg bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-lg shadow-indigo-500/30"
+          form="accession-form" // ✅ LINKED FORM SUBMIT DIRECTLY FOR MOBILE TOO
+          className="h-12 px-6 font-bold text-sm bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md"
           disabled={submitMutation.isPending || selectedTests.length === 0}>
           {submitMutation.isPending ? (
-            <Loader2 className="w-6 h-6 animate-spin" />
+            <Loader2 className="w-5 h-5 animate-spin" />
           ) : (
             "Save & Bill"
           )}

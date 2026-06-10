@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
         break;
       case 'LAB_OWNER':
       case 'LAB_MANAGER': 
-        redirectUrl = '/workspace';
+        redirectUrl = '/workspace/patients';
         break;
       case 'TECHNICIAN':
         redirectUrl = '/technician';

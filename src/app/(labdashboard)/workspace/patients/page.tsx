@@ -7,7 +7,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Search,
   Plus,
-  MoreHorizontal,
   FileText,
   FlaskConical,
   Loader2,
@@ -18,7 +17,6 @@ import {
   Briefcase,
   Trash2,
   Edit,
-  X,
   User,
   Phone,
   Fingerprint,
@@ -29,30 +27,22 @@ import {
   FileBadge,
   AlertCircle,
   Receipt,
-  TestTube,
   MessageCircle,
   Printer,
   FileEdit,
   CheckCircle2,
   Calendar,
-  HelpCircle,
+  TestTube2,
+  MoreHorizontal, // <-- Added Icon
 } from "lucide-react";
 import { differenceInHours, differenceInMinutes, format } from "date-fns";
 import toast from "react-hot-toast";
-import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
 import {
   Popover,
   PopoverContent,
@@ -66,20 +56,28 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
-import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Separator } from "@/components/ui/separator";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+// 👇 ADDED: Dropdown Menu Imports
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 const SEARCH_CRITERIA = [
   { id: "all", label: "Global Search", icon: Search },
@@ -114,7 +112,7 @@ const getTAT = (date: Date) => {
 
   return (
     <div
-      className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-2 py-0.5 rounded-md border ${colorClass} shadow-sm`}>
+      className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-2 py-0.5 rounded-md border cursor-help ${colorClass} shadow-sm transition-transform hover:scale-105`}>
       <Clock className="h-3 w-3" /> {hours.toString().padStart(2, "0")}h{" "}
       {mins.toString().padStart(2, "0")}m
     </div>
@@ -141,20 +139,20 @@ const getBillingStatus = (invoice: any) => {
     return (
       <Badge
         variant="outline"
-        className="text-slate-400 border-dashed text-[10px] uppercase tracking-wider bg-slate-50">
+        className="text-slate-400 border-dashed text-[10px] uppercase tracking-wider bg-slate-50 cursor-help">
         Unbilled
       </Badge>
     );
   }
   if (invoice.status === "PAID") {
     return (
-      <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none text-[10px] px-2.5 uppercase tracking-wider font-bold">
+      <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border-none text-[10px] px-2.5 uppercase tracking-wider font-bold cursor-help transition-colors">
         Paid
       </Badge>
     );
   }
   return (
-    <Badge className="bg-rose-100 text-rose-700 hover:bg-rose-100 border-none text-[10px] px-2.5 uppercase tracking-wider font-bold animate-pulse">
+    <Badge className="bg-rose-100 text-rose-700 hover:bg-rose-200 border-none text-[10px] px-2.5 uppercase tracking-wider font-bold animate-pulse cursor-help transition-colors">
       Dues
     </Badge>
   );
@@ -183,6 +181,7 @@ export default function PatientWorklistPage() {
   const [page, setPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
+  // Filtering Options
   const { data: filterOptions } = useQuery({
     queryKey: ["filterOptions"],
     queryFn: async () => {
@@ -198,6 +197,7 @@ export default function PatientWorklistPage() {
     staleTime: 1000 * 60 * 10,
   });
 
+  // Search Debounce
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(searchQuery);
@@ -233,81 +233,55 @@ export default function PatientWorklistPage() {
   const totalRecords = data?.pagination?.total || 0;
   const totalPages = data?.pagination?.pages || 1;
 
-  // --- MULTI-VISIT DATA FLATTENING LAYER ---
+  // --- MULTI-VISIT DATA FLATTENING LAYER (By Invoice / Visit) ---
   const processedVisits = useMemo(() => {
     const visitsList: any[] = [];
 
     rawPatients.forEach((patient: any) => {
-      const rawNum = (patient.patientId || "").replace(/\D/g, "");
-      const baseIdString = rawNum.slice(-4).padStart(4, "0");
-
-      if (!patient.tests || patient.tests.length === 0) {
-        const creationDate = new Date(patient.createdAt);
-        const dynamicVisitId = `${format(creationDate, "ddMM")}${baseIdString}`;
-
-        visitsList.push({
-          uniqueVisitKey: `${patient.id}-notests`,
-          patient,
-          visitId: dynamicVisitId,
-          date: creationDate,
-          status: "NO_TESTS",
-          tests: [],
-          invoice: patient.invoices?.[0] || null,
-        });
-        return;
-      }
-
-      const testsGroupedByDate = patient.tests.reduce(
-        (acc: any, currentTest: any) => {
-          const groupingKey = format(
-            new Date(currentTest.createdAt),
-            "yyyy-MM-dd",
-          );
-          if (!acc[groupingKey]) acc[groupingKey] = [];
-          acc[groupingKey].push(currentTest);
-          return acc;
-        },
-        {},
-      );
-
-      Object.entries(testsGroupedByDate).forEach(
-        ([dateString, testsArray]: [string, any]) => {
-          const visitCalendarDate = new Date(dateString);
-          const dynamicVisitId = `${format(visitCalendarDate, "ddMM")}${baseIdString}`;
-
-          const isFullyApproved = testsArray.every(
-            (t: any) =>
-              t.status === "COMPLETED" ||
-              t.status === "APPROVED" ||
-              t.status === "DELIVERED",
-          );
-          const visitComputedStatus = isFullyApproved ? "COMPLETED" : "PENDING";
-
-          const mappedInvoice =
-            patient.invoices?.find(
-              (inv: any) =>
-                format(new Date(inv.createdAt), "yyyy-MM-dd") === dateString,
-            ) ||
-            patient.invoices?.[0] ||
-            null;
+      if (patient.invoices && patient.invoices.length > 0) {
+        patient.invoices.forEach((inv: any) => {
+          const invoiceTests =
+            patient.tests?.filter((t: any) => t.invoiceId === inv.id) || [];
+          const isFullyApproved =
+            invoiceTests.length > 0 &&
+            invoiceTests.every(
+              (t: any) =>
+                t.status === "COMPLETED" ||
+                t.status === "APPROVED" ||
+                t.status === "DELIVERED",
+            );
+          const visitComputedStatus = isFullyApproved
+            ? "COMPLETED"
+            : invoiceTests.length === 0
+              ? "NO_TESTS"
+              : "PENDING";
 
           visitsList.push({
-            uniqueVisitKey: `${patient.id}-${dateString}`,
+            uniqueVisitKey: `INV-${inv.id}`,
             patient,
-            visitId: dynamicVisitId,
-            date: new Date(testsArray[0]?.createdAt || dateString),
+            visitId: inv.invoiceNumber,
+            date: new Date(inv.createdAt),
             status: visitComputedStatus,
-            tests: testsArray,
-            invoice: mappedInvoice,
+            tests: invoiceTests.length > 0 ? invoiceTests : patient.tests,
+            invoice: inv,
           });
-        },
-      );
+        });
+      } else {
+        visitsList.push({
+          uniqueVisitKey: `PAT-${patient.id}`,
+          patient,
+          visitId: `REG-${patient.patientId.replace("P-", "")}`,
+          date: new Date(patient.createdAt),
+          status: "NO_TESTS",
+          tests: patient.tests || [],
+          invoice: null,
+        });
+      }
     });
 
     return visitsList.sort((a, b) => b.date.getTime() - a.date.getTime());
   }, [rawPatients]);
 
-  // --- CLIENT SIDE TAB FILTER ROUTING ---
   const filteredVisits = useMemo(() => {
     if (activeTabFilter === "ALL") return processedVisits;
     return processedVisits.filter((visit) => visit.status === activeTabFilter);
@@ -321,11 +295,21 @@ export default function PatientWorklistPage() {
       if (!res.ok) throw new Error("Delete failed");
     },
     onSuccess: () => {
-      toast.success("Patient entry removed");
+      toast.success("Patient record removed");
       queryClient.invalidateQueries({ queryKey: ["patients"] });
     },
     onError: () => toast.error("Failed to delete record"),
   });
+
+  const handleDelete = (id: string) => {
+    if (
+      confirm(
+        "Are you sure you want to completely purge this patient record and all their visits?",
+      )
+    ) {
+      deleteMutation.mutate(id);
+    }
+  };
 
   const handleWhatsAppTrigger = (
     phone: string,
@@ -372,18 +356,17 @@ export default function PatientWorklistPage() {
                   <Badge
                     variant="secondary"
                     className="bg-indigo-50 text-indigo-700 font-mono text-xs">
-                    {filteredVisits.length} Records Active
+                    {filteredVisits.length} Records
                   </Badge>
                 </h1>
                 <p className="text-xs font-medium text-slate-500 mt-1">
-                  Consolidated enterprise directory showing distinct client
-                  clinical visit streams.
+                  Double click any row to edit patient profile.
                 </p>
               </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-              {/* Search Trigger Component */}
+              {/* Search Trigger */}
               <Popover open={isSearchOpen} onOpenChange={setIsSearchOpen}>
                 <PopoverTrigger asChild>
                   <div className="relative w-full sm:w-72 group cursor-pointer">
@@ -392,7 +375,7 @@ export default function PatientWorklistPage() {
                     </div>
                     <Input
                       placeholder={`Search by ${activeLabel}...`}
-                      className="pl-9 pr-9 h-10 bg-white border-slate-200 focus:border-indigo-500 focus:ring-indigo-500/20 rounded-xl cursor-pointer font-medium"
+                      className="pl-9 pr-9 h-10 bg-white border-slate-200 focus:border-indigo-500 rounded-xl cursor-pointer font-medium shadow-sm"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -446,122 +429,6 @@ export default function PatientWorklistPage() {
                 </PopoverContent>
               </Popover>
 
-              {/* Advanced Criteria Filter Drawer */}
-              <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={activeFilterCount > 0 ? "secondary" : "outline"}
-                    className={`h-10 rounded-xl gap-2 font-medium shadow-sm ${activeFilterCount > 0 ? "text-indigo-700 bg-indigo-50 border-indigo-200" : "bg-white"}`}>
-                    <Filter className="h-4 w-4" />
-                    <span>Filters</span>
-                    {activeFilterCount > 0 && (
-                      <Badge className="h-5 px-1.5 bg-indigo-600 text-[10px]">
-                        {activeFilterCount}
-                      </Badge>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent
-                  className="w-[350px] p-0 shadow-2xl border-slate-100 rounded-2xl overflow-hidden"
-                  align="end"
-                  sideOffset={8}>
-                  <div className="bg-slate-50/80 p-4 border-b border-slate-100 flex items-center justify-between">
-                    <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                      <Filter className="h-3.5 w-3.5 text-indigo-600" /> Scope
-                      Filters
-                    </h4>
-                    {activeFilterCount > 0 && (
-                      <button
-                        onClick={() => {
-                          setFilters({
-                            dateFrom: "",
-                            dateTo: "",
-                            doctorId: "ALL",
-                            agencyId: "ALL",
-                            status: "ALL",
-                          });
-                          setAppliedFilters({
-                            dateFrom: "",
-                            dateTo: "",
-                            doctorId: "ALL",
-                            agencyId: "ALL",
-                            status: "ALL",
-                          });
-                        }}
-                        className="text-[10px] font-bold text-rose-500 uppercase tracking-wider">
-                        Clear
-                      </button>
-                    )}
-                  </div>
-                  <div className="p-5 space-y-4 max-h-[400px] overflow-y-auto">
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-bold text-slate-500 uppercase">
-                        Registration Range
-                      </Label>
-                      <div className="grid grid-cols-2 gap-2">
-                        <Input
-                          type="date"
-                          className="h-9 text-xs rounded-xl"
-                          value={filters.dateFrom}
-                          onChange={(e) =>
-                            setFilters({ ...filters, dateFrom: e.target.value })
-                          }
-                        />
-                        <Input
-                          type="date"
-                          className="h-9 text-xs rounded-xl"
-                          value={filters.dateTo}
-                          onChange={(e) =>
-                            setFilters({ ...filters, dateTo: e.target.value })
-                          }
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs font-bold text-slate-700">
-                        Clinician Alignment
-                      </Label>
-                      <Select
-                        value={filters.doctorId}
-                        onValueChange={(val) =>
-                          setFilters({ ...filters, doctorId: val })
-                        }>
-                        <SelectTrigger className="h-9 rounded-xl">
-                          <SelectValue placeholder="All Doctors" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="ALL">
-                            All Alignment Channels
-                          </SelectItem>
-                          {filterOptions?.doctors?.map((doc: any) => (
-                            <SelectItem key={doc.id} value={doc.id}>
-                              {doc.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-2">
-                    <Button
-                      variant="ghost"
-                      onClick={() => setIsFilterOpen(false)}
-                      className="h-9 text-xs font-medium rounded-xl">
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        setAppliedFilters(filters);
-                        setPage(1);
-                        setIsFilterOpen(false);
-                      }}
-                      className="bg-indigo-600 hover:bg-indigo-700 h-9 text-xs font-bold rounded-xl text-white">
-                      Apply
-                    </Button>
-                  </div>
-                </PopoverContent>
-              </Popover>
-
               <Button
                 onClick={() => router.push("/workspace/registration")}
                 className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white h-10 rounded-xl text-sm font-bold shadow-md shadow-indigo-500/25 transition-all hover:-translate-y-0.5">
@@ -585,7 +452,7 @@ export default function PatientWorklistPage() {
                 <TabsTrigger
                   value="COMPLETED"
                   className="rounded-lg text-xs font-bold px-4 py-2 data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center gap-1.5">
-                  <CheckCircle2 className="h-3.5 w-3.5" /> Full Print Ready
+                  <CheckCircle2 className="h-3.5 w-3.5" /> Print Ready
                 </TabsTrigger>
                 <TabsTrigger
                   value="PENDING"
@@ -595,7 +462,7 @@ export default function PatientWorklistPage() {
                 <TabsTrigger
                   value="NO_TESTS"
                   className="rounded-lg text-xs font-bold px-4 py-2 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center gap-1.5">
-                  <AlertCircle className="h-3.5 w-3.5" /> Registration Only
+                  <AlertCircle className="h-3.5 w-3.5" /> Reg. Only
                 </TabsTrigger>
               </TabsList>
             </Tabs>
@@ -604,366 +471,400 @@ export default function PatientWorklistPage() {
 
         {/* --- GRID MASTER TABLE --- */}
         <Card className="flex-1 flex flex-col shadow-sm border-slate-200/80 overflow-hidden rounded-2xl bg-white">
-          <div className="flex-1 overflow-auto relative custom-scrollbar">
-            <table className="w-full text-left border-collapse whitespace-nowrap">
-              <thead className="sticky top-0延 z-20 bg-slate-50/90 backdrop-blur-md text-slate-500 font-bold uppercase tracking-wider text-[10px] border-b border-slate-200">
-                <tr>
-                  <th className="px-5 py-3 w-12 text-center">
-                    <Checkbox
-                      checked={
-                        filteredVisits.length > 0 &&
-                        selectedIds.length === filteredVisits.length
-                      }
-                      onCheckedChange={(c) =>
-                        setSelectedIds(
-                          c ? filteredVisits.map((v) => v.uniqueVisitKey) : [],
-                        )
-                      }
-                      className="rounded-[4px] border-slate-300"
-                    />
-                  </th>
-                  <th className="px-4 py-3 w-[160px]">Visit Registry ID</th>
-                  <th className="px-4 py-3 w-[250px]">
-                    Patient Profile & Demographics
-                  </th>
-                  <th className="px-4 py-3 w-[120px]">TAT Analytics</th>
-                  <th className="px-4 py-3 min-w-[260px]">
-                    Assigned Operational Assays
-                  </th>
-                  <th className="px-4 py-3 w-[160px]">Referral Channels</th>
-                  <th className="px-4 py-3 text-center w-[110px]">
-                    Financials
-                  </th>
-                  <th className="px-5 py-3 text-right w-[110px]">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-sm">
-                {isLoading ? (
+          <TooltipProvider delayDuration={300}>
+            <div className="flex-1 overflow-auto relative custom-scrollbar">
+              <table className="w-full text-left border-collapse whitespace-nowrap">
+                <thead className="sticky top-0 z-20 bg-slate-50/90 backdrop-blur-md text-slate-500 font-bold uppercase tracking-wider text-[10px] border-b border-slate-200">
                   <tr>
-                    <td colSpan={8} className="h-64 text-center">
-                      <div className="flex flex-col items-center justify-center text-slate-500 space-y-2">
-                        <Loader2 className="animate-spin h-6 w-6 text-indigo-600" />
-                        <span className="text-[10px] uppercase tracking-widest font-bold animate-pulse">
-                          Synchronizing Core Engine Database...
-                        </span>
-                      </div>
-                    </td>
+                    <th className="px-4 py-3 w-10 text-center">
+                      <Checkbox className="rounded-[4px] border-slate-300" />
+                    </th>
+                    <th className="px-4 py-3 w-[150px]">Visit Registry ID</th>
+                    <th className="px-4 py-3 w-[350px]">
+                      Patient Profile & Demographics
+                    </th>
+                    <th className="px-4 py-3 w-[120px]">TAT Analytics</th>
+                    <th className="px-4 py-3 min-w-[200px]">Assigned Assays</th>
+
+                    {/* ✅ Renamed to "Referred By" */}
+                    <th className="px-4 py-3 w-[160px]">Referred By</th>
+
+                    <th className="px-4 py-3 text-center w-[100px]">
+                      Financials
+                    </th>
+                    <th className="px-5 py-3 text-right w-[80px]">Actions</th>
                   </tr>
-                ) : filteredVisits.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="h-64 text-center">
-                      <div className="flex flex-col items-center justify-center text-slate-400 space-y-2">
-                        <Search className="h-6 w-6 text-slate-300" />
-                        <p className="font-bold text-xs text-slate-600">
-                          Zero active segment results found
-                        </p>
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  filteredVisits.map((visit: any) => {
-                    const isRowSelected = selectedIds.includes(
-                      visit.uniqueVisitKey,
-                    );
-                    const patientInitials = visit.patient.name
-                      .substring(0, 2)
-                      .toUpperCase();
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-sm">
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={8} className="h-64 text-center">
+                        <div className="flex flex-col items-center justify-center text-slate-500 space-y-2">
+                          <Loader2 className="animate-spin h-6 w-6 text-indigo-600" />
+                          <span className="text-[10px] uppercase tracking-widest font-bold animate-pulse">
+                            Loading Visits...
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : filteredVisits.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="h-64 text-center">
+                        <div className="flex flex-col items-center justify-center text-slate-400 space-y-2">
+                          <Search className="h-6 w-6 text-slate-300" />
+                          <p className="font-bold text-xs text-slate-600">
+                            Zero active segment results found
+                          </p>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredVisits.map((visit: any) => {
+                      const isRowSelected = selectedIds.includes(
+                        visit.uniqueVisitKey,
+                      );
 
-                    let derivedDoctor =
-                      visit.tests?.[0]?.doctor?.name ||
-                      visit.patient.doctor?.name ||
-                      "Self Referral";
-                    let derivedAgency =
-                      visit.tests?.[0]?.agency?.agencyName ||
-                      visit.patient.agency?.agencyName ||
-                      null;
+                      // Resolve Doctor/Agency safely
+                      let derivedDoctor =
+                        visit.tests?.[0]?.doctor?.name ||
+                        visit.patient.doctor?.name ||
+                        "Self Referral";
+                      let derivedAgency =
+                        visit.tests?.[0]?.agency?.agencyName ||
+                        visit.patient.agency?.agencyName ||
+                        null;
 
-                    return (
-                      <tr
-                        key={visit.uniqueVisitKey}
-                        className={`group transition-all ${isRowSelected ? "bg-indigo-50/30" : "hover:bg-slate-50/70"}`}>
-                        <td className="px-5 py-4 text-center">
-                          <Checkbox
-                            checked={isRowSelected}
-                            onCheckedChange={(c) =>
-                              setSelectedIds(
-                                c
-                                  ? [...selectedIds, visit.uniqueVisitKey]
-                                  : selectedIds.filter(
-                                      (id) => id !== visit.uniqueVisitKey,
-                                    ),
-                              )
-                            }
-                            className="rounded-[4px] border-slate-300"
-                          />
-                        </td>
+                      return (
+                        <tr
+                          key={visit.uniqueVisitKey}
+                          // ✅ Standard Single Click to open profile
+                          onClick={() =>
+                            router.push(
+                              `/workspace/patients/${visit.patient.id}`,
+                            )
+                          }
+                          className={`group transition-all cursor-pointer ${isRowSelected ? "bg-indigo-50/30" : "hover:bg-slate-50/70"}`}>
+                          {/* ✅ Stop Propagation so clicking checkbox doesn't open row */}
+                          <td
+                            className="px-4 py-4 text-center"
+                            onClick={(e) => e.stopPropagation()}>
+                            <Checkbox
+                              checked={isRowSelected}
+                              onCheckedChange={(c) =>
+                                setSelectedIds(
+                                  c
+                                    ? [...selectedIds, visit.uniqueVisitKey]
+                                    : selectedIds.filter(
+                                        (id) => id !== visit.uniqueVisitKey,
+                                      ),
+                                )
+                              }
+                              className="rounded-[4px] border-slate-300"
+                            />
+                          </td>
 
-                        {/* 🆔 DYNAMIC VISIT TRACKER ID */}
-                        <td className="px-4 py-4">
-                          <div className="flex flex-col gap-1">
-                            <Badge
-                              variant="outline"
-                              className="font-mono bg-indigo-50/50 font-black text-indigo-700 border-indigo-100 text-[11px] px-2.5 py-0.5 rounded-lg w-max shadow-sm">
-                              {visit.visitId}
-                            </Badge>
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide flex items-center gap-1 pl-1">
-                              <Calendar className="w-3 h-3 text-slate-300" />{" "}
-                              {safeFormatDate(visit.date)}
-                            </span>
-                          </div>
-                        </td>
-
-                        {/* 👤 PATIENT DEMOGRAPHICS SHEET */}
-                        <td className="px-4 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="h-9 w-9 bg-gradient-to-br from-slate-100 to-slate-200 text-slate-700 font-bold text-xs rounded-full flex items-center justify-center border border-slate-200 shadow-sm shrink-0">
-                              {patientInitials}
+                          {/* 🆔 DYNAMIC VISIT TRACKER ID */}
+                          <td className="px-4 py-4">
+                            <div className="flex flex-col gap-1">
+                              <Badge
+                                variant="outline"
+                                className="font-mono bg-indigo-50/50 font-black text-indigo-700 border-indigo-100 text-[11px] px-2 py-0.5 rounded-md w-max shadow-sm">
+                                {visit.visitId}
+                              </Badge>
+                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide flex items-center gap-1 pl-0.5">
+                                <Calendar className="w-3 h-3 text-slate-300" />{" "}
+                                {safeFormatDate(visit.date)}
+                              </span>
                             </div>
-                            <div className="min-w-0 space-y-0.5">
-                              <div className="font-black text-slate-900 truncate tracking-tight text-sm flex items-center gap-2">
-                                {visit.patient.name}
-                              </div>
-                              <div className="flex items-center gap-2 text-[10px] text-slate-500 font-bold uppercase tracking-wide">
-                                <span>
-                                  {visit.patient.age}{" "}
-                                  {visit.patient.ageUnit?.slice(0, 1)}
+                          </td>
+
+                          {/* 👤 INLINE PATIENT DEMOGRAPHICS */}
+                          <td className="px-4 py-4">
+                            <div className="flex flex-col gap-1 w-max">
+                              <div className="flex items-center gap-2">
+                                <span className="font-extrabold text-slate-900 text-sm tracking-tight">
+                                  {visit.patient.name}
                                 </span>
-                                <span>•</span>
-                                <span>{visit.patient.gender}</span>
+                                <Badge className="bg-slate-100 text-slate-600 hover:bg-slate-200 border-none px-1.5 py-0 text-[9px] uppercase tracking-wider font-bold">
+                                  {visit.patient.age}{" "}
+                                  {visit.patient.ageUnit?.slice(0, 1)} •{" "}
+                                  {visit.patient.gender}
+                                </Badge>
+                                <span className="text-slate-300">|</span>
+                                <span className="text-[10px] font-mono font-bold text-slate-500 bg-slate-50 px-1 rounded">
+                                  {visit.patient.patientId}
+                                </span>
                               </div>
-                              <div className="flex items-center gap-1.5 pt-0.5">
-                                <span className="text-[10px] font-mono font-bold text-slate-600">
+
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <span className="text-xs font-semibold text-slate-600 flex items-center gap-1">
+                                  <Phone className="w-3 h-3 text-slate-400" />{" "}
                                   {visit.patient.phone}
                                 </span>
-                                <button
-                                  onClick={() =>
-                                    handleWhatsAppTrigger(
-                                      visit.patient.phone,
-                                      visit.patient.name,
-                                      visit.visitId,
-                                    )
-                                  }
-                                  className="p-1 rounded-full text-emerald-600 hover:bg-emerald-50 transition-colors"
-                                  title="Send Instant Alert WhatsApp">
-                                  <MessageCircle className="w-3.5 h-3.5 fill-current" />
-                                </button>
+                                {visit.patient.phone && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    // ✅ Stop Propagation on WhatsApp button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleWhatsAppTrigger(
+                                        visit.patient.phone,
+                                        visit.patient.name,
+                                        visit.visitId,
+                                      );
+                                    }}
+                                    className="h-6 bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 hover:text-emerald-800 text-[10px] px-2 font-bold ml-1 rounded-md shadow-sm transition-all hover:scale-105">
+                                    <MessageCircle className="w-3 h-3 mr-1" />{" "}
+                                    WhatsApp
+                                  </Button>
+                                )}
                               </div>
                             </div>
-                          </div>
-                        </td>
+                          </td>
 
-                        {/* ⏱️ REAL TIME LOGISTICS TAT ANALYTICS */}
-                        <td className="px-4 py-4">{getTAT(visit.date)}</td>
+                          {/* ⏱️ REAL TIME LOGISTICS TAT ANALYTICS (TOOLTIP) */}
+                          <td className="px-4 py-4">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div>{getTAT(visit.date)}</div>
+                              </TooltipTrigger>
+                              <TooltipContent className="bg-slate-900 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-xl">
+                                Registered:{" "}
+                                {format(
+                                  new Date(visit.date),
+                                  "dd MMM, hh:mm a",
+                                )}
+                              </TooltipContent>
+                            </Tooltip>
+                          </td>
 
-                        {/* 🧪 TESTING PARCELS WITH CONTEMPORARY ENTRY CONDITIONAL INDICATORS */}
-                        <td className="px-4 py-4">
-                          <div className="flex flex-wrap gap-1.5 max-w-[340px]">
-                            {visit.tests.map((testItem: any) => (
-                              <TooltipProvider
-                                key={testItem.id}
-                                delayDuration={100}>
-                                <Tooltip>
+                          {/* 🧪 TESTING PARCELS (TOOLTIP) */}
+                          <td className="px-4 py-4">
+                            <div className="flex flex-wrap gap-1 max-w-[280px]">
+                              {visit.tests.map((testItem: any) => (
+                                <Tooltip key={testItem.id}>
                                   <TooltipTrigger asChild>
                                     <div
-                                      className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-[10px] font-bold border ${getTestStatusBadge(testItem.status)} cursor-pointer transition-all hover:scale-105`}>
+                                      className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-bold border cursor-help transition-all hover:scale-105 ${getTestStatusBadge(testItem.status)}`}>
                                       <span>{testItem.testCode}</span>
-                                      {testItem.status === "PENDING" && (
-                                        <Clock className="w-3 h-3 text-amber-500 animate-spin" />
-                                      )}
-                                      {(testItem.status === "COMPLETED" ||
-                                        testItem.status === "APPROVED") && (
-                                        <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                      {testItem.status === "COMPLETED" ||
+                                      testItem.status === "APPROVED" ? (
+                                        <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" />
+                                      ) : (
+                                        <Clock className="w-2.5 h-2.5 opacity-70" />
                                       )}
                                     </div>
                                   </TooltipTrigger>
-                                  <TooltipContent className="bg-slate-900 text-slate-50 text-xs rounded-xl p-3 shadow-2xl border-slate-800">
-                                    <p className="font-extrabold">
+                                  <TooltipContent className="bg-slate-900 text-slate-50 text-xs rounded-xl p-3 shadow-xl border-slate-800 z-50">
+                                    <p className="font-bold text-sm mb-1">
                                       {testItem.testName}
                                     </p>
-                                    <p className="text-[10px] text-slate-400 mt-1 uppercase">
-                                      Process Stage: {testItem.status}
+                                    <p className="text-[10px] text-slate-400 uppercase tracking-wider">
+                                      Status:{" "}
+                                      <span className="text-white font-bold">
+                                        {testItem.status}
+                                      </span>
                                     </p>
                                   </TooltipContent>
                                 </Tooltip>
-                              </TooltipProvider>
-                            ))}
-                            {visit.tests.length === 0 && (
-                              <span className="text-slate-400 text-xs italic font-semibold flex items-center gap-1">
-                                <AlertCircle className="w-3.5 h-3.5 opacity-60" />{" "}
-                                File Saved Without Core Parameters
+                              ))}
+                              {visit.tests.length === 0 && (
+                                <span className="text-slate-400 text-xs italic font-semibold flex items-center gap-1">
+                                  <AlertCircle className="w-3.5 h-3.5" /> No
+                                  Tests
+                                </span>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* 🩺 REFERRED BY COLUMN */}
+                          <td className="px-4 py-4">
+                            <div className="flex flex-col gap-0.5 text-xs">
+                              <span className="font-bold text-slate-700 flex items-center gap-1.5 truncate max-w-[140px]">
+                                <Stethoscope className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                                {derivedDoctor}
                               </span>
-                            )}
-                          </div>
-                        </td>
+                              {derivedAgency && (
+                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 truncate max-w-[140px]">
+                                  <Briefcase className="h-3 w-3 text-slate-300 shrink-0" />
+                                  {derivedAgency}
+                                </span>
+                              )}
+                            </div>
+                          </td>
 
-                        {/* 🩺 CHANNEL ACCOUNTABILITY */}
-                        <td className="px-4 py-4">
-                          <div className="flex flex-col gap-0.5 text-xs">
-                            <span className="font-bold text-slate-700 flex items-center gap-1.5">
-                              <Stethoscope className="h-3 w-3 text-slate-400 shrink-0" />{" "}
-                              {derivedDoctor}
-                            </span>
-                            {derivedAgency && (
-                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                                <Briefcase className="h-3 w-3 text-slate-300 shrink-0" />{" "}
-                                {derivedAgency}
-                              </span>
-                            )}
-                          </div>
-                        </td>
-
-                        {/* 💰 COMPREHENSIVE REVENUE LEDGER MODAL POPUPS */}
-                        <td className="px-4 py-4 text-center">
-                          <HoverCard openDelay={100}>
-                            <HoverCardTrigger asChild>
-                              <div className="cursor-pointer">
-                                {getBillingStatus(visit.invoice)}
-                              </div>
-                            </HoverCardTrigger>
-                            {visit.invoice && (
-                              <HoverCardContent
-                                className="w-60 p-0 shadow-2xl border-slate-100 rounded-xl overflow-hidden"
-                                align="center">
-                                <div className="bg-slate-50 px-4 py-2 border-b text-[10px] font-bold text-slate-600 uppercase flex items-center gap-1.5">
-                                  <Receipt className="h-3.5 w-3.5" /> Ledger
-                                  Audit Map
+                          {/* 💰 COMPREHENSIVE REVENUE LEDGER (HOVERCARD) */}
+                          <td
+                            className="px-4 py-4 text-center"
+                            onClick={(e) => e.stopPropagation()}>
+                            <HoverCard openDelay={200}>
+                              <HoverCardTrigger asChild>
+                                <div className="w-max mx-auto">
+                                  {getBillingStatus(visit.invoice)}
                                 </div>
-                                <div className="p-4 space-y-2 text-xs font-semibold">
-                                  <div className="flex justify-between text-slate-500">
-                                    <span>Gross Value</span>{" "}
-                                    <span>
-                                      ₹
-                                      {Number(
-                                        visit.invoice.subtotal || 0,
-                                      ).toFixed(2)}
-                                    </span>
+                              </HoverCardTrigger>
+                              {visit.invoice && (
+                                <HoverCardContent
+                                  className="w-64 p-0 shadow-2xl border-slate-200 rounded-xl overflow-hidden z-50"
+                                  align="center">
+                                  <div className="bg-slate-50 px-4 py-2 border-b text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1.5">
+                                    <Receipt className="h-3.5 w-3.5" /> Ledger
+                                    Summary
                                   </div>
-                                  <div className="flex justify-between text-slate-500">
-                                    <span>Discounts</span>{" "}
-                                    <span>
-                                      ₹
-                                      {Number(
-                                        visit.invoice.discount || 0,
-                                      ).toFixed(2)}
-                                    </span>
+                                  <div className="p-4 space-y-2 text-xs font-semibold">
+                                    <div className="flex justify-between text-slate-500">
+                                      <span>Subtotal</span>{" "}
+                                      <span>
+                                        ₹
+                                        {Number(
+                                          visit.invoice.subtotal || 0,
+                                        ).toFixed(2)}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between text-rose-500">
+                                      <span>Discount</span>{" "}
+                                      <span>
+                                        -₹
+                                        {Number(
+                                          visit.invoice.discount || 0,
+                                        ).toFixed(2)}
+                                      </span>
+                                    </div>
+                                    <div className="border-t border-dashed pt-2 flex justify-between font-black text-slate-900 text-sm">
+                                      <span>Net Payable</span>{" "}
+                                      <span>
+                                        ₹
+                                        {Number(
+                                          visit.invoice.grandTotal || 0,
+                                        ).toFixed(2)}
+                                      </span>
+                                    </div>
+                                    {visit.invoice.status !== "PAID" && (
+                                      <div className="flex justify-between text-amber-700 font-bold mt-2 bg-amber-50 p-2 rounded-md items-center">
+                                        <span>Status</span>{" "}
+                                        <span>Payment Pending</span>
+                                      </div>
+                                    )}
                                   </div>
-                                  <div className="border-t border-dashed pt-2 flex justify-between font-black text-slate-900 text-sm">
-                                    <span>Net Amount</span>{" "}
-                                    <span>
-                                      ₹
-                                      {Number(
-                                        visit.invoice.grandTotal || 0,
-                                      ).toFixed(2)}
-                                    </span>
-                                  </div>
-                                </div>
-                              </HoverCardContent>
-                            )}
-                          </HoverCard>
-                        </td>
+                                </HoverCardContent>
+                              )}
+                            </HoverCard>
+                          </td>
 
-                        {/* ⚙️ INTELLIGENT DYNAMIC FLOW MATRIX CALL TRIGGERS */}
-                        <td className="px-5 py-4 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
-                            {/* Dynamic High Priority Primary Icons based on Visit processing flags */}
-                            {visit.status === "COMPLETED" && (
-                              <TooltipProvider delayDuration={50}>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      size="icon"
-                                      variant="ghost"
-                                      className="h-8 w-8 text-emerald-600 hover:bg-emerald-50 rounded-lg shrink-0 border border-emerald-100 bg-emerald-50/20"
-                                      onClick={() =>
-                                        router.push(
-                                          `/workspace/reports/print/${visit.patient.id}`,
-                                        )
-                                      }>
-                                      <Printer className="h-4 w-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent className="bg-slate-900 text-white text-[10px] font-bold rounded-lg px-2.5 py-1">
-                                    Print Authenticated Lab Report
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            )}
-
-                            {visit.status === "PENDING" && (
-                              <TooltipProvider delayDuration={50}>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      size="icon"
-                                      variant="ghost"
-                                      className="h-8 w-8 text-amber-600 hover:bg-amber-50 rounded-lg shrink-0 border border-amber-100 bg-amber-50/20"
-                                      onClick={() =>
-                                        router.push(
-                                          `/workspace/workflow/results/${visit.patient.id}`,
-                                        )
-                                      }>
-                                      <FileEdit className="h-4 w-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent className="bg-slate-900 text-white text-[10px] font-bold rounded-lg px-2.5 py-1">
-                                    Result Entry Missing - Transmit Parameters
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            )}
-
+                          {/* ⚙️ 3-DOT ACTION MENU */}
+                          <td
+                            className="px-5 py-4 text-right"
+                            onClick={(e) => e.stopPropagation()}>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button
                                   variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 rounded-lg text-slate-400 hover:bg-slate-100 transition-colors">
-                                  <MoreHorizontal className="h-4 w-4" />
+                                  className="h-8 w-8 p-0 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50">
+                                  <span className="sr-only">Open menu</span>
+                                  <MoreHorizontal className="h-5 w-5" />
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent
                                 align="end"
-                                className="w-52 p-1.5 shadow-2xl border-slate-100 rounded-xl">
+                                className="w-56 p-1.5 shadow-2xl border-slate-100 rounded-xl">
+                                {/* Core Actions */}
                                 <DropdownMenuItem
                                   onClick={() =>
                                     router.push(
                                       `/workspace/accession?patientId=${visit.patient.id}&isNewVisit=true`,
                                     )
                                   }
-                                  className="cursor-pointer font-bold rounded-lg py-2">
-                                  <TestTube className="mr-2 h-4 w-4 text-indigo-500" />{" "}
-                                  New Booking Visit
+                                  className="cursor-pointer font-bold rounded-lg py-2.5">
+                                  <TestTube2 className="mr-2 h-4 w-4 text-indigo-500" />{" "}
+                                  Add New Test
                                 </DropdownMenuItem>
+
+                                {visit.status === "COMPLETED" ? (
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      router.push(
+                                        `/workspace/reports/print/${visit.patient.id}`,
+                                      )
+                                    }
+                                    className="cursor-pointer font-bold rounded-lg py-2.5">
+                                    <Printer className="mr-2 h-4 w-4 text-emerald-600" />{" "}
+                                    Print Final Report
+                                  </DropdownMenuItem>
+                                ) : visit.tests.length > 0 ? (
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      router.push(
+                                        `/workspace/workflow/results/${visit.patient.id}`,
+                                      )
+                                    }
+                                    className="cursor-pointer font-bold rounded-lg py-2.5">
+                                    <FileEdit className="mr-2 h-4 w-4 text-amber-600" />{" "}
+                                    Enter Results Data
+                                  </DropdownMenuItem>
+                                ) : null}
+
+                                {/* Contextual Meta Options */}
+                                <DropdownMenuSeparator className="bg-slate-100 my-1" />
+
+                                {visit.invoice && (
+                                  <>
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        router.push(
+                                          `/workspace/billing/${visit.invoice.id}`,
+                                        )
+                                      }
+                                      className="cursor-pointer font-medium text-slate-700 rounded-lg py-2">
+                                      <Receipt className="mr-2 h-4 w-4 text-slate-400" />{" "}
+                                      View Invoice
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        router.push(
+                                          `/workspace/print/barcodes?invoiceId=${visit.invoice.id}`,
+                                        )
+                                      }
+                                      className="cursor-pointer font-medium text-slate-700 rounded-lg py-2">
+                                      <ScanBarcode className="mr-2 h-4 w-4 text-slate-400" />{" "}
+                                      Print Barcodes
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+
+                                {/* ✅ Machine Data / Interfacing Option */}
                                 <DropdownMenuItem
                                   onClick={() =>
-                                    router.push(
-                                      `/workspace/patients/${visit.patient.id}`,
+                                    toast.success(
+                                      "Machine Interface Module opening...",
                                     )
                                   }
-                                  className="cursor-pointer font-medium rounded-lg text-slate-700 py-2">
-                                  <Edit className="mr-2 h-4 w-4 text-slate-400" />{" "}
-                                  Edit Master Profile
+                                  className="cursor-pointer font-medium text-slate-700 rounded-lg py-2">
+                                  <FlaskConical className="mr-2 h-4 w-4 text-slate-400" />{" "}
+                                  Machine Data
                                 </DropdownMenuItem>
+
+                                {/* Destructive Action */}
                                 <DropdownMenuSeparator className="bg-slate-100 my-1" />
                                 <DropdownMenuItem
                                   className="text-rose-600 focus:text-rose-700 focus:bg-rose-50 font-bold rounded-lg py-2"
                                   onClick={() =>
                                     handleDelete(visit.patient.id)
                                   }>
-                                  <Trash2 className="mr-2 h-4 w-4" /> Purge
-                                  Global Record
+                                  <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                  Record
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </TooltipProvider>
 
           {/* --- PAGINATION CONSOLE FOOTER --- */}
           <div className="flex-none px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4 bg-white z-20">
