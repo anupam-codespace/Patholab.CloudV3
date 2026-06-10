@@ -781,7 +781,7 @@ export async function POST(req: NextRequest) {
         results: {
           orderBy: { order: "asc" }, // Preserve exact parameter structure
         },
-        testTemplate: { include: { department: true } },
+        testTemplate: { include: { Department: true } },
         sample: true,
         doctor: { include: { user: true } },
         agency: true,
