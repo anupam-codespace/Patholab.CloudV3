@@ -5,12 +5,10 @@ import {
   User,
   Mail,
   Phone,
-  Lock,
   Building2,
   MapPin,
   Upload,
   Save,
-  Shield,
   Palette,
   CreditCard,
   Loader2,
@@ -20,7 +18,6 @@ import {
   Image as ImageIcon,
   Briefcase,
   Plus,
-  AlertCircle,
   CheckCircle2,
   LayoutTemplate,
   ScanLine,
@@ -39,41 +36,36 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
-// List of SaaS Modules for the Toggle Screen
-const SAAS_MODULES = [
+// List of App Modules for the Sidebar Toggle Screen
+const APP_MODULES = [
   {
     id: "inventory",
     name: "Inventory & Stock",
     icon: Package,
-    planKey: "hasInventory",
     desc: "Manage reagents, stock levels, and automated deductions.",
   },
   {
     id: "radiology",
     name: "Radiology (RIS)",
     icon: ScanLine,
-    planKey: "hasRadiology",
     desc: "Complete RIS and PACS viewer for X-Rays, MRI, and CT scans.",
   },
   {
     id: "iot",
     name: "Machine Interfacing (IoT)",
     icon: Cpu,
-    planKey: "hasMachineIoT",
     desc: "Bi-directional zero-latency connection to blood analyzers.",
   },
   {
     id: "b2b",
     name: "B2B Agencies & Referrals",
     icon: Briefcase,
-    planKey: "hasB2bBilling",
     desc: "Manage outsourced samples and commission waterfalls.",
   },
   {
     id: "logistics",
     name: "Logistics & Trips",
     icon: Truck,
-    planKey: "hasLogistics",
     desc: "Track home collection phlebotomists and branch routing.",
   },
 ];
@@ -99,7 +91,6 @@ export default function ProfileSettingsPage() {
     name: "",
     licenseNumber: "",
     registrationNo: "",
-    taxId: "",
     address: "",
     city: "",
     state: "",
@@ -129,7 +120,6 @@ export default function ProfileSettingsPage() {
 
   // Enterprise Data
   const [branches, setBranches] = useState<any[]>([]);
-  const [subscription, setSubscription] = useState<any>(null);
 
   // App Modules Visibility State
   const [activeModules, setActiveModules] = useState<string[]>([
@@ -188,7 +178,11 @@ export default function ProfileSettingsPage() {
         const lab = data.lab || {};
 
         setBranches(lab.branches || []);
-        setSubscription(lab.subscription || null);
+
+        // ✅ CRITICAL FIX: Load saved active modules from database
+        if (lab.activeModules && Array.isArray(lab.activeModules)) {
+          setActiveModules(lab.activeModules);
+        }
 
         setLabSettings((prev) => ({
           ...prev,
@@ -239,6 +233,25 @@ export default function ProfileSettingsPage() {
 
       if (res.ok) toast.success("Settings updated successfully!");
       else toast.error("Failed to update settings");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // ✅ CRITICAL FIX: Save the App Modules to your DB
+  const handleSaveModules = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/workspace/settings/modules", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ activeModules }),
+      });
+
+      if (res.ok) toast.success("App modules updated successfully!");
+      else toast.error("Failed to update modules");
+    } catch (error) {
+      toast.error("An unexpected error occurred");
     } finally {
       setSaving(false);
     }
@@ -352,7 +365,6 @@ export default function ProfileSettingsPage() {
           id: loadId,
         });
 
-        // Update local state directly so UI feels instantly responsive
         if (isNew) {
           setBranches([...branches, data.branch]);
         } else {
@@ -372,13 +384,39 @@ export default function ProfileSettingsPage() {
     }
   };
 
-  const toggleModule = (moduleId: string) => {
-    setActiveModules((prev) =>
-      prev.includes(moduleId)
-        ? prev.filter((id) => id !== moduleId)
-        : [...prev, moduleId],
-    );
-    toast.success("Sidebar modules updated.");
+  // ✅ Instantly updates the state, saves to the database, and forces the Auth hook to resync
+  const toggleModule = async (moduleId: string) => {
+    // 1. Calculate the new array of modules
+    const newModules = activeModules.includes(moduleId)
+      ? activeModules.filter((id) => id !== moduleId)
+      : [...activeModules, moduleId];
+
+    // 2. Immediately update the UI state so the switch flips instantly
+    setActiveModules(newModules);
+
+    // 3. Fire the save request to the backend
+    try {
+      const res = await fetch("/api/workspace/settings/modules", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ activeModules: newModules }),
+      });
+
+      if (res.ok) {
+        toast.success("Sidebar updated!");
+
+        // ✅ CRITICAL FIX: Forces your `useAuth` hook to dump its cache and grab the new modules
+        window.location.reload();
+      } else {
+        toast.error("Failed to save module state.");
+        // Revert the toggle if the server fails
+        setActiveModules(activeModules);
+      }
+    } catch (error) {
+      toast.error("Network error while saving.");
+      // Revert the toggle if there is a network crash
+      setActiveModules(activeModules);
+    }
   };
 
   // --- UI NAVIGATION TABS ---
@@ -438,11 +476,6 @@ export default function ProfileSettingsPage() {
       </div>
     );
   }
-
-  // Branch Limits Calculation
-  const maxBranches = subscription?.plan?.maxBranches || 1;
-  const currentBranchCount = branches.length;
-  const isAtBranchLimit = currentBranchCount >= maxBranches;
 
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-8 selection:bg-emerald-500 selection:text-white">
@@ -1140,14 +1173,14 @@ export default function ProfileSettingsPage() {
                         operations.
                       </p>
                     </div>
-                    <div className="bg-slate-100 px-4 py-2 rounded-xl flex items-center gap-3">
-                      <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">
-                        Plan Limit
+                    <div className="bg-emerald-50 px-4 py-2 rounded-xl flex items-center gap-3">
+                      <span className="text-xs font-bold text-emerald-600 uppercase tracking-widest">
+                        Wallet Era
                       </span>
                       <Badge
                         variant="secondary"
-                        className={`text-sm font-bold border-0 ${isAtBranchLimit ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700"}`}>
-                        {currentBranchCount} / {maxBranches}
+                        className="bg-emerald-100 text-emerald-700 text-sm font-bold border-0">
+                        Unlimited Branches
                       </Badge>
                     </div>
                   </div>
@@ -1200,29 +1233,11 @@ export default function ProfileSettingsPage() {
 
                   {/* Add Branch Action */}
                   <div className="pt-6 border-t border-slate-200 flex flex-col items-center justify-center p-8 bg-slate-50 border-dashed rounded-2xl">
-                    {isAtBranchLimit ? (
-                      <div className="text-center space-y-3">
-                        <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-2">
-                          <AlertCircle className="w-6 h-6" />
-                        </div>
-                        <h4 className="font-bold text-slate-900">
-                          Branch Limit Reached
-                        </h4>
-                        <p className="text-sm text-slate-500 max-w-sm mx-auto">
-                          Your current subscription allows {maxBranches}{" "}
-                          location(s). Upgrade your plan to expand your network.
-                        </p>
-                        <Button className="mt-4 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl h-11 px-6 shadow-sm">
-                          Upgrade Subscription
-                        </Button>
-                      </div>
-                    ) : (
-                      <Button
-                        onClick={openAddBranchModal}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl h-12 px-8 shadow-md">
-                        <Plus className="w-5 h-5 mr-2" /> Add New Location
-                      </Button>
-                    )}
+                    <Button
+                      onClick={openAddBranchModal}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl h-12 px-8 shadow-md">
+                      <Plus className="w-5 h-5 mr-2" /> Add New Location
+                    </Button>
                   </div>
                 </div>
               )}
@@ -1235,37 +1250,28 @@ export default function ProfileSettingsPage() {
                       App Modules
                     </h2>
                     <p className="text-sm text-slate-500 font-medium mt-1">
-                      Enable or disable specific features across your workspace.
+                      Toggle specific features to customize your workspace
+                      sidebar.
                     </p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    {SAAS_MODULES.map((module) => {
-                      const isUnlocked =
-                        subscription?.plan?.[module.planKey] === true;
+                    {APP_MODULES.map((module) => {
                       const isToggledOn = activeModules.includes(module.id);
                       return (
                         <div
                           key={module.id}
                           className={`relative p-6 rounded-2xl border-2 transition-all duration-300 flex flex-col ${
-                            isUnlocked
-                              ? isToggledOn
-                                ? "border-emerald-500 bg-emerald-50/30 shadow-md"
-                                : "border-slate-200 bg-white hover:border-slate-300"
-                              : "border-slate-100 bg-slate-50 opacity-80"
+                            isToggledOn
+                              ? "border-emerald-500 bg-emerald-50/30 shadow-md"
+                              : "border-slate-200 bg-white hover:border-slate-300"
                           }`}>
-                          {!isUnlocked && (
-                            <div className="absolute top-4 right-4 text-slate-400">
-                              <Lock className="w-5 h-5" />
-                            </div>
-                          )}
                           <div className="flex items-start gap-4 mb-6">
                             <div
-                              className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${isUnlocked ? "bg-emerald-100 text-emerald-600" : "bg-slate-200 text-slate-400"}`}>
+                              className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-emerald-100 text-emerald-600`}>
                               <module.icon className="w-6 h-6" />
                             </div>
                             <div>
-                              <h3
-                                className={`text-lg font-bold ${isUnlocked ? "text-slate-900" : "text-slate-500"}`}>
+                              <h3 className="text-lg font-bold text-slate-900">
                                 {module.name}
                               </h3>
                               <p className="text-sm text-slate-500 font-medium mt-1 leading-relaxed">
@@ -1274,34 +1280,38 @@ export default function ProfileSettingsPage() {
                             </div>
                           </div>
                           <div className="mt-auto pt-4 border-t border-slate-100/80 flex items-center justify-between">
-                            {isUnlocked ? (
-                              <>
-                                <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">
-                                  {isToggledOn
-                                    ? "Visible in Sidebar"
-                                    : "Hidden from Sidebar"}
-                                </span>
-                                <label className="relative inline-flex items-center cursor-pointer">
-                                  <input
-                                    type="checkbox"
-                                    className="sr-only peer"
-                                    checked={isToggledOn}
-                                    onChange={() => toggleModule(module.id)}
-                                  />
-                                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
-                                </label>
-                              </>
-                            ) : (
-                              <Button
-                                variant="outline"
-                                className="w-full h-10 rounded-xl font-bold text-slate-600 hover:text-emerald-700 hover:border-emerald-300 hover:bg-emerald-50">
-                                Upgrade Plan to Unlock
-                              </Button>
-                            )}
+                            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                              {isToggledOn
+                                ? "Visible in Sidebar"
+                                : "Hidden from Sidebar"}
+                            </span>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input
+                                type="checkbox"
+                                className="sr-only peer"
+                                checked={isToggledOn}
+                                onChange={() => toggleModule(module.id)}
+                              />
+                              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                            </label>
                           </div>
                         </div>
                       );
                     })}
+                  </div>
+                  {/* ✅ Added Save Modules Button */}
+                  <div className="flex justify-end pt-6 border-t border-slate-200">
+                    <Button
+                      onClick={handleSaveModules}
+                      disabled={saving}
+                      className="h-12 px-8 rounded-xl bg-slate-900 hover:bg-emerald-600 text-white font-bold transition-all shadow-md">
+                      {saving ? (
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      ) : (
+                        <Save className="w-4 h-4 mr-2" />
+                      )}{" "}
+                      Save App Modules
+                    </Button>
                   </div>
                 </div>
               )}
@@ -1423,7 +1433,7 @@ export default function ProfileSettingsPage() {
                 </div>
               )}
 
-              {/* === TAB: INTEGRATIONS & APIS (NEW) === */}
+              {/* === TAB: INTEGRATIONS & APIS === */}
               {activeTab === "integrations" && (
                 <div className="p-6 sm:p-10 space-y-10">
                   <div>

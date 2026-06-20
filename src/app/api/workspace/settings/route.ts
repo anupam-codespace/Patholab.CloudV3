@@ -5,7 +5,7 @@ import { getCurrentUser } from '@/lib/auth';
 export const dynamic = 'force-dynamic';
 
 // ============================================================================
-// GET: Fetch ALL Lab Settings (Branches, Subscription Limits, Configs)
+// GET: Fetch ALL Lab Settings (Branches, Configs) - WALLET ERA UPDATED
 // ============================================================================
 export async function GET(req: NextRequest) {
   try {
@@ -24,12 +24,8 @@ export async function GET(req: NextRequest) {
         branches: {
           orderBy: { createdAt: 'asc' }
         },
-        subscription: {
-          include: {
-            plan: true,
-            currentUsage: true
-          }
-        }
+        // 🚨 DELETED: subscription, plan, and currentUsage includes have been stripped.
+        // The new Pay-As-You-Go Wallet System handles limits via real-time transaction balances.
       }
     });
 

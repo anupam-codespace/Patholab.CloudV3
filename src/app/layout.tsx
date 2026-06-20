@@ -3,7 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import InstallPWA from "@/components/InstallPWA"; // ✅ ADDED PWA Component
-import prisma from "@/lib/prisma"; // Adjust this path to your Prisma client
+import { prisma } from "@/lib/prisma"; // Adjust this path to your Prisma client
 import { GoogleAnalytics } from "@next/third-parties/google"; // npm i @next/third-parties
 
 const inter = Inter({ subsets: ["latin"] });

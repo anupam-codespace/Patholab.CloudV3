@@ -288,7 +288,8 @@ export default function AccessionPage() {
       </div>
     );
 
-  const initials = data.patient.name.substring(0, 2).toUpperCase();
+  // ✅ SAFELY extract initials without crashing on missing data
+  const initials = data?.patient?.name?.substring(0, 2).toUpperCase() || "PT";
 
   return (
     <form
@@ -303,7 +304,7 @@ export default function AccessionPage() {
           </div>
           <div>
             <h1 className="font-bold text-lg lg:text-xl text-slate-900 leading-tight truncate max-w-[200px] sm:max-w-md">
-              {data.patient.name}
+              {data.patient.name || "Unknown Patient"}
             </h1>
             <div className="flex items-center gap-2 text-xs lg:text-sm font-semibold text-slate-500 mt-0.5">
               <span>

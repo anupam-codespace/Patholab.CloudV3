@@ -1,17 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import {
-  ChevronDown,
-  ChevronRight,
-  X,
-  LogOut,
-  Activity,
-  Lock,
-} from "lucide-react";
+import { ChevronDown, X, LogOut, Activity, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import toast from "react-hot-toast";
@@ -20,6 +13,7 @@ import { roleNavMap, NavGroup, NavItem } from "@/config/navigation";
 interface SidebarProps {
   role: string;
   subscription: any;
+  activeModules?: string[]; // Array of enabled module IDs from DB
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
 }
@@ -27,20 +21,38 @@ interface SidebarProps {
 export function Sidebar({
   role,
   subscription,
+  activeModules = [], // Default to empty array to prevent crashes
   isOpen,
   setIsOpen,
 }: SidebarProps) {
   const pathname = usePathname();
   const rawNavigation: NavGroup[] = roleNavMap[role] || [];
 
-  // Expanded Groups State
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
-    () => {
-      const initialState: Record<string, boolean> = {};
-      rawNavigation.forEach((group) => (initialState[group.title] = true));
-      return initialState;
-    },
-  );
+  // ✅ 1. FILTER ENGINE: Dynamically rebuild the menu based on active modules
+  const filteredNavigation = useMemo(() => {
+    return (
+      rawNavigation
+        .map((group) => {
+          return {
+            ...group,
+            items: group.items.filter((item) => {
+              // If the item doesn't require a specific module, always show it (e.g., Dashboard)
+              if (!item.reqModule) return true;
+
+              // If it DOES require a module, check if the lab has enabled it in Settings
+              return activeModules.includes(item.reqModule);
+            }),
+          };
+        })
+        // Remove entirely empty groups so you don't have blank headers
+        .filter((group) => group.items.length > 0)
+    );
+  }, [rawNavigation, activeModules]);
+
+  // ✅ 2. EXPANDED STATE TRACKING
+  // We only track what the user explicitly closes.
+  // If a group isn't in this state object, it defaults to TRUE (Open).
+  const [closedGroups, setClosedGroups] = useState<Record<string, boolean>>({});
 
   // Auto-close sidebar on mobile when route changes
   useEffect(() => {
@@ -50,21 +62,20 @@ export function Sidebar({
   }, [pathname, setIsOpen]);
 
   const toggleGroup = (title: string) => {
-    setExpandedGroups((prev) => ({ ...prev, [title]: !prev[title] }));
+    setClosedGroups((prev) => ({
+      ...prev,
+      [title]: !prev[title],
+    }));
   };
 
-  // Robust Logout Fix
   const handleLogout = async () => {
     const toastId = toast.loading("Logging out securely...");
     try {
-      // Changed to the standard Auth API route format
       const res = await fetch("/api/auth/logout", { method: "POST" });
 
       if (!res.ok) throw new Error("Failed to clear session");
 
       toast.success("Logged out successfully", { id: toastId });
-
-      // Force a hard reload to clear all client-side cache and states
       window.location.href = "/login";
     } catch (error) {
       console.error("Logout Error:", error);
@@ -112,8 +123,11 @@ export function Sidebar({
         {/* Navigation Area */}
         <ScrollArea className="flex-1 py-6 px-4">
           <nav className="space-y-8">
-            {rawNavigation.map((group, gIdx) => {
-              const isGroupOpen = expandedGroups[group.title];
+            {/* Render the FILTERED navigation instead of rawNavigation */}
+            {filteredNavigation.map((group, gIdx) => {
+              // If it's NOT marked as closed, it is open!
+              const isGroupOpen = !closedGroups[group.title];
+
               return (
                 <div key={gIdx} className="space-y-2">
                   <button
@@ -166,28 +180,25 @@ export function Sidebar({
   );
 }
 
+
 // --- Subcomponent for Sidebar Items ---
 
 function SidebarItem({
   item,
-  subscription,
   pathname,
 }: {
   item: NavItem;
-  subscription: any;
+  subscription?: any; // Kept for interface compatibility, but ignored in logic
   pathname: string;
 }) {
-  // Logic: Locked if a reqModule exists and is NOT in unlockedFeatures/Plans
-  const isLocked =
-    item.reqModule &&
-    !subscription?.plan?.[item.reqModule] &&
-    !subscription?.unlockedFeatures?.includes(item.reqModule);
+  
+  // ✅ 1. REMOVED the old SaaS subscription checks. 
+  // If the item survived the Sidebar filter, it is active and unlocked!
+  const isLocked = false; 
 
-  const Icon = isLocked ? Lock : item.icon;
-  const isActive =
-    !isLocked &&
-    (pathname === item.href || pathname.startsWith(`${item.href}/`));
-  const href = isLocked ? `/upgrade?feature=${item.reqModule}` : item.href;
+  const Icon = item.icon;
+  const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+  const href = item.href;
 
   return (
     <Link
@@ -197,7 +208,6 @@ function SidebarItem({
         isActive
           ? "bg-blue-600/10 text-blue-400"
           : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-100",
-        isLocked && "opacity-60 cursor-pointer hover:opacity-100",
       )}>
       {/* Active State Left Accent Line */}
       {isActive && (
@@ -216,22 +226,16 @@ function SidebarItem({
         <span>{item.name}</span>
       </div>
 
-      {isLocked ? (
-        <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full uppercase font-bold tracking-wide z-10">
-          Pro
+      {item.badge && (
+        <span
+          className={cn(
+            "text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide z-10 shadow-sm",
+            isActive
+              ? "bg-blue-500 text-white"
+              : "bg-slate-700 text-slate-300",
+          )}>
+          {item.badge}
         </span>
-      ) : (
-        item.badge && (
-          <span
-            className={cn(
-              "text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide z-10 shadow-sm",
-              isActive
-                ? "bg-blue-500 text-white"
-                : "bg-slate-700 text-slate-300",
-            )}>
-            {item.badge}
-          </span>
-        )
       )}
     </Link>
   );
