@@ -204,6 +204,7 @@ model Lab {
   whatsappPhoneId         String?
   smsApiKey               String?
   smsSenderId             String?
+  activeModules String[] @default(["inventory", "b2b"])
   defaultDoctorCommission Decimal?       @default(10.0) @db.Decimal(5, 2)
   defaultAgencyCommission Decimal?       @default(5.0) @db.Decimal(5, 2)
   commissionType          CommissionType @default(PERCENTAGE)
@@ -904,6 +905,7 @@ model Doctor {
   tests       Test[]       @relation("DoctorReferral")
   commissions Commission[]
   patients    Patient[]    @relation("PatientDefaultDoctor")
+  deletedAt      DateTime?
 
   @@unique([labId, registrationNo])
   @@index([labId])
@@ -930,6 +932,7 @@ model Agency {
   isActive        Boolean        @default(true)
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
+  deletedAt      DateTime?
 
   tests       Test[]       @relation("AgencyReferral")
   commissions Commission[]

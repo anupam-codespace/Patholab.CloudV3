@@ -17,21 +17,22 @@ export default function DashboardLayout({
   const router = useRouter();
   const [isChecking, setIsChecking] = useState(true);
 
-  // ✅ ADDED: Sidebar toggle state (Hidden by default as requested)
+  // Sidebar toggle state
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // ✅ ADDED: States to catch real data from your API route
+  const [liveWalletBalance, setLiveWalletBalance] = useState<number>(0);
+  const [liveLabName, setLiveLabName] = useState<string>("");
 
   useEffect(() => {
     const checkAccess = async () => {
-      // 1. Wait for Auth to load
       if (isLoading) return;
 
-      // 2. Authentication Check
       if (!isAuthenticated || !user) {
         router.push("/login");
         return;
       }
 
-      // 3. Wallet Health Check (Pay-As-You-Go)
       if (user.role === "LAB_OWNER") {
         try {
           const res = await fetch("/api/workspace/wallet/details");
@@ -39,28 +40,42 @@ export default function DashboardLayout({
           if (res.ok) {
             const data = await res.json();
 
-            // Skip checks if they haven't set up the lab yet
-            if (
-              data.status !== "NO_WALLET" &&
-              data.status !== "PENDING_SETUP"
-            ) {
-              // A. Check Validity Expiration
-              if (data.validityEndDate) {
-                const expiryDate = new Date(data.validityEndDate);
-                if (expiryDate < new Date()) {
-                  toast.error(
-                    "Wallet validity expired. Please recharge your wallet to resume clinical operations.",
-                    { id: "wallet-expired", duration: 6000 },
-                  );
-                }
+            // Extract the nested wallet object built in your API route
+            const activeWallet = data.wallet;
+
+            if (activeWallet) {
+              // ✅ 1. Safely catch the Lab Name from the API response
+              if (activeWallet.labName) {
+                setLiveLabName(activeWallet.labName);
               }
 
-              // B. Check Empty Balance
-              if (Number(data.balance) <= 0) {
-                toast.error(
-                  "Wallet balance is empty. Paid actions like Patient Registration are currently locked. Please recharge.",
-                  { id: "wallet-empty", duration: 6000 },
-                );
+              if (
+                activeWallet.status !== "NO_WALLET" &&
+                activeWallet.status !== "PENDING_SETUP"
+              ) {
+                // ✅ 2. Safely catch the real Wallet Balance
+                if (activeWallet.balance !== undefined) {
+                  setLiveWalletBalance(Number(activeWallet.balance));
+                }
+
+                // Expiration Check
+                if (activeWallet.validityEndDate) {
+                  const expiryDate = new Date(activeWallet.validityEndDate);
+                  if (expiryDate < new Date()) {
+                    toast.error(
+                      "Wallet validity expired. Please recharge your wallet to resume clinical operations.",
+                      { id: "wallet-expired", duration: 6000 },
+                    );
+                  }
+                }
+
+                // Empty Balance Check
+                if (Number(activeWallet.balance) <= 0) {
+                  toast.error(
+                    "Wallet balance is empty. Paid actions like Patient Registration are currently locked. Please recharge.",
+                    { id: "wallet-empty", duration: 6000 },
+                  );
+                }
               }
             }
           }
@@ -69,14 +84,12 @@ export default function DashboardLayout({
         }
       }
 
-      // 4. End loading state
       setIsChecking(false);
     };
 
     checkAccess();
   }, [isLoading, isAuthenticated, router, user]);
 
-  // Show loader while checking Auth
   if (
     isLoading ||
     (isAuthenticated && user?.role === "LAB_OWNER" && isChecking)
@@ -88,24 +101,39 @@ export default function DashboardLayout({
     return null;
   }
 
+  // ✅ Maps data to Header: Prioritizes data fetched directly from API, then user object, then fallback strings
+  const headerUserData = {
+    name: user?.name || "User",
+    email: user?.email || "",
+    avatar: user?.avatar || null,
+    role: user?.role || "LAB_OWNER",
+    employeeId: user?.employeeId || null,
+
+    // 👇 Injects the exact lab name & wallet balance caught from your API
+    labName: liveLabName || user?.lab?.name || "Patholab Cloud",
+    walletBalance: liveWalletBalance,
+
+    currencySymbol: user?.lab?.currencySymbol || user?.currencySymbol || "₹",
+    currentBranchName: user?.currentBranch?.name || "Main Branch",
+    branches: user?.branches || user?.lab?.branches || [],
+  };
+
   return (
     <div className="flex h-screen w-full overflow-hidden bg-slate-50">
-      {/* ✅ 1. SIDEBAR: Passed the state and setter */}
       <Sidebar
         role={user.role}
-        subscription={user.subscription || null} // Pass subscription if you have it in user object
+        subscription={user.subscription || null}
+        activeModules={user?.lab?.activeModules || []} // ✅ Pass the DB array down
         isOpen={isSidebarOpen}
         setIsOpen={setIsSidebarOpen}
       />
 
-      {/* ✅ 2. MAIN CONTENT: Shifts right automatically on desktop when sidebar opens */}
       <div
         className={`flex flex-1 flex-col overflow-hidden relative transition-all duration-300 ease-in-out ${
           isSidebarOpen ? "lg:ml-[280px]" : "ml-0"
         }`}>
-        {/* ✅ 3. HEADER: Passed the toggle function */}
         <Header
-          user={user}
+          userData={headerUserData}
           toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         />
 

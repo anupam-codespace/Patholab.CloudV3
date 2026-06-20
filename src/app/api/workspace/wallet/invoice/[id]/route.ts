@@ -1,253 +1,243 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getDataFromToken } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
+import { jsPDF } from "jspdf";
 import { format } from "date-fns";
 
-// ✅ Safely handle Next.js/Webpack module resolution
-const pdfMakeModule = require("pdfmake");
-const PdfPrinter = pdfMakeModule.default || pdfMakeModule;
+export const dynamic = "force-dynamic";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getDataFromToken(req);
-
-    if (!session?.labId) {
+    // 1. Secure Authentication
+    const user = await getCurrentUser();
+    if (!user || !user.labId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    // 1. Fetch Transaction & Lab Data
-    const tx = await prisma.walletTransaction.findFirst({
+    // 2. Fetch Transaction & Lab Data safely
+    const tx = await prisma.walletTransaction.findUnique({
       where: {
         id: params.id,
-        labId: session.labId,
-        type: "RECHARGE",
+        labId: user.labId, // Enforce row-level security
+      },
+      include: {
+        wallet: {
+          include: { lab: true },
+        },
       },
     });
 
-    if (!tx) return new NextResponse("Invoice not found", { status: 404 });
+    if (!tx) {
+      return new NextResponse("Transaction Not Found", { status: 404 });
+    }
 
-    const lab = await prisma.lab.findUnique({
-      where: { id: session.labId },
-    });
+    const lab = tx.wallet.lab;
+    const isRecharge = tx.type === "RECHARGE" || tx.type === "REFUND";
 
-    const config = await prisma.systemConfig.findFirst();
-
-    // 2. Financial Calculations
-    const baseAmount = Number(tx.amount);
-    const taxRate = Number(config?.taxRate || 18);
-    const gstAmount = Number((baseAmount * (taxRate / 100)).toFixed(2));
-    const totalAmount = Number((baseAmount + gstAmount).toFixed(2));
+    // 3. Invoice Math (Forward Calculation)
+    const dbAmount = Number(tx.amount); // Usable Wallet Credit
+    const closingBalance = Number(tx.closingBalance);
     
-    // Half for CGST, Half for SGST (Standard Indian Tax Format)
-    const splitTax = (gstAmount / 2).toFixed(2); 
+    let subtotal = dbAmount;
+    let cgst = 0;
+    let sgst = 0;
+    let totalPaid = dbAmount;
 
-    // 3. ✅ CONFIGURE BUILT-IN FONTS (NO CUSTOM FILES NEEDED!)
-    const fonts = {
-      Helvetica: {
-        normal: "Helvetica",
-        bold: "Helvetica-Bold",
-        italics: "Helvetica-Oblique",
-        bolditalics: "Helvetica-BoldOblique",
-      },
-    };
+    if (isRecharge) {
+      const taxRate = 0.18; // 18% Total GST
+      const totalTax = subtotal * taxRate;
+      cgst = totalTax / 2; // 9% CGST
+      sgst = totalTax / 2; // 9% SGST
+      totalPaid = subtotal + totalTax; // Total charged via Razorpay
+    }
 
-    const printer = new PdfPrinter(fonts);
-
-    // 4. Document Definition (Professional Layout)
-    const docDefinition: any = {
-      pageSize: "A4",
-      pageMargins: [40, 40, 40, 60],
-      defaultStyle: {
-        font: "Helvetica", // Use the built-in font
-        fontSize: 10,
-        color: "#333333",
-        lineHeight: 1.3,
-      },
-      content: [
-        // --- TOP HEADER ---
-        {
-          columns: [
-            {
-              width: "*",
-              text: config?.systemName || "Patholab Cloud Platform",
-              fontSize: 24,
-              bold: true,
-              color: "#1e40af", // Professional deep blue
-            },
-            {
-              width: "auto",
-              text: "TAX INVOICE",
-              fontSize: 20,
-              bold: true,
-              color: "#64748b",
-              alignment: "right",
-            },
-          ],
-          margin: [0, 0, 0, 10],
-        },
-
-        // --- COMPANY DETAILS & INVOICE META ---
-        {
-          canvas: [{ type: "line", x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 1, lineColor: "#e2e8f0" }],
-          margin: [0, 0, 0, 15],
-        },
-        {
-          columns: [
-            {
-              width: "*",
-              text: [
-                { text: `${config?.systemAddress || "HQ Address Unavailable"}\n` },
-                { text: `Email: ${config?.systemEmail || "billing@patholab.cloud"}\n` },
-                { text: `Phone: ${config?.systemPhone || "+91-0000000000"}\n` },
-                { text: `GSTIN: ${config?.gstNumber || "Unregistered"}`, bold: true },
-              ],
-            },
-            {
-              width: 200,
-              text: [
-                { text: "Invoice Number: ", bold: true }, `INV-${tx.id.substring(0, 8).toUpperCase()}\n`,
-                { text: "Date of Issue: ", bold: true }, `${format(new Date(tx.createdAt), "dd MMM yyyy")}\n`,
-                { text: "Time: ", bold: true }, `${format(new Date(tx.createdAt), "hh:mm a")}\n`,
-                { text: "Payment Mode: ", bold: true }, "Prepaid Wallet (Online)\n",
-                { text: "Status: ", bold: true }, { text: "PAID", color: "#16a34a" },
-              ],
-              alignment: "right",
-            },
-          ],
-          margin: [0, 0, 0, 20],
-        },
-
-        // --- BILLED TO SECTION ---
-        {
-          fillColor: "#f8fafc",
-          padding: [15, 10, 15, 10],
-          layout: "noBorders",
-          margin: [0, 0, 0, 25],
-          table: {
-            widths: ["*"],
-            body: [
-              [
-                {
-                  text: [
-                    { text: "BILLED TO:\n", fontSize: 9, color: "#64748b", bold: true },
-                    { text: `${lab?.name || "Unknown Lab"}\n`, fontSize: 14, bold: true, color: "#0f172a" },
-                    { text: `${lab?.address || "Address not provided"}\n` },
-                    { text: `Phone: ${lab?.phone || "N/A"}  |  Email: ${lab?.email || "N/A"}\n` },
-                  ],
-                },
-              ],
-            ],
-          },
-        },
-
-        // --- ITEMS TABLE ---
-        {
-          table: {
-            headerRows: 1,
-            widths: ["*", 80, 100],
-            body: [
-              // Table Header
-              [
-                { text: "DESCRIPTION", bold: true, fillColor: "#1e40af", color: "#ffffff", border: [false, false, false, false], margin: [5, 5, 5, 5] },
-                { text: "TAX %", bold: true, alignment: "center", fillColor: "#1e40af", color: "#ffffff", border: [false, false, false, false], margin: [5, 5, 5, 5] },
-                { text: "AMOUNT (₹)", bold: true, alignment: "right", fillColor: "#1e40af", color: "#ffffff", border: [false, false, false, false], margin: [5, 5, 5, 5] },
-              ],
-              // Table Row
-              [
-                { text: "Wallet Recharge (Platform Credits)\nSAC Code: 9983", margin: [5, 10, 5, 10], border: [false, false, false, true] },
-                { text: `${taxRate}%`, alignment: "center", margin: [5, 10, 5, 10], border: [false, false, false, true] },
-                { text: baseAmount.toFixed(2), alignment: "right", margin: [5, 10, 5, 10], border: [false, false, false, true] },
-              ],
-            ],
-          },
-          layout: {
-            hLineColor: function () { return "#e2e8f0"; },
-            vLineWidth: function () { return 0; },
-          },
-          margin: [0, 0, 0, 15],
-        },
-
-        // --- FINANCIAL SUMMARY ---
-        {
-          columns: [
-            { width: "*", text: "" }, // Spacer
-            {
-              width: 220,
-              table: {
-                widths: ["*", 80],
-                body: [
-                  [{ text: "Subtotal:", color: "#475569" }, { text: baseAmount.toFixed(2), alignment: "right" }],
-                  [{ text: `CGST (${taxRate / 2}%):`, color: "#475569" }, { text: splitTax, alignment: "right" }],
-                  [{ text: `SGST (${taxRate / 2}%):`, color: "#475569" }, { text: splitTax, alignment: "right" }],
-                  [
-                    { text: "Grand Total:", bold: true, fontSize: 12, margin: [0, 5, 0, 0] },
-                    { text: `₹ ${totalAmount.toFixed(2)}`, bold: true, fontSize: 12, alignment: "right", margin: [0, 5, 0, 0] }
-                  ],
-                ],
-              },
-              layout: "noBorders",
-            },
-          ],
-          margin: [0, 0, 0, 40],
-        },
-
-        // --- SIGNATURE & STAMP ---
-        {
-          columns: [
-            { width: "*", text: "" },
-            {
-              width: 200,
-              text: [
-                { text: `For ${config?.systemName || "Patholab Cloud"}\n\n\n\n`, bold: true, alignment: "center" },
-                { text: "Authorized Signatory", alignment: "center", border: [false, true, false, false] }
-              ]
-            }
-          ],
-          margin: [0, 0, 0, 30]
-        },
-
-        // --- TERMS & CONDITIONS ---
-        {
-          text: "Terms & Conditions:",
-          fontSize: 9,
-          bold: true,
-          color: "#64748b",
-        },
-        {
-          ul: [
-            "This is a computer-generated invoice and does not require a physical signature.",
-            "Wallet recharges are strictly non-refundable and non-transferable.",
-            "Credits are valid for 1 year from the date of recharge.",
-            "All disputes are subject to the jurisdiction of the company's registered address."
-          ],
-          fontSize: 8,
-          color: "#64748b",
-          margin: [0, 5, 0, 0]
-        }
-      ],
-    };
-
-    const pdfDoc = printer.createPdfKitDocument(docDefinition);
-    const chunks: Buffer[] = [];
-
-    const pdfBuffer = await new Promise<Buffer>((resolve, reject) => {
-      pdfDoc.on("data", (chunk: Buffer) => chunks.push(chunk));
-      pdfDoc.on("end", () => resolve(Buffer.concat(chunks)));
-      pdfDoc.on("error", reject);
-      pdfDoc.end();
+    // 4. Initialize jsPDF Document (A4 Portrait)
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4",
     });
 
-    return new NextResponse(pdfBuffer, {
+    // --- PDF DESIGN START ---
+    
+    // Top Color Bar
+    if (isRecharge) doc.setFillColor(16, 185, 129); // Emerald-500
+    else doc.setFillColor(244, 63, 94); // Rose-500
+    doc.rect(0, 0, 210, 6, "F");
+
+    // Document Title
+    doc.setTextColor(30, 41, 59); // Slate-800
+    doc.setFontSize(22);
+    doc.setFont("helvetica", "bold");
+    doc.text(isRecharge ? "TAX INVOICE" : "USAGE STATEMENT", 190, 22, { align: "right" });
+
+    // --- LEFT COLUMN: BILLED TO (The Client Lab) ---
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(148, 163, 184); // Slate-400
+    doc.text("BILLED TO", 20, 25);
+
+    doc.setTextColor(15, 23, 42); // Slate-900
+    doc.setFontSize(16);
+    doc.text(lab.name, 20, 32);
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(71, 85, 105); // Slate-600
+    
+    let leftY = 38;
+    if (lab.address || lab.city) {
+      doc.text(`${lab.address || ""}, ${lab.city || ""} ${lab.pincode || ""}`.replace(/^, /, ""), 20, leftY);
+      leftY += 5;
+    }
+    doc.text(`Phone: ${lab.phone}`, 20, leftY);
+    leftY += 5;
+    doc.text(`Email: ${lab.email}`, 20, leftY);
+    leftY += 7;
+    doc.setFont("helvetica", "bold");
+    doc.text(`GSTIN: ${lab.gstNumber || "UNREGISTERED"}`, 20, leftY);
+
+    // --- RIGHT COLUMN: DETAILS & BILLED BY ---
+    doc.setFontSize(9);
+    doc.setTextColor(148, 163, 184);
+    doc.text("TRANSACTION ID", 190, 35, { align: "right" });
+    doc.setTextColor(15, 23, 42);
+    doc.text(`${tx.id.split('-')[0].toUpperCase()}-${tx.id.split('-')[4].toUpperCase()}`, 190, 40, { align: "right" });
+
+    doc.setTextColor(148, 163, 184);
+    doc.text("DATE & TIME", 190, 48, { align: "right" });
+    doc.setTextColor(15, 23, 42);
+    doc.text(format(new Date(tx.createdAt), "dd MMM yyyy, hh:mm a"), 190, 53, { align: "right" });
+
+    // Billed By (Globizhub India Pvt Ltd.)
+    doc.setTextColor(148, 163, 184);
+    doc.text("BILLED BY", 190, 63, { align: "right" });
+    
+    doc.setFontSize(11);
+    doc.setTextColor(15, 23, 42);
+    doc.text("Globizhub India Pvt Ltd.", 190, 68, { align: "right" });
+    
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(71, 85, 105);
+    doc.text("1st Floor, No 59, Nayanpur Rd", 190, 73, { align: "right" });
+    doc.text("GMC Ward Number 44, Ganeshguri", 190, 78, { align: "right" });
+    doc.text("Guwahati, Assam 781006", 190, 83, { align: "right" });
+    
+    doc.setFont("helvetica", "bold");
+    doc.text("GSTIN: 18AAHCG6385Q1ZN", 190, 89, { align: "right" });
+
+    // Status Badge background simulation
+    if (isRecharge) doc.setDrawColor(16, 185, 129); // Emerald
+    else doc.setDrawColor(244, 63, 94); // Rose
+    doc.line(160, 95, 190, 95); // simple underline for status
+
+    // --- TABLE HEADER ---
+    const tableStartY = 105;
+    doc.setDrawColor(226, 232, 240); // border-slate-200
+    doc.setFillColor(248, 250, 252); // bg-slate-50
+    doc.rect(20, tableStartY, 170, 10, "FD");
+
+    doc.setFontSize(9);
+    doc.setTextColor(100, 116, 139); // slate-500
+    doc.text("DESCRIPTION / SERVICE", 25, tableStartY + 6.5);
+    doc.text("SAC CODE", 140, tableStartY + 6.5, { align: "right" });
+    doc.text("NET AMOUNT", 185, tableStartY + 6.5, { align: "right" });
+
+    // --- TABLE ROW ---
+    doc.rect(20, tableStartY + 10, 170, 20, "S");
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(15, 23, 42); // slate-900
+    doc.text(tx.description || `Wallet ${tx.type}`, 25, tableStartY + 18);
+    
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(100, 116, 139); // slate-500
+    doc.text(isRecharge ? "Prepaid wallet recharge for clinical software services." : "Pay-as-you-go deduction for software usage.", 25, tableStartY + 24);
+
+    doc.text("998314", 140, tableStartY + 18, { align: "right" });
+    
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(30, 41, 59); // slate-800
+    doc.text(`Rs. ${subtotal.toFixed(2)}`, 185, tableStartY + 18, { align: "right" });
+
+    // --- TOTALS BLOCK ---
+    const totalsBoxY = tableStartY + 30;
+    const totalsBoxHeight = isRecharge ? 45 : 25;
+    doc.setFillColor(248, 250, 252); // bg-slate-50
+    doc.rect(90, totalsBoxY, 100, totalsBoxHeight, "FD");
+
+    let textY = totalsBoxY + 8;
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(71, 85, 105); // slate-600
+    
+    doc.text("Subtotal (Wallet Credit):", 95, textY);
+    doc.setTextColor(30, 41, 59);
+    doc.text(`Rs. ${subtotal.toFixed(2)}`, 185, textY, { align: "right" });
+
+    if (isRecharge) {
+        textY += 8;
+        doc.setTextColor(71, 85, 105);
+        doc.text("CGST (9%):", 95, textY);
+        doc.setTextColor(30, 41, 59);
+        doc.text(`Rs. ${cgst.toFixed(2)}`, 185, textY, { align: "right" });
+
+        textY += 8;
+        doc.setTextColor(71, 85, 105);
+        doc.text("SGST (9%):", 95, textY);
+        doc.setTextColor(30, 41, 59);
+        doc.text(`Rs. ${sgst.toFixed(2)}`, 185, textY, { align: "right" });
+    }
+
+    textY += 6;
+    doc.setDrawColor(203, 213, 225); // slate-300
+    doc.line(95, textY, 185, textY);
+
+    textY += 8;
+    doc.setFontSize(12);
+    if (isRecharge) doc.setTextColor(16, 185, 129); // Emerald
+    else doc.setTextColor(244, 63, 94); // Rose
+    
+    doc.text(isRecharge ? "TOTAL AMOUNT PAID:" : "TOTAL DEDUCTED:", 95, textY);
+    doc.text(`${isRecharge ? '+' : '-'}Rs. ${totalPaid.toFixed(2)}`, 185, textY, { align: "right" });
+
+    textY += 8;
+    doc.setFontSize(9);
+    doc.setTextColor(148, 163, 184); // slate-400
+    doc.text("NEW WALLET BALANCE:", 95, textY);
+    doc.text(`Rs. ${closingBalance.toFixed(2)}`, 185, textY, { align: "right" });
+
+    // --- FOOTER ---
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(148, 163, 184); // slate-400
+    doc.text("Computer generated tax invoice. No signature required.", 105, 280, { align: "center" });
+    doc.text("Powered by Patholab.cloud", 105, 285, { align: "center" });
+
+    // 5. Convert to Buffer and Return
+    const arrayBuffer = doc.output("arraybuffer");
+    const buffer = Buffer.from(arrayBuffer);
+
+    // Provide friendly, unique file name
+    const dateStr = format(new Date(tx.createdAt), "yyyyMMdd");
+    const fileName = `Invoice_${dateStr}_${tx.id.split('-')[0].toUpperCase()}.pdf`;
+
+    return new NextResponse(buffer, {
+      status: 200,
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `inline; filename="Invoice_${tx.id.substring(0, 8)}.pdf"`, // Changed to 'inline' so it previews in browser nicely
+        "Content-Disposition": `attachment; filename="${fileName}"`, // Triggers download
       },
     });
+
   } catch (error) {
-    console.error("PDF Generation Error:", error);
-    return new NextResponse("Error generating invoice PDF", { status: 500 });
+    console.error("[WALLET_INVOICE_PDF_ERROR]", error);
+    return new NextResponse("Internal Server Error", { status: 500 });
   }
 }

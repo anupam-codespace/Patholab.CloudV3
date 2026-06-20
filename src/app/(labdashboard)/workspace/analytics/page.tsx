@@ -7,17 +7,18 @@ import {
   TrendingUp,
   Receipt,
   Wallet,
-  Percent,
-  FileText,
   AlertCircle,
-  Building2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+
+export const dynamic = "force-dynamic";
 
 export default async function FinancialAnalyticsPage() {
   const user = await getCurrentUser();
   if (!user || !user.labId) redirect("/login");
 
+  // Ensure only authorized high-level staff can view global financials
   if (
     user.role !== "LAB_OWNER" &&
     user.role !== "LAB_MANAGER" &&
@@ -28,6 +29,7 @@ export default async function FinancialAnalyticsPage() {
 
   const labId = user.labId;
 
+  // Execute all aggregations concurrently for massive performance gains
   const [
     revenueAgg,
     expenseAgg,
@@ -36,7 +38,7 @@ export default async function FinancialAnalyticsPage() {
     recentInvoices,
     recentExpenses,
   ] = await Promise.all([
-    // Total Revenue
+    // Total Revenue (excluding cancelled)
     prisma.invoice.aggregate({
       _sum: { grandTotal: true },
       where: { labId, status: { not: "CANCELLED" } },
@@ -54,7 +56,7 @@ export default async function FinancialAnalyticsPage() {
       where: { labId, status: "PENDING" },
     }),
 
-    // GST / Discount breakdown – NOW ALL FIELDS EXIST
+    // GST / Discount breakdown
     prisma.invoice.aggregate({
       _sum: {
         subtotal: true,
@@ -66,18 +68,19 @@ export default async function FinancialAnalyticsPage() {
       where: { labId, status: { not: "CANCELLED" } },
     }),
 
-    // Recent Invoices
+    // Recent Invoices (Last 10)
     prisma.invoice.findMany({
       where: { labId },
       take: 10,
       orderBy: { createdAt: "desc" },
       include: {
         patient: { select: { name: true } },
-        Agency: { select: { name: true } }, // 👈 agency.name, not agencyName
+        // FIXED: Using 'agencyName' instead of 'name' based on your Prisma schema
+        agency: { select: { agencyName: true } },
       },
     }),
 
-    // Recent Expenses
+    // Recent Expenses (Last 10)
     prisma.expense.findMany({
       where: { labId },
       take: 10,
@@ -85,6 +88,7 @@ export default async function FinancialAnalyticsPage() {
     }),
   ]);
 
+  // Derived Metrics
   const totalRevenue = Number(revenueAgg._sum.grandTotal || 0);
   const totalExpense = Number(expenseAgg._sum.amount || 0);
   const netProfit = totalRevenue - totalExpense;
@@ -92,10 +96,10 @@ export default async function FinancialAnalyticsPage() {
 
   const grossBilling = Number(taxAndDiscountAgg._sum.subtotal || 0);
   const totalDiscounts = Number(taxAndDiscountAgg._sum.discount || 0);
-  const totalTaxCollected = Number(taxAndDiscountAgg._sum.totalTax || 0);
   const totalCGST = Number(taxAndDiscountAgg._sum.cgstAmount || 0);
   const totalSGST = Number(taxAndDiscountAgg._sum.sgstAmount || 0);
 
+  // Formatting Helper
   const formatINR = (amount: number) =>
     new Intl.NumberFormat("en-IN", {
       style: "currency",
@@ -104,17 +108,29 @@ export default async function FinancialAnalyticsPage() {
     }).format(amount);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-          Financial Analytics
-        </h1>
-        <p className="text-slate-500 mt-1">
-          Comprehensive overview of your lab's financial health.
-        </p>
+    <div className="p-6 max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-black tracking-tight text-slate-900">
+            Financial Analytics
+          </h1>
+          <p className="text-slate-500 font-medium mt-1">
+            Comprehensive overview of your enterprise's financial health.
+          </p>
+        </div>
+        <div className="bg-emerald-50 px-4 py-2 rounded-xl flex items-center gap-3 border border-emerald-100">
+          <span className="text-xs font-bold text-emerald-600 uppercase tracking-widest">
+            Wallet Era
+          </span>
+          <Badge
+            variant="secondary"
+            className="bg-emerald-100 text-emerald-700 text-sm font-bold border-0">
+            Pay-As-You-Go Active
+          </Badge>
+        </div>
       </div>
 
-      {/* KPIs */}
+      {/* === TOP-LEVEL KPIs === */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total Revenue"
@@ -146,163 +162,211 @@ export default async function FinancialAnalyticsPage() {
         />
       </div>
 
-      {/* GST / Discount Breakdown */}
+      {/* === GST / DISCOUNT BREAKDOWN === */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card>
+        <Card className="border-slate-200 shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-semibold text-slate-500 uppercase">
+            <CardTitle className="text-xs font-bold text-slate-500 uppercase tracking-widest">
               Gross Billing
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-900">
+            <div className="text-2xl font-black text-slate-900">
               {formatINR(grossBilling)}
             </div>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-slate-500 mt-1 font-medium">
               Subtotal before adjustments.
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-slate-200 shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-semibold text-slate-500 uppercase">
+            <CardTitle className="text-xs font-bold text-slate-500 uppercase tracking-widest">
               Discounts Given
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-900">
+            <div className="text-2xl font-black text-slate-900">
               {formatINR(totalDiscounts)}
             </div>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-slate-500 mt-1 font-medium">
               {grossBilling > 0
                 ? ((totalDiscounts / grossBilling) * 100).toFixed(1)
                 : 0}
-              % of gross.
+              % of gross revenue.
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-slate-200 shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-semibold text-slate-500 uppercase">
+            <CardTitle className="text-xs font-bold text-slate-500 uppercase tracking-widest">
               CGST Collected
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-900">
+            <div className="text-2xl font-black text-slate-900">
               {formatINR(totalCGST)}
             </div>
-            <p className="text-xs text-slate-500 mt-1">Central GST.</p>
+            <p className="text-xs text-slate-500 mt-1 font-medium">
+              Central GST.
+            </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-slate-200 shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-semibold text-slate-500 uppercase">
+            <CardTitle className="text-xs font-bold text-slate-500 uppercase tracking-widest">
               SGST Collected
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-900">
+            <div className="text-2xl font-black text-slate-900">
               {formatINR(totalSGST)}
             </div>
-            <p className="text-xs text-slate-500 mt-1">State GST.</p>
+            <p className="text-xs text-slate-500 mt-1 font-medium">
+              State GST.
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Ledgers */}
-      <div className="grid gap-8 lg:grid-cols-2">
+      {/* === DETAILED LEDGERS === */}
+      <div className="grid gap-6 lg:grid-cols-2">
         {/* Invoices Ledger */}
-        <Card>
-          <CardHeader className="border-b bg-slate-50/50 pb-4">
-            <CardTitle className="flex items-center gap-2 text-lg">
+        <Card className="border-slate-200 shadow-sm overflow-hidden">
+          <CardHeader className="border-b border-slate-100 bg-slate-50/80 pb-4">
+            <CardTitle className="flex items-center gap-2 text-lg font-black text-slate-800">
               <Receipt className="w-5 h-5 text-blue-600" /> Recent Invoices
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50 text-slate-500 font-medium border-b">
-                <tr>
-                  <th className="px-4 py-3">Invoice</th>
-                  <th className="px-4 py-3">Billed To</th>
-                  <th className="px-4 py-3 text-right">Amount</th>
-                  <th className="px-4 py-3 text-center">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {recentInvoices.map((inv) => (
-                  <tr key={inv.id} className="hover:bg-slate-50">
-                    <td className="px-4 py-3 font-medium text-blue-600">
-                      {inv.invoiceNumber}
-                    </td>
-                    <td className="px-4 py-3 text-slate-700">
-                      {inv.isB2B ? inv.agency?.name : inv.patient?.name}
-                    </td>
-                    <td className="px-4 py-3 text-right font-semibold">
-                      {formatINR(Number(inv.grandTotal))}
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          inv.status === "PAID"
-                            ? "bg-green-100 text-green-700"
-                            : inv.status === "PENDING"
-                              ? "bg-amber-100 text-amber-700"
-                              : "bg-rose-100 text-rose-700"
-                        }`}>
-                        {inv.status}
-                      </span>
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-white text-xs font-bold text-slate-500 uppercase tracking-widest border-b border-slate-100">
+                  <tr>
+                    <th className="px-5 py-4">Invoice</th>
+                    <th className="px-5 py-4">Billed To</th>
+                    <th className="px-5 py-4 text-right">Amount</th>
+                    <th className="px-5 py-4 text-center">Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100 bg-white">
+                  {recentInvoices.map((inv: any) => {
+                    // FIXED: Properly querying inv.agency.agencyName
+                    const entityName = inv.isB2B
+                      ? inv.agency?.agencyName || "Unknown Agency"
+                      : inv.patient?.name || "Unknown Patient";
+
+                    return (
+                      <tr
+                        key={inv.id}
+                        className="hover:bg-slate-50 transition-colors">
+                        <td className="px-5 py-4 font-bold text-blue-600 whitespace-nowrap">
+                          {inv.invoiceNumber}
+                        </td>
+                        <td className="px-5 py-4 text-slate-700 font-medium">
+                          {entityName}
+                          {inv.isB2B && (
+                            <span className="ml-2 inline-block px-1.5 py-0.5 rounded text-[10px] bg-slate-100 text-slate-600 font-bold uppercase">
+                              B2B
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-5 py-4 text-right font-black text-slate-900 whitespace-nowrap">
+                          {formatINR(Number(inv.grandTotal))}
+                        </td>
+                        <td className="px-5 py-4 text-center">
+                          <span
+                            className={`px-2.5 py-1 rounded-md text-[11px] font-black uppercase tracking-wider ${
+                              inv.status === "PAID"
+                                ? "bg-emerald-100 text-emerald-700"
+                                : inv.status === "PENDING"
+                                  ? "bg-amber-100 text-amber-700"
+                                  : "bg-rose-100 text-rose-700"
+                            }`}>
+                            {inv.status}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {recentInvoices.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="px-5 py-8 text-center text-slate-400 font-medium">
+                        No recent invoices found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </CardContent>
         </Card>
 
         {/* Expenses Ledger */}
-        <Card>
-          <CardHeader className="border-b bg-slate-50/50 pb-4">
-            <CardTitle className="flex items-center gap-2 text-lg">
+        <Card className="border-slate-200 shadow-sm overflow-hidden">
+          <CardHeader className="border-b border-slate-100 bg-slate-50/80 pb-4">
+            <CardTitle className="flex items-center gap-2 text-lg font-black text-slate-800">
               <Wallet className="w-5 h-5 text-rose-600" /> Recent Expenses
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50 text-slate-500 font-medium border-b">
-                <tr>
-                  <th className="px-4 py-3">Date</th>
-                  <th className="px-4 py-3">Title / Category</th>
-                  <th className="px-4 py-3">Mode</th>
-                  <th className="px-4 py-3 text-right">Amount</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {recentExpenses.map((exp) => (
-                  <tr key={exp.id} className="hover:bg-slate-50">
-                    <td className="px-4 py-3 text-slate-500">
-                      {new Date(exp.date).toLocaleDateString("en-IN")}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="font-medium text-slate-900">
-                        {exp.title || "—"}
-                      </div>
-                      <div className="text-xs text-slate-500">
-                        {exp.category}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-slate-600">
-                      {exp.paymentMode || "—"}
-                    </td>
-                    <td className="px-4 py-3 text-right font-semibold text-rose-600">
-                      -{formatINR(Number(exp.amount))}
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-white text-xs font-bold text-slate-500 uppercase tracking-widest border-b border-slate-100">
+                  <tr>
+                    <th className="px-5 py-4">Date</th>
+                    <th className="px-5 py-4">Category</th>
+                    <th className="px-5 py-4">Mode</th>
+                    <th className="px-5 py-4 text-right">Amount</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100 bg-white">
+                  {recentExpenses.map((exp: any) => (
+                    <tr
+                      key={exp.id}
+                      className="hover:bg-slate-50 transition-colors">
+                      <td className="px-5 py-4 text-slate-500 font-medium whitespace-nowrap">
+                        {new Date(exp.date).toLocaleDateString("en-IN", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="font-bold text-slate-900">
+                          {exp.title || "—"}
+                        </div>
+                        <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mt-0.5">
+                          {exp.category}
+                        </div>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className="px-2 py-1 rounded bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-wider">
+                          {exp.paymentMode || "—"}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4 text-right font-black text-rose-600 whitespace-nowrap">
+                        -{formatINR(Number(exp.amount))}
+                      </td>
+                    </tr>
+                  ))}
+                  {recentExpenses.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="px-5 py-8 text-center text-slate-400 font-medium">
+                        No recent expenses recorded.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -310,19 +374,22 @@ export default async function FinancialAnalyticsPage() {
   );
 }
 
+// Reusable KPI Card Component
 function StatCard({ title, value, icon: Icon, color, bg }: any) {
   return (
-    <Card>
+    <Card className="border-slate-200 shadow-sm hover:shadow-md transition-shadow">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+        <CardTitle className="text-xs font-bold text-slate-500 uppercase tracking-widest">
           {title}
         </CardTitle>
-        <div className={`p-2 rounded-lg ${bg}`}>
-          <Icon className={`h-5 w-5 ${color}`} />
+        <div className={`p-2.5 rounded-xl ${bg}`}>
+          <Icon className={`h-5 w-5 ${color}`} strokeWidth={2.5} />
         </div>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold text-slate-900">{value}</div>
+        <div className="text-2xl font-black text-slate-900 tracking-tight">
+          {value}
+        </div>
       </CardContent>
     </Card>
   );

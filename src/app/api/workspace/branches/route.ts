@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
 }
 
 // ============================================================================
-// POST: Create a New Branch (Enforces SaaS Plan Limits & Generates branchCode)
+// POST: Create a New Branch (WALLET ERA - UNLIMITED BRANCHES)
 // ============================================================================
 export async function POST(req: NextRequest) {
   try {
@@ -37,36 +37,18 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
 
-    // 1. Fetch Lab and Subscription Limits
-    const lab = await prisma.lab.findUnique({
-      where: { id: user.labId },
-      include: {
-        branches: true,
-        subscription: { include: { plan: true } }
-      }
+    // 1. Fetch Current Branch Count (Extremely fast aggregate query)
+    // We no longer check SaaS limits, but we still need the count to auto-generate the branchCode!
+    const currentBranchCount = await prisma.branch.count({
+      where: { labId: user.labId }
     });
 
-    if (!lab || !lab.subscription) {
-      return NextResponse.json({ error: 'Invalid workspace or subscription state.' }, { status: 400 });
-    }
-
-    // 2. ENFORCE SAAS LIMITS
-    const currentBranchCount = lab.branches.length;
-    // NOTE: If you consider the main lab as "1", make sure your logic accounts for it!
-    const maxAllowedBranches = lab.subscription.plan.maxBranches + (lab.subscription.boosterBranches || 0);
-
-    if (currentBranchCount >= maxAllowedBranches) {
-      return NextResponse.json({ 
-        error: `Plan limit reached. Your subscription allows a maximum of ${maxAllowedBranches} branch(es). Please upgrade to expand.` 
-      }, { status: 403 });
-    }
-
-    // 3. AUTO-GENERATE 2-DIGIT BRANCH CODE (e.g., "02", "03")
-    // This is required for the 9-digit Employee ID generation in the Staff API!
+    // 2. AUTO-GENERATE 2-DIGIT BRANCH CODE (e.g., "01", "02", "03")
+    // This is vital for the 9-digit Employee ID generation in the Staff API.
     const nextBranchNum = currentBranchCount + 1; 
     const generatedBranchCode = nextBranchNum.toString().padStart(2, '0');
 
-    // 4. Create the Branch
+    // 3. Create the Branch
     const newBranch = await prisma.branch.create({
       data: {
         labId: user.labId,
@@ -84,7 +66,7 @@ export async function POST(req: NextRequest) {
       }
     });
 
-    // 5. If this is set as Main Branch, strip the flag from older branches
+    // 4. If this is set as Main Branch, safely strip the flag from older branches
     if (body.isMainBranch) {
       await prisma.branch.updateMany({
         where: { labId: user.labId, id: { not: newBranch.id } },

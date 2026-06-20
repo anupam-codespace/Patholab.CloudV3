@@ -1,17 +1,10 @@
-import prisma from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import {
   Activity,
   Building2,
-  CreditCard,
   Microscope,
-  ArrowUpRight,
-  Clock,
-  Ticket,
-  Zap,
   TrendingUp,
   HardDrive,
-  Wallet,
-  PieChart,
   Users,
   FileText,
   Stethoscope,
@@ -23,28 +16,29 @@ import {
   Beaker,
   Layers,
   Network,
+  Clock,
+  Wallet,
+  ArrowDownRight,
+  ArrowUpRight,
+  AlertTriangle,
 } from "lucide-react";
 import Link from "next/link";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+
+export const dynamic = "force-dynamic";
 
 // --- 1. MASSIVE DATA FETCHING (SERVER-SIDE) ---
 async function getDashboardMetrics() {
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-  // We run all count queries in parallel. Prisma handles this extremely efficiently.
+  // We run all count queries in parallel to ensure lightning-fast dashboard loads
   const [
-    // 1. SaaS & Tenant Counts
+    // 1. Tenant & Wallet Counts
     activeLabsCount,
-    trialLabsCount,
+    lowBalanceLabsCount, // Replaces Trial Labs - Shows labs at risk of service pause
     totalBranches,
     openTicketsCount,
 
@@ -70,14 +64,15 @@ async function getDashboardMetrics() {
     // 5. Feeds & Lists
     recentLabs,
     recentActivity,
-    subscriptions,
-    monthlyPayments,
-    plansWithStats,
-    platformUsage,
+
+    // 6. Financials (Wallet Pivot)
+    rechargesMTD,
+    deductionsMTD,
+    platformLiability, // Total sum of all unspent wallet balances across all labs
   ] = await Promise.all([
-    // SaaS
+    // SaaS / Tenants
     prisma.lab.count({ where: { isActive: true, deletedAt: null } }),
-    prisma.subscription.count({ where: { status: "TRIAL" } }),
+    prisma.labWallet.count({ where: { balance: { lt: 500 } } }), // Labs with < 500 Rs
     prisma.branch.count({ where: { deletedAt: null } }),
     prisma.supportTicket.count({
       where: { status: { in: ["OPEN", "IN_PROGRESS"] } },
@@ -85,9 +80,9 @@ async function getDashboardMetrics() {
 
     // Medical Volume
     prisma.patient.count({ where: { deletedAt: null } }),
-    prisma.test.count({ where: { deletedAt: null } }),
-    prisma.report.count({ where: { deletedAt: null } }),
-    prisma.sample.count({ where: { deletedAt: null } }),
+    prisma.test.count(), // Immutability applied in schema
+    prisma.report.count(),
+    prisma.sample.count(),
 
     // Network
     prisma.doctor.count(),
@@ -110,8 +105,8 @@ async function getDashboardMetrics() {
         id: true,
         name: true,
         createdAt: true,
-        subscription: {
-          select: { status: true, plan: { select: { name: true } } },
+        wallet: {
+          select: { balance: true, isActive: true },
         },
       },
     }),
@@ -121,49 +116,31 @@ async function getDashboardMetrics() {
       include: { user: { select: { name: true, role: true } } },
     }),
 
-    // Financials
-    prisma.subscription.findMany({
-      where: { status: "ACTIVE" },
-      include: { plan: true },
-    }),
-    prisma.payment.aggregate({
+    // Financials (Wallet Model)
+    prisma.walletTransaction.aggregate({
       _sum: { amount: true },
-      where: { status: "SUCCESS", createdAt: { gte: startOfMonth } },
+      where: { type: "RECHARGE", createdAt: { gte: startOfMonth } },
     }),
-    prisma.plan.findMany({
-      include: {
-        _count: { select: { subscriptions: { where: { status: "ACTIVE" } } } },
-      },
+    prisma.walletTransaction.aggregate({
+      _sum: { amount: true },
+      where: { type: "DEDUCTION", createdAt: { gte: startOfMonth } },
     }),
-    prisma.currentUsage.aggregate({ _sum: { storageUsedGB: true } }),
+    prisma.labWallet.aggregate({
+      _sum: { balance: true },
+    }),
   ]);
-
-  // Calculations
-  const mrr = subscriptions.reduce(
-    (acc, sub) => acc + Number(sub.plan.price),
-    0,
-  );
-  const actualRevenue = Number(monthlyPayments._sum.amount || 0);
-
-  const activePlans = plansWithStats
-    .filter((p) => p._count.subscriptions > 0)
-    .map((p) => ({
-      name: p.name,
-      users: p._count.subscriptions,
-      revenue: p._count.subscriptions * Number(p.price),
-    }))
-    .sort((a, b) => b.revenue - a.revenue);
 
   return {
     saas: {
       activeLabsCount,
-      trialLabsCount,
+      lowBalanceLabsCount,
       totalBranches,
       openTicketsCount,
-      mrr,
-      actualRevenue,
-      activePlans,
-      bestPlan: activePlans[0],
+    },
+    financials: {
+      rechargesMTD: Number(rechargesMTD._sum.amount || 0),
+      deductionsMTD: Number(deductionsMTD._sum.amount || 0),
+      platformLiability: Number(platformLiability._sum.balance || 0),
     },
     volume: { totalPatients, totalTests, totalReports, totalSamples },
     network: { totalDoctors, totalAgencies, totalIoTAnalyzers },
@@ -176,7 +153,6 @@ async function getDashboardMetrics() {
       departments,
     },
     feeds: { recentLabs, recentActivity },
-    storage: platformUsage._sum.storageUsedGB || 0,
   };
 }
 
@@ -198,7 +174,7 @@ function MiniStat({
         <Icon className={`h-4 w-4 ${colorClass.replace("bg-", "text-")}`} />
       </div>
       <div>
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider line-clamp-1">
           {title}
         </p>
         <p className="text-lg font-bold text-slate-800 leading-none mt-0.5">
@@ -221,84 +197,88 @@ export default async function SuperAdminDashboard() {
     }).format(amount);
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-6 pb-12 animate-in fade-in duration-500">
       {/* --- HEADER --- */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">
             God Mode Command Center
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Omniscient view of Patholab Cloud's financial, operational, and
-            architectural scale.
+          <p className="text-sm font-medium text-slate-500 mt-1">
+            Omniscient view of Patholab Cloud's Pay-As-You-Go ecosystem.
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Badge
             variant="outline"
-            className="bg-white px-3 py-1.5 text-slate-600 border-slate-200 shadow-sm">
-            <HardDrive className="h-3.5 w-3.5 text-blue-500 mr-2" />
-            {m.storage.toFixed(1)} GB Storage Used
-          </Badge>
-          <Badge
-            variant="outline"
-            className="bg-white px-3 py-1.5 text-slate-600 border-slate-200 shadow-sm">
-            <Network className="h-3.5 w-3.5 text-indigo-500 mr-2" />
+            className="bg-white px-3 py-1.5 text-slate-600 border-slate-200 shadow-sm font-bold uppercase tracking-widest text-[10px]">
+            <Network className="h-3 w-3 text-indigo-500 mr-2" />
             {m.saas.totalBranches} Active Branches
           </Badge>
         </div>
       </div>
 
-      {/* --- ROW 1: PRIMARY FINANCIALS (4 Cards) --- */}
+      {/* --- ROW 1: PRIMARY FINANCIALS (WALLET PIVOT) --- */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-none shadow-sm bg-gradient-to-br from-blue-600 to-blue-800 text-white">
+        <Card className="border-none shadow-sm bg-gradient-to-br from-emerald-500 to-emerald-700 text-white">
           <CardContent className="p-5">
             <div className="flex items-center justify-between opacity-80 mb-2">
               <p className="text-xs font-bold uppercase tracking-wider">
-                Platform MRR
+                Recharges (MTD)
               </p>
               <TrendingUp className="h-4 w-4" />
             </div>
-            <h3 className="text-3xl font-bold">{formatCurrency(m.saas.mrr)}</h3>
+            <h3 className="text-3xl font-black">
+              {formatCurrency(m.financials.rechargesMTD)}
+            </h3>
+            <p className="text-xs font-medium text-emerald-100 mt-2">
+              Cash collected this month
+            </p>
           </CardContent>
         </Card>
 
         <Card className="border-none shadow-sm bg-white">
           <CardContent className="p-5">
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-              Cash Collected (MTD)
-            </p>
-            <h3 className="text-3xl font-bold text-slate-900">
-              {formatCurrency(m.saas.actualRevenue)}
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                Consumed (MTD)
+              </p>
+              <Activity className="h-4 w-4 text-indigo-500" />
+            </div>
+            <h3 className="text-3xl font-black text-slate-900">
+              {formatCurrency(m.financials.deductionsMTD)}
             </h3>
+            <p className="text-xs font-medium text-slate-400 mt-2">
+              Platform usage revenue burned
+            </p>
           </CardContent>
         </Card>
 
         <Card className="border-none shadow-sm bg-white">
-          <CardContent className="p-5 flex justify-between items-center">
+          <CardContent className="p-5 flex justify-between items-center h-full">
             <div>
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                Paying Labs
+                Active Tenants
               </p>
-              <h3 className="text-3xl font-bold text-slate-900">
+              <h3 className="text-3xl font-black text-slate-900">
                 {m.saas.activeLabsCount}
               </h3>
             </div>
-            <Building2 className="h-8 w-8 text-indigo-100" />
+            <Building2 className="h-8 w-8 text-blue-100" />
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm bg-white">
-          <CardContent className="p-5 flex justify-between items-center">
+        <Card className="border-slate-200 shadow-sm bg-rose-50/50">
+          <CardContent className="p-5 flex justify-between items-center h-full">
             <div>
-              <p className="text-xs font-bold text-orange-500 uppercase tracking-wider mb-2">
-                In Trial Pipeline
+              <p className="text-xs font-bold text-rose-600 uppercase tracking-wider mb-2">
+                Low Balance Labs
               </p>
-              <h3 className="text-3xl font-bold text-slate-900">
-                {m.saas.trialLabsCount}
+              <h3 className="text-3xl font-black text-rose-700">
+                {m.saas.lowBalanceLabsCount}
               </h3>
             </div>
-            <Zap className="h-8 w-8 text-orange-100" />
+            <AlertTriangle className="h-8 w-8 text-rose-200" />
           </CardContent>
         </Card>
       </div>
@@ -316,7 +296,7 @@ export default async function SuperAdminDashboard() {
             colorClass="bg-blue-500"
           />
           <MiniStat
-            title="Tests Processed"
+            title="Tests Run"
             value={m.volume.totalTests}
             icon={Microscope}
             colorClass="bg-purple-500"
@@ -328,25 +308,25 @@ export default async function SuperAdminDashboard() {
             colorClass="bg-rose-500"
           />
           <MiniStat
-            title="Reports Gen."
+            title="Reports"
             value={m.volume.totalReports}
             icon={FileText}
             colorClass="bg-emerald-500"
           />
           <MiniStat
-            title="Ref. Doctors"
+            title="Doctors"
             value={m.network.totalDoctors}
             icon={Stethoscope}
             colorClass="bg-cyan-500"
           />
           <MiniStat
-            title="Ref. Agencies"
+            title="Agencies"
             value={m.network.totalAgencies}
             icon={Briefcase}
             colorClass="bg-amber-500"
           />
           <MiniStat
-            title="IoT Analyzers"
+            title="Analyzers"
             value={m.network.totalIoTAnalyzers}
             icon={Cpu}
             colorClass="bg-slate-700"
@@ -357,8 +337,8 @@ export default async function SuperAdminDashboard() {
       {/* --- ROW 3: TEST ENGINE CONFIGURATION (Hyper Dense Grid) --- */}
       <div>
         <h3 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
-          <Layers className="h-4 w-4 text-indigo-500" /> Test Engine
-          Architecture
+          <Layers className="h-4 w-4 text-indigo-500" /> Catalog Engine &
+          Parameters
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
           <MiniStat
@@ -368,7 +348,7 @@ export default async function SuperAdminDashboard() {
             colorClass="bg-blue-600"
           />
           <MiniStat
-            title="Private Tests"
+            title="Local Tests"
             value={m.engine.privateTests}
             icon={Lock}
             colorClass="bg-slate-600"
@@ -400,65 +380,57 @@ export default async function SuperAdminDashboard() {
         </div>
       </div>
 
-      {/* --- ROW 4: BOTTOM THREE COLUMNS (Plans | Tenant Pipeline | Activity Feed) --- */}
+      {/* --- ROW 4: BOTTOM THREE COLUMNS --- */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Col 1: Plan Distribution */}
-        <Card className="border-none shadow-sm flex flex-col">
-          <CardHeader className="pb-3 border-b border-slate-100">
+        {/* Col 1: System Liability & Economics */}
+        <Card className="border-slate-200 shadow-sm flex flex-col bg-white">
+          <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/50">
             <CardTitle className="text-sm font-bold text-slate-800 flex items-center gap-2">
-              <PieChart className="h-4 w-4 text-purple-500" /> Subscription
-              Dist.
+              <Wallet className="h-4 w-4 text-indigo-500" /> Platform Economics
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-4 flex-1">
-            {m.saas.bestPlan && (
-              <div className="bg-slate-50 border border-slate-100 rounded-lg p-3 mb-4">
-                <p className="text-[10px] text-purple-600 font-bold uppercase tracking-widest mb-1">
-                  Top Earner
+          <CardContent className="p-6 flex-1 flex flex-col justify-center space-y-6">
+            <div className="space-y-2">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center justify-between">
+                Total Unspent Wallet Credits
+              </p>
+              <h4 className="text-4xl font-black text-slate-900 tracking-tighter">
+                {formatCurrency(m.financials.platformLiability)}
+              </h4>
+              <p className="text-xs font-medium text-slate-500 leading-snug">
+                This represents prepaid balances held across all active client
+                lab wallets.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100">
+              <div className="bg-emerald-50 p-3 rounded-xl border border-emerald-100">
+                <ArrowDownRight className="w-5 h-5 text-emerald-600 mb-1" />
+                <p className="text-[10px] font-bold text-emerald-600/80 uppercase">
+                  Inflow (MTD)
                 </p>
-                <div className="flex justify-between items-end">
-                  <h4 className="text-sm font-bold text-slate-900">
-                    {m.saas.bestPlan.name}
-                  </h4>
-                  <p className="text-xs font-bold text-slate-700">
-                    {formatCurrency(m.saas.bestPlan.revenue)}/mo
-                  </p>
-                </div>
+                <p className="text-sm font-black text-emerald-700">
+                  {formatCurrency(m.financials.rechargesMTD)}
+                </p>
               </div>
-            )}
-            <div className="space-y-4">
-              {m.saas.activePlans.map((plan, idx) => {
-                const percentage = Math.round(
-                  (plan.users / m.saas.activeLabsCount) * 100,
-                );
-                return (
-                  <div key={idx} className="space-y-1">
-                    <div className="flex justify-between text-xs">
-                      <span className="font-semibold text-slate-700">
-                        {plan.name}
-                      </span>
-                      <span className="text-slate-500">
-                        {plan.users} labs ({percentage}%)
-                      </span>
-                    </div>
-                    <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                      <div
-                        className="bg-purple-500 h-full rounded-full"
-                        style={{ width: `${percentage}%` }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
+              <div className="bg-rose-50 p-3 rounded-xl border border-rose-100">
+                <ArrowUpRight className="w-5 h-5 text-rose-600 mb-1" />
+                <p className="text-[10px] font-bold text-rose-600/80 uppercase">
+                  Burn (MTD)
+                </p>
+                <p className="text-sm font-black text-rose-700">
+                  {formatCurrency(m.financials.deductionsMTD)}
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
 
         {/* Col 2: Tenant Pipeline */}
-        <Card className="border-none shadow-sm flex flex-col">
-          <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-slate-100">
+        <Card className="border-slate-200 shadow-sm flex flex-col bg-white">
+          <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-slate-100 bg-slate-50/50">
             <CardTitle className="text-sm font-bold text-slate-800">
-              Recent Tenants
+              Recent Deployments
             </CardTitle>
             <Link
               href="/admin/labs"
@@ -468,11 +440,10 @@ export default async function SuperAdminDashboard() {
           </CardHeader>
           <CardContent className="p-0 flex-1">
             <table className="w-full text-xs text-left">
-              <thead className="text-[10px] text-slate-400 font-bold uppercase bg-slate-50">
+              <thead className="text-[10px] text-slate-400 font-bold uppercase bg-slate-50 border-b border-slate-100">
                 <tr>
-                  <th className="px-4 py-2">Lab Name</th>
-                  <th className="px-4 py-2">Plan</th>
-                  <th className="px-4 py-2 text-right">Status</th>
+                  <th className="px-4 py-3">Lab Name</th>
+                  <th className="px-4 py-3 text-right">Wallet Bal.</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -480,25 +451,25 @@ export default async function SuperAdminDashboard() {
                   <tr
                     key={lab.id}
                     className="hover:bg-slate-50 transition-colors">
-                    <td className="px-4 py-3 font-semibold text-slate-800 truncate max-w-[120px]">
-                      {lab.name}
-                    </td>
-                    <td className="px-4 py-3 text-slate-600">
-                      {lab.subscription?.plan?.name || "None"}
+                    <td className="px-4 py-3">
+                      <p className="font-bold text-slate-800 truncate max-w-[150px]">
+                        {lab.name}
+                      </p>
+                      <p className="text-[10px] text-slate-400 font-medium">
+                        {new Date(lab.createdAt).toLocaleDateString()}
+                      </p>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      {lab.subscription?.status === "ACTIVE" ? (
-                        <span className="text-emerald-600 font-bold bg-emerald-50 px-2 py-1 rounded">
-                          Active
-                        </span>
-                      ) : lab.subscription?.status === "TRIAL" ? (
-                        <span className="text-orange-600 font-bold bg-orange-50 px-2 py-1 rounded">
-                          Trial
+                      {lab.wallet ? (
+                        <span className="font-black text-slate-700">
+                          {formatCurrency(Number(lab.wallet.balance))}
                         </span>
                       ) : (
-                        <span className="text-slate-400 font-medium">
-                          Setup
-                        </span>
+                        <Badge
+                          variant="outline"
+                          className="bg-amber-50 text-amber-600 border-amber-200 text-[9px] uppercase">
+                          No Wallet
+                        </Badge>
                       )}
                     </td>
                   </tr>
@@ -509,10 +480,10 @@ export default async function SuperAdminDashboard() {
         </Card>
 
         {/* Col 3: Live Omniscient Feed */}
-        <Card className="border-none shadow-sm flex flex-col h-[350px]">
-          <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-slate-100">
+        <Card className="border-slate-200 shadow-sm flex flex-col h-[350px] bg-white">
+          <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-slate-100 bg-slate-50/50">
             <CardTitle className="text-sm font-bold text-slate-800 flex items-center gap-2">
-              <Activity className="h-4 w-4 text-blue-500" /> Platform Feed
+              <Activity className="h-4 w-4 text-blue-500" /> Live Audit Log
             </CardTitle>
             <div className="flex items-center gap-1.5">
               <span className="relative flex h-2 w-2">
@@ -532,8 +503,8 @@ export default async function SuperAdminDashboard() {
                     key={log.id}
                     className="p-3 hover:bg-slate-50 transition-colors">
                     <div className="flex gap-3">
-                      <div className="h-6 w-6 rounded-full bg-slate-100 flex items-center justify-center shrink-0 mt-0.5">
-                        <span className="text-[10px] font-bold text-slate-500">
+                      <div className="h-7 w-7 rounded-xl bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200">
+                        <span className="text-[10px] font-black text-slate-500">
                           {log.user?.name.charAt(0) || "S"}
                         </span>
                       </div>
@@ -545,10 +516,10 @@ export default async function SuperAdminDashboard() {
                           {log.description}
                         </p>
                         <div className="flex items-center gap-2 mt-1.5">
-                          <span className="text-[9px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded uppercase">
+                          <span className="text-[9px] font-black text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded uppercase">
                             {log.action}
                           </span>
-                          <span className="text-[9px] text-slate-400 flex items-center gap-1">
+                          <span className="text-[9px] font-medium text-slate-400 flex items-center gap-1">
                             <Clock className="h-2.5 w-2.5" />
                             {new Date(log.createdAt).toLocaleTimeString(
                               "en-US",
