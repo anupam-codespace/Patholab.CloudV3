@@ -2,10 +2,7 @@ import {
   LayoutDashboard,
   Users,
   TestTube,
-  FileText,
   Settings,
-  Building2,
-  FlaskConical,
   Truck,
   Cpu,
   BrainCircuit,
@@ -19,17 +16,16 @@ import {
   UserPlus,
   ClipboardList,
   FileImage,
-  Disc,
   Activity,
   CalendarDays,
-  ScanLine,
   Server,
   LayoutTemplate,
   ScanBarcode,
   CheckSquare,
-  ClipboardCheck, // Added for Results
-  Send,           // Added for Report Dispatch
-  History         // Added for Audit Logs
+  ClipboardCheck,
+  Send,
+  History,
+  Wallet,
 } from "lucide-react";
 
 export type NavItem = {
@@ -37,13 +33,13 @@ export type NavItem = {
   href: string;
   icon: any;
   badge?: string;
-  reqModule?: string;
+  moduleTag?: string; // ✅ Changed from reqModule to moduleTag to match your Sidebar logic
 };
 
-export type NavGroup = { 
-  title: string; 
-  items: NavItem[]; 
-  reqModule?: string;
+export type NavGroup = {
+  title: string;
+  items: NavItem[];
+  moduleTag?: string; // ✅ Allows locking an entire group at once
 };
 
 // ==========================================
@@ -70,13 +66,14 @@ export const adminNav: NavGroup[] = [
   {
     title: "Resources & Logistics",
     items: [
-      { name: "Inventory & Stock", href: "/workspace/inventory", icon: Box, reqModule: "hasInventory" },
-      { name: "Logistics / Trips", href: "/workspace/logistics", icon: Truck, reqModule: "hasLogistics" },
+      // ✅ Using uppercase DB-friendly tags
+      { name: "Inventory & Stock", href: "/workspace/inventory", icon: Box, moduleTag: "INVENTORY" },
+      { name: "Logistics / Trips", href: "/workspace/logistics", icon: Truck, moduleTag: "LOGISTICS" },
     ],
   },
   {
     title: "B2B & Growth",
-    reqModule: "hasB2bBilling", 
+    moduleTag: "B2B", // Locks the whole group if B2B is not purchased
     items: [
       { name: "Referral Doctors", href: "/workspace/doctors", icon: Stethoscope },
       { name: "Corporate Agencies", href: "/workspace/agencies", icon: Briefcase },
@@ -89,10 +86,9 @@ export const adminNav: NavGroup[] = [
       { name: "Report Templates", href: "/workspace/settings/templates", icon: LayoutTemplate },
       { name: "Staff Management", href: "/workspace/staff", icon: UserCog },
       { name: "Invoices & Payments", href: "/workspace/billing", icon: Receipt },
-
       { name: "Lab Settings", href: "/workspace/settings", icon: Settings },
-      { name: "Audit & Compliance", href: "/workspace/audit-logs", icon: History }, // ✅ NEW: Full Audit Trail
-      { name: "My Wallet", href: "/workspace/wallet", icon: ShieldCheck },
+      { name: "Audit Logs", href: "/workspace/audit-logs", icon: History },
+      { name: "Wallet & Billing", href: "/workspace/wallet", icon: Wallet }, // Updated to Wallet icon
     ],
   },
 ];
@@ -108,14 +104,14 @@ export const receptionistNav: NavGroup[] = [
       { name: "New Registration", href: "/workspace/registration", icon: UserPlus, badge: "Start" },
       { name: "Patient Records", href: "/workspace/patients", icon: ClipboardList },
       { name: "Appointments", href: "/workspace/appointments", icon: CalendarDays },
-      { name: "Home Collection", href: "/workspace/logistics", icon: Truck, reqModule: "hasLogistics" },
+      { name: "Home Collection", href: "/workspace/logistics", icon: Truck, moduleTag: "LOGISTICS" },
     ],
   },
   {
     title: "Billing & Dispatch",
     items: [
       { name: "Invoices & Payments", href: "/workspace/billing", icon: Receipt },
-      { name: "Report Dispatch", href: "/workspace/reports", icon: Send }, // ✅ NEW: Receptionists need to send reports!
+      { name: "Report Dispatch", href: "/workspace/reports", icon: Send },
     ],
   },
 ];
@@ -128,22 +124,22 @@ export const technicianNav: NavGroup[] = [
     title: "Clinical Workflow",
     items: [
       { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-      { name: "Sample Accessioning", href: "/workspace/samples", icon: ScanBarcode },
-      { name: "Worklist & Results", href: "/workspace/results", icon: ClipboardCheck, badge: "Live" }, // ✅ NEW: Points to our new Results page
+      { name: "Sample Accession", href: "/workspace/samples", icon: ScanBarcode },
+      { name: "Worklist & Results", href: "/workspace/results", icon: ClipboardCheck, badge: "Live" },
     ],
   },
   {
     title: "Processing",
     items: [
-      { name: "Machine Results", href: "/workspace/analyzers", icon: Cpu, reqModule: "hasMachineIoT" },
-      { name: "AI Review", href: "/workspace/ai-review", icon: BrainCircuit, reqModule: "hasAiPrediction" },
+      { name: "Machine Results", href: "/workspace/analyzers", icon: Cpu, moduleTag: "MACHINE_IOT" },
+      { name: "AI Review", href: "/workspace/ai-review", icon: BrainCircuit, moduleTag: "AI_REVIEW" },
       { name: "Verify & Approve", href: "/workspace/approvals", icon: CheckSquare },
     ],
   },
   {
     title: "Lab Resources",
     items: [
-      { name: "Request Inventory", href: "/workspace/inventory-requests", icon: Box, reqModule: "hasInventory" },
+      { name: "Request Inventory", href: "/workspace/inventory-requests", icon: Box, moduleTag: "INVENTORY" },
     ],
   },
 ];
@@ -153,7 +149,7 @@ export const technicianNav: NavGroup[] = [
 // ==========================================
 export const radiologyNav: NavGroup = {
   title: "Radiology (RIS)",
-  reqModule: "hasRadiology", 
+  moduleTag: "RADIOLOGY", 
   items: [
     { name: "RIS Dashboard", href: "/workspace/radiology/dashboard", icon: Activity },
     { name: "Scan Schedule", href: "/workspace/radiology/appointments", icon: CalendarDays },
@@ -163,13 +159,14 @@ export const radiologyNav: NavGroup = {
   ],
 };
 
-// Attach Radiology to Admin navigation if they have the module
-// (Note: Splice index changed to 3 to accommodate the new "Resources" split)
-adminNav.splice(3, 0, radiologyNav);
+// Attach Radiology right after Clinical Operations
+adminNav.splice(2, 0, radiologyNav);
 
-// Map standard database roles to their specific navigation configurations
+// ==========================================
+// 5. ROLE MAPPER
+// ==========================================
 export const roleNavMap: Record<string, NavGroup[]> = {
-  SUPER_ADMIN: [], // Setup later
+  SUPER_ADMIN: adminNav, 
   LAB_OWNER: adminNav,
   LAB_MANAGER: adminNav, 
   TECHNICIAN: technicianNav,
