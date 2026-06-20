@@ -5,8 +5,9 @@ import {
   LogOut,
   User,
   Settings,
-  CreditCard,
-  Activity, // Changed from FlaskConical to match Sidebar branding
+  Wallet,
+  AlertTriangle,
+  Activity,
   ChevronRight,
   ChevronDown,
   HelpCircle,
@@ -15,7 +16,6 @@ import {
   UserPlus,
   Receipt,
   Scan,
-  LifeBuoy,
   Building2,
   MapPin,
   Check,
@@ -24,6 +24,8 @@ import {
   BarChart3,
   Hash,
   FlaskConical,
+  LifeBuoy,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter, usePathname } from "next/navigation";
@@ -52,23 +54,22 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import NotificationDropdown from "@/components/layouts/NotificationDropdown";
 
-// --- PROPS ---
 interface HeaderProps {
-  user: {
+  toggleSidebar: () => void;
+  userData: {
     name: string;
     email: string;
-    avatar?: string | null;
-    role?: string;
-    employeeId?: string | null;
-    lab?: { name: string } | null;
-    currentBranch?: { id: string; name: string; isMainBranch?: boolean } | null;
-    branches?: { id: string; name: string; isMainBranch?: boolean }[];
+    avatar: string | null;
+    role: string;
+    employeeId: string | null;
+    labName: string;
+    currencySymbol: string;
+    walletBalance: number;
+    currentBranchName: string;
+    branches: any[];
   };
-  // ✅ Added toggleSidebar prop to connect with WorkspaceLayout
-  toggleSidebar: () => void;
 }
 
-// --- DYNAMIC SHORTCUTS GENERATOR ---
 const getQuickShortcuts = (role?: string) => {
   switch (role) {
     case "LAB_OWNER":
@@ -143,14 +144,19 @@ const getQuickShortcuts = (role?: string) => {
   }
 };
 
-export function Header({ user, toggleSidebar }: HeaderProps) {
+export function Header({ toggleSidebar, userData }: HeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const shortcuts = getQuickShortcuts(user?.role);
 
-  // ✅ Only Owners and Super Admins can switch branches
+  const shortcuts = getQuickShortcuts(userData?.role);
+
   const canSwitchBranch =
-    user?.role === "LAB_OWNER" || user?.role === "SUPER_ADMIN";
+    userData?.role === "LAB_OWNER" ||
+    userData?.role === "SUPER_ADMIN" ||
+    userData?.role === "LAB_MANAGER";
+
+  const isFinanceManager =
+    userData?.role === "LAB_OWNER" || userData?.role === "SUPER_ADMIN";
 
   const handleLogout = async () => {
     const toastId = toast.loading("Logging out securely...");
@@ -163,36 +169,40 @@ export function Header({ user, toggleSidebar }: HeaderProps) {
         throw new Error("Logout failed on server");
       }
     } catch (error) {
-      // Fallback cleanup if server fails
       document.cookie = "token=; Max-Age=0; path=/;";
       toast.success("Logged out", { id: toastId });
       window.location.href = "/login";
     }
   };
 
-  // ✅ Actually switch the branch by setting a cookie the backend can read
   const handleSwitchBranch = (branchId: string, branchName: string) => {
     if (branchId === "ALL") {
-      document.cookie = "activeBranchId=; Max-Age=0; path=/;"; // Clear cookie to view all
-      toast.success(`Switched to Master God-View`);
+      document.cookie = "activeBranchId=; Max-Age=0; path=/;";
+      toast.success(`Switched to Global Master View`);
     } else {
-      document.cookie = `activeBranchId=${branchId}; path=/; max-age=86400`; // 1 day
+      document.cookie = `activeBranchId=${branchId}; path=/; max-age=86400`;
       toast.success(`Switched workspace to ${branchName}`);
     }
-    router.refresh(); // Refresh the page to trigger new data fetch
+    router.refresh();
   };
 
-  const userName = user?.name || "User";
+  const userName = userData?.name || "User";
+  const userEmail = userData?.email || "";
+  const labName = userData?.labName || "Patholab Cloud";
+  const currentBranchName = userData?.currentBranchName || "Main Branch";
+  const availableBranches = userData?.branches || [];
+  const currencySymbol = userData?.currencySymbol || "₹";
+
+  const rawBalance = userData?.walletBalance ?? 0.0;
+  const isZeroBalance = rawBalance <= 0;
+  const isLowBalance = rawBalance > 0 && rawBalance < 100.0;
+
   const initials = userName
     .split(" ")
     .map((n) => n[0])
     .join("")
     .toUpperCase()
     .substring(0, 2);
-
-  const labName = user?.lab?.name || "Patholab Cloud";
-  const currentBranchName = user?.currentBranch?.name || "Main Branch";
-  const availableBranches = user?.branches || [];
 
   const getPageTitle = (path: string) => {
     const segments = path.split("/").filter(Boolean);
@@ -204,14 +214,13 @@ export function Header({ user, toggleSidebar }: HeaderProps) {
       registration: "New Registration",
       billing: "Billing & Invoices",
       tests: "Test Menu",
-      inventory: "Inventory",
-      settings: "Settings",
-      technician: "Technician Dashboard",
-      receptionist: "Front Desk",
-      analyzers: "Analyzer Management",
-      subscription: "Subscription Plan",
-      support: "Help & Support",
+      inventory: "Inventory Management",
+      settings: "System Settings",
+      analyzers: "Analyzer Interfacing",
+      wallet: "Lab Wallet & Top-up",
       staff: "Staff Directory",
+      samples: "Sample Track",
+      support: "Help & Support",
     };
 
     if (!lastSegment) return "Dashboard";
@@ -225,7 +234,7 @@ export function Header({ user, toggleSidebar }: HeaderProps) {
 
   const currentPage = getPageTitle(pathname);
 
-  // --- BRANCH BADGE COMPONENT ---
+  // ✅ UI UPDATE: Lab name is now big & bold, Branch name is the smaller subtitle
   const BranchDisplay = () => (
     <div
       className={`h-10 px-2.5 py-1.5 flex items-center gap-2 rounded-xl border border-transparent transition-all text-left ${canSwitchBranch ? "hover:bg-slate-100 hover:border-slate-200" : ""}`}>
@@ -233,10 +242,10 @@ export function Header({ user, toggleSidebar }: HeaderProps) {
         <Building2 className="w-4 h-4 text-slate-500" />
       </div>
       <div className="flex flex-col items-start justify-center">
-        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-0.5">
+        <span className="text-sm font-extrabold text-slate-900 tracking-tight leading-none mb-0.5">
           {labName}
         </span>
-        <span className="text-sm font-extrabold text-slate-900 tracking-tight leading-none flex items-center gap-1.5">
+        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider leading-none flex items-center gap-1">
           {currentBranchName}
           {canSwitchBranch && (
             <ChevronDown className="w-3 h-3 text-slate-400" />
@@ -247,11 +256,10 @@ export function Header({ user, toggleSidebar }: HeaderProps) {
   );
 
   return (
-    <div className="sticky top-0 z-40 px-2 sm:px-6 py-3 pointer-events-none">
+    <div className="sticky top-0 z-40 px-2 sm:px-6 py-3 pointer-events-none w-full">
       <header className="pointer-events-auto h-16 w-full mx-auto flex items-center justify-between rounded-2xl bg-white/80 backdrop-blur-xl border border-slate-200 shadow-sm pr-3 pl-2 sm:pr-5 sm:pl-3 transition-all duration-300">
         {/* 1. LEFT SIDE: HAMBURGER, BRANDING & BREADCRUMBS */}
         <div className="flex items-center gap-1.5 sm:gap-2 overflow-hidden whitespace-nowrap">
-          {/* ✅ Integrated toggleSidebar Prop */}
           <Button
             variant="ghost"
             size="icon"
@@ -260,7 +268,6 @@ export function Header({ user, toggleSidebar }: HeaderProps) {
             <Menu className="h-5 w-5" />
           </Button>
 
-          {/* ✅ Updated to Match Sidebar Blue/Slate Theme */}
           <Link
             href="/workspace"
             className="hidden sm:flex items-center justify-center h-10 w-10 bg-blue-600/10 rounded-xl border border-blue-500/20 group transition-all hover:bg-blue-600/20 mr-1 shrink-0">
@@ -282,7 +289,6 @@ export function Header({ user, toggleSidebar }: HeaderProps) {
                     Switch Workspace
                   </DropdownMenuLabel>
                   <div className="space-y-1">
-                    {/* Master View Option for Owners */}
                     <DropdownMenuItem
                       onClick={() => handleSwitchBranch("ALL", "All Branches")}
                       className={`cursor-pointer rounded-xl px-3 py-2.5 flex items-center justify-between transition-colors ${currentBranchName === "All Branches" ? "bg-blue-50 text-blue-900" : "hover:bg-slate-50"}`}>
@@ -295,7 +301,7 @@ export function Header({ user, toggleSidebar }: HeaderProps) {
                             Global Master View
                           </span>
                           <span className="text-[10px] text-slate-400 font-medium mt-1">
-                            See all lab data
+                            System-wide data access
                           </span>
                         </div>
                       </div>
@@ -325,7 +331,7 @@ export function Header({ user, toggleSidebar }: HeaderProps) {
                               </span>
                               {branch.isMainBranch && (
                                 <span className="text-[10px] text-slate-400 font-medium mt-1">
-                                  Headquarters
+                                  Primary Hub
                                 </span>
                               )}
                             </div>
@@ -357,7 +363,6 @@ export function Header({ user, toggleSidebar }: HeaderProps) {
             </span>
           </div>
 
-          {/* Mobile Fallback Title */}
           <div className="sm:hidden flex flex-col justify-center max-w-[140px] ml-1">
             <span className="text-[9px] font-bold text-blue-600 uppercase tracking-widest leading-none mb-0.5 truncate">
               {currentBranchName}
@@ -368,18 +373,73 @@ export function Header({ user, toggleSidebar }: HeaderProps) {
           </div>
         </div>
 
-        {/* 2. CENTER/RIGHT: ACTIONS */}
+        {/* 2. CENTER/RIGHT: WALLET, HELPDESK & INTERACTIVE POPUPS */}
         <div className="flex items-center gap-1.5 sm:gap-2">
-          <div className="hidden lg:flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl h-10 mr-1 shadow-sm">
-            <Hash className="h-3.5 w-3.5 text-slate-400" />
-            <span className="text-xs font-bold text-slate-700 tracking-wider font-mono">
-              {user?.employeeId ? (
-                user.employeeId
-              ) : (
-                <span className="text-amber-600">PENDING</span>
+          {isFinanceManager && (
+            <div className="flex items-center mr-1 shrink-0">
+              {/* STATE 1: ZERO BALANCE WARNING DISPLAY */}
+              {isZeroBalance && (
+                <Link href="/workspace/wallet?action=recharge">
+                  <div className="h-10 px-3 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 text-red-700 animate-pulse transition-all shadow-sm hover:bg-red-100">
+                    <AlertTriangle className="h-4 w-4 text-red-600 shrink-0" />
+                    <div className="flex flex-col items-start justify-center">
+                      <span className="text-[8px] font-black uppercase tracking-wider leading-none mb-0.5 text-red-500">
+                        Zero Balance
+                      </span>
+                      <span className="text-xs font-extrabold tracking-tight leading-none">
+                        Recharge to use software
+                      </span>
+                    </div>
+                  </div>
+                </Link>
               )}
-            </span>
-          </div>
+
+              {/* STATE 2: LOW BALANCE WARNING DISPLAY */}
+              {isLowBalance && (
+                <Link href="/workspace/wallet?action=recharge">
+                  <div className="h-10 px-3 flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 transition-all shadow-sm hover:bg-amber-100/80 group">
+                    <Wallet className="h-4 w-4 text-amber-600 shrink-0 group-hover:scale-110 transition-transform" />
+                    <div className="flex flex-col items-start justify-center">
+                      <span className="text-[8px] font-bold text-amber-500 uppercase tracking-wider leading-none mb-0.5">
+                        Balance: {currencySymbol}
+                        {rawBalance.toFixed(2)}
+                      </span>
+                      <span className="text-xs font-black tracking-tight leading-none animate-pulse">
+                        Low Balance - Add Funds
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              )}
+
+              {/* STATE 3: HEALTHY WALLET BALANCE TRACKER */}
+              {!isZeroBalance && !isLowBalance && (
+                <Link href="/workspace/wallet">
+                  <div className="h-10 px-3 flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 shadow-sm hover:bg-slate-100 transition-all">
+                    <Wallet className="h-4 w-4 text-slate-500 shrink-0" />
+                    <div className="flex flex-col items-start justify-center">
+                      <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider leading-none mb-0.5">
+                        Lab Wallet
+                      </span>
+                      <span className="text-xs font-black tracking-tight leading-none text-slate-900 font-mono">
+                        {currencySymbol}
+                        {rawBalance.toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              )}
+            </div>
+          )}
+
+          {userData?.employeeId && (
+            <div className="hidden lg:flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl h-10 mr-1 shadow-sm">
+              <Hash className="h-3.5 w-3.5 text-slate-400" />
+              <span className="text-xs font-bold text-slate-700 tracking-wider font-mono">
+                {userData.employeeId}
+              </span>
+            </div>
+          )}
 
           <div className="hidden md:flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-xl p-1 mr-1 shadow-sm">
             <TooltipProvider delayDuration={100}>
@@ -397,7 +457,7 @@ export function Header({ user, toggleSidebar }: HeaderProps) {
                       </Button>
                     </Link>
                   </TooltipTrigger>
-                  <TooltipContent className="bg-slate-900 border-0 text-xs font-bold px-3 py-1.5 rounded-lg shadow-xl">
+                  <TooltipContent className="bg-slate-900 border-0 text-xs font-bold px-3 py-1.5 rounded-lg shadow-xl text-white">
                     {shortcut.label}
                   </TooltipContent>
                 </Tooltip>
@@ -405,24 +465,26 @@ export function Header({ user, toggleSidebar }: HeaderProps) {
             </TooltipProvider>
           </div>
 
+          {/* HELP SUPPORT MODULE POPUP CARD CONTAINER */}
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-10 w-10 rounded-xl text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-all shrink-0">
+                className={`h-10 w-10 rounded-xl transition-all shrink-0 ${pathname === "/workspace/support" ? "bg-slate-100 text-slate-900" : "text-slate-400 hover:text-slate-900 hover:bg-slate-100"}`}>
                 <HelpCircle className="h-5 w-5" />
               </Button>
             </PopoverTrigger>
             <PopoverContent
               align="end"
-              className="w-80 p-0 shadow-2xl border-0 rounded-2xl overflow-hidden animate-in zoom-in-95 data-[state=closed]:zoom-out-95 duration-200">
+              className="w-80 p-0 shadow-2xl border border-slate-200 rounded-2xl overflow-hidden animate-in zoom-in-95 duration-200">
               <div className="bg-[#0f172a] p-5">
                 <h4 className="font-bold text-white flex items-center gap-2">
-                  <LifeBuoy className="w-4 h-4 text-blue-400" /> Need Help?
+                  <LifeBuoy className="w-4 h-4 text-blue-400" /> Need
+                  Assistance?
                 </h4>
                 <p className="text-xs text-slate-400 mt-1 font-medium">
-                  We're here to support your laboratory operations.
+                  We are here to support your daily laboratory operations.
                 </p>
               </div>
               <div className="p-2 space-y-1 bg-white">
@@ -452,6 +514,17 @@ export function Header({ user, toggleSidebar }: HeaderProps) {
                     </p>
                   </div>
                 </div>
+
+                <DropdownMenuSeparator className="my-1 bg-slate-100" />
+
+                <div className="p-1">
+                  <Link href="/workspace/support">
+                    <Button className="w-full justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2 h-9 rounded-xl shadow-sm transition-colors">
+                      Open Support Dashboard
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </Button>
+                  </Link>
+                </div>
               </div>
             </PopoverContent>
           </Popover>
@@ -460,6 +533,7 @@ export function Header({ user, toggleSidebar }: HeaderProps) {
             <NotificationDropdown />
           </div>
 
+          {/* USER ACCOUNT PROFILE SUB-SECTION SELECTION POPUP */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -467,7 +541,7 @@ export function Header({ user, toggleSidebar }: HeaderProps) {
                 className="relative h-10 w-10 rounded-xl p-0 ml-1 border border-slate-200 shadow-sm hover:ring-4 ring-blue-500/10 transition-all overflow-hidden shrink-0">
                 <Avatar className="h-full w-full rounded-none">
                   <AvatarImage
-                    src={user?.avatar || ""}
+                    src={userData?.avatar || ""}
                     alt={userName}
                     className="object-cover"
                   />
@@ -482,11 +556,10 @@ export function Header({ user, toggleSidebar }: HeaderProps) {
               className="w-72 mt-3 p-0 rounded-2xl shadow-xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200"
               align="end"
               forceMount>
-              {/* ✅ Matched Profile Header to Sidebar Background */}
               <DropdownMenuLabel className="font-normal p-5 bg-[#0B1120] text-white relative">
                 <div className="flex items-center gap-4">
                   <Avatar className="h-12 w-12 border-2 border-slate-700 rounded-xl shadow-inner">
-                    <AvatarImage src={user?.avatar || ""} alt={userName} />
+                    <AvatarImage src={userData?.avatar || ""} alt={userName} />
                     <AvatarFallback className="bg-slate-800 text-white font-bold">
                       {initials}
                     </AvatarFallback>
@@ -496,12 +569,12 @@ export function Header({ user, toggleSidebar }: HeaderProps) {
                       {userName}
                     </p>
                     <p className="text-xs font-medium text-slate-400 truncate max-w-[150px]">
-                      {user?.email}
+                      {userEmail}
                     </p>
                     <div className="flex gap-2 mt-2">
-                      {user?.role && (
+                      {userData?.role && (
                         <Badge className="w-fit bg-blue-500/20 text-blue-400 border border-blue-500/30 text-[9px] uppercase tracking-widest font-black rounded-md px-1.5 py-0.5">
-                          {user.role.replace("_", " ")}
+                          {userData.role.replace("_", " ")}
                         </Badge>
                       )}
                     </div>
@@ -522,21 +595,21 @@ export function Header({ user, toggleSidebar }: HeaderProps) {
                     </DropdownMenuItem>
                   </Link>
 
-                  {user?.role === "LAB_OWNER" && (
-                    <Link href="/workspace/subscription">
+                  {userData?.role === "LAB_OWNER" && (
+                    <Link href="/workspace/wallet">
                       <DropdownMenuItem className="cursor-pointer rounded-xl py-3 px-3 hover:bg-slate-50 focus:bg-slate-50 transition-colors">
                         <div className="bg-slate-100 p-1.5 rounded-lg mr-3">
-                          <CreditCard className="h-4 w-4 text-slate-600" />
+                          <Wallet className="h-4 w-4 text-slate-600" />
                         </div>
                         <span className="font-bold text-sm text-slate-700">
-                          Billing & Plans
+                          Lab Wallet & Billing
                         </span>
                       </DropdownMenuItem>
                     </Link>
                   )}
 
-                  {(user?.role === "LAB_OWNER" ||
-                    user?.role === "LAB_MANAGER") && (
+                  {(userData?.role === "LAB_OWNER" ||
+                    userData?.role === "LAB_MANAGER") && (
                     <Link href="/workspace/settings?tab=general">
                       <DropdownMenuItem className="cursor-pointer rounded-xl py-3 px-3 hover:bg-slate-50 focus:bg-slate-50 transition-colors">
                         <div className="bg-slate-100 p-1.5 rounded-lg mr-3">

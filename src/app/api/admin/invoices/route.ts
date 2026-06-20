@@ -3,29 +3,43 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { startOfDay, endOfDay, parseISO } from 'date-fns';
+import { getCurrentUser } from '@/lib/auth';
 
 export async function GET(req: Request) {
   try {
+    // 1. Authenticate Request
+    const user = await getCurrentUser();
+    if (!user || user.role !== "SUPER_ADMIN") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
+    const limit = parseInt(searchParams.get('limit') || '50');
     const search = searchParams.get('search') || '';
-    const status = searchParams.get('status');
+    const type = searchParams.get('type') || 'RECHARGE'; // Only fetch Wallet Recharges
     const from = searchParams.get('from');
     const to = searchParams.get('to');
 
     const skip = (page - 1) * limit;
 
-    // 1. Build Query
+    // 2. Build Query using the new WalletTransaction model
     const whereClause: any = {
-      OR: [
-        { invoiceNumber: { contains: search, mode: 'insensitive' } },
-        { lab: { name: { contains: search, mode: 'insensitive' } } },
-      ]
+      type: type, // Matches 'RECHARGE'
     };
 
-    if (status && status !== 'all') whereClause.status = status;
-    
+    // Advanced relational searching (Transaction ID or Lab Name)
+    if (search) {
+      whereClause.OR = [
+        { id: { contains: search, mode: 'insensitive' } },
+        {
+          wallet: {
+            lab: { name: { contains: search, mode: 'insensitive' } }
+          }
+        },
+      ];
+    }
+
     if (from && to) {
       whereClause.createdAt = {
         gte: startOfDay(parseISO(from)),
@@ -33,29 +47,42 @@ export async function GET(req: Request) {
       };
     }
 
-    // 2. Fetch Invoices & Stats
-    const [invoices, total, stats] = await Promise.all([
-      prisma.invoice.findMany({
+    // 3. Fetch Transactions & Stats Concurrently
+    const [transactions, total, stats] = await Promise.all([
+      prisma.walletTransaction.findMany({
         where: whereClause,
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
         include: {
-          lab: { select: { name: true, email: true, gstNumber: true, address: true } },
-          items: true // Include line items
+          wallet: {
+            include: {
+              lab: { 
+                select: { 
+                  name: true, 
+                  email: true, 
+                  gstNumber: true, 
+                  address: true, 
+                  city: true, 
+                  pincode: true 
+                } 
+              }
+            }
+          }
         }
       }),
-      prisma.invoice.count({ where: whereClause }),
+      prisma.walletTransaction.count({ where: whereClause }),
       
-      // Quick Stats for Header
-      prisma.invoice.aggregate({
-        where: { status: 'PAID' },
-        _sum: { grandTotal: true }
+      // Calculate Total Historical Revenue from Recharges
+      prisma.walletTransaction.aggregate({
+        where: { type: 'RECHARGE' },
+        _sum: { amount: true }
       })
     ]);
 
+    // 4. Format & Return
     return NextResponse.json({
-      data: invoices,
+      data: transactions,
       meta: {
         total,
         page,
@@ -63,12 +90,12 @@ export async function GET(req: Request) {
         totalPages: Math.ceil(total / limit)
       },
       stats: {
-        totalRevenue: stats._sum.grandTotal || 0
+        totalRevenue: Number(stats._sum.amount || 0)
       }
     });
 
   } catch (error) {
-    console.error('Invoices API Error:', error);
+    console.error('[ADMIN_INVOICES_API_ERROR]:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

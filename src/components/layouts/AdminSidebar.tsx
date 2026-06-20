@@ -10,8 +10,6 @@ import {
   BarChart3,
   Mail,
   Building2,
-  Box,
-  CreditCard,
   Receipt,
   LifeBuoy,
   Settings,
@@ -23,10 +21,12 @@ import {
   Server,
   Database,
   Files,
-  PlusSquare,
   Activity,
   Trash2,
   HardDriveDownload,
+  Wallet,
+  ArrowDownRight,
+  ArrowUpRight,
 } from "lucide-react";
 import {
   Tooltip,
@@ -35,34 +35,42 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import Image from "next/image"; // Added for optimized logo rendering
+import Image from "next/image";
 
-// Navigation Data
+// --- PIVOTED NAVIGATION DATA ---
 const navGroups = [
   {
     title: "Overview",
     items: [
       { name: "Command Center", href: "/admin", icon: LayoutDashboard },
       { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
-      { name: "Leads", href: "/admin/leads", icon: Mail },
+      { name: "Leads & Outreach", href: "/admin/leads", icon: Mail },
     ],
   },
   {
     title: "Tenant Management",
     items: [
-      { name: "Labs & Usage", href: "/admin/labs", icon: Building2 },
+      { name: "Client Labs", href: "/admin/labs", icon: Building2 },
       { name: "Global Users", href: "/admin/users", icon: Users },
       { name: "Master Catalog", href: "/admin/catalog", icon: Database },
     ],
   },
   {
-    title: "Monetization",
+    title: "Platform Economics", // Replaced 'Monetization'
     items: [
-      { name: "SaaS Plans", href: "/admin/plans", icon: Box },
-      { name: "Add-Ons", href: "/admin/addons", icon: PlusSquare },
-      { name: "Payment Methods", href: "/admin/payments", icon: CreditCard },
-      { name: "Subscriptions", href: "/admin/subscriptions", icon: CreditCard },
-      { name: "Invoices", href: "/admin/invoices", icon: Receipt },
+      // Replaced old SaaS Subscriptions with Wallet system
+      { name: "Wallet Ledger", href: "/admin/wallet", icon: Wallet },
+      {
+        name: "Recharge History",
+        href: "/admin/wallet/recharges",
+        icon: ArrowDownRight,
+      },
+      {
+        name: "Usage Deductions",
+        href: "/admin/wallet/deductions",
+        icon: ArrowUpRight,
+      },
+      { name: "Tax Invoices", href: "/admin/invoices", icon: Receipt },
       { name: "Webhooks", href: "/admin/webhooks", icon: HardDriveDownload },
     ],
   },
@@ -74,7 +82,7 @@ const navGroups = [
     ],
   },
   {
-    title: "System",
+    title: "System Control",
     items: [
       { name: "Notifications", href: "/admin/notifications", icon: Bell },
       { name: "Support Tickets", href: "/admin/support", icon: LifeBuoy },
@@ -96,13 +104,13 @@ export default function AdminSidebar({
   const pathname = usePathname();
   const router = useRouter();
   const [systemStatus, setSystemStatus] = useState<any>(null);
-  const [systemConfig, setSystemConfig] = useState<any>(null); // State for branding
+  const [systemConfig, setSystemConfig] = useState<any>(null);
 
   // Fetch System Status & Config on Mount
   useEffect(() => {
     Promise.all([
       fetch("/api/system/status").then((res) => (res.ok ? res.json() : null)),
-      fetch("/api/system/config").then((res) => (res.ok ? res.json() : null)), // Assuming you create this endpoint to return SystemConfig
+      fetch("/api/system/config").then((res) => (res.ok ? res.json() : null)),
     ])
       .then(([statusData, configData]) => {
         if (statusData) setSystemStatus(statusData);
@@ -146,17 +154,17 @@ export default function AdminSidebar({
                 />
               </div>
             ) : (
-              <ShieldCheck className="text-blue-500 h-8 w-8 shrink-0" />
+              <ShieldCheck className="text-emerald-500 h-8 w-8 shrink-0" />
             )}
 
             {!collapsed && (
               <div className="overflow-hidden">
                 {/* Dynamic System Name */}
                 <h2 className="text-lg font-bold text-white tracking-tight leading-none truncate">
-                  {systemConfig?.systemName || "Super Admin"}
+                  {systemConfig?.systemName || "Patholab Admin"}
                 </h2>
-                <span className="text-[10px] text-blue-400 font-mono uppercase">
-                  Root Access
+                <span className="text-[10px] text-emerald-400 font-mono uppercase tracking-widest font-bold">
+                  God Mode
                 </span>
               </div>
             )}
@@ -180,14 +188,14 @@ export default function AdminSidebar({
                   className={cn(
                     "font-mono flex items-center gap-1.5",
                     systemStatus.dbStatus === "Connected"
-                      ? "text-green-400"
+                      ? "text-emerald-400"
                       : "text-red-400",
                   )}>
                   <span
                     className={cn(
                       "h-1.5 w-1.5 rounded-full",
                       systemStatus.dbStatus === "Connected"
-                        ? "bg-green-500 animate-pulse"
+                        ? "bg-emerald-500 animate-pulse"
                         : "bg-red-500",
                     )}
                   />
@@ -204,7 +212,7 @@ export default function AdminSidebar({
             {navGroups.map((group) => (
               <div key={group.title}>
                 {!collapsed && (
-                  <h3 className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-2 px-3 transition-opacity duration-300">
+                  <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 px-3 transition-opacity duration-300">
                     {group.title}
                   </h3>
                 )}
@@ -220,33 +228,33 @@ export default function AdminSidebar({
                               "flex items-center rounded-lg transition-all duration-200 group relative",
                               collapsed ? "justify-center p-3" : "px-3 py-2.5",
                               isActive
-                                ? "bg-blue-600 text-white shadow-lg shadow-blue-900/20"
-                                : "hover:bg-slate-800 hover:text-white",
+                                ? "bg-emerald-600/10 text-emerald-400 shadow-sm border border-emerald-500/20"
+                                : "hover:bg-slate-800 hover:text-white border border-transparent",
                             )}>
                             <item.icon
                               className={cn(
                                 "h-5 w-5 shrink-0 transition-colors",
                                 isActive
-                                  ? "text-white"
-                                  : "text-slate-400 group-hover:text-white",
+                                  ? "text-emerald-400"
+                                  : "text-slate-500 group-hover:text-slate-300",
                               )}
                             />
 
                             {!collapsed && (
-                              <span className="ml-3 text-sm font-medium whitespace-nowrap overflow-hidden">
+                              <span className="ml-3 text-sm font-semibold whitespace-nowrap overflow-hidden">
                                 {item.name}
                               </span>
                             )}
 
                             {isActive && (
-                              <div className="absolute left-0 top-2 bottom-2 w-1 bg-white/20 rounded-r-full" />
+                              <div className="absolute left-0 top-2 bottom-2 w-1 bg-emerald-500 rounded-r-full shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
                             )}
                           </Link>
                         </TooltipTrigger>
                         {collapsed && (
                           <TooltipContent
                             side="right"
-                            className="bg-slate-900 text-white border-slate-700">
+                            className="bg-slate-900 text-white border-slate-700 font-medium">
                             {item.name}
                           </TooltipContent>
                         )}
@@ -267,8 +275,8 @@ export default function AdminSidebar({
             {collapsed ? (
               <ChevronRight className="h-4 w-4" />
             ) : (
-              <div className="flex items-center gap-2 text-xs font-medium">
-                <ChevronLeft className="h-4 w-4" /> Collapse Sidebar
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400">
+                <ChevronLeft className="h-4 w-4" /> Collapse
               </div>
             )}
           </button>
@@ -276,7 +284,7 @@ export default function AdminSidebar({
           <button
             onClick={handleLogout}
             className={cn(
-              "w-full flex items-center gap-3 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-500 hover:text-red-400 transition-all border border-transparent hover:border-red-900/30",
+              "w-full flex items-center gap-3 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 hover:text-rose-400 transition-all border border-transparent hover:border-rose-900/30",
               collapsed ? "justify-center p-3" : "px-4 py-3",
             )}>
             <LogOut className="h-5 w-5 shrink-0" />
