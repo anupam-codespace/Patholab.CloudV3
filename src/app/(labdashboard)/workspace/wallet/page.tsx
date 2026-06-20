@@ -9,14 +9,16 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Plus,
-  Download,
   Search,
   Calendar,
   Clock,
-  FileText,
   ShieldCheck,
   Receipt,
   CreditCard,
+  CheckCircle2,
+  AlertTriangle,
+  Eye,
+  FileText,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -31,12 +33,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // --- Formatter Utilities ---
@@ -44,11 +41,6 @@ const formatCurrency = (amount: number) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(
     amount,
   );
-
-const extractPaymentId = (description: string) => {
-  const match = description.match(/Payment ID:\s*([^)]+)/);
-  return match ? match[1] : "N/A";
-};
 
 export default function WalletDashboard() {
   const router = useRouter();
@@ -69,40 +61,54 @@ export default function WalletDashboard() {
 
   if (isLoading) return <WalletSkeleton />;
 
-  const { wallet, transactions = [] } = data || { wallet: {}, transactions: [] };
-  const currentBalance = transactions.reduce((acc: number, tx: any) => {
-   return tx.type === "RECHARGE"
-     ? acc + Number(tx.amount)
-     : acc - Number(tx.amount);
- }, 0);
+  const { wallet, transactions = [] } = data || {
+    wallet: {},
+    transactions: [],
+  };
 
- const minRecharge = Number(wallet?.minimumRecharge ?? 100);
- const feePerPatient = Number(wallet?.perPatientFee ?? 2.5);
+  // 1. Database Balance (Source of Truth)
+  const dbBalance = Number(wallet?.balance ?? 0);
+
+  // 2. Calculated Balance (Ledger Audit)
+  const calculatedBalance = transactions.reduce((acc: number, tx: any) => {
+    if (tx.type === "RECHARGE" || tx.type === "REFUND") {
+      return acc + Number(tx.amount);
+    } else {
+      // DEDUCTION or SETUP_FEE
+      return acc - Number(tx.amount);
+    }
+  }, 0);
+
+  // 3. Integrity Check
+  const isBalanceMatching = Math.abs(dbBalance - calculatedBalance) < 0.01;
+
+  const feePerPatient = Number(wallet?.perPatientFee ?? 2.5);
 
   // --- Calculations ---
   const totalRecharged = transactions
-    .filter((tx: any) => tx.type === "RECHARGE")
+    .filter((tx: any) => tx.type === "RECHARGE" || tx.type === "REFUND")
     .reduce((sum: number, tx: any) => sum + Number(tx.amount), 0);
 
   const totalSpent = transactions
-    .filter((tx: any) => tx.type === "DEDUCTION")
+    .filter((tx: any) => tx.type === "DEDUCTION" || tx.type === "SETUP_FEE")
     .reduce((sum: number, tx: any) => sum + Number(tx.amount), 0);
 
   // --- Filtering ---
   const filteredTransactions = transactions.filter((tx: any) => {
     const matchesTab = activeTab === "ALL" || tx.type === activeTab;
     const matchesSearch = tx.description
-      .toLowerCase()
+      ?.toLowerCase()
       .includes(searchTerm.toLowerCase());
     return matchesTab && matchesSearch;
   });
 
-  // --- Download PDF Action ---
-  const handleDownloadInvoice = (txId: string, e: React.MouseEvent) => {
+  // --- View Invoice Action (Changed from Direct Download) ---
+  const handleViewInvoice = (txId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    toast.success("Generating Invoice PDF...");
-    // Redirects to your backend PDF generator route
-    window.open(`/api/workspace/wallet/invoice/${txId}`, "_blank");
+    // Closes the modal if open, then navigates to the view page
+    setSelectedTx(null);
+    // Routes to a front-end view page instead of the raw PDF API
+    router.push(`/workspace/wallet/invoice/${txId}`);
   };
 
   return (
@@ -136,26 +142,50 @@ export default function WalletDashboard() {
                 <p className="text-indigo-200 text-sm font-semibold uppercase tracking-wider">
                   Available Credits
                 </p>
-                <h2 className="text-5xl font-black tracking-tighter text-emerald-400">
-                  {formatCurrency(currentBalance)}
+                <h2 className="text-5xl font-black tracking-tighter text-emerald-400 flex items-center gap-3">
+                  {formatCurrency(dbBalance)}
                 </h2>
+                {/* Ledger Integrity Indicator */}
+                <div className="pt-2">
+                  {isBalanceMatching ? (
+                    <Badge
+                      variant="outline"
+                      className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 font-bold px-2 py-0.5">
+                      <CheckCircle2 className="w-3 h-3 mr-1.5" /> Ledger
+                      Verified
+                    </Badge>
+                  ) : (
+                    <Badge
+                      variant="outline"
+                      className="bg-rose-500/20 text-rose-300 border-rose-500/30 font-bold px-2 py-0.5">
+                      <AlertTriangle className="w-3 h-3 mr-1.5" /> Mismatch!
+                      Calc: {formatCurrency(calculatedBalance)}
+                    </Badge>
+                  )}
+                </div>
               </div>
-              <ShieldCheck className="h-8 w-8 text-indigo-300 opacity-50" />
+              <ShieldCheck
+                className={`h-8 w-8 opacity-50 ${isBalanceMatching ? "text-emerald-300" : "text-rose-300"}`}
+              />
             </div>
 
             <div className="pt-4 border-t border-indigo-500/30 flex justify-between items-end">
               <div>
-                <p className="text-xs text-indigo-300 mb-1">Validity Ends On</p>
+                <p className="text-xs text-indigo-300 mb-1 uppercase tracking-wider font-bold">
+                  Validity Ends On
+                </p>
                 <p className="font-medium text-sm text-indigo-100">
                   {wallet?.validityEndDate
                     ? format(new Date(wallet.validityEndDate), "dd MMM yyyy")
-                    : "N/A"}
+                    : "No Expiry"}
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-xs text-indigo-300 mb-1">Current Rate</p>
+                <p className="text-xs text-indigo-300 mb-1 uppercase tracking-wider font-bold">
+                  Deduction Rate
+                </p>
                 <p className="font-medium text-sm text-indigo-100">
-                  ₹{feePerPatient} / Patient
+                  {formatCurrency(feePerPatient)} / Patient
                 </p>
               </div>
             </div>
@@ -177,7 +207,7 @@ export default function WalletDashboard() {
               {formatCurrency(totalRecharged)}
             </h3>
             <p className="text-xs font-medium text-slate-400 mt-2">
-              Lifetime wallet additions
+              Lifetime wallet additions & refunds
             </p>
           </CardContent>
         </Card>
@@ -197,7 +227,7 @@ export default function WalletDashboard() {
               {formatCurrency(totalSpent)}
             </h3>
             <p className="text-xs font-medium text-slate-400 mt-2">
-              Spent on clinical operations
+              Spent on clinical operations & setups
             </p>
           </CardContent>
         </Card>
@@ -256,8 +286,8 @@ export default function WalletDashboard() {
                       {/* Left: Icon & Description */}
                       <div className="flex items-center gap-4 mb-3 md:mb-0">
                         <div
-                          className={`p-3 rounded-full shrink-0 ${tx.type === "RECHARGE" ? "bg-emerald-100 text-emerald-600" : "bg-rose-100 text-rose-600"}`}>
-                          {tx.type === "RECHARGE" ? (
+                          className={`p-3 rounded-full shrink-0 ${tx.type === "RECHARGE" || tx.type === "REFUND" ? "bg-emerald-100 text-emerald-600" : "bg-rose-100 text-rose-600"}`}>
+                          {tx.type === "RECHARGE" || tx.type === "REFUND" ? (
                             <ArrowDownRight className="h-5 w-5" />
                           ) : (
                             <ArrowUpRight className="h-5 w-5" />
@@ -265,7 +295,7 @@ export default function WalletDashboard() {
                         </div>
                         <div>
                           <p className="font-bold text-sm text-slate-900 line-clamp-1">
-                            {tx.description}
+                            {tx.description || tx.type}
                           </p>
                           <div className="flex items-center gap-3 text-xs text-slate-500 mt-1 font-medium">
                             <span className="flex items-center">
@@ -284,8 +314,10 @@ export default function WalletDashboard() {
                       <div className="flex items-center justify-between md:justify-end gap-6 ml-12 md:ml-0">
                         <div className="text-right">
                           <p
-                            className={`font-black ${tx.type === "RECHARGE" ? "text-emerald-600" : "text-rose-600"}`}>
-                            {tx.type === "RECHARGE" ? "+" : "-"}
+                            className={`font-black ${tx.type === "RECHARGE" || tx.type === "REFUND" ? "text-emerald-600" : "text-rose-600"}`}>
+                            {tx.type === "RECHARGE" || tx.type === "REFUND"
+                              ? "+"
+                              : "-"}
                             {formatCurrency(Number(tx.amount))}
                           </p>
                           <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mt-0.5">
@@ -293,13 +325,14 @@ export default function WalletDashboard() {
                           </p>
                         </div>
 
+                        {/* Replaced Download with View Invoice Action */}
                         {tx.type === "RECHARGE" && (
                           <Button
                             variant="outline"
                             size="icon"
                             className="h-8 w-8 rounded-full border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 shrink-0"
-                            onClick={(e) => handleDownloadInvoice(tx.id, e)}>
-                            <Download className="h-4 w-4" />
+                            onClick={(e) => handleViewInvoice(tx.id, e)}>
+                            <Eye className="h-4 w-4" />
                           </Button>
                         )}
                       </div>
@@ -319,22 +352,28 @@ export default function WalletDashboard() {
             <>
               {/* Modal Header */}
               <div
-                className={`p-6 text-white text-center ${selectedTx.type === "RECHARGE" ? "bg-emerald-600" : "bg-rose-600"}`}>
+                className={`p-6 text-white text-center ${selectedTx.type === "RECHARGE" || selectedTx.type === "REFUND" ? "bg-emerald-600" : "bg-rose-600"}`}>
                 <div className="mx-auto w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mb-4">
-                  {selectedTx.type === "RECHARGE" ? (
+                  {selectedTx.type === "RECHARGE" ||
+                  selectedTx.type === "REFUND" ? (
                     <ArrowDownRight className="h-6 w-6 text-white" />
                   ) : (
                     <ArrowUpRight className="h-6 w-6 text-white" />
                   )}
                 </div>
                 <h2 className="text-3xl font-black tracking-tighter">
-                  {selectedTx.type === "RECHARGE" ? "+" : "-"}
+                  {selectedTx.type === "RECHARGE" ||
+                  selectedTx.type === "REFUND"
+                    ? "+"
+                    : "-"}
                   {formatCurrency(Number(selectedTx.amount))}
                 </h2>
                 <p className="text-white/80 text-sm font-medium mt-1 uppercase tracking-widest">
                   {selectedTx.type === "RECHARGE"
                     ? "Payment Received"
-                    : "Wallet Deduction"}
+                    : selectedTx.type === "REFUND"
+                      ? "Amount Refunded"
+                      : "Wallet Deduction"}
                 </p>
               </div>
 
@@ -368,7 +407,7 @@ export default function WalletDashboard() {
                     Description
                   </p>
                   <p className="text-sm font-medium text-slate-700 leading-snug">
-                    {selectedTx.description}
+                    {selectedTx.description || selectedTx.type}
                   </p>
 
                   {/* Extract Razorpay Mode details if it's a recharge */}
@@ -392,8 +431,8 @@ export default function WalletDashboard() {
                   {selectedTx.type === "RECHARGE" ? (
                     <Button
                       className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl h-12"
-                      onClick={(e) => handleDownloadInvoice(selectedTx.id, e)}>
-                      <Download className="h-4 w-4 mr-2" /> Download Tax Invoice
+                      onClick={(e) => handleViewInvoice(selectedTx.id, e)}>
+                      <FileText className="h-4 w-4 mr-2" /> View Full Invoice
                     </Button>
                   ) : (
                     <Button

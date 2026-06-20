@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getDataFromToken } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth"; // Upgraded to secure session
 
 export async function PUT(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const user = await getDataFromToken(req);
-    if (!user || !user.labId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const user = await getCurrentUser();
+    if (!user || !user.labId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     const testTemplateId = params.id;
     const body = await req.json();
@@ -21,6 +23,10 @@ export async function PUT(
 
     if (!existingTest) return NextResponse.json({ error: "Test not found" }, { status: 404 });
 
+    // Safely parse numbers based on schema expectations
+    const tatHours = body.tatHours ? parseInt(body.tatHours) : (body.tat ? parseInt(body.tat) : 24);
+    const price = body.price ? parseFloat(body.price) : 0;
+
     // ==========================================
     // SCENARIO A: Editing an already LOCAL test
     // ==========================================
@@ -30,38 +36,36 @@ export async function PUT(
       }
 
       const updatedLocalTest = await prisma.$transaction(async (tx) => {
-        // 1. Update core details
+        // 1. Update core details (Strictly mapped to TestTemplate schema)
         const updated = await tx.testTemplate.update({
           where: { id: testTemplateId },
           data: {
             name: body.name,
             code: body.code,
             printName: body.printName || null,
-            departmentId: body.departmentId,
-            sampleTypeId: body.sampleTypeId,
+            departmentId: body.departmentId || null,
+            sampleTypeId: body.sampleTypeId || null,
             containerTypeId: body.containerTypeId || null,
-            price: body.price,
-            b2bPrice: body.b2bPrice || 0,
-            cost: body.cost || 0,
-            tat: body.tat,
-            method: body.method,
-            isActive: body.isActive
+            testCategoryId: body.testCategoryId || existingTest.testCategoryId || null, 
+            price: price,
+            tatHours: tatHours,
+            method: body.method || null,
+            isActive: body.isActive !== undefined ? body.isActive : true
           }
         });
 
-        // 2. Wipe old parameters
+        // 2. Wipe old parameters (Using correct testTemplateId)
         await tx.testTemplateParameter.deleteMany({
-          where: { templateId: testTemplateId }
+          where: { testTemplateId: testTemplateId }
         });
 
         // 3. Insert newly arranged parameters
         if (body.components && body.components.length > 0) {
           await tx.testTemplateParameter.createMany({
             data: body.components.map((c: any) => ({
-              templateId: testTemplateId,
+              testTemplateId: testTemplateId, // Correctly mapped
               parameterId: c.parameterId,
-              headingId: c.headingId,
-              order: c.order
+              order: c.order || 0
             }))
           });
         }
@@ -88,25 +92,38 @@ export async function PUT(
 
     if (!isCoreChanged) {
       // SCENARIO B1: ONLY PRICE CHANGED -> Create an Override via LabTestPricing
-      await prisma.labTestPricing.upsert({
-        where: { labId_testTemplateId: { labId: user.labId, testTemplateId: testTemplateId } },
-        update: {
-          price: body.price,
-          b2bPrice: body.b2bPrice || 0,
-          cost: body.cost || 0,
-          tat: body.tat,
-          isActive: body.isActive
-        },
-        create: {
-          labId: user.labId,
-          testTemplateId: testTemplateId,
-          price: body.price,
-          b2bPrice: body.b2bPrice || 0,
-          cost: body.cost || 0,
-          tat: body.tat,
-          isActive: body.isActive !== undefined ? body.isActive : true
-        }
+      const b2bPrice = body.b2bPrice ? parseFloat(body.b2bPrice) : 0;
+      const cost = body.cost ? parseFloat(body.cost) : 0;
+
+      // Because LabTestPricing doesn't have a unique constraint, we use findFirst + update/create
+      const existingPricing = await prisma.labTestPricing.findFirst({
+        where: { labId: user.labId, testTemplateId: testTemplateId }
       });
+
+      if (existingPricing) {
+        await prisma.labTestPricing.update({
+          where: { id: existingPricing.id },
+          data: {
+            price: price,
+            b2bPrice: b2bPrice,
+            cost: cost,
+            tat: tatHours.toString(), // Schema uses string for pricing TAT
+            isActive: body.isActive !== undefined ? body.isActive : true
+          }
+        });
+      } else {
+        await prisma.labTestPricing.create({
+          data: {
+            labId: user.labId,
+            testTemplateId: testTemplateId,
+            price: price,
+            b2bPrice: b2bPrice,
+            cost: cost,
+            tat: tatHours.toString(),
+            isActive: body.isActive !== undefined ? body.isActive : true
+          }
+        });
+      }
 
       return NextResponse.json({ 
         success: true, 
@@ -117,7 +134,7 @@ export async function PUT(
 
     // SCENARIO B2: CORE DETAILS CHANGED -> Fork into a Local Test
     const newLocalTest = await prisma.$transaction(async (tx) => {
-      // 1. Create the new local clone
+      // 1. Create the new local clone (Strictly mapped to TestTemplate schema)
       const cloned = await tx.testTemplate.create({
         data: {
           labId: user.labId,
@@ -126,17 +143,15 @@ export async function PUT(
           name: body.name,
           code: body.code, 
           printName: body.printName || null,
-          price: body.price,
-          b2bPrice: body.b2bPrice || 0,
-          cost: body.cost || 0,
-          tat: body.tat,
-          method: body.method,
+          price: price,
+          tatHours: tatHours,
+          method: body.method || null,
           type: existingTest.type,
-          categoryId: existingTest.categoryId,
-          departmentId: body.departmentId,
-          sampleTypeId: body.sampleTypeId,
+          testCategoryId: body.testCategoryId || existingTest.testCategoryId || null,
+          departmentId: body.departmentId || null,
+          sampleTypeId: body.sampleTypeId || null,
           containerTypeId: body.containerTypeId || null,
-          isActive: body.isActive
+          isActive: body.isActive !== undefined ? body.isActive : true
         }
       });
 
@@ -144,10 +159,9 @@ export async function PUT(
       if (body.components && body.components.length > 0) {
         await tx.testTemplateParameter.createMany({
           data: body.components.map((c: any) => ({
-            templateId: cloned.id,
+            testTemplateId: cloned.id, // Correctly mapped
             parameterId: c.parameterId,
-            headingId: c.headingId,
-            order: c.order
+            order: c.order || 0
           }))
         });
       }
@@ -163,7 +177,7 @@ export async function PUT(
     });
 
   } catch (error) {
-    console.error("Update Test Catalog Error:", error);
+    console.error("[UPDATE_TEST_CATALOG_ERROR]", error);
     return NextResponse.json({ error: "Failed to update test" }, { status: 500 });
   }
 }
