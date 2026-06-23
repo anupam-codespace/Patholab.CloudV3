@@ -49,7 +49,7 @@ export const adminNav: NavGroup[] = [
   {
     title: "Overview",
     items: [
-      { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+      { name: "Dashboard", href: "/workspace", icon: LayoutDashboard },
       { name: "Financial Analytics", href: "/workspace/analytics", icon: BarChart3 },
     ],
   },
