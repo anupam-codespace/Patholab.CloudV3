@@ -34,12 +34,12 @@ export async function POST(req: Request) {
 
     // 3. Find Default Plan (Free/Basic) if none provided
     const defaultPlan = await prisma.plan.findFirst({
-      where: data.planId ? { id: data.planId } : { name: 'FREE' } // Ensure you have a 'FREE' plan in seed
-    }) || await prisma.plan.findFirst(); // Fallback to any plan
+      where: data.planId ? { id: data.planId } : { name: 'FREE' } 
+    }) || await prisma.plan.findFirst(); 
 
     if (!defaultPlan) return NextResponse.json({ error: 'No subscription plans configured in system' }, { status: 500 });
 
-    // 4. ATOMIC TRANSACTION: Create User + Lab + Subscription
+    // 4. ATOMIC TRANSACTION: Create User + Lab + Subscription + Wallet
     const result = await prisma.$transaction(async (tx) => {
       // A. Create User
       const user = await tx.user.create({
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
           password: hashedPassword,
           role: Role.LAB_OWNER,
           phone: data.phone,
-          emailVerified: true, // Auto-verify admin created accounts
+          emailVerified: true, 
           isActive: true,
         }
       });
@@ -70,7 +70,7 @@ export async function POST(req: Request) {
         }
       });
 
-      // C. Assign Subscription
+      // C. Assign Subscription (For Module/Feature Access)
       await tx.subscription.create({
         data: {
           labId: lab.id,
@@ -81,6 +81,19 @@ export async function POST(req: Request) {
         }
       });
 
+      // D. Provision Pay-As-You-Go Wallet (NEW)
+      const oneYearFromNow = new Date();
+      oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+
+      await tx.wallet.create({
+        data: {
+          labId: lab.id,
+          balance: 0,          // Starts at ₹0, requiring immediate recharge or admin credit
+          status: "ACTIVE", 
+          validityEndDate: oneYearFromNow, // 1-year default validity
+        }
+      });
+
       return { user, lab };
     });
 
@@ -88,8 +101,8 @@ export async function POST(req: Request) {
     console.log(`[EMAIL QUEUE] Welcome ${data.email}. Temp Password: ${tempPassword}`);
 
     return NextResponse.json({
-      message: 'Lab onboarded successfully',
-      credentials: { email: data.email, tempPassword }, // Return to admin to share manually if needed
+      message: 'Lab onboarded successfully with active wallet',
+      credentials: { email: data.email, tempPassword }, 
       labId: result.lab.id
     });
 
