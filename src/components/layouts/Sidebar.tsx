@@ -102,7 +102,7 @@ export function Sidebar({
         {/* Brand Header */}
         <div className="flex h-16 shrink-0 items-center justify-between px-6 border-b border-slate-800/60 bg-[#0B1120]">
           <Link
-            href="/dashboard"
+            href="/workspace"
             className="flex items-center gap-3 transition-opacity hover:opacity-80">
             <div className="bg-blue-600/10 border border-blue-500/20 p-1.5 rounded-lg">
               <Activity className="h-5 w-5 text-blue-500" />
