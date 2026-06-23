@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getDataFromToken } from '@/lib/auth';
-import { consumeReagentsForTest } from '@/lib/inventoryEngine'; // ✅ IMPORT THE ENGINE
+import { consumeReagentsForTest } from '@/lib/inventoryEngine'; 
 
 export const dynamic = 'force-dynamic';
 
@@ -77,6 +77,18 @@ export async function GET(
 
     if (!patientData) return NextResponse.json({ error: "Patient not found" }, { status: 404 });
 
+    // Bridge the strict schema fields back to what the Frontend UI expects
+    const mappedTests = patientData.tests.map(t => ({
+      ...t,
+      results: t.results.map(r => ({
+         ...r,
+         // The frontend maps data using "parameterName" and "value"
+         parameterName: r.printName || r.parameterCode,
+         value: r.textValue || (r.numericValue !== null ? r.numericValue.toString() : "")
+      }))
+    }));
+    patientData.tests = mappedTests as any;
+
     // Hydrate Single Parameter Tests
     const singleParameterTests = patientData.tests.filter(t => !t.testTemplate || t.testTemplate.parameters.length === 0);
     
@@ -115,7 +127,7 @@ export async function GET(
 }
 
 // =========================================================================
-// POST: Save Results (Enhanced with Usage Tracking & Inventory)
+// POST: Save Results (Enhanced with Inventory)
 // =========================================================================
 export async function POST(
   req: NextRequest, 
@@ -145,28 +157,11 @@ export async function POST(
 
     if (!testContext) return NextResponse.json({ error: "Test not found" }, { status: 404 });
 
-    // ✅ 2. Identify if this is the FIRST time completing/approving to prevent double-deduction
+    // 2. Identify if this is the FIRST time completing/approving to prevent double-deduction for inventory
     const isFirstTimeCompletion = (action === 'SUBMIT_FOR_REVIEW' || action === 'APPROVE') && 
                                   (testContext.status !== 'COMPLETED' && testContext.status !== 'APPROVED');
 
-    // ============================================================
-    // ✅ USAGE TRACKING LOGIC
-    // ============================================================
-    if (isFirstTimeCompletion) {
-        const subscription = await prisma.subscription.findUnique({
-            where: { labId: user.labId },
-            select: { id: true } 
-        });
-
-        if (subscription) {
-            await prisma.currentUsage.update({
-                where: { subscriptionId: subscription.id },
-                data: { testsUsed: { increment: 1 } }
-            });
-        }
-    }
-
-    // 3. Save Standard Results
+    // 3. Save Standard Results (MAPPED PROPERLY TO YOUR SCHEMA)
     if (results && results.length > 0) {
         for (const res of results) {
             let masterParam = testContext.testTemplate?.parameters.find(
@@ -180,41 +175,48 @@ export async function POST(
                 }) as any;
             }
 
-            let snapshot = { min: null, max: null, text: null };
+            let snapshot = { text: null as string | null };
             
             if (masterParam) {
                 const range = getMatchingRange(masterParam, testContext.patient);
                 if (range) {
                     snapshot = {
-                        min: range.lowValue,
-                        max: range.highValue,
-                        text: range.textValue || (range.customLabel ? `${range.customLabel}: ${range.lowValue}-${range.highValue}` : null)
+                        text: range.textValue || (range.customLabel ? `${range.customLabel}: ${range.lowValue}-${range.highValue}` : `${range.lowValue} - ${range.highValue}`)
                     };
                 }
             }
 
-            await prisma.testResultParameter.upsert({
-                where: { id: res.id || "new-entry" },
-                update: { 
-                    value: res.value, 
-                    isAbnormal: res.isAbnormal, 
-                    isCritical: res.isCritical,
-                    refRangeMin: snapshot.min,
-                    refRangeMax: snapshot.max,
-                    refRangeText: snapshot.text
-                },
-                create: {
-                    testId: testId,
-                    parameterName: res.parameterName,
-                    value: res.value,
-                    unit: res.unit || masterParam?.unit, 
-                    isAbnormal: res.isAbnormal,
-                    isCritical: res.isCritical,
-                    refRangeMin: snapshot.min,
-                    refRangeMax: snapshot.max,
-                    refRangeText: snapshot.text
-                }
-            });
+            // Determine values matching the exact Prisma columns
+            const parsedNumeric = parseFloat(res.value);
+            const isNumeric = !isNaN(parsedNumeric) && res.value.trim() !== '';
+            const flagValue = res.isCritical ? "CRITICAL" : (res.isAbnormal ? "ABNORMAL" : null);
+
+            if (res.id) {
+                // Update Existing Record
+                await prisma.testResultParameter.update({
+                    where: { id: res.id },
+                    data: { 
+                        numericValue: isNumeric ? parsedNumeric : null,
+                        textValue: res.value, 
+                        referenceRangeText: snapshot.text,
+                        flag: flagValue
+                    }
+                });
+            } else {
+                // Create New Record
+                await prisma.testResultParameter.create({
+                    data: {
+                        testId: testId,
+                        parameterCode: masterParam?.code || res.parameterName.replace(/\s+/g, '_').toUpperCase(),
+                        printName: masterParam?.printName || masterParam?.name || res.parameterName,
+                        numericValue: isNumeric ? parsedNumeric : null,
+                        textValue: res.value,
+                        referenceRangeText: snapshot.text,
+                        flag: flagValue,
+                        method: masterParam?.method || null,
+                    }
+                });
+            }
         }
     }
 
@@ -249,11 +251,8 @@ export async function POST(
         });
     }
 
-    // ============================================================
-    // ✅ 6. FIRE THE INVENTORY ENGINE
-    // ============================================================
+    // 6. FIRE THE INVENTORY ENGINE
     if (isFirstTimeCompletion) {
-        // Fire it asynchronously so it doesn't hold up the UI response
         consumeReagentsForTest(testId, user.id || user.name || "SYSTEM")
             .then(res => console.log("[Inventory Trigger]", res))
             .catch(err => console.error("[Inventory Trigger Error]", err));

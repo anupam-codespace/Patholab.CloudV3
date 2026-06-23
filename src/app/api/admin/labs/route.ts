@@ -2,23 +2,26 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 
-// Schema for updating lab status
+// Strict validation schema for updating lab status
 const updateStatusSchema = z.object({
-  labId: z.string(),
+  labId: z.string().uuid('Invalid lab ID format'),
   isActive: z.boolean(),
 });
 
+// ========================================================
+// GET: FETCH ALL LABS WITH WALLET AND COUNTS (FOR ADMIN)
+// ========================================================
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
+    const limit = parseInt(searchParams.get('limit') || '50'); 
     const search = searchParams.get('search') || '';
     const status = searchParams.get('status'); // 'active' | 'inactive' | 'all'
     
     const skip = (page - 1) * limit;
 
-    // Build Query
+    // Build flexible multi-field query matching your schema relations
     const whereClause: any = {
       OR: [
         { name: { contains: search, mode: 'insensitive' } },
@@ -31,16 +34,18 @@ export async function GET(req: Request) {
       whereClause.isActive = status === 'active';
     }
 
-    // 1. Fetch Data
-    const [labs, total] = await Promise.all([
+    // 1. Fetch data concurrently
+    const [rawLabs, total] = await Promise.all([
       prisma.lab.findMany({
         where: whereClause,
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
         include: {
-          owner: { select: { name: true, email: true, phone: true } },
-          subscription: { include: { plan: true } },
+          owner: { 
+            select: { name: true, email: true, phone: true } 
+          },
+          wallet: true, // Pulls the unique relation field 'wallet' mapping to LabWallet
           _count: {
             select: {
               tests: true,
@@ -53,19 +58,34 @@ export async function GET(req: Request) {
       prisma.lab.count({ where: whereClause })
     ]);
 
-    // 2. Fetch Stats Headers (Only on first page load to save resources)
+    // Format fields to flatten the balance metrics for your frontend dropdown lists and tables
+    const labs = rawLabs.map((lab) => ({
+      ...lab,
+      walletBalance: lab.wallet ? Number(lab.wallet.balance) : 0,
+      walletStatus: lab.wallet?.isActive ? 'ACTIVE' : 'INACTIVE',
+      validityEndDate: lab.wallet?.validityEndDate || null,
+    }));
+
+    // 2. Fetch Dashboard Stat Headers (Aggregated only on initial page load)
     let stats = null;
     if (page === 1 && !search) {
-      const [totalLabs, activeLabs, totalRevenue] = await Promise.all([
+      const [totalLabs, activeLabs, walletLiabilityAggregate] = await Promise.all([
         prisma.lab.count(),
         prisma.lab.count({ where: { isActive: true } }),
-        prisma.payment.aggregate({ where: { status: 'SUCCESS' }, _sum: { amount: true } })
+        prisma.labWallet.aggregate({ 
+          _sum: { balance: true } 
+        }) 
       ]);
-      stats = { totalLabs, activeLabs, totalRevenue: totalRevenue._sum.amount || 0 };
+      
+      stats = { 
+        totalLabs, 
+        activeLabs, 
+        totalSystemWalletBalance: walletLiabilityAggregate._sum.balance ? Number(walletLiabilityAggregate._sum.balance) : 0 
+      };
     }
 
     return NextResponse.json({
-      data: labs,
+      labs, 
       meta: {
         total,
         page,
@@ -76,24 +96,35 @@ export async function GET(req: Request) {
     });
 
   } catch (error) {
-    console.error('Labs API Error:', error);
+    console.error('Labs Admin GET API Error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
 
-// TOGGLE STATUS API
+// ========================================================
+// PATCH: ACTIVATE / DEACTIVATE LABORATORY PORTAL
+// ========================================================
 export async function PATCH(req: Request) {
   try {
     const body = await req.json();
     const { labId, isActive } = updateStatusSchema.parse(body);
 
+    // Update state atomically on the target platform workspace record
     const lab = await prisma.lab.update({
       where: { id: labId },
       data: { isActive },
+      include: { wallet: true }
     });
 
-    return NextResponse.json({ message: 'Status updated', lab });
+    return NextResponse.json({ 
+      message: `Lab workspace ${isActive ? 'activated' : 'deactivated'} successfully`, 
+      lab 
+    });
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to update' }, { status: 400 });
+    console.error('Lab Status PATCH API Error:', error);
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: error.errors[0].message }, { status: 400 });
+    }
+    return NextResponse.json({ error: 'Failed to update lab activation profile state' }, { status: 500 });
   }
 }
