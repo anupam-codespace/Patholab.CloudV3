@@ -81,23 +81,44 @@ export async function GET(req: NextRequest) {
       where.AND = where.AND ? [...where.AND, searchCondition] : [searchCondition];
     }
 
-    // --- 2. APPLY FILTERS ---
+    // --- 2. APPLY FILTERS (FIXED to check Invoices & Tests, not just Patient creation) ---
     if (from || to) {
-      where.createdAt = {};
-      if (from) where.createdAt.gte = new Date(from);
+      const dateFilter: any = {};
+      if (from) dateFilter.gte = new Date(from);
       if (to) {
          const endDate = new Date(to);
          endDate.setHours(23, 59, 59, 999);
-         where.createdAt.lte = endDate;
+         dateFilter.lte = endDate;
       }
+      
+      const dateCondition = {
+        OR: [
+          { createdAt: dateFilter },
+          { invoices: { some: { createdAt: dateFilter } } },
+          { tests: { some: { createdAt: dateFilter } } }
+        ]
+      };
+      where.AND = where.AND ? [...where.AND, dateCondition] : [dateCondition];
     }
-    if (doctorFilter && doctorFilter !== 'ALL') where.doctorId = doctorFilter;
-    if (agencyFilter && agencyFilter !== 'ALL') where.agencyId = agencyFilter;
-    if (statusFilter && statusFilter !== 'ALL') {
-      const statusCondition = statusFilter === 'PAID' 
-        ? { invoices: { some: { status: 'PAID' } } }
-        : { invoices: { some: { status: { not: 'PAID' } } } };
-      where.AND = where.AND ? [...where.AND, statusCondition] : [statusCondition];
+
+    if (doctorFilter && doctorFilter !== 'ALL') {
+      const docCondition = {
+        OR: [
+          { doctorId: doctorFilter },
+          { tests: { some: { doctorId: doctorFilter } } }
+        ]
+      };
+      where.AND = where.AND ? [...where.AND, docCondition] : [docCondition];
+    }
+
+    if (agencyFilter && agencyFilter !== 'ALL') {
+      const agencyCondition = {
+        OR: [
+          { agencyId: agencyFilter },
+          { tests: { some: { agencyId: agencyFilter } } }
+        ]
+      };
+      where.AND = where.AND ? [...where.AND, agencyCondition] : [agencyCondition];
     }
 
     // --- 3. FETCH & DB-LEVEL PAGINATION ---
@@ -114,14 +135,14 @@ export async function GET(req: NextRequest) {
           agency: true,
           invoices: {
             orderBy: { createdAt: 'desc' },
-            take: 1,
+            // 🚨 FIX: Removed 'take: 1' so all invoices load
             select: { id: true, invoiceNumber: true, grandTotal: true, discount: true, status: true, subtotal: true, createdAt: true }
           },
           tests: {
             orderBy: { createdAt: 'desc' },
-            take: 1,
+            // 🚨 FIX: Removed 'take: 1' and ADDED 'invoiceId: true' so frontend can group tests by invoice
             select: {
-              id: true, testCode: true, testName: true, status: true, createdAt: true,
+              id: true, testCode: true, testName: true, status: true, createdAt: true, invoiceId: true,
               referredBy: true, 
               doctor: { select: { name: true } },
               agency: { select: { agencyName: true } },
@@ -245,7 +266,7 @@ export async function POST(req: NextRequest) {
                 labId: user.labId,
                 branchId: isGlobal ? null : user.branchId,
                 userId: user.id,
-                patientId: nextId, // P-0001
+                patientId: nextId, 
                 name: safeName,
                 age: safeAge,
                 ageUnit: body.ageUnit || null,
@@ -269,7 +290,7 @@ export async function POST(req: NextRequest) {
             data: { balance: { decrement: totalDeduction } }
         });
 
-        // 🚨 CRITICAL FIX: The description must contain the Database UUID so the Accession Route can find it later!
+        // C. Record the Transaction
         await tx.walletTransaction.create({
             data: {
                 labId: user.labId,
@@ -280,7 +301,7 @@ export async function POST(req: NextRequest) {
             }
         });
 
-        // C. Detailed Activity Log
+        // D. Detailed Activity Log
         await tx.activityLog.create({
           data: {
             labId: user.labId,
@@ -320,7 +341,6 @@ export async function PATCH(req: NextRequest) {
     const user = await getDataFromToken(req);
     if (!user || !user.labId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    // 🛡️ SECURITY: Only Owners and Managers can merge patient records
     if (user.role !== 'LAB_OWNER' && user.role !== 'LAB_MANAGER') {
        return NextResponse.json({ error: 'Only Lab Owners/Managers can merge patient records.' }, { status: 403 });
     }
@@ -330,9 +350,7 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid merge parameters.' }, { status: 400 });
     }
 
-    // Run massive merge operation in a single ACID transaction
     await prisma.$transaction(async (tx) => {
-      
       // 1. Relink all tests
       await tx.test.updateMany({
         where: { patientId: secondaryId },
@@ -350,7 +368,7 @@ export async function PATCH(req: NextRequest) {
         where: { id: secondaryId }
       });
 
-      // 📝 4. AUDIT LOG: Record the merge for compliance
+      // 4. AUDIT LOG
       await tx.activityLog.create({
         data: {
           labId: user.labId,

@@ -34,7 +34,17 @@ export async function GET(req: NextRequest) {
         _count: { select: { parameters: true } },
         parameters: {
           include: {
-            parameter: true
+            parameter: {
+              // ✅ FIX 2: Explicitly fetch the attached reagents and inventory items
+              // so the frontend "Auto-Reagents" column works!
+              include: {
+                reagents: {
+                  include: {
+                    inventoryItem: true
+                  }
+                }
+              }
+            }
           }
         }
       },
@@ -71,8 +81,13 @@ export async function GET(req: NextRequest) {
         containerType: test.ContainerType || null,
         method: test.method,
         isActive: test.isActive,
-        hasOverride: !!test.forkedFromId, // True if this is a local fork overriding a master test
-        parameterCount: test._count?.parameters || 0,
+        hasOverride: !!test.forkedFromId, 
+        
+        // ✅ FIX 1: Provide EXACTLY the shape the frontend is looking for
+        _count: { parameters: test._count?.parameters || 0 }, 
+        parameterCount: test._count?.parameters || 0, // Kept for safety
+        
+        // Map the deep-fetched parameters to 'components' for the UI
         components: test.parameters 
       };
     });

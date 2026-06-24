@@ -11,7 +11,6 @@ import {
   ArrowRight,
   Loader2,
   Fingerprint,
-  ScanBarcode,
   Activity,
   Receipt,
   Calendar,
@@ -55,16 +54,38 @@ export default function RegistrationSearchPage() {
   const [results, setResults] = useState<any[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
 
+  // --- INPUT HANDLER ---
+  const handleQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value;
+    if (searchType === "PHONE") {
+      val = val.replace(/\D/g, ""); // Allow only digits
+      if (val.length > 10) val = val.substring(0, 10); // Max 10 digits
+    }
+    setQuery(val);
+  };
+
+  const handleSearchTypeChange = (val: string) => {
+    setSearchType(val);
+    setQuery(""); // Clear query when switching types
+    setResults([]);
+    setHasSearched(false);
+  };
+
   // --- SEARCH HANDLER ---
   const handleSearch = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!query.trim()) return;
 
+    if (searchType === "PHONE" && query.length < 10) {
+      toast.error("Please enter a valid 10-digit mobile number.");
+      return;
+    }
+
     setLoading(true);
     setHasSearched(true);
     try {
       const res = await fetch(
-        `/api/workspace/patients/search?query=${query}&type=${searchType}`,
+        `/api/workspace/patients/search?query=${encodeURIComponent(query)}&type=${searchType}`,
       );
       const data = await res.json();
       const safeArray = Array.isArray(data) ? data : data?.data || [];
@@ -85,7 +106,12 @@ export default function RegistrationSearchPage() {
   };
 
   const createNewPatient = () => {
-    router.push(`/workspace/patients/new?phone=${query}`);
+    // Dynamically pass phone or name based on the search type
+    if (searchType === "PHONE") {
+      router.push(`/workspace/patients/new?phone=${query}`);
+    } else {
+      router.push(`/workspace/patients/new?name=${encodeURIComponent(query)}`);
+    }
   };
 
   return (
@@ -114,7 +140,7 @@ export default function RegistrationSearchPage() {
             onSubmit={handleSearch}
             className="w-full flex flex-col sm:flex-row items-center gap-2">
             <div className="w-full sm:w-[160px] shrink-0 relative">
-              <Select value={searchType} onValueChange={setSearchType}>
+              <Select value={searchType} onValueChange={handleSearchTypeChange}>
                 <SelectTrigger className="w-full h-12 border-0 bg-slate-100/50 hover:bg-slate-100 focus:ring-0 font-bold text-slate-700 rounded-xl text-sm transition-colors">
                   <SelectValue />
                 </SelectTrigger>
@@ -129,18 +155,6 @@ export default function RegistrationSearchPage() {
                       <User className="h-4 w-4 text-indigo-500" /> Name
                     </div>
                   </SelectItem>
-                  <SelectItem value="ABHA" className="font-medium">
-                    <div className="flex items-center gap-2">
-                      <Fingerprint className="h-4 w-4 text-indigo-500" /> ABHA
-                      ID
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="AADHAAR" className="font-medium">
-                    <div className="flex items-center gap-2">
-                      <ScanBarcode className="h-4 w-4 text-indigo-500" />{" "}
-                      Aadhaar
-                    </div>
-                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -152,11 +166,11 @@ export default function RegistrationSearchPage() {
                 placeholder={
                   searchType === "PHONE"
                     ? "Enter 10-digit mobile number..."
-                    : "Enter search query..."
+                    : "Enter patient name..."
                 }
                 className="w-full h-12 border-0 focus-visible:ring-0 text-base sm:text-lg px-4 shadow-none bg-transparent placeholder:text-slate-400 font-medium"
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={handleQueryChange}
                 autoFocus
               />
             </div>
@@ -219,7 +233,29 @@ export default function RegistrationSearchPage() {
           </div>
         )}
 
-        {/* CASE B: RESULTS FOUND */}
+        {/* CASE B: RESULTS FOUND BUT ALLOW CREATION ANYWAY */}
+        {hasSearched && results.length > 0 && !loading && (
+          <div className="flex flex-col sm:flex-row items-center justify-between bg-white p-5 rounded-2xl shadow-sm border border-slate-200/60 mb-6 animate-in fade-in duration-500">
+            <div className="text-sm font-medium text-slate-600 mb-4 sm:mb-0">
+              Found{" "}
+              <span className="font-bold text-indigo-600">
+                {results.length}
+              </span>{" "}
+              record(s) matching{" "}
+              <span className="font-bold text-slate-900">{query}</span>.
+              <br className="sm:hidden" /> Not the person you're looking for?
+            </div>
+            <Button
+              onClick={createNewPatient}
+              variant="outline"
+              className="w-full sm:w-auto border-indigo-200 text-indigo-700 hover:bg-indigo-50 font-bold rounded-xl h-11 transition-all">
+              <UserPlus className="h-4 w-4 mr-2" />
+              Register New Patient
+            </Button>
+          </div>
+        )}
+
+        {/* RENDER EXISTING RESULTS */}
         {results.map((patient) => {
           const initials = patient.name
             .split(" ")

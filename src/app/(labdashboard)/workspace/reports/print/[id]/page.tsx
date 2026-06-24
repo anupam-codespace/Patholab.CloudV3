@@ -11,6 +11,10 @@ import {
   FileCheck2,
   MessageCircle,
   Mail,
+  ArrowUp,
+  ArrowDown,
+  Check,
+  Activity,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect, useMemo } from "react";
@@ -114,11 +118,30 @@ const getSafeConfig = (template: any) => {
   };
 };
 
-const getReferenceRange = (res: any, test: any, patient: any) => {
+const getReferenceRange = (res: any, test?: any, patient?: any) => {
+  if (res.referenceRangeText) return res.referenceRangeText;
   if (res.refRangeText) return res.refRangeText;
-  if (res.refRangeMin !== null && res.refRangeMax !== null)
+  if (
+    res.refRangeMin !== null &&
+    res.refRangeMax !== null &&
+    res.refRangeMin !== undefined
+  )
     return `${res.refRangeMin} - ${res.refRangeMax}`;
-  return "";
+  return "-";
+};
+
+// Extractor to mathematically evaluate High/Low
+const getMinMax = (res: any, test: any, patient: any) => {
+  const rangeStr = getReferenceRange(res, test, patient);
+  if (!rangeStr) return { min: null, max: null };
+  const parts = rangeStr.split("-").map((s: string) => parseFloat(s.trim()));
+  if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+    return { min: parts[0], max: parts[1] };
+  }
+  if (res.refRangeMin != null && res.refRangeMax != null) {
+    return { min: res.refRangeMin, max: res.refRangeMax };
+  }
+  return { min: null, max: null };
 };
 
 export default function ClinicalReportPage() {
@@ -127,6 +150,9 @@ export default function ClinicalReportPage() {
 
   const [isDownloading, setIsDownloading] = useState<string | null>(null);
   const [verificationUrl, setVerificationUrl] = useState("");
+
+  // 🌟 NEW STATE: Toggle Clinical Flags
+  const [showFlags, setShowFlags] = useState(false);
 
   const { data: patient, isLoading } = useQuery({
     queryKey: ["report", id],
@@ -143,8 +169,9 @@ export default function ClinicalReportPage() {
   const groupedVisits = useMemo(() => {
     if (!patient || !patient.tests) return [];
 
-    const validTests = patient.tests.filter((t: any) => t.status !== "PENDING");
-
+    const validTests = patient.tests.filter(
+      (t: any) => t.status !== "PENDING" && t.status !== "CANCELLED",
+    );
     const visitsMap: Record<string, any> = {};
 
     validTests.forEach((test: any) => {
@@ -175,10 +202,8 @@ export default function ClinicalReportPage() {
   // ==========================================
   const handleWhatsAppShare = (visit: any) => {
     if (!patient) return toast.error("Patient data not loaded");
-
     let phone = patient.phone;
     if (!phone) return toast.error("No phone number saved for this patient.");
-
     phone = phone.replace(/\D/g, "");
     if (phone.length === 10) phone = `91${phone}`;
 
@@ -192,7 +217,6 @@ export default function ClinicalReportPage() {
 
   const handleEmailShare = (visit: any) => {
     if (!patient) return toast.error("Patient data not loaded");
-
     const email = patient.email;
     if (!email) return toast.error("No email address saved for this patient.");
 
@@ -223,6 +247,7 @@ export default function ClinicalReportPage() {
 
   const activeTemplate = patient.lab?.reportTemplates?.[0];
   const config = getSafeConfig(activeTemplate);
+
   const {
     primaryColor,
     secondaryColor,
@@ -233,7 +258,6 @@ export default function ClinicalReportPage() {
   } = config.branding;
   const pb = config.patientBlock;
 
-  // --- DYNAMIC TIMESTAMPS FOR LATEST PREVIEW ---
   const primaryTest = latestVisit.tests[0];
   const barcodeValue =
     primaryTest?.sample?.sampleId || patient.patientId || "UNKNOWN";
@@ -267,7 +291,13 @@ export default function ClinicalReportPage() {
         patient,
         lab: patient.lab,
         validTests: visit.tests,
-        config,
+        config: {
+          ...config,
+          bodyOptions: {
+            ...config.bodyOptions,
+            showClinicalFlags: showFlags, // Pass the current toggle state to PDF!
+          },
+        },
         qrCodeDataUrl,
         barcodeValue: visit.tests[0]?.sample?.sampleId || patient.patientId,
         timestamps: {
@@ -320,6 +350,7 @@ export default function ClinicalReportPage() {
   // --- PREVIEW QR COMPONENT ---
   const PreviewQR = ({ position }: { position: string }) => {
     const [qrDataUrl, setQrDataUrl] = useState("");
+
     useEffect(() => {
       if (config.qrCode.show && verificationUrl) {
         QRCode.toDataURL(verificationUrl, {
@@ -328,12 +359,17 @@ export default function ClinicalReportPage() {
           color: { dark: "#0f172a", light: "#ffffff" },
         }).then(setQrDataUrl);
       }
-    }, [verificationUrl]);
+    }, [verificationUrl, config.qrCode.show, config.qrCode.size]);
 
     if (!config.qrCode.show || !qrDataUrl) return null;
-    const isCustom = config.qrCode.mode === "custom";
-    if (!isCustom && config.qrCode.position !== position) return null;
-    if (isCustom && position !== "custom") return null;
+
+    const isCustomPosition =
+      config.qrCode.mode === "custom" || config.qrCode.position === "custom";
+
+    if (position === "custom" && !isCustomPosition) return null;
+    if (position !== "custom" && isCustomPosition) return null;
+    if (position !== "custom" && position !== config.qrCode.position)
+      return null;
 
     const qrContent = (
       <div
@@ -344,7 +380,7 @@ export default function ClinicalReportPage() {
         }}>
         <img
           src={qrDataUrl}
-          alt="QR"
+          alt="Verification QR"
           style={{
             width: config.qrCode.size - 8,
             height: config.qrCode.size - 8,
@@ -358,18 +394,20 @@ export default function ClinicalReportPage() {
       </div>
     );
 
-    if (isCustom)
+    if (isCustomPosition) {
       return (
         <div
           style={{
             position: "absolute",
-            zIndex: 50,
-            left: config.qrCode.x,
-            top: config.qrCode.y,
+            zIndex: 100,
+            left: `${config.qrCode.x}px`,
+            top: `${config.qrCode.y}px`,
           }}>
           {qrContent}
         </div>
       );
+    }
+
     return qrContent;
   };
 
@@ -398,8 +436,18 @@ export default function ClinicalReportPage() {
           </div>
         </div>
 
-        {/* 🆕 ACTION BUTTONS (Print Removed) */}
         <div className="flex flex-wrap items-center gap-2">
+          {/* 🌟 NEW: CLINICAL FLAGS TOGGLE */}
+          <Button
+            variant="outline"
+            onClick={() => setShowFlags(!showFlags)}
+            className={`h-11 rounded-lg font-bold border-2 transition-all mr-2 ${showFlags ? "bg-indigo-50 text-indigo-700 border-indigo-200" : "text-slate-600 border-slate-200"}`}>
+            <Activity className="w-4 h-4 md:mr-2" />
+            <span className="hidden md:inline">
+              {showFlags ? "Flags: ON" : "Flags: OFF"}
+            </span>
+          </Button>
+
           <Button
             variant="outline"
             onClick={() => handleWhatsAppShare(latestVisit)}
@@ -469,11 +517,6 @@ export default function ClinicalReportPage() {
         </div>
       )}
 
-      <p className="print:hidden text-slate-400 text-sm mb-6 flex items-center bg-slate-800 px-4 py-2 rounded-full border border-slate-700">
-        👀 Showing visual preview of the{" "}
-        <strong>Latest Report ({latestVisit.invoiceNumber})</strong>.
-      </p>
-
       {/* ============================================================== */}
       {/* A4 REPORT PREVIEW CANVAS (Shows LATEST tests only)             */}
       {/* ============================================================== */}
@@ -519,6 +562,7 @@ export default function ClinicalReportPage() {
           </div>
         )}
 
+        {/* ✅ Renders absolute QR code on top of EVERYTHING including header images */}
         <PreviewQR position="custom" />
 
         <div className="w-full bg-transparent z-10 relative flex-1 flex flex-col">
@@ -529,7 +573,7 @@ export default function ClinicalReportPage() {
               style={{ borderBottomColor: primaryColor }}>
               {config.header.mode === "image" && config.header.fullImage ? (
                 <div
-                  className="w-full overflow-hidden"
+                  className="w-full overflow-hidden relative"
                   style={{ height: `${config.header.height || 150}px` }}>
                   <img
                     src={config.header.fullImage}
@@ -757,27 +801,99 @@ export default function ClinicalReportPage() {
                               </tr>
                             </thead>
                             <tbody>
-                              {test.results.map((res: any) => (
-                                <tr
-                                  key={res.id}
-                                  className="border-b border-slate-100">
-                                  <td className="py-2.5 px-1 font-medium">
-                                    {res.parameterName}
-                                  </td>
-                                  <td
-                                    className={`py-2.5 px-1 font-bold ${res.isAbnormal ? "text-red-600" : "text-slate-900"}`}>
-                                    {res.value} {res.isAbnormal && "*"}
-                                  </td>
-                                  <td className="py-2.5 px-1 text-slate-500">
-                                    {res.unit}
-                                  </td>
-                                  {config.bodyOptions.showBiologicalRef && (
-                                    <td className="py-2.5 px-1 text-slate-500 whitespace-pre-wrap leading-tight">
-                                      {getReferenceRange(res, test, patient)}
+                              {test.results.map((res: any) => {
+                                const val =
+                                  res.value ||
+                                  res.textValue ||
+                                  res.numericValue ||
+                                  "";
+                                const unt =
+                                  res.unit || res.parameter?.unit || "";
+                                const pName =
+                                  res.printName || res.parameterName;
+
+                                // 🌟 DYNAMIC FLAG EVALUATION
+                                const { min, max } = getMinMax(
+                                  res,
+                                  test,
+                                  patient,
+                                );
+                                const valNum = parseFloat(val);
+                                let flagStatus = "NONE";
+
+                                if (
+                                  !isNaN(valNum) &&
+                                  min !== null &&
+                                  max !== null
+                                ) {
+                                  if (valNum < min) flagStatus = "LOW";
+                                  else if (valNum > max) flagStatus = "HIGH";
+                                  else flagStatus = "NORMAL";
+                                }
+
+                                let valColor = "text-slate-900";
+                                let icon = null;
+
+                                if (showFlags && flagStatus !== "NONE") {
+                                  if (flagStatus === "LOW") {
+                                    valColor = "text-blue-600";
+                                    icon = (
+                                      <ArrowDown
+                                        className="w-3.5 h-3.5 inline ml-1.5"
+                                        strokeWidth={3}
+                                      />
+                                    );
+                                  } else if (flagStatus === "HIGH") {
+                                    valColor = "text-rose-600";
+                                    icon = (
+                                      <ArrowUp
+                                        className="w-3.5 h-3.5 inline ml-1.5"
+                                        strokeWidth={3}
+                                      />
+                                    );
+                                  } else if (flagStatus === "NORMAL") {
+                                    valColor = "text-emerald-600";
+                                    icon = (
+                                      <Check
+                                        className="w-3.5 h-3.5 inline ml-1.5"
+                                        strokeWidth={3}
+                                      />
+                                    );
+                                  }
+                                } else {
+                                  // Default fallback when flags are off
+                                  if (
+                                    flagStatus === "LOW" ||
+                                    flagStatus === "HIGH" ||
+                                    res.flag === "ABNORMAL" ||
+                                    res.flag === "CRITICAL"
+                                  ) {
+                                    icon = <span className="ml-1">*</span>;
+                                  }
+                                }
+
+                                return (
+                                  <tr
+                                    key={res.id}
+                                    className="border-b border-slate-100">
+                                    <td className="py-2.5 px-1 font-medium">
+                                      {pName}
                                     </td>
-                                  )}
-                                </tr>
-                              ))}
+                                    <td
+                                      className={`py-2.5 px-1 font-bold ${valColor}`}>
+                                      {val} {icon}
+                                    </td>
+                                    <td className="py-2.5 px-1 text-slate-500">
+                                      {unt}
+                                    </td>
+                                    {config.bodyOptions.showBiologicalRef && (
+                                      <td className="py-2.5 px-1 text-slate-500 whitespace-pre-wrap leading-tight">
+                                        {getReferenceRange(res, test, patient)}
+                                      </td>
+                                    )}
+                                  </tr>
+                                );
+                              })}
                             </tbody>
                           </table>
                         </div>
