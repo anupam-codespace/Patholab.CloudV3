@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,7 +17,6 @@ import {
   X,
   Loader2,
   Mail,
-  Fingerprint,
   ScanBarcode,
   ChevronsUpDown,
   Check,
@@ -25,11 +24,12 @@ import {
   Briefcase,
   Banknote,
   UserCheck,
-  CreditCard,
   MapPin,
   Activity,
   ShieldCheck,
   Clock,
+  AlertCircle,
+  ArrowRight,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -65,7 +65,7 @@ import {
 import { getDoctors } from "@/actions/doctor-management";
 import { getAgencies } from "@/actions/agency-management";
 
-// --- VALIDATION SCHEMA (Fixed: Removed .default() to prevent TS Type Collisions) ---
+// --- VALIDATION SCHEMA ---
 const patientSchema = z.object({
   title: z.string(),
   name: z.string().min(2, "Name is required"),
@@ -100,8 +100,13 @@ const COLLECTORS = [
 export default function CreatePatientPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  // ✅ DYNAMIC PARAMETER CHECK (Name or Phone)
   const phoneParam = searchParams.get("phone") || "";
+  const nameParam = searchParams.get("name") || "";
+
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentNameInput, setCurrentNameInput] = useState(nameParam);
 
   // ✅ FETCH LIVE DOCTORS & AGENCIES
   const { data: doctorsData } = useQuery({
@@ -112,6 +117,19 @@ export default function CreatePatientPage() {
   const { data: agenciesData } = useQuery({
     queryKey: ["agencies"],
     queryFn: async () => await getAgencies(),
+  });
+
+  // ✅ CHECK FOR EXISTING PATIENTS WITH THE SAME NAME
+  const { data: nameMatches } = useQuery({
+    queryKey: ["patient-name-check", currentNameInput],
+    queryFn: async () => {
+      if (currentNameInput.length < 3) return [];
+      const res = await fetch(
+        `/api/workspace/patients/search?query=${encodeURIComponent(currentNameInput)}&type=NAME`,
+      );
+      return await res.json();
+    },
+    enabled: currentNameInput.length >= 3,
   });
 
   const liveDoctors = [
@@ -129,6 +147,7 @@ export default function CreatePatientPage() {
     resolver: zodResolver(patientSchema),
     defaultValues: {
       title: "Mr.",
+      name: nameParam,
       ageUnit: "Years",
       gender: "MALE",
       phone: phoneParam,
@@ -145,8 +164,28 @@ export default function CreatePatientPage() {
     control,
     register,
     formState: { errors },
+    watch,
+    setValue,
   } = form;
 
+  // Watch name changes to trigger the duplicate check
+  useEffect(() => {
+    const subscription = watch((value, { name }) => {
+      if (name === "name" && value.name) {
+        setCurrentNameInput(value.name);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [watch]);
+
+  // ✅ STRICT PHONE NUMBER INPUT HANDLER
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value.replace(/\D/g, ""); // Strip non-digits instantly
+    if (val.length > 10) val = val.substring(0, 10);
+    setValue("phone", val, { shouldValidate: true });
+  };
+
+  // ✅ SAFELY GUARDED ONSUBMIT (No more 404s!)
   const onSubmit = async (data: PatientFormValues) => {
     setIsSubmitting(true);
     try {
@@ -164,17 +203,9 @@ export default function CreatePatientPage() {
 
       if (!res.ok) {
         if (res.status === 409) {
-          if (confirm("Patient already exists. Load their profile?")) {
-            const params = new URLSearchParams({
-              patientId: result.patient?.id,
-              doc: data.doctorName || "Self",
-              agency: data.agencyName || "Direct",
-              pay: data.paymentMode || "Cash",
-              colBy: data.collectedBy || "",
-            });
-            router.push(`/workspace/accession?${params.toString()}`);
-            return;
-          }
+          toast.error(
+            "Phone number already exists. Please use the search page to find them.",
+          );
           throw new Error("Duplicate ignored.");
         }
         throw new Error(result.error || "Failed to register patient");
@@ -182,22 +213,40 @@ export default function CreatePatientPage() {
 
       toast.success("Patient Registered Successfully");
 
+      // 🌟 SAFE EXTRACTION: Guaranteed to grab the ID no matter how the backend wraps it
+      const newPatientId =
+        result?.patient?.id || result?.data?.id || result?.id;
+
+      if (!newPatientId) {
+        throw new Error("Patient created, but backend did not return an ID.");
+      }
+
       const params = new URLSearchParams({
-        patientId: result.id,
+        patientId: newPatientId,
+        isNewVisit: "true",
         doc: data.doctorName || "Self",
         agency: data.agencyName || "Direct",
         pay: data.paymentMode,
         colBy: data.collectedBy || "",
       });
+
       router.push(`/workspace/accession?${params.toString()}`);
     } catch (error: any) {
-      toast.error(error.message);
+      if (error.message !== "Duplicate ignored.") {
+        toast.error(error.message);
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Modern Combobox Component
+  // Quick route to start a visit for an existing matched patient
+  const startExistingVisit = (patientId: string) => {
+    router.push(
+      `/workspace/accession?patientId=${patientId}&isNewVisit=true&doc=Self&agency=Direct`,
+    );
+  };
+
   const CreatableCombobox = ({
     value,
     onChange,
@@ -286,7 +335,6 @@ export default function CreatePatientPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans selection:bg-indigo-100 relative">
-      {/* Decorative Background Mesh */}
       <div className="absolute top-0 inset-x-0 h-64 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-100/50 via-slate-50 to-transparent pointer-events-none z-0" />
 
       {/* --- FLOATING HEADER --- */}
@@ -311,33 +359,57 @@ export default function CreatePatientPage() {
               </h1>
             </div>
           </div>
-
-          {/* Premium Step Indicator */}
-          <div className="hidden md:flex items-center gap-2 bg-slate-100/80 p-1.5 rounded-full border border-slate-200/50 shadow-inner">
-            <div className="px-4 py-1.5 bg-white text-indigo-700 rounded-full shadow-sm text-xs font-bold tracking-wide flex items-center gap-2">
-              <div className="h-5 w-5 bg-indigo-100 rounded-full flex items-center justify-center text-[10px]">
-                1
-              </div>{" "}
-              Details
-            </div>
-            <div className="px-4 py-1.5 text-slate-400 text-xs font-bold tracking-wide flex items-center gap-2 opacity-70">
-              <div className="h-5 w-5 bg-slate-200 rounded-full flex items-center justify-center text-[10px] text-slate-500">
-                2
-              </div>{" "}
-              Tests
-            </div>
-            <div className="px-4 py-1.5 text-slate-400 text-xs font-bold tracking-wide flex items-center gap-2 opacity-70">
-              <div className="h-5 w-5 bg-slate-200 rounded-full flex items-center justify-center text-[10px] text-slate-500">
-                3
-              </div>{" "}
-              Billing
-            </div>
-          </div>
         </div>
       </header>
 
       {/* --- FORM AREA --- */}
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 z-10 pb-32">
+        {/* ✅ DUPLICATE NAME WARNING BANNER */}
+        {nameMatches && nameMatches.length > 0 && (
+          <div className="mb-6 bg-amber-50 border border-amber-200 rounded-2xl p-4 shadow-sm animate-in fade-in slide-in-from-top-4">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+              <div className="w-full">
+                <h4 className="text-sm font-bold text-amber-800">
+                  We found existing patients with similar names
+                </h4>
+                <p className="text-xs text-amber-700 mb-3 mt-1">
+                  If this is an existing patient, select them below. Otherwise,
+                  continue registering a new patient.
+                </p>
+                <div className="space-y-2">
+                  {nameMatches.slice(0, 3).map((match: any) => (
+                    <div
+                      key={match.id}
+                      className="flex items-center justify-between bg-white p-3 rounded-xl border border-amber-100 shadow-sm">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-amber-100 text-amber-700 font-bold h-8 w-8 rounded-lg flex items-center justify-center text-xs">
+                          {match.name.substring(0, 2).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="font-bold text-sm text-slate-900">
+                            {match.name}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {match.age} {match.ageUnit?.charAt(0)} •{" "}
+                            {match.phone}
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => startExistingVisit(match.id)}
+                        className="bg-amber-600 hover:bg-amber-700 text-white text-xs h-8 rounded-lg">
+                        Start Visit <ArrowRight className="h-3 w-3 ml-1" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <form
           id="patient-form"
           onSubmit={form.handleSubmit(onSubmit)}
@@ -476,10 +548,10 @@ export default function CreatePatientPage() {
                     <div className="relative">
                       <Phone className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
                       <Input
-                        {...register("phone")}
+                        value={watch("phone")}
+                        onChange={handlePhoneChange} // ✅ STRICT NUMBERS ONLY
                         className="h-11 pl-10 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:ring-indigo-500/20 font-mono text-sm"
                         placeholder="9876543210"
-                        maxLength={10}
                       />
                     </div>
                     {errors.phone && (
@@ -512,52 +584,6 @@ export default function CreatePatientPage() {
                     className="min-h-[80px] rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:ring-indigo-500/20 resize-none py-3"
                     placeholder="Apartment, Street, City..."
                   />
-                </div>
-
-                <div className="h-px bg-slate-100 my-2" />
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
-                      ABHA Number
-                    </Label>
-                    <div className="relative">
-                      <ScanBarcode className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
-                      <Input
-                        {...register("abhaNumber")}
-                        className="h-11 pl-10 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:ring-indigo-500/20 font-mono text-sm"
-                        placeholder="XXXX-XXXX-XXXX"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
-                      Passport / SRF
-                    </Label>
-                    <div className="relative">
-                      <ShieldCheck className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
-                      <Input
-                        {...register("passport")}
-                        className="h-11 pl-10 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:ring-indigo-500/20"
-                        placeholder="Optional"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex gap-3 pt-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="h-10 rounded-xl text-xs gap-2 border-slate-200 text-slate-600 hover:bg-slate-50">
-                    <ScanLine className="h-4 w-4" /> Scan Aadhar QR
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="h-10 rounded-xl text-xs gap-2 border-slate-200 text-slate-600 hover:bg-slate-50">
-                    <Camera className="h-4 w-4" /> Capture Photo
-                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -677,10 +703,10 @@ export default function CreatePatientPage() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Cash">Cash</SelectItem>
+                            <SelectItem value="CASH">Cash</SelectItem>
                             <SelectItem value="UPI">UPI / QR</SelectItem>
-                            <SelectItem value="Card">Card</SelectItem>
-                            <SelectItem value="Credit">Credit (Due)</SelectItem>
+                            <SelectItem value="CARD">Card</SelectItem>
+                            <SelectItem value="DUE">Credit (Due)</SelectItem>
                           </SelectContent>
                         </Select>
                       )}

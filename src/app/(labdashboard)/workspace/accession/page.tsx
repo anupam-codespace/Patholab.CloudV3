@@ -11,7 +11,6 @@ import {
   Search,
   Trash2,
   UserCheck,
-  CalendarClock,
   Loader2,
   AlertTriangle,
   Receipt,
@@ -70,16 +69,26 @@ type AccessionFormData = z.infer<typeof accessionSchema>;
 // --- 2. DATA FETCHER ---
 const fetchAccessionData = async (patientId: string) => {
   const [patientRes, catalogRes, parametersRes] = await Promise.all([
-    fetch(`/api/workspace/patients/${patientId}`).then((r) => r.json()),
-    fetch(`/api/workspace/test-catalog`).then((r) => r.json()),
+    fetch(`/api/workspace/patients/${patientId}`).then((r) =>
+      r.ok ? r.json() : null,
+    ),
+    fetch(`/api/workspace/test-catalog`).then((r) => (r.ok ? r.json() : null)),
     fetch(`/api/workspace/parameters`).then((r) =>
       r.ok ? r.json() : { parameters: [] },
     ),
   ]);
 
-  const catalogArray = catalogRes?.tests || [];
-  const parametersArray = parametersRes?.parameters || [];
-  const patientData = patientRes?.patient || patientRes;
+  if (!patientRes) throw new Error("Failed to fetch patient data");
+
+  const catalogArray = catalogRes?.tests || catalogRes?.data || [];
+  const parametersArray =
+    parametersRes?.parameters || parametersRes?.data || [];
+
+  const patientData = patientRes?.patient || patientRes?.data || patientRes;
+
+  if (!patientData || !patientData.id) {
+    throw new Error("Patient profile data is missing or incomplete.");
+  }
 
   const formattedParameters = parametersArray.map((p: any) => ({
     id: p.id,
@@ -107,8 +116,15 @@ export default function AccessionPage() {
   const isNewVisit = searchParams.get("isNewVisit") === "true";
   const doctorNameParam = searchParams.get("doc");
   const agencyNameParam = searchParams.get("agency");
-  const paymentModeParam = searchParams.get("pay") || "CASH";
   const collectedByParam = searchParams.get("colBy") || "";
+
+  // Safely map URL payment parameters to strict Zod Enums
+  const rawPay = searchParams.get("pay")?.toUpperCase() || "CASH";
+  let safePaymentMode = "CASH";
+  if (rawPay.includes("UPI") || rawPay.includes("QR")) safePaymentMode = "UPI";
+  else if (rawPay.includes("CARD")) safePaymentMode = "CARD";
+  else if (rawPay.includes("DUE") || rawPay.includes("CREDIT"))
+    safePaymentMode = "DUE";
 
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<
@@ -137,7 +153,7 @@ export default function AccessionPage() {
       tests: [],
       discount: 0,
       paidAmount: 0,
-      paymentMode: paymentModeParam as any,
+      paymentMode: safePaymentMode as any,
       collectedBy: collectedByParam,
       collectedAt: "",
       note: "",
@@ -147,9 +163,19 @@ export default function AccessionPage() {
     },
   });
 
+  useEffect(() => {
+    register("tests");
+    register("paymentMode");
+    register("collectedAt");
+    register("printSlip");
+    register("printBarcode");
+    register("isUrgent");
+  }, [register]);
+
   const selectedTests = watch("tests");
   const discount = watch("discount");
   const paidAmount = watch("paidAmount");
+  const paymentMode = watch("paymentMode");
   const isUrgent = watch("isUrgent");
 
   const subTotal = selectedTests.reduce(
@@ -158,6 +184,14 @@ export default function AccessionPage() {
   );
   const netPayable = Math.max(0, subTotal - discount);
   const balance = Math.max(0, netPayable - paidAmount);
+
+  useEffect(() => {
+    if (paymentMode !== "DUE") {
+      setValue("paidAmount", netPayable, { shouldValidate: true });
+    } else {
+      setValue("paidAmount", 0, { shouldValidate: true });
+    }
+  }, [netPayable, paymentMode, setValue]);
 
   const applyDiscountPercent = (percent: number) => {
     const calculated = Math.round(subTotal * (percent / 100));
@@ -171,7 +205,9 @@ export default function AccessionPage() {
     const day = String(now.getDate()).padStart(2, "0");
     const hours = String(now.getHours()).padStart(2, "0");
     const minutes = String(now.getMinutes()).padStart(2, "0");
-    setValue("collectedAt", `${year}-${month}-${day} ${hours}:${minutes}`);
+    setValue("collectedAt", `${year}-${month}-${day} ${hours}:${minutes}`, {
+      shouldValidate: true,
+    });
   }, [setValue]);
 
   // --- API MUTATION ---
@@ -185,31 +221,34 @@ export default function AccessionPage() {
       const json = await res.json();
 
       if (res.status === 402)
-        throw new Error(
-          `Insufficient Wallet Balance. Needed: ₹${json.required}`,
-        );
+        throw new Error(json.error || `Insufficient Wallet Balance.`);
       if (!res.ok) throw new Error(json.error || "Failed to create order");
 
       return json;
     },
     onSuccess: (json) => {
       toast.success("Visit Registered & Invoice Generated!");
-      router.push(`/workspace/billing/${json.data?.invoice?.id}`);
+      router.push(`/workspace/billing/${json.data?.id}`);
     },
     onError: (err: any) => toast.error(err.message),
   });
 
   const onSubmit = (formData: AccessionFormData) => {
+    // Construct collectedAt date safely
+    const collectedDate = new Date(
+      formData.collectedAt.replace(" ", "T") + ":00",
+    );
+
     const payload = {
       patientId,
       isNewVisit,
       subtotal: subTotal,
-      discountAmount: discount,
+      discountAmount: formData.discount,
       grandTotal: netPayable,
       doctorId: doctorNameParam === "Self" ? null : doctorNameParam,
       agencyId: agencyNameParam === "Direct" ? null : agencyNameParam,
       tests: formData.tests.map((t: CatalogItem) => ({
-        testId: t.id,
+        testTemplateId: t.id, // ✅ FIXED: Crucial parameter mapped properly
         testCode: t.code,
         testName: t.name,
         price: t.price,
@@ -217,24 +256,33 @@ export default function AccessionPage() {
       paymentMode: formData.paymentMode,
       paidAmount: formData.paidAmount,
       collectedBy: formData.collectedBy,
-      collectedAt: new Date(formData.collectedAt),
+      collectedAt: collectedDate.toISOString(),
       isUrgent: formData.isUrgent,
       note: formData.note,
     };
+
     submitMutation.mutate(payload);
+  };
+
+  const onFormError = (errors: any) => {
+    console.error("Validation Errors:", errors);
+    toast.error("Please select at least one test to proceed.");
   };
 
   const addTest = (test: CatalogItem) => {
     if (selectedTests.find((t: CatalogItem) => t.id === test.id))
       return toast.error("Already added to cart");
-    setValue("tests", [...selectedTests, test], { shouldValidate: true });
+    setValue("tests", [...selectedTests, test], {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
   };
 
   const removeTest = (id: string) => {
     setValue(
       "tests",
       selectedTests.filter((t: CatalogItem) => t.id !== id),
-      { shouldValidate: true },
+      { shouldValidate: true, shouldDirty: true },
     );
   };
 
@@ -283,18 +331,25 @@ export default function AccessionPage() {
 
   if (!data || !data.patient)
     return (
-      <div className="h-[calc(100vh-60px)] flex items-center justify-center text-red-500 font-bold">
-        Error loading patient identity profile.
+      <div className="h-[calc(100vh-60px)] flex flex-col items-center justify-center text-red-500 gap-2">
+        <AlertTriangle className="h-10 w-10 text-red-500 mb-2" />
+        <span className="font-bold text-lg">
+          Error loading patient profile.
+        </span>
+        <Button
+          variant="outline"
+          onClick={() => router.push("/workspace/registration")}>
+          Go Back
+        </Button>
       </div>
     );
 
-  // ✅ SAFELY extract initials without crashing on missing data
   const initials = data?.patient?.name?.substring(0, 2).toUpperCase() || "PT";
 
   return (
     <form
       id="accession-form"
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={handleSubmit(onSubmit, onFormError)}
       className="flex flex-col h-[calc(100vh-80px)] bg-slate-50 font-sans relative pb-20 lg:pb-0">
       {/* 🌟 STICKY TOP HEADER BAR */}
       <div className="flex-none h-[72px] bg-white border-b border-slate-200 px-4 lg:px-6 flex justify-between items-center shadow-sm z-30">
@@ -313,7 +368,7 @@ export default function AccessionPage() {
               </span>
               <span className="hidden sm:inline text-slate-300">|</span>
               <span className="hidden sm:inline text-indigo-600 font-mono bg-indigo-50 px-2 rounded-md">
-                ID: {data.patient.patientId}
+                ID: {data.patient.patientId || data.patient.id.substring(0, 8)}
               </span>
             </div>
           </div>
@@ -426,11 +481,6 @@ export default function AccessionPage() {
                 <Badge className="bg-red-500 text-white animate-pulse border-0 shadow-sm text-[10px]">
                   <AlertTriangle className="w-3 h-3 mr-1" /> STAT
                 </Badge>
-              )}
-              {errors.tests && (
-                <span className="text-[10px] text-rose-600 font-bold px-2 py-1 bg-rose-100 rounded-md">
-                  {errors.tests.message}
-                </span>
               )}
             </div>
             {selectedTests.length > 0 && (
@@ -575,8 +625,10 @@ export default function AccessionPage() {
                   Pay Mode
                 </Label>
                 <Select
-                  onValueChange={(v) => setValue("paymentMode", v as any)}
-                  defaultValue={watch("paymentMode")}>
+                  onValueChange={(v) =>
+                    setValue("paymentMode", v as any, { shouldValidate: true })
+                  }
+                  value={paymentMode}>
                   <SelectTrigger className="h-10 text-xs font-bold border-slate-200 rounded-xl">
                     <SelectValue />
                   </SelectTrigger>
@@ -650,8 +702,10 @@ export default function AccessionPage() {
               <div className="flex items-center space-x-2 bg-rose-50 p-2.5 rounded-xl border border-rose-200 w-full">
                 <Checkbox
                   id="urgent"
-                  checked={watch("isUrgent")}
-                  onCheckedChange={(v) => setValue("isUrgent", !!v)}
+                  checked={isUrgent}
+                  onCheckedChange={(v) =>
+                    setValue("isUrgent", !!v, { shouldValidate: true })
+                  }
                   className="w-4 h-4 border-rose-400 data-[state=checked]:bg-rose-600"
                 />
                 <label
@@ -685,7 +739,7 @@ export default function AccessionPage() {
             </Button>
             <Button
               type="submit"
-              form="accession-form" // ✅ LINKED FORM SUBMIT DIRECTLY
+              form="accession-form"
               className="w-2/3 h-12 font-bold text-base bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md"
               disabled={submitMutation.isPending || selectedTests.length === 0}>
               {submitMutation.isPending ? (
@@ -710,7 +764,7 @@ export default function AccessionPage() {
         </div>
         <Button
           type="submit"
-          form="accession-form" // ✅ LINKED FORM SUBMIT DIRECTLY FOR MOBILE TOO
+          form="accession-form"
           className="h-12 px-6 font-bold text-sm bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md"
           disabled={submitMutation.isPending || selectedTests.length === 0}>
           {submitMutation.isPending ? (

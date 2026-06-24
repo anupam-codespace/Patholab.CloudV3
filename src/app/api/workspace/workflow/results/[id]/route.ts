@@ -28,7 +28,7 @@ function getMatchingRange(parameter: any, patient: any) {
 }
 
 // =========================================================================
-// GET: Fetch Worksheet / Report Data
+// GET: Fetch Worksheet / Report Data (With Unit Injection)
 // =========================================================================
 export async function GET(
   req: NextRequest, 
@@ -57,11 +57,14 @@ export async function GET(
           orderBy: { createdAt: 'desc' }, 
           include: {
             doctor: { include: { user: true } },
+            agency: true,
             sample: true,
+            invoice: true,
             results: { orderBy: { id: 'asc' } },
             customResults: true, 
             testTemplate: {
               include: {
+                Department: true,
                 SampleType: true,
                 parameters: {
                   include: { parameter: { include: { referenceRanges: true } } },
@@ -77,46 +80,34 @@ export async function GET(
 
     if (!patientData) return NextResponse.json({ error: "Patient not found" }, { status: 404 });
 
-    // Bridge the strict schema fields back to what the Frontend UI expects
+    // --- FETCH UNITS FROM MASTER CATALOG ---
+    const allParameterCodes = patientData.tests.flatMap(t => t.results.map(r => r.parameterCode));
+    const uniqueCodes = [...new Set(allParameterCodes)];
+
+    const masterParams = await prisma.labTestParameter.findMany({
+      where: {
+        code: { in: uniqueCodes },
+        OR: [{ labId: user.labId }, { isGlobal: true }]
+      },
+      select: { code: true, unit: true } 
+    });
+
+    const paramUnitMap = new Map();
+    masterParams.forEach(p => paramUnitMap.set(p.code, p.unit));
+
+    // --- MAP TESTS FOR FRONTEND ---
     const mappedTests = patientData.tests.map(t => ({
       ...t,
       results: t.results.map(r => ({
          ...r,
          // The frontend maps data using "parameterName" and "value"
          parameterName: r.printName || r.parameterCode,
-         value: r.textValue || (r.numericValue !== null ? r.numericValue.toString() : "")
+         value: r.textValue || (r.numericValue !== null ? r.numericValue.toString() : ""),
+         // Inject the missing unit so the PDF Report displays it!
+         unit: paramUnitMap.get(r.parameterCode) || "" 
       }))
     }));
     patientData.tests = mappedTests as any;
-
-    // Hydrate Single Parameter Tests
-    const singleParameterTests = patientData.tests.filter(t => !t.testTemplate || t.testTemplate.parameters.length === 0);
-    
-    if (singleParameterTests.length > 0) {
-        const codes = singleParameterTests.map(t => t.testCode);
-        const masterParams = await prisma.labTestParameter.findMany({
-            where: { labId: user.labId, code: { in: codes } },
-            include: { referenceRanges: true }
-        });
-
-        singleParameterTests.forEach(test => {
-            const match = masterParams.find(mp => mp.code === test.testCode);
-            if (match) {
-                test.testTemplate = {
-                    ...test.testTemplate, 
-                    parameters: [{
-                        parameter: match,
-                        order: 0,
-                        id: 'virtual-id', 
-                        templateId: 'virtual-template',
-                        parameterId: match.id,
-                        headingId: null,
-                        customLabel: null
-                    }]
-                } as any;
-            }
-        });
-    }
 
     return NextResponse.json(patientData);
 
@@ -127,7 +118,7 @@ export async function GET(
 }
 
 // =========================================================================
-// POST: Save Results (Enhanced with Inventory)
+// POST: Save Results (BATCH PROCESSING FOR ENTIRE INVOICE)
 // =========================================================================
 export async function POST(
   req: NextRequest, 
@@ -137,106 +128,104 @@ export async function POST(
     const user = await getDataFromToken(req);
     if (!user || !user.labId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { id } = await params; 
-    const { testId, results, customResults, action, notes, impression, sampleReceivedAt } = await req.json(); 
+    const { id: targetId } = await params; // Could be invoiceId or testId depending on the caller
+    const body = await req.json(); 
 
-    // 1. Fetch Test Context
-    const testContext = await prisma.test.findUnique({
-        where: { id: testId },
-        include: {
-            patient: true,
-            testTemplate: {
-                include: {
-                    parameters: {
-                        include: { parameter: { include: { referenceRanges: true } } }
+    // --- HANDLE NEW INVOICE-LEVEL BATCH PAYLOAD ---
+    if (body.data && body.data.parameters) {
+        const { action, data, invoiceId } = body;
+        const { parameters, notes, impressions } = data;
+
+        let newStatus = undefined;
+        if (action === 'SAVE_DRAFT') newStatus = 'IN_PROGRESS';
+        if (action === 'REQUEST_APPROVAL') newStatus = 'COMPLETED';
+        if (action === 'APPROVE') newStatus = 'APPROVED';
+
+        await prisma.$transaction(async (tx) => {
+            // 1. Batch Update all Parameter Results
+            for (const [paramId, value] of Object.entries(parameters)) {
+                const strValue = String(value);
+                const parsedNumeric = parseFloat(strValue);
+                const isNumeric = !isNaN(parsedNumeric) && strValue.trim() !== '';
+
+                await tx.testResultParameter.update({
+                    where: { id: paramId },
+                    data: {
+                        textValue: strValue,
+                        numericValue: isNumeric ? parsedNumeric : null,
+                    }
+                });
+            }
+
+            // 2. Batch Update all Tests (Notes, Impressions, and Status)
+            const testsInInvoice = await tx.test.findMany({ 
+                where: { invoiceId: invoiceId || targetId, labId: user.labId } 
+            });
+
+            for (const test of testsInInvoice) {
+                const isFirstTimeCompletion = (action === 'REQUEST_APPROVAL' || action === 'APPROVE') && 
+                                              (test.status !== 'COMPLETED' && test.status !== 'APPROVED');
+
+                await tx.test.update({
+                    where: { id: test.id },
+                    data: {
+                        // Safely apply notes and impressions if provided for this test
+                        ...(notes && notes[test.id] !== undefined ? { notes: notes[test.id] } : {}),
+                        ...(impressions && impressions[test.id] !== undefined ? { impression: impressions[test.id] } : {}),
+                        
+                        ...(newStatus ? { 
+                            status: newStatus as any,
+                            ...(newStatus === 'APPROVED' ? { approvedAt: new Date(), approvedBy: user.name } : {})
+                        } : {})
+                    }
+                });
+
+                // 3. Fire the Inventory Engine if transitioning to Complete/Approve
+                if (isFirstTimeCompletion) {
+                    try {
+                        await consumeReagentsForTest(test.id, user.id || user.name || "SYSTEM");
+                    } catch (err) {
+                        console.error(`[Inventory Error] Test ${test.id}:`, err);
                     }
                 }
             }
-        }
-    });
+        });
 
-    if (!testContext) return NextResponse.json({ error: "Test not found" }, { status: 404 });
+        return NextResponse.json({ success: true, message: "Batch update successful" });
+    }
 
-    // 2. Identify if this is the FIRST time completing/approving to prevent double-deduction for inventory
-    const isFirstTimeCompletion = (action === 'SUBMIT_FOR_REVIEW' || action === 'APPROVE') && 
-                                  (testContext.status !== 'COMPLETED' && testContext.status !== 'APPROVED');
+    // --- HANDLE OLD SINGLE-TEST PAYLOAD (Fallback for safety) ---
+    const { testId, results, action, notes, impression, sampleReceivedAt } = body; 
+    
+    if (testId && results) {
+        const testContext = await prisma.test.findUnique({
+            where: { id: testId }
+        });
 
-    // 3. Save Standard Results (MAPPED PROPERLY TO YOUR SCHEMA)
-    if (results && results.length > 0) {
+        if (!testContext) return NextResponse.json({ error: "Test not found" }, { status: 404 });
+
+        const isFirstTimeCompletion = (action === 'SUBMIT_FOR_REVIEW' || action === 'APPROVE') && 
+                                      (testContext.status !== 'COMPLETED' && testContext.status !== 'APPROVED');
+
         for (const res of results) {
-            let masterParam = testContext.testTemplate?.parameters.find(
-                (p) => p.parameter.name === res.parameterName
-            )?.parameter;
-
-            if (!masterParam) {
-                masterParam = await prisma.labTestParameter.findFirst({
-                    where: { labId: user.labId, name: res.parameterName },
-                    include: { referenceRanges: true }
-                }) as any;
-            }
-
-            let snapshot = { text: null as string | null };
-            
-            if (masterParam) {
-                const range = getMatchingRange(masterParam, testContext.patient);
-                if (range) {
-                    snapshot = {
-                        text: range.textValue || (range.customLabel ? `${range.customLabel}: ${range.lowValue}-${range.highValue}` : `${range.lowValue} - ${range.highValue}`)
-                    };
-                }
-            }
-
-            // Determine values matching the exact Prisma columns
             const parsedNumeric = parseFloat(res.value);
             const isNumeric = !isNaN(parsedNumeric) && res.value.trim() !== '';
-            const flagValue = res.isCritical ? "CRITICAL" : (res.isAbnormal ? "ABNORMAL" : null);
 
             if (res.id) {
-                // Update Existing Record
                 await prisma.testResultParameter.update({
                     where: { id: res.id },
                     data: { 
                         numericValue: isNumeric ? parsedNumeric : null,
                         textValue: res.value, 
-                        referenceRangeText: snapshot.text,
-                        flag: flagValue
-                    }
-                });
-            } else {
-                // Create New Record
-                await prisma.testResultParameter.create({
-                    data: {
-                        testId: testId,
-                        parameterCode: masterParam?.code || res.parameterName.replace(/\s+/g, '_').toUpperCase(),
-                        printName: masterParam?.printName || masterParam?.name || res.parameterName,
-                        numericValue: isNumeric ? parsedNumeric : null,
-                        textValue: res.value,
-                        referenceRangeText: snapshot.text,
-                        flag: flagValue,
-                        method: masterParam?.method || null,
                     }
                 });
             }
         }
-    }
 
-    // 4. Save Custom Fields
-    if (customResults && customResults.length > 0) {
-        for (const item of customResults) {
-           await prisma.testResultCustomField.upsert({
-              where: { testId_fieldDefId: { testId: testId, fieldDefId: item.fieldDefId } },
-              update: { value: item.value, ...(item.layout ? { layout: item.layout } : {}) },
-              create: { testId: testId, fieldDefId: item.fieldDefId, value: item.value, layout: item.layout ?? undefined }
-           });
-        }
-    }
+        let newStatus = undefined;
+        if (action === 'SUBMIT_FOR_REVIEW') newStatus = 'COMPLETED';
+        if (action === 'APPROVE') newStatus = 'APPROVED';
 
-    // 5. Update Status & Meta Data
-    let newStatus = undefined;
-    if (action === 'SUBMIT_FOR_REVIEW') newStatus = 'COMPLETED';
-    if (action === 'APPROVE') newStatus = 'APPROVED';
-
-    if (action || notes !== undefined || impression !== undefined || sampleReceivedAt) {
         await prisma.test.update({
             where: { id: testId },
             data: { 
@@ -249,16 +238,15 @@ export async function POST(
                 } : {})
             }
         });
+
+        if (isFirstTimeCompletion) {
+            consumeReagentsForTest(testId, user.id || user.name || "SYSTEM").catch(console.error);
+        }
+
+        return NextResponse.json({ success: true, message: "Single test update successful" });
     }
 
-    // 6. FIRE THE INVENTORY ENGINE
-    if (isFirstTimeCompletion) {
-        consumeReagentsForTest(testId, user.id || user.name || "SYSTEM")
-            .then(res => console.log("[Inventory Trigger]", res))
-            .catch(err => console.error("[Inventory Trigger Error]", err));
-    }
-
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ error: "Invalid payload format" }, { status: 400 });
 
   } catch (error: any) {
     console.error("Save Error:", error);

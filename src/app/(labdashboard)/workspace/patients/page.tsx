@@ -1,7 +1,7 @@
 "use client";
 export const dynamic = "force-dynamic";
 
-import { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -16,7 +16,6 @@ import {
   Clock,
   Briefcase,
   Trash2,
-  Edit,
   User,
   Phone,
   Fingerprint,
@@ -33,7 +32,7 @@ import {
   CheckCircle2,
   Calendar,
   TestTube2,
-  MoreHorizontal, // <-- Added Icon
+  MoreHorizontal,
 } from "lucide-react";
 import { differenceInHours, differenceInMinutes, format } from "date-fns";
 import toast from "react-hot-toast";
@@ -49,13 +48,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -69,8 +61,6 @@ import {
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-// 👇 ADDED: Dropdown Menu Imports
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -97,7 +87,7 @@ const safeFormatDate = (dateValue: string | Date | null | undefined) => {
   if (!dateValue) return "N/A";
   const d = new Date(dateValue);
   if (isNaN(d.getTime())) return "Invalid Date";
-  return format(d, "dd MMM yyyy");
+  return format(d, "dd MMM yyyy, hh:mm a");
 };
 
 const getTAT = (date: Date) => {
@@ -134,30 +124,6 @@ const getTestStatusBadge = (status: string) => {
   }
 };
 
-const getBillingStatus = (invoice: any) => {
-  if (!invoice) {
-    return (
-      <Badge
-        variant="outline"
-        className="text-slate-400 border-dashed text-[10px] uppercase tracking-wider bg-slate-50 cursor-help">
-        Unbilled
-      </Badge>
-    );
-  }
-  if (invoice.status === "PAID") {
-    return (
-      <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border-none text-[10px] px-2.5 uppercase tracking-wider font-bold cursor-help transition-colors">
-        Paid
-      </Badge>
-    );
-  }
-  return (
-    <Badge className="bg-rose-100 text-rose-700 hover:bg-rose-200 border-none text-[10px] px-2.5 uppercase tracking-wider font-bold animate-pulse cursor-help transition-colors">
-      Dues
-    </Badge>
-  );
-};
-
 export default function PatientWorklistPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -167,35 +133,9 @@ export default function PatientWorklistPage() {
   const [searchField, setSearchField] = useState("all");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [filters, setFilters] = useState({
-    dateFrom: "",
-    dateTo: "",
-    doctorId: "ALL",
-    agencyId: "ALL",
-    status: "ALL",
-  });
-  const [appliedFilters, setAppliedFilters] = useState(filters);
   const [activeTabFilter, setActiveTabFilter] = useState("ALL");
-
   const [page, setPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-
-  // Filtering Options
-  const { data: filterOptions } = useQuery({
-    queryKey: ["filterOptions"],
-    queryFn: async () => {
-      const [docsRes, agenciesRes] = await Promise.allSettled([
-        fetch("/api/workspace/doctors").then((r) => (r.ok ? r.json() : [])),
-        fetch("/api/workspace/agencies").then((r) => (r.ok ? r.json() : [])),
-      ]);
-      return {
-        doctors: docsRes.status === "fulfilled" ? docsRes.value : [],
-        agencies: agenciesRes.status === "fulfilled" ? agenciesRes.value : [],
-      };
-    },
-    staleTime: 1000 * 60 * 10,
-  });
 
   // Search Debounce
   useEffect(() => {
@@ -210,11 +150,6 @@ export default function PatientWorklistPage() {
     page: page.toString(),
     search: debouncedSearch,
     field: searchField,
-    from: appliedFilters.dateFrom || "",
-    to: appliedFilters.dateTo || "",
-    doctor: appliedFilters.doctorId || "",
-    agency: appliedFilters.agencyId || "",
-    status: appliedFilters.status || "",
   }).toString();
 
   const { data, isLoading } = useQuery({
@@ -230,18 +165,21 @@ export default function PatientWorklistPage() {
   });
 
   const rawPatients = data?.data || (Array.isArray(data) ? data : []);
-  const totalRecords = data?.pagination?.total || 0;
   const totalPages = data?.pagination?.pages || 1;
 
-  // --- MULTI-VISIT DATA FLATTENING LAYER (By Invoice / Visit) ---
+  // 🌟 THE FIX: FLATTEN BY INVOICE (1 Invoice = 1 Row)
   const processedVisits = useMemo(() => {
     const visitsList: any[] = [];
 
     rawPatients.forEach((patient: any) => {
+      // If the patient has invoices, break them out into separate rows
       if (patient.invoices && patient.invoices.length > 0) {
         patient.invoices.forEach((inv: any) => {
+          // Find tests that specifically belong to this invoice
           const invoiceTests =
             patient.tests?.filter((t: any) => t.invoiceId === inv.id) || [];
+
+          // Compute status based on THIS specific invoice's tests
           const isFullyApproved =
             invoiceTests.length > 0 &&
             invoiceTests.every(
@@ -257,31 +195,35 @@ export default function PatientWorklistPage() {
               : "PENDING";
 
           visitsList.push({
-            uniqueVisitKey: `INV-${inv.id}`,
-            patient,
-            visitId: inv.invoiceNumber,
+            uniqueVisitKey: inv.id, // The unique row ID is the Invoice ID!
+            patient: patient,
+            invoice: inv,
+            visitId: inv.invoiceNumber, // Human readable ID for the UI
             date: new Date(inv.createdAt),
             status: visitComputedStatus,
-            tests: invoiceTests.length > 0 ? invoiceTests : patient.tests,
-            invoice: inv,
+            tests: invoiceTests,
           });
         });
-      } else {
+      }
+      // If they were registered but NEVER billed (No invoices at all)
+      else {
         visitsList.push({
-          uniqueVisitKey: `PAT-${patient.id}`,
-          patient,
+          uniqueVisitKey: `NO-INV-${patient.id}`,
+          patient: patient,
+          invoice: null,
           visitId: `REG-${patient.patientId.replace("P-", "")}`,
           date: new Date(patient.createdAt),
           status: "NO_TESTS",
           tests: patient.tests || [],
-          invoice: null,
         });
       }
     });
 
+    // Sort all rows globally by date (Newest first)
     return visitsList.sort((a, b) => b.date.getTime() - a.date.getTime());
   }, [rawPatients]);
 
+  // Tab Filtering logic
   const filteredVisits = useMemo(() => {
     if (activeTabFilter === "ALL") return processedVisits;
     return processedVisits.filter((visit) => visit.status === activeTabFilter);
@@ -302,41 +244,15 @@ export default function PatientWorklistPage() {
   });
 
   const handleDelete = (id: string) => {
-    if (
-      confirm(
-        "Are you sure you want to completely purge this patient record and all their visits?",
-      )
-    ) {
+    if (confirm("Are you sure you want to purge this entire patient record?")) {
       deleteMutation.mutate(id);
     }
-  };
-
-  const handleWhatsAppTrigger = (
-    phone: string,
-    name: string,
-    visitId: string,
-  ) => {
-    const normalizedPhone = phone.replace(/\D/g, "");
-    const textString = encodeURIComponent(
-      `Hello ${name}, your booking reference ID ${visitId} is recorded at our laboratory. We will notify you once reports are generated.`,
-    );
-    window.open(
-      `https://wa.me/91${normalizedPhone}?text=${textString}`,
-      "_blank",
-    );
   };
 
   const ActiveIcon =
     SEARCH_CRITERIA.find((c) => c.id === searchField)?.icon || Search;
   const activeLabel =
     SEARCH_CRITERIA.find((c) => c.id === searchField)?.label || "Global Search";
-  const activeFilterCount = [
-    appliedFilters.dateFrom,
-    appliedFilters.dateTo,
-    appliedFilters.doctorId !== "ALL",
-    appliedFilters.agencyId !== "ALL",
-    appliedFilters.status !== "ALL",
-  ].filter(Boolean).length;
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] bg-slate-50 font-sans relative overflow-hidden selection:bg-indigo-100">
@@ -360,13 +276,12 @@ export default function PatientWorklistPage() {
                   </Badge>
                 </h1>
                 <p className="text-xs font-medium text-slate-500 mt-1">
-                  Double click any row to edit patient profile.
+                  Click any row to open the full patient profile.
                 </p>
               </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-              {/* Search Trigger */}
               <Popover open={isSearchOpen} onOpenChange={setIsSearchOpen}>
                 <PopoverTrigger asChild>
                   <div className="relative w-full sm:w-72 group cursor-pointer">
@@ -437,7 +352,6 @@ export default function PatientWorklistPage() {
             </div>
           </div>
 
-          {/* --- WORKLIST SEGMENTED CONSOLE FILTER TABS --- */}
           <div className="border-t border-slate-100 pt-3">
             <Tabs
               value={activeTabFilter}
@@ -476,19 +390,13 @@ export default function PatientWorklistPage() {
               <table className="w-full text-left border-collapse whitespace-nowrap">
                 <thead className="sticky top-0 z-20 bg-slate-50/90 backdrop-blur-md text-slate-500 font-bold uppercase tracking-wider text-[10px] border-b border-slate-200">
                   <tr>
-                    <th className="px-4 py-3 w-10 text-center">
-                      <Checkbox className="rounded-[4px] border-slate-300" />
-                    </th>
-                    <th className="px-4 py-3 w-[150px]">Visit Registry ID</th>
+                    <th className="px-4 py-3 w-[150px]">Visit ID</th>
                     <th className="px-4 py-3 w-[350px]">
                       Patient Profile & Demographics
                     </th>
                     <th className="px-4 py-3 w-[120px]">TAT Analytics</th>
                     <th className="px-4 py-3 min-w-[200px]">Assigned Assays</th>
-
-                    {/* ✅ Renamed to "Referred By" */}
                     <th className="px-4 py-3 w-[160px]">Referred By</th>
-
                     <th className="px-4 py-3 text-center w-[100px]">
                       Financials
                     </th>
@@ -498,7 +406,7 @@ export default function PatientWorklistPage() {
                 <tbody className="divide-y divide-slate-100 text-sm">
                   {isLoading ? (
                     <tr>
-                      <td colSpan={8} className="h-64 text-center">
+                      <td colSpan={7} className="h-64 text-center">
                         <div className="flex flex-col items-center justify-center text-slate-500 space-y-2">
                           <Loader2 className="animate-spin h-6 w-6 text-indigo-600" />
                           <span className="text-[10px] uppercase tracking-widest font-bold animate-pulse">
@@ -509,11 +417,11 @@ export default function PatientWorklistPage() {
                     </tr>
                   ) : filteredVisits.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="h-64 text-center">
+                      <td colSpan={7} className="h-64 text-center">
                         <div className="flex flex-col items-center justify-center text-slate-400 space-y-2">
                           <Search className="h-6 w-6 text-slate-300" />
                           <p className="font-bold text-xs text-slate-600">
-                            Zero active segment results found
+                            Zero visits found
                           </p>
                         </div>
                       </td>
@@ -524,7 +432,6 @@ export default function PatientWorklistPage() {
                         visit.uniqueVisitKey,
                       );
 
-                      // Resolve Doctor/Agency safely
                       let derivedDoctor =
                         visit.tests?.[0]?.doctor?.name ||
                         visit.patient.doctor?.name ||
@@ -537,41 +444,21 @@ export default function PatientWorklistPage() {
                       return (
                         <tr
                           key={visit.uniqueVisitKey}
-                          // ✅ Standard Single Click to open profile
                           onClick={() =>
                             router.push(
                               `/workspace/patients/${visit.patient.id}`,
                             )
                           }
                           className={`group transition-all cursor-pointer ${isRowSelected ? "bg-indigo-50/30" : "hover:bg-slate-50/70"}`}>
-                          {/* ✅ Stop Propagation so clicking checkbox doesn't open row */}
-                          <td
-                            className="px-4 py-4 text-center"
-                            onClick={(e) => e.stopPropagation()}>
-                            <Checkbox
-                              checked={isRowSelected}
-                              onCheckedChange={(c) =>
-                                setSelectedIds(
-                                  c
-                                    ? [...selectedIds, visit.uniqueVisitKey]
-                                    : selectedIds.filter(
-                                        (id) => id !== visit.uniqueVisitKey,
-                                      ),
-                                )
-                              }
-                              className="rounded-[4px] border-slate-300"
-                            />
-                          </td>
-
                           {/* 🆔 DYNAMIC VISIT TRACKER ID */}
                           <td className="px-4 py-4">
-                            <div className="flex flex-col gap-1">
+                            <div className="flex flex-col gap-1 w-max">
                               <Badge
                                 variant="outline"
-                                className="font-mono bg-indigo-50/50 font-black text-indigo-700 border-indigo-100 text-[11px] px-2 py-0.5 rounded-md w-max shadow-sm">
+                                className="font-mono bg-indigo-50/50 font-black text-indigo-700 border-indigo-100 text-[11px] px-2 py-0.5 rounded-md shadow-sm">
                                 {visit.visitId}
                               </Badge>
-                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide flex items-center gap-1 pl-0.5">
+                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide flex items-center gap-1 pl-0.5 mt-0.5">
                                 <Calendar className="w-3 h-3 text-slate-300" />{" "}
                                 {safeFormatDate(visit.date)}
                               </span>
@@ -590,40 +477,20 @@ export default function PatientWorklistPage() {
                                   {visit.patient.ageUnit?.slice(0, 1)} •{" "}
                                   {visit.patient.gender}
                                 </Badge>
-                                <span className="text-slate-300">|</span>
-                                <span className="text-[10px] font-mono font-bold text-slate-500 bg-slate-50 px-1 rounded">
+                                <span className="text-[10px] font-mono font-bold text-slate-400 ml-1">
                                   {visit.patient.patientId}
                                 </span>
                               </div>
-
                               <div className="flex items-center gap-2 mt-0.5">
-                                <span className="text-xs font-semibold text-slate-600 flex items-center gap-1">
+                                <span className="text-xs font-semibold text-slate-500 flex items-center gap-1">
                                   <Phone className="w-3 h-3 text-slate-400" />{" "}
                                   {visit.patient.phone}
                                 </span>
-                                {visit.patient.phone && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    // ✅ Stop Propagation on WhatsApp button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleWhatsAppTrigger(
-                                        visit.patient.phone,
-                                        visit.patient.name,
-                                        visit.visitId,
-                                      );
-                                    }}
-                                    className="h-6 bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 hover:text-emerald-800 text-[10px] px-2 font-bold ml-1 rounded-md shadow-sm transition-all hover:scale-105">
-                                    <MessageCircle className="w-3 h-3 mr-1" />{" "}
-                                    WhatsApp
-                                  </Button>
-                                )}
                               </div>
                             </div>
                           </td>
 
-                          {/* ⏱️ REAL TIME LOGISTICS TAT ANALYTICS (TOOLTIP) */}
+                          {/* ⏱️ REAL TIME LOGISTICS TAT ANALYTICS */}
                           <td className="px-4 py-4">
                             <Tooltip>
                               <TooltipTrigger asChild>
@@ -639,7 +506,7 @@ export default function PatientWorklistPage() {
                             </Tooltip>
                           </td>
 
-                          {/* 🧪 TESTING PARCELS (TOOLTIP) */}
+                          {/* 🧪 TESTING PARCELS */}
                           <td className="px-4 py-4">
                             <div className="flex flex-wrap gap-1 max-w-[280px]">
                               {visit.tests.map((testItem: any) => (
@@ -672,7 +539,7 @@ export default function PatientWorklistPage() {
                               {visit.tests.length === 0 && (
                                 <span className="text-slate-400 text-xs italic font-semibold flex items-center gap-1">
                                   <AlertCircle className="w-3.5 h-3.5" /> No
-                                  Tests
+                                  Tests Billed
                                 </span>
                               )}
                             </div>
@@ -694,22 +561,25 @@ export default function PatientWorklistPage() {
                             </div>
                           </td>
 
-                          {/* 💰 COMPREHENSIVE REVENUE LEDGER (HOVERCARD) */}
+                          {/* 💰 FINANCIALS */}
                           <td
                             className="px-4 py-4 text-center"
                             onClick={(e) => e.stopPropagation()}>
-                            <HoverCard openDelay={200}>
-                              <HoverCardTrigger asChild>
-                                <div className="w-max mx-auto">
-                                  {getBillingStatus(visit.invoice)}
-                                </div>
-                              </HoverCardTrigger>
-                              {visit.invoice && (
+                            {visit.invoice ? (
+                              <HoverCard openDelay={200}>
+                                <HoverCardTrigger asChild>
+                                  <div className="w-max mx-auto">
+                                    <Badge
+                                      className={`${visit.invoice.status === "PAID" ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"} border-none text-[10px] px-2.5 uppercase tracking-wider font-bold cursor-help`}>
+                                      {visit.invoice.status}
+                                    </Badge>
+                                  </div>
+                                </HoverCardTrigger>
                                 <HoverCardContent
                                   className="w-64 p-0 shadow-2xl border-slate-200 rounded-xl overflow-hidden z-50"
                                   align="center">
                                   <div className="bg-slate-50 px-4 py-2 border-b text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1.5">
-                                    <Receipt className="h-3.5 w-3.5" /> Ledger
+                                    <Receipt className="h-3.5 w-3.5" /> Invoice
                                     Summary
                                   </div>
                                   <div className="p-4 space-y-2 text-xs font-semibold">
@@ -722,15 +592,6 @@ export default function PatientWorklistPage() {
                                         ).toFixed(2)}
                                       </span>
                                     </div>
-                                    <div className="flex justify-between text-rose-500">
-                                      <span>Discount</span>{" "}
-                                      <span>
-                                        -₹
-                                        {Number(
-                                          visit.invoice.discount || 0,
-                                        ).toFixed(2)}
-                                      </span>
-                                    </div>
                                     <div className="border-t border-dashed pt-2 flex justify-between font-black text-slate-900 text-sm">
                                       <span>Net Payable</span>{" "}
                                       <span>
@@ -740,16 +601,16 @@ export default function PatientWorklistPage() {
                                         ).toFixed(2)}
                                       </span>
                                     </div>
-                                    {visit.invoice.status !== "PAID" && (
-                                      <div className="flex justify-between text-amber-700 font-bold mt-2 bg-amber-50 p-2 rounded-md items-center">
-                                        <span>Status</span>{" "}
-                                        <span>Payment Pending</span>
-                                      </div>
-                                    )}
                                   </div>
                                 </HoverCardContent>
-                              )}
-                            </HoverCard>
+                              </HoverCard>
+                            ) : (
+                              <Badge
+                                variant="outline"
+                                className="text-slate-400 border-dashed text-[10px] uppercase">
+                                Unbilled
+                              </Badge>
+                            )}
                           </td>
 
                           {/* ⚙️ 3-DOT ACTION MENU */}
@@ -768,7 +629,7 @@ export default function PatientWorklistPage() {
                               <DropdownMenuContent
                                 align="end"
                                 className="w-56 p-1.5 shadow-2xl border-slate-100 rounded-xl">
-                                {/* Core Actions */}
+                                {/* New Accession for THIS patient */}
                                 <DropdownMenuItem
                                   onClick={() =>
                                     router.push(
@@ -780,18 +641,8 @@ export default function PatientWorklistPage() {
                                   Add New Test
                                 </DropdownMenuItem>
 
-                                {visit.status === "COMPLETED" ? (
-                                  <DropdownMenuItem
-                                    onClick={() =>
-                                      router.push(
-                                        `/workspace/reports/print/${visit.patient.id}`,
-                                      )
-                                    }
-                                    className="cursor-pointer font-bold rounded-lg py-2.5">
-                                    <Printer className="mr-2 h-4 w-4 text-emerald-600" />{" "}
-                                    Print Final Report
-                                  </DropdownMenuItem>
-                                ) : visit.tests.length > 0 ? (
+                                {/* Results Entry (Using the Patient ID to fetch their active tests) */}
+                                {visit.tests.length > 0 && (
                                   <DropdownMenuItem
                                     onClick={() =>
                                       router.push(
@@ -802,11 +653,25 @@ export default function PatientWorklistPage() {
                                     <FileEdit className="mr-2 h-4 w-4 text-amber-600" />{" "}
                                     Enter Results Data
                                   </DropdownMenuItem>
-                                ) : null}
+                                )}
 
-                                {/* Contextual Meta Options */}
+                                {/* Print Report (Using Patient ID) */}
+                                {visit.status === "COMPLETED" && (
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      router.push(
+                                        `/workspace/reports/print/${visit.patient.id}`,
+                                      )
+                                    }
+                                    className="cursor-pointer font-bold rounded-lg py-2.5">
+                                    <Printer className="mr-2 h-4 w-4 text-emerald-600" />{" "}
+                                    Print Final Report
+                                  </DropdownMenuItem>
+                                )}
+
                                 <DropdownMenuSeparator className="bg-slate-100 my-1" />
 
+                                {/* Invoice Actions (Using specific Invoice ID!) */}
                                 {visit.invoice && (
                                   <>
                                     <DropdownMenuItem
@@ -832,19 +697,6 @@ export default function PatientWorklistPage() {
                                   </>
                                 )}
 
-                                {/* ✅ Machine Data / Interfacing Option */}
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    toast.success(
-                                      "Machine Interface Module opening...",
-                                    )
-                                  }
-                                  className="cursor-pointer font-medium text-slate-700 rounded-lg py-2">
-                                  <FlaskConical className="mr-2 h-4 w-4 text-slate-400" />{" "}
-                                  Machine Data
-                                </DropdownMenuItem>
-
-                                {/* Destructive Action */}
                                 <DropdownMenuSeparator className="bg-slate-100 my-1" />
                                 <DropdownMenuItem
                                   className="text-rose-600 focus:text-rose-700 focus:bg-rose-50 font-bold rounded-lg py-2"

@@ -5,7 +5,7 @@ import { getDataFromToken } from '@/lib/auth';
 export const dynamic = 'force-dynamic';
 
 // =========================================================================
-// GET: Fetch Recent Accessions / Visits
+// 1. GET: Fetch Recent Accessions / Visits (Worklist)
 // =========================================================================
 export async function GET(req: NextRequest) {
   try {
@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
 
     let where: any = { labId: user.labId };
     
-    // Enterprise Branch Scoping
+    // Enterprise Branch Scoping: Managers only see their branch's accessions
     if (user.role !== 'LAB_OWNER' && user.role !== 'SUPER_ADMIN' && user.branchId) {
       where.OR = [{ branchId: user.branchId }, { branchId: null }];
     }
@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
 }
 
 // =========================================================================
-// POST: Optimized Accession Booking
+// 2. POST: Complete Accession Booking Engine
 // =========================================================================
 export async function POST(req: NextRequest) {
   try {
@@ -55,161 +55,174 @@ export async function POST(req: NextRequest) {
     if (!user?.labId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
-    const { patientId, tests, doctorId, agencyId, subtotal, discountAmount, grandTotal } = body;
+    const { patientId, tests, subtotal, discountAmount, grandTotal } = body;
 
-    // 1. Fetch wallet status outside transaction
-    const wallet = await prisma.labWallet.findUnique({ where: { labId: user.labId } });
-    if (!wallet) return NextResponse.json({ error: "Wallet not initialized." }, { status: 400 });
-
+    // Execute the entire booking in a single, safe transaction
     const result = await prisma.$transaction(async (tx) => {
-        const startOfToday = new Date();
-        startOfToday.setHours(0, 0, 0, 0);
-
-        // Fetch patient for a clean Ledger description
-        const patient = await tx.patient.findUnique({ where: { id: patientId } });
-        const patientName = patient?.name || "Unknown Patient";
-
-        // A. DEDUCTION CHECK: Look for exact ID pattern in today's transactions
-        const existingDeduction = await tx.walletTransaction.findFirst({
-            where: { 
-                labId: user.labId, 
-                type: 'DEDUCTION',
-                description: { contains: `[ID: ${patientId}]` }, 
-                createdAt: { gte: startOfToday } 
-            }
-        });
+        
+        // --- A. WALLET DEDUCTION LOGIC ---
+        const wallet = await tx.labWallet.findUnique({ where: { labId: user.labId } });
+        if (!wallet) throw new Error("INSUFFICIENT_FUNDS");
 
         const visitFee = Number(wallet.perPatientFee || 2.5);
+        if (Number(wallet.balance) < visitFee) throw new Error("INSUFFICIENT_FUNDS");
 
-        // B. ONLY DEDUCT IF NO PRIOR DEDUCTION FOUND TODAY
-        if (!existingDeduction) {
-            const currentWallet = await tx.labWallet.findUnique({ where: { labId: user.labId } });
-            if (Number(currentWallet?.balance) < visitFee) {
-                throw new Error("INSUFFICIENT_FUNDS");
-            }
-
-            const updatedWallet = await tx.labWallet.update({
-                where: { labId: user.labId },
-                data: { balance: { decrement: visitFee } }
-            });
-
-            // ✅ BEAUTIFUL FORMAT: Shows name to humans, contains ID for system checks
-            await tx.walletTransaction.create({
-                data: {
-                    labId: user.labId,
-                    type: 'DEDUCTION',
-                    amount: visitFee,
-                    closingBalance: updatedWallet.balance,
-                    description: `Registration fee for: ${patientName} [ID: ${patientId}]`,
-                }
-            });
-        }
-
-        // C. DAILY VISIT ID GENERATION (Format: DDMMYY-XXXX)
-        const d = new Date();
-        const dd = String(d.getDate()).padStart(2, '0');
-        const mm = String(d.getMonth() + 1).padStart(2, '0');
-        const yy = String(d.getFullYear()).slice(2);
-        const datePrefix = `${dd}${mm}${yy}`; // e.g. "100626"
-
-        const countToday = await tx.invoice.count({ 
-            where: { labId: user.labId, createdAt: { gte: startOfToday } } 
+        await tx.labWallet.update({
+            where: { labId: user.labId },
+            data: { balance: { decrement: visitFee } }
         });
+
+        // --- B. GENERATE VISIT ID (e.g., 240626-0001) ---
+        const d = new Date();
+        const datePrefix = `${String(d.getDate()).padStart(2, '0')}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getFullYear()).slice(2)}`;
         
-        // This is the "Visit Lab ID" -> e.g. "100626-0001"
+        // Count invoices created today to append sequential number
+        const countToday = await tx.invoice.count({ 
+            where: { labId: user.labId, createdAt: { gte: new Date(d.setHours(0,0,0,0)) } } 
+        });
         const invoiceNumber = `${datePrefix}-${(countToday + 1).toString().padStart(4, '0')}`;
 
-        // D. CREATE INVOICE
+        // --- C. CREATE INVOICE (With Strict Schema Compliance) ---
+        const taxableAmount = Number(subtotal) - Number(discountAmount);
+        
         const invoice = await tx.invoice.create({
             data: {
                 labId: user.labId,
                 branchId: user.branchId,
                 patientId,
-                invoiceNumber, // Used as Visit ID
+                invoiceNumber, // This doubles as our Visit ID
                 subtotal: Number(subtotal),
                 discount: Number(discountAmount),
-                taxableAmount: Number(grandTotal),
+                taxableAmount: Number(taxableAmount),
+                
+                // Explicitly defining zero-values to satisfy strict Prisma Decimals
                 totalTax: 0,
+                cgstAmount: 0,
+                sgstAmount: 0,
+                igstAmount: 0,
+                roundOff: 0,
+                
                 grandTotal: Number(grandTotal),
                 status: 'PENDING',
                 paymentStatus: 'PENDING',
-                items: {
-                    create: tests.map((t: any) => ({
-                        description: t.testName,
-                        unitPrice: Number(t.price),
-                        quantity: 1,
+                items: { 
+                    create: tests.map((t: any) => ({ 
+                        description: t.testName, 
+                        unitPrice: Number(t.price), 
+                        quantity: 1, 
                         taxRate: 0,
                         taxAmount: 0,
-                        total: Number(t.price)
-                    }))
+                        total: Number(t.price) 
+                    })) 
                 }
             }
         });
 
-        // E. CREATE TESTS (Individually to capture IDs)
-        const createdTests = [];
-        for (const [i, t] of tests.entries()) {
-            const test = await tx.test.create({
+        // --- D. CREATE TESTS, SNAPSHOT RESULTS & PREP SAMPLES ---
+        const testsWithTemplates = [];
+        const samplesMap: Record<string, any[]> = {}; // Map to pool tests by Container
+
+        for (const t of tests) {
+            // 1. Smart ID Resolution (Defends against frontend naming inconsistencies)
+            const templateId = t.testTemplateId || t.testId || t.templateId || t.id;
+
+            if (!templateId) {
+                throw new Error(`MISSING_TEMPLATE_ID: Payload: ${JSON.stringify(t)}`);
+            }
+
+            // 2. Fetch the Blueprint
+            const template = await tx.testTemplate.findUnique({
+                where: { id: templateId },
+                include: { 
+                    parameters: { 
+                        include: { 
+                            parameter: { include: { referenceRanges: true } } 
+                        } 
+                    } 
+                }
+            });
+
+            if (!template) throw new Error(`TEMPLATE_NOT_FOUND: ${t.testName}`);
+
+            // 3. Create Test & Snapshot the Parameters for the Result Entry Page
+            const createdTest = await tx.test.create({
                 data: {
                     labId: user.labId,
                     branchId: user.branchId,
                     patientId,
                     invoiceId: invoice.id,
-                    testNumber: `T-${datePrefix}-${Math.floor(Math.random() * 10000)}`,
+                    testNumber: `T-${invoiceNumber}-${t.testCode}`,
                     testCode: t.testCode,
                     testName: t.testName,
+                    testTemplateId: template.id,
+                    price: Number(t.price || 0),
                     finalPrice: Number(t.price || 0),
-                    price: Number(t.price),
-                    status: 'PENDING'
+                    status: 'PENDING',
+                    
+                    // 🌟 MAGIC: Freezing the parameters into the patient's record
+                    results: {
+                        create: template.parameters.map(p => {
+                            // Extract standard reference range text for the snapshot
+                            const standardRange = p.parameter.referenceRanges.find(r => r.gender === 'BOTH' || r.gender === 'MALE' || r.gender === 'FEMALE');
+                            const refText = standardRange ? (standardRange.textValue || `${standardRange.lowValue} - ${standardRange.highValue}`) : "-";
+
+                            return {
+                                parameterCode: p.parameter.code,
+                                printName: p.parameter.printName || p.parameter.name,
+                                method: p.parameter.method || "",
+                                order: p.order,
+                                referenceRangeText: refText, // Stores historical range text permanently
+                            };
+                        })
+                    }
                 }
             });
-            createdTests.push(test);
+            
+            testsWithTemplates.push(createdTest);
+
+            // 4. Group tests by Container Type for physical tube generation
+            const containerKey = template.containerTypeId || 'DEFAULT';
+            if (!samplesMap[containerKey]) samplesMap[containerKey] = [];
+            samplesMap[containerKey].push(createdTest.id);
         }
 
-        // F. LINK SAMPLES TO TESTS (Grouping by container)
-        const samplesToCreate = tests.reduce((acc: any, t: any) => {
-            const key = t.containerTypeId || 'default';
-            if (!acc[key]) acc[key] = [];
-            acc[key].push(t);
-            return acc;
-        }, {});
-
-        for (const [containerId, groupTests] of Object.entries(samplesToCreate)) {
+        // --- E. CREATE PHYSICAL SAMPLES (Tubes/Barcodes) ---
+        // Loops through grouped containers and creates 1 sample per container type
+        for (const [containerId, testIds] of Object.entries(samplesMap)) {
+            // Give the barcode a suffix based on container (or generic random digit if default)
+            const sampleSuffix = containerId === 'DEFAULT' ? Math.floor(Math.random() * 1000) : containerId.substring(0, 4).toUpperCase();
+            
             await tx.sample.create({
                 data: {
                     labId: user.labId,
                     branchId: user.branchId,
+                    sampleId: `${invoiceNumber}-${sampleSuffix}`,
                     patientId,
-                    // Format sample barcode as VisitID-RandomDigit (e.g. 100626-0001-1)
-                    sampleId: `${invoiceNumber}-${Math.floor(Math.random() * 10)}`,
-                    containerTypeId: containerId === 'default' ? null : containerId,
+                    containerTypeId: containerId === 'DEFAULT' ? null : containerId,
                     status: 'COLLECTED',
                     tests: {
-                        connect: (groupTests as any[]).map((t: any) => ({
-                            // Safely look up the ID from our createdTests array
-                            id: createdTests.find(x => x.testCode === t.testCode)?.id
-                        }))
+                        // Connect all tests that share this physical tube
+                        connect: testIds.map(id => ({ id }))
                     }
                 }
             });
         }
 
-        return { ...invoice, tests: createdTests };
-    }, { timeout: 10000 });
+        return invoice;
+    }, { timeout: 15000 }); // Generous timeout for complex LIMS processing
 
-    return NextResponse.json({ success: true, data: { invoice: result } });
-
+    return NextResponse.json({ success: true, data: result });
   } catch (error: any) {
     if (error.message === "INSUFFICIENT_FUNDS") {
-        return NextResponse.json({ error: "Insufficient wallet balance." }, { status: 402 });
+        return NextResponse.json({ error: "Insufficient wallet balance to register patient." }, { status: 402 });
     }
     console.error("POST ACCESSION ERROR:", error);
-    return NextResponse.json({ error: "Transaction failed." }, { status: 500 });
+    return NextResponse.json({ error: "Failed to book tests.", details: error.message }, { status: 500 });
   }
 }
 
 // =========================================================================
-// PATCH: Update Accession/Visit (Cancel Tests, Update Doctor)
+// 3. PATCH: Update Accession/Visit (Cancel Tests, Status changes)
 // =========================================================================
 export async function PATCH(req: NextRequest) {
   try {
@@ -224,7 +237,6 @@ export async function PATCH(req: NextRequest) {
     }
 
     const updatedTest = await prisma.$transaction(async (tx) => {
-      
       let updateData: any = {};
       
       if (action === 'CANCEL') {
