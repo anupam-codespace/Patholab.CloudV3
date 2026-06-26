@@ -15,7 +15,7 @@ import { format } from "date-fns";
 export const dynamic = "force-dynamic";
 
 // ============================================================================
-// CONFIGURATION DEFAULTS HELPER (Ensures backend rendering never crashes)
+// CONFIGURATION DEFAULTS HELPER
 // ============================================================================
 const getSafeConfig = (configRaw: any) => {
   let config = configRaw;
@@ -30,7 +30,7 @@ const getSafeConfig = (configRaw: any) => {
   return {
     layout: {
       margins: { top: 10, bottom: 10, left: 10, right: 10 },
-      border: { show: false, weight: 2, color: "#1e3a8a", padding: 5 },
+      border: { show: false, weight: 1, color: "#cbd5e1", padding: 5 },
       ...config.layout,
     },
     header: {
@@ -41,7 +41,7 @@ const getSafeConfig = (configRaw: any) => {
       logoUrl: "",
       fullImage: "",
       html: "",
-      height: 150,
+      height: 120,
       ...config.header,
     },
     qrCode: {
@@ -53,11 +53,12 @@ const getSafeConfig = (configRaw: any) => {
       size: 60,
       margin: 10,
       showPageNumber: true,
+      pageNumberPosition: "below-qr",
       ...config.qrCode,
     },
     patientBlock: {
       show: true,
-      fontSize: 12,
+      fontSize: 11,
       barcode: { show: true, position: "center", height: 35, scale: 1.2 },
       showName: true,
       showPatientId: true,
@@ -71,9 +72,10 @@ const getSafeConfig = (configRaw: any) => {
     },
     bodyOptions: {
       groupDepartmentWise: true,
-      tableFontSize: 13,
+      tableFontSize: 11,
       showBiologicalRef: true,
       showTestTimestamps: true,
+      showClinicalFlags: true,
       ...config.bodyOptions,
     },
     body: config.body || [{ id: "fallback-2", type: "RESULTS_TABLE" }],
@@ -82,7 +84,7 @@ const getSafeConfig = (configRaw: any) => {
       mode: "standard",
       text: "**Sample has been collected outside the laboratory.",
       signatures: [],
-      height: 100,
+      height: 80,
       footerBottomImage: "",
       ...config.footer,
     },
@@ -98,6 +100,18 @@ const getSafeConfig = (configRaw: any) => {
   };
 };
 
+const getMinMax = (res: any) => {
+  const rangeStr = res.referenceRangeText || res.refRangeText || "";
+  const parts = rangeStr.split("-").map((s: string) => parseFloat(s.trim()));
+  if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+    return { min: parts[0], max: parts[1] };
+  }
+  if (res.refRangeMin != null && res.refRangeMax != null) {
+    return { min: res.refRangeMin, max: res.refRangeMax };
+  }
+  return { min: null, max: null };
+};
+
 // ============================================================================
 // THE PDF DOCUMENT COMPONENT
 // ============================================================================
@@ -111,6 +125,7 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
     barcodeValue,
     timestamps,
   } = payload;
+
   const { branding, layout, header, footer, patientBlock, bodyOptions, body } =
     config;
 
@@ -122,20 +137,21 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
   const mLeft = pt(layout?.margins?.left ?? 10);
   const mRight = pt(layout?.margins?.right ?? 10);
 
-  const globalFont = branding?.globalFontSize || 10;
-  const primaryColor = branding?.primaryColor || "#1e3a8a";
-  const headerHeight = pxToPt(header?.height || 150);
-  const footerHeight = pxToPt(footer?.height || 100);
+  const headerHeight = header.show ? pxToPt(header.height || 120) : 0;
+  const footerHeight = footer.show ? pxToPt(footer.height || 80) : 0;
   const qrSize = pxToPt(config.qrCode?.size || 60);
+
+  const pagePaddingTop = headerHeight + mTop + 15;
+  const pagePaddingBottom = footerHeight + mBottom + 30;
 
   const styles = StyleSheet.create({
     page: {
-      paddingTop: header.show ? headerHeight + mTop + 10 : mTop + 10,
-      paddingBottom: footer.show ? footerHeight + mBottom + 20 : mBottom + 10,
+      paddingTop: pagePaddingTop,
+      paddingBottom: pagePaddingBottom,
       paddingLeft: mLeft,
       paddingRight: mRight,
       fontFamily: "Helvetica",
-      fontSize: globalFont,
+      fontSize: branding.globalFontSize || 10,
       color: "#1e293b",
     },
     pageBorder: {
@@ -145,7 +161,7 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
       left: layout?.border?.padding || 10,
       right: layout?.border?.padding || 10,
       borderWidth: layout?.border?.show ? layout?.border?.weight || 1 : 0,
-      borderColor: layout?.border?.color || "#000",
+      borderColor: layout?.border?.color || "#cbd5e1",
     },
     watermarkWrapper: {
       position: "absolute",
@@ -172,9 +188,17 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
       right: mRight,
       height: headerHeight,
       borderBottomWidth: header.mode === "image" ? 0 : 2,
-      borderBottomColor: primaryColor,
+      borderBottomColor: branding.primaryColor,
       flexDirection: "row",
       alignItems: "center",
+    },
+    footerZone: {
+      position: "absolute",
+      bottom: mBottom,
+      left: mLeft,
+      right: mRight,
+      height: footerHeight,
+      borderTopWidth: 0, // 🌟 FIX: Removed Top Border Line
     },
     patientBlock: {
       flexDirection: "row",
@@ -183,17 +207,16 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
       borderBottomColor: "#cbd5e1",
       paddingBottom: 10,
       marginBottom: 15,
-      fontSize: patientBlock?.fontSize || 11,
-      marginTop: 10,
+      fontSize: patientBlock.fontSize || 11,
+      lineHeight: 1.4,
     },
-    patientCol: { flex: 1, flexDirection: "column", gap: 4 },
+    patientCol: { flex: 1, flexDirection: "column", gap: 3 },
     label: { color: "#64748b" },
     value: { fontWeight: "bold", color: "#0f172a" },
     deptHeader: {
       backgroundColor: "#f1f5f9",
       paddingVertical: 4,
       textAlign: "center",
-      fontSize: globalFont,
       fontWeight: "bold",
       textTransform: "uppercase",
       marginBottom: 8,
@@ -205,36 +228,64 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
       flexDirection: "row",
       borderBottomWidth: 2,
       borderTopWidth: 2,
-      borderColor: primaryColor,
+      borderColor: branding.primaryColor,
       paddingVertical: 6,
       fontWeight: "bold",
-      fontSize: bodyOptions?.tableFontSize || 11,
+      fontSize: bodyOptions.tableFontSize || 11,
     },
     tableRow: {
       flexDirection: "row",
       borderBottomWidth: 1,
       borderBottomColor: "#f1f5f9",
       paddingVertical: 6,
-      fontSize: bodyOptions?.tableFontSize || 11,
       alignItems: "center",
+      fontSize: bodyOptions.tableFontSize || 11,
     },
-    footerZone: {
-      position: "absolute",
-      bottom: mBottom,
-      left: mLeft,
-      right: mRight,
-      height: footerHeight,
-      borderTopWidth: footer.mode === "image" ? 0 : 2,
-      borderTopColor: primaryColor,
-    },
+    // 🌟 FIX: Strict boundaries force text to wrap downwards instead of overlapping
+    colParam: { width: "40%", paddingRight: 10 },
+    colResult: { width: "20%", paddingRight: 5 },
+    colUnit: { width: "15%", paddingRight: 5 },
+    colRef: { width: "25%", paddingRight: 5 },
   });
 
-  const getRangeString = (res: any) => {
-    if (res.refRangeText) return res.refRangeText;
-    if (res.refRangeMin !== null && res.refRangeMax !== null) {
-      return `${res.refRangeMin} - ${res.refRangeMax}`;
-    }
-    return "-";
+  // 🌟 HELPER: Universal Page Number Renderer
+  const PageNumberElement = () => (
+    <Text
+      style={{
+        fontSize: 8,
+        fontWeight: "bold",
+        color: "#64748b",
+        marginTop: 4,
+        textAlign: "center",
+      }}
+      render={({ pageNumber, totalPages }) =>
+        `Page ${pageNumber} of ${totalPages}`
+      }
+    />
+  );
+
+  // 🌟 HELPER: Universal QR Code Renderer
+  const RenderQR = () => {
+    if (!config.qrCode?.show || !qrCodeDataUrl) return null;
+    return (
+      // 🌟 FIX 2: Added minHeight so the text never gets cut off
+      <View
+        style={{
+          alignItems: "center",
+          width: qrSize,
+          minHeight: qrSize + 20,
+          zIndex: 50,
+        }}>
+        <Image
+          src={qrCodeDataUrl}
+          style={{ width: qrSize - 5, height: qrSize - 5 }}
+        />
+        {config.qrCode.showPageNumber &&
+          config.qrCode.pageNumberPosition === "below-qr" && (
+            <PageNumberElement />
+          )}
+      </View>
+    );
   };
 
   return (
@@ -247,69 +298,87 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
           </View>
         )}
 
+        {/* --- CUSTOM ABSOLUTE QR --- */}
         {config.qrCode?.show && config.qrCode.mode === "custom" && (
           <View
             style={{
               position: "absolute",
               left: pxToPt(config.qrCode.x),
               top: pxToPt(config.qrCode.y),
-              alignItems: "center",
-              width: qrSize,
-              zIndex: 50,
             }}
             fixed>
-            <Image
-              src={qrCodeDataUrl}
-              style={{ width: qrSize - 5, height: qrSize - 5 }}
-            />
-            {config.qrCode.showPageNumber && (
-              <Text
-                style={{
-                  fontSize: 8,
-                  fontWeight: "bold",
-                  color: "#000000",
-                  marginTop: 3,
-                }}
-                render={({ pageNumber, totalPages }) =>
-                  `Page ${pageNumber} of ${totalPages}`
-                }
-              />
-            )}
+            <RenderQR />
           </View>
         )}
 
+        {/* --- HEADER --- */}
         {header.show && (
           <View style={styles.headerZone} fixed>
             {header.mode === "image" && header.fullImage ? (
-              <Image
-                src={header.fullImage}
-                style={{ width: "100%", height: "100%", objectFit: "contain" }}
-              />
-            ) : (
               <>
+                <Image
+                  src={header.fullImage}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "contain",
+                    objectPosition: "left top",
+                  }}
+                />
+                {/* Overlay QR on Image Letterheads */}
+                {config.qrCode?.mode === "preset" &&
+                  config.qrCode.position.includes("header") && (
+                    <View
+                      style={{
+                        position: "absolute",
+                        right:
+                          config.qrCode.position === "header-right"
+                            ? 10
+                            : undefined,
+                        left:
+                          config.qrCode.position === "header-left"
+                            ? 10
+                            : undefined,
+                        top: 10,
+                      }}>
+                      <RenderQR />
+                    </View>
+                  )}
+              </>
+            ) : (
+              <View
+                style={{ flex: 1, flexDirection: "row", alignItems: "center" }}>
+                {config.qrCode?.mode === "preset" &&
+                config.qrCode.position === "header-left" ? (
+                  <RenderQR />
+                ) : (
+                  <View style={{ width: qrSize }} />
+                )}
+
                 <View
                   style={{
                     flex: 1,
                     flexDirection: "row",
                     alignItems: "center",
+                    justifyContent: "center",
                   }}>
                   {header.logoUrl && (
                     <Image
                       src={header.logoUrl}
                       style={{
                         maxWidth: pxToPt(150),
-                        height: headerHeight - pxToPt(20),
+                        height: headerHeight - 20,
                         objectFit: "contain",
                         marginRight: 15,
                       }}
                     />
                   )}
-                  <View>
+                  <View style={{ textAlign: "center" }}>
                     <Text
                       style={{
-                        fontSize: 22,
+                        fontSize: 20,
                         fontWeight: "bold",
-                        color: primaryColor,
+                        color: branding.primaryColor,
                         textTransform: "uppercase",
                       }}>
                       {header.title || lab?.name}
@@ -317,50 +386,26 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
                     <Text
                       style={{
                         fontSize: 10,
-                        color: branding?.secondaryColor || "#64748b",
+                        color: branding.secondaryColor || "#64748b",
                         marginTop: 2,
                       }}>
                       {header.subTitle}
                     </Text>
                   </View>
                 </View>
-                {config.qrCode?.show &&
-                  config.qrCode.mode === "preset" &&
-                  config.qrCode.position.includes("header") && (
-                    <View style={{ alignItems: "center", width: qrSize }}>
-                      <Image
-                        src={qrCodeDataUrl}
-                        style={{ width: qrSize - 5, height: qrSize - 5 }}
-                      />
-                      {config.qrCode.showPageNumber ? (
-                        <Text
-                          style={{
-                            fontSize: 8,
-                            fontWeight: "bold",
-                            color: "#000000",
-                            marginTop: 3,
-                          }}
-                          render={({ pageNumber, totalPages }) =>
-                            `Page ${pageNumber} of ${totalPages}`
-                          }
-                        />
-                      ) : (
-                        <Text
-                          style={{
-                            fontSize: 6,
-                            marginTop: 2,
-                            color: "#64748b",
-                          }}>
-                          Scan to Verify
-                        </Text>
-                      )}
-                    </View>
-                  )}
-              </>
+
+                {config.qrCode?.mode === "preset" &&
+                config.qrCode.position === "header-right" ? (
+                  <RenderQR />
+                ) : (
+                  <View style={{ width: qrSize }} />
+                )}
+              </View>
             )}
           </View>
         )}
 
+        {/* --- PATIENT INFO BLOCK --- */}
         {patientBlock.show && (
           <View style={styles.patientBlock}>
             <View style={styles.patientCol}>
@@ -407,10 +452,14 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
             </View>
             {patientBlock.barcode?.show && barcodeValue && (
               <View
-                style={{ justifyContent: "center", alignItems: "flex-end" }}>
+                style={{
+                  justifyContent: "center",
+                  alignItems: "flex-end",
+                  width: pxToPt(140),
+                }}>
                 <Image
                   src={`https://bwipjs-api.metafloor.com/?bcid=code128&text=${barcodeValue}&scaleX=2&scaleY=1`}
-                  style={{ width: pxToPt(130), height: pxToPt(35) }}
+                  style={{ width: "100%", height: pxToPt(35) }}
                 />
                 <Text style={{ fontSize: 7, marginTop: 2 }}>
                   {barcodeValue}
@@ -420,38 +469,11 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
           </View>
         )}
 
+        {/* --- RESULTS BODY --- */}
         {body.map((block: any, idx: number) => {
           if (block.type === "SPACER")
             return (
               <View key={idx} style={{ height: pxToPt(block.height || 20) }} />
-            );
-
-          if (block.type === "TEXT")
-            return (
-              <Text
-                key={idx}
-                style={{
-                  fontSize: globalFont,
-                  marginBottom: 10,
-                  lineHeight: 1.5,
-                }}>
-                {(block.content || "").replace(/<[^>]*>?/gm, "")}
-              </Text>
-            );
-
-          if (block.type === "IMAGE" && block.imageUrl)
-            return (
-              <View
-                key={idx}
-                style={{ alignItems: "center", marginBottom: 10 }}>
-                <Image
-                  src={block.imageUrl}
-                  style={{
-                    width: `${block.imageScale || 100}%`,
-                    objectFit: "contain",
-                  }}
-                />
-              </View>
             );
 
           if (block.type === "RESULTS_TABLE") {
@@ -459,118 +481,145 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
               <View key={idx}>
                 {validTests.map((test: any, testIdx: number) => {
                   const hasResults = test.results && test.results.length > 0;
+                  if (!hasResults) return null;
+
                   return (
-                    <View key={testIdx} style={{ marginBottom: 25 }}>
-                      {hasResults && (
-                        <View wrap={false}>
-                          {bodyOptions.groupDepartmentWise &&
-                            test.testTemplate?.department?.name && (
-                              <Text style={styles.deptHeader}>
-                                {test.testTemplate.department.name}
-                              </Text>
-                            )}
-                          <Text
-                            style={{
-                              fontSize: globalFont + 4,
-                              fontWeight: "bold",
-                              color: primaryColor,
-                              textAlign: "center",
-                              marginBottom: 8,
-                              textTransform: "uppercase",
-                            }}>
-                            {test.testName}
+                    <View key={testIdx} style={{ marginBottom: 20 }}>
+                      {bodyOptions.groupDepartmentWise &&
+                        test.testTemplate?.department?.name && (
+                          <Text style={styles.deptHeader}>
+                            {test.testTemplate.department.name}
                           </Text>
-                          <View style={styles.tableHeader}>
-                            <Text style={{ width: "40%" }}>Test Parameter</Text>
-                            <Text style={{ width: "20%" }}>Result</Text>
-                            <Text style={{ width: "15%" }}>Unit</Text>
-                            {bodyOptions.showBiologicalRef && (
-                              <Text style={{ width: "25%" }}>
-                                Bio. Ref. Range
-                              </Text>
-                            )}
-                          </View>
+                        )}
+                      <Text
+                        style={{
+                          fontSize: branding.globalFontSize + 2,
+                          fontWeight: "bold",
+                          color: branding.primaryColor,
+                          textAlign: "center",
+                          marginBottom: 8,
+                          textTransform: "uppercase",
+                        }}>
+                        {test.testName}
+                      </Text>
 
-                          <View style={styles.tableRow}>
-                            <Text style={{ width: "40%" }}>
-                              {test.results[0].parameterName}
-                            </Text>
-                            <Text
-                              style={{
-                                width: "20%",
-                                fontWeight: "bold",
-                                color: test.results[0].isAbnormal
-                                  ? "#dc2626"
-                                  : "#0f172a",
-                              }}>
-                              {test.results[0].value}{" "}
-                              {test.results[0].isAbnormal ? "*" : ""}
-                            </Text>
-                            <Text style={{ width: "15%", color: "#64748b" }}>
-                              {test.results[0].unit}
-                            </Text>
-                            {bodyOptions.showBiologicalRef && (
-                              <Text
-                                style={{
-                                  width: "25%",
-                                  fontSize: bodyOptions.tableFontSize - 2,
-                                  color: "#64748b",
-                                }}>
-                                {getRangeString(test.results[0])}
-                              </Text>
-                            )}
-                          </View>
+                      <View style={styles.tableHeader} wrap={false}>
+                        <View style={styles.colParam}>
+                          <Text>Test Parameter</Text>
                         </View>
-                      )}
+                        <View style={styles.colResult}>
+                          <Text>Result</Text>
+                        </View>
+                        <View style={styles.colUnit}>
+                          <Text>Unit</Text>
+                        </View>
+                        {bodyOptions.showBiologicalRef && (
+                          <View style={styles.colRef}>
+                            <Text>Bio. Ref. Range</Text>
+                          </View>
+                        )}
+                      </View>
 
-                      {hasResults &&
-                        test.results.length > 1 &&
-                        test.results.slice(1).map((res: any, i: number) => (
-                          <View
-                            key={i + 1}
-                            style={styles.tableRow}
-                            wrap={false}>
-                            <Text style={{ width: "40%" }}>
-                              {res.parameterName}
-                            </Text>
-                            <Text
-                              style={{
-                                width: "20%",
-                                fontWeight: "bold",
-                                color: res.isAbnormal ? "#dc2626" : "#0f172a",
-                              }}>
-                              {res.value} {res.isAbnormal ? "*" : ""}
-                            </Text>
-                            <Text style={{ width: "15%", color: "#64748b" }}>
-                              {res.unit}
-                            </Text>
-                            {bodyOptions.showBiologicalRef && (
+                      {test.results.map((res: any, i: number) => {
+                        const val =
+                          res.value || res.textValue || res.numericValue || "";
+                        const unt = res.unit || "";
+                        const pName = res.printName || res.parameterName || "";
+                        const refRange =
+                          res.referenceRangeText ||
+                          res.refRangeText ||
+                          (res.refRangeMin != null
+                            ? `${res.refRangeMin} - ${res.refRangeMax}`
+                            : "-");
+
+                        const { min, max } = getMinMax(res);
+                        const valNum = parseFloat(val);
+                        let flagStatus = "NONE";
+
+                        if (!isNaN(valNum) && min !== null && max !== null) {
+                          if (valNum < min) flagStatus = "LOW";
+                          else if (valNum > max) flagStatus = "HIGH";
+                          else flagStatus = "NORMAL";
+                        } else if (
+                          res.flag === "ABNORMAL" ||
+                          res.flag === "CRITICAL" ||
+                          res.isAbnormal
+                        ) {
+                          flagStatus = "HIGH";
+                        }
+
+                        let valColor = "#0f172a";
+                        let icon = "";
+                        let isAbnormal = false;
+
+                        if (
+                          flagStatus === "LOW" ||
+                          flagStatus === "HIGH" ||
+                          res.flag === "ABNORMAL" ||
+                          res.flag === "CRITICAL"
+                        ) {
+                          isAbnormal = true;
+                        }
+
+                        if (
+                          bodyOptions?.showClinicalFlags &&
+                          flagStatus !== "NONE"
+                        ) {
+                          if (flagStatus === "LOW") {
+                            valColor = "#2563eb";
+                            icon = " (L)";
+                          } else if (flagStatus === "HIGH") {
+                            valColor = "#e11d48";
+                            icon = " (H)";
+                          } else if (flagStatus === "NORMAL") {
+                            valColor = "#059669";
+                          }
+                        } else if (isAbnormal) {
+                          valColor = "#dc2626";
+                          icon = " *";
+                        }
+
+                        return (
+                          <View key={i} style={styles.tableRow} wrap={false}>
+                            <View style={styles.colParam}>
+                              <Text>{pName}</Text>
+                            </View>
+                            <View style={styles.colResult}>
                               <Text
                                 style={{
-                                  width: "25%",
-                                  fontSize: bodyOptions.tableFontSize - 2,
-                                  color: "#64748b",
+                                  fontWeight: isAbnormal ? "bold" : "normal",
+                                  color: valColor,
                                 }}>
-                                {getRangeString(res)}
+                                {val}
+                                {icon}
                               </Text>
+                            </View>
+                            <View style={styles.colUnit}>
+                              <Text style={{ color: "#64748b" }}>{unt}</Text>
+                            </View>
+                            {bodyOptions.showBiologicalRef && (
+                              <View style={styles.colRef}>
+                                <Text style={{ color: "#64748b" }}>
+                                  {refRange}
+                                </Text>
+                              </View>
                             )}
                           </View>
-                        ))}
+                        );
+                      })}
 
                       {bodyOptions.showTestTimestamps && (
-                        <View wrap={false}>
-                          <Text
-                            style={{
-                              fontSize: globalFont - 3,
-                              color: "#94a3b8",
-                              fontStyle: "italic",
-                              marginTop: 8,
-                            }}>
-                            (Collected: {timestamps.collected} | Received:{" "}
-                            {timestamps.received} | Reported:{" "}
-                            {timestamps.reported})
-                          </Text>
-                        </View>
+                        <Text
+                          style={{
+                            fontSize: 8,
+                            color: "#94a3b8",
+                            fontStyle: "italic",
+                            marginTop: 8,
+                          }}>
+                          (Collected: {timestamps.collected} | Received:{" "}
+                          {timestamps.received} | Reported:{" "}
+                          {timestamps.reported})
+                        </Text>
                       )}
                     </View>
                   );
@@ -593,44 +642,51 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
           *** End of Report ***
         </Text>
 
-        {/* FOOTER */}
+        {/* --- FOOTER --- */}
         {footer.show && (
           <View style={styles.footerZone} fixed>
             {footer.mode === "image" && footer.fullImage ? (
-              <Image
-                src={footer.fullImage}
-                style={{ width: "100%", height: "100%", objectFit: "contain" }}
-              />
+              <>
+                <Image
+                  src={footer.fullImage}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "contain",
+                    objectPosition: "center bottom",
+                  }}
+                />
+                {/* Overlay QR on Image Footers */}
+                {config.qrCode?.mode === "preset" &&
+                  config.qrCode.position.includes("footer") && (
+                    <View
+                      style={{
+                        position: "absolute",
+                        right:
+                          config.qrCode.position === "footer-right"
+                            ? 10
+                            : undefined,
+                        left:
+                          config.qrCode.position === "footer-left"
+                            ? 10
+                            : undefined,
+                        bottom: 10,
+                      }}>
+                      <RenderQR />
+                    </View>
+                  )}
+              </>
             ) : (
-              <View style={{ paddingTop: 15, paddingHorizontal: 20 }}>
+              <View style={{ paddingTop: 10, paddingHorizontal: 15 }}>
                 <View
                   style={{
                     flexDirection: "row",
                     justifyContent: "space-between",
                     alignItems: "flex-end",
                   }}>
-                  {config.qrCode?.show &&
-                  config.qrCode.mode === "preset" &&
+                  {config.qrCode?.mode === "preset" &&
                   config.qrCode.position === "footer-left" ? (
-                    <View style={{ alignItems: "center", width: qrSize }}>
-                      <Image
-                        src={qrCodeDataUrl}
-                        style={{ width: qrSize - 5, height: qrSize - 5 }}
-                      />
-                      {config.qrCode.showPageNumber && (
-                        <Text
-                          style={{
-                            fontSize: 8,
-                            fontWeight: "bold",
-                            color: "#000000",
-                            marginTop: 3,
-                          }}
-                          render={({ pageNumber, totalPages }) =>
-                            `Page ${pageNumber} of ${totalPages}`
-                          }
-                        />
-                      )}
-                    </View>
+                    <RenderQR />
                   ) : (
                     <View style={{ width: qrSize }} />
                   )}
@@ -638,7 +694,7 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
                   <View
                     style={{
                       flexDirection: "row",
-                      gap: 40,
+                      gap: 30,
                       flex: 1,
                       justifyContent: "center",
                     }}>
@@ -655,30 +711,30 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
                               <Image
                                 src={sig.imageUrl}
                                 style={{
-                                  height: pxToPt(40),
+                                  height: pxToPt(35),
                                   objectFit: "contain",
-                                  marginBottom: 4,
+                                  marginBottom: 2,
                                 }}
                               />
                             ) : (
-                              <View style={{ height: pxToPt(40) }} />
+                              <View style={{ height: pxToPt(35) }} />
                             )}
                             <Text
                               style={{
-                                fontSize: 10,
+                                fontSize: 9,
                                 fontWeight: "bold",
                                 color: "#0f172a",
                               }}>
                               {sig.name}
                             </Text>
-                            <Text style={{ fontSize: 8, color: "#64748b" }}>
+                            <Text style={{ fontSize: 7, color: "#64748b" }}>
                               {sig.qualifications}
                             </Text>
                             <Text
                               style={{
-                                fontSize: 8,
+                                fontSize: 7,
                                 fontWeight: "bold",
-                                marginTop: 2,
+                                marginTop: 1,
                               }}>
                               {sig.title}
                             </Text>
@@ -687,81 +743,54 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
                     )}
                   </View>
 
-                  {config.qrCode?.show &&
-                  config.qrCode.mode === "preset" &&
+                  {config.qrCode?.mode === "preset" &&
                   config.qrCode.position === "footer-right" ? (
-                    <View style={{ alignItems: "center", width: qrSize }}>
-                      <Image
-                        src={qrCodeDataUrl}
-                        style={{ width: qrSize - 5, height: qrSize - 5 }}
-                      />
-                      {config.qrCode.showPageNumber && (
-                        <Text
-                          style={{
-                            fontSize: 8,
-                            fontWeight: "bold",
-                            color: "#000000",
-                            marginTop: 3,
-                          }}
-                          render={({ pageNumber, totalPages }) =>
-                            `Page ${pageNumber} of ${totalPages}`
-                          }
-                        />
-                      )}
-                    </View>
+                    <RenderQR />
                   ) : (
                     <View style={{ width: qrSize }} />
                   )}
                 </View>
-
-                {footer.footerBottomImage && (
-                  <Image
-                    src={footer.footerBottomImage}
-                    style={{
-                      height: 30,
-                      objectFit: "contain",
-                      marginTop: 15,
-                      alignSelf: "center",
-                    }}
-                  />
-                )}
 
                 <Text
                   style={{
                     fontSize: 8,
                     textAlign: "center",
                     color: "#94a3b8",
-                    marginTop: 15,
+                    marginTop: 10,
                   }}>
                   {footer.text}
                 </Text>
-
-                {(!config.qrCode?.show ||
-                  !config.qrCode.showPageNumber ||
-                  config.qrCode.mode === "preset") && (
-                  <Text
-                    style={{
-                      fontSize: 8,
-                      textAlign: "center",
-                      color: "#94a3b8",
-                      marginTop: 5,
-                    }}
-                    render={({ pageNumber, totalPages }) =>
-                      `Page ${pageNumber} of ${totalPages}`
-                    }
-                  />
-                )}
               </View>
             )}
           </View>
         )}
+
+        {/* --- GLOBAL BOTTOM PAGE NUMBERS (IF SELECTED) --- */}
+        {config.qrCode?.showPageNumber &&
+          config.qrCode.pageNumberPosition === "bottom-center" && (
+            <Text
+              fixed
+              style={{
+                position: "absolute",
+                bottom: 10,
+                left: 0,
+                right: 0,
+                textAlign: "center",
+                fontSize: 8,
+                color: "#94a3b8",
+              }}
+              render={({ pageNumber, totalPages }) =>
+                `Page ${pageNumber} of ${totalPages}`
+              }
+            />
+          )}
       </Page>
     </Document>
   );
-};
+};;
 
 // ============================================================================
-// MAIN API HANDLER (Smart Searching for Multiple Tests)
+// MAIN API HANDLER
 // ============================================================================
 export async function POST(req: NextRequest) {
   try {
@@ -778,9 +807,7 @@ export async function POST(req: NextRequest) {
       const includeQuery = {
         lab: { include: { reportTemplates: true } },
         patient: true,
-        results: {
-          orderBy: { order: "asc" }, // Preserve exact parameter structure
-        },
+        results: { orderBy: { order: "asc" as any } },
         testTemplate: { include: { Department: true } },
         sample: true,
         doctor: { include: { user: true } },
@@ -789,14 +816,12 @@ export async function POST(req: NextRequest) {
 
       let fetchedTests: any[] = [];
 
-      // 1. SMART SEARCH: Try Invoice ID (Groups all tests for a single visit)
       const invoice = await prisma.invoice.findUnique({
         where: { id },
         include: { tests: { include: includeQuery } },
       });
       if (invoice && invoice.tests.length > 0) fetchedTests = invoice.tests;
 
-      // 2. SMART SEARCH: Try Report ID (Single specific test)
       if (fetchedTests.length === 0) {
         const report = await prisma.report.findUnique({
           where: { id },
@@ -805,7 +830,6 @@ export async function POST(req: NextRequest) {
         if (report && report.test) fetchedTests = [report.test];
       }
 
-      // 3. SMART SEARCH: Try Test ID (Single specific test)
       if (fetchedTests.length === 0) {
         const singleTest = await prisma.test.findUnique({
           where: { id },
@@ -814,14 +838,11 @@ export async function POST(req: NextRequest) {
         if (singleTest) fetchedTests = [singleTest];
       }
 
-      // 4. SMART SEARCH: Try Patient ID -> Get Latest Visit!
       if (fetchedTests.length === 0) {
-        // Find the most recent test to find their latest invoice
         const latestTest = await prisma.test.findFirst({
           where: { patientId: id },
           orderBy: { createdAt: "desc" },
         });
-
         if (latestTest) {
           if (latestTest.invoiceId) {
             const latestInvoice = await prisma.invoice.findUnique({
@@ -831,7 +852,6 @@ export async function POST(req: NextRequest) {
             if (latestInvoice && latestInvoice.tests.length > 0)
               fetchedTests = latestInvoice.tests;
           } else {
-            // Unbilled test fallback
             const populatedTest = await prisma.test.findUnique({
               where: { id: latestTest.id },
               include: includeQuery,
@@ -841,19 +861,39 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // If it's not found in ANY of those tables, return 404
-      if (fetchedTests.length === 0) {
+      if (fetchedTests.length === 0)
         return NextResponse.json(
           { error: "No completed tests found for this visit." },
           { status: 404 },
         );
-      }
+
+      // INJECT MISSING UNITS
+      const allParameterCodes = fetchedTests.flatMap((t) =>
+        t.results.map((r: any) => r.parameterCode),
+      );
+      const uniqueCodes = [...new Set(allParameterCodes)];
+      const masterParams = await prisma.labTestParameter.findMany({
+        where: { code: { in: uniqueCodes } },
+        select: { code: true, unit: true },
+      });
+      const paramUnitMap = new Map();
+      masterParams.forEach((p) => paramUnitMap.set(p.code, p.unit));
+
+      // Re-map with Units and Values
+      fetchedTests = fetchedTests.map((test) => ({
+        ...test,
+        results: test.results.map((res: any) => ({
+          ...res,
+          unit: res.unit || paramUnitMap.get(res.parameterCode) || "",
+          value: res.value || res.textValue || res.numericValue || "",
+          referenceRangeText: res.referenceRangeText || res.refRangeText || "",
+          printName:
+            res.printName || res.parameterName || res.parameterCode || "",
+        })),
+      }));
 
       const primaryTest = fetchedTests[0];
 
-      // ====================================================================
-      // 🔒 VAULT SECURITY: STRICT PHONE NUMBER VERIFICATION (Only for public)
-      // ====================================================================
       if (payload.action === "public_download") {
         const dbPhoneClean = (primaryTest.patient.phone || "")
           .replace(/\D/g, "")
@@ -861,15 +901,12 @@ export async function POST(req: NextRequest) {
         const inputPhoneClean = (payload.phone || "")
           .replace(/\D/g, "")
           .slice(-10);
-
-        if (dbPhoneClean !== inputPhoneClean) {
+        if (dbPhoneClean !== inputPhoneClean)
           return NextResponse.json(
             { error: "Unauthorized. Incorrect mobile number." },
             { status: 401 },
           );
-        }
       }
-      // ====================================================================
 
       const qrCodeDataUrl = await QRCode.toDataURL(
         payload.verificationUrl || "https://patholab.cloud/verify",
@@ -882,7 +919,7 @@ export async function POST(req: NextRequest) {
       finalPayload = {
         patient: primaryTest.patient,
         lab: primaryTest.lab,
-        validTests: fetchedTests, // 🎯 Passes ALL tests from this visit
+        validTests: fetchedTests,
         config: getSafeConfig(primaryTest.lab?.reportTemplates?.[0]?.config),
         qrCodeDataUrl,
         barcodeValue:

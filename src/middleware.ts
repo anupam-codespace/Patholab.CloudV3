@@ -19,6 +19,7 @@ export async function middleware(request: NextRequest) {
     PUBLIC_PATHS.includes(pathname) || 
     pathname.startsWith('/api/public/') ||
     pathname.startsWith('/api/auth/') ||
+    pathname.startsWith('/verify') ||
     pathname.startsWith('/api/webhooks');
 
   // 3. No Token Handling

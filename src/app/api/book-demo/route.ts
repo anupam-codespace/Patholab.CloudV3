@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { sendEmail } from '@/lib/email';
+import { sendEmail } from '@/lib/mail';
 import { sendSlackAlert } from '@/lib/slack'; // ✅ Import the Slack Helper
 
 export async function POST(req: Request) {
