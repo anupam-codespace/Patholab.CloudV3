@@ -21,7 +21,7 @@ export async function getAgencies() {
       _count: {
         select: { tests: true, patients: true }
       },
-      // ✅ NEW: Fetch the custom test rates so the frontend can populate the Edit modal
+      // ✅ Fetch custom test rates AND net prices
       customTestCommissions: {
         include: {
           testTemplate: { select: { name: true } }
@@ -47,13 +47,17 @@ export async function getAgencies() {
   // ✅ Dynamically calculate the total lifetime commission and format custom rates
   return agencies.map(agency => ({
     ...agency,
-    totalCommission: agency.commissions.reduce((sum, c) => sum + c.amount, 0),
-    // Map the custom commissions to exactly match what the frontend UI expects
+    // Expose the new Tier and Volume fields to the frontend
+    agencyTier: agency.agencyTier || "STANDARD",
+    monthlyVolume: agency.monthlyVolume || 0,
+    totalCommission: agency.commissions.reduce((sum, c) => sum + Number(c.amount), 0),
+    // Map the custom commissions (including netPrice) to exactly match what the UI expects
     customTestCommissions: agency.customTestCommissions.map(cc => ({
       testTemplateId: cc.testTemplateId,
       testName: cc.testTemplate.name,
       commissionRate: cc.commissionRate,
-      commissionType: cc.commissionType
+      commissionType: cc.commissionType,
+      netPrice: cc.netPrice ? Number(cc.netPrice) : null, // Include the fixed B2B rate
     }))
   }));
 }
@@ -68,8 +72,9 @@ export async function createAgency(data: {
   commissionType: CommissionType;
   customCommissions?: {
     testTemplateId: string;
-    commissionRate: number;
+    commissionRate?: number | null;
     commissionType: CommissionType;
+    netPrice?: number | null; // Allow passing fixed B2B rates
   }[];
 }) {
   const labId = await getLabId();
@@ -84,12 +89,13 @@ export async function createAgency(data: {
       commissionRate: data.commissionRate,
       commissionType: data.commissionType,
       labId,
-      // ✅ NEW: Insert the custom test rates along with the agency creation
+      // ✅ Insert custom commissions, mapping both commissionRate and netPrice safely
       customTestCommissions: {
         create: data.customCommissions?.map(c => ({
           testTemplateId: c.testTemplateId,
-          commissionRate: Number(c.commissionRate),
-          commissionType: c.commissionType
+          commissionRate: c.commissionRate ? Number(c.commissionRate) : null,
+          commissionType: c.commissionType,
+          netPrice: c.netPrice ? Number(c.netPrice) : null,
         })) || []
       }
     }
@@ -108,8 +114,9 @@ export async function updateAgency(id: string, data: {
   commissionType: CommissionType;
   customCommissions?: {
     testTemplateId: string;
-    commissionRate: number;
+    commissionRate?: number | null;
     commissionType: CommissionType;
+    netPrice?: number | null; // Allow passing fixed B2B rates
   }[];
 }) {
   const labId = await getLabId();
@@ -124,13 +131,14 @@ export async function updateAgency(id: string, data: {
       panNumber: data.panNumber,
       commissionRate: data.commissionRate,
       commissionType: data.commissionType,
-      // ✅ NEW: Delete any existing custom rates for this agency and insert the newly updated list
+      // ✅ Delete old custom rates and insert the newly updated list containing netPrice/commission adjustments
       customTestCommissions: {
         deleteMany: {}, // Clear old ones
         create: data.customCommissions?.map(c => ({
           testTemplateId: c.testTemplateId,
-          commissionRate: Number(c.commissionRate),
-          commissionType: c.commissionType
+          commissionRate: c.commissionRate ? Number(c.commissionRate) : null,
+          commissionType: c.commissionType,
+          netPrice: c.netPrice ? Number(c.netPrice) : null,
         })) || []
       }
     }

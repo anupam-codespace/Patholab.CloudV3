@@ -248,14 +248,14 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
     colRef: { width: "25%", paddingRight: 5 },
   });
 
-  // 🌟 HELPER: Universal Page Number Renderer
+  // 🌟 FIX: Simplified Page Number element to ensure it triggers correctly
   const PageNumberElement = () => (
     <Text
       style={{
         fontSize: 8,
         fontWeight: "bold",
         color: "#64748b",
-        marginTop: 4,
+        marginTop: 2,
         textAlign: "center",
       }}
       render={({ pageNumber, totalPages }) =>
@@ -264,18 +264,13 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
     />
   );
 
-  // 🌟 HELPER: Universal QR Code Renderer
+  // 🌟 FIX: QR Code Renderer with explicit height constraint
   const RenderQR = () => {
     if (!config.qrCode?.show || !qrCodeDataUrl) return null;
+
     return (
-      // 🌟 FIX 2: Added minHeight so the text never gets cut off
       <View
-        style={{
-          alignItems: "center",
-          width: qrSize,
-          minHeight: qrSize + 20,
-          zIndex: 50,
-        }}>
+        style={{ alignItems: "center", width: qrSize, minHeight: qrSize + 15 }}>
         <Image
           src={qrCodeDataUrl}
           style={{ width: qrSize - 5, height: qrSize - 5 }}
@@ -787,7 +782,7 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
       </Page>
     </Document>
   );
-};;
+};;;;
 
 // ============================================================================
 // MAIN API HANDLER
