@@ -1011,6 +1011,7 @@ model Commission {
 enum CommissionType {
   PERCENTAGE
   FIXED
+  NET_PRICE
 }
 
 enum CommissionStatus {
