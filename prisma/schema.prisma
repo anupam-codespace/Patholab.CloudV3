@@ -204,7 +204,7 @@ model Lab {
   whatsappPhoneId         String?
   smsApiKey               String?
   smsSenderId             String?
-  activeModules String[] @default(["inventory", "b2b"])
+  activeModules           String[]       @default(["inventory", "b2b"])
   defaultDoctorCommission Decimal?       @default(10.0) @db.Decimal(5, 2)
   defaultAgencyCommission Decimal?       @default(5.0) @db.Decimal(5, 2)
   commissionType          CommissionType @default(PERCENTAGE)
@@ -880,67 +880,112 @@ enum TestPriority {
 // REFERRAL & COMMISSION
 // ==========================================
 model Doctor {
-  id              String         @id @default(uuid())
-  labId           String
-  lab             Lab            @relation(fields: [labId], references: [id])
-  branchId        String?
-  branch          Branch?        @relation(fields: [branchId], references: [id])
-  userId          String?        @unique
-  user            User?          @relation(fields: [userId], references: [id])
-  name            String         @default("Legacy Doctor")
-  email           String?
-  phone           String?
-  registrationNo  String?
-  specialization  String?
-  qualification   String?
-  clinic          String?
-  commissionRate  Decimal?       @db.Decimal(5, 2)
-  commissionType  CommissionType @default(PERCENTAGE)
-  totalReferrals  Int            @default(0)
-  totalCommission Decimal        @default(0.00) @db.Decimal(12, 2)
-  isActive        Boolean        @default(true)
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  id                    String                   @id @default(uuid())
+  labId                 String
+  lab                   Lab                      @relation(fields: [labId], references: [id])
+  branchId              String?
+  branch                Branch?                  @relation(fields: [branchId], references: [id])
+  userId                String?                  @unique
+  user                  User?                    @relation(fields: [userId], references: [id])
+  name                  String                   @default("Legacy Doctor")
+  email                 String?
+  phone                 String?
+  registrationNo        String?
+  specialization        String?
+  qualification         String?
+  clinic                String?
+  commissionRate        Decimal?                 @db.Decimal(5, 2)
+  commissionType        CommissionType           @default(PERCENTAGE)
+  customTestCommissions DoctorCustomCommission[]
+  totalReferrals        Int                      @default(0)
+  totalCommission       Decimal                  @default(0.00) @db.Decimal(12, 2)
+  isActive              Boolean                  @default(true)
+  createdAt             DateTime                 @default(now())
+  updatedAt             DateTime                 @updatedAt
 
   tests       Test[]       @relation("DoctorReferral")
   commissions Commission[]
   patients    Patient[]    @relation("PatientDefaultDoctor")
-  deletedAt      DateTime?
+  deletedAt   DateTime?
 
   @@unique([labId, registrationNo])
   @@index([labId])
   @@index([branchId])
 }
 
+model DoctorCustomCommission {
+  id             String @id @default(uuid())
+  doctorId       String
+  testTemplateId String
+  commissionRate Float
+  commissionType String @default("PERCENTAGE") // PERCENTAGE or FLAT
+
+  doctor       Doctor       @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  testTemplate TestTemplate @relation(fields: [testTemplateId], references: [id], onDelete: Cascade)
+
+  @@unique([doctorId, testTemplateId]) // A doctor can only have one custom rate per test
+}
+
+// 1. Update your existing Agency model
 model Agency {
-  id              String         @id @default(uuid())
-  labId           String
-  lab             Lab            @relation(fields: [labId], references: [id])
-  branchId        String?
-  branch          Branch?        @relation(fields: [branchId], references: [id])
-  userId          String?        @unique
-  user            User?          @relation(fields: [userId], references: [id])
-  agencyName      String         @default("Legacy Agency")
-  contactPerson   String?
-  email           String?
-  phone           String?
-  panNumber       String?
+  id            String  @id @default(uuid())
+  labId         String
+  lab           Lab     @relation(fields: [labId], references: [id])
+  branchId      String?
+  branch        Branch? @relation(fields: [branchId], references: [id])
+  userId        String? @unique
+  user          User?   @relation(fields: [userId], references: [id])
+  agencyName    String  @default("Legacy Agency")
+  contactPerson String?
+  email         String?
+  phone         String?
+  panNumber     String?
+
+  // -- TIER & VOLUME TRACKING (New) --
+  agencyTier    String @default("STANDARD") // e.g., STANDARD, BRONZE, SILVER, GOLD
+  monthlyVolume Int    @default(0) // Tracks how many patients they sent this month
+
+  // -- STANDARD COMMISSION --
   commissionRate  Decimal?       @db.Decimal(5, 2)
   commissionType  CommissionType @default(PERCENTAGE)
   totalReferrals  Int            @default(0)
   totalCommission Decimal        @default(0.00) @db.Decimal(12, 2)
-  isActive        Boolean        @default(true)
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  deletedAt      DateTime?
+
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   tests       Test[]       @relation("AgencyReferral")
   commissions Commission[]
   invoices    Invoice[]
   patients    Patient[]    @relation("PatientDefaultAgency")
 
+  // ✅ ADD THIS MISSING RELATION
+  customTestCommissions AgencyCustomCommission[]
+
   @@index([labId])
   @@index([branchId])
+}
+
+// 2. Add this completely new model at the bottom of your schema file
+model AgencyCustomCommission {
+  id             String @id @default(uuid())
+  agencyId       String
+  testTemplateId String
+
+  // Use commissionRate if giving them a specific % or Flat ₹ discount
+  commissionRate Float?
+  commissionType CommissionType @default(PERCENTAGE)
+
+  // OR use netPrice if giving them a strict B2B rate (e.g., CBC for ₹150)
+  netPrice Decimal? @db.Decimal(10, 2)
+
+  agency       Agency       @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  testTemplate TestTemplate @relation(fields: [testTemplateId], references: [id], onDelete: Cascade)
+
+  // Ensures an agency only has one custom rule per test
+  @@unique([agencyId, testTemplateId])
 }
 
 model Commission {
@@ -1569,9 +1614,11 @@ model TestTemplate {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  parameters   TestTemplateParameter[]
-  customFields TestTemplateCustomField[] // Add this line!
-  Test         Test[]
+  parameters             TestTemplateParameter[]
+  customFields           TestTemplateCustomField[] // Add this line!
+  Test                   Test[]
+  DoctorCustomCommission DoctorCustomCommission[]
+  AgencyCustomCommission AgencyCustomCommission[]
 
   @@index([labId])
 }
