@@ -1,178 +1,170 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { hash } from 'bcryptjs';
-import { addMinutes } from 'date-fns';
-import nodemailer from 'nodemailer';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import bcrypt from "bcryptjs";
+import { sendOTPEmail } from "@/lib/mail";
 
-export async function POST(req: Request) {
+// Helper to generate a 6-digit OTP
+function generateOTP() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    
-    // 🚀 PIVOT UPDATE: Accept labName from the updated frontend
-    const { labName, name, email, password, phone } = body; 
+    const { name, email, password, phone, labName } = body;
 
-    if (!email || !password || !name) {
+    // 1. Validate all required fields
+    if (!name || !email || !password || !phone || !labName) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const hashedPassword = await hash(password, 12);
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = addMinutes(new Date(), 15); // 15 min expiry
+    // 2. Normalize the email to prevent case-sensitivity mismatches
+    const normalizedEmail = email.toLowerCase().trim();
 
-    // 1. Check if user already exists
-    const existing = await prisma.user.findUnique({ where: { email } });
-    let targetUserId = "";
+    const existingUser = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
+    });
 
-    // ==========================================
-    // SCENARIO A: USER EXISTS
-    // ==========================================
-    if (existing) {
-      // If they are already active/verified, block registration
-      if (existing.isActive) {
-        return NextResponse.json(
-          { error: 'Email already registered and verified. Please log in.' }, 
-          { status: 409 }
-        );
-      }
+    const hashedPassword = await bcrypt.hash(password, 12);
+    const otpCode = generateOTP();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // Expires in 10 minutes
 
-      // If they are NOT verified, update their details and send them a fresh OTP
-      const updatedUser = await prisma.$transaction(async (tx) => {
-        // Update their info in case they typed a different password/phone this time
-        const user = await tx.user.update({
-          where: { id: existing.id },
-          data: { name, phone, password: hashedPassword }
-        });
+    // ============================================================================
+    // SCENARIO A: Existing User (Edge Case: Never Verified)
+    // ============================================================================
+    if (existingUser) {
+      if (existingUser.emailVerified) {
+        return NextResponse.json({ error: "Email is already registered. Please log in." }, { status: 400 });
+      } else {
+        // User exists but NEVER VERIFIED. Update credentials, lab info, and resend OTP.
+        await prisma.$transaction(async (tx) => {
+          // Update User
+          await tx.user.update({
+            where: { email: normalizedEmail },
+            data: { name, password: hashedPassword, phone },
+          });
 
-        // Wipe old OTPs and create a new one
-        await (tx as any).oTP.deleteMany({ where: { userId: existing.id } });
-        
-        await (tx as any).oTP.create({
-          data: {
-            userId: existing.id,
-            code: otpCode,
-            type: 'EMAIL_VERIFICATION',
-            expiresAt,
-          }
-        });
-
-        // Update Lab name if it exists via relation
-        if (labName) {
-          try {
-            const userLab = await (tx as any).lab.findFirst({ where: { userId: existing.id } });
-            if (userLab) {
-              await (tx as any).lab.update({
-                where: { id: userLab.id },
-                data: { name: labName, phone }
-              });
+          // Upsert Lab (In case they changed the lab name on their second attempt)
+          const lab = await tx.lab.upsert({
+            where: { ownerId: existingUser.id },
+            update: { name: labName, phone },
+            create: {
+              name: labName,
+              phone,
+              email: normalizedEmail,
+              ownerId: existingUser.id,
+              isActive: true,
             }
-          } catch (e) {
-            // Silently ignore if relation varies
-          }
+          });
+
+          // Ensure Wallet Exists (Self-Healing)
+          await tx.labWallet.upsert({
+            where: { labId: lab.id },
+            update: {},
+            create: {
+              labId: lab.id,
+              balance: 0,
+              validityEndDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
+              isActive: true,
+            }
+          });
+
+          // Refresh OTP
+          await tx.oTP.upsert({
+            where: { userId: existingUser.id },
+            update: { code: otpCode, expiresAt, type: "EMAIL_VERIFICATION" },
+            create: { userId: existingUser.id, code: otpCode, expiresAt, type: "EMAIL_VERIFICATION" },
+          });
+        });
+
+        // Send Email
+        const { success, error } = await sendOTPEmail(normalizedEmail, otpCode, name);
+
+        if (!success) {
+          console.error("Email API Error:", error);
+          return NextResponse.json({ 
+            success: true, 
+            warning: "Account updated, but OTP email failed to send.",
+          }, { status: 200 });
         }
 
-        return user;
-      });
-
-      targetUserId = updatedUser.id;
-    } 
-    
-    // ==========================================
-    // SCENARIO B: BRAND NEW USER
-    // ==========================================
-    else {
-      const newUser = await prisma.$transaction(async (tx) => {
-        // Create User with INITIAL Status
-        const createdUser = await tx.user.create({
-          data: {
-            name,
-            email,
-            password: hashedPassword,
-            phone,
-            role: 'LAB_OWNER',
-            isActive: false, // Starts as inactive until OTP is verified
-            
-            // ✅ Link the Lab creation directly through Prisma relation
-            ...(labName && {
-              lab: {
-                create: {
-                  name: labName,
-                  email: email,
-                  phone: phone,
-                }
-              }
-            })
-          }
-        });
-
-        // Create OTP Record
-        await (tx as any).oTP.create({
-          data: {
-            userId: createdUser.id,
-            code: otpCode,
-            type: 'EMAIL_VERIFICATION',
-            expiresAt, 
-          }
-        });
-
-        return createdUser;
-      });
-
-      targetUserId = newUser.id;
+        return NextResponse.json({ 
+          success: true, 
+          message: "Verification email resent! Please check your inbox for the new OTP." 
+        }, { status: 200 });
+      }
     }
 
-    // ==========================================
-    // 3. SEND VERIFICATION EMAIL VIA SMTP
-    // ==========================================
-    try {
-      const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: Number(process.env.SMTP_PORT),
-        secure: true,
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
+    // ============================================================================
+    // SCENARIO B: Brand New User
+    // ============================================================================
+    await prisma.$transaction(async (tx) => {
+      // 1. Create the User
+      const user = await tx.user.create({
+        data: {
+          name,
+          email: normalizedEmail,
+          password: hashedPassword,
+          phone,
+          emailVerified: false,
+          onboardingStatus: "REGISTERED", 
         },
       });
 
-      const mailOptions = {
-        from: '"Patholab.cloud Support" <patholab@globizhub.com>',
-        to: email,
-        subject: 'Verify your Patholab Account',
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
-            <h2 style="color: #3b82f6; text-align: center;">Verify Your Email</h2>
-            <p style="color: #333; font-size: 16px;">Hello ${name},</p>
-            <p style="color: #555; font-size: 16px;">
-              Welcome to the future of pathology management! Please use the verification code below to complete your registration.
-            </p>
-            <div style="text-align: center; margin: 30px 0;">
-              <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1e293b; background: #f1f5f9; padding: 10px 20px; border-radius: 8px;">
-                ${otpCode}
-              </span>
-            </div>
-            <p style="color: #555; font-size: 14px;">This code is valid for 15 minutes.</p>
-            <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 20px 0;">
-            <p style="color: #888; font-size: 12px; text-align: center;">
-              If you didn't request this code, you can safely ignore this email.
-            </p>
-          </div>
-        `,
-      };
+      // 2. Create the Lab tied to this owner
+      const lab = await tx.lab.create({
+        data: {
+          name: labName,
+          phone,
+          email: normalizedEmail,
+          ownerId: user.id,
+          isActive: true,
+        }
+      });
 
-      await transporter.sendMail(mailOptions);
-      console.log(`[EMAIL] OTP sent to ${email}`);
+      // 3. Create the Wallet for this Lab instantly (Zero Balance)
+      await tx.labWallet.create({
+        data: {
+          labId: lab.id,
+          balance: 0,
+          validityEndDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
+          isActive: true,
+        }
+      });
 
-    } catch (emailError) {
-      console.error('SMTP Error:', emailError);
-      // We don't rollback the user creation if email fails, 
-      // the frontend allows "Resend OTP" which handles retry.
+      // 4. Create the Verification OTP
+      await tx.oTP.create({
+        data: {
+          userId: user.id,
+          code: otpCode,
+          expiresAt,
+          type: "EMAIL_VERIFICATION",
+        },
+      });
+    });
+
+    // Send the Welcome OTP Email
+    const { success, error } = await sendOTPEmail(normalizedEmail, otpCode, name);
+
+    if (!success) {
+      console.error("Email API Error:", error);
+      return NextResponse.json({ 
+        success: true, 
+        warning: "User registered, but OTP email failed to send.",
+      }, { status: 201 });
     }
 
-    // Return the ID so the frontend can redirect to /verify?userId=...
-    return NextResponse.json({ success: true, userId: targetUserId, email: email }, { status: 201 });
+    return NextResponse.json({ 
+      success: true, 
+      message: "Registration successful! Please check your email for the verification code." 
+    }, { status: 201 });
 
-  } catch (error) {
-    console.error("Registration Logic Error:", error);
-    return NextResponse.json({ error: 'Registration failed. Please try again.' }, { status: 500 });
+  } catch (error: any) {
+    console.error("Registration Server Error:", error);
+    // Specifically catch Prisma unique constraint errors just in case
+    if (error.code === 'P2002') {
+      return NextResponse.json({ error: "An account with these details already exists." }, { status: 409 });
+    }
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

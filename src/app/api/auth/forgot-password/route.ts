@@ -1,87 +1,73 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { addMinutes } from 'date-fns';
-import nodemailer from 'nodemailer';
+import { sendPasswordResetEmail } from '@/lib/mail';
+
+// Helper to generate a 6-digit OTP
+function generateOTP() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
 
 export async function POST(req: Request) {
   try {
-    const { email } = await req.json();
+    const body = await req.json();
+    const { email } = body;
 
-    const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) {
-      // Security: Prevent email enumeration attacks. Always return success.
-      return NextResponse.json({ success: true }); 
+    if (!email) {
+      return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
 
-    // Generate 6-digit OTP
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    // 1. Normalize email to prevent case-sensitivity mismatches
+    const normalizedEmail = email.toLowerCase().trim();
 
-    // Store OTP in Database
-    // Using (prisma as any) to bypass TS strictness if OTP model casing differs in Prisma client
-    await (prisma as any).oTP.upsert({
-      where: { userId: user.id }, 
-      create: {
-        userId: user.id,
-        code,
-        type: 'PASSWORD_RESET',
-        expiresAt: addMinutes(new Date(), 10)
-      },
-      update: {
-        code,
-        type: 'PASSWORD_RESET',
-        expiresAt: addMinutes(new Date(), 10)
-      }
+    // 2. Find the User
+    const user = await prisma.user.findUnique({
+      where: { email: normalizedEmail }
     });
 
-    // Send Email via SMTP
-    try {
-      const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: Number(process.env.SMTP_PORT),
-        secure: true,
-        auth: { 
-          user: process.env.SMTP_USER, 
-          pass: process.env.SMTP_PASS 
-        }
-      });
-
-      const mailOptions = {
-        from: '"Patholab Security" <patholab@globizhub.com>',
-        to: email,
-        subject: 'Reset Your Password - Patholab',
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
-            <h2 style="color: #ef4444; text-align: center;">Password Reset Request</h2>
-            <p style="color: #333; font-size: 16px;">Hello ${user.name},</p>
-            <p style="color: #555; font-size: 16px;">
-              We received a request to reset your Patholab account password. Please use the verification code below to proceed.
-            </p>
-            <div style="text-align: center; margin: 30px 0;">
-              <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1e293b; background: #f1f5f9; padding: 10px 20px; border-radius: 8px;">
-                ${code}
-              </span>
-            </div>
-            <p style="color: #555; font-size: 14px;">This code will expire in exactly <strong>10 minutes</strong>.</p>
-            <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 20px 0;">
-            <p style="color: #888; font-size: 12px; text-align: center;">
-              If you did not request a password reset, please ignore this email or contact support if you have concerns.
-            </p>
-          </div>
-        `
-      };
-
-      await transporter.sendMail(mailOptions);
-      console.log(`[SECURITY] Password reset OTP sent to ${email}`);
-
-    } catch (emailError) {
-      console.error('SMTP Error during password reset:', emailError);
-      // Even if SMTP fails, do not expose internal errors to the client to maintain security boundaries
+    if (!user) {
+      // UX Choice: For B2B platforms, it's better to explicitly tell them the account doesn't exist
+      // so they don't sit around waiting for an email.
+      return NextResponse.json({ error: "No account found with this email address." }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true });
+    // 3. Generate OTP & Expiry (10 minutes)
+    const otpCode = generateOTP();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); 
 
-  } catch (error) {
-    console.error('Forgot Password Error:', error);
-    return NextResponse.json({ error: 'Failed to process request' }, { status: 500 });
+    // 4. Atomically Upsert the OTP Record
+    // Note: We strictly flag this as a 'PASSWORD_RESET' type so it can't be used to bypass email verification
+    await prisma.oTP.upsert({
+      where: { userId: user.id },
+      update: { 
+        code: otpCode, 
+        expiresAt,
+        type: "PASSWORD_RESET"
+      },
+      create: { 
+        userId: user.id, 
+        code: otpCode, 
+        expiresAt, 
+        type: "PASSWORD_RESET" 
+      },
+    });
+
+    // 5. Send the Centralized Email
+    const { success, error } = await sendPasswordResetEmail(normalizedEmail, otpCode, user.name);
+
+    if (!success) {
+      console.error("Forgot Password Email API Error:", error);
+      return NextResponse.json({ 
+        error: "Failed to send reset email. Please contact support or try again later." 
+      }, { status: 500 });
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      message: "Password reset code sent to your email!" 
+    });
+
+  } catch (error: any) {
+    console.error("Forgot Password Server Error:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

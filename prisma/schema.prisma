@@ -1209,7 +1209,7 @@ model Invoice {
   lab            Lab                  @relation(fields: [labId], references: [id])
   branchId       String?
   branch         Branch?              @relation(fields: [branchId], references: [id])
-  invoiceNumber  String               @unique
+  invoiceNumber  String               
   notes          String?
   financialYear  String?              @default("2024-25")
   patientId      String?
