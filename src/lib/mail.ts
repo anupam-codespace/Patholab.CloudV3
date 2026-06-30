@@ -6,7 +6,7 @@ import { Resend } from 'resend';
 
 // Initialize Resend
 const resend = new Resend(process.env.RESEND_API_KEY);
-const SENDER_EMAIL = process.env.EMAIL_FROM || 'Patholab.cloud <noreply@patholab.cloud>';
+const SENDER_EMAIL = process.env.SENDER_EMAIL || 'Patholab.Cloud <noreply@patholab.cloud>';
 
 interface EmailOptions {
   to: string | string[];
@@ -187,5 +187,73 @@ export async function sendReportReadyEmail(patientEmail: string, patientName: st
     to: patientEmail,
     subject: `Your Lab Report is Ready - ${labName}`,
     html: generateEmailHtml('📄 Report Ready', 'linear-gradient(135deg, #0f172a 0%, #334155 100%)', content),
+  });
+}
+
+export async function sendWelcomeVerificationEmail(email: string, name: string, verificationLink: string) {
+  const content = `
+    <p>Welcome to <strong>Patholab Cloud</strong>, ${name}!</p>
+    <p>We are thrilled to have you on board. To get started and set up your laboratory, please verify your email address by clicking the button below:</p>
+    <div style="text-align: center;">
+      <a href="${verificationLink}" class="button">Verify Email Address</a>
+    </div>
+    <p style="font-size: 14px; color: #64748b;">
+      If the button above does not work, please copy and paste the following link securely into your browser:<br/>
+      <a href="${verificationLink}" style="color: #3b82f6; word-break: break-all;">${verificationLink}</a>
+    </p>
+  `;
+
+  return sendEmail({
+    to: email,
+    subject: 'Welcome to Patholab! Please verify your email.',
+    html: generateEmailHtml('🔬 Verify Your Account', 'linear-gradient(135deg, #0F172A 0%, #334155 100%)', content),
+  });
+}
+
+// =========================================================================
+// 6. ONBOARDING & ADMIN ALERTS
+// =========================================================================
+
+export async function sendVerificationSuccessEmail(email: string, name: string, labName: string) {
+  const content = `
+    <div style="text-align: center; margin-bottom: 20px;">
+      <p style="color: #16a34a; font-weight: bold; font-size: 18px; margin-top: 5px;">Your account has been successfully verified!</p>
+    </div>
+    <p>Your workspace for <strong>${labName}</strong> is now active and ready to use.</p>
+    <div class="highlight-box" style="text-align: left; background-color: #f8fafc;">
+      <h3 style="margin-top: 0; color: #0f172a; font-size: 16px;">Your Login Details:</h3>
+      <p style="margin: 5px 0;"><strong>Login URL:</strong> <a href="${process.env.NEXT_PUBLIC_APP_URL}/login" style="color: #2563eb;">app.patholab.cloud/login</a></p>
+      <p style="margin: 5px 0;"><strong>User ID:</strong> ${email}</p>
+      <p style="margin: 5px 0;"><strong>Password:</strong> <em>(The secure password you created during registration)</em></p>
+    </div>
+    <p style="text-align: center; color: #475569; font-size: 14px;">To unlock full professional features and start generating reports, please log in and recharge your wallet.</p>
+    <div style="text-align: center;">
+      <a href="${process.env.NEXT_PUBLIC_APP_URL}/workspace/wallet/recharge" class="button">Go to Dashboard</a>
+    </div>
+  `;
+
+  return sendEmail({
+    to: email,
+    subject: 'Welcome to Patholab.cloud - Account Verified! 🎉',
+    html: generateEmailHtml(`Congratulations, ${name}!`, 'linear-gradient(135deg, #16a34a 0%, #22c55e 100%)', content),
+  });
+}
+
+export async function sendAdminNewLabAlert(adminEmail: string, labName: string, ownerName: string, ownerEmail: string, ownerPhone: string | null) {
+  const content = `
+    <p style="color: #475569; font-size: 15px;">A new user has just completed registration and verified their email address.</p>
+    <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+      <tr><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #64748b; width: 120px;">Lab Name:</td><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-weight: bold; color: #0f172a;">${labName}</td></tr>
+      <tr><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #64748b;">Owner Name:</td><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-weight: bold; color: #0f172a;">${ownerName}</td></tr>
+      <tr><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #64748b;">Email:</td><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-weight: bold; color: #0f172a;">${ownerEmail}</td></tr>
+      <tr><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #64748b;">Phone:</td><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-weight: bold; color: #0f172a;">${ownerPhone || 'N/A'}</td></tr>
+      <tr><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #64748b;">Time:</td><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-weight: bold; color: #0f172a;">${new Date().toLocaleString('en-IN')}</td></tr>
+    </table>
+  `;
+
+  return sendEmail({
+    to: adminEmail,
+    subject: `New Lab Registered: ${labName} 🚀`,
+    html: generateEmailHtml('New Registration Alert', 'linear-gradient(135deg, #0f172a 0%, #334155 100%)', content),
   });
 }

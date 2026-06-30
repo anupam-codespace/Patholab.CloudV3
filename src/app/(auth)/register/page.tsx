@@ -125,7 +125,7 @@ export default function RegisterPage() {
       if (!res.ok) throw new Error(data.error || "Registration failed");
 
       // Redirect to verification with the userId
-      router.push(`/verify?userId=${data.userId}`);
+      router.push(`/verify?email=${encodeURIComponent(formData.email)}`);
     } catch (err: any) {
       setGlobalError(err.message);
       setLoading(false);
