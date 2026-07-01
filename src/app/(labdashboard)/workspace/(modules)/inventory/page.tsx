@@ -22,14 +22,14 @@ import { format } from "date-fns";
 
 // --- API FETCHERS ---
 const fetchItems = async () => {
-  const res = await fetch("/api/lab-owner/inventory/items");
+  const res = await fetch("/api/workspace/inventory/items");
   if (!res.ok) throw new Error("Failed to fetch inventory");
   return res.json();
 };
 
 const fetchLedger = async (itemId: string) => {
   const res = await fetch(
-    `/api/lab-owner/inventory/transactions?itemId=${itemId}`,
+    `/api/workspace/inventory/transactions?itemId=${itemId}`,
   );
   if (!res.ok) throw new Error("Failed to fetch ledger");
   return res.json();
@@ -63,7 +63,7 @@ export default function InventoryPage() {
   // --- ITEM MUTATIONS ---
   const addItemMutation = useMutation({
     mutationFn: async (payload: any) => {
-      const res = await fetch("/api/lab-owner/inventory/items", {
+      const res = await fetch("/api/workspace/inventory/items", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -82,7 +82,7 @@ export default function InventoryPage() {
 
   const updateItemMutation = useMutation({
     mutationFn: async ({ id, payload }: { id: string; payload: any }) => {
-      const res = await fetch(`/api/lab-owner/inventory/items/${id}`, {
+      const res = await fetch(`/api/workspace/inventory/items/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -102,7 +102,7 @@ export default function InventoryPage() {
 
   const deleteItemMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/lab-owner/inventory/items/${id}`, {
+      const res = await fetch(`/api/workspace/inventory/items/${id}`, {
         method: "DELETE",
       });
       const data = await res.json();
@@ -119,7 +119,7 @@ export default function InventoryPage() {
   // --- BATCH MUTATIONS ---
   const addStockMutation = useMutation({
     mutationFn: async (payload: any) => {
-      const res = await fetch("/api/lab-owner/inventory/batches", {
+      const res = await fetch("/api/workspace/inventory/batches", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -148,7 +148,7 @@ export default function InventoryPage() {
       batchId: string;
       payload: any;
     }) => {
-      const res = await fetch(`/api/lab-owner/inventory/batches/${batchId}`, {
+      const res = await fetch(`/api/workspace/inventory/batches/${batchId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -170,7 +170,7 @@ export default function InventoryPage() {
 
   const deleteBatchMutation = useMutation({
     mutationFn: async (batchId: string) => {
-      const res = await fetch(`/api/lab-owner/inventory/batches/${batchId}`, {
+      const res = await fetch(`/api/workspace/inventory/batches/${batchId}`, {
         method: "DELETE",
       });
       const data = await res.json();
