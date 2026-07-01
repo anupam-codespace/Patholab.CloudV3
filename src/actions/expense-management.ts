@@ -11,6 +11,11 @@ async function getLabId() {
   return user.labId;
 }
 
+function toNumber(value: unknown) {
+  if (value === null || value === undefined) return 0;
+  return Number(value);
+}
+
 export async function getExpenseDashboardData(month: number, year: number) {
   const labId = await getLabId();
 
@@ -40,7 +45,7 @@ export async function getExpenseDashboardData(month: number, year: number) {
   // ✅ FIX: We ONLY look at the Batch. No more transaction double-counting.
   // ✅ FIX: We ONLY use costPrice. MRP and Quantity are completely ignored for math.
   const mappedBatches = inventoryPurchases.map(i => {
-      const exactTotalPaid = i.costPrice || 0; 
+     const exactTotalPaid = toNumber(i.costPrice);
       const qty = i.initialQuantity || 1;
       
       return {
@@ -57,12 +62,12 @@ export async function getExpenseDashboardData(month: number, year: number) {
   // --- UNIFY DATA FOR THE LEDGER ---
   const unifiedLedger = [
     ...manualExpenses.map(e => ({
-      id: e.id, title: e.title, category: e.category, amount: e.amount, date: e.date, 
+      id: e.id, title: e.title, category: e.category, amount: toNumber(e.amount), date: e.date, 
       type: 'OPERATIONAL', ref: e.referenceNo || '-'
     })),
     ...commissions.map(c => ({
       id: c.id, title: `Payout: ${c.doctor?.name || c.agency?.agencyName || 'Referral'}`, 
-      category: 'COMMISSIONS', amount: c.amount, date: c.paidAt || c.createdAt, 
+      category: 'COMMISSIONS', amount: toNumber(c.amount), date: c.paidAt || c.createdAt, 
       type: 'COMMISSION', ref: c.test?.testNumber || 'Auto'
     })),
     ...mappedBatches
