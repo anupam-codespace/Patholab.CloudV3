@@ -5,7 +5,7 @@ import { verifyToken } from '@/lib/auth';
 // 1. Define Access Zones
 const PUBLIC_PATHS = [
   '/login', '/register', '/verify-otp', '/forgot-password', 
-  '/pricing', '/unauthorized', '/verify', '/contact-us', '/'
+  '/pricing', '/unauthorized', '/verify', '/contact-us', '/patient-portal'
 ];
 
 const GUEST_ONLY_PATHS = ['/login', '/register'];
@@ -20,6 +20,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/api/public/') ||
     pathname.startsWith('/api/auth/') ||
     pathname.startsWith('/verify') ||
+    pathname.startsWith('/book') ||
     pathname.startsWith('/api/webhooks');
 
   // 3. No Token Handling
@@ -49,7 +50,8 @@ export async function middleware(request: NextRequest) {
   if (GUEST_ONLY_PATHS.includes(pathname)) {
     if (role === 'SUPER_ADMIN') return NextResponse.redirect(new URL('/admin', request.url));
     if (role === 'PATIENT') return NextResponse.redirect(new URL('/portal', request.url));
-    
+    if (role === 'B2B_PARTNER') return NextResponse.redirect(new URL('/b2b', request.url));
+
     // All Lab Staff & Owners go to Workspace
     return NextResponse.redirect(new URL('/workspace', request.url)); 
   }
@@ -68,6 +70,7 @@ export async function middleware(request: NextRequest) {
     RECEPTIONIST: ['/workspace'],
     DOCTOR: ['/doctor'],
     AGENCY: ['/agency'],
+    B2B_PARTNER: ['/b2b'],
     PATIENT: ['/portal']
   };
 
