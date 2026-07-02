@@ -15,6 +15,7 @@ import {
   Server,
   CheckCircle2,
   Plus,
+  Calendar, Users,   ChevronRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -167,6 +168,57 @@ export default function RisDashboard() {
           ))}
         </div>
 
+               {/* LIVE WORKFLOW PIPELINE (NEW) */}
+        <Card className="border-slate-200/80 shadow-sm rounded-2xl bg-white overflow-hidden">
+          <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-4">
+            <CardTitle className="text-sm font-bold text-slate-800 flex items-center gap-2 uppercase tracking-wider">
+              <Activity className="h-4 w-4 text-indigo-500" /> Today's Live Workflow
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="flex flex-col md:flex-row items-center justify-between w-full">
+              
+              {/* Define the pipeline steps */}
+              {[
+                { label: "Scheduled", count: data?.workflow?.scheduled || 0, icon: Calendar, color: "text-slate-500", bg: "bg-slate-100" },
+                { label: "Waiting", count: data?.workflow?.waiting || 0, icon: Users, color: "text-amber-600", bg: "bg-amber-100" },
+                { label: "Scanning", count: data?.workflow?.scanning || 0, icon: Activity, color: "text-blue-600", bg: "bg-blue-100" },
+                { label: "Reporting", count: data?.workflow?.reporting || 0, icon: FileText, color: "text-purple-600", bg: "bg-purple-100" },
+                { label: "Verified", count: data?.workflow?.verified || 0, icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-100" },
+              ].map((step, index, array) => (
+                <div key={step.label} className="flex items-center w-full md:w-auto">
+                  
+                  {/* Step Node */}
+                  <div className="flex flex-row md:flex-col items-center gap-4 md:gap-2 w-full md:w-32 p-3 md:p-0 rounded-xl hover:bg-slate-50 transition-colors">
+                    <div className={`h-12 w-12 rounded-full flex items-center justify-center ${step.bg}`}>
+                      <step.icon className={`h-6 w-6 ${step.color}`} />
+                    </div>
+                    <div className="flex-1 md:text-center">
+                      <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-0.5">{step.label}</p>
+                      <p className={`text-2xl font-black ${step.count > 0 ? "text-slate-900" : "text-slate-300"}`}>
+                        {step.count}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Separator Arrow (Hidden on last item and mobile) */}
+                  {index < array.length - 1 && (
+                    <div className="hidden md:flex items-center justify-center w-8 text-slate-300">
+                      <ChevronRight className="h-6 w-6" />
+                    </div>
+                  )}
+                  
+                  {/* Mobile Separator Line */}
+                  {index < array.length - 1 && (
+                    <div className="h-4 w-px bg-slate-200 md:hidden my-1 ml-9"></div>
+                  )}
+                </div>
+              ))}
+              
+            </div>
+          </CardContent>
+        </Card>
+
         {/* MAIN DASHBOARD SPLIT */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* LEFT COLUMN: Modality Status (Spans 8) */}
@@ -297,6 +349,8 @@ export default function RisDashboard() {
                   {data.pendingQueue?.length || 0}
                 </Badge>
               </CardHeader>
+
+       
 
               <CardContent className="p-0 flex-1 overflow-y-auto custom-scrollbar">
                 {!data.pendingQueue || data.pendingQueue.length === 0 ? (

@@ -24,6 +24,23 @@ const nextConfig = {
   experimental: {
     // serverActions: true, // Note: If you are on Next.js 14+, this is enabled by default!
   },
+  async headers() {
+  return [
+    {
+      source: "/sw.js",
+      headers: [
+        {
+          key: "Cache-Control",
+          value: "no-store, no-cache, must-revalidate, proxy-revalidate",
+        },
+        {
+          key: "Service-Worker-Allowed",
+          value: "/",
+        },
+      ],
+    },
+  ];
+}
 };
 
 // Wrap your config with the PWA plugin
