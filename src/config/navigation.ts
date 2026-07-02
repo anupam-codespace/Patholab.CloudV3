@@ -26,6 +26,7 @@ import {
   Send,
   History,
   Wallet,
+  HelpCircle,
 } from "lucide-react";
 
 export type NavItem = {
@@ -51,6 +52,8 @@ export const adminNav: NavGroup[] = [
     items: [
       { name: "Dashboard", href: "/workspace", icon: LayoutDashboard },
       { name: "Financial Analytics", href: "/workspace/analytics", icon: BarChart3 },
+      { name: "Online Booking", href: "/workspace/bookings", icon: CalendarDays, badge: "New"},
+      // { name: "Appointments", href: "/workspace/appointments", icon: CalendarDays,  },
     ],
   },
   {
@@ -71,6 +74,19 @@ export const adminNav: NavGroup[] = [
       { name: "Logistics / Trips", href: "/workspace/logistics", icon: Truck, moduleTag: "LOGISTICS" },
     ],
   },
+
+ {
+    title: "Machine & AI",
+    items: [
+      // ✅ Using uppercase DB-friendly tags
+      { name: "Analyzer", href: "/workspace/analyzers", icon: Cpu, moduleTag: "MACHINE" },
+      { name: "Visual Mapper", href: "/workspace/analyzers/mapper", icon: BrainCircuit, moduleTag: "MACHINE" },
+      { name: "Mappings", href: "/workspace/analyzers/mappings", icon: ScanBarcode, moduleTag: "MACHINE" },
+      { name: "AI Analysis", href: "/workspace/analyzers/ai", icon: Activity, moduleTag: "AI" },
+    ],
+  },
+
+  
   {
     title: "B2B & Growth",
     moduleTag: "B2B", // Locks the whole group if B2B is not purchased
@@ -78,6 +94,8 @@ export const adminNav: NavGroup[] = [
       { name: "Referral Doctors", href: "/workspace/doctors", icon: Stethoscope },
       { name: "Corporate Agencies", href: "/workspace/agencies", icon: Briefcase },
       { name: "Commissions Payout", href: "/workspace/commissions", icon: Receipt },
+      { name: "B2B Settings", href: "/workspace/settings/b2b-tiers", icon: ShieldCheck, moduleTag: "B2B" }, // Only show if B2B is purchased
+
     ],
   },
   {
@@ -86,9 +104,12 @@ export const adminNav: NavGroup[] = [
       { name: "Report Templates", href: "/workspace/settings/templates", icon: LayoutTemplate },
       { name: "Staff Management", href: "/workspace/staff", icon: UserCog },
       { name: "Invoices & Payments", href: "/workspace/billing", icon: Receipt },
+      { name: "Expenses", href: "/workspace/expenses", icon: ClipboardList },
       { name: "Lab Settings", href: "/workspace/settings", icon: Settings },
       { name: "Audit Logs", href: "/workspace/audit-logs", icon: History },
-      { name: "Wallet & Billing", href: "/workspace/wallet", icon: Wallet }, // Updated to Wallet icon
+      { name: "Wallet & Billing", href: "/workspace/wallet", icon: Wallet }, 
+      { name: "Help & Support", href: "/workspace/support", icon: HelpCircle }, 
+
     ],
   },
 ];

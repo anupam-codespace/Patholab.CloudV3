@@ -126,6 +126,7 @@ enum Role {
   AGENCY
   PATIENT
   PHLEBOTOMIST
+  B2B_PARTNER
 }
 
 model OTP {
@@ -1686,4 +1687,23 @@ model TestResultCustomField {
 
   @@unique([testId, fieldDefId])
   @@index([testId])
+}
+
+model B2BTierRule {
+  id             String   @id @default(cuid())
+  tier           String   // "STANDARD", "BRONZE", "SILVER", "GOLD", "PLATINUM"
+  
+  testTemplateId String
+  testName       String   // Cached for faster loading
+  basePrice      Float    // Cached original price
+
+  ruleType       String   // "NET_PRICE", "PERCENTAGE", "FIXED"
+  value          Float
+
+  labId          String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  // Ensure a test only has one rule per tier per lab
+  @@unique([tier, testTemplateId, labId])
 }
