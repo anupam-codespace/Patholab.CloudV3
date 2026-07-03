@@ -1451,6 +1451,8 @@ model RadiologyStudy {
   technicianId     String?
   radiologistId    String?
   status           String    @default("ORDERED")
+
+
   priority         String    @default("ROUTINE")
   createdAt        DateTime  @default(now())
   performedAt      DateTime?

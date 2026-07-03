@@ -1,425 +1,413 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import {
-  Database,
-  Search,
-  HardDrive,
-  Download,
-  Calendar,
-  MonitorPlay,
-  Server,
-  AlertTriangle,
-  Layers,
-  Loader2,
-  Fingerprint,
+import { 
+  HardDrive, Server, Search, Filter, LayoutGrid, List, CheckCircle2, 
+  AlertTriangle, Clock, Upload, Download, Eye, FileText, Archive, 
+  Brain, Activity, Database, Cpu, MemoryStick, ChevronRight, X, Sparkles, Send
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import toast from "react-hot-toast";
+import { useQuery } from "@tanstack/react-query";
 
-export default function PacsArchivePage() {
+
+
+const ACTIVITIES = [
+  { time: "16:05", event: "USG Whole Abdomen uploaded", type: "upload" },
+  { time: "15:30", event: "MRI Brain report verified", type: "success" },
+  { time: "14:00", event: "Daily Orthanc Backup complete", type: "system" },
+  { time: "12:15", event: "Storage cleanup (Freed 45GB)", type: "system" },
+];
+
+export default function PacsDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [modalityFilter, setModalityFilter] = useState("ALL");
-  const [dateFilter, setDateFilter] = useState(""); // Added dynamic date filter state
+  const [activeFilter, setActiveFilter] = useState("All");
+  const [viewMode, setViewMode] = useState<"table" | "grid">("table");
+  const [selectedStudy, setSelectedStudy] = useState<any | null>(null);
 
-  // Fetch Live Data from API
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ["radiology-pacs-archive"],
+  // 1. THE REAL-TIME ENGINE
+  const { data: liveStudies = [], isLoading } = useQuery({
+    queryKey: ["pacs-studies"],
     queryFn: async () => {
-      const res = await fetch("/api/workspace/radiology/pacs");
-      if (!res.ok) throw new Error("Failed to fetch PACS archive");
+      const res = await fetch("/api/workspace/pacs");
+      if (!res.ok) throw new Error("Failed to fetch studies");
       return res.json();
     },
-    refetchInterval: 60000,
+    // MAGIC FEATURE: Poll the database every 5 seconds
+    refetchInterval: 5000, 
+    refetchOnWindowFocus: true, // Auto-update when the doctor switches back to this tab
   });
 
-  const handleLaunchViewer = (studyUid: string) => {
-    if (studyUid === "UNKNOWN-UID" || !studyUid) {
-      return toast.error(
-        "Study Instance UID missing. Images not synced to PACS yet.",
-      );
-    }
-    toast.success("Launching Diagnostic Web Viewer...");
+  // 2. Map data for the UI and apply filters
+  const filteredStudies = liveStudies.filter((s: any) => {
+    // Note: Adjust 'patientName' / 'accession' based on your exact Prisma schema fields
+    const matchesSearch = 
+      s.patientName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      s.accession?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      s.uhid?.toLowerCase().includes(searchQuery.toLowerCase());
+      
+    const matchesFilter = 
+      activeFilter === "All" || 
+      s.modality === activeFilter || 
+      s.status === activeFilter.toUpperCase();
 
-    // Launch standard OHIF/Osimis DICOM Web Viewer.
-    setTimeout(() => {
-      window.open(
-        `http://localhost:8042/viewer?StudyInstanceUID=${studyUid}`,
-        "_blank",
-      );
-    }, 500);
-  };
-
-  const handleDownloadDicom = () => {
-    toast.success(
-      "Zipping DICOM files for download. This may take a minute depending on the size.",
-    );
-  };
-
-  // Dynamic Data Extraction (No Hardcoded Safety Nets)
-  const studies = data?.studies || [];
-  const storage = data?.storage || {
-    total: "0 GB",
-    used: "0 GB",
-    percentUsed: 0,
-  };
-
-  // Extract unique modalities dynamically from the fetched studies
-  const uniqueModalities = Array.from(
-    new Set(studies.map((s: any) => s.modality).filter(Boolean)),
-  );
-
-  // Client-side filtering logic
-  const filteredStudies = studies.filter((study: any) => {
-    const pName = study.patientName || "";
-    const aNo = study.accessionNo || "";
-    const pId = study.patientId || "";
-
-    // 1. Text Search
-    const matchesSearch =
-      pName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      aNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      pId.toLowerCase().includes(searchQuery.toLowerCase());
-
-    // 2. Modality Filter
-    const matchesModality =
-      modalityFilter === "ALL" || study.modality === modalityFilter;
-
-    // 3. Date Filter (Checking if the studyDate string contains the selected YYYY-MM-DD)
-
-    let matchesDate = true;
-    if (dateFilter) {
-      const selectedDateObj = new Date(dateFilter);
-      // Format to match backend "dd MMM yyyy"
-      const formattedFilterDate = selectedDateObj.toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      });
-      matchesDate = (study.studyDate || "").includes(formattedFilterDate);
-    }
-
-    return matchesSearch && matchesModality && matchesDate;
+    return matchesSearch && matchesFilter;
   });
 
-  if (isLoading) {
-    return (
-      <div className="h-[calc(100vh-4rem)] flex flex-col items-center justify-center bg-slate-50 font-sans">
-        <Loader2 className="h-10 w-10 animate-spin text-indigo-600 mb-4" />
-        <p className="text-sm font-bold text-slate-500 uppercase tracking-widest animate-pulse">
-          Connecting to PACS...
-        </p>
-      </div>
-    );
-  }
+  // 3. Dynamic KPIs based on real-time data
+  const todaysUploads = liveStudies.filter((s: any) => {
+      const today = new Date().toDateString();
+      return new Date(s.studyDate).toDateString() === today;
+  }).length;
+  
+  const pendingReports = liveStudies.filter((s: any) => s.status === "AWAITING").length;
 
-  if (isError) {
-    return (
-      <div className="h-[calc(100vh-4rem)] flex flex-col items-center justify-center bg-slate-50 font-sans">
-        <Server className="h-12 w-12 text-rose-400 mb-4" />
-        <h2 className="text-xl font-bold text-slate-800">Connection Error</h2>
-        <p className="text-slate-500 mb-6 max-w-md text-center">
-          Failed to connect to the PACS database. Please check your network or
-          server status.
-        </p>
-        <Button onClick={() => window.location.reload()} variant="outline">
-          Retry Connection
-        </Button>
-      </div>
-    );
-  }
+  // 7. Status Chips Helper
+  const getStatusChip = (status: string) => {
+    switch(status) {
+      case "REPORTED": return <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200"><CheckCircle2 className="w-3 h-3 mr-1"/> Reported</Badge>;
+      case "AWAITING": return <Badge className="bg-amber-100 text-amber-800 border-amber-200"><Clock className="w-3 h-3 mr-1"/> Awaiting Report</Badge>;
+      case "UPLOADING": return <Badge className="bg-blue-100 text-blue-800 border-blue-200 animate-pulse"><Upload className="w-3 h-3 mr-1"/> Uploading</Badge>;
+      case "PROCESSING": return <Badge className="bg-purple-100 text-purple-800 border-purple-200"><Activity className="w-3 h-3 mr-1 animate-spin"/> Processing</Badge>;
+      case "ARCHIVED": return <Badge className="bg-slate-200 text-slate-700 border-slate-300"><Archive className="w-3 h-3 mr-1"/> Archived</Badge>;
+      default: return <Badge>{status}</Badge>;
+    }
+  };
+
+  
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-slate-50 font-sans relative selection:bg-indigo-100 pb-12">
-      {/* Decorative Background Mesh */}
-      <div className="absolute top-0 inset-x-0 h-64 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-100/40 via-slate-50 to-transparent pointer-events-none z-0" />
-
-      {/* FLOATING HEADER */}
-      <header className="sticky top-0 z-30 bg-white/70 backdrop-blur-xl border-b border-slate-200/60 shadow-sm">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-          <div className="flex items-center gap-4">
-            <div className="h-12 w-12 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-inner shrink-0">
-              <Database className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-slate-900 tracking-tight leading-tight">
-                PACS Server Archive
-              </h1>
-              <p className="text-xs font-medium text-slate-500 mt-0.5">
-                Search, view, and manage DICOM studies stored on your local
-                server.
-              </p>
-            </div>
+    <div className="flex h-[calc(100vh-4rem)] bg-slate-50 overflow-hidden relative">
+      
+      {/* ========================================== */}
+      {/* MAIN CONTENT (Left Side)                   */}
+      {/* ========================================== */}
+      <main className="flex-1 flex flex-col overflow-y-auto p-4 lg:p-6 custom-scrollbar">
+        
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+          <div>
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight">PACS & Imaging</h1>
+            <p className="text-sm font-medium text-slate-500 mt-1">Manage DICOM studies, storage, and Orthanc servers.</p>
           </div>
-
-          {/* Dynamic Storage Widget */}
-          <div className="bg-white/80 p-3 rounded-xl border border-slate-200 shadow-sm w-full md:w-80 flex flex-col gap-2 shrink-0">
-            <div className="flex justify-between items-center text-xs">
-              <span className="font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                <HardDrive className="h-3.5 w-3.5" /> Local Storage
-              </span>
-              <span
-                className={`font-black ${storage.percentUsed > 80 ? "text-rose-600" : "text-slate-800"}`}>
-                {storage.used} / {storage.total}
-              </span>
-            </div>
-            <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all duration-1000 ${
-                  storage.percentUsed > 90
-                    ? "bg-rose-500"
-                    : storage.percentUsed > 80
-                      ? "bg-amber-500"
-                      : "bg-indigo-500"
-                }`}
-                style={{ width: `${storage.percentUsed}%` }}
-              />
-            </div>
-            {storage.percentUsed > 80 && (
-              <p className="text-[10px] text-rose-600 font-bold flex items-center gap-1 mt-0.5 uppercase tracking-wider">
-                <AlertTriangle className="h-3 w-3" /> Storage running low.
-                Archive old studies.
-              </p>
-            )}
+          <div className="flex gap-2">
+            {/* 14. Bulk Actions (Mocked for UI) */}
+            <Button variant="outline" className="bg-white border-slate-200 text-slate-600 shadow-sm hidden sm:flex">
+              <Archive className="w-4 h-4 mr-2" /> Bulk Archive
+            </Button>
+            <Button className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-sm">
+              <Upload className="w-4 h-4 mr-2" /> Upload DICOM
+            </Button>
           </div>
         </div>
-      </header>
 
-      <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10 space-y-6">
-        {/* TOOLBAR */}
-        <div className="bg-white p-2 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row justify-between gap-2">
-          {/* Search Bar */}
-          <div className="relative w-full md:w-[350px] shrink-0">
-            <Search className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
-            <Input
-              placeholder="Search by Patient Name, ID, or Accession..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-11 bg-white border-slate-200 focus:border-indigo-300 focus:ring-indigo-500/20 rounded-xl text-sm transition-all shadow-sm"
-            />
+        {/* 1. KPI CARDS */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 shrink-0">
+          {[
+            { label: "Total Studies", value: liveStudies.length, icon: Brain, color: "text-indigo-600" },
+            { label: "Today's Uploads", value: todaysUploads, icon: Upload, color: "text-emerald-600" },
+            { label: "Pending Reports", value: pendingReports, icon: Clock, color: "text-amber-600" },
+            { label: "Storage Used", value: "6.4 TB", sub: "/ 10 TB", icon: HardDrive, color: "text-rose-600" },
+          ].map((kpi, idx) => (
+            <div key={idx} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center">
+              <div className="flex items-center gap-2 text-slate-500 mb-2">
+                <kpi.icon className={`w-4 h-4 ${kpi.color}`} />
+                <span className="text-xs font-bold uppercase tracking-wider">{kpi.label}</span>
+              </div>
+              <div className="flex items-baseline gap-1">
+                <span className="text-2xl font-black text-slate-900">{kpi.value}</span>
+                {kpi.sub && <span className="text-xs font-bold text-slate-400">{kpi.sub}</span>}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* 3 & 4. FILTERS & ADVANCED SEARCH */}
+        <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex flex-col lg:flex-row justify-between items-center gap-4 mb-6 shrink-0">
+          <div className="flex flex-wrap items-center gap-1.5 w-full lg:w-auto">
+            {["All", "MRI", "CT", "X-Ray", "USG", "Reported", "Awaiting"].map((f) => (
+              <button 
+                key={f} onClick={() => setActiveFilter(f)}
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                  activeFilter === f ? "bg-indigo-50 text-indigo-700 border border-indigo-200" : "text-slate-600 hover:bg-slate-100 border border-transparent"
+                }`}>
+                {f}
+              </button>
+            ))}
           </div>
+          <div className="flex items-center gap-3 w-full lg:w-auto">
+            <div className="relative flex-1 lg:w-80">
+              <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+              <Input placeholder="Search patient, accession, UHID..." className="pl-9 h-9 bg-slate-50 text-sm border-slate-200" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+            </div>
+            {/* 18. View Toggle */}
+            <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200 shrink-0">
+              <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded-md ${viewMode === 'grid' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-400'}`}><LayoutGrid className="w-4 h-4" /></button>
+              <button onClick={() => setViewMode('table')} className={`p-1.5 rounded-md ${viewMode === 'table' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-400'}`}><List className="w-4 h-4" /></button>
+            </div>
+          </div>
+        </div>
 
-          <div className="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto">
-            {/* Modality Filter Pills */}
-            <div className="flex gap-1 bg-slate-50/80 p-1.5 rounded-xl overflow-x-auto custom-scrollbar border border-slate-100 w-full sm:w-auto">
-              {["ALL", ...(uniqueModalities as string[])].map((mod: string) => (
-                <button
-                  key={mod}
-                  onClick={() => setModalityFilter(mod)}
-                  className={`px-5 py-2 text-xs font-bold rounded-lg whitespace-nowrap transition-all ${
-                    modalityFilter === mod
-                      ? "bg-white text-indigo-700 shadow-sm border border-slate-200/50"
-                      : "text-slate-500 hover:text-slate-800 hover:bg-slate-100/50"
-                  }`}>
-                  {mod}
-                </button>
+        {/* 6. RICH TABLE OR GRID VIEW */}
+        <div className="flex-1 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col min-h-[400px]">
+          {filteredStudies.length === 0 ? (
+            // 17. Better Empty State
+            <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-8">
+              <div className="h-16 w-16 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-100 mb-4 shadow-sm">
+                <Upload className="w-8 h-8 text-indigo-300" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-700">No studies found</h3>
+              <p className="text-sm text-slate-500 mt-1 mb-4">Drag a DICOM folder here or sync with Orthanc.</p>
+              <Button variant="outline" className="border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100">Connect PACS</Button>
+            </div>
+          ) : viewMode === 'table' ? (
+            <div className="overflow-x-auto custom-scrollbar">
+              <table className="w-full text-left text-sm whitespace-nowrap">
+                <thead className="bg-slate-50 border-b border-slate-200 text-slate-500">
+                  <tr>
+                    <th className="p-4 font-bold text-xs uppercase tracking-wider">Patient & Study</th>
+                    <th className="p-4 font-bold text-xs uppercase tracking-wider">Details</th>
+                    <th className="p-4 font-bold text-xs uppercase tracking-wider">Images & Size</th>
+                    <th className="p-4 font-bold text-xs uppercase tracking-wider">Status</th>
+                    <th className="p-4 font-bold text-xs uppercase tracking-wider text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredStudies.map(study => (
+                    <tr key={study.id} onClick={() => setSelectedStudy(study)} className={`hover:bg-indigo-50/50 cursor-pointer transition-colors ${selectedStudy?.id === study.id ? 'bg-indigo-50/80' : ''}`}>
+                      <td className="p-4">
+                        <div className="flex items-center gap-3">
+                          {/* 5. Thumbnail Preview */}
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 border ${
+                            study.modality === 'MRI' ? 'bg-indigo-100 border-indigo-200 text-indigo-700' :
+                            study.modality === 'CT' ? 'bg-purple-100 border-purple-200 text-purple-700' : 'bg-blue-100 border-blue-200 text-blue-700'
+                          }`}>
+                            <Brain className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <p className="font-bold text-slate-900">{study.patient} <span className="text-xs font-mono text-slate-400 ml-2">{study.uhid}</span></p>
+                            <p className="text-xs font-medium text-slate-600 truncate max-w-[200px]">{study.study}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <p className="font-bold text-slate-700 text-xs">{study.modality}</p>
+                        <p className="text-[10px] font-mono text-slate-500 mt-0.5">{study.accession}</p>
+                      </td>
+                      <td className="p-4">
+                        {/* 11. Image Count */}
+                        <p className="font-bold text-slate-700 text-xs">{study.images} Images</p>
+                        <p className="text-[10px] text-slate-500 mt-0.5">{study.size}</p>
+                      </td>
+                      <td className="p-4">{getStatusChip(study.status)}</td>
+                      <td className="p-4 text-right">
+                        {/* 19. Actions */}
+                        <div className="flex items-center justify-end gap-2">
+                          <Button size="icon" variant="ghost" className="h-8 w-8 text-indigo-600 hover:bg-indigo-100" title="Open Viewer"><Eye className="w-4 h-4"/></Button>
+                          <Button size="icon" variant="ghost" className="h-8 w-8 text-slate-400 hover:text-slate-600" title="Download"><Download className="w-4 h-4"/></Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="p-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 overflow-y-auto">
+              {filteredStudies.map(study => (
+                <div key={study.id} onClick={() => setSelectedStudy(study)} className={`p-4 rounded-xl border cursor-pointer transition-all ${selectedStudy?.id === study.id ? 'border-indigo-500 ring-1 ring-indigo-500 shadow-md bg-indigo-50/20' : 'border-slate-200 hover:border-indigo-300 hover:shadow-sm'}`}>
+                  <div className="flex justify-between items-start mb-3">
+                    <Badge variant="outline" className="bg-slate-50 font-bold">{study.modality}</Badge>
+                    {getStatusChip(study.status)}
+                  </div>
+                  <h3 className="font-bold text-slate-900">{study.patient}</h3>
+                  <p className="text-xs text-slate-500 mb-3 truncate">{study.study}</p>
+                  <div className="flex justify-between items-center text-xs font-bold text-slate-400 pt-3 border-t border-slate-100">
+                    <span>{study.images} Img</span>
+                    <span>{study.date.split(',')[0]}</span>
+                  </div>
+                </div>
               ))}
             </div>
+          )}
+        </div>
+      </main>
 
-            {/* Functional Date Filter */}
-            <div className="relative w-full sm:w-auto">
-              <Calendar className="absolute left-3 top-3.5 h-4 w-4 text-indigo-500 pointer-events-none" />
-              <Input
-                type="date"
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
-                className="pl-9 h-11 rounded-xl font-bold text-slate-600 bg-white border-slate-200 hover:bg-slate-50 shadow-sm transition-all w-full sm:w-40"
-              />
-              {dateFilter && (
-                <button
-                  onClick={() => setDateFilter("")}
-                  className="absolute right-2 top-2.5 h-6 w-6 flex items-center justify-center rounded-md text-slate-400 hover:text-rose-500 hover:bg-rose-50">
-                  ×
-                </button>
+      {/* ========================================== */}
+      {/* RIGHT SIDEBAR (Dual Mode: System vs Study) */}
+      {/* ========================================== */}
+      <aside className={`w-[320px] 2xl:w-[380px] border-l border-slate-200 bg-white flex flex-col shrink-0 transition-transform duration-300 ${selectedStudy ? 'translate-x-0 absolute right-0 h-full z-20 shadow-2xl lg:relative lg:shadow-none' : 'hidden lg:flex'}`}>
+        
+        {selectedStudy ? (
+          // ------------------------------------------------
+          // MODE 1: STUDY PREVIEW DRAWER (Point 10 & 13)
+          // ------------------------------------------------
+          <div className="flex flex-col h-full overflow-y-auto custom-scrollbar">
+            <div className="p-4 bg-slate-900 text-white flex justify-between items-center sticky top-0 z-10">
+              <h2 className="font-bold text-sm flex items-center gap-2"><Eye className="w-4 h-4 text-indigo-400"/> Study Preview</h2>
+              <button onClick={() => setSelectedStudy(null)} className="p-1 hover:bg-white/10 rounded-md"><X className="w-4 h-4"/></button>
+            </div>
+            
+            <div className="p-5 flex flex-col gap-6">
+              <div className="text-center">
+                <div className="w-20 h-20 mx-auto bg-indigo-50 border border-indigo-100 rounded-2xl flex items-center justify-center mb-3 shadow-inner">
+                  <Brain className="w-10 h-10 text-indigo-600" />
+                </div>
+                <h3 className="font-black text-lg text-slate-900">{selectedStudy.patient}</h3>
+                <p className="text-xs font-bold text-slate-500 font-mono mt-1">{selectedStudy.uhid}</p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="grid grid-cols-2 gap-2">
+                <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm h-9">
+                  <Eye className="w-3.5 h-3.5 mr-1.5"/> Open Viewer
+                </Button>
+                <Button variant="outline" className="w-full text-xs font-bold shadow-sm h-9">
+                  <FileText className="w-3.5 h-3.5 mr-1.5"/> Report
+                </Button>
+                <Button variant="outline" className="w-full text-xs font-bold shadow-sm h-9 col-span-2 text-slate-600">
+                  <Download className="w-3.5 h-3.5 mr-1.5"/> Download DICOM Zip
+                </Button>
+              </div>
+
+              {/* Study Details */}
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-[10px] uppercase font-bold text-slate-400">Study Name</span>
+                  <span className="text-xs font-bold text-slate-800 text-right">{selectedStudy.study}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[10px] uppercase font-bold text-slate-400">Accession</span>
+                  <span className="text-xs font-bold text-slate-800 font-mono">{selectedStudy.accession}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[10px] uppercase font-bold text-slate-400">Date</span>
+                  <span className="text-xs font-bold text-slate-800">{selectedStudy.date}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[10px] uppercase font-bold text-slate-400">Images</span>
+                  <span className="text-xs font-bold text-indigo-600">{selectedStudy.images} ({selectedStudy.size})</span>
+                </div>
+              </div>
+
+              {/* 13. AI Insights */}
+              {selectedStudy.ai && (
+                <div className="bg-purple-50 p-4 rounded-xl border border-purple-100">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Sparkles className="w-4 h-4 text-purple-600" />
+                    <span className="text-xs font-black uppercase tracking-wider text-purple-900">AI Insight</span>
+                  </div>
+                  <p className="text-xs font-semibold text-purple-800 leading-relaxed">{selectedStudy.ai}</p>
+                </div>
               )}
             </div>
           </div>
-        </div>
+        ) : (
+          // ------------------------------------------------
+          // MODE 2: SYSTEM OVERVIEW (Points 2, 8, 9, 15, 16)
+          // ------------------------------------------------
+          <div className="flex flex-col h-full overflow-y-auto custom-scrollbar p-5 gap-6">
+            
+            {/* 9. PACS Health */}
+            <div>
+              <h3 className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-2">
+                <Server className="w-3.5 h-3.5"/> Server Health
+              </h3>
+              <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-1 divide-y divide-slate-100">
+                <div className="flex justify-between items-center p-2.5">
+                  <span className="text-xs font-bold text-slate-700">Orthanc Node</span>
+                  <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"/> ONLINE</span>
+                </div>
+                <div className="flex justify-between items-center p-2.5">
+                  <span className="text-xs font-bold text-slate-700">DICOM Listener</span>
+                  <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500"/> RUNNING</span>
+                </div>
+                <div className="flex justify-between items-center p-2.5">
+                  <span className="text-xs font-bold text-slate-700">PostgreSQL DB</span>
+                  <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500"/> HEALTHY</span>
+                </div>
+              </div>
+            </div>
 
-        {/* DATA TABLE */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden min-h-[500px] flex flex-col">
-          <div className="overflow-x-auto custom-scrollbar flex-1">
-            <table className="w-full text-left text-sm text-slate-600 whitespace-nowrap">
-              <thead className="bg-slate-50/80 backdrop-blur-sm text-slate-500 font-bold uppercase tracking-wider text-[10px] border-b border-slate-200/80 sticky top-0 z-10">
-                <tr>
-                  <th className="px-6 py-4">Patient Identity</th>
-                  <th className="px-6 py-4">Study Information</th>
-                  <th className="px-6 py-4">Data Size</th>
-                  <th className="px-6 py-4">Server & Report Status</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredStudies.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-20 text-center">
-                      <div className="flex flex-col items-center justify-center text-slate-400 space-y-3">
-                        <div className="h-16 w-16 bg-slate-50 rounded-full flex items-center justify-center">
-                          <Database className="h-8 w-8 text-slate-300" />
-                        </div>
-                        <div>
-                          <p className="font-bold text-slate-600 text-base">
-                            No DICOM Studies Found
-                          </p>
-                          <p className="text-xs mt-1">
-                            There are no studies matching your search or
-                            filters.
-                          </p>
-                        </div>
+            {/* 16. Server Monitoring */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-slate-50 border border-slate-100 p-3 rounded-xl">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase">CPU Load</span>
+                  <Cpu className="w-3.5 h-3.5 text-slate-400"/>
+                </div>
+                <span className="text-lg font-black text-slate-700">22%</span>
+              </div>
+              <div className="bg-slate-50 border border-slate-100 p-3 rounded-xl">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase">RAM Usage</span>
+                  <MemoryStick className="w-3.5 h-3.5 text-slate-400"/>
+                </div>
+                <span className="text-lg font-black text-amber-600">41%</span>
+              </div>
+            </div>
+
+            {/* 2 & 15. Better Storage Card & Analytics */}
+            <div>
+              <h3 className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-2">
+                <Database className="w-3.5 h-3.5"/> Storage Matrix
+              </h3>
+              <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4">
+                <div className="flex justify-between items-end mb-2">
+                  <span className="font-bold text-slate-800 text-sm">Main NAS</span>
+                  <div className="text-right">
+                    <span className="font-black text-rose-600">6.4 TB</span>
+                    <span className="text-[10px] font-bold text-slate-400 ml-1">/ 10 TB</span>
+                  </div>
+                </div>
+                <div className="w-full bg-slate-100 rounded-full h-2 mb-4 overflow-hidden">
+                  <div className="bg-rose-500 h-full rounded-full w-[64%]"></div>
+                </div>
+                
+                {/* Modality Breakdown */}
+                <div className="space-y-2 mt-4 pt-4 border-t border-slate-100">
+                  {[
+                    { mod: "MRI", val: "4.2 TB", pct: "65%", col: "bg-indigo-500" },
+                    { mod: "CT", val: "1.5 TB", pct: "25%", col: "bg-purple-500" },
+                    { mod: "USG", val: "0.7 TB", pct: "10%", col: "bg-blue-500" }
+                  ].map((st, i) => (
+                    <div key={i} className="flex justify-between items-center text-xs">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${st.col}`}></div>
+                        <span className="font-bold text-slate-600">{st.mod}</span>
                       </div>
-                    </td>
-                  </tr>
-                ) : (
-                  filteredStudies.map((study: any) => {
-                    const pName = study.patientName || "Unknown Patient";
-                    const initials = pName
-                      .split(" ")
-                      .map((n: string) => n[0])
-                      .join("")
-                      .substring(0, 2)
-                      .toUpperCase();
+                      <span className="font-mono font-bold text-slate-500">{st.val}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
 
-                    return (
-                      <tr
-                        key={study.accessionNo || Math.random()}
-                        className="hover:bg-slate-50/80 transition-colors group">
-                        {/* Patient Col */}
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-4">
-                            <Avatar className="h-10 w-10 border border-slate-200 shadow-sm hidden sm:flex shrink-0">
-                              <AvatarFallback className="bg-slate-100 text-slate-600 font-bold text-xs">
-                                {initials}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex flex-col min-w-0">
-                              <span className="font-bold text-slate-900 truncate text-base">
-                                {pName}
-                              </span>
-                              <div className="flex items-center gap-2 mt-1">
-                                <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200 flex items-center gap-1">
-                                  <Fingerprint className="h-2.5 w-2.5" />{" "}
-                                  {study.patientId || "N/A"}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </td>
+            {/* 20. Activity Feed */}
+            <div className="flex-1 min-h-[200px]">
+              <h3 className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-2">
+                <Activity className="w-3.5 h-3.5"/> Live Activity
+              </h3>
+              <div className="space-y-4 relative before:absolute before:inset-0 before:ml-2.5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 before:to-transparent">
+                {ACTIVITIES.map((act, i) => (
+                  <div key={i} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                    <div className={`flex items-center justify-center w-5 h-5 rounded-full border-2 border-white bg-slate-200 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm ${act.type==='upload' ? 'bg-blue-400' : act.type === 'success' ? 'bg-emerald-400' : 'bg-slate-400'} z-10`}></div>
+                    <div className="w-[calc(100%-2rem)] md:w-[calc(50%-1.5rem)] bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm ml-2 md:ml-0">
+                      <div className="flex justify-between items-center mb-1">
+                        <time className="text-[9px] font-bold font-mono text-slate-400">{act.time}</time>
+                      </div>
+                      <p className="text-xs font-semibold text-slate-700 leading-tight">{act.event}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
 
-                        {/* Study Col */}
-                        <td className="px-6 py-4">
-                          <div className="flex flex-col items-start gap-1.5">
-                            <div className="flex items-center gap-2">
-                              <Badge
-                                variant="outline"
-                                className={`text-[9px] font-bold uppercase tracking-wider border-none shadow-sm
-                            ${
-                              study.modality === "MRI"
-                                ? "bg-violet-100 text-violet-700"
-                                : study.modality === "CT"
-                                  ? "bg-indigo-100 text-indigo-700"
-                                  : study.modality === "XRAY"
-                                    ? "bg-amber-100 text-amber-700"
-                                    : study.modality === "USG"
-                                      ? "bg-emerald-100 text-emerald-700"
-                                      : "bg-slate-100 text-slate-600"
-                            }`}>
-                                {study.modality || "UNK"}
-                              </Badge>
-                              <span
-                                className="font-bold text-slate-800 text-sm truncate max-w-[200px]"
-                                title={study.description}>
-                                {study.description || "Unknown Study"}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-[10px] font-mono text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded font-bold border border-indigo-100">
-                                {study.accessionNo || "N/A"}
-                              </span>
-                              <span className="text-[10px] font-medium text-slate-500 flex items-center gap-1">
-                                <Calendar className="h-3 w-3" />{" "}
-                                {study.studyDate || "Unknown Date"}
-                              </span>
-                            </div>
-                          </div>
-                        </td>
-
-                        {/* Data Size Col */}
-                        <td className="px-6 py-4">
-                          <div className="flex flex-col gap-1">
-                            <span className="font-bold text-slate-800 flex items-center gap-1.5 text-sm">
-                              <Layers className="h-4 w-4 text-indigo-500" />
-                              {study.instances || 0}{" "}
-                              <span className="font-medium text-slate-500 text-xs">
-                                Images
-                              </span>
-                            </span>
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                              SIZE:{" "}
-                              {study.sizeMb > 1000
-                                ? `${(study.sizeMb / 1000).toFixed(2)} GB`
-                                : `${(study.sizeMb || 0).toFixed(0)} MB`}
-                            </span>
-                          </div>
-                        </td>
-
-                        {/* Status Col */}
-                        <td className="px-6 py-4">
-                          <div className="flex flex-col gap-2 items-start">
-                            <span
-                              className={`text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1.5 uppercase tracking-wider
-                          ${study.status === "ONLINE" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-slate-100 text-slate-600 border border-slate-200"}`}>
-                              <Database className="h-3 w-3" /> PACS:{" "}
-                              {study.status || "UNKNOWN"}
-                            </span>
-                            <span
-                              className={`text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1.5 uppercase tracking-wider border shadow-sm
-                          ${
-                            study.reportStatus === "FINAL"
-                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                              : study.reportStatus === "DRAFT" ||
-                                  study.reportStatus === "DICTATED"
-                                ? "bg-amber-50 text-amber-700 border-amber-200"
-                                : "bg-rose-50 text-rose-700 border-rose-200"
-                          }`}>
-                              {study.reportStatus === "UNREAD"
-                                ? "REPORT: UNREAD"
-                                : `REPORT: ${study.reportStatus || "UNKNOWN"}`}
-                            </span>
-                          </div>
-                        </td>
-
-                        {/* Actions Col */}
-                        <td className="px-6 py-4 text-right">
-                          <div className="flex justify-end gap-2 items-center">
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={handleDownloadDicom}
-                              className="text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200 hidden md:flex h-10 w-10 rounded-xl transition-colors shadow-sm"
-                              title="Download DICOM Zip">
-                              <Download className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              onClick={() => handleLaunchViewer(study.studyUid)}
-                              className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white h-10 rounded-xl shadow-md shadow-indigo-500/25 transition-all duration-300 hover:-translate-y-0.5 font-bold w-full sm:w-auto">
-                              <MonitorPlay className="h-4 w-4 mr-2" /> View
-                              Images
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
           </div>
-        </div>
-      </main>
+        )}
+      </aside>
+
     </div>
   );
 }

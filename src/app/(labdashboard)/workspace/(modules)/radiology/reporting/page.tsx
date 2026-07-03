@@ -15,6 +15,7 @@ import {
   FileText,
   AlertCircle,
   Fingerprint,
+  User, Hash, Building2, TestTube, ArrowUpRight, ArrowDownRight, Activity, Calendar
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,14 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import toast from "react-hot-toast";
+import { Wand2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // 1. Fetch Functions
 const fetchQueue = async () => {
@@ -43,6 +52,31 @@ export default function ReportingDeskPage() {
   const [activeFilter, setActiveFilter] = useState("ALL"); // UNREAD, DRAFT, ALL
   const [selectedStudy, setSelectedStudy] = useState<any | null>(null);
 
+  // Fetch Templates / Macros
+  const { data: macros } = useQuery({
+    queryKey: ["radiology-macros"],
+    queryFn: async () => {
+      const res = await fetch("/api/workspace/radiology/macros");
+      if (!res.ok) return [];
+      return res.json();
+    },
+  });
+
+  // Handle Macro Insertion
+  const handleApplyMacro = (macroId: string) => {
+    const macro = macros?.find((m: any) => m.id === macroId);
+    if (!macro) return;
+
+    // Update the selected study with macro text
+    setSelectedStudy((prev: any) => ({
+      ...prev,
+      findings: macro.findingsText,
+      impression: macro.impressionText,
+    }));
+    
+    toast.success(`${macro.title} template applied`);
+  };
+
   // 2. Queries
   const { data: queue = [], isLoading: isQueueLoading } = useQuery({
     queryKey: ["radiology-queue"],
@@ -50,11 +84,11 @@ export default function ReportingDeskPage() {
     refetchInterval: 30000, // Auto-refresh queue every 30 seconds
   });
 
-  const { data: macros = [] } = useQuery({
-    queryKey: ["radiology-macros"],
-    queryFn: fetchMacros,
-    staleTime: 5 * 60 * 1000, // Cache macros for 5 mins
-  });
+ // const { data: macros = [] } = useQuery({
+    //queryKey: ["radiology-macros"],
+  //  queryFn: fetchMacros,
+  //  staleTime: 5 * 60 * 1000, // Cache macros for 5 mins
+//});
 
   // 3. Save/Finalize Mutation
   const saveMutation = useMutation({
@@ -88,52 +122,57 @@ export default function ReportingDeskPage() {
   });
 
   // ==========================================
-  // 🧠 THE SHORTCODE ENGINE
+  // 🧠 THE SMART MACRO ENGINE
   // ==========================================
-  const handleFindingsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    let text = e.target.value;
+  const handleSmartText = (field: 'findings' | 'impression', value: string) => {
+    let text = value;
 
-    // Check if the user just typed a space, and if there's a shortcode right before it
+    // Check if the user just typed a space, triggering the macro check
     if (text.endsWith(" ")) {
-      // Find all words in the text that start with '/'
       const words = text.split(/\s+/);
-      const lastWord = words[words.length - 2]; // -1 is empty string after space, -2 is the typed word
+      const lastWord = words[words.length - 2]; // The word just typed before the space
 
       if (lastWord && lastWord.startsWith("/")) {
-        const typedShortcode = lastWord.substring(1).toLowerCase(); // remove '/' and lowercase
+        const typedShortcode = lastWord.substring(1).toLowerCase();
 
-        // Find matching macro
-        const matchedMacro = macros.find(
+        // Find the matching macro
+        const matchedMacro = macros?.find(
           (m: any) =>
             m.shortcode &&
-            m.shortcode.toLowerCase() === typedShortcode &&
-            (m.modalityType === selectedStudy?.modality ||
-              m.modalityType === "ALL"),
+            m.shortcode.toLowerCase() === typedShortcode
         );
 
         if (matchedMacro) {
-          // 1. Replace the shortcode in the findings text
+          // 1. Replace the typed "/shortcode" with the actual heavy text
           const regex = new RegExp(`/${matchedMacro.shortcode}\\s$`, "i");
-          text = text.replace(regex, matchedMacro.findingsText + " ");
+          const replacementText = field === 'findings' ? matchedMacro.findingsText : matchedMacro.impressionText;
+          text = text.replace(regex, replacementText + "\n\n");
 
-          // 2. Auto-fill or append the impression
+          // 2. MAGIC AUTO-FILL: Fill the other box if it's currently empty
+          const currentImpression = selectedStudy?.impression || "";
+          const currentFindings = selectedStudy?.findings || "";
+
           setSelectedStudy((prev: any) => ({
             ...prev,
-            findings: text,
-            impression: prev.impression
-              ? prev.impression + "\n\n" + matchedMacro.impressionText
-              : matchedMacro.impressionText,
+            [field]: text, // Update the field they are typing in
+            // If they typed in findings and impression is empty, fill impression
+            ...(field === 'findings' && !currentImpression && matchedMacro.impressionText 
+                ? { impression: matchedMacro.impressionText } : {}),
+            // If they typed in impression and findings is empty, fill findings
+            ...(field === 'impression' && !currentFindings && matchedMacro.findingsText 
+                ? { findings: matchedMacro.findingsText } : {})
           }));
 
-          toast.success(`Applied Macro: ${matchedMacro.title}`);
-          return; // Exit early since we updated state
+          toast.success(`Expanded Macro: ${matchedMacro.title}`);
+          return; // Exit early since state is updated
         }
       }
     }
 
-    // Normal typing update
-    setSelectedStudy({ ...selectedStudy, findings: text });
+    // Normal typing update if no macro was triggered
+    setSelectedStudy((prev: any) => ({ ...prev, [field]: text }));
   };
+
 
   // Filter Logic
   const filteredQueue = queue.filter((item: any) => {
@@ -201,26 +240,33 @@ export default function ReportingDeskPage() {
         </div>
       </header>
 
-      {/* SPLIT PANE MAIN CONTENT */}
-      <main className="flex-1 w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pb-4 flex flex-col lg:flex-row gap-6 relative z-10 lg:min-h-0">
-        {/* LEFT COLUMN: Queue */}
-        <div className="w-full lg:w-1/3 flex flex-col bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden lg:h-full">
-          <div className="p-4 border-b border-slate-100 bg-slate-50/50 space-y-4 shrink-0">
+    {/* ========================================== */}
+      {/* 3-COLUMN RESPONSIVE SPLIT PANE MAIN CONTENT */}
+      {/* ========================================== */}
+      {/* On mobile: Stacks vertically & scrolls. On laptops (lg+): Locks to screen height. */}
+      <main className="flex-1 w-full max-w-[1920px] mx-auto px-2 sm:px-4 lg:px-6 pb-4 flex flex-col lg:flex-row gap-4 relative z-10 lg:h-[calc(100vh-5rem)] overflow-y-auto lg:overflow-hidden">
+        
+        {/* ========================================== */}
+        {/* COLUMN 1: PATIENT QUEUE                    */}
+        {/* ========================================== */}
+        {/* Mobile: 400px height. Laptop: 280px wide. Desktop: 320px wide. */}
+        <div className="w-full lg:w-[280px] xl:w-[300px] 2xl:w-[320px] flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden shrink-0 h-[400px] lg:h-full">
+          <div className="p-3 border-b border-slate-100 bg-slate-50/50 space-y-3 shrink-0">
             <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
               <Input
-                placeholder="Search patient or accession..."
-                className="pl-9 bg-white border-slate-200 focus:border-indigo-300 focus:ring-indigo-500/20 rounded-xl h-10 text-sm shadow-sm"
+                placeholder="Search patient..."
+                className="pl-9 bg-white border-slate-200 focus:border-indigo-300 focus:ring-indigo-500/20 rounded-lg h-9 text-sm shadow-sm"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <div className="flex gap-1.5 bg-slate-100/80 p-1.5 rounded-xl border border-slate-200/50">
+            <div className="flex gap-1 bg-slate-100/80 p-1 rounded-lg border border-slate-200/50">
               {["UNREAD", "DRAFT", "ALL"].map((filter) => (
                 <button
                   key={filter}
                   onClick={() => setActiveFilter(filter)}
-                  className={`flex-1 py-1.5 text-[11px] uppercase tracking-wider font-bold rounded-lg transition-all ${
+                  className={`flex-1 py-1 text-[10px] uppercase tracking-wider font-bold rounded-md transition-all ${
                     activeFilter === filter
                       ? "bg-white text-indigo-700 shadow-sm border border-slate-200/50"
                       : "text-slate-500 hover:text-slate-800"
@@ -231,83 +277,37 @@ export default function ReportingDeskPage() {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto custom-scrollbar divide-y divide-slate-100 min-h-[300px] lg:min-h-0">
+          <div className="flex-1 overflow-y-auto custom-scrollbar divide-y divide-slate-100">
             {filteredQueue.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full p-8 text-center text-slate-400">
-                <CheckCircle2 className="h-12 w-12 mx-auto mb-3 opacity-30 text-emerald-500" />
-                <p className="text-sm font-bold text-slate-600">
-                  Queue is clear
-                </p>
-                <p className="text-xs mt-1">No studies pending your review.</p>
+                <CheckCircle2 className="h-10 w-10 mx-auto mb-3 opacity-30 text-emerald-500" />
+                <p className="text-sm font-bold text-slate-600">Queue is clear</p>
               </div>
             ) : (
               filteredQueue.map((item: any) => {
                 const isSelected = selectedStudy?.studyId === item.studyId;
-                const initials =
-                  item.patient
-                    ?.split(" ")
-                    .map((n: string) => n[0])
-                    .join("")
-                    .substring(0, 2)
-                    .toUpperCase() || "PT";
-
+                
                 return (
                   <div
                     key={item.id}
                     onClick={() => setSelectedStudy(item)}
-                    className={`p-4 sm:p-5 cursor-pointer transition-all border-l-4 group
-                  ${
-                    isSelected
-                      ? "bg-indigo-50/50 border-l-indigo-600"
-                      : item.status === "DRAFT"
-                        ? "border-l-amber-400 hover:bg-slate-50/80"
-                        : "border-l-transparent hover:bg-slate-50/80"
-                  }`}>
-                    <div className="flex items-start gap-3">
-                      <Avatar
-                        className={`h-10 w-10 border shadow-sm shrink-0 ${isSelected ? "border-indigo-200 bg-white" : "border-slate-200 bg-slate-50"}`}>
-                        <AvatarFallback
-                          className={`font-bold text-xs ${isSelected ? "text-indigo-700" : "text-slate-600"}`}>
-                          {initials}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex justify-between items-start mb-1 gap-2">
-                          <h3
-                            className={`font-bold text-sm truncate ${isSelected ? "text-indigo-900" : "text-slate-900"}`}>
-                            {item.patient || "Unknown Patient"}
-                          </h3>
-                          {item.priority === "URGENT" && (
-                            <Badge
-                              variant="outline"
-                              className="bg-rose-50 text-rose-700 border-none px-1.5 py-0 text-[9px] font-black tracking-wider uppercase flex items-center gap-1 shadow-sm shrink-0">
-                              URGENT
-                            </Badge>
-                          )}
-                        </div>
-                        <p
-                          className="text-xs font-medium text-slate-600 mb-2 truncate"
-                          title={item.scan}>
-                          {item.scan}
-                        </p>
-                        <div className="flex justify-between items-center mt-2 flex-wrap gap-2">
-                          <div className="flex items-center gap-2">
-                            <Badge
-                              variant="outline"
-                              className="text-[9px] font-bold uppercase tracking-wider bg-white border-slate-200 text-slate-700 shadow-sm shrink-0">
-                              {item.modality}
-                            </Badge>
-                            <span className="text-[10px] font-medium text-slate-500 whitespace-nowrap">
-                              {item.time}
-                            </span>
-                          </div>
-                          {item.status === "DRAFT" && (
-                            <span className="text-[10px] font-bold text-amber-600 uppercase tracking-wider flex items-center gap-1 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100 shrink-0">
-                              <Save className="h-3 w-3" /> Draft
-                            </span>
-                          )}
-                        </div>
-                      </div>
+                    className={`p-3 cursor-pointer transition-all border-l-4 group ${
+                      isSelected ? "bg-indigo-50/50 border-l-indigo-600" : item.status === "DRAFT" ? "border-l-amber-400 hover:bg-slate-50/80" : "border-l-transparent hover:bg-slate-50/80"
+                    }`}>
+                    <div className="flex justify-between items-start mb-1 gap-2">
+                      <h3 className={`font-bold text-sm truncate ${isSelected ? "text-indigo-900" : "text-slate-900"}`}>
+                        {item.patient || "Unknown Patient"}
+                      </h3>
+                      {item.priority === "URGENT" && (
+                        <div className="h-2 w-2 rounded-full bg-rose-500 animate-pulse mt-1 shrink-0" />
+                      )}
+                    </div>
+                    <p className="text-xs font-medium text-slate-600 mb-2 truncate" title={item.scan}>{item.scan}</p>
+                    <div className="flex justify-between items-center mt-2 flex-wrap gap-2">
+                      <Badge variant="outline" className="text-[9px] font-bold uppercase tracking-wider bg-white border-slate-200 text-slate-700 shadow-sm">
+                        {item.modality}
+                      </Badge>
+                      <span className="text-[10px] font-medium text-slate-500">{item.time}</span>
                     </div>
                   </div>
                 );
@@ -316,151 +316,208 @@ export default function ReportingDeskPage() {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Editor */}
-        <div className="w-full lg:w-2/3 flex flex-col bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden lg:h-full relative min-h-[600px] lg:min-h-0">
-          {selectedStudy ? (
-            <>
-              {/* Context Header */}
-              <div className="px-5 py-4 border-b border-slate-100 bg-slate-50/50 shrink-0 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div className="min-w-0 w-full sm:w-auto">
-                  <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2 truncate">
-                    {selectedStudy.patient || "Unknown Patient"}
-                    <span className="text-sm font-normal text-slate-500 whitespace-nowrap">
-                      ({selectedStudy.ageSex || "N/A"})
+        {selectedStudy ? (
+          <>
+            {/* ========================================== */}
+            {/* COLUMN 2: CLINICAL CONTEXT                 */}
+            {/* ========================================== */}
+            {/* Mobile: Expands to fit content. Laptop: 300px wide. Desktop: 350-400px wide. */}
+            <div className="w-full lg:w-[300px] xl:w-[350px] 2xl:w-[400px] flex flex-col gap-4 overflow-y-auto custom-scrollbar shrink-0 h-auto lg:h-full pb-4 lg:pb-10 pr-1 lg:pr-2">
+              
+              {/* 1. Patient Information */}
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden shrink-0">
+                <div className="bg-slate-900 px-3 py-2 flex items-center gap-2 text-white">
+                  <User className="h-4 w-4 text-indigo-400" />
+                  <h3 className="font-bold text-[11px] uppercase tracking-wider">Patient Info</h3>
+                </div>
+                <div className="p-3 space-y-2.5">
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                    <span className="text-[11px] text-slate-500 font-medium">Name</span>
+                    <span className="text-xs font-bold text-slate-900">{selectedStudy.patient || "Amit Kumar"}</span>
+                  </div>
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                    <span className="text-[11px] text-slate-500 font-medium">Age / Gender</span>
+                    <span className="text-xs font-semibold text-slate-700">{selectedStudy.age || "54 Y"} / {selectedStudy.gender || "M"}</span>
+                  </div>
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                    <span className="text-[11px] text-slate-500 font-medium">UHID</span>
+                    <span className="text-xs font-mono text-slate-700">{selectedStudy.uhid || "UH202600124"}</span>
+                  </div>
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                    <span className="text-[11px] text-slate-500 font-medium">Ref Doctor</span>
+                    <span className="text-xs font-semibold text-indigo-700 truncate max-w-[120px] text-right">{selectedStudy.referringDoctor || "Dr. Sharma"}</span>
+                  </div>
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                    <span className="text-[11px] text-slate-500 font-medium">Department</span>
+                    <span className="text-xs font-semibold text-slate-700">{selectedStudy.department || "Neurology"}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[11px] text-slate-500 font-medium">Priority</span>
+                    <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded flex items-center gap-1 border border-rose-100">
+                      <div className="h-1.5 w-1.5 rounded-full bg-rose-500" /> {selectedStudy.priority || "URGENT"}
                     </span>
-                  </h2>
-                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                    <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-white text-slate-600 border border-slate-200 flex items-center gap-1 shadow-sm shrink-0">
-                      <Fingerprint className="h-2.5 w-2.5" /> {selectedStudy.id}
-                    </span>
-                    <Badge
-                      variant="outline"
-                      className="text-[10px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 border-indigo-200 shadow-sm shrink-0">
-                      {selectedStudy.scan}
-                    </Badge>
                   </div>
                 </div>
-                <Button
-                  onClick={() => {
-                    if (
-                      !selectedStudy.studyUid ||
-                      selectedStudy.studyUid === "UNKNOWN-UID"
-                    )
-                      return toast.error("No PACS UID found.");
-                    window.open(
-                      `http://localhost:8042/viewer?StudyInstanceUID=${selectedStudy.studyUid}`,
-                      "_blank",
-                    );
-                  }}
-                  className="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-white shadow-md rounded-xl font-bold transition-all hover:-translate-y-0.5 shrink-0">
-                  <MonitorPlay className="h-4 w-4 mr-2" /> View Images
-                </Button>
+              </div>
+
+              {/* 2. Clinical History */}
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden shrink-0">
+                <div className="bg-amber-50 px-3 py-2 flex items-center gap-2 border-b border-amber-100">
+                  <History className="h-4 w-4 text-amber-600" />
+                  <h3 className="font-bold text-[11px] uppercase tracking-wider text-amber-900">Clinical History</h3>
+                </div>
+                <div className="p-3 space-y-4">
+                  <div>
+                    <h4 className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Chief Complaint</h4>
+                    <p className="text-xs font-semibold text-slate-800 bg-slate-50 p-2 rounded border border-slate-100">
+                      {selectedStudy.complaint || "Severe headache for 2 months"}
+                    </p>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <h4 className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Symptoms</h4>
+                      <ul className="text-[11px] font-medium text-slate-700 space-y-1 list-disc pl-3 marker:text-indigo-400">
+                        <li>Vomiting</li>
+                        <li>Dizziness</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Medication</h4>
+                      <ul className="text-[11px] font-medium text-slate-700 space-y-1 list-disc pl-3 marker:text-emerald-400">
+                        <li>Aspirin</li>
+                        <li>Metformin</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Past History</h4>
+                    <div className="flex flex-wrap gap-1.5">
+                      <Badge variant="outline" className="bg-rose-50 text-rose-700 border-rose-200 text-[9px] px-1.5">Diabetes</Badge>
+                      <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 text-[9px] px-1.5">Hypertension</Badge>
+                      <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-[9px] px-1.5">Stroke (2023)</Badge>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. Previous Studies */}
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden shrink-0">
+                <div className="bg-slate-50 px-3 py-2 flex items-center gap-2 border-b border-slate-100">
+                  <FileText className="h-4 w-4 text-slate-600" />
+                  <h3 className="font-bold text-[11px] uppercase tracking-wider text-slate-700">Previous Studies</h3>
+                </div>
+                <div className="divide-y divide-slate-100">
+                  {[
+                    { name: "MRI Brain", date: "15-Jan-2026" },
+                    { name: "CT Brain", date: "04-Oct-2025" }
+                  ].map((study, idx) => (
+                    <div key={idx} className="p-2.5 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                      <div>
+                        <p className="text-xs font-bold text-slate-800">{study.name}</p>
+                        <p className="text-[10px] text-slate-500">{study.date}</p>
+                      </div>
+                      <Button variant="outline" size="sm" className="h-6 px-2 text-[9px] font-bold border-indigo-200 text-indigo-700 hover:bg-indigo-50">
+                        View
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* ========================================== */}
+            {/* COLUMN 3: REPORT EDITOR                    */}
+            {/* ========================================== */}
+            {/* Flex-1 means it takes up all remaining space! */}
+            <div className="flex-1 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden relative min-h-[600px] lg:min-h-0 lg:h-full w-full">
+              
+              {/* Toolbar */}
+              <div className="px-3 py-2.5 border-b border-slate-100 bg-slate-50/80 shrink-0 flex flex-wrap justify-between items-center gap-2">
+                <div className="flex items-center gap-2">
+                  <Wand2 className="h-4 w-4 text-indigo-600 hidden sm:block" />
+                  <span className="text-sm font-bold text-slate-800">Editor</span>
+                </div>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <Select onValueChange={handleApplyMacro}>
+                    <SelectTrigger className="flex-1 sm:w-[200px] xl:w-[220px] h-8 bg-white border-slate-200 text-xs shadow-sm">
+                      <SelectValue placeholder="Load Macro..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {macros?.length === 0 ? (
+                        <SelectItem value="none" disabled>No templates</SelectItem>
+                      ) : (
+                        macros?.map((macro: any) => (
+                          <SelectItem key={macro.id} value={macro.id}>{macro.title}</SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    onClick={() => window.open(`http://localhost:8042/viewer?StudyInstanceUID=${selectedStudy.studyUid}`, "_blank")}
+                    className="h-8 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-lg shadow-sm shrink-0">
+                    <MonitorPlay className="h-3 w-3 sm:mr-1.5" /> <span className="hidden sm:inline">View DICOM</span>
+                  </Button>
+                </div>
               </div>
 
               {/* Editor Body */}
-              <div className="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-6 flex flex-col gap-6">
-                {/* Clinical History Alert */}
-                {selectedStudy.clinicalNotes && (
-                  <div className="p-4 bg-amber-50/50 border border-amber-200/60 rounded-xl text-sm text-amber-900 flex items-start gap-3 shadow-sm">
-                    <History className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
-                    <div>
-                      <p className="font-bold uppercase tracking-wider text-[10px] text-amber-700 mb-0.5">
-                        Clinical Indication / History
-                      </p>
-                      <p className="leading-relaxed font-medium">
-                        {selectedStudy.clinicalNotes}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Findings Box */}
-                <div className="flex-1 flex flex-col space-y-2 min-h-[300px]">
-                  <div className="flex justify-between items-center">
-                    <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
-                      <FileText className="h-4 w-4 text-indigo-500" /> Findings
-                    </Label>
-                    <span className="text-[10px] text-slate-500 font-mono bg-slate-100 border border-slate-200 px-2 py-1 rounded-md hidden sm:inline-block shadow-sm">
-                      Type /shortcode and press Space
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-3 sm:p-5 flex flex-col gap-4">
+                
+                {/* Findings */}
+                <div className="space-y-1.5 flex-1 flex flex-col">
+                  <label className="text-xs font-bold text-slate-700 flex flex-wrap items-center justify-between gap-2">
+                    <span>Technique & Findings</span>
+                    <span className="text-[9px] font-normal text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                      Type <kbd className="font-mono text-slate-600">/shortcode</kbd> + Space
                     </span>
-                  </div>
-                  <Textarea
-                    value={selectedStudy.findings || ""}
-                    onChange={handleFindingsChange}
-                    placeholder="Type findings here... e.g. /N-CXR "
-                    className="flex-1 min-h-[250px] font-mono text-[13px] leading-relaxed p-4 rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white focus:border-indigo-400 focus:ring-indigo-500/20 resize-none shadow-inner"
+                  </label>
+                  <Textarea 
+                    placeholder="Describe findings or type a /shortcut..." 
+                    className="flex-1 min-h-[250px] font-sans text-sm leading-relaxed bg-slate-50/50 border-slate-200 focus-visible:ring-indigo-500 p-4 shadow-inner resize-none"
+                    value={selectedStudy?.findings || ""}
+                    onChange={(e) => handleSmartText('findings', e.target.value)}
                   />
                 </div>
 
-                {/* Impression Box */}
-                <div className="shrink-0 space-y-2">
-                  <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
-                    <AlertCircle className="h-4 w-4 text-indigo-500" />{" "}
-                    Impression
-                  </Label>
-                  <Textarea
-                    value={selectedStudy.impression || ""}
-                    onChange={(e) =>
-                      setSelectedStudy({
-                        ...selectedStudy,
-                        impression: e.target.value,
-                      })
-                    }
-                    placeholder="Final diagnosis or conclusion..."
-                    className="min-h-[120px] font-bold text-sm leading-relaxed p-4 rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white focus:border-indigo-400 focus:ring-indigo-500/20 shadow-inner"
+                {/* Impression */}
+                <div className="space-y-1.5 h-[150px] xl:h-[200px] flex flex-col shrink-0">
+                  <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                    <AlertCircle className="h-3.5 w-3.5 text-indigo-600" />
+                    Impression / Conclusion
+                  </label>
+                  <Textarea 
+                    placeholder="Final diagnosis or type a /shortcut..." 
+                    className="flex-1 font-sans text-sm font-semibold leading-relaxed bg-slate-50/50 border-slate-200 focus-visible:ring-indigo-500 p-4 shadow-inner resize-none"
+                    value={selectedStudy?.impression || ""}
+                    onChange={(e) => handleSmartText('impression', e.target.value)}
                   />
                 </div>
               </div>
 
               {/* Footer Actions */}
-              <div className="p-4 border-t border-slate-100 bg-white flex flex-col sm:flex-row justify-between items-center gap-3 shrink-0">
-                <Button
-                  variant="outline"
-                  onClick={() => handleAction("DRAFT")}
-                  disabled={saveMutation.isPending}
-                  className="w-full sm:w-auto h-11 rounded-xl font-bold text-slate-600 bg-white border-slate-200 hover:bg-slate-50 shadow-sm">
-                  {saveMutation.isPending &&
-                  saveMutation.variables?.action === "DRAFT" ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin text-slate-400" />
-                  ) : (
-                    <Save className="h-4 w-4 mr-2 text-slate-400" />
-                  )}
-                  Save as Draft
+              <div className="p-3 border-t border-slate-100 bg-slate-50 flex justify-between items-center shrink-0">
+                <Button variant="outline" className="h-9 text-xs font-bold text-slate-600 bg-white border-slate-200 shadow-sm">
+                  <Save className="h-3 w-3 mr-2 text-slate-400" /> Save Draft
                 </Button>
-
-                <Button
-                  onClick={() => handleAction("FINALIZE")}
-                  disabled={saveMutation.isPending}
-                  className="w-full sm:w-auto h-11 rounded-xl font-bold bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-md shadow-emerald-500/25 px-8 transition-all hover:-translate-y-0.5">
-                  {saveMutation.isPending &&
-                  saveMutation.variables?.action === "FINALIZE" ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <FileSignature className="h-4 w-4 mr-2" />
-                  )}
-                  Verify & Finalize Report
+                <Button className="h-9 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm px-6">
+                  <FileSignature className="h-3 w-3 mr-2" /> Verify & Sign
                 </Button>
               </div>
-            </>
-          ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-8 bg-slate-50/30">
-              <div className="h-24 w-24 bg-white rounded-full flex items-center justify-center shadow-sm mb-5 border border-slate-100">
-                <Stethoscope className="h-10 w-10 text-indigo-200" />
-              </div>
-              <h3 className="text-xl font-bold text-slate-700 mb-2">
-                Ready to Report
-              </h3>
-              <p className="text-sm text-center max-w-sm leading-relaxed text-slate-500">
-                Select a patient from the queue to review clinical history, view
-                DICOM images, and dictate findings. Use{" "}
-                <code className="bg-white border border-slate-200 text-indigo-600 font-bold px-1.5 py-0.5 rounded-md shadow-sm mx-1">
-                  /shortcode
-                </code>{" "}
-                to pull in your saved macros.
-              </p>
             </div>
-          )}
-        </div>
+          </>
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-8 bg-white rounded-xl border border-slate-200 shadow-sm">
+            <div className="h-20 w-20 bg-slate-50 rounded-full flex items-center justify-center shadow-sm mb-4 border border-slate-100">
+              <Stethoscope className="h-8 w-8 text-indigo-300" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-700 mb-1">Ready to Report</h3>
+            <p className="text-xs text-center max-w-sm leading-relaxed text-slate-500">
+              Select a patient from the queue to begin reporting.
+            </p>
+          </div>
+        )}
       </main>
     </div>
   );
