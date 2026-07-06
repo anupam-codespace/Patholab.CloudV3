@@ -11,6 +11,22 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 
+interface StudyItem {
+  id: string;
+  patient: string;
+  patientName?: string;
+  uhid?: string;
+  study: string;
+  accession?: string;
+  modality?: string;
+  status?: string;
+  images?: number;
+  size?: string;
+  date: string;
+  studyDate?: string;
+  ai?: string;
+}
+
 
 
 const ACTIVITIES = [
@@ -24,10 +40,10 @@ export default function PacsDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
-  const [selectedStudy, setSelectedStudy] = useState<any | null>(null);
+  const [selectedStudy, setSelectedStudy] = useState<StudyItem | null>(null);
 
   // 1. THE REAL-TIME ENGINE
-  const { data: liveStudies = [], isLoading } = useQuery({
+  const { data: liveStudies = [], isLoading } = useQuery<StudyItem[]>({
     queryKey: ["pacs-studies"],
     queryFn: async () => {
       const res = await fetch("/api/workspace/pacs");
@@ -40,7 +56,7 @@ export default function PacsDashboard() {
   });
 
   // 2. Map data for the UI and apply filters
-  const filteredStudies = liveStudies.filter((s: any) => {
+  const filteredStudies = liveStudies.filter((s) => {
     // Note: Adjust 'patientName' / 'accession' based on your exact Prisma schema fields
     const matchesSearch = 
       s.patientName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -56,12 +72,12 @@ export default function PacsDashboard() {
   });
 
   // 3. Dynamic KPIs based on real-time data
-  const todaysUploads = liveStudies.filter((s: any) => {
+  const todaysUploads = liveStudies.filter((s) => {
       const today = new Date().toDateString();
-      return new Date(s.studyDate).toDateString() === today;
+      return s.studyDate ? new Date(s.studyDate).toDateString() === today : false;
   }).length;
   
-  const pendingReports = liveStudies.filter((s: any) => s.status === "AWAITING").length;
+  const pendingReports = liveStudies.filter((s) => s.status === "AWAITING").length;
 
   // 7. Status Chips Helper
   const getStatusChip = (status: string) => {
@@ -200,7 +216,7 @@ export default function PacsDashboard() {
                         <p className="font-bold text-slate-700 text-xs">{study.images} Images</p>
                         <p className="text-[10px] text-slate-500 mt-0.5">{study.size}</p>
                       </td>
-                      <td className="p-4">{getStatusChip(study.status)}</td>
+                      <td className="p-4">{getStatusChip(study.status ?? "")}</td>
                       <td className="p-4 text-right">
                         {/* 19. Actions */}
                         <div className="flex items-center justify-end gap-2">
@@ -219,7 +235,7 @@ export default function PacsDashboard() {
                 <div key={study.id} onClick={() => setSelectedStudy(study)} className={`p-4 rounded-xl border cursor-pointer transition-all ${selectedStudy?.id === study.id ? 'border-indigo-500 ring-1 ring-indigo-500 shadow-md bg-indigo-50/20' : 'border-slate-200 hover:border-indigo-300 hover:shadow-sm'}`}>
                   <div className="flex justify-between items-start mb-3">
                     <Badge variant="outline" className="bg-slate-50 font-bold">{study.modality}</Badge>
-                    {getStatusChip(study.status)}
+                    {getStatusChip(study.status ?? "")}
                   </div>
                   <h3 className="font-bold text-slate-900">{study.patient}</h3>
                   <p className="text-xs text-slate-500 mb-3 truncate">{study.study}</p>

@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getCurrentUser } from '@/lib/auth';
+import { getDataFromToken } from '@/lib/auth';
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
-    const user = await getCurrentUser();
+    const user = await getDataFromToken(req);
     if (!user || !user.labId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     // Fetch macros that belong to this lab OR are marked as global standard templates

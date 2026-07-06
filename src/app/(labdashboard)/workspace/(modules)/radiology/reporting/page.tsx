@@ -14,15 +14,12 @@ import {
   History,
   FileText,
   AlertCircle,
-  Fingerprint,
-  User, Hash, Building2, TestTube, ArrowUpRight, ArrowDownRight, Activity, Calendar
+  User, TestTube
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import toast from "react-hot-toast";
 import { Wand2 } from "lucide-react";
 import {
@@ -52,45 +49,38 @@ export default function ReportingDeskPage() {
   const [activeFilter, setActiveFilter] = useState("ALL"); // UNREAD, DRAFT, ALL
   const [selectedStudy, setSelectedStudy] = useState<any | null>(null);
 
-  // Fetch Templates / Macros
-  const { data: macros } = useQuery({
+  // ==========================================
+  // 🟢 TOP LEVEL REACT HOOKS (Moved here to fix the crash!)
+  // ==========================================
+
+  // 1. Fetch Macros
+  const { data: macros = [] } = useQuery({
     queryKey: ["radiology-macros"],
-    queryFn: async () => {
-      const res = await fetch("/api/workspace/radiology/macros");
-      if (!res.ok) return [];
-      return res.json();
-    },
+    queryFn: fetchMacros, // Fixed API path
   });
 
-  // Handle Macro Insertion
-  const handleApplyMacro = (macroId: string) => {
-    const macro = macros?.find((m: any) => m.id === macroId);
-    if (!macro) return;
-
-    // Update the selected study with macro text
-    setSelectedStudy((prev: any) => ({
-      ...prev,
-      findings: macro.findingsText,
-      impression: macro.impressionText,
-    }));
-    
-    toast.success(`${macro.title} template applied`);
-  };
-
-  // 2. Queries
+  // 2. Fetch Queue
   const { data: queue = [], isLoading: isQueueLoading } = useQuery({
     queryKey: ["radiology-queue"],
     queryFn: fetchQueue,
-    refetchInterval: 30000, // Auto-refresh queue every 30 seconds
+    refetchInterval: 30000, 
   });
 
- // const { data: macros = [] } = useQuery({
-    //queryKey: ["radiology-macros"],
-  //  queryFn: fetchMacros,
-  //  staleTime: 5 * 60 * 1000, // Cache macros for 5 mins
-//});
+  // 3. Fetch deep clinical context ONLY when a patient is clicked
+  const { data: patientContext, isLoading: isContextLoading } = useQuery({
+    queryKey: ["patient-context", selectedStudy?.patientId],
+    queryFn: async () => {
+      const res = await fetch(`/api/workspace/radiology/patient-context?patientId=${selectedStudy.patientId}&currentStudyId=${selectedStudy.id}`);
+      if (!res.ok) throw new Error("Failed to load context");
+      return res.json();
+    },
+    enabled: !!selectedStudy?.patientId, 
+  });
 
-  // 3. Save/Finalize Mutation
+  // ==========================================
+  // 🟢 MUTATIONS & HANDLERS
+  // ==========================================
+
   const saveMutation = useMutation({
     mutationFn: async ({ studyId, findings, impression, action }: any) => {
       const res = await fetch("/api/workspace/radiology/reporting", {
@@ -103,87 +93,17 @@ export default function ReportingDeskPage() {
       return data;
     },
     onSuccess: (data, variables) => {
-      toast.success(data.message);
+      toast.success(data.message || "Report saved successfully");
       queryClient.invalidateQueries({ queryKey: ["radiology-queue"] });
 
       if (variables.action === "FINALIZE") {
         setSelectedStudy(null);
-        // Open the generated report in a new tab immediately
-        window.open(
-          `/workspace/radiology/print/${variables.studyId}`,
-          "_blank",
-        );
+        window.open(`/workspace/radiology/print/${variables.studyId}`, "_blank");
       } else {
-        // Update local state to reflect it's now a draft
         setSelectedStudy((prev: any) => ({ ...prev, status: "DRAFT" }));
       }
     },
     onError: (error: any) => toast.error(error.message),
-  });
-
-  // ==========================================
-  // 🧠 THE SMART MACRO ENGINE
-  // ==========================================
-  const handleSmartText = (field: 'findings' | 'impression', value: string) => {
-    let text = value;
-
-    // Check if the user just typed a space, triggering the macro check
-    if (text.endsWith(" ")) {
-      const words = text.split(/\s+/);
-      const lastWord = words[words.length - 2]; // The word just typed before the space
-
-      if (lastWord && lastWord.startsWith("/")) {
-        const typedShortcode = lastWord.substring(1).toLowerCase();
-
-        // Find the matching macro
-        const matchedMacro = macros?.find(
-          (m: any) =>
-            m.shortcode &&
-            m.shortcode.toLowerCase() === typedShortcode
-        );
-
-        if (matchedMacro) {
-          // 1. Replace the typed "/shortcode" with the actual heavy text
-          const regex = new RegExp(`/${matchedMacro.shortcode}\\s$`, "i");
-          const replacementText = field === 'findings' ? matchedMacro.findingsText : matchedMacro.impressionText;
-          text = text.replace(regex, replacementText + "\n\n");
-
-          // 2. MAGIC AUTO-FILL: Fill the other box if it's currently empty
-          const currentImpression = selectedStudy?.impression || "";
-          const currentFindings = selectedStudy?.findings || "";
-
-          setSelectedStudy((prev: any) => ({
-            ...prev,
-            [field]: text, // Update the field they are typing in
-            // If they typed in findings and impression is empty, fill impression
-            ...(field === 'findings' && !currentImpression && matchedMacro.impressionText 
-                ? { impression: matchedMacro.impressionText } : {}),
-            // If they typed in impression and findings is empty, fill findings
-            ...(field === 'impression' && !currentFindings && matchedMacro.findingsText 
-                ? { findings: matchedMacro.findingsText } : {})
-          }));
-
-          toast.success(`Expanded Macro: ${matchedMacro.title}`);
-          return; // Exit early since state is updated
-        }
-      }
-    }
-
-    // Normal typing update if no macro was triggered
-    setSelectedStudy((prev: any) => ({ ...prev, [field]: text }));
-  };
-
-
-  // Filter Logic
-  const filteredQueue = queue.filter((item: any) => {
-    const pName = item.patient || "";
-    const pId = item.id || "";
-    const matchesSearch =
-      pName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      pId.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFilter =
-      activeFilter === "ALL" || item.status === activeFilter;
-    return matchesSearch && matchesFilter;
   });
 
   const handleAction = (action: "DRAFT" | "FINALIZE") => {
@@ -198,6 +118,148 @@ export default function ReportingDeskPage() {
     });
   };
 
+  const handleApplyMacro = (macroId: string) => {
+  const macro = macros?.find((m: any) => m.id === macroId);
+
+  if (!macro || !selectedStudy) return;
+
+  const findings = injectVariables(
+    macro.findingsText || "",
+    selectedStudy
+  );
+
+  const impression = injectVariables(
+    macro.impressionText || "",
+    selectedStudy
+  );
+
+  setSelectedStudy((prev: any) => ({
+    ...prev,
+    findings,
+    impression,
+  }));
+
+  toast.success(`${macro.title} template applied`);
+};
+
+  // ==========================================
+  // 🧠 THE SMART MACRO ENGINE (Upgraded with Dynamic Variables)
+  // ==========================================
+  
+  // Helper function to inject patient data into macro text
+ const injectVariables = (templateText: string, study: any) => {
+  if (!templateText) return "";
+
+  const patientName =
+    typeof study?.patient === "string"
+      ? study.patient
+      : study?.patient?.name ??
+        study?.patientName ??
+        "Unknown Patient";
+
+  const age =
+    study?.age ??
+    study?.patientAge ??
+    study?.patient?.age ??
+    "N/A";
+
+  const gender =
+    study?.gender ??
+    study?.patientGender ??
+    study?.patient?.gender ??
+    "N/A";
+
+  const modality =
+    typeof study?.modality === "string"
+      ? study.modality
+      : study?.modality?.type ??
+        study?.modality?.name ??
+        study?.modalityType ??
+        "N/A";
+
+  const uhid =
+    study?.uhid ??
+    study?.patient?.patientId ??
+    study?.patient?.uhid ??
+    "N/A";
+
+  const referringDoctor =
+    study?.referringDoctor ??
+    study?.refDoctor ??
+    study?.referringPhysician ??
+    "N/A";
+
+  return templateText
+    .replace(/\[Patient Name\]/gi, String(patientName))
+    .replace(/\[Age\]/gi, String(age))
+    .replace(/\[Gender\]/gi, String(gender))
+    .replace(/\[Modality\]/gi, String(modality))
+    .replace(/\[UHID\]/gi, String(uhid))
+    .replace(/\[Ref Doctor\]/gi, String(referringDoctor));
+};
+
+  const handleSmartText = (field: 'findings' | 'impression', value: string) => {
+    let text = value;
+
+    if (text.endsWith(" ")) {
+      const words = text.split(/\s+/);
+      const lastWord = words[words.length - 2]; 
+
+      if (lastWord && lastWord.startsWith("/")) {
+        const typedShortcode = lastWord.substring(1).toLowerCase();
+        const matchedMacro = macros?.find(
+          (m: any) => m.shortcode && m.shortcode.toLowerCase() === typedShortcode
+        );
+
+        if (matchedMacro) {
+          const regex = new RegExp(`/${matchedMacro.shortcode}\\s$`, "i");
+          
+          // Inject dynamic variables into the raw macro text before applying it!
+          const rawReplacementText = field === 'findings' ? matchedMacro.findingsText : matchedMacro.impressionText;
+          const replacementText = injectVariables(rawReplacementText, selectedStudy);
+          
+          text = text.replace(regex, replacementText + "\n\n");
+
+          const currentImpression = selectedStudy?.impression || "";
+          const currentFindings = selectedStudy?.findings || "";
+
+          // Also inject variables into the auto-fill text for the OTHER box
+          const autoFillImpression = injectVariables(matchedMacro.impressionText, selectedStudy);
+          const autoFillFindings = injectVariables(matchedMacro.findingsText, selectedStudy);
+
+          setSelectedStudy((prev: any) => ({
+            ...prev,
+            [field]: text, 
+            ...(field === 'findings' && !currentImpression && autoFillImpression 
+                ? { impression: autoFillImpression } : {}),
+            ...(field === 'impression' && !currentFindings && autoFillFindings 
+                ? { findings: autoFillFindings } : {})
+          }));
+
+          toast.success(`Expanded Macro: ${matchedMacro.title}`);
+          return; 
+        }
+      }
+    }
+    setSelectedStudy((prev: any) => ({ ...prev, [field]: text }));
+  };
+
+  // Filter Logic
+  const filteredQueue = queue.filter((item: any) => {
+    const pName = item.patient || "";
+    const pId = item.id || "";
+    const matchesSearch =
+      pName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      pId.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesFilter =
+      activeFilter === "ALL" || item.status === activeFilter;
+    return matchesSearch && matchesFilter;
+  });
+
+  // ==========================================
+  // 🟢 UI RENDERING
+  // ==========================================
+
   if (isQueueLoading) {
     return (
       <div className="h-[calc(100vh-4rem)] flex flex-col items-center justify-center bg-slate-50 font-sans">
@@ -211,10 +273,8 @@ export default function ReportingDeskPage() {
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-slate-50 font-sans relative selection:bg-indigo-100 pb-12 lg:h-[calc(100vh-4rem)] lg:overflow-hidden flex flex-col">
-      {/* Decorative Background Mesh */}
       <div className="absolute top-0 inset-x-0 h-64 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-100/40 via-slate-50 to-transparent pointer-events-none z-0" />
 
-      {/* FLOATING HEADER */}
       <header className="shrink-0 z-30 px-4 sm:px-6 lg:px-8 py-4 w-full max-w-[1600px] mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/70 backdrop-blur-xl p-4 rounded-2xl border border-slate-200/60 shadow-sm">
           <div className="flex items-center gap-4">
@@ -222,34 +282,20 @@ export default function ReportingDeskPage() {
               <Stethoscope className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-900 tracking-tight leading-tight">
-                Radiologist Reporting Desk
-              </h1>
-              <p className="text-xs font-medium text-slate-500 mt-0.5">
-                Review scans, dictate findings, and verify reports.
-              </p>
+              <h1 className="text-xl font-bold text-slate-900 tracking-tight leading-tight">Radiologist Reporting Desk</h1>
+              <p className="text-xs font-medium text-slate-500 mt-0.5">Review scans, dictate findings, and verify reports.</p>
             </div>
           </div>
-
           <div className="flex items-center gap-2 px-4 py-2.5 bg-indigo-50 rounded-xl border border-indigo-100 shadow-sm shrink-0 w-full md:w-auto justify-center">
             <Zap className="h-4 w-4 text-indigo-600" />
-            <span className="text-xs font-bold text-indigo-800 uppercase tracking-wider">
-              {macros.length} Macros Active
-            </span>
+            <span className="text-xs font-bold text-indigo-800 uppercase tracking-wider">{macros?.length || 0} Macros Active</span>
           </div>
         </div>
       </header>
 
-    {/* ========================================== */}
-      {/* 3-COLUMN RESPONSIVE SPLIT PANE MAIN CONTENT */}
-      {/* ========================================== */}
-      {/* On mobile: Stacks vertically & scrolls. On laptops (lg+): Locks to screen height. */}
       <main className="flex-1 w-full max-w-[1920px] mx-auto px-2 sm:px-4 lg:px-6 pb-4 flex flex-col lg:flex-row gap-4 relative z-10 lg:h-[calc(100vh-5rem)] overflow-y-auto lg:overflow-hidden">
         
-        {/* ========================================== */}
-        {/* COLUMN 1: PATIENT QUEUE                    */}
-        {/* ========================================== */}
-        {/* Mobile: 400px height. Laptop: 280px wide. Desktop: 320px wide. */}
+        {/* COLUMN 1: PATIENT QUEUE */}
         <div className="w-full lg:w-[280px] xl:w-[300px] 2xl:w-[320px] flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden shrink-0 h-[400px] lg:h-full">
           <div className="p-3 border-b border-slate-100 bg-slate-50/50 space-y-3 shrink-0">
             <div className="relative">
@@ -267,16 +313,13 @@ export default function ReportingDeskPage() {
                   key={filter}
                   onClick={() => setActiveFilter(filter)}
                   className={`flex-1 py-1 text-[10px] uppercase tracking-wider font-bold rounded-md transition-all ${
-                    activeFilter === filter
-                      ? "bg-white text-indigo-700 shadow-sm border border-slate-200/50"
-                      : "text-slate-500 hover:text-slate-800"
+                    activeFilter === filter ? "bg-white text-indigo-700 shadow-sm border border-slate-200/50" : "text-slate-500 hover:text-slate-800"
                   }`}>
                   {filter}
                 </button>
               ))}
             </div>
           </div>
-
           <div className="flex-1 overflow-y-auto custom-scrollbar divide-y divide-slate-100">
             {filteredQueue.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full p-8 text-center text-slate-400">
@@ -286,27 +329,15 @@ export default function ReportingDeskPage() {
             ) : (
               filteredQueue.map((item: any) => {
                 const isSelected = selectedStudy?.studyId === item.studyId;
-                
                 return (
-                  <div
-                    key={item.id}
-                    onClick={() => setSelectedStudy(item)}
-                    className={`p-3 cursor-pointer transition-all border-l-4 group ${
-                      isSelected ? "bg-indigo-50/50 border-l-indigo-600" : item.status === "DRAFT" ? "border-l-amber-400 hover:bg-slate-50/80" : "border-l-transparent hover:bg-slate-50/80"
-                    }`}>
+                  <div key={item.id} onClick={() => setSelectedStudy(item)} className={`p-3 cursor-pointer transition-all border-l-4 group ${isSelected ? "bg-indigo-50/50 border-l-indigo-600" : item.status === "DRAFT" ? "border-l-amber-400 hover:bg-slate-50/80" : "border-l-transparent hover:bg-slate-50/80"}`}>
                     <div className="flex justify-between items-start mb-1 gap-2">
-                      <h3 className={`font-bold text-sm truncate ${isSelected ? "text-indigo-900" : "text-slate-900"}`}>
-                        {item.patient || "Unknown Patient"}
-                      </h3>
-                      {item.priority === "URGENT" && (
-                        <div className="h-2 w-2 rounded-full bg-rose-500 animate-pulse mt-1 shrink-0" />
-                      )}
+                      <h3 className={`font-bold text-sm truncate ${isSelected ? "text-indigo-900" : "text-slate-900"}`}>{item.patient || "Unknown Patient"}</h3>
+                      {item.priority === "URGENT" && <div className="h-2 w-2 rounded-full bg-rose-500 animate-pulse mt-1 shrink-0" />}
                     </div>
                     <p className="text-xs font-medium text-slate-600 mb-2 truncate" title={item.scan}>{item.scan}</p>
                     <div className="flex justify-between items-center mt-2 flex-wrap gap-2">
-                      <Badge variant="outline" className="text-[9px] font-bold uppercase tracking-wider bg-white border-slate-200 text-slate-700 shadow-sm">
-                        {item.modality}
-                      </Badge>
+                      <Badge variant="outline" className="text-[9px] font-bold uppercase tracking-wider bg-white border-slate-200 text-slate-700 shadow-sm">{item.modality}</Badge>
                       <span className="text-[10px] font-medium text-slate-500">{item.time}</span>
                     </div>
                   </div>
@@ -318,13 +349,8 @@ export default function ReportingDeskPage() {
 
         {selectedStudy ? (
           <>
-            {/* ========================================== */}
-            {/* COLUMN 2: CLINICAL CONTEXT                 */}
-            {/* ========================================== */}
-            {/* Mobile: Expands to fit content. Laptop: 300px wide. Desktop: 350-400px wide. */}
+            {/* COLUMN 2: CLINICAL CONTEXT */}
             <div className="w-full lg:w-[300px] xl:w-[350px] 2xl:w-[400px] flex flex-col gap-4 overflow-y-auto custom-scrollbar shrink-0 h-auto lg:h-full pb-4 lg:pb-10 pr-1 lg:pr-2">
-              
-              {/* 1. Patient Information */}
               <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden shrink-0">
                 <div className="bg-slate-900 px-3 py-2 flex items-center gap-2 text-white">
                   <User className="h-4 w-4 text-indigo-400" />
@@ -333,23 +359,19 @@ export default function ReportingDeskPage() {
                 <div className="p-3 space-y-2.5">
                   <div className="flex justify-between items-center border-b border-slate-100 pb-2">
                     <span className="text-[11px] text-slate-500 font-medium">Name</span>
-                    <span className="text-xs font-bold text-slate-900">{selectedStudy.patient || "Amit Kumar"}</span>
+                    <span className="text-xs font-bold text-slate-900">{selectedStudy.patient || "Not available"}</span>
                   </div>
                   <div className="flex justify-between items-center border-b border-slate-100 pb-2">
                     <span className="text-[11px] text-slate-500 font-medium">Age / Gender</span>
-                    <span className="text-xs font-semibold text-slate-700">{selectedStudy.age || "54 Y"} / {selectedStudy.gender || "M"}</span>
+                    <span className="text-xs font-semibold text-slate-700">{selectedStudy.age || "N/A"} / {selectedStudy.gender || "N/A"}</span>
                   </div>
                   <div className="flex justify-between items-center border-b border-slate-100 pb-2">
                     <span className="text-[11px] text-slate-500 font-medium">UHID</span>
-                    <span className="text-xs font-mono text-slate-700">{selectedStudy.uhid || "UH202600124"}</span>
+                    <span className="text-xs font-mono text-slate-700">{selectedStudy.uhid || "N/A"}</span>
                   </div>
                   <div className="flex justify-between items-center border-b border-slate-100 pb-2">
                     <span className="text-[11px] text-slate-500 font-medium">Ref Doctor</span>
-                    <span className="text-xs font-semibold text-indigo-700 truncate max-w-[120px] text-right">{selectedStudy.referringDoctor || "Dr. Sharma"}</span>
-                  </div>
-                  <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-                    <span className="text-[11px] text-slate-500 font-medium">Department</span>
-                    <span className="text-xs font-semibold text-slate-700">{selectedStudy.department || "Neurology"}</span>
+                    <span className="text-xs font-semibold text-indigo-700 truncate max-w-[120px] text-right">{selectedStudy.referringDoctor || "N/A"}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-[11px] text-slate-500 font-medium">Priority</span>
@@ -360,7 +382,6 @@ export default function ReportingDeskPage() {
                 </div>
               </div>
 
-              {/* 2. Clinical History */}
               <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden shrink-0">
                 <div className="bg-amber-50 px-3 py-2 flex items-center gap-2 border-b border-amber-100">
                   <History className="h-4 w-4 text-amber-600" />
@@ -369,71 +390,67 @@ export default function ReportingDeskPage() {
                 <div className="p-3 space-y-4">
                   <div>
                     <h4 className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Chief Complaint</h4>
-                    <p className="text-xs font-semibold text-slate-800 bg-slate-50 p-2 rounded border border-slate-100">
-                      {selectedStudy.complaint || "Severe headache for 2 months"}
-                    </p>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <h4 className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Symptoms</h4>
-                      <ul className="text-[11px] font-medium text-slate-700 space-y-1 list-disc pl-3 marker:text-indigo-400">
-                        <li>Vomiting</li>
-                        <li>Dizziness</li>
-                      </ul>
-                    </div>
-                    <div>
-                      <h4 className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Medication</h4>
-                      <ul className="text-[11px] font-medium text-slate-700 space-y-1 list-disc pl-3 marker:text-emerald-400">
-                        <li>Aspirin</li>
-                        <li>Metformin</li>
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Past History</h4>
-                    <div className="flex flex-wrap gap-1.5">
-                      <Badge variant="outline" className="bg-rose-50 text-rose-700 border-rose-200 text-[9px] px-1.5">Diabetes</Badge>
-                      <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 text-[9px] px-1.5">Hypertension</Badge>
-                      <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-[9px] px-1.5">Stroke (2023)</Badge>
-                    </div>
+                    <p className="text-xs font-semibold text-slate-800 bg-slate-50 p-2 rounded border border-slate-100">{selectedStudy.complaint || "Severe headache for 2 months"}</p>
                   </div>
                 </div>
               </div>
 
-              {/* 3. Previous Studies */}
               <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden shrink-0">
                 <div className="bg-slate-50 px-3 py-2 flex items-center gap-2 border-b border-slate-100">
                   <FileText className="h-4 w-4 text-slate-600" />
                   <h3 className="font-bold text-[11px] uppercase tracking-wider text-slate-700">Previous Studies</h3>
                 </div>
                 <div className="divide-y divide-slate-100">
-                  {[
-                    { name: "MRI Brain", date: "15-Jan-2026" },
-                    { name: "CT Brain", date: "04-Oct-2025" }
-                  ].map((study, idx) => (
-                    <div key={idx} className="p-2.5 flex items-center justify-between hover:bg-slate-50 transition-colors">
-                      <div>
-                        <p className="text-xs font-bold text-slate-800">{study.name}</p>
-                        <p className="text-[10px] text-slate-500">{study.date}</p>
+                  {isContextLoading ? (
+                    <div className="p-4 text-center text-xs text-slate-400">Loading history...</div>
+                  ) : patientContext?.previousStudies?.length === 0 ? (
+                    <div className="p-4 text-center text-xs font-medium text-slate-500">No previous scans found.</div>
+                  ) : (
+                    patientContext?.previousStudies?.map((study: any) => (
+                      <div key={study.id} className="p-2.5 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                        <div>
+                          <p className="text-xs font-bold text-slate-800">{study.name}</p>
+                          <p className="text-[10px] text-slate-500">{study.date}</p>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => window.open(`http://localhost:8042/viewer?StudyInstanceUID=${study.uid}`, "_blank")}
+                          className="h-6 px-2 text-[9px] font-bold border-indigo-200 text-indigo-700 hover:bg-indigo-50">
+                          Compare
+                        </Button>
                       </div>
-                      <Button variant="outline" size="sm" className="h-6 px-2 text-[9px] font-bold border-indigo-200 text-indigo-700 hover:bg-indigo-50">
-                        View
-                      </Button>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
+              </div>
+
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden shrink-0">
+                <div className="bg-indigo-50 px-3 py-2 flex items-center gap-2 border-b border-indigo-100">
+                  <TestTube className="h-4 w-4 text-indigo-600" />
+                  <h3 className="font-bold text-[11px] uppercase tracking-wider text-indigo-900">Recent Lab Results</h3>
+                </div>
+                {isContextLoading ? (
+                  <div className="p-4 text-center text-xs text-slate-400">Loading labs...</div>
+                ) : !patientContext?.recentLabs ? (
+                  <div className="p-4 text-center text-xs font-medium text-slate-500">No recent bloodwork found.</div>
+                ) : (
+                  <div className="p-3 grid grid-cols-2 gap-2">
+                    <div className="flex justify-between items-center p-2 bg-slate-50 rounded border border-slate-100">
+                      <span className="text-[10px] font-bold text-slate-600">Hb</span>
+                      <span className="text-xs font-black text-rose-600">{patientContext.recentLabs.hb}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-slate-50 rounded border border-slate-100">
+                      <span className="text-[10px] font-bold text-slate-600">WBC</span>
+                      <span className="text-xs font-black text-slate-800">{patientContext.recentLabs.wbc}</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* ========================================== */}
-            {/* COLUMN 3: REPORT EDITOR                    */}
-            {/* ========================================== */}
-            {/* Flex-1 means it takes up all remaining space! */}
+            {/* COLUMN 3: REPORT EDITOR */}
             <div className="flex-1 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden relative min-h-[600px] lg:min-h-0 lg:h-full w-full">
-              
-              {/* Toolbar */}
               <div className="px-3 py-2.5 border-b border-slate-100 bg-slate-50/80 shrink-0 flex flex-wrap justify-between items-center gap-2">
                 <div className="flex items-center gap-2">
                   <Wand2 className="h-4 w-4 text-indigo-600 hidden sm:block" />
@@ -462,10 +479,7 @@ export default function ReportingDeskPage() {
                 </div>
               </div>
 
-              {/* Editor Body */}
               <div className="flex-1 overflow-y-auto custom-scrollbar p-3 sm:p-5 flex flex-col gap-4">
-                
-                {/* Findings */}
                 <div className="space-y-1.5 flex-1 flex flex-col">
                   <label className="text-xs font-bold text-slate-700 flex flex-wrap items-center justify-between gap-2">
                     <span>Technique & Findings</span>
@@ -481,7 +495,6 @@ export default function ReportingDeskPage() {
                   />
                 </div>
 
-                {/* Impression */}
                 <div className="space-y-1.5 h-[150px] xl:h-[200px] flex flex-col shrink-0">
                   <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
                     <AlertCircle className="h-3.5 w-3.5 text-indigo-600" />
@@ -496,13 +509,21 @@ export default function ReportingDeskPage() {
                 </div>
               </div>
 
-              {/* Footer Actions */}
+              {/* ✅ FIX 2: Added onClick handlers to these buttons */}
               <div className="p-3 border-t border-slate-100 bg-slate-50 flex justify-between items-center shrink-0">
-                <Button variant="outline" className="h-9 text-xs font-bold text-slate-600 bg-white border-slate-200 shadow-sm">
+                <Button 
+                  variant="outline" 
+                  onClick={() => handleAction("DRAFT")}
+                  disabled={saveMutation.isPending}
+                  className="h-9 text-xs font-bold text-slate-600 bg-white border-slate-200 shadow-sm">
                   <Save className="h-3 w-3 mr-2 text-slate-400" /> Save Draft
                 </Button>
-                <Button className="h-9 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm px-6">
-                  <FileSignature className="h-3 w-3 mr-2" /> Verify & Sign
+                <Button 
+                  onClick={() => handleAction("FINALIZE")}
+                  disabled={saveMutation.isPending}
+                  className="h-9 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm px-6">
+                  {saveMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileSignature className="h-3 w-3 mr-2" />}
+                  Verify & Sign
                 </Button>
               </div>
             </div>
