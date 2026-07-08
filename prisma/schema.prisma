@@ -126,6 +126,7 @@ enum Role {
   AGENCY
   PATIENT
   PHLEBOTOMIST
+  B2B_PARTNER
 }
 
 model OTP {
@@ -1078,15 +1079,50 @@ enum ReportStatus {
   SENT_TO_PATIENT
 }
 
+// schema.prisma
+
+enum TemplateType {
+  GLOBAL
+  LOCAL
+  HEADLESS
+  HEADER
+  FOOTER
+  PAGE
+}
+
 model ReportTemplate {
   id           String   @id @default(uuid())
-  labId        String
-  lab          Lab      @relation(fields: [labId], references: [id], onDelete: Cascade)
-  name         String   @default("Standard Clinical Report")
+  labId        String?  // null = GLOBAL template
+  lab          Lab?     @relation(fields: [labId], references: [id], onDelete: Cascade)
+  name         String
+  type         TemplateType @default(LOCAL)
   isActive     Boolean  @default(false)
+  isSystem     Boolean  @default(false)
+
+  // ─── Parent / Copy relation ──────────────────────
+  parentId     String?
+  parent       ReportTemplate? @relation("TemplateCopies", fields: [parentId], references: [id], onDelete: SetNull)
+  children     ReportTemplate[] @relation("TemplateCopies")  // ← opposite side
+
+  // ─── Header template relation ────────────────────
+  headerTemplateId String?
+  headerTemplate   ReportTemplate? @relation("HeaderTemplates", fields: [headerTemplateId], references: [id], onDelete: SetNull)
+  usedAsHeaderBy   ReportTemplate[] @relation("HeaderTemplates")  // ← opposite side
+
+  // ─── Footer template relation ────────────────────
+  footerTemplateId String?
+  footerTemplate   ReportTemplate? @relation("FooterTemplates", fields: [footerTemplateId], references: [id], onDelete: SetNull)
+  usedAsFooterBy   ReportTemplate[] @relation("FooterTemplates")  // ← opposite side
+
+  // ─── Content ──────────────────────────────────────
+  config       Json?
+  content      Json?      // for HEADLESS / HEADER / FOOTER / PAGE
+  extraPageIds Json?      // array of PAGE template IDs (stored as JSON)
+
+  // ─── Visual settings ──────────────────────────────
   pageSize     String   @default("A4")
   orientation  String   @default("PORTRAIT")
-  primaryColor String?  @default("#000000")
+  primaryColor String?  @default("#1e3a8a")
   accentColor  String?  @default("#2563eb")
   fontFamily   String?  @default("Inter")
   logoUrl      String?
@@ -1095,11 +1131,13 @@ model ReportTemplate {
   footerImage  String?
   isoMarkUrl   String?
   watermarkUrl String?
-  config       Json?
+
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   @@index([labId])
+  @@index([type])
+  @@index([parentId])
 }
 
 // ==========================================
@@ -1124,13 +1162,28 @@ model Supplier {
 }
 
 model InventoryItem {
-  id                   String                 @id @default(uuid())
-  labId                String
-  lab                  Lab                    @relation(fields: [labId], references: [id])
-  name                 String
-  supplierId           String?
-  supplier             Supplier?              @relation(fields: [supplierId], references: [id])
-  isActive             Boolean                @default(true)
+  id               String                 @id @default(uuid())
+  labId            String
+  lab              Lab                    @relation(fields: [labId], references: [id])
+  
+  // Basic Details
+  name             String
+  sku              String?
+  category         String?
+  
+  // Unit Mapping & Conversion
+  purchaseUnit     String                 @default("Box")
+  usageUnit        String                 @default("ml")
+  conversionFactor Float                  @default(1.0)
+  minStockLevel    Float                  @default(10.0)
+
+  // Relations & Status
+  supplierId       String?
+  supplier         Supplier?              @relation(fields: [supplierId], references: [id])
+  isActive         Boolean                @default(true)
+  deletedAt        DateTime?
+
+  // Infrastructure 
   batches              InventoryBatch[]
   TestParameterReagent TestParameterReagent[]
 

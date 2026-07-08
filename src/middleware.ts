@@ -20,6 +20,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/api/public/') ||
     pathname.startsWith('/api/auth/') ||
     pathname.startsWith('/verify') ||
+    pathname.startsWith('/patient-portal') ||
     pathname.startsWith('/api/webhooks');
 
   // 3. No Token Handling

@@ -13,23 +13,26 @@ import {
   Mail,
   ArrowUp,
   ArrowDown,
-  Check,
   Activity,
+  Printer,
+  Settings2,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import toast from "react-hot-toast";
 import Barcode from "react-barcode";
 import QRCode from "qrcode";
+import { useReactToPrint } from "react-to-print";
 
-// --- 1. FETCH DATA ---
+// ─── 1. FETCH DATA ──────────────────────────────────────
 const fetchReportData = async (id: string) => {
   const res = await fetch(`/api/workspace/workflow/results/${id}`);
   if (!res.ok) throw new Error("Failed to load report data");
   return res.json();
 };
 
-// --- 2. CONFIG HELPER ---
+// ─── 2. CONFIG HELPPER (Supports Both New Component Schema & Legacy) ───
 const getSafeConfig = (template: any) => {
   let config = template?.config;
   if (typeof config === "string") {
@@ -40,108 +43,134 @@ const getSafeConfig = (template: any) => {
     }
   }
   if (!config) config = {};
+
+  // NEW FORMAT: Has 'components' array from the new Canvas Builder
+  if (config.components && Array.isArray(config.components)) {
+    return { ...config, isLegacy: false, isNewBuilder: true };
+  }
+
+  // OLD ABSOLUTE FORMAT: Has 'pages' array
+  if (config.pages && Array.isArray(config.pages)) {
+    return { ...config, isLegacy: false, isNewBuilder: false };
+  }
+
+  // ANCIENT FLOW FORMAT: Has old config keys
+  if (config.header || config.bodyOptions) {
+    return { isLegacy: true, isNewBuilder: false, ...config };
+  }
+
+  // Empty Fallback
   return {
-    layout: {
-      margins: { top: 10, bottom: 10, left: 10, right: 10 },
-      border: { show: false, weight: 2, color: "#1e3a8a", padding: 5 },
-      ...config.layout,
-    },
-    header: {
-      show: true,
-      mode: "standard",
-      title: "GLOBIZ PATHOLAB",
-      subTitle: "Medical District",
-      logoUrl: "",
-      fullImage: "",
-      html: "",
-      height: 150,
-      ...config.header,
-    },
-    qrCode: {
-      show: true,
-      mode: "preset",
-      position: "header-right",
-      x: 650,
-      y: 50,
-      size: 60,
-      margin: 10,
-      showPageNumber: true,
-      ...config.qrCode,
-    },
-    patientBlock: {
-      show: true,
-      fontSize: 12,
-      barcode: {
-        show: true,
-        position: "center",
-        height: 35,
-        scale: 1.2,
-        ...config.patientBlock?.barcode,
+    isLegacy: false,
+    isNewBuilder: false,
+    pages: [
+      {
+        id: "default-page",
+        width: 794,
+        height: 1123,
+        background: "#ffffff",
+        margin: { top: 20, right: 20, bottom: 20, left: 20 },
+        border: { show: false, width: 1, color: "#000000", style: "solid" },
+        watermark: {
+          url: "",
+          opacity: 10,
+          size: "contain",
+          position: "center",
+        },
+        pageNumber: {
+          show: false,
+          position: "bottom-right",
+          format: "page-x-of-y",
+        },
+        elements: [],
       },
-      showName: true,
-      showPatientId: true,
-      showSentBy: true,
-      showAgeSex: true,
-      showEmployeeId: true,
-      showRefDoctor: true,
-      showSampleCollection: true,
-      showReportReleased: true,
-      ...config.patientBlock,
-    },
-    bodyOptions: {
-      groupDepartmentWise: true,
-      tableFontSize: 13,
-      showBiologicalRef: true,
-      showTestTimestamps: true,
-      ...config.bodyOptions,
-    },
-    body: config.body || [{ id: "fallback-2", type: "RESULTS_TABLE" }],
-    footer: {
-      show: true,
-      mode: "standard",
-      text: "**Sample has been collected outside the laboratory.",
-      isoMarkUrls: [],
-      signatures: [],
-      height: 100,
-      footerBottomImage: "",
-      ...config.footer,
-    },
-    branding: {
-      primaryColor: "#000000",
-      secondaryColor: "#475569",
-      globalFontSize: 10,
-      fontFamily: "Helvetica",
-      watermarkUrl: "",
-      watermarkOpacity: 0.1,
-      ...config.branding,
-    },
+    ],
   };
 };
 
-const getReferenceRange = (res: any, test?: any, patient?: any) => {
+// ─── 3. LAB REFERENCE HELPERS ────────────────────────────
+const getReferenceRange = (res: any) => {
   if (res.referenceRangeText) return res.referenceRangeText;
   if (res.refRangeText) return res.refRangeText;
-  if (
-    res.refRangeMin !== null &&
-    res.refRangeMax !== null &&
-    res.refRangeMin !== undefined
-  )
+  if (res.refRangeMin != null && res.refRangeMax != null)
     return `${res.refRangeMin} - ${res.refRangeMax}`;
   return "-";
 };
 
-// Extractor to mathematically evaluate High/Low
-const getMinMax = (res: any, test: any, patient: any) => {
-  const rangeStr = getReferenceRange(res, test, patient);
+const getMinMax = (res: any) => {
+  const rangeStr = getReferenceRange(res);
   if (!rangeStr) return { min: null, max: null };
   const parts = rangeStr.split("-").map((s: string) => parseFloat(s.trim()));
-  if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+  if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1]))
     return { min: parts[0], max: parts[1] };
-  }
-  if (res.refRangeMin != null && res.refRangeMax != null) {
+  if (res.refRangeMin != null && res.refRangeMax != null)
     return { min: res.refRangeMin, max: res.refRangeMax };
-  }
   return { min: null, max: null };
+};
+
+// ─── 4. VARIABLE REPLACER (Expanded for New Builder) ───
+const replaceVariables = (text: string, data: any) => {
+  if (!text) return "";
+  return text
+    .replace(/\{\{patient\.name\}\}/g, data.patient?.name || "")
+    .replace(/\{\{patient\.age\}\}/g, data.patient?.age || "")
+    .replace(/\{\{patient\.gender\}\}/g, data.patient?.gender || "")
+    .replace(/\{\{patient\.id\}\}/g, data.patient?.patientId || "")
+    .replace(/\{\{patient\.uhid\}\}/g, data.patient?.patientId || "")
+    .replace(/\{\{patient\.phone\}\}/g, data.patient?.phone || "")
+    .replace(/\{\{patient\.address\}\}/g, data.patient?.address || "")
+    .replace(/\{\{sample\.id\}\}/g, data.barcodeValue || "")
+    .replace(/\{\{sample\.sampleId\}\}/g, data.barcodeValue || "")
+    .replace(/\{\{sample\.referredBy\}\}/g, data.refDoctorName || "")
+    .replace(/\{\{system\.date\}\}/g, data.timestamps?.reported || "")
+    .replace(/\{\{system\.currentDate\}\}/g, data.timestamps?.reported || "");
+};
+
+// ─── 5. CSS BUILDER FOR NEW COMPONENTS ─────────────────
+const buildPrintStyle = (comp: any): React.CSSProperties => {
+  const s = comp.style || {};
+  const bgFinal =
+    s.bgColor === "transparent"
+      ? "transparent"
+      : s.bgOpacity < 100
+        ? `${s.bgColor}${Math.round(s.bgOpacity * 2.55)
+            .toString(16)
+            .padStart(2, "0")}`
+        : s.bgColor;
+
+  const borderStr = s.useIndividualBorders
+    ? `${s.borderTopWidth}px ${s.borderTopStyle} ${s.borderTopColor} ${s.borderRightWidth}px ${s.borderRightStyle} ${s.borderRightColor} ${s.borderBottomWidth}px ${s.borderBottomStyle} ${s.borderBottomColor} ${s.borderLeftWidth}px ${s.borderLeftStyle} ${s.borderLeftColor}`
+    : s.borderStyle === "none"
+      ? "none"
+      : `${s.borderWidth}px ${s.borderStyle} ${s.borderColor}`;
+
+  const radiusStr = s.useIndividualRadius
+    ? `${s.borderTopLeftRadius}px ${s.borderTopRightRadius}px ${s.borderBottomRightRadius}px ${s.borderBottomLeftRadius}px`
+    : `${s.borderRadius}px`;
+
+  return {
+    fontFamily: s.fontFamily,
+    fontSize: s.fontSize,
+    fontWeight: s.fontWeight,
+    fontStyle: s.fontStyle,
+    color: s.color,
+    textAlign: s.textAlign,
+    textTransform: s.textTransform as any,
+    textDecoration: s.textDecoration,
+    letterSpacing: s.letterSpacing,
+    lineHeight: s.lineHeight,
+    whiteSpace: s.whiteSpace,
+    backgroundColor: bgFinal,
+    border: borderStr,
+    borderRadius: radiusStr,
+    padding: `${s.paddingTop}px ${s.paddingRight}px ${s.paddingBottom}px ${s.paddingLeft}px`,
+    opacity: (s.opacity ?? 100) / 100,
+    transform: s.rotation ? `rotate(${s.rotation}deg)` : undefined,
+    overflow: s.overflow,
+    width: "100%",
+    height: "100%",
+    boxSizing: "border-box" as const,
+  };
 };
 
 export default function ClinicalReportPage() {
@@ -150,9 +179,16 @@ export default function ClinicalReportPage() {
 
   const [isDownloading, setIsDownloading] = useState<string | null>(null);
   const [verificationUrl, setVerificationUrl] = useState("");
-
-  // 🌟 NEW STATE: Toggle Clinical Flags
   const [showFlags, setShowFlags] = useState(false);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(
+    null,
+  );
+  const [printOptions, setPrintOptions] = useState({
+    includeHeader: true,
+    includeExtraPages: true,
+  });
+  const [qrDataUrl, setQrDataUrl] = useState<string>("");
+  const printRef = useRef<any>(null);
 
   const { data: patient, isLoading } = useQuery({
     queryKey: ["report", id],
@@ -160,74 +196,122 @@ export default function ClinicalReportPage() {
   });
 
   useEffect(() => {
-    setVerificationUrl(`${window.location.origin}/verify/${id}`);
+    const url = `${window.location.origin}/verify/${id}`;
+    setVerificationUrl(url);
+    QRCode.toDataURL(url, {
+      margin: 0,
+      color: { dark: "#0f172a", light: "#ffffff" },
+    }).then(setQrDataUrl);
   }, [id]);
 
-  // =======================================================================
-  // 🧠 SMART GROUPING: Group tests by Invoice/Visit and find the Latest
-  // =======================================================================
   const groupedVisits = useMemo(() => {
     if (!patient || !patient.tests) return [];
-
     const validTests = patient.tests.filter(
       (t: any) => t.status !== "PENDING" && t.status !== "CANCELLED",
     );
     const visitsMap: Record<string, any> = {};
-
     validTests.forEach((test: any) => {
       const invId = test.invoiceId || "UNBILLED";
       const invNo = test.invoice?.invoiceNumber || "Unbilled Visit";
       const date = test.approvedAt || test.createdAt;
-
       if (!visitsMap[invId]) {
         visitsMap[invId] = {
           invoiceId: invId,
           invoiceNumber: invNo,
-          date: date,
+          date,
           formattedDate: format(new Date(date), "dd MMM yyyy, hh:mm a"),
           tests: [],
         };
       }
       visitsMap[invId].tests.push(test);
     });
-
     return Object.values(visitsMap).sort(
       (a: any, b: any) =>
         new Date(b.date).getTime() - new Date(a.date).getTime(),
     );
   }, [patient]);
 
-  // ==========================================
-  // 🚀 SHARING LOGIC
-  // ==========================================
+  const templates = patient?.lab?.reportTemplates || [];
+  const activeTemplate = templates.find((t: any) => t.isActive === true);
+  const defaultTemplateId = activeTemplate?.id || templates[0]?.id || null;
+
+  useEffect(() => {
+    if (defaultTemplateId && !selectedTemplateId)
+      setSelectedTemplateId(defaultTemplateId);
+  }, [defaultTemplateId, selectedTemplateId]);
+
+  const selectedTemplate = templates.find(
+    (t: any) => t.id === selectedTemplateId,
+  );
+  const config = getSafeConfig(selectedTemplate);
+
+  // ─── Actions ───
   const handleWhatsAppShare = (visit: any) => {
     if (!patient) return toast.error("Patient data not loaded");
     let phone = patient.phone;
     if (!phone) return toast.error("No phone number saved for this patient.");
     phone = phone.replace(/\D/g, "");
     if (phone.length === 10) phone = `91${phone}`;
-
-    const labName = patient.lab?.name || "Our Lab";
-    const message = `Hello ${patient.name},\n\nYour lab test report from *${labName}* (Visit: ${visit.invoiceNumber}) is ready.\n\nYou can view and securely download your report here:\n${verificationUrl}\n\nThank you for choosing us!`;
-    const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-
-    window.open(waUrl, "_blank");
-    toast.success("Opening WhatsApp...");
+    const message = `Hello ${patient.name},\n\nYour lab test report (Visit: ${visit.invoiceNumber}) is ready.\n\nView and securely download it here:\n${verificationUrl}`;
+    window.open(
+      `https://wa.me/${phone}?text=${encodeURIComponent(message)}`,
+      "_blank",
+    );
   };
 
   const handleEmailShare = (visit: any) => {
     if (!patient) return toast.error("Patient data not loaded");
     const email = patient.email;
-    if (!email) return toast.error("No email address saved for this patient.");
-
-    const labName = patient.lab?.name || "Our Lab";
-    const subject = `Your Lab Report from ${labName} - ${visit.invoiceNumber}`;
-    const body = `Hello ${patient.name},\n\nYour lab test report (Visit: ${visit.invoiceNumber}) is ready.\n\nYou can view and download your report securely here:\n\n${verificationUrl}\n\nThank you,\n${labName}`;
-    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-
-    window.open(gmailUrl, "_blank");
-    toast.success("Opening Email...");
+    if (!email) return toast.error("No email saved.");
+    const subject = `Your Lab Report - ${visit.invoiceNumber}`;
+    const body = `Hello ${patient.name},\n\nYour report is ready: \n${verificationUrl}`;
+    window.open(
+      `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
+      "_blank",
+    );
   };
+
+  const handleDownload = async (visit: any) => {
+    setIsDownloading(visit.invoiceId);
+    const toastId = toast.loading(
+      `Building PDF for Invoice ${visit.invoiceNumber}...`,
+    );
+    try {
+      const payload = {
+        patient,
+        lab: patient.lab,
+        validTests: visit.tests,
+        templateId: selectedTemplateId,
+        config,
+        qrCodeDataUrl: qrDataUrl,
+        barcodeValue: visit.tests[0]?.sample?.sampleId || patient.patientId,
+        timestamps: { reported: new Date().toISOString() },
+        printOptions,
+      };
+      const res = await fetch("/api/reports/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error("Failed to generate PDF");
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Report_${patient.name.replace(/[^a-zA-Z0-9]/g, "_")}_${visit.invoiceNumber}.pdf`;
+      a.click();
+      toast.success("PDF Download Complete!", { id: toastId });
+    } catch (e) {
+      toast.error("API PDF Failed. Using local print.", { id: toastId });
+      handlePrint();
+    }
+    setIsDownloading(null);
+  };
+
+  const handlePrint = useReactToPrint({
+    content: () => printRef.current,
+    documentTitle: `${patient?.name || "Report"}_Print`,
+  });
 
   if (isLoading)
     return (
@@ -238,194 +322,725 @@ export default function ClinicalReportPage() {
   if (!patient || groupedVisits.length === 0)
     return (
       <div className="p-10 text-center text-slate-500">
-        No completed tests available for this patient.
+        No completed tests available.
       </div>
     );
 
   const latestVisit = groupedVisits[0];
   const pastVisits = groupedVisits.slice(1);
-
-  const activeTemplate = patient.lab?.reportTemplates?.[0];
-  const config = getSafeConfig(activeTemplate);
-
-  const {
-    primaryColor,
-    secondaryColor,
-    globalFontSize,
-    fontFamily,
-    watermarkUrl,
-    watermarkOpacity,
-  } = config.branding;
-  const pb = config.patientBlock;
-
   const primaryTest = latestVisit.tests[0];
-  const barcodeValue =
-    primaryTest?.sample?.sampleId || patient.patientId || "UNKNOWN";
-  const refDoctorName =
-    primaryTest?.doctor?.user?.name || primaryTest?.referredBy || "Self";
-  const agencyName = primaryTest?.agency?.agencyName || "Self";
 
-  const sampleCollectedAt = primaryTest?.sampleCollectedAt
-    ? format(new Date(primaryTest.sampleCollectedAt), "dd/MM/yy HH:mm:ss")
-    : "-";
-  const sampleReceivedAt = primaryTest?.sampleReceivedAt
-    ? format(new Date(primaryTest.sampleReceivedAt), "dd/MM/yy HH:mm:ss")
-    : "-";
-  const reportApprovedAt = primaryTest?.approvedAt
-    ? format(new Date(primaryTest.approvedAt), "dd/MM/yy HH:mm:ss")
-    : format(new Date(), "dd/MM/yy HH:mm:ss");
-
-  // --- PDF DOWNLOAD TRIGGER ---
-  const handleDownload = async (visit: any) => {
-    setIsDownloading(visit.invoiceId);
-    const toastId = toast.loading(
-      `Building PDF for Invoice ${visit.invoiceNumber}...`,
-    );
-    try {
-      const qrCodeDataUrl = await QRCode.toDataURL(verificationUrl, {
-        margin: 0,
-        color: { dark: "#0f172a", light: "#ffffff" },
-      });
-
-      const payload = {
-        patient,
-        lab: patient.lab,
-        validTests: visit.tests,
-        config: {
-          ...config,
-          bodyOptions: {
-            ...config.bodyOptions,
-            showClinicalFlags: showFlags, // Pass the current toggle state to PDF!
-          },
-        },
-        qrCodeDataUrl,
-        barcodeValue: visit.tests[0]?.sample?.sampleId || patient.patientId,
-        timestamps: {
-          collected: visit.tests[0]?.sampleCollectedAt
-            ? format(
-                new Date(visit.tests[0].sampleCollectedAt),
-                "dd/MM/yy HH:mm:ss",
-              )
-            : "-",
-          received: visit.tests[0]?.sampleReceivedAt
-            ? format(
-                new Date(visit.tests[0].sampleReceivedAt),
-                "dd/MM/yy HH:mm:ss",
-              )
-            : "-",
-          reported: visit.tests[0]?.approvedAt
-            ? format(new Date(visit.tests[0].approvedAt), "dd/MM/yy HH:mm:ss")
-            : format(new Date(), "dd/MM/yy HH:mm:ss"),
-          refDoctor:
-            visit.tests[0]?.doctor?.user?.name ||
-            visit.tests[0]?.referredBy ||
-            "Self",
-        },
-      };
-
-      const res = await fetch("/api/reports/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) throw new Error("Failed to generate PDF");
-
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-
-      const safeName = patient.name.replace(/[^a-zA-Z0-9]/g, "_").toUpperCase();
-      a.download = `Report_${safeName}_${visit.invoiceNumber}.pdf`;
-
-      a.click();
-      toast.success("PDF Download Complete!", { id: toastId });
-    } catch (e) {
-      toast.error("Failed to build PDF.", { id: toastId });
-    }
-    setIsDownloading(null);
+  const templateData = {
+    patient,
+    barcodeValue:
+      primaryTest?.sample?.sampleId || patient.patientId || "UNKNOWN",
+    refDoctorName:
+      primaryTest?.doctor?.user?.name || primaryTest?.referredBy || "Self",
+    timestamps: {
+      collected: primaryTest?.sampleCollectedAt
+        ? format(new Date(primaryTest.sampleCollectedAt), "dd/MM/yy HH:mm")
+        : "-",
+      received: primaryTest?.sampleReceivedAt
+        ? format(new Date(primaryTest.sampleReceivedAt), "dd/MM/yy HH:mm")
+        : "-",
+      reported: primaryTest?.approvedAt
+        ? format(new Date(primaryTest.approvedAt), "dd/MM/yy HH:mm")
+        : format(new Date(), "dd/MM/yy HH:mm"),
+    },
   };
 
-  // --- PREVIEW QR COMPONENT ---
-  const PreviewQR = ({ position }: { position: string }) => {
-    const [qrDataUrl, setQrDataUrl] = useState("");
-
-    useEffect(() => {
-      if (config.qrCode.show && verificationUrl) {
-        QRCode.toDataURL(verificationUrl, {
-          margin: 0,
-          width: config.qrCode.size - 8,
-          color: { dark: "#0f172a", light: "#ffffff" },
-        }).then(setQrDataUrl);
-      }
-    }, [verificationUrl, config.qrCode.show, config.qrCode.size]);
-
-    if (!config.qrCode.show || !qrDataUrl) return null;
-
-    const isCustomPosition =
-      config.qrCode.mode === "custom" || config.qrCode.position === "custom";
-
-    if (position === "custom" && !isCustomPosition) return null;
-    if (position !== "custom" && isCustomPosition) return null;
-    if (position !== "custom" && position !== config.qrCode.position)
-      return null;
-
-    const qrContent = (
-      <div
-        className="flex flex-col items-center bg-white p-1 border shadow-sm"
-        style={{
-          width: config.qrCode.size,
-          height: config.qrCode.size + (config.qrCode.showPageNumber ? 15 : 0),
-        }}>
-        <img
-          src={qrDataUrl}
-          alt="Verification QR"
-          style={{
-            width: config.qrCode.size - 8,
-            height: config.qrCode.size - 8,
-          }}
-        />
-        {config.qrCode.showPageNumber && (
-          <span className="text-[8px] mt-1 font-bold text-slate-800 whitespace-nowrap">
-            Page 1 of 1
-          </span>
-        )}
-      </div>
-    );
-
-    if (isCustomPosition) {
+  // ─── A. LEGACY ELEMENT RENDERER ──────────────────────
+  const RenderLegacyElement = ({ el }: { el: any }) => {
+    const { type, props } = el;
+    if (type === "text") {
+      if (
+        props.content?.toLowerCase().includes("globiz") &&
+        !printOptions.includeHeader
+      )
+        return null;
       return (
         <div
           style={{
-            position: "absolute",
-            zIndex: 100,
-            left: `${config.qrCode.x}px`,
-            top: `${config.qrCode.y}px`,
+            ...props,
+            width: "100%",
+            height: "100%",
+            wordBreak: "break-word",
+          }}
+          dangerouslySetInnerHTML={{
+            __html: replaceVariables(props.content, templateData),
+          }}
+        />
+      );
+    }
+    if (type === "image")
+      return (
+        <img
+          src={props.src || props.imageUrl}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: props.objectFit || "contain",
+            opacity: props.opacity || 1,
+          }}
+          alt="img"
+        />
+      );
+    if (type === "qr")
+      return (
+        <img
+          src={qrDataUrl}
+          style={{ width: "100%", height: "100%", objectFit: "contain" }}
+          alt="QR"
+        />
+      );
+    if (type === "barcode")
+      return (
+        <div className="w-full h-full flex justify-center items-center">
+          <Barcode
+            value={templateData.barcodeValue}
+            height={el.height * 0.5}
+            width={1.5}
+            fontSize={10}
+            displayValue={props.displayValue !== false}
+            margin={0}
+          />
+        </div>
+      );
+    if (type === "shape")
+      return (
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            backgroundColor: props.fillColor,
+            border: `${props.strokeWidth || 0}px solid ${props.strokeColor}`,
+            borderRadius: props.shapeType === "circle" ? "50%" : "0",
+          }}
+        />
+      );
+
+    if (type === "patientData") {
+      return (
+        <div
+          style={{
+            borderColor: props.borderColor,
+            backgroundColor: props.bgColor,
+            padding: `${props.padding}px`,
+            fontSize: `${props.fontSize}px`,
+            width: "100%",
+            height: "100%",
+            borderRadius: "8px",
+            border: "1px solid",
           }}>
-          {qrContent}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: `repeat(${props.gridColumns || 2}, minmax(0, 1fr))`,
+              gap: "8px",
+            }}>
+            {props.showName !== false && (
+              <div className="flex">
+                <strong style={{ color: props.labelColor, width: "100px" }}>
+                  Patient Name
+                </strong>
+                <span style={{ color: props.valueColor }}>
+                  : {templateData.patient.name}
+                </span>
+              </div>
+            )}
+            {props.showAge !== false && (
+              <div className="flex">
+                <strong style={{ color: props.labelColor, width: "100px" }}>
+                  Age / Gender
+                </strong>
+                <span style={{ color: props.valueColor }}>
+                  : {templateData.patient.age} / {templateData.patient.gender}
+                </span>
+              </div>
+            )}
+            {props.showPatientId !== false && (
+              <div className="flex">
+                <strong style={{ color: props.labelColor, width: "100px" }}>
+                  Patient ID
+                </strong>
+                <span style={{ color: props.valueColor }}>
+                  : {templateData.patient.patientId}
+                </span>
+              </div>
+            )}
+            {props.showSampleId !== false && (
+              <div className="flex">
+                <strong style={{ color: props.labelColor, width: "100px" }}>
+                  Sample ID
+                </strong>
+                <span style={{ color: props.valueColor }}>
+                  : {templateData.barcodeValue}
+                </span>
+              </div>
+            )}
+            {props.showReferredBy !== false && (
+              <div className="flex">
+                <strong style={{ color: props.labelColor, width: "100px" }}>
+                  Referred By
+                </strong>
+                <span style={{ color: props.valueColor }}>
+                  : {templateData.refDoctorName}
+                </span>
+              </div>
+            )}
+            {props.showRegistrationDate !== false && (
+              <div className="flex">
+                <strong style={{ color: props.labelColor, width: "100px" }}>
+                  Registered
+                </strong>
+                <span style={{ color: props.valueColor }}>
+                  : {templateData.timestamps.reported}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       );
     }
 
-    return qrContent;
+    if (type === "table") {
+      return (
+        <div className="w-full h-full">
+          {latestVisit.tests.map((test: any) => {
+            if (!test.results || test.results.length === 0) return null;
+            return (
+              <div key={test.id} className="mb-4">
+                <div
+                  style={{
+                    backgroundColor: props.headerBgColor || "#f1f5f9",
+                    color: props.headerTextColor || "#0f172a",
+                    textAlign: "center",
+                    fontWeight: "bold",
+                    padding: "4px",
+                  }}
+                  className="text-xs uppercase border-y mb-2 tracking-wider">
+                  {test.testTemplate?.department?.name || "LABORATORY TEST"}
+                </div>
+                <h3
+                  className="text-center font-bold text-sm mb-2 underline uppercase"
+                  style={{ color: props.headerTextColor || "#1e3a8a" }}>
+                  {test.testName}
+                </h3>
+                <table
+                  className="w-full border-collapse"
+                  style={{ fontSize: "11px", borderColor: props.borderColor }}>
+                  <thead
+                    className="border-b-2 text-left"
+                    style={{ borderColor: props.borderColor || "#cbd5e1" }}>
+                    <tr>
+                      <th className="py-1.5 px-1 font-bold">Parameter</th>
+                      <th className="py-1.5 px-1 font-bold">Result</th>
+                      <th className="py-1.5 px-1 font-bold">Unit</th>
+                      <th className="py-1.5 px-1 font-bold">Reference Range</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {test.results.map((res: any, idx: number) => {
+                      const val =
+                        res.value || res.textValue || res.numericValue || "";
+                      const unt = res.unit || res.parameter?.unit || "";
+                      const pName = res.printName || res.parameterName;
+                      const { min, max } = getMinMax(res);
+                      const valNum = parseFloat(val);
+                      let valColor = "text-slate-900";
+                      let icon = null;
+                      if (!isNaN(valNum) && min !== null && max !== null) {
+                        if (valNum < min) {
+                          valColor = "text-blue-600";
+                          icon = <ArrowDown className="w-3 h-3 inline ml-1" />;
+                        } else if (valNum > max) {
+                          valColor = "text-red-600";
+                          icon = <ArrowUp className="w-3 h-3 inline ml-1" />;
+                        }
+                      }
+                      return (
+                        <tr
+                          key={idx}
+                          style={{
+                            backgroundColor:
+                              idx % 2 === 0
+                                ? props.rowBgColor
+                                : props.rowAlternateColor,
+                            borderBottom: `1px solid ${props.borderColor || "#eee"}`,
+                          }}>
+                          <td className="py-1.5 px-1 font-medium">{pName}</td>
+                          <td
+                            className={`py-1.5 px-1 font-bold ${showFlags ? valColor : "text-slate-900"}`}>
+                            {val} {showFlags && icon}
+                          </td>
+                          <td className="py-1.5 px-1 text-slate-500">{unt}</td>
+                          <td className="py-1.5 px-1 text-slate-500 whitespace-pre-wrap">
+                            {getReferenceRange(res)}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+    if (type === "signature") {
+      return (
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "flex-end",
+          }}>
+          {props.imageUrl ? (
+            <img
+              src={props.imageUrl}
+              className="h-10 object-contain mb-1"
+              alt="Sig"
+            />
+          ) : (
+            <div className="h-10 mb-1" />
+          )}
+          <div
+            style={{
+              borderTop: `1px solid ${props.lineColor || "#000"}`,
+              width: "100%",
+              textAlign: "center",
+              paddingTop: "4px",
+            }}>
+            <p className="font-bold text-[10px] m-0 leading-tight">
+              {props.name || "Signatory"}
+            </p>
+            <p className="text-[8px] text-slate-500 m-0">{props.designation}</p>
+          </div>
+        </div>
+      );
+    }
+    return null;
   };
 
-  const m = config.layout.margins;
+  // ─── B. NEW CANVAS BUILDER COMPONENT RENDERER ─────────
+  const RenderNewComponent = ({ comp }: { comp: any }) => {
+    if (comp.visible === false) return null;
+    const css = buildPrintStyle(comp);
+    const d = comp.data || {};
 
+    // Dynamic Data Fields
+    const getDynamicValue = (type: string) => {
+      switch (type) {
+        case "PATIENT_NAME":
+          return templateData.patient.name;
+        case "PATIENT_AGE":
+          return templateData.patient.age;
+        case "PATIENT_GENDER":
+          return templateData.patient.gender;
+        case "PATIENT_ID":
+          return templateData.patient.patientId;
+        case "PATIENT_PHONE":
+          return templateData.patient.phone;
+        case "PATIENT_ADDRESS":
+          return templateData.patient.address;
+        case "SAMPLE_ID":
+          return templateData.barcodeValue;
+        case "REF_DOCTOR":
+          return templateData.refDoctorName;
+        case "SENT_BY":
+          return templateData.refDoctorName;
+        case "COLLECTION_DATETIME":
+          return templateData.timestamps.collected;
+        case "REPORT_DATETIME":
+          return templateData.timestamps.reported;
+        case "DATE_BLOCK":
+          return templateData.timestamps.reported;
+        default:
+          return "---";
+      }
+    };
+
+    if (
+      [
+        "PATIENT_NAME",
+        "PATIENT_AGE",
+        "PATIENT_GENDER",
+        "PATIENT_ID",
+        "REF_DOCTOR",
+        "SENT_BY",
+        "SAMPLE_ID",
+        "COLLECTION_DATETIME",
+        "REPORT_DATETIME",
+        "EMPLOYEE_ID",
+        "PATIENT_PHONE",
+        "PATIENT_ADDRESS",
+        "DATE_BLOCK",
+      ].includes(comp.type)
+    ) {
+      return (
+        <div style={css} className="flex items-baseline gap-1 overflow-hidden">
+          {d.showLabel !== false && (
+            <span
+              style={{
+                fontWeight: 500,
+                opacity: 0.7,
+                fontSize: css.fontSize ? css.fontSize * 0.85 : undefined,
+              }}>
+              {d.label}:
+            </span>
+          )}
+          <span className="truncate">{getDynamicValue(comp.type)}</span>
+        </div>
+      );
+    }
+
+    if (
+      comp.type === "TEXT" ||
+      comp.type === "RICH_TEXT" ||
+      comp.type === "DISCLAIMER"
+    ) {
+      return (
+        <div
+          style={css}
+          className="overflow-hidden break-words"
+          dangerouslySetInnerHTML={{
+            __html: replaceVariables(d.content || "", templateData),
+          }}
+        />
+      );
+    }
+
+    if (comp.type === "BARCODE") {
+      return (
+        <div
+          style={{
+            ...css,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}>
+          <Barcode
+            value={d.value || templateData.barcodeValue}
+            format={d.format || "CODE128"}
+            height={d.barHeight || 35}
+            width={d.barScale || 1.5}
+            displayValue={d.displayValue !== false}
+            fontSize={10}
+            margin={0}
+          />
+        </div>
+      );
+    }
+
+    if (comp.type === "QR_CODE") {
+      return (
+        <div
+          style={{
+            ...css,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}>
+          <img
+            src={qrDataUrl}
+            style={{ width: "100%", height: "100%", objectFit: "contain" }}
+            alt="QR"
+          />
+        </div>
+      );
+    }
+
+    if (
+      [
+        "LAB_LOGO",
+        "SIGNATURE",
+        "CUSTOM_IMAGE",
+        "HEADER_BANNER",
+        "FOOTER_BANNER",
+      ].includes(comp.type)
+    ) {
+      if (!d.imageUrl) return null;
+      if (comp.type === "SIGNATURE") {
+        return (
+          <div
+            style={{
+              ...css,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}>
+            <img
+              src={d.imageUrl}
+              alt="Signature"
+              style={{ objectFit: "contain", maxHeight: "60%" }}
+            />
+            {d.showDetails !== false && (
+              <div style={{ textAlign: "center", marginTop: 2 }}>
+                {d.name && (
+                  <div style={{ fontSize: 10, fontWeight: 700 }}>{d.name}</div>
+                )}
+                {d.qualifications && (
+                  <div style={{ fontSize: 8, opacity: 0.7 }}>
+                    {d.qualifications}
+                  </div>
+                )}
+                {d.title && (
+                  <div style={{ fontSize: 8, opacity: 0.6 }}>{d.title}</div>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      }
+      return (
+        <img
+          src={d.imageUrl}
+          alt={d.altText || ""}
+          style={{
+            ...css,
+            objectFit: css.objectFit || "contain",
+            display: "block",
+          }}
+        />
+      );
+    }
+
+    if (comp.type === "RESULTS_TABLE") {
+      return (
+        <div style={{ ...css, overflow: "auto" }}>
+          {latestVisit.tests.map((test: any) => {
+            if (!test.results?.length) return null;
+            return (
+              <div key={test.id} style={{ marginBottom: 8 }}>
+                {d.showDepartmentGroup !== false && (
+                  <div
+                    style={{
+                      backgroundColor: d.headerBgColor || "#1e3a8a",
+                      color: d.headerTextColor || "#fff",
+                      padding: "4px 8px",
+                      fontWeight: (d.headerFontWeight || 600) as any,
+                      fontSize: (css.fontSize || 10) - 1,
+                      textTransform: "uppercase",
+                    }}>
+                    {test.testTemplate?.department?.name || "LABORATORY"}
+                  </div>
+                )}
+                <table
+                  style={{
+                    width: "100%",
+                    borderCollapse: "collapse",
+                    fontSize: css.fontSize || 10,
+                  }}>
+                  {d.showHeader !== false && (
+                    <thead>
+                      <tr
+                        style={{
+                          borderBottom: `2px solid ${d.headerBgColor || "#1e3a8a"}`,
+                        }}>
+                        <th
+                          style={{
+                            backgroundColor: d.headerBgColor || "#1e3a8a",
+                            color: d.headerTextColor || "#fff",
+                            padding: "4px 6px",
+                            textAlign: "left",
+                          }}>
+                          Parameter
+                        </th>
+                        <th
+                          style={{
+                            backgroundColor: d.headerBgColor || "#1e3a8a",
+                            color: d.headerTextColor || "#fff",
+                            padding: "4px 6px",
+                            textAlign: "left",
+                          }}>
+                          Result
+                        </th>
+                        {d.showUnit !== false && (
+                          <th
+                            style={{
+                              backgroundColor: d.headerBgColor || "#1e3a8a",
+                              color: d.headerTextColor || "#fff",
+                              padding: "4px 6px",
+                              textAlign: "left",
+                            }}>
+                            Unit
+                          </th>
+                        )}
+                        {d.showRefRange !== false && (
+                          <th
+                            style={{
+                              backgroundColor: d.headerBgColor || "#1e3a8a",
+                              color: d.headerTextColor || "#fff",
+                              padding: "4px 6px",
+                              textAlign: "left",
+                            }}>
+                            Ref Range
+                          </th>
+                        )}
+                      </tr>
+                    </thead>
+                  )}
+                  <tbody>
+                    {test.results.map((res: any, idx: number) => {
+                      const val =
+                        res.value || res.textValue || res.numericValue || "";
+                      const unt = res.unit || res.parameter?.unit || "";
+                      const pName = res.printName || res.parameterName;
+                      const { min, max } = getMinMax(res);
+                      const valNum = parseFloat(val);
+                      let valColor = css.color;
+                      let icon = null;
+                      if (
+                        showFlags &&
+                        !isNaN(valNum) &&
+                        min !== null &&
+                        max !== null
+                      ) {
+                        if (valNum < min) {
+                          valColor = "#2563eb";
+                          icon = <ArrowDown className="w-3 h-3 inline ml-1" />;
+                        } else if (valNum > max) {
+                          valColor = "#dc2626";
+                          icon = <ArrowUp className="w-3 h-3 inline ml-1" />;
+                        }
+                      }
+                      return (
+                        <tr
+                          key={idx}
+                          style={{
+                            backgroundColor:
+                              idx % 2 === 1
+                                ? d.rowAltColor || "#f1f5f9"
+                                : "transparent",
+                            borderBottom: `1px solid ${css.borderColor || "#e2e8f0"}`,
+                          }}>
+                          <td style={{ padding: "3px 6px", fontWeight: 500 }}>
+                            {pName}
+                          </td>
+                          <td
+                            style={{
+                              padding: "3px 6px",
+                              fontWeight: 700,
+                              color: valColor,
+                            }}>
+                            {val} {icon}
+                          </td>
+                          {d.showUnit !== false && (
+                            <td style={{ padding: "3px 6px", opacity: 0.7 }}>
+                              {unt}
+                            </td>
+                          )}
+                          {d.showRefRange !== false && (
+                            <td
+                              style={{
+                                padding: "3px 6px",
+                                opacity: 0.7,
+                                whiteSpace: "pre-wrap",
+                              }}>
+                              {getReferenceRange(res)}
+                            </td>
+                          )}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
+    if (comp.type === "DEPARTMENT_HEADER") {
+      return <div style={css}>{d.title || "DEPARTMENT"}</div>;
+    }
+
+    if (comp.type === "SEPARATOR") {
+      return <div style={css} />;
+    }
+
+    if (comp.type === "SPACER") {
+      return <div style={css} />;
+    }
+
+    if (comp.type === "DIVIDER_DOTS") {
+      return (
+        <div style={css} className="overflow-hidden">
+          {(d.dotChar || "·").repeat(d.repeatCount || 60)}
+        </div>
+      );
+    }
+
+    if (comp.type === "BOX_CONTAINER") {
+      return (
+        <div style={css}>
+          {d.showTitle !== false && d.title && (
+            <div
+              style={{
+                fontSize: 10,
+                fontWeight: 700,
+                marginBottom: 4,
+                borderBottom: `1px solid ${css.borderColor || "#e2e8f0"}`,
+                paddingBottom: 3,
+              }}>
+              {d.title}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    if (comp.type === "APPROVAL_STAMP") {
+      return (
+        <div
+          style={{
+            ...css,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}>
+          <span
+            style={{
+              fontSize: css.fontSize,
+              fontWeight: 900,
+              textTransform: "uppercase",
+              letterSpacing: 2,
+            }}>
+            {d.text || "APPROVED"}
+          </span>
+        </div>
+      );
+    }
+
+    if (comp.type === "PAGE_NUMBER") {
+      const fmt = d.format || "Page {current} of {total}";
+      return (
+        <div style={css}>
+          {fmt.replace("{current}", "1").replace("{total}", "1")}
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  // ─── MAIN RETURN ──────────────────────────────────────
   return (
     <div className="flex flex-col items-center py-10 bg-slate-900 min-h-screen print:bg-white print:py-0 print:block">
-      {/* ============================================================== */}
-      {/* TOP ACTION BAR (Latest Report) - 🚫 Hidden on Print */}
-      {/* ============================================================== */}
-      <div className="w-[210mm] print:hidden flex flex-col md:flex-row justify-between items-center mb-6 sticky top-4 z-50 bg-white/95 backdrop-blur-md p-4 rounded-xl shadow-xl border border-blue-200 gap-4">
+      {/* ─── Top Action Bar ────────────────────────────── */}
+      <div className="w-[210mm] max-w-[100%] print:hidden flex flex-col md:flex-row justify-between items-center mb-6 sticky top-4 z-50 bg-white/95 backdrop-blur-md p-4 rounded-xl shadow-xl border border-blue-200 gap-4">
         <div className="flex items-center gap-4">
           <div className="bg-blue-600 p-3 rounded-lg text-white shadow-inner hidden md:block">
             <FileCheck2 size={28} />
           </div>
           <div>
             <h1 className="text-xl font-black text-slate-800 flex items-center gap-2">
-              Latest Report{" "}
+              Report{" "}
               <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full uppercase tracking-wider">
                 {latestVisit.invoiceNumber}
               </span>
@@ -437,52 +1052,96 @@ export default function ClinicalReportPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          {/* 🌟 NEW: CLINICAL FLAGS TOGGLE */}
+          <select
+            className="h-10 rounded-lg border-2 border-slate-200 bg-white px-3 py-1 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={selectedTemplateId || ""}
+            onChange={(e) => setSelectedTemplateId(e.target.value || null)}>
+            {templates.length === 0 ? (
+              <option value="">Default Layout</option>
+            ) : (
+              templates.map((t: any) => (
+                <option key={t.id} value={t.id}>
+                  {t.name} {t.isActive ? "(Active)" : ""}
+                </option>
+              ))
+            )}
+          </select>
+
+          <div className="flex items-center gap-2 bg-slate-50 px-3 py-1 rounded-lg border border-slate-200 h-10">
+            <Settings2 className="w-4 h-4 text-slate-500" />
+            <label className="flex items-center gap-1 text-sm whitespace-nowrap cursor-pointer">
+              <input
+                type="checkbox"
+                checked={printOptions.includeHeader}
+                onChange={(e) =>
+                  setPrintOptions({
+                    ...printOptions,
+                    includeHeader: e.target.checked,
+                  })
+                }
+              />{" "}
+              Header
+            </label>
+            <label className="flex items-center gap-1 text-sm whitespace-nowrap cursor-pointer">
+              <input
+                type="checkbox"
+                checked={printOptions.includeExtraPages}
+                onChange={(e) =>
+                  setPrintOptions({
+                    ...printOptions,
+                    includeExtraPages: e.target.checked,
+                  })
+                }
+              />{" "}
+              Extra Pages
+            </label>
+          </div>
+
           <Button
             variant="outline"
             onClick={() => setShowFlags(!showFlags)}
-            className={`h-11 rounded-lg font-bold border-2 transition-all mr-2 ${showFlags ? "bg-indigo-50 text-indigo-700 border-indigo-200" : "text-slate-600 border-slate-200"}`}>
+            className={`h-10 rounded-lg font-bold border-2 transition-all ${showFlags ? "bg-indigo-50 text-indigo-700 border-indigo-200" : "text-slate-600 border-slate-200"}`}>
             <Activity className="w-4 h-4 md:mr-2" />
             <span className="hidden md:inline">
               {showFlags ? "Flags: ON" : "Flags: OFF"}
             </span>
           </Button>
-
           <Button
             variant="outline"
             onClick={() => handleWhatsAppShare(latestVisit)}
-            className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 h-11 rounded-lg">
-            <MessageCircle className="w-4 h-4 md:mr-2" />
-            <span className="hidden md:inline">WhatsApp</span>
+            className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 h-10 rounded-lg"
+            title="WhatsApp">
+            <MessageCircle className="w-4 h-4" />
           </Button>
-
           <Button
             variant="outline"
             onClick={() => handleEmailShare(latestVisit)}
-            className="text-blue-600 border-blue-200 hover:bg-blue-50 h-11 rounded-lg">
-            <Mail className="w-4 h-4 md:mr-2" />
-            <span className="hidden md:inline">Email</span>
+            className="text-blue-600 border-blue-200 hover:bg-blue-50 h-10 rounded-lg"
+            title="Email">
+            <Mail className="w-4 h-4" />
           </Button>
-
           <Button
-            className="bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all h-11 rounded-lg font-bold"
+            className="bg-purple-600 hover:bg-purple-700 text-white shadow-md transition-all h-10 rounded-lg font-bold"
+            onClick={handlePrint}>
+            <Printer className="w-4 h-4 mr-2" /> Print
+          </Button>
+          <Button
+            className="bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all h-10 rounded-lg font-bold"
             onClick={() => handleDownload(latestVisit)}
             disabled={isDownloading === latestVisit.invoiceId}>
             {isDownloading === latestVisit.invoiceId ? (
               <Loader2 className="h-4 w-4 animate-spin mr-2" />
             ) : (
               <Download className="h-4 w-4 mr-2" />
-            )}
-            Download PDF
+            )}{" "}
+            PDF
           </Button>
         </div>
       </div>
 
-      {/* ============================================================== */}
-      {/* HISTORICAL REPORTS SECTION - 🚫 Hidden on Print */}
-      {/* ============================================================== */}
+      {/* ─── Historical Visits ──────────────────────────── */}
       {pastVisits.length > 0 && (
-        <div className="w-[210mm] print:hidden bg-slate-800 border border-slate-700 p-4 rounded-xl mb-6 shadow-md">
+        <div className="w-[210mm] max-w-[100%] print:hidden bg-slate-800 border border-slate-700 p-4 rounded-xl mb-6 shadow-md">
           <h3 className="text-slate-300 font-bold uppercase tracking-wider text-xs mb-3 flex items-center gap-2">
             <History className="w-4 h-4" /> Previous Lab Visits
           </h3>
@@ -490,7 +1149,7 @@ export default function ClinicalReportPage() {
             {pastVisits.map((visit: any) => (
               <div
                 key={visit.invoiceId}
-                className="bg-slate-700/50 hover:bg-slate-700 border border-slate-600 rounded-lg p-3 flex justify-between items-center transition-colors">
+                className="bg-slate-700/50 hover:bg-slate-700 border border-slate-600 rounded-lg p-3 flex justify-between items-center">
                 <div>
                   <p className="text-slate-200 text-sm font-bold">
                     {visit.invoiceNumber}
@@ -502,7 +1161,7 @@ export default function ClinicalReportPage() {
                 <Button
                   variant="secondary"
                   size="sm"
-                  className="bg-slate-600 hover:bg-blue-600 text-white border-0 h-8"
+                  className="bg-slate-600 hover:bg-blue-600 text-white h-8"
                   onClick={() => handleDownload(visit)}
                   disabled={isDownloading === visit.invoiceId}>
                   {isDownloading === visit.invoiceId ? (
@@ -517,482 +1176,188 @@ export default function ClinicalReportPage() {
         </div>
       )}
 
-      {/* ============================================================== */}
-      {/* A4 REPORT PREVIEW CANVAS (Shows LATEST tests only)             */}
-      {/* ============================================================== */}
-      <div
-        style={{
-          fontFamily: fontFamily,
-          fontSize: `${globalFontSize}px`,
-          width: "210mm",
-          minHeight: "297mm",
-          padding: `${m.top}mm ${m.right}mm ${m.bottom}mm ${m.left}mm`,
-          color: "#1e293b",
-          boxSizing: "border-box",
-        }}
-        className="bg-white shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative flex flex-col mx-auto overflow-hidden rounded-sm print:shadow-none print:m-0">
-        {config.layout.border.show && (
-          <div
-            className="absolute pointer-events-none"
-            style={{
-              top: config.layout.border.padding,
-              bottom: config.layout.border.padding,
-              left: config.layout.border.padding,
-              right: config.layout.border.padding,
-              border: `${config.layout.border.weight}px solid ${config.layout.border.color}`,
-              zIndex: 10,
-              boxSizing: "border-box",
-            }}
-          />
-        )}
-
-        {watermarkUrl && (
-          <div
-            className="pointer-events-none flex items-center justify-center z-0 absolute inset-0"
-            style={{ opacity: watermarkOpacity }}>
-            <img
-              src={watermarkUrl}
-              style={{
-                maxWidth: "75%",
-                maxHeight: "75%",
-                objectFit: "contain",
-              }}
-              alt="watermark"
-            />
+      {/* ─── PRINT ENGINE ──────────────────────────────── */}
+      <div ref={printRef} className="w-full flex flex-col items-center">
+        {/* Legacy Fallback Warning */}
+        {config.isLegacy && (
+          <div className="w-[210mm] bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-4 text-yellow-700 print:hidden">
+            <p className="font-bold flex items-center">
+              <AlertTriangle className="mr-2 h-5 w-5" /> Legacy Template
+              Detected
+            </p>
+            <p className="text-sm mt-1">
+              This template was created with the old flow-based builder. Please
+              recreate it using the new Canvas Builder.
+            </p>
           </div>
         )}
 
-        {/* ✅ Renders absolute QR code on top of EVERYTHING including header images */}
-        <PreviewQR position="custom" />
-
-        <div className="w-full bg-transparent z-10 relative flex-1 flex flex-col">
-          {/* --- PREVIEW HEADER --- */}
-          {config.header.show && (
-            <div
-              className={`w-full mb-4 pb-4 ${config.header.mode === "image" ? "" : "border-b-[3px]"}`}
-              style={{ borderBottomColor: primaryColor }}>
-              {config.header.mode === "image" && config.header.fullImage ? (
-                <div
-                  className="w-full overflow-hidden relative"
-                  style={{ height: `${config.header.height || 150}px` }}>
-                  <img
-                    src={config.header.fullImage}
-                    className="w-full h-full object-cover"
-                    alt="Header"
-                  />
-                </div>
-              ) : config.header.mode === "html" ? (
-                <div dangerouslySetInnerHTML={{ __html: config.header.html }} />
-              ) : (
-                <div className="flex justify-between items-start w-full mt-2">
-                  <div className="shrink-0 mr-4">
-                    <PreviewQR position="header-left" />
-                  </div>
-
-                  <div className="flex-1 flex items-center justify-center">
-                    {config.header.logoUrl ? (
-                      <img
-                        src={config.header.logoUrl}
-                        className="h-16 w-auto object-contain mr-4"
-                        alt="Logo"
-                      />
-                    ) : (
-                      <div className="h-16 w-16 mr-4 bg-slate-50 flex items-center justify-center border font-bold rounded text-slate-400">
-                        {patient.lab?.name?.charAt(0) || "L"}
-                      </div>
-                    )}
-                    <div>
-                      <h1
-                        className="text-2xl font-bold uppercase tracking-wide"
-                        style={{ color: primaryColor }}>
-                        {config.header.title || patient.lab?.name}
-                      </h1>
-                      <p
-                        className="text-sm font-medium"
-                        style={{ color: secondaryColor }}>
-                        {config.header.subTitle}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="shrink-0 ml-4">
-                    <PreviewQR position="header-right" />
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* --- PREVIEW PATIENT BLOCK --- */}
-          {pb.show && (
-            <div
-              className={`mb-6 ${config.header.mode === "image" ? "px-6" : ""}`}
-              style={{ fontSize: `${pb.fontSize || 12}px` }}>
-              <div className="flex justify-between items-start mb-4 mt-2">
-                {pb.barcode.show && (
-                  <div
-                    style={{
-                      textAlign: pb.barcode.position as any,
-                      width: "100%",
-                    }}>
-                    <div
-                      className="inline-block"
-                      style={{
-                        transform: `scale(${pb.barcode.scale})`,
-                        transformOrigin:
-                          pb.barcode.position === "center"
-                            ? "center"
-                            : pb.barcode.position,
-                      }}>
-                      <Barcode
-                        value={barcodeValue}
-                        height={pb.barcode.height}
-                        width={1.5}
-                        fontSize={10}
-                        displayValue={true}
-                        margin={0}
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div
-                className="grid grid-cols-2 gap-x-8 gap-y-1 border-b pb-4"
-                style={{ borderColor: primaryColor }}>
-                <div className="space-y-1.5">
-                  {pb.showName && (
-                    <div className="flex">
-                      <span
-                        className="w-28 font-bold"
-                        style={{ color: secondaryColor }}>
-                        Patient Name
-                      </span>
-                      <span className="font-bold uppercase">
-                        : {patient.name}
-                      </span>
-                    </div>
-                  )}
-                  {pb.showPatientId && (
-                    <div className="flex">
-                      <span
-                        className="w-28 font-bold"
-                        style={{ color: secondaryColor }}>
-                        Patient ID
-                      </span>
-                      <span>: {patient.patientId}</span>
-                    </div>
-                  )}
-                  {pb.showSentBy && (
-                    <div className="flex">
-                      <span
-                        className="w-28 font-bold"
-                        style={{ color: secondaryColor }}>
-                        Sent By
-                      </span>
-                      <span className="truncate uppercase">: {agencyName}</span>
-                    </div>
-                  )}
-                </div>
-                <div className="space-y-1.5">
-                  {pb.showAgeSex && (
-                    <div className="flex">
-                      <span
-                        className="w-32 font-bold"
-                        style={{ color: secondaryColor }}>
-                        Age / Gender
-                      </span>
-                      <span className="font-bold">
-                        : {patient.age} {patient.ageUnit} / {patient.gender}
-                      </span>
-                    </div>
-                  )}
-                  {pb.showEmployeeId && (
-                    <div className="flex">
-                      <span
-                        className="w-32 font-bold"
-                        style={{ color: secondaryColor }}>
-                        Employee ID
-                      </span>
-                      <span>: {patient.employeeId || "-"}</span>
-                    </div>
-                  )}
-                  {pb.showRefDoctor && (
-                    <div className="flex">
-                      <span
-                        className="w-32 font-bold"
-                        style={{ color: secondaryColor }}>
-                        Ref. Doctor
-                      </span>
-                      <span className="uppercase">: {refDoctorName}</span>
-                    </div>
-                  )}
-                  {pb.showSampleCollection && (
-                    <div className="flex">
-                      <span
-                        className="w-32 font-bold"
-                        style={{ color: secondaryColor }}>
-                        Collected
-                      </span>
-                      <span>: {sampleCollectedAt}</span>
-                    </div>
-                  )}
-                  {pb.showReportReleased && (
-                    <div className="flex">
-                      <span
-                        className="w-32 font-bold"
-                        style={{ color: secondaryColor }}>
-                        Reported
-                      </span>
-                      <span>: {reportApprovedAt}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* --- PREVIEW RESULTS --- */}
+        {/* --- PATH 1: NEW CANVAS BUILDER FORMAT --- */}
+        {config.isNewBuilder && (
           <div
-            className={`flex-1 ${config.header.mode === "image" ? "px-6" : ""}`}>
-            {config.body.map((block: any) => {
-              if (block.type === "RESULTS_TABLE") {
-                return (
-                  <div key={block.id}>
-                    {latestVisit.tests.map((test: any) => {
-                      if (!test.results || test.results.length === 0)
-                        return null;
-                      return (
-                        <div key={test.id} className="mb-6 w-full">
-                          {config.bodyOptions?.groupDepartmentWise &&
-                            test.testTemplate?.department?.name && (
-                              <div className="bg-slate-100 font-bold py-1.5 px-3 mb-4 text-[12px] uppercase text-center border-y border-slate-300 tracking-wider">
-                                {test.testTemplate.department.name}
-                              </div>
-                            )}
-                          <h2
-                            className="text-center font-bold text-lg mb-4 underline uppercase tracking-wide"
-                            style={{ color: primaryColor }}>
-                            {test.testName}
-                          </h2>
-                          <table
-                            className="w-full border-collapse"
-                            style={{
-                              fontSize: `${config.bodyOptions.tableFontSize || 11}px`,
-                            }}>
-                            <thead
-                              className="border-y-2 text-left"
-                              style={{ borderColor: primaryColor }}>
-                              <tr>
-                                <th className="py-2.5 px-1 font-bold w-2/5">
-                                  Test Parameter
-                                </th>
-                                <th className="py-2.5 px-1 font-bold w-1/5">
-                                  Result
-                                </th>
-                                <th className="py-2.5 px-1 font-bold w-1/5">
-                                  Unit
-                                </th>
-                                {config.bodyOptions.showBiologicalRef && (
-                                  <th className="py-2.5 px-1 font-bold w-1/5">
-                                    Bio. Ref. Range
-                                  </th>
-                                )}
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {test.results.map((res: any) => {
-                                const val =
-                                  res.value ||
-                                  res.textValue ||
-                                  res.numericValue ||
-                                  "";
-                                const unt =
-                                  res.unit || res.parameter?.unit || "";
-                                const pName =
-                                  res.printName || res.parameterName;
+            className="relative shadow-[0_20px_50px_rgba(0,0,0,0.3)] mb-8 print:shadow-none print:mb-0 print:break-after-page"
+            style={{
+              width: `${config.page?.width || 794}px`,
+              height: `${config.page?.height || 1123}px`,
+              backgroundColor: config.page?.bgColor || "#ffffff",
+              overflow: "hidden",
+              fontFamily: config.page?.fontFamily || "sans-serif",
+            }}>
+            {config.page?.watermarkUrl && (
+              <div
+                className="absolute pointer-events-none inset-0 flex items-center justify-center"
+                style={{ opacity: config.page?.watermarkOpacity || 0.08 }}>
+                <img
+                  src={config.page.watermarkUrl}
+                  alt="Watermark"
+                  style={{ width: "80%", objectFit: "contain" }}
+                />
+              </div>
+            )}
 
-                                // 🌟 DYNAMIC FLAG EVALUATION
-                                const { min, max } = getMinMax(
-                                  res,
-                                  test,
-                                  patient,
-                                );
-                                const valNum = parseFloat(val);
-                                let flagStatus = "NONE";
+            {config.page?.border?.show && (
+              <div
+                className="absolute pointer-events-none"
+                style={{
+                  top: config.page.border.padding,
+                  left: config.page.border.padding,
+                  right: config.page.border.padding,
+                  bottom: config.page.border.padding,
+                  border: `${config.page.border.weight}px solid ${config.page.border.color}`,
+                  borderRadius: config.page.border.radius,
+                }}
+              />
+            )}
 
-                                if (
-                                  !isNaN(valNum) &&
-                                  min !== null &&
-                                  max !== null
-                                ) {
-                                  if (valNum < min) flagStatus = "LOW";
-                                  else if (valNum > max) flagStatus = "HIGH";
-                                  else flagStatus = "NORMAL";
-                                }
+            {config.components
+              ?.sort((a: any, b: any) => (a.zIndex || 0) - (b.zIndex || 0))
+              .map((comp: any) => (
+                <div
+                  key={comp.id}
+                  className="absolute"
+                  style={{
+                    left: comp.x,
+                    top: comp.y,
+                    width: comp.width,
+                    height: comp.height,
+                    zIndex: comp.zIndex || 1,
+                  }}>
+                  <RenderNewComponent comp={comp} />
+                </div>
+              ))}
+          </div>
+        )}
 
-                                let valColor = "text-slate-900";
-                                let icon = null;
-
-                                if (showFlags && flagStatus !== "NONE") {
-                                  if (flagStatus === "LOW") {
-                                    valColor = "text-blue-600";
-                                    icon = (
-                                      <ArrowDown
-                                        className="w-3.5 h-3.5 inline ml-1.5"
-                                        strokeWidth={3}
-                                      />
-                                    );
-                                  } else if (flagStatus === "HIGH") {
-                                    valColor = "text-rose-600";
-                                    icon = (
-                                      <ArrowUp
-                                        className="w-3.5 h-3.5 inline ml-1.5"
-                                        strokeWidth={3}
-                                      />
-                                    );
-                                  } else if (flagStatus === "NORMAL") {
-                                    valColor = "text-emerald-600";
-                                    icon = (
-                                      <Check
-                                        className="w-3.5 h-3.5 inline ml-1.5"
-                                        strokeWidth={3}
-                                      />
-                                    );
-                                  }
-                                } else {
-                                  // Default fallback when flags are off
-                                  if (
-                                    flagStatus === "LOW" ||
-                                    flagStatus === "HIGH" ||
-                                    res.flag === "ABNORMAL" ||
-                                    res.flag === "CRITICAL"
-                                  ) {
-                                    icon = <span className="ml-1">*</span>;
-                                  }
-                                }
-
-                                return (
-                                  <tr
-                                    key={res.id}
-                                    className="border-b border-slate-100">
-                                    <td className="py-2.5 px-1 font-medium">
-                                      {pName}
-                                    </td>
-                                    <td
-                                      className={`py-2.5 px-1 font-bold ${valColor}`}>
-                                      {val} {icon}
-                                    </td>
-                                    <td className="py-2.5 px-1 text-slate-500">
-                                      {unt}
-                                    </td>
-                                    {config.bodyOptions.showBiologicalRef && (
-                                      <td className="py-2.5 px-1 text-slate-500 whitespace-pre-wrap leading-tight">
-                                        {getReferenceRange(res, test, patient)}
-                                      </td>
-                                    )}
-                                  </tr>
-                                );
-                              })}
-                            </tbody>
-                          </table>
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              }
-              if (block.type === "SPACER")
-                return (
+        {/* --- PATH 2: OLD ABSOLUTE FORMAT --- */}
+        {!config.isNewBuilder &&
+          !config.isLegacy &&
+          config.pages?.map((page: any, index: number) => {
+            const isExtraPage = index > 0;
+            if (isExtraPage && !printOptions.includeExtraPages) return null;
+            return (
+              <div
+                key={page.id || index}
+                className="relative shadow-[0_20px_50px_rgba(0,0,0,0.3)] mb-8 print:shadow-none print:mb-0 print:break-after-page"
+                style={{
+                  width: `${page.width || 794}px`,
+                  height: `${page.height || 1123}px`,
+                  backgroundColor: page.background || "#ffffff",
+                  overflow: "hidden",
+                  pageBreakAfter: "always",
+                }}>
+                {page.border?.show && (
                   <div
-                    key={block.id}
-                    style={{ height: `${block.height || 20}px` }}></div>
-                );
-              if (block.type === "IMAGE" && block.imageUrl)
-                return (
-                  <div key={block.id} className="flex justify-center mb-4">
+                    className="absolute pointer-events-none"
+                    style={{
+                      top: 0,
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      border: `${page.border.width || 1}px ${page.border.style || "solid"} ${page.border.color || "#000000"}`,
+                      zIndex: 1000,
+                    }}
+                  />
+                )}
+                {page.watermark?.url && (
+                  <div
+                    className="absolute pointer-events-none flex inset-0 z-0 items-center justify-center"
+                    style={{ opacity: (page.watermark.opacity || 10) / 100 }}>
                     <img
-                      src={block.imageUrl}
+                      src={page.watermark.url}
+                      alt="Watermark"
                       style={{
-                        width: `${block.imageScale || 100}%`,
-                        objectFit: "contain",
+                        width:
+                          page.watermark.size === "cover" ? "100%" : "auto",
+                        height:
+                          page.watermark.size === "cover" ? "100%" : "auto",
+                        maxWidth:
+                          page.watermark.size === "contain" ? "80%" : "none",
+                        objectFit: (page.watermark.size as any) || "contain",
                       }}
                     />
                   </div>
-                );
-              return null;
-            })}
-          </div>
-
-          {/* --- PREVIEW FOOTER --- */}
-          {config.footer.show && (
-            <div
-              className={`w-full mt-auto pt-4 pb-2 relative ${config.footer.mode === "image" ? "" : "border-t-2"}`}
-              style={{ borderTopColor: primaryColor }}>
-              {config.footer.mode === "image" && config.footer.fullImage ? (
-                <div
-                  className="w-full overflow-hidden"
-                  style={{ height: `${config.footer.height || 100}px` }}>
-                  <img
-                    src={config.footer.fullImage}
-                    className="w-full h-full object-cover"
-                    alt="Footer"
-                  />
-                </div>
-              ) : config.footer.mode === "html" ? (
-                <div dangerouslySetInnerHTML={{ __html: config.footer.html }} />
-              ) : (
-                <div className="w-full flex flex-col items-center">
-                  <div className="flex justify-between items-end w-full mb-4 px-10 relative">
-                    <div className="shrink-0 mr-4">
-                      <PreviewQR position="footer-left" />
-                    </div>
-                    <div className="flex-1 flex justify-around items-end px-4">
-                      {config.footer.signatures?.map(
-                        (sig: any, idx: number) =>
-                          sig.show && (
-                            <div
-                              key={idx}
-                              className="flex flex-col items-center"
-                              style={{ width: `${sig.width}px` }}>
-                              <div className="h-12 flex items-end justify-center mb-1">
-                                {sig.imageUrl && (
-                                  <img
-                                    src={sig.imageUrl}
-                                    className="h-full object-contain"
-                                    alt="Sig"
-                                  />
-                                )}
-                              </div>
-                              <div className="w-full text-center border-t border-slate-300 pt-1">
-                                <p className="font-bold text-[11px] text-slate-900 whitespace-nowrap">
-                                  {sig.name}
-                                </p>
-                                <p className="text-[9px] text-slate-600 whitespace-nowrap">
-                                  {sig.qualifications}
-                                </p>
-                                <p className="font-bold text-[9px] text-slate-800 uppercase mt-0.5 whitespace-nowrap">
-                                  {sig.title}
-                                </p>
-                              </div>
-                            </div>
-                          ),
-                      )}
-                    </div>
-                    <div className="shrink-0 ml-4">
-                      <PreviewQR position="footer-right" />
-                    </div>
+                )}
+                {(!page.elements || page.elements.length === 0) && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20 print:hidden">
+                    <h1 className="text-4xl font-bold uppercase tracking-widest text-slate-500 transform -rotate-45">
+                      Blank Canvas
+                    </h1>
                   </div>
-                </div>
-              )}
-              <div
-                className="text-[9px] text-center mt-4 pb-2 pt-2 border-t border-slate-200"
-                style={{ color: secondaryColor }}
-                dangerouslySetInnerHTML={{ __html: config.footer.text || "" }}
-              />
+                )}
+                {page.elements?.map((el: any) => (
+                  <div
+                    key={el.id}
+                    className="absolute"
+                    style={{
+                      left: `${el.x}px`,
+                      top: `${el.y}px`,
+                      width: `${el.width}px`,
+                      height: `${el.height}px`,
+                      transform: `rotate(${el.rotation || 0}deg)`,
+                      zIndex: el.zIndex || 1,
+                    }}>
+                    <RenderLegacyElement el={el} />
+                  </div>
+                ))}
+                {page.pageNumber?.show && (
+                  <div
+                    className="absolute text-slate-500 text-[10px] z-50 font-medium"
+                    style={{ bottom: "20px", right: "20px" }}>
+                    {page.pageNumber.format === "page-x-of-y"
+                      ? `Page ${index + 1} of ${config.pages.length}`
+                      : `Page ${index + 1}`}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+        {/* --- PATH 3: ANCIENT LEGACY FORMAT --- */}
+        {config.isLegacy && (
+          <div className="w-[210mm] bg-white p-8 shadow-2xl print:shadow-none">
+            <div className="text-center border-b-2 border-blue-800 pb-4 mb-6">
+              <h1 className="text-2xl font-bold text-blue-900">
+                LAB REPORT (Legacy Mode)
+              </h1>
+              <p className="text-sm text-gray-500">
+                Please recreate this template in the new builder.
+              </p>
             </div>
-          )}
-        </div>
+            <RenderLegacyElement
+              el={{
+                id: "legacy-table",
+                type: "table",
+                props: {
+                  headerBgColor: "#f1f5f9",
+                  headerTextColor: "#0f172a",
+                  borderColor: "#cbd5e1",
+                  rowBgColor: "#ffffff",
+                  rowAlternateColor: "#f8fafc",
+                },
+              }}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
