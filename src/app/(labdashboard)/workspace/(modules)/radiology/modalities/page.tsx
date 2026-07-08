@@ -1,53 +1,141 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   Activity, Settings, Edit, FileText, Wrench, ShieldCheck, 
-  Server, Wifi, Monitor, ActivitySquare, Plus, Search, 
-  LayoutGrid, List, AlertTriangle, PowerOff
+  Server, Monitor, ActivitySquare, Plus, Search, 
+  LayoutGrid, List, AlertTriangle, PowerOff, Loader2, Trash2, Save
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import toast from "react-hot-toast";
 
+// Helper to format dates for the HTML <input type="date">
+const formatDateForInput = (dateString: string | null) => {
+  if (!dateString) return "";
+  return new Date(dateString).toISOString().split('T')[0];
+};
 
+const defaultFormState = {
+  name: "", type: "MRI", aeTitle: "", ipAddress: "", port: "", 
+  location: "", manufacturer: "", status: "ACTIVE", lastMaintenance: "", nextMaintenance: ""
+};
 
 export default function MachinesDashboard() {
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("ALL");
 
-  // Action Modals State
-  const [activeModal, setActiveModal] = useState<string | null>(null); // 'view' | 'edit' | 'logs' | 'config'
+  // Modal State
+  const [activeModal, setActiveModal] = useState<'add' | 'edit' | 'view' | 'delete' | null>(null);
   const [selectedMachine, setSelectedMachine] = useState<any>(null);
+  const [formData, setFormData] = useState(defaultFormState);
 
-  const openAction = (type: string, machine: any) => {
-    setSelectedMachine(machine);
-    setActiveModal(type);
-  };
-
- // 1. Fetch live Modalities from your API
+  // 1. GET: Fetch Modalities
   const { data: modalities = [], isLoading } = useQuery({
     queryKey: ["radiology-modalities"],
     queryFn: async () => {
-      const res = await fetch("/api/workspace/radiology/modalities"); 
-      if (!res.ok) throw new Error("Failed to fetch modalities");
-      return res.json();
+      const res = await fetch("/api/workspace/radiology/modalities");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to fetch modalities");
+      return data; // Your GET route returns the array directly
     }
   });
 
-  // 3. NEW: Calculate Live KPIs from the database data
+  // 2. POST: Add Machine
+  const addMutation = useMutation({
+    mutationFn: async (payload: typeof formData) => {
+      const res = await fetch("/api/workspace/radiology/modalities", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to add machine");
+      return data;
+    },
+    onSuccess: (data) => {
+      toast.success(data.message || "Machine added!");
+      queryClient.invalidateQueries({ queryKey: ["radiology-modalities"] });
+      setActiveModal(null);
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+
+  // 3. PATCH: Edit Machine
+  const editMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      const res = await fetch("/api/workspace/radiology/modalities", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: selectedMachine.id, ...payload }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to update machine");
+      return data;
+    },
+    onSuccess: (data) => {
+      toast.success(data.message || "Machine updated!");
+      queryClient.invalidateQueries({ queryKey: ["radiology-modalities"] });
+      setActiveModal(null);
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+
+  // 4. DELETE: Remove Machine
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/workspace/radiology/modalities?id=${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to delete machine");
+      return data;
+    },
+    onSuccess: (data) => {
+      toast.success(data.message || "Machine deleted!");
+      queryClient.invalidateQueries({ queryKey: ["radiology-modalities"] });
+      setActiveModal(null);
+    },
+    onError: (err: any) => toast.error(err.message), // This will nicely show your P2003 foreign key error!
+  });
+
+  // Handle opening modals and populating data
+  const openModal = (type: 'add' | 'edit' | 'view' | 'delete', machine: any = null) => {
+    setSelectedMachine(machine);
+    if (type === 'edit' && machine) {
+      setFormData({
+        name: machine.name || "",
+        type: machine.type || "MRI",
+        aeTitle: machine.aeTitle || "",
+        ipAddress: machine.ipAddress || "",
+        port: machine.port?.toString() || "",
+        location: machine.location || "",
+        manufacturer: machine.manufacturer || "",
+        status: machine.status || "ACTIVE",
+        lastMaintenance: formatDateForInput(machine.lastMaintenance),
+        nextMaintenance: formatDateForInput(machine.nextMaintenance),
+      });
+    } else if (type === 'add') {
+      setFormData(defaultFormState);
+    }
+    setActiveModal(type);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (activeModal === 'add') addMutation.mutate(formData);
+    if (activeModal === 'edit') editMutation.mutate(formData);
+  };
+
+  // KPIs
   const totalMachines = modalities.length;
   const activeMachines = modalities.filter((m: any) => m.status === "ACTIVE").length;
   const maintenanceMachines = modalities.filter((m: any) => m.status === "MAINTENANCE").length;
   const offlineMachines = modalities.filter((m: any) => m.status === "OFFLINE").length;
-  
-  // Note: Utilization usually requires calculating the total daily scans vs max slots. 
-  // Until we link this to the appointments table, we can show a placeholder or calculate if you add it to the schema later.
-  const avgUtilization = totalMachines > 0 ? "~82%" : "0%";
 
-  // 2. Filter Logic (Applies your search and button filters)
+  // Filtering
   const filteredModalities = modalities.filter((machine: any) => {
     const matchesSearch = 
       machine.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -59,21 +147,16 @@ export default function MachinesDashboard() {
       (activeFilter === "Maintenance" && machine.status === "MAINTENANCE") ||
       machine.type === activeFilter;
 
-      
-
     return matchesSearch && matchesFilter;
   });
 
-  
-
-  // Helper for Status Badges
+  // Status Badge Helper
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "ACTIVE": return <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border-emerald-200 shadow-sm"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse" /> Active</Badge>;
-      case "BUSY": return <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100 border-purple-200 shadow-sm"><span className="w-1.5 h-1.5 rounded-full bg-purple-500 mr-1.5 animate-pulse" /> Busy</Badge>;
-      case "MAINTENANCE": return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 border-amber-200 shadow-sm"><Wrench className="w-3 h-3 mr-1" /> Service</Badge>;
-      case "OFFLINE": return <Badge className="bg-rose-100 text-rose-800 hover:bg-rose-100 border-rose-200 shadow-sm"><PowerOff className="w-3 h-3 mr-1" /> Offline</Badge>;
-      default: return <Badge>{status}</Badge>;
+      case "ACTIVE": return <Badge className="bg-emerald-100 text-emerald-800 border-none shadow-sm"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse" /> Active</Badge>;
+      case "MAINTENANCE": return <Badge className="bg-amber-100 text-amber-800 border-none shadow-sm"><Wrench className="w-3 h-3 mr-1" /> Service</Badge>;
+      case "OFFLINE": return <Badge className="bg-slate-100 text-slate-600 border-none shadow-sm"><PowerOff className="w-3 h-3 mr-1" /> Offline</Badge>;
+      default: return <Badge variant="outline">{status}</Badge>;
     }
   };
 
@@ -84,41 +167,38 @@ export default function MachinesDashboard() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">Modalities & Assets</h1>
-          <p className="text-sm font-medium text-slate-500 mt-1">Manage machine health, DICOM connectivity, and utilization.</p>
+          <p className="text-sm font-medium text-slate-500 mt-1">Manage machine health, DICOM connectivity, and maintenance schedules.</p>
         </div>
-        <Button className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-sm">
+        <Button onClick={() => openModal('add')} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-sm">
           <Plus className="w-4 h-4 mr-2" /> Add Machine
         </Button>
       </div>
 
-      {/* 1. KPI CARDS (Now Live!) */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 lg:gap-4 mb-6">
+      {/* KPI CARDS */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {[
           { label: "Total Machines", value: totalMachines, icon: ActivitySquare, color: "text-slate-600" },
           { label: "Active", value: activeMachines, icon: Activity, color: "text-emerald-600" },
-          { label: "Maintenance", value: maintenanceMachines, icon: AlertTriangle, color: "text-amber-600" },
+          { label: "In Maintenance", value: maintenanceMachines, icon: AlertTriangle, color: "text-amber-600" },
           { label: "Offline", value: offlineMachines, icon: PowerOff, color: "text-rose-600" },
-          { label: "Avg Utilization", value: avgUtilization, icon: ActivitySquare, color: "text-indigo-600" },
         ].map((kpi, idx) => (
-          <div key={idx} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center">
-            <div className="flex items-center gap-2 text-slate-500 mb-2">
-              <kpi.icon className={`w-4 h-4 ${kpi.color}`} />
-              <span className="text-xs font-bold uppercase tracking-wider">{kpi.label}</span>
+          <div key={idx} className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">{kpi.label}</p>
+              <h3 className="text-2xl font-black text-slate-900">{isLoading ? "-" : kpi.value}</h3>
             </div>
-            <span className="text-2xl font-black text-slate-900">
-              {isLoading ? "-" : kpi.value}
-            </span>
+            <div className={`h-10 w-10 rounded-full flex items-center justify-center bg-slate-50 border border-slate-100`}>
+              <kpi.icon className={`w-5 h-5 ${kpi.color}`} />
+            </div>
           </div>
         ))}
       </div>
 
-      {/* 8. FILTER BAR */}
+      {/* FILTER BAR */}
       <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex flex-col lg:flex-row justify-between items-center gap-4 mb-6">
         <div className="flex flex-wrap items-center gap-1.5 w-full lg:w-auto">
-          {["All", "MRI", "CT", "X-Ray", "USG", "Active", "Maintenance"].map((f) => (
-            <button 
-              key={f}
-              onClick={() => setActiveFilter(f)}
+          {["ALL", "MRI", "CT", "X-Ray", "USG", "Active", "Maintenance"].map((f) => (
+            <button key={f} onClick={() => setActiveFilter(f)}
               className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
                 activeFilter === f ? "bg-indigo-50 text-indigo-700 border border-indigo-200" : "text-slate-600 hover:bg-slate-100 border border-transparent"
               }`}>
@@ -126,47 +206,41 @@ export default function MachinesDashboard() {
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-3 w-full lg:w-auto">
-          <div className="relative flex-1 lg:w-64">
-            <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
-            <Input placeholder="Search AE Title, IP..." className="pl-9 h-9 bg-slate-50 text-sm" />
-          </div>
-          <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200 shrink-0">
-            <button className="p-1.5 bg-white shadow-sm rounded-md text-indigo-600"><LayoutGrid className="w-4 h-4" /></button>
-            <button className="p-1.5 text-slate-400 hover:text-slate-600"><List className="w-4 h-4" /></button>
-          </div>
+        <div className="relative flex-1 lg:max-w-xs w-full">
+          <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+          <Input placeholder="Search AE Title, IP, Name..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 h-9 bg-slate-50 text-sm" />
         </div>
       </div>
 
-     {/* 2. MACHINE GRID */}
+     {/* MACHINE GRID */}
       {isLoading ? (
-        <div className="flex items-center justify-center p-20 text-slate-400">Loading modalities...</div>
+        <div className="flex flex-col items-center justify-center p-20 text-slate-400">
+          <Loader2 className="w-8 h-8 animate-spin mb-4 text-indigo-500" />
+          <p className="font-bold">Loading modalities...</p>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-5 pb-10">
-          {filteredModalities.map((machine: any) => (
-            <div key={machine.id} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 pb-10">
+          {filteredModalities.length === 0 ? (
+             <div className="col-span-full p-12 text-center text-slate-500 bg-white rounded-xl border border-slate-200 border-dashed">
+                No machines found. Click "Add Machine" to register one.
+             </div>
+          ) : filteredModalities.map((machine: any) => (
+            <div key={machine.id} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-all group">
               
-              {/* Card Header */}
-              <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-start">
+              <div className="p-4 border-b border-slate-100 bg-slate-50/80 flex justify-between items-start">
                 <div className="flex gap-3">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 shadow-sm border ${
-                    machine.type === 'MRI' ? 'bg-indigo-50 border-indigo-100 text-indigo-600' : 
-                    machine.type === 'CT' ? 'bg-purple-50 border-purple-100 text-purple-600' : 'bg-blue-50 border-blue-100 text-blue-600'
-                  }`}>
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 shadow-sm bg-white border border-slate-200 text-indigo-600">
                     <Server className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-slate-900 text-sm leading-tight">{machine.name}</h3>
-                    <span className="text-xs font-semibold text-slate-500">{machine.location || "Unassigned Room"}</span>
+                    <h3 className="font-bold text-slate-900 text-sm">{machine.name}</h3>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{machine.manufacturer || "Unknown Brand"} • {machine.type}</span>
                   </div>
                 </div>
                 {getStatusBadge(machine.status)}
               </div>
 
-              {/* Content Body */}
-              <div className="p-4 flex-1 flex flex-col gap-5">
-                
-                {/* System Details (Grid) */}
+              <div className="p-4 flex-1 flex flex-col gap-4">
                 <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-xs">
                   <div>
                     <p className="text-[10px] uppercase font-bold text-slate-400 mb-0.5">AE Title</p>
@@ -174,92 +248,149 @@ export default function MachinesDashboard() {
                   </div>
                   <div>
                     <p className="text-[10px] uppercase font-bold text-slate-400 mb-0.5">IP Address : Port</p>
-                    <p className="font-mono font-bold text-slate-700">{machine.ipAddress || "0.0.0.0"} : {machine.port || "104"}</p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] uppercase font-bold text-slate-400 mb-0.5">Manufacturer</p>
-                    <p className="font-semibold text-slate-700">{machine.manufacturer || "Unknown"}</p>
+                    <p className="font-mono font-bold text-slate-700">{machine.ipAddress || "0.0.0.0"}:{machine.port || "104"}</p>
                   </div>
                 </div>
 
-                {/* Maintenance Dates */}
                 <div className="flex justify-between items-center text-xs p-2.5 bg-slate-50 rounded-lg border border-slate-100">
                   <div>
                     <p className="text-[9px] uppercase font-bold text-slate-400">Last Service</p>
-                    <p className="font-bold text-slate-700">
-                      {machine.lastMaintenance ? new Date(machine.lastMaintenance).toLocaleDateString() : "N/A"}
-                    </p>
+                    <p className="font-bold text-slate-700">{machine.lastMaintenance ? new Date(machine.lastMaintenance).toLocaleDateString() : "N/A"}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-[9px] uppercase font-bold text-slate-400">Next Service</p>
-                    <p className="font-bold text-amber-600">
-                      {machine.nextMaintenance ? new Date(machine.nextMaintenance).toLocaleDateString() : "N/A"}
-                    </p>
+                    <p className="font-bold text-indigo-600">{machine.nextMaintenance ? new Date(machine.nextMaintenance).toLocaleDateString() : "N/A"}</p>
                   </div>
                 </div>
               </div>
 
-              {/* Footer Actions */}
-            {/* 6. Quick Actions Footer */}
-            <div className="grid grid-cols-4 border-t border-slate-100 bg-slate-50 shrink-0 divide-x divide-slate-200">
-              <button onClick={() => openAction('view', machine)} className="flex flex-col items-center justify-center py-2.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors">
-                <Monitor className="w-4 h-4 mb-1" />
-                <span className="text-[9px] font-bold uppercase tracking-wider">View</span>
-              </button>
-              <button onClick={() => openAction('edit', machine)} className="flex flex-col items-center justify-center py-2.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors">
-                <Edit className="w-4 h-4 mb-1" />
-                <span className="text-[9px] font-bold uppercase tracking-wider">Edit</span>
-              </button>
-              <button onClick={() => openAction('logs', machine)} className="flex flex-col items-center justify-center py-2.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors">
-                <FileText className="w-4 h-4 mb-1" />
-                <span className="text-[9px] font-bold uppercase tracking-wider">Logs</span>
-              </button>
-              <button onClick={() => openAction('config', machine)} className="flex flex-col items-center justify-center py-2.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors">
-                <Settings className="w-4 h-4 mb-1" />
-                <span className="text-[9px] font-bold uppercase tracking-wider">Config</span>
-              </button>
-            </div>
+              {/* Action Bar */}
+              <div className="grid grid-cols-3 border-t border-slate-100 bg-slate-50 shrink-0 divide-x divide-slate-200">
+                <button onClick={() => openModal('view', machine)} className="py-2.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5">
+                  <Monitor className="w-3.5 h-3.5" /> View
+                </button>
+                <button onClick={() => openModal('edit', machine)} className="py-2.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5">
+                  <Settings className="w-3.5 h-3.5" /> Config
+                </button>
+                <button onClick={() => openModal('delete', machine)} className="py-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5">
+                  <Trash2 className="w-3.5 h-3.5" /> Delete
+                </button>
+              </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* MASTER ACTION MODAL */}
-      <Dialog open={!!activeModal} onOpenChange={() => setActiveModal(null)}>
-        <DialogContent className="max-w-2xl">
+      {/* MASTER FORM MODAL (Handles Add & Edit) */}
+      <Dialog open={activeModal === 'add' || activeModal === 'edit'} onOpenChange={(open) => !open && setActiveModal(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="capitalize">{activeModal} Machine: {selectedMachine?.name}</DialogTitle>
+            <DialogTitle className="text-xl font-bold">
+              {activeModal === 'add' ? 'Register New Machine' : `Edit Machine: ${selectedMachine?.name}`}
+            </DialogTitle>
+            <DialogDescription>Configure standard details, DICOM networking, and maintenance logs.</DialogDescription>
           </DialogHeader>
 
-          {activeModal === 'view' && (
-            <div className="p-4 bg-slate-50 rounded-lg">
-              {/* Detailed View Component */}
-              <p>Show full modality specs, warranty info, and system details here.</p>
+          <form onSubmit={handleSubmit} className="space-y-6 py-4">
+            
+            {/* Section 1: Basic Info */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider border-b pb-2">Basic Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700">Machine Name *</label>
+                  <Input required placeholder="Main MRI 1.5T" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700">Modality Type *</label>
+                  <select className="w-full h-9 px-3 py-1 text-sm border rounded-md bg-white border-slate-200" value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})}>
+                    <option value="MRI">MRI</option><option value="CT">CT</option><option value="X-RAY">X-Ray</option><option value="USG">USG</option><option value="PET">PET</option>
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700">Manufacturer</label>
+                  <Input placeholder="GE, Siemens, Philips..." value={formData.manufacturer} onChange={e => setFormData({...formData, manufacturer: e.target.value})} />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700">Physical Location / Room</label>
+                  <Input placeholder="Room 101" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} />
+                </div>
+              </div>
             </div>
-          )}
 
-          {activeModal === 'edit' && (
-            <div className="p-4">
-              {/* Edit Form Component */}
-              <p>Form to edit Name, AE Title, IP, and Status.</p>
+            {/* Section 2: DICOM Networking */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider border-b pb-2">DICOM Connectivity</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700">AE Title</label>
+                  <Input placeholder="PACS_MRI" value={formData.aeTitle} onChange={e => setFormData({...formData, aeTitle: e.target.value})} />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700">IP Address</label>
+                  <Input placeholder="192.168.1.100" value={formData.ipAddress} onChange={e => setFormData({...formData, ipAddress: e.target.value})} />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700">Port</label>
+                  <Input type="number" placeholder="104" value={formData.port} onChange={e => setFormData({...formData, port: e.target.value})} />
+                </div>
+              </div>
             </div>
-          )}
 
-          {activeModal === 'logs' && (
-            <div className="p-4">
-              {/* Audit Logs Table */}
-              <p>Fetch audit logs from /api/workspace/audit-logs where entityId = {selectedMachine?.id}</p>
+            {/* Section 3: Status & Maintenance */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider border-b pb-2">Health & Maintenance</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700">Current Status</label>
+                  <select className="w-full h-9 px-3 py-1 text-sm border rounded-md bg-white border-slate-200 font-semibold text-slate-700" value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})}>
+                    <option value="ACTIVE">✅ Active</option>
+                    <option value="MAINTENANCE">🔧 In Maintenance</option>
+                    <option value="OFFLINE">❌ Offline / Inactive</option>
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700">Last Serviced</label>
+                  <Input type="date" value={formData.lastMaintenance} onChange={e => setFormData({...formData, lastMaintenance: e.target.value})} />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700">Next Service Due</label>
+                  <Input type="date" value={formData.nextMaintenance} onChange={e => setFormData({...formData, nextMaintenance: e.target.value})} />
+                </div>
+              </div>
             </div>
-          )}
-          
-          {activeModal === 'config' && (
-            <div className="p-4">
-              {/* DICOM Node Config */}
-              <p>DICOM settings, Port, AE Title configuration fields.</p>
+
+            {/* Actions */}
+            <div className="pt-4 flex justify-end gap-3 border-t">
+              <Button type="button" variant="outline" onClick={() => setActiveModal(null)}>Cancel</Button>
+              <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold" disabled={addMutation.isPending || editMutation.isPending}>
+                {(addMutation.isPending || editMutation.isPending) ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                {activeModal === 'add' ? "Register Machine" : "Save Changes"}
+              </Button>
             </div>
-          )}
+          </form>
         </DialogContent>
       </Dialog>
+
+      {/* DELETE CONFIRMATION MODAL */}
+      <Dialog open={activeModal === 'delete'} onOpenChange={(open) => !open && setActiveModal(null)}>
+        <DialogContent className="max-w-md text-center p-8">
+          <div className="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertTriangle className="w-8 h-8" />
+          </div>
+          <DialogTitle className="text-xl font-bold text-slate-900 mb-2">Delete Machine?</DialogTitle>
+          <DialogDescription className="text-slate-600 mb-6">
+            Are you sure you want to permanently remove <strong>{selectedMachine?.name}</strong>? This action cannot be undone.
+          </DialogDescription>
+          <div className="flex gap-3 justify-center">
+            <Button variant="outline" onClick={() => setActiveModal(null)} className="w-full">Cancel</Button>
+            <Button variant="destructive" onClick={() => deleteMutation.mutate(selectedMachine.id)} disabled={deleteMutation.isPending} className="w-full font-bold">
+              {deleteMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : "Yes, Delete"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }

@@ -50,22 +50,29 @@ export async function PATCH(req: NextRequest) {
     }
 
     // ACTION: Tech clicks "Start Scan"
-    if (action === 'START') {
+   if (action === 'START') {
       await prisma.$transaction([
         // 1. Mark Appointment as In Progress
         prisma.radiologyAppointment.update({
           where: { id: appointmentId, labId: user.labId },
           data: { status: 'IN_PROGRESS' }
         }),
-        // 2. Save the mandatory safety checklist to the clinical study record
+        // 2. Save the safety checklist AND update the Study Status
         prisma.radiologyStudy.update({
           where: { id: studyId, labId: user.labId },
-          data: { safetyChecklist: safetyChecklist }
+          data: { 
+            safetyChecklist: safetyChecklist,
+            status: 'IN_PROGRESS',   // 🚀 ADDED: Fixes the Dashboard "Scanning" count
+            performedAt: new Date()  // 🚀 ADDED: Logs the exact time the scan started
+          }
         })
       ]);
-      return NextResponse.json({ success: true, message: 'Scan started and safety verified.' });
+      
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Scan started and safety verified.' 
+      });
     }
-
     // ACTION: Tech clicks "Mark Completed"
     if (action === 'COMPLETE') {
       await prisma.$transaction([

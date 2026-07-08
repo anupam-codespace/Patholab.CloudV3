@@ -20,10 +20,10 @@ export async function GET(req: NextRequest) {
     const appointments = await prisma.radiologyAppointment.findMany({
       where: {
         labId: user.labId,
-        scheduledStart: { gte: start, lte: end }
+        scheduledStart: { gte: start, lte: end,  }
       },
       include: {
-        patient: { select: { id: true, name: true, phone: true } },
+        patient: { select: { id: true, name: true, phone: true, age: true, ageUnit: true, gender: true } },
         modality: { select: { name: true, type: true } },
         study: { select: { accessionNumber: true } }
       },
