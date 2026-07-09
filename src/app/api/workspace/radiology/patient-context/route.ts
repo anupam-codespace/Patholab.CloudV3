@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
       take: 1
     });*/
 
-    // 3. Format the data for the frontend
+// 3. Format the data for the frontend
     return NextResponse.json({
       previousStudies: previousStudies.map(study => ({
         id: study.id,
@@ -43,14 +43,13 @@ export async function GET(req: NextRequest) {
         date: study.performedAt ? format(new Date(study.performedAt), 'dd-MMM-yyyy') : 'Unknown',
         uid: study.studyInstanceUid
       })),
-      // Mocking the specific lab values for the UI until you extract exact Hb/WBC from your specific JSON results
-      recentLabs: recentLabs.length > 0 ? {
-        hb: "11.2", wbc: "8.4", creatinine: "1.8", esr: "52"
-      } : null
+      
+      // ✅ FIX: Hardcode this to null so it doesn't look for the deleted variable
+      recentLabs: null 
     });
 
   } catch (error) {
     console.error("Patient Context Error:", error);
-    return NextResponse.json({ error: "Failed to fetch context" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to load context" }, { status: 500 });
   }
 }
