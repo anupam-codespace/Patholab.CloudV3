@@ -1,16 +1,31 @@
 model InventoryItem {
-  id            String  @id @default(uuid())
-  labId         String
-  name          String
-  sku           String?
-  unitOfMeasure String // e.g., "ml", "box", "vial"
-  minimumStock  Int     @default(0)
+  id               String                 @id @default(uuid())
+  labId            String
+  lab              Lab                    @relation(fields: [labId], references: [id])
+  
+  // Basic Details
+  name             String
+  sku              String?
+  category         String?                // Added for the frontend department/category field
+  
+  // Unit Mapping & Conversion (Replaces unitOfMeasure)
+  purchaseUnit     String                 @default("Box")
+  usageUnit        String                 @default("ml")
+  conversionFactor Float                  @default(1.0)
+  minStockLevel    Float                  @default(10.0) // Renamed from minimumStock & changed to Float
 
-  batches InventoryBatch[]
+  // Relations & Status
+  supplierId       String?
+  supplier         Supplier?              @relation(fields: [supplierId], references: [id])
+  isActive         Boolean                @default(true) // Required for your GET route filter
+  deletedAt        DateTime?
 
-  lab                  Lab                    @relation(fields: [labId], references: [id])
-  deletedAt            DateTime?
+  // Infrastructure 
+  batches              InventoryBatch[]
   TestParameterReagent TestParameterReagent[]
+
+  @@unique([labId, name])
+  @@index([labId])
 }
 
 model InventoryBatch {

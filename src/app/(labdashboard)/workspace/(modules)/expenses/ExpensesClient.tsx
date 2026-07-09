@@ -169,7 +169,7 @@ export default function ExpensesClient() {
 
   /** 🎨 UI REIMAGINED */
   return (
-    <div className="min-h-screen bg-[#fafafa] dark:bg-slate-950 p-4 md:p-8 space-y-8">
+    <div className="min-h-screen bg-[#fafafa] dark:bg-slate-950 px-6 py-4 md:px-10 md:py-8 xl:px-12 space-y-8">
       {/* HEADER SECTION */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
         <div className="space-y-1">

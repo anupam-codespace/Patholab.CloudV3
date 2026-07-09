@@ -13,6 +13,10 @@ import {
   Clock,
   AlertTriangle,
   Users,
+  ArrowDownRight,
+  FileText,
+  Trophy,
+  TrophyIcon,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -132,6 +136,7 @@ export default function LabOwnerDashboard() {
 
   // Wallet Low Balance Alert Threshold
   const isLowBalance = (kpi?.walletBalance || 0) < 100;
+  
 
   return (
     <div className="space-y-6 p-4 md:p-8 min-h-screen bg-slate-50/50">
@@ -162,22 +167,31 @@ export default function LabOwnerDashboard() {
         </div>
       </div>
 
-      {/* FINANCIAL & KPI CARDS */}
+      {/* ========================================== */}
+      {/* ROW 1: FINANCIAL & MONEY TRANSACTIONS      */}
+      {/* ========================================== */}
+      <h2 className="text-sm font-bold text-slate-800 mt-6 mb-3 uppercase tracking-wider">
+        Financial Overview
+      </h2>
       <div className="grid gap-4 md:grid-cols-4">
-        {/* 1. Wallet Balance Card (NEW PAY-AS-YOU-GO FOCUS) */}
+        {/* 1. Wallet Balance Card (PAY-AS-YOU-GO) */}
         <Card
-          className={`border shadow-sm relative overflow-hidden ${isLowBalance ? "border-red-300 bg-red-50" : "border-indigo-200 bg-indigo-50"}`}>
+          className={`border shadow-sm relative overflow-hidden ${isLowBalance ? "border-red-300 bg-red-50" : "border-indigo-200 bg-indigo-50"}`}
+        >
           <div
-            className={`absolute -right-4 -top-4 w-24 h-24 rounded-full opacity-50 ${isLowBalance ? "bg-red-100" : "bg-indigo-100"}`}></div>
+            className={`absolute -right-4 -top-4 w-24 h-24 rounded-full opacity-50 ${isLowBalance ? "bg-red-100" : "bg-indigo-100"}`}
+          ></div>
           <CardHeader className="pb-2">
             <CardTitle
-              className={`text-[11px] font-bold uppercase flex items-center gap-1 ${isLowBalance ? "text-red-700" : "text-indigo-700"}`}>
+              className={`text-[11px] font-bold uppercase flex items-center gap-1 ${isLowBalance ? "text-red-700" : "text-indigo-700"}`}
+            >
               <Wallet className="w-3 h-3" /> Wallet Balance
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div
-              className={`text-3xl font-black ${isLowBalance ? "text-red-900" : "text-indigo-900"}`}>
+              className={`text-3xl font-black ${isLowBalance ? "text-red-900" : "text-indigo-900"}`}
+            >
               {formatCurrency(kpi?.walletBalance || 0)}
             </div>
             <div className="flex items-center justify-between mt-2">
@@ -189,7 +203,8 @@ export default function LabOwnerDashboard() {
               <Button
                 size="sm"
                 className={`h-7 text-xs ${isLowBalance ? "bg-red-600 hover:bg-red-700" : "bg-indigo-600 hover:bg-indigo-700"}`}
-                onClick={() => router.push("/workspace/wallet")}>
+                onClick={() => router.push("/workspace/wallet")}
+              >
                 Recharge
               </Button>
             </div>
@@ -213,7 +228,105 @@ export default function LabOwnerDashboard() {
           </CardContent>
         </Card>
 
-        {/* 3. Total Tests */}
+        {/* 3. Total Expenses (NEW) */}
+        <Card className="border-slate-200 shadow-sm relative overflow-hidden bg-white">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-[11px] font-bold text-slate-500 uppercase flex items-center gap-1">
+              <ArrowDownRight className="w-3 h-3" /> Total Expenses
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-black text-slate-900">
+              {formatCurrency(kpi?.expenses || 0)}
+            </div>
+            <p className="text-xs text-rose-600 mt-1 flex items-center font-semibold">
+              <ArrowDownRight className="w-3 h-3 mr-1" /> Outflow
+            </p>
+          </CardContent>
+        </Card>
+        {/* 3. Profit */}
+        {/* 5. Net Profit Card */}
+        <Card className="border-slate-200 shadow-sm relative overflow-hidden bg-white">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-[11px] font-bold text-slate-500 uppercase flex items-center gap-1">
+              <Wallet className="w-3 h-3" /> Net Profit
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div
+              className={`text-3xl font-black ${
+                (kpi?.netProfit || 0) >= 0
+                  ? "text-emerald-700"
+                  : "text-rose-700"
+              }`}
+            >
+              {formatCurrency(kpi?.netProfit || 0)}
+            </div>
+            <p
+              className={`text-xs mt-1 flex items-center font-semibold ${
+                (kpi?.netProfit || 0) >= 0
+                  ? "text-emerald-600"
+                  : "text-rose-600"
+              }`}
+            >
+              {(kpi?.netProfit || 0) >= 0 ? (
+                <>
+                  {" "}
+                  <ArrowUpRight className="w-3 h-3 mr-1" /> Profitable{" "}
+                </>
+              ) : (
+                <>
+                  {" "}
+                  <ArrowDownRight className="w-3 h-3 mr-1" /> Loss{" "}
+                </>
+              )}
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* 4. Pending Dues (NEW) */}
+        <Card className="border-amber-200 bg-amber-50/30 shadow-sm relative overflow-hidden">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-[11px] font-bold text-amber-600 uppercase flex items-center gap-1">
+              <Clock className="w-3 h-3" /> Pending Dues
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-black text-amber-700">
+              {formatCurrency(kpi?.pendingDues || 0)}
+            </div>
+            <p className="text-xs text-amber-600 mt-1 font-semibold">
+              To be collected
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* ========================================== */}
+      {/* ROW 2: PATIENT & OPERATIONAL METRICS       */}
+      {/* ========================================== */}
+      <h2 className="text-sm font-bold text-slate-800 mt-8 mb-3 uppercase tracking-wider">
+        Operations & Clinical
+      </h2>
+      <div className="grid gap-4 md:grid-cols-4">
+        {/* 1. Total Patients (NEW) */}
+        <Card className="border-slate-200 shadow-sm relative overflow-hidden bg-white">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-[11px] font-bold text-slate-500 uppercase flex items-center gap-1">
+              <Users className="w-3 h-3" /> Total Patients
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-black text-slate-900">
+              {kpi?.totalPatients || 0}
+            </div>
+            <p className="text-xs text-blue-600 mt-1 flex items-center font-semibold">
+              Registered
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* 2. Total Tests */}
         <Card className="border-slate-200 shadow-sm relative overflow-hidden bg-white">
           <CardHeader className="pb-2">
             <CardTitle className="text-[11px] font-bold text-slate-500 uppercase flex items-center gap-1">
@@ -230,10 +343,28 @@ export default function LabOwnerDashboard() {
           </CardContent>
         </Card>
 
-        {/* 4. Critical Alerts */}
+        {/* 3. Pending Reports (NEW) */}
+        <Card className="border-slate-200 shadow-sm relative overflow-hidden bg-white">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-[11px] font-bold text-slate-500 uppercase flex items-center gap-1">
+              <FileText className="w-3 h-3" /> Pending Reports
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-black text-slate-900">
+              {kpi?.pendingReports || 0}
+            </div>
+            <p className="text-xs text-slate-500 mt-1 flex items-center font-semibold">
+              Requires approval
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* 4. Critical Inventory Alerts */}
         <Card
           className="border-orange-200 bg-orange-50/30 shadow-sm relative overflow-hidden cursor-pointer hover:border-orange-300 transition-colors"
-          onClick={() => router.push("/workspace/inventory")}>
+          onClick={() => router.push("/workspace/inventory")}
+        >
           <CardHeader className="pb-2">
             <CardTitle className="text-[11px] font-bold text-orange-600 uppercase flex items-center gap-1">
               <Package className="w-3 h-3" /> Inventory Alerts
@@ -248,7 +379,66 @@ export default function LabOwnerDashboard() {
             </p>
           </CardContent>
         </Card>
+        {/* Row 2: Operations & Clinical */}
+
+        <Card className="border-slate-200 shadow-sm relative overflow-hidden bg-white hover:border-indigo-200 transition-colors">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-[11px] font-bold text-slate-500 uppercase flex items-center gap-1">
+              <Clock className="w-3 h-3" /> Pending Samples
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-black text-slate-900">
+              {kpi?.pendingSamples || 0}
+            </div>
+            <p className="text-xs text-indigo-600 mt-1 flex items-center font-semibold">
+              In-progress / Collected
+            </p>
+          </CardContent>
+        </Card>
+        {/* TOP REFERRERS SECTION */}
+        <Card className="border-slate-200 shadow-sm relative overflow-hidden bg-white">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-[11px] font-bold text-slate-500 uppercase flex items-center gap-1">
+              <TrophyIcon className="w-3 h-3 text-amber-500" />
+              Top Referrer
+            </CardTitle>
+          </CardHeader>
+
+          <CardContent>
+            {data?.topReferrers?.length > 0 ? (
+              <>
+                <div className="text-lg font-black text-slate-900 truncate">
+                  {data.topReferrers[0].name}
+                </div>
+
+                <p className="text-xs text-emerald-600 mt-1 font-semibold">
+                  {formatCurrency(data.topReferrers[0].amount)}
+                </p>
+              </>
+            ) : (
+              <p className="text-xs text-slate-500">No referral data</p>
+            )}
+          </CardContent>
+        </Card>
+        {/* 1. Samples Today (NEW) */}
+        <Card className="border-slate-200 shadow-sm relative overflow-hidden bg-white">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-[11px] font-bold text-slate-500 uppercase flex items-center gap-1">
+              <Activity className="w-3 h-3" /> Samples Today
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-black text-slate-900">
+              {kpi?.samplesToday || 0}
+            </div>
+            <p className="text-xs text-emerald-600 mt-1 flex items-center font-semibold">
+              Collected today
+            </p>
+          </CardContent>
+        </Card>
       </div>
+      {/* ... remaining cards (Total Tests, Pending Reports, etc.) ... */}
 
       {/* CHARTS ROW */}
       <div className="grid gap-6 lg:grid-cols-2">
@@ -367,7 +557,8 @@ export default function LabOwnerDashboard() {
             variant="ghost"
             size="sm"
             className="text-indigo-600 hover:bg-indigo-50 font-bold"
-            onClick={() => router.push("/workspace/patients")}>
+            onClick={() => router.push("/workspace/patients")}
+          >
             View All &rarr;
           </Button>
         </CardHeader>
@@ -380,7 +571,8 @@ export default function LabOwnerDashboard() {
                   className="flex items-center justify-between group cursor-pointer hover:bg-slate-50 p-3 rounded-xl transition-colors border border-slate-100 hover:border-indigo-200 shadow-sm"
                   onClick={() =>
                     router.push(`/workspace/patients/${patient.id}`)
-                  }>
+                  }
+                >
                   <div className="flex items-center gap-3">
                     <Avatar className="h-10 w-10 bg-indigo-50 border border-indigo-100 text-indigo-600 font-bold shadow-sm">
                       <AvatarFallback>{patient.name.charAt(0)}</AvatarFallback>
@@ -412,7 +604,8 @@ export default function LabOwnerDashboard() {
       <Dialog open={showSetupModal} onOpenChange={setShowSetupModal}>
         <DialogContent
           className="sm:max-w-[425px]"
-          onInteractOutside={(e) => e.preventDefault()}>
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle>Set Up Your Laboratory</DialogTitle>
             <DialogDescription>
@@ -422,7 +615,8 @@ export default function LabOwnerDashboard() {
           </DialogHeader>
           <form
             onSubmit={setupForm.handleSubmit(onSetupSubmit)}
-            className="space-y-4 pt-4">
+            className="space-y-4 pt-4"
+          >
             <div className="space-y-2">
               <Label>Laboratory Name</Label>
               <Input
@@ -451,7 +645,8 @@ export default function LabOwnerDashboard() {
               <Button
                 type="submit"
                 disabled={setupForm.formState.isSubmitting}
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white">
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
+              >
                 {setupForm.formState.isSubmitting
                   ? "Saving..."
                   : "Complete Setup"}

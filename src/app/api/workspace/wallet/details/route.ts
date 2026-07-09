@@ -1,78 +1,132 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth"; 
-
-export const dynamic = "force-dynamic";
+import { getDataFromToken } from "@/lib/auth"; // Assuming this is your auth method from context
 
 export async function GET(req: NextRequest) {
   try {
-    // 1. Secure Authentication
-    const user = await getCurrentUser();
+    const user = await getDataFromToken(req);
     if (!user || !user.labId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // 2. Fetch Wallet Details strictly for this Lab
-    const wallet = await prisma.labWallet.findUnique({
-      where: { labId: user.labId },
-      include: {
-        lab: { select: { name: true } },
-      },
-    });
+    // 1. Extract Query Parameters for Pagination & Filtering
+    const searchParams = req.nextUrl.searchParams;
+    const page = Math.max(parseInt(searchParams.get("page") || "1"), 1);
 
-    // Handle case where wallet doesn't exist yet (e.g., brand new lab)
-    if (!wallet) {
-      return NextResponse.json({
-        wallet: {
-          balance: 0,
-          validityEndDate: null,
-          isActive: false,
-          isLisIntegrationPaid: false,
-          perPatientFee: 2.50, // System default fallback
-          minimumRecharge: 100.00, // System default fallback
-          status: "NO_WALLET",
-        },
-        transactions: [],
-      });
+    const limit = Math.min(
+      Math.max(parseInt(searchParams.get("limit") || "10"), 1),
+      100,
+    );
+    const filterType = searchParams.get("type") || "ALL";
+    const skip = (page - 1) * limit;
+    const labId = user.labId;
+
+    // Build the dynamic WHERE clause for transactions
+    const txWhere: any = { labId };
+    if (filterType !== "ALL") {
+      txWhere.type = filterType;
     }
 
-    // 3. Fetch Transaction History (Increased to 50 for better ledger views)
-    const transactions = await prisma.walletTransaction.findMany({
-      where: { labId: user.labId },
-      orderBy: { createdAt: "desc" },
-      take: 50,
-    });
+    // 1. Add Date extraction
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
 
-    // 4. Construct and Return Payload 
-    // IMPORTANT: We nest the wallet details inside a `wallet` object 
-    // to perfectly match the frontend's destructuring expectation!
+    // 2. Add the date filter to your transaction WHERE clause
+
+    // -> NEW: Apply date range if provided
+    if (startDate && endDate) {
+      const from = new Date(startDate);
+      const to = new Date(endDate);
+
+      if (isNaN(from.getTime()) || isNaN(to.getTime())) {
+        return NextResponse.json(
+          { error: "Invalid date range" },
+          { status: 400 },
+        );
+      }
+
+      to.setHours(23, 59, 59, 999);
+
+      txWhere.createdAt = {
+        gte: from,
+        lte: to,
+      };
+    }
+
+    // 2. Execute parallel DB queries for maximum speed
+    const [wallet, rechargeAgg, spentAgg, transactions, totalTransactions] =
+      await Promise.all([
+        // A. Get the core wallet data
+        prisma.labWallet.findUnique({
+          where: { labId },
+        }),
+        // B. Calculate Total Recharged (DB Level Math)
+        prisma.walletTransaction.aggregate({
+          where: {
+            labId,
+            type: { in: ["RECHARGE", "REFUND"] },
+            createdAt: txWhere.createdAt,
+          },
+          _sum: { amount: true },
+        }),
+        // C. Calculate Total Spent (DB Level Math)
+        prisma.walletTransaction.aggregate({
+          where: {
+            labId,
+            type: { in: ["DEDUCTION", "SETUP_FEE"] },
+            createdAt: txWhere.createdAt,
+          },
+          _sum: { amount: true },
+        }),
+        // D. Fetch Paginated Transactions
+        prisma.walletTransaction.findMany({
+          where: txWhere,
+          orderBy: { createdAt: "desc" },
+          take: limit,
+          skip: skip,
+        }),
+        // E. Get total count for pagination math
+        prisma.walletTransaction.count({
+          where: txWhere,
+        }),
+      ]);
+
+    // 3. Prevent the Next.js "Decimal Warning" by mapping to numbers
+    const safeTransactions = transactions.map((tx) => ({
+      ...tx,
+      amount: Number(tx.amount),
+      closingBalance: Number(tx.closingBalance),
+    }));
+
+    // 4. Return structured, sanitized payload
     return NextResponse.json({
+      
       wallet: {
-        id: wallet.id,
-        balance: Number(wallet.balance),
-        validityEndDate: wallet.validityEndDate, // Real Date from DB
-        isActive: wallet.isActive,
-        isLisIntegrationPaid: wallet.isLisIntegrationPaid,
-        perPatientFee: Number(wallet.perPatientFee), // Real Lab-Specific fee
-        minimumRecharge: Number(wallet.minimumRecharge),
-        labName: wallet.lab.name,
+        
+        ...wallet,
+        balance: Number(wallet?.balance || 0),
+        perPatientFee: Number(wallet?.perPatientFee || 0),
       },
-      transactions: transactions.map((t) => ({
-        id: t.id,
-        type: t.type,
-        amount: Number(t.amount),
-        closingBalance: Number(t.closingBalance),
-        description: t.description || `Wallet ${t.type}`,
-        status: "SUCCESS",
-        createdAt: t.createdAt,
-      })),
+      metrics: {
+        totalRecharged: Number(rechargeAgg._sum.amount || 0),
+        totalSpent: Number(spentAgg._sum.amount || 0),
+        calculatedBalance:
+          Number(rechargeAgg._sum.amount || 0) -
+          Number(spentAgg._sum.amount || 0),
+      },
+      transactions: safeTransactions,
+      pagination: {
+        total: totalTransactions,
+        page,
+        limit,
+        totalPages: Math.ceil(totalTransactions / limit),
+      },
     });
-
   } catch (error: any) {
-    console.error("[WALLET_DETAILS_API_ERROR]", error);
+    console.error("Wallet Fetch Error:", error);
     return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
+      { error: "Failed to fetch wallet data" },
+      { status: 500 },
     );
   }
 }
