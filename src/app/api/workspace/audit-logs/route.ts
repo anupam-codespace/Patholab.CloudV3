@@ -32,16 +32,41 @@ export async function GET(req: NextRequest) {
     if (entity && entity !== "ALL") whereClause.entity = entity;
     if (action && action !== "ALL") whereClause.action = action;
 
-    const logs = await prisma.auditLog.findMany({
+    // Fetch raw logs from the database
+    // IMPORTANT: If your schema uses 'activityLog', change 'prisma.auditLog' to 'prisma.activityLog'
+    const rawLogs = await prisma.auditLog.findMany({
       where: whereClause,
       orderBy: { createdAt: "desc" },
       take: limit,
-      // Note: If you updated your schema to make userId a proper relation to the User table,
-      // uncomment the line below to directly fetch the user's name instead of mapping it manually.
       // include: { user: { select: { name: true, role: true } } }
     });
 
-    return NextResponse.json({ logs });
+    // 4. CRITICAL FIX: Map the raw DB rows to match the Frontend Interface
+    const formattedLogs = rawLogs.map((log: any) => {
+      // Safely extract the JSON payload (handles both stringified and native JSON)
+      const details = typeof log.details === 'string' 
+        ? JSON.parse(log.details) 
+        : (log.details || {});
+      
+      return {
+        id: log.id,
+        userId: log.userId, // If you uncommented include: { user }, use log.user?.name || log.userId here
+        entity: log.entity || "UNKNOWN",
+        entityId: log.entityId || "N/A",
+        action: log.action,
+        
+        // Pull the dynamic data OUT of the details object and put it at the top level
+        oldData: details?.oldData || null,
+        newData: details?.newData || null,
+        ipAddress: details?.ipAddress || details?.ip || null,
+        
+        createdAt: log.createdAt,
+      };
+    });
+
+    // Return the formatted logs to the frontend
+    return NextResponse.json({ logs: formattedLogs });
+
   } catch (error) {
     console.error("[AUDIT_LOG_GET_ERROR]:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

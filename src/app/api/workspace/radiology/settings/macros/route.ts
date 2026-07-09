@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
 
     const macros = await prisma.radiologyMacro.findMany({
       where: { labId: user.labId },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { updatedAt: 'desc' }
     });
 
     return NextResponse.json(macros);

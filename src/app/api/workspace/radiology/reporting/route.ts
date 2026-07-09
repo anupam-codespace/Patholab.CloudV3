@@ -23,21 +23,64 @@ export async function GET(req: NextRequest) {
     });
 
     // Format data for the frontend
-    const formattedQueue = pendingStudies.map(study => ({
-      id: study.accessionNumber,
-      studyId: study.id,
-      studyUid: study.studyInstanceUid,
-      patient: study.patient.name,
-      ageSex: `${study.patient.age} ${study.patient.ageUnit.charAt(0)} / ${study.patient.gender.charAt(0)}`,
-      scan: "Radiology Scan", // In production, map this from your order catalog
-      modality: study.modality.type,
-      time: study.performedAt ? new Date(study.performedAt).toLocaleString('en-IN') : 'Unknown',
-      priority: 'ROUTINE', // Update if you add priority flags
-      status: study.status === 'REPORTING' ? 'DRAFT' : 'UNREAD',
-      clinicalNotes: study.report?.clinicalNotes || '',
-      findings: study.report?.findings || '',
-      impression: study.report?.impression || ''
-    }));
+    const formattedQueue = pendingStudies.map((study) => ({
+  id: study.accessionNumber,
+  studyId: study.id,
+  studyUid: study.studyInstanceUid,
+
+  // Required for patient-context API
+  patientId: study.patientId,
+
+  // Patient info
+  patient: study.patient?.name ?? "Unknown Patient",
+
+  age: study.patient?.age
+    ? `${study.patient.age} ${
+        study.patient.ageUnit
+          ? study.patient.ageUnit.charAt(0)
+          : ""
+      }`
+    : "N/A",
+
+  gender: study.patient?.gender ?? "N/A",
+
+  // Your Patient table has patientId, not uhid
+  uhid: study.patient?.patientId ?? "N/A",
+
+  // Study info
+  scan: study.scanName ?? "Radiology Scan",
+
+  modality:
+    study.modality?.type ??
+    study.modality?.name ??
+    "N/A",
+
+  referringDoctor:
+    study.referringDoctor ?? "N/A",
+
+  complaint:
+    study.clinicalHistory ?? "No clinical history",
+
+  time: study.performedAt
+    ? new Date(study.performedAt).toLocaleString("en-IN")
+    : "Unknown",
+
+  priority: study.priority ?? "ROUTINE",
+
+  status:
+    study.status === "REPORTING"
+      ? "DRAFT"
+      : "UNREAD",
+
+  clinicalNotes:
+    study.report?.clinicalNotes ?? "",
+
+  findings:
+    study.report?.findings ?? "",
+
+  impression:
+    study.report?.impression ?? "",
+}));
 
     return NextResponse.json(formattedQueue);
 
@@ -47,43 +90,54 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// 2. POST: Save Draft or Finalize Report
+/// 2. POST: Save Draft or Finalize Report
 export async function POST(req: NextRequest) {
   try {
     const user = await getDataFromToken(req);
-    if (!user || !user.labId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // STABLE AUTH CHECK: Ensure we absolutely have a user ID and Lab ID
+    const currentUserId = user?.id || user?.userId || user?._id;
+    if (!user || !user.labId || !currentUserId) {
+      return NextResponse.json({ error: 'Unauthorized or missing User ID' }, { status: 401 });
+    }
 
     const body = await req.json();
-    const { studyId, findings, impression, action } = body; // action = 'DRAFT' or 'FINALIZE'
+    const { studyId, findings, impression, action } = body; 
 
     if (!studyId || !findings || !impression) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    // SECURITY CHECK: Verify the study actually belongs to this Lab before modifying it
+    const existingStudy = await prisma.radiologyStudy.findFirst({
+      where: { id: studyId, labId: user.labId }
+    });
+
+    if (!existingStudy) {
+      return NextResponse.json({ error: 'Study not found or unauthorized access' }, { status: 403 });
+    }
+
     const reportStatus = action === 'FINALIZE' ? 'FINAL' : 'DRAFT';
     const studyStatus = action === 'FINALIZE' ? 'VERIFIED' : 'REPORTING';
 
-    // ✅ THE FIX: Safely grab the user's ID regardless of how your token is structured
-    const currentUserId = user.id || user.userId || user._id || 'SYSTEM_ADMIN';
-
     // Database Transaction to ensure both Report and Study update together
     await prisma.$transaction(async (tx) => {
-      // 1. Upsert the Report
+      // 1. Upsert the Report (Ensure your schema has @unique on studyId in RadiologyReport)
       await tx.radiologyReport.upsert({
         where: { studyId: studyId },
         update: {
           findings,
           impression,
           status: reportStatus,
-          radiologistId: currentUserId, // ✅ Safely populated
+          radiologistId: currentUserId,
           verifiedAt: action === 'FINALIZE' ? new Date() : null,
         },
         create: {
+          labId: user.labId, // ✅ Added missing labId
           studyId: studyId,
           findings,
           impression,
           status: reportStatus,
-          radiologistId: currentUserId, // ✅ Safely populated
+          radiologistId: currentUserId, 
           verifiedAt: action === 'FINALIZE' ? new Date() : null,
         }
       });

@@ -78,6 +78,12 @@ export default function AuditLogsPage() {
     queryFn: () => fetchAuditLogs(entityFilter, actionFilter),
   });
 
+  const formatAction = (action: string) => {
+    return action
+      .replace(/_/g, " ")
+      .toLowerCase()
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+  };
   // --- UI HELPERS ---
   const getActionBadge = (action: string) => {
     switch (action) {
@@ -113,8 +119,19 @@ export default function AuditLogsPage() {
         );
       default:
         return (
-          <Badge variant="outline" className="text-slate-600">
-            {action}
+          <Badge
+            variant="outline"
+            title={action}
+            className="
+        max-w-[180px]
+        truncate
+        overflow-hidden
+        whitespace-nowrap
+        text-ellipsis
+        text-slate-600
+      "
+          >
+            {formatAction(action)}
           </Badge>
         );
     }
@@ -224,7 +241,8 @@ export default function AuditLogsPage() {
               <TableRow>
                 <TableCell
                   colSpan={6}
-                  className="text-center h-48 text-slate-500">
+                  className="text-center h-48 text-slate-500"
+                >
                   <div className="flex flex-col items-center justify-center">
                     <Loader2 className="h-8 w-8 animate-spin text-indigo-600 mb-2" />
                     Fetching secure logs...
@@ -235,7 +253,8 @@ export default function AuditLogsPage() {
               <TableRow>
                 <TableCell
                   colSpan={6}
-                  className="text-center h-48 text-slate-500">
+                  className="text-center h-48 text-slate-500"
+                >
                   No audit logs found matching your filters.
                 </TableCell>
               </TableRow>
@@ -243,7 +262,8 @@ export default function AuditLogsPage() {
               filteredLogs.map((log) => (
                 <TableRow
                   key={log.id}
-                  className="hover:bg-slate-50/80 transition-colors">
+                  className="hover:bg-slate-50/80 transition-colors"
+                >
                   {/* Timestamp */}
                   <TableCell className="text-sm font-medium text-slate-700">
                     <div className="flex items-center gap-2">
@@ -286,7 +306,8 @@ export default function AuditLogsPage() {
                       variant="outline"
                       size="sm"
                       className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 font-semibold text-xs"
-                      onClick={() => setSelectedLog(log)}>
+                      onClick={() => setSelectedLog(log)}
+                    >
                       <FileJson className="h-4 w-4 mr-1.5" /> Inspect Data
                     </Button>
                   </TableCell>
@@ -302,7 +323,8 @@ export default function AuditLogsPage() {
       {/* ============================================================== */}
       <Dialog
         open={!!selectedLog}
-        onOpenChange={(open) => !open && setSelectedLog(null)}>
+        onOpenChange={(open) => !open && setSelectedLog(null)}
+      >
         <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col p-0 overflow-hidden bg-slate-50">
           <DialogHeader className="p-6 bg-white border-b border-slate-200 shrink-0">
             <div className="flex items-center gap-3 mb-2">
@@ -326,13 +348,16 @@ export default function AuditLogsPage() {
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
             {/* Quick Context Bar */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-              <div>
+              <div className="min-w-0">
                 <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">
                   Action
                 </p>
-                {selectedLog && getActionBadge(selectedLog.action)}
+
+                <div className="max-w-full overflow-hidden">
+                  {selectedLog && getActionBadge(selectedLog.action)}
+                </div>
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">
                   Entity
                 </p>
@@ -340,7 +365,7 @@ export default function AuditLogsPage() {
                   {selectedLog?.entity}
                 </p>
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">
                   Record ID
                 </p>
@@ -348,7 +373,7 @@ export default function AuditLogsPage() {
                   {selectedLog?.entityId}
                 </p>
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">
                   Timestamp
                 </p>
@@ -415,7 +440,8 @@ export default function AuditLogsPage() {
             <Button
               variant="outline"
               onClick={() => setSelectedLog(null)}
-              className="font-bold">
+              className="font-bold"
+            >
               Close Inspector
             </Button>
           </div>
