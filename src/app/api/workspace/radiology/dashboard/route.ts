@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
   try {
     const tokenData = await getDataFromToken(req);
     
-    // 1. Resilient Auth Check (Catches id, userId, or _id)
+    // 1. Resilient Auth Check
     const userId = tokenData?.id || tokenData?.userId || tokenData?._id;
 
     if (!tokenData || !userId) {
@@ -36,20 +36,17 @@ export async function GET(req: NextRequest) {
     // 1. STATS CALCULATION
     // ==========================================
     
-    // A. Scans Today
     const scansTodayCount = await prisma.radiologyStudy.count({
-      where: { labId: currentLabId, createdAt: { gte: todayStart, lte: todayEnd } } // <-- FIXED
+      where: { labId: currentLabId, createdAt: { gte: todayStart, lte: todayEnd } }
     });
 
-    // B. Pending Reports (Scanned but not verified)
     const pendingReportsCount = await prisma.radiologyStudy.count({
-      where: { labId: currentLabId, status: { in: ['SCANNED', 'REPORTING'] } } // <-- FIXED
+      where: { labId: currentLabId, status: { in: ['SCANNED', 'REPORTING'] } }
     });
 
-    // C. Average TAT (Turnaround Time) for today's completed reports
     const completedToday = await prisma.radiologyStudy.findMany({
       where: {
-        labId: currentLabId, // <-- FIXED
+        labId: currentLabId,
         status: 'VERIFIED',
         report: { verifiedAt: { gte: todayStart, lte: todayEnd } }
       },
@@ -68,31 +65,30 @@ export async function GET(req: NextRequest) {
       avgTatStr = `${Math.floor(avgMins / 60)}h ${avgMins % 60}m`;
     }
 
-    // D. Revenue Today
-    const revenueAgg = await prisma.payment.aggregate({
-      _sum: { amount: true },
+    const revenueAgg = await prisma.invoice.aggregate({
+      _sum: { grandTotal: true },
       where: { 
-        status: 'SUCCESS',
+        labId: currentLabId,
+        status: 'PAID',
         createdAt: { gte: todayStart, lte: todayEnd },
       }
     });
-    const revenueToday = revenueAgg._sum.amount || 0;
+    
+    const revenueToday = Number(revenueAgg._sum.grandTotal || 0);
 
     // ==========================================
     // 2. MODALITIES STATUS (Machines)
     // ==========================================
     const modalitiesList = await prisma.modality.findMany({
-      where: { labId: currentLabId } // <-- FIXED
+      where: { labId: currentLabId }
     });
 
     const modalitiesData = await Promise.all(modalitiesList.map(async (mod) => {
-      // Find who is inside the machine right now
       const currentStudy = await prisma.radiologyStudy.findFirst({
         where: { modalityId: mod.id, status: 'IN_PROGRESS' },
         include: { patient: { select: { name: true } } }
       });
 
-      // Find the next scheduled appointment
       const nextApt = await prisma.radiologyAppointment.findFirst({
         where: { 
           modalityId: mod.id, 
@@ -103,7 +99,6 @@ export async function GET(req: NextRequest) {
         include: { patient: { select: { name: true } } }
       });
 
-      // Calculate simple load based on appointments today (assuming 20 slots max per machine for % math)
       const aptsToday = await prisma.radiologyAppointment.count({
         where: { modalityId: mod.id, scheduledStart: { gte: todayStart, lte: todayEnd } }
       });
@@ -113,24 +108,24 @@ export async function GET(req: NextRequest) {
         id: mod.id,
         name: mod.name,
         type: mod.type,
-        status: mod.status, // ACTIVE, MAINTENANCE
+        status: mod.status,
         currentPatient: currentStudy ? currentStudy.patient.name : '-',
         nextSlot: nextApt ? format(new Date(nextApt.scheduledStart), 'hh:mm a') : 'No upcoming slots',
         load: loadPercent
       };
-    }));
+    })); // <-- MAP IS NOW PROPERLY CLOSED HERE
 
     // ==========================================
     // 3. PENDING QUEUE (For Radiologists)
     // ==========================================
     const pendingQueueRaw = await prisma.radiologyStudy.findMany({
-      where: { labId: currentLabId, status: { in: ['SCANNED', 'REPORTING'] } }, // <-- FIXED
+      where: { labId: currentLabId, status: { in: ['SCANNED', 'REPORTING'] } },
       include: {
         patient: { select: { name: true } },
         modality: { select: { type: true } }
       },
       orderBy: { performedAt: 'asc' },
-      take: 6 // Show top 6
+      take: 6
     });
 
     const pendingQueue = pendingQueueRaw.map(study => ({
@@ -138,10 +133,37 @@ export async function GET(req: NextRequest) {
       patient: study.patient.name,
       scan: `${study.modality.type} Scan`, 
       time: study.performedAt ? format(new Date(study.performedAt), 'hh:mm a') : 'Unknown',
-      priority: 'NORMAL' // Hardcoded for now, update if you add priority fields
+      priority: 'NORMAL' 
     }));
 
-    // Return aggregated payload
+    // ==========================================
+    // 4. LIVE WORKFLOW COUNTS (The Pipeline)
+    // ==========================================
+    const workflowCounts = await prisma.radiologyStudy.groupBy({
+      by: ['status'],
+      where: { 
+        labId: currentLabId,
+        createdAt: { gte: todayStart, lte: todayEnd } 
+      },
+      _count: true
+    });
+
+    const workflow = {
+      scheduled: 0, waiting: 0, scanning: 0, reporting: 0, verified: 0, delivered: 0
+    };
+
+    workflowCounts.forEach(item => {
+      if (item.status === 'SCHEDULED' || item.status === 'ORDERED') workflow.scheduled = item._count;
+      if (item.status === 'ARRIVED') workflow.waiting = item._count;
+      if (item.status === 'IN_PROGRESS') workflow.scanning = item._count;
+      if (item.status === 'SCANNED' || item.status === 'REPORTING') workflow.reporting += item._count;
+      if (item.status === 'VERIFIED') workflow.verified = item._count;
+      if (item.status === 'DELIVERED') workflow.delivered = item._count;
+    });
+
+    // ==========================================
+    // FINAL AGGREGATED RESPONSE
+    // ==========================================
     return NextResponse.json({
       stats: {
         scansToday: scansTodayCount,
@@ -149,6 +171,7 @@ export async function GET(req: NextRequest) {
         avgTat: avgTatStr,
         revenueToday: `₹${revenueToday.toLocaleString()}`
       },
+      workflow: workflow, // Triggers the pipeline UI
       modalities: modalitiesData,
       pendingQueue: pendingQueue
     });

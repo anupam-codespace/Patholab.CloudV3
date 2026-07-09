@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
           orderBy: { expiryDate: 'asc' }
         },
         // ✅ FIXED: Capital "S" to match the Prisma Schema exactly
-        Supplier: true 
+        supplier: true 
       },
       orderBy: { name: 'asc' }
     });
@@ -70,5 +70,34 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "An item with this name or SKU already exists in your lab." }, { status: 400 });
     }
     return NextResponse.json({ error: "Failed to create item" }, { status: 500 });
+  }
+}
+
+export async function PUT(
+  request: Request, 
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { id } = await params; // Next.js 15+ requirement
+    const body = await request.json();
+    
+    // Ensure all fields are handled to avoid 'undefined' issues
+    const updatedItem = await prisma.inventoryItem.update({
+      where: { id: id },
+      data: {
+        name: body.name,
+        sku: body.sku || null,
+        category: body.category || null,
+        purchaseUnit: body.purchaseUnit,
+        usageUnit: body.usageUnit,
+        conversionFactor: parseFloat(body.conversionFactor),
+        minStockLevel: parseFloat(body.minStockLevel),
+      }
+    });
+
+    return NextResponse.json(updatedItem);
+  } catch (error: any) {
+    console.error("PUT Error:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
