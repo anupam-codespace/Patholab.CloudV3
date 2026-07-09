@@ -90,12 +90,13 @@ export async function GET(req: NextRequest) {
   }
 }
 
-/// 2. POST: Save Draft or Finalize Report
+
+// 2. POST: Save Draft or Finalize Report
 export async function POST(req: NextRequest) {
   try {
     const user = await getDataFromToken(req);
-    // STABLE AUTH CHECK: Ensure we absolutely have a user ID and Lab ID
     const currentUserId = user?.id || user?.userId || user?._id;
+    
     if (!user || !user.labId || !currentUserId) {
       return NextResponse.json({ error: 'Unauthorized or missing User ID' }, { status: 401 });
     }
@@ -121,7 +122,7 @@ export async function POST(req: NextRequest) {
 
     // Database Transaction to ensure both Report and Study update together
     await prisma.$transaction(async (tx) => {
-      // 1. Upsert the Report (Ensure your schema has @unique on studyId in RadiologyReport)
+      // 1. Upsert the Report
       await tx.radiologyReport.upsert({
         where: { studyId: studyId },
         update: {
@@ -132,7 +133,7 @@ export async function POST(req: NextRequest) {
           verifiedAt: action === 'FINALIZE' ? new Date() : null,
         },
         create: {
-          labId: user.labId, // ✅ Added missing labId
+          // REMOVED labId FROM HERE! The schema doesn't use it on this table.
           studyId: studyId,
           findings,
           impression,
