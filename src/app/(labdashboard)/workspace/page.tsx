@@ -13,7 +13,7 @@ import {
   Loader2,
   ChevronLeft,
   ChevronRight,
-  Filter,
+  ChevronDown,
   Clock,
   Briefcase,
   Trash2,
@@ -27,7 +27,6 @@ import {
   FileBadge,
   AlertCircle,
   Receipt,
-  MessageCircle,
   Printer,
   FileEdit,
   CheckCircle2,
@@ -42,7 +41,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Popover,
   PopoverContent,
@@ -71,24 +69,24 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const SEARCH_CRITERIA = [
-  { id: "all", label: "Global Search", icon: Search },
-  { id: "patientId", label: "Patient ID", icon: Fingerprint },
-  { id: "name", label: "Patient Name", icon: User },
-  { id: "phone", label: "Phone Number", icon: Phone },
-  { id: "sampleId", label: "Sample ID", icon: FlaskConical },
-  { id: "testName", label: "Test Name", icon: FileText },
-  { id: "invoiceId", label: "Bill / Invoice No", icon: Hash },
-  { id: "doctor", label: "Referral Doctor", icon: Stethoscope },
-  { id: "agency", label: "Agency / Corporate", icon: Briefcase },
+  { id: "all", label: "GLOBAL SEARCH", icon: Search },
+  { id: "patientId", label: "PATIENT ID", icon: Fingerprint },
+  { id: "name", label: "PATIENT NAME", icon: User },
+  { id: "phone", label: "PHONE NUMBER", icon: Phone },
+  { id: "sampleId", label: "SAMPLE ID", icon: FlaskConical },
+  { id: "testName", label: "TEST NAME", icon: FileText },
+  { id: "invoiceId", label: "BILL / INVOICE NO", icon: Hash },
+  { id: "doctor", label: "REFERRAL DOCTOR", icon: Stethoscope },
+  { id: "agency", label: "AGENCY / CORPORATE", icon: Briefcase },
   { id: "srfId", label: "SRF ID", icon: FileBadge },
-  { id: "abha", label: "ABHA Number", icon: ScanBarcode },
+  { id: "abha", label: "ABHA NUMBER", icon: ScanBarcode },
 ];
 
 const safeFormatDate = (dateValue: string | Date | null | undefined) => {
   if (!dateValue) return "N/A";
   const d = new Date(dateValue);
-  if (isNaN(d.getTime())) return "Invalid Date";
-  return format(d, "dd MMM yyyy, hh:mm a");
+  if (isNaN(d.getTime())) return "INVALID DATE";
+  return format(d, "dd MMM yyyy, hh:mm a").toUpperCase();
 };
 
 const getTAT = (date: Date) => {
@@ -103,9 +101,9 @@ const getTAT = (date: Date) => {
 
   return (
     <div
-      className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-2 py-0.5 rounded-md border cursor-help ${colorClass} shadow-sm transition-transform hover:scale-105`}>
-      <Clock className="h-3 w-3" /> {hours.toString().padStart(2, "0")}h{" "}
-      {mins.toString().padStart(2, "0")}m
+      className={`inline-flex items-center gap-1.5 text-[10px] font-normal uppercase px-1.5 py-0.5 rounded border cursor-help ${colorClass} shadow-sm transition-transform hover:scale-105`}>
+      <Clock className="h-3 w-3" /> {hours.toString().padStart(2, "0")}H{" "}
+      {mins.toString().padStart(2, "0")}M
     </div>
   );
 };
@@ -116,12 +114,33 @@ const getTestStatusBadge = (status: string) => {
     case "COMPLETED":
     case "DELIVERED":
       return "text-emerald-700 bg-emerald-50 border-emerald-200";
+    case "RESULT_ENTERED":
     case "IN_PROGRESS":
     case "SAMPLE_COLLECTED":
       return "text-amber-700 bg-amber-50 border-amber-200";
     case "PENDING":
     default:
-      return "text-muted-foreground bg-muted border-border";
+      return "text-muted-foreground bg-muted border-border hover:bg-slate-200";
+  }
+};
+
+const getTestDetailedStatus = (status: string) => {
+  switch (status) {
+    case "COMPLETED":
+    case "DELIVERED":
+      return "READY TO PRINT";
+    case "APPROVED":
+      return "APPROVED BY DR";
+    case "RESULT_ENTERED":
+      return "RESULT ENTERED";
+    case "IN_PROGRESS":
+      return "PROCESSING";
+    case "SAMPLE_COLLECTED":
+      return "SAMPLE COLLECTED";
+    case "PENDING":
+      return "PENDING";
+    default:
+      return status.replace("_", " ").toUpperCase();
   }
 };
 
@@ -136,17 +155,39 @@ export default function PatientWorklistPage() {
 
   const [activeTabFilter, setActiveTabFilter] = useState("ALL");
   const [page, setPage] = useState(1);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
   // ⌨️ Keyboard shortcuts
-  useKeyboardShortcut("n", () => router.push("/workspace/registration"), { description: "New patient registration" });
-  useKeyboardShortcut("/", () => { const el = document.querySelector('input[type="text"]') as HTMLInputElement; el?.focus(); }, { description: "Focus search" });
-  useKeyboardShortcut("ArrowRight", () => setPage(p => p + 1), { ctrl: true, description: "Next page" });
-  useKeyboardShortcut("ArrowLeft", () => setPage(p => Math.max(1, p - 1)), { ctrl: true, description: "Previous page" });
-  useKeyboardShortcut("Escape", () => router.push("/workspace"), { description: "Go back to dashboard" });
-  useKeyboardShortcut("r", () => queryClient.invalidateQueries({ queryKey: ["patients"] }), { description: "Refresh patient list" });
+  useKeyboardShortcut("n", () => router.push("/workspace/registration"), {
+    description: "New patient registration",
+  });
+  useKeyboardShortcut(
+    "/",
+    () => {
+      const el = document.querySelector(
+        'input[type="text"]',
+      ) as HTMLInputElement;
+      el?.focus();
+    },
+    { description: "Focus search" },
+  );
+  useKeyboardShortcut("ArrowRight", () => setPage((p) => p + 1), {
+    ctrl: true,
+    description: "Next page",
+  });
+  useKeyboardShortcut("ArrowLeft", () => setPage((p) => Math.max(1, p - 1)), {
+    ctrl: true,
+    description: "Previous page",
+  });
+  useKeyboardShortcut("Escape", () => router.push("/workspace"), {
+    description: "Go back to dashboard",
+  });
+  useKeyboardShortcut(
+    "r",
+    () => queryClient.invalidateQueries({ queryKey: ["patients"] }),
+    { description: "Refresh patient list" },
+  );
 
-  // Search Debounce
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(searchQuery);
@@ -176,19 +217,15 @@ export default function PatientWorklistPage() {
   const rawPatients = data?.data || (Array.isArray(data) ? data : []);
   const totalPages = data?.pagination?.pages || 1;
 
-  // 🌟 THE FIX: FLATTEN BY INVOICE (1 Invoice = 1 Row)
   const processedVisits = useMemo(() => {
     const visitsList: any[] = [];
 
     rawPatients.forEach((patient: any) => {
-      // If the patient has invoices, break them out into separate rows
       if (patient.invoices && patient.invoices.length > 0) {
         patient.invoices.forEach((inv: any) => {
-          // Find tests that specifically belong to this invoice
           const invoiceTests =
             patient.tests?.filter((t: any) => t.invoiceId === inv.id) || [];
 
-          // Compute status based on THIS specific invoice's tests
           const isFullyApproved =
             invoiceTests.length > 0 &&
             invoiceTests.every(
@@ -204,18 +241,16 @@ export default function PatientWorklistPage() {
               : "PENDING";
 
           visitsList.push({
-            uniqueVisitKey: inv.id, // The unique row ID is the Invoice ID!
+            uniqueVisitKey: inv.id,
             patient: patient,
             invoice: inv,
-            visitId: inv.invoiceNumber, // Human readable ID for the UI
+            visitId: inv.invoiceNumber,
             date: new Date(inv.createdAt),
             status: visitComputedStatus,
             tests: invoiceTests,
           });
         });
-      }
-      // If they were registered but NEVER billed (No invoices at all)
-      else {
+      } else {
         visitsList.push({
           uniqueVisitKey: `NO-INV-${patient.id}`,
           patient: patient,
@@ -228,11 +263,9 @@ export default function PatientWorklistPage() {
       }
     });
 
-    // Sort all rows globally by date (Newest first)
     return visitsList.sort((a, b) => b.date.getTime() - a.date.getTime());
   }, [rawPatients]);
 
-  // Tab Filtering logic
   const filteredVisits = useMemo(() => {
     if (activeTabFilter === "ALL") return processedVisits;
     return processedVisits.filter((visit) => visit.status === activeTabFilter);
@@ -253,18 +286,25 @@ export default function PatientWorklistPage() {
   });
 
   const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to purge this entire patient record?")) {
+    if (confirm("ARE YOU SURE YOU WANT TO PURGE THIS ENTIRE PATIENT RECORD?")) {
       deleteMutation.mutate(id);
     }
+  };
+
+  const toggleRowExpansion = (key: string) => {
+    setExpandedRows((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
   };
 
   const ActiveIcon =
     SEARCH_CRITERIA.find((c) => c.id === searchField)?.icon || Search;
   const activeLabel =
-    SEARCH_CRITERIA.find((c) => c.id === searchField)?.label || "Global Search";
+    SEARCH_CRITERIA.find((c) => c.id === searchField)?.label || "GLOBAL SEARCH";
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] bg-muted/30 font-sans relative overflow-hidden selection:bg-indigo-100">
+    <div className="flex flex-col h-[calc(100vh-4rem)] bg-muted/30 font-sans relative overflow-hidden selection:bg-indigo-100 uppercase">
       <div className="absolute top-0 inset-x-0 h-64 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-100/40 via-slate-50 to-transparent pointer-events-none z-0" />
 
       <div className="flex-1 flex flex-col p-4 sm:p-6 z-10 overflow-hidden max-w-[1600px] mx-auto w-full">
@@ -276,16 +316,17 @@ export default function PatientWorklistPage() {
                 <FlaskConical className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-foreground tracking-tight flex items-center gap-2 leading-none">
-                  Patient Visit Worklist
+                <h1 className="text-lg font-normal text-foreground tracking-tight flex items-center gap-2 leading-none">
+                  PATIENT VISIT WORKLIST
                   <Badge
                     variant="secondary"
-                    className="bg-indigo-50 text-indigo-700 font-mono text-xs">
-                    {filteredVisits.length} Records
+                    className="bg-indigo-50 text-indigo-700 font-mono font-normal text-[10px]">
+                    {filteredVisits.length} RECORDS
                   </Badge>
                 </h1>
-                <p className="text-xs font-medium text-muted-foreground mt-1">
-                  Click any row to open the full patient profile.
+                <p className="text-[10px] font-normal text-muted-foreground mt-1">
+                  CLICK ANY ROW TO EXPAND TEST DETAILS. CLICK PATIENT ID TO OPEN
+                  PROFILE.
                 </p>
               </div>
             </div>
@@ -298,8 +339,8 @@ export default function PatientWorklistPage() {
                       <ActiveIcon className="h-4 w-4" />
                     </div>
                     <Input
-                      placeholder={`Search by ${activeLabel}...`}
-                      className="pl-9 pr-9 h-10 bg-card border-border focus:border-indigo-500 rounded-xl cursor-pointer font-medium shadow-sm"
+                      placeholder={`SEARCH BY ${activeLabel}...`}
+                      className="pl-9 pr-9 h-10 bg-card border-border focus:border-indigo-500 rounded-xl cursor-pointer font-normal text-xs shadow-sm uppercase placeholder:uppercase"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -309,17 +350,17 @@ export default function PatientWorklistPage() {
                   </div>
                 </PopoverTrigger>
                 <PopoverContent
-                  className="w-80 p-0 shadow-2xl border-slate-100 rounded-2xl overflow-hidden"
+                  className="w-80 p-0 shadow-2xl border-slate-100 rounded-2xl overflow-hidden uppercase"
                   align="end"
                   sideOffset={8}>
                   <div className="bg-slate-50/80 p-4 border-b border-slate-100">
                     <div className="relative">
                       <Input
                         autoFocus
-                        placeholder="Filter criteria fields..."
+                        placeholder="FILTER CRITERIA FIELDS..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="h-10 bg-card pl-9 rounded-xl focus:border-indigo-500"
+                        className="h-10 bg-card pl-9 rounded-xl focus:border-indigo-500 uppercase font-normal text-xs placeholder:uppercase"
                       />
                       <ActiveIcon className="absolute left-3 top-3 h-4 w-4 text-indigo-500" />
                     </div>
@@ -341,7 +382,7 @@ export default function PatientWorklistPage() {
                             />
                             <Label
                               htmlFor={criteria.id}
-                              className="flex items-center gap-2 px-3 py-2 rounded-xl border border-transparent cursor-pointer hover:bg-muted/30 peer-data-[state=checked]:bg-indigo-50 peer-data-[state=checked]:text-indigo-700 transition-all text-xs font-semibold">
+                              className="flex items-center gap-2 px-3 py-2 rounded-xl border border-transparent cursor-pointer hover:bg-muted/30 peer-data-[state=checked]:bg-indigo-50 peer-data-[state=checked]:text-indigo-700 transition-all text-[10px] font-normal uppercase">
                               <criteria.icon className="h-3.5 w-3.5 opacity-75" />
                               {criteria.label}
                             </Label>
@@ -355,8 +396,8 @@ export default function PatientWorklistPage() {
 
               <Button
                 onClick={() => router.push("/workspace/registration")}
-                className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white h-10 rounded-xl text-sm font-bold shadow-md shadow-indigo-500/25 transition-all hover:-translate-y-0.5">
-                <Plus className="h-4 w-4 mr-1.5" /> New Registration
+                className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white h-10 rounded-xl text-xs font-normal shadow-md shadow-indigo-500/25 transition-all hover:-translate-y-0.5 uppercase">
+                <Plus className="h-4 w-4 mr-1.5" /> NEW REGISTRATION ("N")
               </Button>
             </div>
           </div>
@@ -369,23 +410,23 @@ export default function PatientWorklistPage() {
               <TabsList className="bg-slate-100/80 p-1 rounded-xl flex justify-start gap-1 w-full sm:w-max overflow-x-auto">
                 <TabsTrigger
                   value="ALL"
-                  className="rounded-lg text-xs font-bold px-4 py-2 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm">
-                  All Visits ({processedVisits.length})
+                  className="rounded-lg text-[10px] font-normal px-4 py-2 uppercase data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm">
+                  ALL VISITS ({processedVisits.length})
                 </TabsTrigger>
                 <TabsTrigger
                   value="COMPLETED"
-                  className="rounded-lg text-xs font-bold px-4 py-2 data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center gap-1.5">
-                  <CheckCircle2 className="h-3.5 w-3.5" /> Print Ready
+                  className="rounded-lg text-[10px] font-normal px-4 py-2 uppercase data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center gap-1.5">
+                  <CheckCircle2 className="h-3.5 w-3.5" /> PRINT READY
                 </TabsTrigger>
                 <TabsTrigger
                   value="PENDING"
-                  className="rounded-lg text-xs font-bold px-4 py-2 data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center gap-1.5">
-                  <Clock className="h-3.5 w-3.5" /> Entry Pending
+                  className="rounded-lg text-[10px] font-normal px-4 py-2 uppercase data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5" /> ENTRY PENDING
                 </TabsTrigger>
                 <TabsTrigger
                   value="NO_TESTS"
-                  className="rounded-lg text-xs font-bold px-4 py-2 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center gap-1.5">
-                  <AlertCircle className="h-3.5 w-3.5" /> Reg. Only
+                  className="rounded-lg text-[10px] font-normal px-4 py-2 uppercase data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center gap-1.5">
+                  <AlertCircle className="h-3.5 w-3.5" /> REG. ONLY
                 </TabsTrigger>
               </TabsList>
             </Tabs>
@@ -397,29 +438,31 @@ export default function PatientWorklistPage() {
           <TooltipProvider delayDuration={300}>
             <div className="flex-1 overflow-auto relative custom-scrollbar">
               <table className="w-full text-left border-collapse whitespace-nowrap">
-                <thead className="sticky top-0 z-20 bg-slate-50/90 backdrop-blur-md text-muted-foreground font-bold uppercase tracking-wider text-[10px] border-b border-border">
+                <thead className="sticky top-0 z-20 bg-slate-50/90 backdrop-blur-md text-muted-foreground font-normal uppercase tracking-wider text-[10px] border-b border-border">
                   <tr>
-                    <th className="px-4 py-3 w-[150px]">Visit ID</th>
-                    <th className="px-4 py-3 w-[350px]">
-                      Patient Profile & Demographics
+                    <th className="px-4 py-3 w-[160px]">VISIT ID</th>
+                    <th className="px-4 py-3 w-[340px]">
+                      PATIENT DEMOGRAPHICS
                     </th>
-                    <th className="px-4 py-3 w-[120px]">TAT Analytics</th>
-                    <th className="px-4 py-3 min-w-[200px]">Assigned Assays</th>
-                    <th className="px-4 py-3 w-[160px]">Referred By</th>
+                    <th className="px-4 py-3 w-[120px]">TAT LOGISTICS</th>
+                    <th className="px-4 py-3 min-w-[220px]">
+                      ASSIGNED ASSAYS & STATUS
+                    </th>
+                    <th className="px-4 py-3 w-[160px]">REFERRED BY</th>
                     <th className="px-4 py-3 text-center w-[100px]">
-                      Financials
+                      FINANCIALS
                     </th>
-                    <th className="px-5 py-3 text-right w-[80px]">Actions</th>
+                    <th className="px-4 py-3 text-right w-[150px]">ACTIONS</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-sm">
+                <tbody className="divide-y divide-slate-100 text-xs font-normal uppercase tracking-wide">
                   {isLoading ? (
                     <tr>
                       <td colSpan={7} className="h-64 text-center">
                         <div className="flex flex-col items-center justify-center text-muted-foreground space-y-2">
                           <Loader2 className="animate-spin h-6 w-6 text-indigo-600" />
-                          <span className="text-[10px] uppercase tracking-widest font-bold animate-pulse">
-                            Loading Visits...
+                          <span className="text-[10px] uppercase tracking-widest font-normal animate-pulse">
+                            LOADING VISITS...
                           </span>
                         </div>
                       </td>
@@ -429,22 +472,20 @@ export default function PatientWorklistPage() {
                       <td colSpan={7} className="h-64 text-center">
                         <div className="flex flex-col items-center justify-center text-muted-foreground/70 space-y-2">
                           <Search className="h-6 w-6 text-slate-300" />
-                          <p className="font-bold text-xs text-muted-foreground">
-                            Zero visits found
+                          <p className="font-normal text-[10px] uppercase text-muted-foreground">
+                            ZERO VISITS FOUND
                           </p>
                         </div>
                       </td>
                     </tr>
                   ) : (
                     filteredVisits.map((visit: any) => {
-                      const isRowSelected = selectedIds.includes(
-                        visit.uniqueVisitKey,
-                      );
+                      const isExpanded = expandedRows[visit.uniqueVisitKey];
 
                       let derivedDoctor =
                         visit.tests?.[0]?.doctor?.name ||
                         visit.patient.doctor?.name ||
-                        "Self Referral";
+                        "SELF REFERRAL";
                       let derivedAgency =
                         visit.tests?.[0]?.agency?.agencyName ||
                         visit.patient.agency?.agencyName ||
@@ -454,45 +495,64 @@ export default function PatientWorklistPage() {
                         <tr
                           key={visit.uniqueVisitKey}
                           onClick={() =>
-                            router.push(
-                              `/workspace/patients/${visit.patient.id}`,
-                            )
+                            toggleRowExpansion(visit.uniqueVisitKey)
                           }
-                          className={`group transition-all cursor-pointer ${isRowSelected ? "bg-indigo-50/30" : "hover:bg-muted/50/70"}`}>
+                          className={`group transition-all cursor-pointer ${isExpanded ? "bg-indigo-50/20" : "hover:bg-muted/50/70"}`}>
                           {/* 🆔 DYNAMIC VISIT TRACKER ID */}
-                          <td className="px-4 py-4">
-                            <div className="flex flex-col gap-1 w-max">
-                              <Badge
-                                variant="outline"
-                                className="font-mono bg-indigo-50/50 font-black text-indigo-700 border-indigo-100 text-[11px] px-2 py-0.5 rounded-md shadow-sm">
-                                {visit.visitId}
-                              </Badge>
-                              <span className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wide flex items-center gap-1 pl-0.5 mt-0.5">
-                                <Calendar className="w-3 h-3 text-slate-300" />{" "}
-                                {safeFormatDate(visit.date)}
-                              </span>
+                          <td className="px-4 py-3 align-top">
+                            <div className="flex items-start gap-2 w-max">
+                              <div
+                                className={`mt-0.5 text-slate-300 transition-transform ${isExpanded ? "rotate-180" : "rotate-0"}`}>
+                                <ChevronDown className="w-4 h-4" />
+                              </div>
+                              <div className="flex flex-col gap-1">
+                                <Badge
+                                  variant="outline"
+                                  className="font-mono bg-indigo-50/50 font-normal text-indigo-700 border-indigo-100 text-[11px] px-2 py-0.5 rounded shadow-sm uppercase">
+                                  {visit.visitId}
+                                </Badge>
+                                <span className="text-[9px] font-normal text-muted-foreground/70 flex items-center gap-1 pl-0.5">
+                                  <Calendar className="w-2.5 h-2.5 text-slate-300" />{" "}
+                                  {safeFormatDate(visit.date)}
+                                </span>
+                              </div>
                             </div>
                           </td>
 
-                          {/* 👤 INLINE PATIENT DEMOGRAPHICS */}
-                          <td className="px-4 py-4">
+                          {/* 👤 INLINE PATIENT DEMOGRAPHICS (CLICKABLE ID) */}
+                          <td className="px-4 py-3 align-top">
                             <div className="flex flex-col gap-1 w-max">
                               <div className="flex items-center gap-2">
-                                <span className="font-extrabold text-foreground text-sm tracking-tight">
+                                <span className="font-normal text-foreground text-sm tracking-tight">
                                   {visit.patient.name}
                                 </span>
-                                <Badge className="bg-muted text-muted-foreground hover:bg-slate-200 border-none px-1.5 py-0 text-[9px] uppercase tracking-wider font-bold">
+                                <Badge className="bg-muted text-muted-foreground border-none px-1.5 py-0 text-[9px] font-normal uppercase">
                                   {visit.patient.age}{" "}
                                   {visit.patient.ageUnit?.slice(0, 1)} •{" "}
                                   {visit.patient.gender}
                                 </Badge>
-                                <span className="text-[10px] font-mono font-bold text-muted-foreground/70 ml-1">
-                                  {visit.patient.patientId}
-                                </span>
+                                {/* LARGER CLICKABLE PATIENT ID */}
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        router.push(
+                                          `/workspace/patients/${visit.patient.id}`,
+                                        );
+                                      }}
+                                      className="text-sm font-mono font-normal text-indigo-600 bg-indigo-50/50 px-1.5 rounded cursor-pointer hover:bg-indigo-100 hover:underline transition-all">
+                                      {visit.patient.patientId}
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent className="bg-slate-900 text-white font-normal text-[10px] uppercase">
+                                    OPEN PATIENT PROFILE
+                                  </TooltipContent>
+                                </Tooltip>
                               </div>
-                              <div className="flex items-center gap-2 mt-0.5">
-                                <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
-                                  <Phone className="w-3 h-3 text-slate-400" />{" "}
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-normal text-muted-foreground flex items-center gap-1">
+                                  <Phone className="w-2.5 h-2.5 text-slate-400" />{" "}
                                   {visit.patient.phone}
                                 </span>
                               </div>
@@ -500,70 +560,93 @@ export default function PatientWorklistPage() {
                           </td>
 
                           {/* ⏱️ REAL TIME LOGISTICS TAT ANALYTICS */}
-                          <td className="px-4 py-4">
+                          <td className="px-4 py-3 align-top">
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <div>{getTAT(visit.date)}</div>
                               </TooltipTrigger>
-                              <TooltipContent className="bg-slate-900 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-xl">
-                                Registered:{" "}
+                              <TooltipContent className="bg-slate-900 text-white text-[10px] font-normal uppercase px-3 py-1.5 rounded-lg shadow-xl">
+                                REGISTERED:{" "}
                                 {format(
                                   new Date(visit.date),
                                   "dd MMM, hh:mm a",
-                                )}
+                                ).toUpperCase()}
                               </TooltipContent>
                             </Tooltip>
                           </td>
 
-                          {/* 🧪 TESTING PARCELS */}
-                          <td className="px-4 py-4">
-                            <div className="flex flex-wrap gap-1 max-w-[280px]">
-                              {visit.tests.map((testItem: any) => (
-                                <Tooltip key={testItem.id}>
-                                  <TooltipTrigger asChild>
-                                    <div
-                                      className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-bold border cursor-help transition-all hover:scale-105 ${getTestStatusBadge(testItem.status)}`}>
-                                      <span>{testItem.testCode}</span>
-                                      {testItem.status === "COMPLETED" ||
-                                      testItem.status === "APPROVED" ? (
-                                        <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" />
-                                      ) : (
-                                        <Clock className="w-2.5 h-2.5 opacity-70" />
-                                      )}
-                                    </div>
-                                  </TooltipTrigger>
-                                  <TooltipContent className="bg-slate-900 text-slate-50 text-xs rounded-xl p-3 shadow-xl border-slate-800 z-50">
-                                    <p className="font-bold text-sm mb-1">
-                                      {testItem.testName}
-                                    </p>
-                                    <p className="text-[10px] text-muted-foreground/70 uppercase tracking-wider">
-                                      Status:{" "}
-                                      <span className="text-white font-bold">
-                                        {testItem.status}
-                                      </span>
-                                    </p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              ))}
-                              {visit.tests.length === 0 && (
-                                <span className="text-muted-foreground/70 text-xs italic font-semibold flex items-center gap-1">
-                                  <AlertCircle className="w-3.5 h-3.5" /> No
-                                  Tests Billed
+                          {/* 🧪 TESTING PARCELS (COLLAPSED / EXPANDED STATE) */}
+                          <td className="px-4 py-3 align-top">
+                            {/* STATE 1: COLLAPSED (Short Codes) */}
+                            {!isExpanded && (
+                              <div className="flex flex-wrap gap-1 max-w-[280px]">
+                                {visit.tests.map((testItem: any) => (
+                                  <div
+                                    key={testItem.id}
+                                    className={`px-1.5 py-0.5 rounded text-[9px] font-normal uppercase border ${getTestStatusBadge(testItem.status)}`}>
+                                    {testItem.testCode}
+                                  </div>
+                                ))}
+                                {visit.tests.length === 0 && (
+                                  <span className="text-muted-foreground/70 text-[10px] font-normal flex items-center gap-1">
+                                    <AlertCircle className="w-3 h-3" /> NO TESTS
+                                    BILLED
+                                  </span>
+                                )}
+                              </div>
+                            )}
+
+                            {/* STATE 2: EXPANDED (Line by Line with Details) */}
+                            {isExpanded && (
+                              <div className="flex flex-col gap-1.5 min-w-[280px] max-w-[340px]">
+                                <span className="text-[9px] font-medium text-indigo-500 mb-1 flex items-center gap-1">
+                                  <FlaskConical className="w-3 h-3" /> TEST
+                                  BREAKDOWN
                                 </span>
-                              )}
-                            </div>
+                                {visit.tests.map((testItem: any) => (
+                                  <div
+                                    key={testItem.id}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      router.push(
+                                        `/workspace/workflow/results/${visit.patient.id}`,
+                                      );
+                                    }}
+                                    className={`flex items-center justify-between gap-3 px-2 py-1.5 rounded text-[10px] font-normal uppercase border cursor-pointer transition-all hover:border-indigo-300 hover:shadow-sm ${getTestStatusBadge(testItem.status)}`}>
+                                    <div className="flex flex-col">
+                                      <span className="font-semibold tracking-wide">
+                                        {testItem.testName}
+                                      </span>
+                                      <span className="text-[8px] opacity-70">
+                                        CODE: {testItem.testCode}
+                                      </span>
+                                    </div>
+
+                                    <span className="px-1.5 py-0.5 bg-white/80 rounded-[3px] text-[8px] font-bold tracking-wider border border-black/5 shadow-sm whitespace-nowrap">
+                                      {getTestDetailedStatus(testItem.status)}
+                                    </span>
+                                  </div>
+                                ))}
+                                {visit.tests.length === 0 && (
+                                  <span className="text-muted-foreground/70 text-[10px] font-normal flex items-center gap-1">
+                                    <AlertCircle className="w-3 h-3" /> NO TESTS
+                                    BILLED
+                                  </span>
+                                )}
+                              </div>
+                            )}
                           </td>
 
                           {/* 🩺 REFERRED BY COLUMN */}
-                          <td className="px-4 py-4">
-                            <div className="flex flex-col gap-0.5 text-xs">
-                              <span className="font-bold text-foreground/80 flex items-center gap-1.5 truncate max-w-[140px]">
-                                <Stethoscope className="h-3.5 w-3.5 text-muted-foreground/70 shrink-0" />
+                          <td className="px-4 py-3 align-top">
+                            <div className="flex flex-col gap-1 text-[10px]">
+                              <span className="font-normal text-foreground flex items-center gap-1 truncate max-w-[140px]">
+                                <Stethoscope className="h-3 w-3 text-muted-foreground/70 shrink-0" />
                                 {derivedDoctor}
                               </span>
                               {derivedAgency && (
-                                <span className="text-[9px] font-black text-muted-foreground/70 uppercase tracking-widest flex items-center gap-1.5 truncate max-w-[140px]">
-                                  <Briefcase className="h-3 w-3 text-slate-300 shrink-0" />
+                                <span className="text-[9px] font-normal text-muted-foreground/70 flex items-center gap-1 truncate max-w-[140px]">
+                                  <Briefcase className="h-2.5 w-2.5 text-slate-300 shrink-0" />
                                   {derivedAgency}
                                 </span>
                               )}
@@ -572,28 +655,28 @@ export default function PatientWorklistPage() {
 
                           {/* 💰 FINANCIALS */}
                           <td
-                            className="px-4 py-4 text-center"
+                            className="px-4 py-3 align-top text-center"
                             onClick={(e) => e.stopPropagation()}>
                             {visit.invoice ? (
                               <HoverCard openDelay={200}>
                                 <HoverCardTrigger asChild>
                                   <div className="w-max mx-auto">
                                     <Badge
-                                      className={`${visit.invoice.status === "PAID" ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"} border-none text-[10px] px-2.5 uppercase tracking-wider font-bold cursor-help`}>
+                                      className={`${visit.invoice.status === "PAID" ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"} border-none text-[9px] px-2 py-0.5 uppercase font-normal cursor-help`}>
                                       {visit.invoice.status}
                                     </Badge>
                                   </div>
                                 </HoverCardTrigger>
                                 <HoverCardContent
-                                  className="w-64 p-0 shadow-2xl border-border rounded-xl overflow-hidden z-50"
+                                  className="w-64 p-0 shadow-2xl border-border rounded-xl overflow-hidden z-50 uppercase font-normal"
                                   align="center">
-                                  <div className="bg-muted/30 px-4 py-2 border-b text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1.5">
-                                    <Receipt className="h-3.5 w-3.5" /> Invoice
-                                    Summary
+                                  <div className="bg-muted/30 px-4 py-2 border-b text-[10px] text-muted-foreground flex items-center gap-1.5">
+                                    <Receipt className="h-3.5 w-3.5" /> INVOICE
+                                    SUMMARY
                                   </div>
-                                  <div className="p-4 space-y-2 text-xs font-semibold">
+                                  <div className="p-4 space-y-2 text-[11px]">
                                     <div className="flex justify-between text-muted-foreground">
-                                      <span>Subtotal</span>{" "}
+                                      <span>SUBTOTAL</span>{" "}
                                       <span>
                                         ₹
                                         {Number(
@@ -601,8 +684,8 @@ export default function PatientWorklistPage() {
                                         ).toFixed(2)}
                                       </span>
                                     </div>
-                                    <div className="border-t border-dashed pt-2 flex justify-between font-black text-foreground text-sm">
-                                      <span>Net Payable</span>{" "}
+                                    <div className="border-t border-dashed pt-2 flex justify-between text-foreground text-xs font-semibold">
+                                      <span>NET PAYABLE</span>{" "}
                                       <span>
                                         ₹
                                         {Number(
@@ -616,107 +699,117 @@ export default function PatientWorklistPage() {
                             ) : (
                               <Badge
                                 variant="outline"
-                                className="text-muted-foreground/70 border-dashed text-[10px] uppercase">
-                                Unbilled
+                                className="text-muted-foreground/70 border-dashed text-[9px] font-normal uppercase">
+                                UNBILLED
                               </Badge>
                             )}
                           </td>
 
-                          {/* ⚙️ 3-DOT ACTION MENU */}
+                          {/* ⚙️ ACTION MENU WITH INLINE HORIZONTAL ACTIONS */}
                           <td
-                            className="px-5 py-4 text-right"
+                            className="px-4 py-3 align-top text-right"
                             onClick={(e) => e.stopPropagation()}>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
+                            <div className="flex flex-row items-center justify-end gap-2">
+                              {/* INLINE LABELED ACTION: PRINT REPORT */}
+                              {visit.status === "COMPLETED" && (
                                 <Button
-                                  variant="ghost"
-                                  className="h-8 w-8 p-0 rounded-lg text-muted-foreground/70 hover:text-indigo-600 hover:bg-indigo-50">
-                                  <span className="sr-only">Open menu</span>
-                                  <MoreHorizontal className="h-5 w-5" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent
-                                align="end"
-                                className="w-56 p-1.5 shadow-2xl border-slate-100 rounded-xl">
-                                {/* New Accession for THIS patient */}
-                                <DropdownMenuItem
-                                  onClick={() =>
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
                                     router.push(
-                                      `/workspace/accession?patientId=${visit.patient.id}&isNewVisit=true`,
-                                    )
-                                  }
-                                  className="cursor-pointer font-bold rounded-lg py-2.5">
-                                  <TestTube2 className="mr-2 h-4 w-4 text-indigo-500" />{" "}
-                                  Add New Test
-                                </DropdownMenuItem>
+                                      `/workspace/reports/print/${visit.patient.id}`,
+                                    );
+                                  }}
+                                  className="h-8 px-3 border-emerald-200 bg-emerald-50/50 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-300 rounded shadow-sm flex items-center gap-1.5 transition-all">
+                                  <Printer className="h-3.5 w-3.5 shrink-0" />
+                                  <span className="text-[10px] font-bold tracking-wider">
+                                    PRINT
+                                  </span>
+                                </Button>
+                              )}
 
-                                {/* Results Entry (Using the Patient ID to fetch their active tests) */}
-                                {visit.tests.length > 0 && (
+                              {/* STANDARD DROPDOWN MENU FOR EVERYTHING ELSE */}
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 px-3 rounded text-muted-foreground/70 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 transition-all flex items-center gap-1.5 shadow-sm">
+                                    <span className="text-[10px] font-bold tracking-wider">
+                                      MORE
+                                    </span>
+                                    <ChevronDown className="h-3.5 w-3.5 shrink-0" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                  align="end"
+                                  className="w-56 p-1.5 shadow-2xl border-slate-100 rounded-xl uppercase font-normal text-xs">
+                                  {visit.tests.length > 0 && (
+                                    <DropdownMenuItem
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        router.push(
+                                          `/workspace/workflow/results/${visit.patient.id}`,
+                                        );
+                                      }}
+                                      className="cursor-pointer rounded-lg py-2.5 font-medium text-amber-700 hover:text-amber-800 hover:bg-amber-50">
+                                      <FileEdit className="mr-2 h-4 w-4" />{" "}
+                                      ENTER RESULTS
+                                    </DropdownMenuItem>
+                                  )}
+
                                   <DropdownMenuItem
                                     onClick={() =>
                                       router.push(
-                                        `/workspace/workflow/results/${visit.patient.id}`,
+                                        `/workspace/accession?patientId=${visit.patient.id}&isNewVisit=true`,
                                       )
                                     }
-                                    className="cursor-pointer font-bold rounded-lg py-2.5">
-                                    <FileEdit className="mr-2 h-4 w-4 text-amber-600" />{" "}
-                                    Enter Results Data
+                                    className="cursor-pointer rounded-lg py-2.5 font-medium text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50">
+                                    <TestTube2 className="mr-2 h-4 w-4" /> ADD
+                                    NEW TEST
                                   </DropdownMenuItem>
-                                )}
 
-                                {/* Print Report (Using Patient ID) */}
-                                {visit.status === "COMPLETED" && (
+                                  <DropdownMenuSeparator className="bg-muted my-1" />
+
+                                  {visit.invoice && (
+                                    <>
+                                      <DropdownMenuItem
+                                        onClick={() =>
+                                          router.push(
+                                            `/workspace/billing/${visit.invoice.id}`,
+                                          )
+                                        }
+                                        className="cursor-pointer text-foreground/80 rounded-lg py-2 font-medium hover:bg-slate-100">
+                                        <Receipt className="mr-2 h-4 w-4 text-slate-400" />{" "}
+                                        VIEW INVOICE
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem
+                                        onClick={() =>
+                                          router.push(
+                                            `/workspace/print/barcodes?invoiceId=${visit.invoice.id}`,
+                                          )
+                                        }
+                                        className="cursor-pointer text-foreground/80 rounded-lg py-2 font-medium hover:bg-slate-100">
+                                        <ScanBarcode className="mr-2 h-4 w-4 text-slate-400" />{" "}
+                                        PRINT BARCODES
+                                      </DropdownMenuItem>
+                                    </>
+                                  )}
+
+                                  <DropdownMenuSeparator className="bg-muted my-1" />
+
                                   <DropdownMenuItem
+                                    className="text-rose-600 focus:text-rose-700 focus:bg-rose-50 rounded-lg py-2 font-medium"
                                     onClick={() =>
-                                      router.push(
-                                        `/workspace/reports/print/${visit.patient.id}`,
-                                      )
-                                    }
-                                    className="cursor-pointer font-bold rounded-lg py-2.5">
-                                    <Printer className="mr-2 h-4 w-4 text-emerald-600" />{" "}
-                                    Print Final Report
+                                      handleDelete(visit.patient.id)
+                                    }>
+                                    <Trash2 className="mr-2 h-4 w-4" /> DELETE
+                                    RECORD
                                   </DropdownMenuItem>
-                                )}
-
-                                <DropdownMenuSeparator className="bg-muted my-1" />
-
-                                {/* Invoice Actions (Using specific Invoice ID!) */}
-                                {visit.invoice && (
-                                  <>
-                                    <DropdownMenuItem
-                                      onClick={() =>
-                                        router.push(
-                                          `/workspace/billing/${visit.invoice.id}`,
-                                        )
-                                      }
-                                      className="cursor-pointer font-medium text-foreground/80 rounded-lg py-2">
-                                      <Receipt className="mr-2 h-4 w-4 text-slate-400" />{" "}
-                                      View Invoice
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      onClick={() =>
-                                        router.push(
-                                          `/workspace/print/barcodes?invoiceId=${visit.invoice.id}`,
-                                        )
-                                      }
-                                      className="cursor-pointer font-medium text-foreground/80 rounded-lg py-2">
-                                      <ScanBarcode className="mr-2 h-4 w-4 text-slate-400" />{" "}
-                                      Print Barcodes
-                                    </DropdownMenuItem>
-                                  </>
-                                )}
-
-                                <DropdownMenuSeparator className="bg-muted my-1" />
-                                <DropdownMenuItem
-                                  className="text-rose-600 focus:text-rose-700 focus:bg-rose-50 font-bold rounded-lg py-2"
-                                  onClick={() =>
-                                    handleDelete(visit.patient.id)
-                                  }>
-                                  <Trash2 className="mr-2 h-4 w-4" /> Delete
-                                  Record
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -728,10 +821,10 @@ export default function PatientWorklistPage() {
           </TooltipProvider>
 
           {/* --- PAGINATION CONSOLE FOOTER --- */}
-          <div className="flex-none px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4 bg-card z-20">
-            <div className="text-xs text-muted-foreground font-bold tracking-wide uppercase">
-              Page <span className="text-foreground font-black">{page}</span> /{" "}
-              <span className="text-foreground font-black">{totalPages}</span>
+          <div className="flex-none px-6 py-3 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4 bg-card z-20 uppercase font-normal">
+            <div className="text-[10px] text-muted-foreground tracking-wide font-medium">
+              PAGE <span className="text-foreground">{page}</span> /{" "}
+              <span className="text-foreground">{totalPages}</span>
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -739,16 +832,16 @@ export default function PatientWorklistPage() {
                 size="sm"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="h-9 px-4 rounded-xl text-xs font-black border-border text-muted-foreground hover:bg-muted/30">
-                <ChevronLeft className="h-4 w-4 mr-1" /> Prev
+                className="h-8 px-4 rounded-xl text-[10px] border-border text-muted-foreground hover:bg-muted/30 uppercase font-medium">
+                <ChevronLeft className="h-3 w-3 mr-1" /> PREV
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setPage((p) => p + 1)}
                 disabled={page >= totalPages}
-                className="h-9 px-4 rounded-xl text-xs font-black border-border text-muted-foreground hover:bg-muted/30">
-                Next <ChevronRight className="h-4 w-4 ml-1" />
+                className="h-8 px-4 rounded-xl text-[10px] border-border text-muted-foreground hover:bg-muted/30 uppercase font-medium">
+                NEXT <ChevronRight className="h-3 w-3 ml-1" />
               </Button>
             </div>
           </div>

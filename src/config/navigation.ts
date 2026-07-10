@@ -61,7 +61,7 @@ export const adminNav: NavGroup[] = [
   {
     title: "Clinical Operations",
     items: [
-      { name: "Patient Registration", href: "/workspace/registration", icon: UserPlus, badge: "New" },
+      { name: "New Registration", href: "/workspace/registration", icon: UserPlus, badge: "N" },
       { name: "Patient Directory", href: "/workspace/patients", icon: Users },
       { name: "Test Management", href: "/workspace/test-management", icon: TestTube },
       { name: "Worklist & Results", href: "/workspace/results", icon: ClipboardCheck, badge: "Live" },

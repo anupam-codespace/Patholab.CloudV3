@@ -73,23 +73,23 @@ const getQuickShortcuts = (role?: string) => {
     case "SUPER_ADMIN":
       return [
         {
-          label: "New Patient",
+          label: "NEW REGISTRATION",
           href: "/workspace/registration",
           icon: UserPlus,
           color: "text-emerald-600",
           bg: "hover:bg-emerald-100",
           active: "bg-emerald-50",
         },
+        // {
+        //   label: "ADD STAFF",
+        //   href: "/workspace/staff",
+        //   icon: Users,
+        //   color: "text-primary",
+        //   bg: "hover:bg-blue-100",
+        //   active: "bg-primary/10",
+        // },
         {
-          label: "Add Staff",
-          href: "/workspace/staff",
-          icon: Users,
-          color: "text-primary",
-          bg: "hover:bg-blue-100",
-          active: "bg-primary/10",
-        },
-        {
-          label: "Reports",
+          label: "REPORTS",
           href: "/workspace/reports",
           icon: BarChart3,
           color: "text-indigo-600",
@@ -465,8 +465,8 @@ export function Header({ toggleSidebar, userData }: HeaderProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                className={`h-10 w-10 rounded-xl transition-all shrink-0 ${pathname === "/workspace/support" ? "bg-muted text-foreground" : "text-muted-foreground/70 hover:text-foreground hover:bg-muted"}`}>
-                <HelpCircle className="h-5 w-5" />
+                className={`h-10 w-18 rounded-xl p-2 transition-all shrink-0 ${pathname === "/workspace/support" ? "bg-muted text-foreground" : "text-muted-foreground/70 hover:text-foreground hover:bg-muted"}`}>
+                <HelpCircle className="h-5 w-5" /><span className="mr-2">HELP</span>
               </Button>
             </PopoverTrigger>
             <PopoverContent
@@ -503,7 +503,7 @@ export function Header({ toggleSidebar, userData }: HeaderProps) {
                     <p className="text-[11px] uppercase font-medium text-muted-foreground/70 tracking-wide">
                       Email Support
                     </p>
-                    <p className="text-sm font-semibold text-foreground">
+                    <p className="text-sm font-semibold text-foreground lowercase">
                       support@patholab.cloud
                     </p>
                   </div>

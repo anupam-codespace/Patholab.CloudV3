@@ -128,10 +128,9 @@ export default function DashboardLayout({
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
-      
       {/* ✅ ADDED: Mobile Overlay Backdrop. Clicking this closes the sidebar on mobile */}
       {isSidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden transition-opacity"
           onClick={() => setIsSidebarOpen(false)}
         />
@@ -149,16 +148,16 @@ export default function DashboardLayout({
       <div
         className={`flex flex-1 flex-col overflow-hidden relative transition-all duration-300 ease-in-out ${
           isSidebarOpen ? "lg:ml-[280px]" : "ml-0"
-        }`}
-      >
+        }`}>
         <Header
           userData={headerUserData}
           toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         />
 
-        <main className="flex-1 overflow-y-auto w-full relative z-0 bg-muted/30">
+        <main className="flex-1 overflow-y-auto w-full relative z-0 bg-muted/30 uppercase">
           {children}
-        </main>
+          </main>
+         
       </div>
     </div>
   );

@@ -397,7 +397,7 @@ export default function PatientWorklistPage() {
               <Button
                 onClick={() => router.push("/workspace/registration")}
                 className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white h-10 rounded-xl text-xs font-normal shadow-md shadow-indigo-500/25 transition-all hover:-translate-y-0.5 uppercase">
-                <Plus className="h-4 w-4 mr-1.5" /> NEW REGISTRATION
+                <Plus className="h-4 w-4 mr-1.5" /> NEW REGISTRATION ("N")
               </Button>
             </div>
           </div>
