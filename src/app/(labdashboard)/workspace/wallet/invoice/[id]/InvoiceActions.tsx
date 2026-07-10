@@ -22,7 +22,7 @@ const router = useRouter();
       <Button
         variant="ghost"
         onClick={() => router.push("/workspace/wallet")}
-        className="font-bold text-slate-500 hover:text-slate-900 hover:bg-slate-200 rounded-xl h-12 px-6">
+        className="font-bold text-muted-foreground hover:text-foreground hover:bg-slate-200 rounded-xl h-12 px-6">
         <ArrowLeft className="w-4 h-4 mr-2" /> Back to Wallet
       </Button>
 
@@ -30,7 +30,7 @@ const router = useRouter();
         <Button
           variant="outline"
           onClick={handlePrint}
-          className="font-bold text-slate-700 bg-white border-slate-200 hover:bg-slate-50 rounded-xl h-12 flex-1 sm:flex-none">
+          className="font-bold text-foreground/80 bg-card border-border hover:bg-muted/30 rounded-xl h-12 flex-1 sm:flex-none">
           <Printer className="w-4 h-4 mr-2" /> Print Receipt
         </Button>
 

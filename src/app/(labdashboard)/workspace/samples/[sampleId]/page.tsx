@@ -49,17 +49,17 @@ export default async function SampleReviewPage({
 
   if (!sample) {
     return (
-      <div className="min-h-[calc(100vh-4rem)] bg-slate-50 font-sans flex items-center justify-center p-6">
-        <div className="bg-white rounded-3xl border border-slate-200/60 p-12 text-center shadow-xl shadow-slate-200/40 max-w-md w-full">
-          <div className="h-20 w-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
+      <div className="min-h-[calc(100vh-4rem)] bg-muted/30 font-sans flex items-center justify-center p-6">
+        <div className="bg-card rounded-3xl border border-slate-200/60 p-12 text-center shadow-xl shadow-slate-200/40 max-w-md w-full">
+          <div className="h-20 w-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
             <Beaker className="h-10 w-10 text-slate-300" />
           </div>
-          <h1 className="text-2xl font-black text-slate-800 tracking-tight">
+          <h1 className="text-2xl font-black text-foreground tracking-tight">
             Sample Not Found
           </h1>
-          <p className="text-slate-500 mt-2 text-sm leading-relaxed">
+          <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
             Barcode{" "}
-            <span className="font-mono font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded">
+            <span className="font-mono font-bold text-foreground/80 bg-muted px-1.5 py-0.5 rounded">
               {sampleId}
             </span>{" "}
             does not exist in your lab database.
@@ -109,12 +109,12 @@ export default async function SampleReviewPage({
   );
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-slate-50 font-sans relative selection:bg-indigo-100 pb-32">
+    <div className="min-h-[calc(100vh-4rem)] bg-muted/30 font-sans relative selection:bg-indigo-100 pb-32">
       {/* Decorative Background Mesh */}
       <div className="absolute top-0 inset-x-0 h-64 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-100/40 via-slate-50 to-transparent pointer-events-none z-0" />
 
       {/* FLOATING HEADER */}
-      <header className="sticky top-0 z-30 bg-white/70 backdrop-blur-xl border-b border-slate-200/60 shadow-sm">
+      <header className="sticky top-0 z-30 bg-card/70 backdrop-blur-xl border-b border-slate-200/60 shadow-sm">
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <Link
             href="/workspace/analyzer"
@@ -128,7 +128,7 @@ export default async function SampleReviewPage({
               </div>
               <div className="min-w-0 flex flex-col items-start gap-1">
                 <div className="flex items-center gap-2">
-                  <h1 className="text-2xl font-black text-slate-900 tracking-tight leading-tight">
+                  <h1 className="text-2xl font-black text-foreground tracking-tight leading-tight">
                     Sample
                   </h1>
                   <span className="font-mono text-sm font-bold text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-md border border-indigo-100 shadow-sm mt-0.5">
@@ -167,29 +167,29 @@ export default async function SampleReviewPage({
 
       <main className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10 space-y-6">
         {/* PATIENT CONTEXT BAR */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-wrap gap-x-8 gap-y-4">
+        <div className="bg-card p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-wrap gap-x-8 gap-y-4">
           <div className="flex flex-col">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            <span className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider">
               Patient Name
             </span>
-            <span className="font-bold text-slate-800 text-sm mt-0.5">
+            <span className="font-bold text-foreground text-sm mt-0.5">
               {sample.patient.name}
             </span>
           </div>
           <div className="flex flex-col">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            <span className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider">
               Age / Gender
             </span>
-            <span className="font-bold text-slate-800 text-sm mt-0.5">
+            <span className="font-bold text-foreground text-sm mt-0.5">
               {sample.patient.age} {sample.patient.ageUnit.charAt(0)} •{" "}
               {sample.patient.gender}
             </span>
           </div>
           <div className="flex flex-col">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            <span className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider">
               Collection Date
             </span>
-            <span className="font-bold text-slate-800 text-sm mt-0.5">
+            <span className="font-bold text-foreground text-sm mt-0.5">
               {sample.collectedAt
                 ? format(new Date(sample.collectedAt), "dd MMM yyyy, hh:mm a")
                 : "Unknown"}
@@ -206,7 +206,7 @@ export default async function SampleReviewPage({
             return (
               <div
                 key={test.id}
-                className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col">
+                className="bg-card rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col">
                 {/* TEST HEADER */}
                 <div className="bg-slate-900 px-6 py-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <div>
@@ -218,7 +218,7 @@ export default async function SampleReviewPage({
                         <CheckCircle2 className="h-5 w-5 text-emerald-400" />
                       )}
                     </div>
-                    <span className="text-slate-400 text-xs font-mono font-bold bg-slate-800 px-2 py-0.5 rounded mt-1.5 inline-block border border-slate-700 shadow-inner">
+                    <span className="text-muted-foreground/70 text-xs font-mono font-bold bg-slate-800 px-2 py-0.5 rounded mt-1.5 inline-block border border-slate-700 shadow-inner">
                       CODE: {test.testCode}
                     </span>
                   </div>
@@ -237,7 +237,7 @@ export default async function SampleReviewPage({
                 <div className="overflow-x-auto custom-scrollbar">
                   <table className="w-full text-left border-collapse min-w-[700px]">
                     <thead>
-                      <tr className="bg-slate-50/80 border-b border-slate-200/80 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
+                      <tr className="bg-slate-50/80 border-b border-slate-200/80 text-muted-foreground text-[10px] font-bold uppercase tracking-wider">
                         <th className="px-6 py-4 w-1/4">Parameter</th>
                         <th className="px-6 py-4 w-1/4">Result Value</th>
                         <th className="px-6 py-4 w-1/6">Unit</th>
@@ -251,7 +251,7 @@ export default async function SampleReviewPage({
                       {test.results.map((result) => (
                         <tr
                           key={result.id}
-                          className="hover:bg-slate-50/50 transition-colors">
+                          className="hover:bg-muted/50/50 transition-colors">
                           <td className="px-6 py-4 font-bold text-slate-700">
                             {result.parameterName}
                           </td>
@@ -265,8 +265,8 @@ export default async function SampleReviewPage({
                                     : result.isAbnormal
                                       ? "bg-rose-50 text-rose-700 border-rose-200"
                                       : result.value
-                                        ? "bg-white text-slate-800 border-slate-200 shadow-sm"
-                                        : "bg-slate-50 text-slate-400 font-normal italic border-dashed border-slate-300"
+                                        ? "bg-card text-foreground border-border shadow-sm"
+                                        : "bg-muted/30 text-muted-foreground/70 font-normal italic border-dashed border-slate-300"
                                 }`}>
                                 {result.value || "Pending Entry..."}
                               </span>
@@ -276,10 +276,10 @@ export default async function SampleReviewPage({
                             </div>
                           </td>
 
-                          <td className="px-6 py-4 text-slate-500 font-medium">
+                          <td className="px-6 py-4 text-muted-foreground font-medium">
                             {result.unit || "-"}
                           </td>
-                          <td className="px-6 py-4 text-slate-500 font-medium whitespace-pre-wrap leading-relaxed">
+                          <td className="px-6 py-4 text-muted-foreground font-medium whitespace-pre-wrap leading-relaxed">
                             {result.refRangeText || "-"}
                           </td>
 
@@ -291,14 +291,14 @@ export default async function SampleReviewPage({
                                 </span>
                                 {result.analyzer && (
                                   <span
-                                    className="text-[10px] text-slate-400 mt-1.5 font-mono font-bold truncate max-w-[120px]"
+                                    className="text-[10px] text-muted-foreground/70 mt-1.5 font-mono font-bold truncate max-w-[120px]"
                                     title={result.analyzer.name}>
                                     {result.analyzer.name}
                                   </span>
                                 )}
                               </div>
                             ) : (
-                              <span className="text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-1 rounded-md uppercase tracking-wider">
+                              <span className="text-[10px] font-bold text-muted-foreground bg-muted border border-border px-2 py-1 rounded-md uppercase tracking-wider">
                                 Manual
                               </span>
                             )}
@@ -310,8 +310,8 @@ export default async function SampleReviewPage({
                         <tr>
                           <td
                             colSpan={5}
-                            className="px-6 py-16 text-center text-slate-500">
-                            <p className="font-bold text-slate-600 mb-2">
+                            className="px-6 py-16 text-center text-muted-foreground">
+                            <p className="font-bold text-muted-foreground mb-2">
                               No parameters found.
                             </p>
                             <Link
@@ -333,17 +333,17 @@ export default async function SampleReviewPage({
 
       {/* 3. FLOATING ACTION FOOTER (Only shows if NOT approved) */}
       {!isFullyApproved && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-slate-200/60 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] p-4 md:p-6 z-50 animate-in slide-in-from-bottom-10 duration-300">
+        <div className="fixed bottom-0 left-0 right-0 bg-card/80 backdrop-blur-xl border-t border-slate-200/60 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] p-4 md:p-6 z-50 animate-in slide-in-from-bottom-10 duration-300">
           <div className="max-w-[1200px] mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-4">
               <div className="bg-indigo-100 text-indigo-600 p-3 rounded-xl hidden sm:flex shrink-0 shadow-inner border border-indigo-200">
                 <CheckCircle2 className="w-6 h-6" />
               </div>
               <div className="text-center sm:text-left">
-                <p className="font-black text-slate-900 text-sm md:text-base">
+                <p className="font-black text-foreground text-sm md:text-base">
                   Ready to finalize this report?
                 </p>
-                <p className="text-xs font-medium text-slate-500 mt-0.5">
+                <p className="text-xs font-medium text-muted-foreground mt-0.5">
                   Verify machine integrations and manual entries. Approval locks
                   the results.
                 </p>

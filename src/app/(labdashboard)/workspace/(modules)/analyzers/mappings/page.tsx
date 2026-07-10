@@ -68,7 +68,7 @@ export default async function MachineMappingPage() {
         <header className="space-y-4">
           <Link
             href="/workspace/analyzers"
-            className="group inline-flex items-center gap-2 text-slate-400 hover:text-blue-600 transition-colors text-xs font-bold uppercase tracking-widest">
+            className="group inline-flex items-center gap-2 text-muted-foreground/70 hover:text-primary transition-colors text-xs font-bold uppercase tracking-widest">
             <svg
               className="w-4 h-4 transition-transform group-hover:-translate-x-1"
               fill="none"
@@ -86,18 +86,18 @@ export default async function MachineMappingPage() {
 
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
-              <h1 className="text-4xl font-black text-slate-900 tracking-tight">
-                Machine <span className="text-blue-600">Dictionary</span>
+              <h1 className="text-4xl font-black text-foreground tracking-tight">
+                Machine <span className="text-primary">Dictionary</span>
               </h1>
-              <p className="text-slate-500 font-medium mt-1">
+              <p className="text-muted-foreground font-medium mt-1">
                 Map raw hardware signals to clinical database parameters.
               </p>
             </div>
-            <div className="hidden md:block px-4 py-2 bg-white border border-slate-200 rounded-xl shadow-sm">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+            <div className="hidden md:block px-4 py-2 bg-card border border-border rounded-xl shadow-sm">
+              <p className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-tighter">
                 Total Rules
               </p>
-              <p className="text-xl font-black text-slate-700 tabular-nums">
+              <p className="text-xl font-black text-foreground/80 tabular-nums">
                 {mappings.length}
               </p>
             </div>
@@ -107,11 +107,11 @@ export default async function MachineMappingPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Sidebar: Add Translation Rule */}
           <section className="lg:col-span-4 sticky top-8">
-            <div className="bg-white border border-slate-200 rounded-[2rem] p-8 shadow-sm space-y-6">
+            <div className="bg-card border border-border rounded-[2rem] p-8 shadow-sm space-y-6">
               <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
-                <div className="p-2 bg-blue-50 rounded-lg">
+                <div className="p-2 bg-primary/10 rounded-lg">
                   <svg
-                    className="w-5 h-5 text-blue-600"
+                    className="w-5 h-5 text-primary"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24">
@@ -136,13 +136,13 @@ export default async function MachineMappingPage() {
               ) : (
                 <form action={addMapping} className="space-y-5">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                    <label className="text-[10px] font-black text-muted-foreground/70 uppercase tracking-widest ml-1">
                       Select Machine
                     </label>
                     <select
                       name="labAnalyzerId"
                       required
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold focus:ring-2 focus:ring-blue-500/20 outline-none transition-all appearance-none cursor-pointer">
+                      className="w-full bg-muted/30 border border-border rounded-xl px-4 py-3 text-sm font-semibold focus:ring-2 focus:ring-primary/20 outline-none transition-all appearance-none cursor-pointer">
                       <option value="">-- Choose Analyzer --</option>
                       {analyzers.map((a) => (
                         <option key={a.id} value={a.id}>
@@ -153,7 +153,7 @@ export default async function MachineMappingPage() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                    <label className="text-[10px] font-black text-muted-foreground/70 uppercase tracking-widest ml-1">
                       Machine Raw Code
                     </label>
                     <input
@@ -161,12 +161,12 @@ export default async function MachineMappingPage() {
                       name="machineCode"
                       required
                       placeholder="e.g., WBC-C"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono font-bold focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                      className="w-full bg-muted/30 border border-border rounded-xl px-4 py-3 text-sm font-mono font-bold focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                    <label className="text-[10px] font-black text-muted-foreground/70 uppercase tracking-widest ml-1">
                       Target Parameter
                     </label>
                     <input
@@ -174,7 +174,7 @@ export default async function MachineMappingPage() {
                       name="parameterName"
                       required
                       placeholder="e.g., White Blood Cells"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                      className="w-full bg-muted/30 border border-border rounded-xl px-4 py-3 text-sm font-semibold focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     />
                   </div>
 
@@ -190,9 +190,9 @@ export default async function MachineMappingPage() {
 
           {/* Main Table: Active Rules */}
           <section className="lg:col-span-8">
-            <div className="bg-white border border-slate-200 rounded-[2rem] shadow-sm overflow-hidden">
+            <div className="bg-card border border-border rounded-[2rem] shadow-sm overflow-hidden">
               <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                <h2 className="font-bold text-slate-800 tracking-tight flex items-center gap-2">
+                <h2 className="font-bold text-foreground tracking-tight flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                   Active Protocol Library
                 </h2>
@@ -200,7 +200,7 @@ export default async function MachineMappingPage() {
 
               {mappings.length === 0 ? (
                 <div className="p-20 text-center space-y-4">
-                  <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto text-slate-300">
+                  <div className="w-16 h-16 bg-muted/30 rounded-full flex items-center justify-center mx-auto text-slate-300">
                     <svg
                       className="w-8 h-8"
                       fill="none"
@@ -214,7 +214,7 @@ export default async function MachineMappingPage() {
                       />
                     </svg>
                   </div>
-                  <p className="text-slate-400 font-medium italic">
+                  <p className="text-muted-foreground/70 font-medium italic">
                     Your translation library is empty.
                   </p>
                 </div>
@@ -222,7 +222,7 @@ export default async function MachineMappingPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="text-slate-400 text-[10px] font-black uppercase tracking-[0.15em] border-b border-slate-100">
+                      <tr className="text-muted-foreground/70 text-[10px] font-black uppercase tracking-[0.15em] border-b border-slate-100">
                         <th className="px-8 py-5">Analyzer Node</th>
                         <th className="px-8 py-5">Machine In</th>
                         <th className="px-8 py-5">LIMS Output</th>
@@ -233,19 +233,19 @@ export default async function MachineMappingPage() {
                       {mappings.map((map) => (
                         <tr
                           key={map.id}
-                          className="group hover:bg-slate-50/80 transition-colors">
+                          className="group hover:bg-muted/50/80 transition-colors">
                           <td className="px-8 py-5">
                             <div className="flex flex-col">
-                              <span className="text-xs font-black text-slate-700 tracking-tight">
+                              <span className="text-xs font-black text-foreground/80 tracking-tight">
                                 {map.analyzer.name}
                               </span>
-                              <span className="text-[10px] font-bold text-slate-400 uppercase">
+                              <span className="text-[10px] font-bold text-muted-foreground/70 uppercase">
                                 {map.analyzer.model}
                               </span>
                             </div>
                           </td>
                           <td className="px-8 py-5">
-                            <span className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-mono font-black border border-blue-100">
+                            <span className="px-3 py-1.5 bg-primary/10 text-primary rounded-lg text-xs font-mono font-black border border-blue-100">
                               {map.machineCode}
                             </span>
                           </td>
@@ -263,7 +263,7 @@ export default async function MachineMappingPage() {
                                   d="M13 7l5 5m0 0l-5 5m5-5H6"
                                 />
                               </svg>
-                              <span className="text-sm font-bold text-slate-600 tracking-tight">
+                              <span className="text-sm font-bold text-muted-foreground tracking-tight">
                                 {map.parameterName}
                               </span>
                             </div>

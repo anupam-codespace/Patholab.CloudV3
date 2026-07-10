@@ -31,14 +31,14 @@ export default async function BookingSettingsPage() {
       <div className="mb-8">
         <Link
           href="/workspace/bookings"
-          className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800 mb-4 transition-colors">
+          className="inline-flex items-center text-sm font-medium text-primary hover:text-blue-800 mb-4 transition-colors">
           <ArrowLeft className="w-4 h-4 mr-1" /> Back to Bookings
         </Link>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900 flex items-center gap-3">
-          <Globe className="w-8 h-8 text-blue-600" />
+        <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
+          <Globe className="w-8 h-8 text-primary" />
           Public Portal Settings
         </h1>
-        <p className="text-slate-500 mt-2">
+        <p className="text-muted-foreground mt-2">
           Configure how your B2B2C booking website appears to the public.
         </p>
       </div>
@@ -51,9 +51,9 @@ export default async function BookingSettingsPage() {
 
         {/* Informational Sidebar */}
         <div className="space-y-6">
-          <div className="bg-blue-50 border border-blue-100 rounded-xl p-5">
+          <div className="bg-primary/10 border border-blue-100 rounded-xl p-5">
             <h3 className="font-bold text-blue-900 flex items-center gap-2 mb-2">
-              <ShieldCheck className="w-5 h-5 text-blue-600" /> Secure Routing
+              <ShieldCheck className="w-5 h-5 text-primary" /> Secure Routing
             </h3>
             <p className="text-sm text-blue-800 leading-relaxed">
               When patients book Home Collection, the system automatically
@@ -62,15 +62,15 @@ export default async function BookingSettingsPage() {
             </p>
           </div>
 
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
-            <h3 className="font-bold text-slate-900 mb-2">Test Visibility</h3>
-            <p className="text-sm text-slate-600 leading-relaxed mb-4">
+          <div className="bg-muted/30 border border-border rounded-xl p-5">
+            <h3 className="font-bold text-foreground mb-2">Test Visibility</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed mb-4">
               Not all tests are shown on your public portal. You can hide
               specific B2B tests from your Test Catalog settings.
             </p>
             <Link
               href="/workspace/tests"
-              className="text-sm font-bold text-blue-600 hover:underline">
+              className="text-sm font-bold text-primary hover:underline">
               Manage Test Visibility &rarr;
             </Link>
           </div>

@@ -4,23 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Users,
-  Activity,
-  IndianRupee,
-  FileCheck2,
-  Clock,
-  Download,
-  Loader2,
-} from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Users, Activity, IndianRupee, FileCheck2, Clock, Download, Loader2 } from "lucide-react";
+import Link from "next/link";
 import toast from "react-hot-toast";
 
 export default function B2BDashboard() {
@@ -34,25 +20,16 @@ export default function B2BDashboard() {
   });
 
   const handleDownloadReport = (testId: string) => {
-    // Implement your PDF download logic here (e.g., open in new tab or trigger jspdf)
     toast.success("Downloading report...");
-    window.open(`/api/reports/download/${testId}`, "_blank");
+    window.open(`/api/workspace/reports/${testId}/pdf`, "_blank");
   };
 
   if (isLoading) {
-    return (
-      <div className="p-12 flex justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-      </div>
-    );
+    return <div className="p-12 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
 
   if (error) {
-    return (
-      <div className="p-8 text-red-500">
-        Error loading dashboard. Please try again.
-      </div>
-    );
+    return <div className="p-8 text-destructive">Error loading dashboard. Please try again.</div>;
   }
 
   const { stats, recentPatients, agency } = data;
@@ -61,14 +38,12 @@ export default function B2BDashboard() {
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8">
       {/* WELCOME BANNER */}
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">
           Welcome back, {agency?.agencyName}
         </h1>
-        <p className="text-slate-500 mt-1">
+        <p className="text-muted-foreground mt-1">
           Here is your referral overview and recent patient reports.
-          <Badge
-            variant="outline"
-            className="ml-3 bg-indigo-50 text-indigo-700 border-indigo-200">
+          <Badge variant="outline" className="ml-3 bg-primary/10 text-primary border-primary/20">
             {agency?.agencyTier || "Standard"} Tier
           </Badge>
         </p>
@@ -76,71 +51,44 @@ export default function B2BDashboard() {
 
       {/* STATS ROW */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-none shadow-sm bg-white">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500">
-              Total Referrals
-            </CardTitle>
-            <Users className="h-4 w-4 text-blue-500" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Referrals</CardTitle>
+            <Users className="h-4 w-4 text-primary" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-slate-900">
-              {stats?.totalReferrals}
-            </div>
-          </CardContent>
+          <CardContent><div className="text-2xl font-bold text-foreground">{stats?.totalReferrals}</div></CardContent>
         </Card>
-
-        <Card className="border-none shadow-sm bg-white">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500">
-              Pending Reports
-            </CardTitle>
-            <Clock className="h-4 w-4 text-orange-500" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Pending Reports</CardTitle>
+            <Clock className="h-4 w-4 text-warning" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
-              {stats?.pendingReports}
-            </div>
-          </CardContent>
+          <CardContent><div className="text-2xl font-bold text-warning">{stats?.pendingReports}</div></CardContent>
         </Card>
-
-        <Card className="border-none shadow-sm bg-white">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500">
-              Completed Reports
-            </CardTitle>
-            <FileCheck2 className="h-4 w-4 text-emerald-500" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Completed Reports</CardTitle>
+            <FileCheck2 className="h-4 w-4 text-success" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-emerald-600">
-              {stats?.completedReports}
-            </div>
-          </CardContent>
+          <CardContent><div className="text-2xl font-bold text-success">{stats?.completedReports}</div></CardContent>
         </Card>
-
-        <Card className="border-none shadow-sm bg-white">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500">
-              Total Earnings
-            </CardTitle>
-            <IndianRupee className="h-4 w-4 text-indigo-500" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Earnings</CardTitle>
+            <IndianRupee className="h-4 w-4 text-primary" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-indigo-600">
-              ₹{stats?.totalEarnings?.toLocaleString()}
-            </div>
-          </CardContent>
+          <CardContent><div className="text-2xl font-bold text-primary">₹{stats?.totalEarnings?.toLocaleString()}</div></CardContent>
         </Card>
       </div>
 
       {/* RECENT PATIENTS TABLE */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-          <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-            <Activity className="h-5 w-5 text-slate-400" /> Recent Patients
+      <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
+        <div className="p-6 border-b border-border flex justify-between items-center">
+          <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+            <Activity className="h-5 w-5 text-muted-foreground" /> Recent Patients
           </h2>
           <Button variant="outline" size="sm" asChild>
-            <Link href="/b2b-portal/patients">View All</Link>
+            <Link href="/b2b/patients">View All</Link>
           </Button>
         </div>
         <div className="overflow-x-auto">
@@ -156,63 +104,29 @@ export default function B2BDashboard() {
             </TableHeader>
             <TableBody>
               {recentPatients?.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="text-center py-8 text-slate-500">
-                    No patients referred yet.
-                  </TableCell>
-                </TableRow>
+                <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">No patients referred yet.</TableCell></TableRow>
               ) : (
                 recentPatients?.map((test: any) => (
                   <TableRow key={test.id}>
-                    <TableCell className="text-sm text-slate-500 font-mono">
-                      {new Date(test.createdAt).toLocaleDateString()}
-                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground font-mono">{new Date(test.createdAt).toLocaleDateString()}</TableCell>
                     <TableCell>
-                      <div className="font-semibold text-slate-900">
-                        {test.patient.name}
-                      </div>
-                      <div className="text-xs text-slate-500">
-                        {test.patient.age} Y / {test.patient.gender} •{" "}
-                        {test.patient.phone}
-                      </div>
+                      <div className="font-semibold text-foreground">{test.patient.name}</div>
+                      <div className="text-xs text-muted-foreground">{test.patient.age} Y / {test.patient.gender} • {test.patient.phone}</div>
                     </TableCell>
+                    <TableCell><div className="font-medium text-foreground">{test.testName}</div></TableCell>
                     <TableCell>
-                      <div className="font-medium text-slate-700">
-                        {test.testName}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {test.status === "COMPLETED" ? (
-                        <Badge
-                          variant="outline"
-                          className="bg-emerald-50 text-emerald-700 border-emerald-200">
-                          Completed
-                        </Badge>
+                      {test.status === "COMPLETED" || test.status === "APPROVED" ? (
+                        <Badge variant="outline" className="bg-success/10 text-success border-success/20">Completed</Badge>
                       ) : (
-                        <Badge
-                          variant="outline"
-                          className="bg-orange-50 text-orange-700 border-orange-200">
-                          Processing
-                        </Badge>
+                        <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">Processing</Badge>
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        variant={
-                          test.status === "COMPLETED" ? "default" : "secondary"
-                        }
-                        size="sm"
-                        disabled={test.status !== "COMPLETED"}
-                        onClick={() => handleDownloadReport(test.id)}
-                        className={
-                          test.status === "COMPLETED"
-                            ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm"
-                            : ""
-                        }>
+                      <Button variant={test.status === "COMPLETED" || test.status === "APPROVED" ? "default" : "secondary"} size="sm"
+                        disabled={test.status !== "COMPLETED" && test.status !== "APPROVED"}
+                        onClick={() => handleDownloadReport(test.id)}>
                         <Download className="h-4 w-4 mr-2" />
-                        {test.status === "COMPLETED" ? "Download" : "Pending"}
+                        {test.status === "COMPLETED" || test.status === "APPROVED" ? "Download" : "Pending"}
                       </Button>
                     </TableCell>
                   </TableRow>

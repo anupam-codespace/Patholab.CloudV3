@@ -158,30 +158,30 @@ export default function HeadingsTab() {
       {/* LEFT: FORM */}
       <div className="md:col-span-1 space-y-4">
         <div
-          className={`p-5 border rounded-xl shadow-sm transition-colors ${editingItem ? "bg-blue-50/50 border-blue-200" : "bg-white border-slate-200"}`}>
+          className={`p-5 border rounded-xl shadow-sm transition-colors ${editingItem ? "bg-primary/10/50 border-primary/20" : "bg-card border-border"}`}>
           <div className="font-semibold mb-5 flex items-center justify-between text-slate-800">
             <span className="flex items-center gap-2">
-              <Layers className="h-4 w-4 text-blue-600" />
+              <Layers className="h-4 w-4 text-primary" />
               {editingItem ? "Edit Custom Heading" : "Add Custom Heading"}
             </span>
             {editingItem && (
               <Button
                 variant="ghost"
                 onClick={handleCancel}
-                className="h-6 w-6 p-0 text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors">
+                className="h-6 w-6 p-0 text-muted-foreground/70 hover:bg-red-50 hover:text-red-600 transition-colors">
                 <X className="h-4 w-4" />
               </Button>
             )}
           </div>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-600 uppercase">
+              <label className="text-xs font-semibold text-muted-foreground uppercase">
                 Heading Text *
               </label>
               <Input
                 placeholder="e.g. LIPID PROFILE"
                 {...register("name")}
-                className={`focus-visible:ring-blue-500 uppercase ${errors.name ? "border-red-500 bg-red-50" : "bg-white"}`}
+                className={`focus-visible:ring-primary uppercase ${errors.name ? "border-red-500 bg-red-50" : "bg-card"}`}
               />
               {errors.name && (
                 <p className="text-xs text-red-500">{errors.name.message}</p>
@@ -191,7 +191,7 @@ export default function HeadingsTab() {
             <div className="flex gap-3 pt-2">
               <Button
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 transition-colors"
+                className="w-full bg-primary hover:bg-blue-700 transition-colors"
                 disabled={saveMutation.isPending}>
                 {saveMutation.isPending ? (
                   <Loader2 className="animate-spin h-4 w-4" />
@@ -219,18 +219,18 @@ export default function HeadingsTab() {
       </div>
 
       {/* RIGHT: LIST */}
-      <div className="md:col-span-2 border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm">
+      <div className="md:col-span-2 border border-border rounded-xl overflow-hidden bg-card shadow-sm">
         <div className="overflow-x-auto">
           <Table className="min-w-[500px]">
             <TableHeader>
-              <TableRow className="bg-slate-50 border-b border-slate-200">
-                <TableHead className="font-semibold text-slate-600">
+              <TableRow className="bg-muted/30 border-b border-border">
+                <TableHead className="font-semibold text-muted-foreground">
                   Heading Name
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600">
+                <TableHead className="font-semibold text-muted-foreground">
                   Scope
                 </TableHead>
-                <TableHead className="text-right font-semibold text-slate-600">
+                <TableHead className="text-right font-semibold text-muted-foreground">
                   Actions
                 </TableHead>
               </TableRow>
@@ -240,7 +240,7 @@ export default function HeadingsTab() {
                 <TableRow>
                   <TableCell
                     colSpan={3}
-                    className="text-center h-32 text-slate-500 animate-pulse">
+                    className="text-center h-32 text-muted-foreground animate-pulse">
                     Loading headings...
                   </TableCell>
                 </TableRow>
@@ -261,7 +261,7 @@ export default function HeadingsTab() {
                 <TableRow>
                   <TableCell
                     colSpan={3}
-                    className="text-center h-32 text-slate-500">
+                    className="text-center h-32 text-muted-foreground">
                     No headings found.
                   </TableCell>
                 </TableRow>
@@ -269,8 +269,8 @@ export default function HeadingsTab() {
                 headings.map((item) => (
                   <TableRow
                     key={item.id}
-                    className={`transition-colors ${editingItem?.id === item.id ? "bg-blue-50/50" : "hover:bg-slate-50/80"} ${item.isGlobal ? "bg-slate-50/30" : ""}`}>
-                    <TableCell className="font-medium text-slate-900">
+                    className={`transition-colors ${editingItem?.id === item.id ? "bg-primary/10/50" : "hover:bg-muted/50/80"} ${item.isGlobal ? "bg-slate-50/30" : ""}`}>
+                    <TableCell className="font-medium text-foreground">
                       {item.name}
                     </TableCell>
 
@@ -298,7 +298,7 @@ export default function HeadingsTab() {
                               ? "Global headings cannot be edited"
                               : "Edit Heading"
                           }
-                          className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors disabled:opacity-30 disabled:hover:bg-transparent">
+                          className="h-8 w-8 text-muted-foreground/70 hover:text-primary hover:bg-primary/10 transition-colors disabled:opacity-30 disabled:hover:bg-transparent">
                           <Pencil className="h-4 w-4" />
                         </Button>
                         <Button
@@ -315,7 +315,7 @@ export default function HeadingsTab() {
                               ? "Global headings cannot be deleted"
                               : "Delete Heading"
                           }
-                          className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-30 disabled:hover:bg-transparent">
+                          className="h-8 w-8 text-muted-foreground/70 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-30 disabled:hover:bg-transparent">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>

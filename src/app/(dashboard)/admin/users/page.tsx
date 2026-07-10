@@ -134,7 +134,7 @@ export default function GlobalUsersPage() {
       cell: ({ row }) => {
         const role = row.original.role;
         const color = role === 'SUPER_ADMIN' ? 'bg-purple-100 text-purple-700' :
-                      role === 'LAB_OWNER' ? 'bg-blue-100 text-blue-700' : 
+                      role === 'LAB_OWNER' ? 'bg-blue-100 text-primary' : 
                       'bg-gray-100 text-gray-700';
         return (
           <Badge className={`${color} border-none shadow-none`}>

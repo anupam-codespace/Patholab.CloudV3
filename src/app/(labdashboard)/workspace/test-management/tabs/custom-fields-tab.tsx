@@ -113,7 +113,7 @@ export default function CustomFieldsTab() {
   const getTypeIcon = (type: string) => {
     switch (type) {
       case "TEXT":
-        return <Type className="h-3 w-3 mr-1.5 text-blue-600" />;
+        return <Type className="h-3 w-3 mr-1.5 text-primary" />;
       case "LONG_TEXT":
         return <AlignLeft className="h-3 w-3 mr-1.5 text-orange-600" />;
       case "DROPDOWN":
@@ -138,12 +138,12 @@ export default function CustomFieldsTab() {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* TOOLBAR */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="bg-card p-4 rounded-xl border border-border shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="relative w-full max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input
             placeholder="Search custom fields..."
-            className="pl-10 focus-visible:ring-blue-500 border-slate-300 w-full"
+            className="pl-10 focus-visible:ring-primary border-border w-full"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -157,12 +157,12 @@ export default function CustomFieldsTab() {
           }}>
           <Button
             onClick={handleAddNew}
-            className="bg-blue-600 hover:bg-blue-700 shadow-sm shrink-0 w-full sm:w-auto">
+            className="bg-primary hover:bg-blue-700 shadow-sm shrink-0 w-full sm:w-auto">
             <Plus className="mr-2 h-4 w-4" /> Create Custom Field
           </Button>
 
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0 border-0">
-            <DialogHeader className="px-6 py-4 border-b bg-slate-50 sticky top-0 z-10">
+            <DialogHeader className="px-6 py-4 border-b bg-muted/30 sticky top-0 z-10">
               <DialogTitle className="text-xl text-slate-800">
                 {editingField
                   ? `Edit Field: ${editingField.name}`
@@ -186,21 +186,21 @@ export default function CustomFieldsTab() {
       </div>
 
       {/* TABLE */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
         <div className="overflow-x-auto">
           <Table className="min-w-[800px]">
             <TableHeader>
-              <TableRow className="bg-slate-50 border-b border-slate-200 hover:bg-slate-50">
-                <TableHead className="font-semibold text-slate-600 w-[250px]">
+              <TableRow className="bg-muted/30 border-b border-border hover:bg-muted/30">
+                <TableHead className="font-semibold text-muted-foreground w-[250px]">
                   Field Name
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600 w-[180px]">
+                <TableHead className="font-semibold text-muted-foreground w-[180px]">
                   Input Type
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600">
+                <TableHead className="font-semibold text-muted-foreground">
                   Options / Details
                 </TableHead>
-                <TableHead className="text-right font-semibold text-slate-600">
+                <TableHead className="text-right font-semibold text-muted-foreground">
                   Actions
                 </TableHead>
               </TableRow>
@@ -210,7 +210,7 @@ export default function CustomFieldsTab() {
                 <TableRow>
                   <TableCell
                     colSpan={4}
-                    className="text-center h-32 text-slate-500 animate-pulse">
+                    className="text-center h-32 text-muted-foreground animate-pulse">
                     Loading fields dictionary...
                   </TableCell>
                 </TableRow>
@@ -231,7 +231,7 @@ export default function CustomFieldsTab() {
                 <TableRow>
                   <TableCell
                     colSpan={4}
-                    className="text-center h-32 text-slate-500">
+                    className="text-center h-32 text-muted-foreground">
                     No custom fields found matching your search.
                   </TableCell>
                 </TableRow>
@@ -239,19 +239,19 @@ export default function CustomFieldsTab() {
                 filteredFields.map((field) => (
                   <TableRow
                     key={field.id}
-                    className={`transition-colors ${editingField?.id === field.id ? "bg-blue-50/50" : "hover:bg-slate-50/80"}`}>
-                    <TableCell className="font-medium text-slate-900">
+                    className={`transition-colors ${editingField?.id === field.id ? "bg-primary/10/50" : "hover:bg-muted/50/80"}`}>
+                    <TableCell className="font-medium text-foreground">
                       {field.name}
                     </TableCell>
 
                     <TableCell>
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold bg-muted text-foreground/80 border border-border">
                         {getTypeIcon(field.type)}
                         {field.type.replace("_", " ")}
                       </span>
                     </TableCell>
 
-                    <TableCell className="text-xs text-slate-500">
+                    <TableCell className="text-xs text-muted-foreground">
                       {field.type === "DROPDOWN" &&
                       field.options &&
                       field.options.length > 0 ? (
@@ -259,7 +259,7 @@ export default function CustomFieldsTab() {
                           {field.options.map((opt, i) => (
                             <span
                               key={i}
-                              className="bg-slate-100 px-1.5 py-0.5 rounded text-[10px] border border-slate-200">
+                              className="bg-muted px-1.5 py-0.5 rounded text-[10px] border border-border">
                               {opt}
                             </span>
                           ))}
@@ -276,7 +276,7 @@ export default function CustomFieldsTab() {
                           size="icon"
                           onClick={() => handleEdit(field)}
                           title="Edit Field"
-                          className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors">
+                          className="h-8 w-8 text-muted-foreground/70 hover:text-primary hover:bg-primary/10 transition-colors">
                           <Pencil className="h-4 w-4" />
                         </Button>
                         <Button
@@ -288,7 +288,7 @@ export default function CustomFieldsTab() {
                             deleteMutation.variables === field.id
                           }
                           title="Delete Field"
-                          className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-30 disabled:hover:bg-transparent">
+                          className="h-8 w-8 text-muted-foreground/70 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-30 disabled:hover:bg-transparent">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>

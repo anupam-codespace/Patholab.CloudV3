@@ -52,8 +52,8 @@ export function BookingForm({ selectedDate, patients, modalities, onClose, onSuc
     <div className="space-y-5">
       {/* Patient Selection */}
       <div className="space-y-1.5">
-        <Label className="text-xs font-bold text-slate-700 uppercase">Patient *</Label>
-        <select className="flex h-11 w-full rounded-xl border bg-slate-50 pl-4 text-sm" value={formData.patientId} onChange={(e) => setFormData({ ...formData, patientId: e.target.value })}>
+        <Label className="text-xs font-bold text-foreground/80 uppercase">Patient *</Label>
+        <select className="flex h-11 w-full rounded-xl border bg-muted/30 pl-4 text-sm" value={formData.patientId} onChange={(e) => setFormData({ ...formData, patientId: e.target.value })}>
           <option value="">-- Choose Patient --</option>
           {patients.map((p: any) => <option key={p.id} value={p.id}>{p.name} ({p.phone})</option>)}
         </select>
@@ -61,14 +61,14 @@ export function BookingForm({ selectedDate, patients, modalities, onClose, onSuc
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <Label className="text-xs font-bold text-slate-700 uppercase">Modality *</Label>
-          <select className="flex h-11 w-full rounded-xl border bg-slate-50 pl-4 text-sm" value={formData.modalityId} onChange={(e) => setFormData({ ...formData, modalityId: e.target.value })}>
+          <Label className="text-xs font-bold text-foreground/80 uppercase">Modality *</Label>
+          <select className="flex h-11 w-full rounded-xl border bg-muted/30 pl-4 text-sm" value={formData.modalityId} onChange={(e) => setFormData({ ...formData, modalityId: e.target.value })}>
             <option value="">-- Machine --</option>
             {modalities.map((m: any) => <option key={m.id} value={m.id}>{m.type} ({m.name})</option>)}
           </select>
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs font-bold text-slate-700 uppercase">Scan Name *</Label>
+          <Label className="text-xs font-bold text-foreground/80 uppercase">Scan Name *</Label>
           <Input value={formData.scanName} onChange={(e) => setFormData({ ...formData, scanName: e.target.value })} />
         </div>
       </div>

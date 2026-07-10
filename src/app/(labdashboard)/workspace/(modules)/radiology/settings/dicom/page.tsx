@@ -116,9 +116,9 @@ export default function DicomSettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-[calc(100vh-4rem)] flex-col items-center justify-center bg-slate-50 font-sans">
+      <div className="flex h-[calc(100vh-4rem)] flex-col items-center justify-center bg-muted/30 font-sans">
         <Loader2 className="h-10 w-10 animate-spin text-indigo-600 mb-4" />
-        <p className="text-sm font-bold text-slate-500 uppercase tracking-widest animate-pulse">
+        <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest animate-pulse">
           Loading Configuration...
         </p>
       </div>
@@ -126,22 +126,22 @@ export default function DicomSettingsPage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-slate-50 font-sans relative selection:bg-indigo-100 pb-12">
+    <div className="min-h-[calc(100vh-4rem)] bg-muted/30 font-sans relative selection:bg-indigo-100 pb-12">
       {/* Decorative Background Mesh */}
       <div className="absolute top-0 inset-x-0 h-64 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-100/40 via-slate-50 to-transparent pointer-events-none z-0" />
 
       {/* FLOATING HEADER */}
-      <header className="sticky top-0 z-30 bg-white/70 backdrop-blur-xl border-b border-slate-200/60 shadow-sm">
+      <header className="sticky top-0 z-30 bg-card/70 backdrop-blur-xl border-b border-slate-200/60 shadow-sm">
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="flex items-center gap-4">
             <div className="h-12 w-12 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-inner shrink-0">
               <Network className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-900 tracking-tight leading-tight">
+              <h1 className="text-xl font-bold text-foreground tracking-tight leading-tight">
                 DICOM & PACS Settings
               </h1>
-              <p className="text-xs font-medium text-slate-500 mt-0.5">
+              <p className="text-xs font-medium text-muted-foreground mt-0.5">
                 Configure networking for imaging modalities and archive routing.
               </p>
             </div>
@@ -166,23 +166,23 @@ export default function DicomSettingsPage() {
           {/* LEFT COLUMN: Main Configurations (Spans 8) */}
           <div className="lg:col-span-8 space-y-8">
             {/* SECTION 1: Local RIS Identity */}
-            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+            <div className="bg-card rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
               <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/80 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Server className="h-5 w-5 text-slate-500" />
+                  <Server className="h-5 w-5 text-muted-foreground" />
                   <h2 className="text-base font-bold text-slate-800">
                     Local RIS Node (This Server)
                   </h2>
                 </div>
                 <Badge
                   variant="outline"
-                  className="bg-slate-100 text-slate-500 border-none font-mono text-[10px] tracking-wider uppercase">
+                  className="bg-muted text-muted-foreground border-none font-mono text-[10px] tracking-wider uppercase">
                   Identity
                 </Badge>
               </div>
               <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                  <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                     Local AE Title
                   </Label>
                   <Input
@@ -193,14 +193,14 @@ export default function DicomSettingsPage() {
                         localAETitle: e.target.value.toUpperCase(),
                       })
                     }
-                    className="uppercase font-mono text-sm h-11 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:ring-indigo-500/20"
+                    className="uppercase font-mono text-sm h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-indigo-500/20"
                   />
-                  <p className="text-[10px] font-medium text-slate-400 mt-1">
+                  <p className="text-[10px] font-medium text-muted-foreground/70 mt-1">
                     The Application Entity Title of this RIS software.
                   </p>
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                  <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                     Listener Port
                   </Label>
                   <Input
@@ -209,14 +209,14 @@ export default function DicomSettingsPage() {
                     onChange={(e) =>
                       setSettings({ ...settings, localPort: e.target.value })
                     }
-                    className="font-mono text-sm h-11 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:ring-indigo-500/20"
+                    className="font-mono text-sm h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-indigo-500/20"
                   />
                 </div>
               </div>
             </div>
 
             {/* SECTION 2: PACS Server */}
-            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+            <div className="bg-card rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
               <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/80 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <ShieldCheck className="h-5 w-5 text-emerald-500" />
@@ -234,7 +234,7 @@ export default function DicomSettingsPage() {
               <div className="p-6 space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
                   <div className="space-y-1.5">
-                    <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                    <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                       PACS AE Title
                     </Label>
                     <Input
@@ -245,11 +245,11 @@ export default function DicomSettingsPage() {
                           pacsAETitle: e.target.value.toUpperCase(),
                         })
                       }
-                      className="uppercase font-mono text-sm h-11 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:ring-indigo-500/20"
+                      className="uppercase font-mono text-sm h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-indigo-500/20"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                    <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                       IP / Hostname
                     </Label>
                     <Input
@@ -260,11 +260,11 @@ export default function DicomSettingsPage() {
                           pacsIpAddress: e.target.value,
                         })
                       }
-                      className="font-mono text-sm h-11 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:ring-indigo-500/20"
+                      className="font-mono text-sm h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-indigo-500/20"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                    <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                       PACS Port
                     </Label>
                     <Input
@@ -273,7 +273,7 @@ export default function DicomSettingsPage() {
                       onChange={(e) =>
                         setSettings({ ...settings, pacsPort: e.target.value })
                       }
-                      className="font-mono text-sm h-11 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:ring-indigo-500/20"
+                      className="font-mono text-sm h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-indigo-500/20"
                     />
                   </div>
                 </div>
@@ -287,7 +287,7 @@ export default function DicomSettingsPage() {
                           ? "bg-emerald-50 border-emerald-200 text-emerald-600"
                           : pacsStatus === "FAILED"
                             ? "bg-rose-50 border-rose-200 text-rose-600"
-                            : "bg-white border-slate-200 text-slate-400"
+                            : "bg-card border-border text-slate-400"
                       }`}>
                       {pingMutation.isPending ? (
                         <Activity className="h-6 w-6 animate-pulse text-indigo-500" />
@@ -300,7 +300,7 @@ export default function DicomSettingsPage() {
                       )}
                     </div>
                     <div className="flex flex-col min-w-0">
-                      <p className="font-bold text-sm text-slate-900 uppercase tracking-wider">
+                      <p className="font-bold text-sm text-foreground uppercase tracking-wider">
                         Connection Status
                       </p>
                       <p
@@ -309,7 +309,7 @@ export default function DicomSettingsPage() {
                             ? "text-emerald-600"
                             : pacsStatus === "FAILED"
                               ? "text-rose-600"
-                              : "text-slate-500"
+                              : "text-muted-foreground"
                         }`}>
                         {pingMutation.isPending
                           ? "Testing connection..."
@@ -326,7 +326,7 @@ export default function DicomSettingsPage() {
                     variant="outline"
                     onClick={() => pingMutation.mutate()}
                     disabled={pingMutation.isPending || !settings.pacsIpAddress}
-                    className="w-full sm:w-auto bg-white border-slate-200 text-slate-700 font-bold hover:bg-slate-50 hover:text-indigo-600 h-10 rounded-xl transition-colors shadow-sm shrink-0">
+                    className="w-full sm:w-auto bg-card border-border text-foreground/80 font-bold hover:bg-muted/30 hover:text-indigo-600 h-10 rounded-xl transition-colors shadow-sm shrink-0">
                     {pingMutation.isPending ? (
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
                     ) : (
@@ -339,7 +339,7 @@ export default function DicomSettingsPage() {
             </div>
 
             {/* SECTION 3: Web Viewer */}
-            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+            <div className="bg-card rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
               <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/80 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <MonitorPlay className="h-5 w-5 text-indigo-500" />
@@ -350,7 +350,7 @@ export default function DicomSettingsPage() {
               </div>
               <div className="p-6">
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                  <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                     Viewer Base URL
                   </Label>
                   <div className="relative w-full">
@@ -363,13 +363,13 @@ export default function DicomSettingsPage() {
                           viewerBaseUrl: e.target.value,
                         })
                       }
-                      className="pl-10 font-mono text-sm text-indigo-600 h-11 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:ring-indigo-500/20"
+                      className="pl-10 font-mono text-sm text-indigo-600 h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-indigo-500/20"
                       placeholder="http://192.168.1.100:8042/viewer?StudyInstanceUID="
                     />
                   </div>
-                  <p className="text-[11px] font-medium text-slate-500 mt-2">
+                  <p className="text-[11px] font-medium text-muted-foreground mt-2">
                     Example format for Orthanc/Osimis:{" "}
-                    <code className="bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded text-slate-700 font-mono text-[10px]">
+                    <code className="bg-muted border border-border px-1.5 py-0.5 rounded text-foreground/80 font-mono text-[10px]">
                       http://192.168.1.100:8042/viewer?StudyInstanceUID=
                     </code>
                   </p>
@@ -381,10 +381,10 @@ export default function DicomSettingsPage() {
           {/* RIGHT COLUMN: Modality Worklist (MWL) & Help (Spans 4) */}
           <div className="lg:col-span-4 space-y-6">
             <div
-              className={`bg-white rounded-2xl border shadow-sm overflow-hidden transition-all duration-300 ${
+              className={`bg-card rounded-2xl border shadow-sm overflow-hidden transition-all duration-300 ${
                 settings.enableMwl
                   ? "border-indigo-200 shadow-indigo-500/10"
-                  : "border-slate-200 opacity-80"
+                  : "border-border opacity-80"
               }`}>
               <div className="px-5 py-4 border-b border-slate-100 bg-slate-50/80 flex justify-between items-center">
                 <h2 className="text-base font-bold text-slate-800">
@@ -402,7 +402,7 @@ export default function DicomSettingsPage() {
               </div>
 
               <div className="p-5 space-y-5">
-                <p className="text-xs font-medium text-slate-500 leading-relaxed">
+                <p className="text-xs font-medium text-muted-foreground leading-relaxed">
                   MWL allows your MRI and CT machines to automatically fetch
                   patient details from this RIS, eliminating manual data entry
                   by technicians.
@@ -411,7 +411,7 @@ export default function DicomSettingsPage() {
                 <div
                   className={`space-y-4 transition-opacity ${settings.enableMwl ? "opacity-100" : "opacity-40 pointer-events-none"}`}>
                   <div className="space-y-1.5">
-                    <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                    <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                       MWL AE Title
                     </Label>
                     <Input
@@ -422,12 +422,12 @@ export default function DicomSettingsPage() {
                           mwlAETitle: e.target.value.toUpperCase(),
                         })
                       }
-                      className="uppercase font-mono text-sm h-10 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-indigo-300"
+                      className="uppercase font-mono text-sm h-10 rounded-xl bg-muted/30 border-border focus:bg-card focus:border-indigo-300"
                       disabled={!settings.enableMwl}
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                    <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                       MWL Port
                     </Label>
                     <Input
@@ -436,7 +436,7 @@ export default function DicomSettingsPage() {
                       onChange={(e) =>
                         setSettings({ ...settings, mwlPort: e.target.value })
                       }
-                      className="font-mono text-sm h-10 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-indigo-300"
+                      className="font-mono text-sm h-10 rounded-xl bg-muted/30 border-border focus:bg-card focus:border-indigo-300"
                       disabled={!settings.enableMwl}
                     />
                   </div>
@@ -446,7 +446,7 @@ export default function DicomSettingsPage() {
                   variant={settings.enableMwl ? "outline" : "default"}
                   className={`w-full h-11 rounded-xl font-bold transition-all ${
                     settings.enableMwl
-                      ? "bg-white border-rose-200 text-rose-600 hover:bg-rose-50"
+                      ? "bg-card border-rose-200 text-rose-600 hover:bg-rose-50"
                       : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-500/25 hover:-translate-y-0.5"
                   }`}
                   onClick={() =>

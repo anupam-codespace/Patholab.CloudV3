@@ -61,7 +61,7 @@ export default function InvoicePage() {
   if (error || !data) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-zinc-50 p-4">
-        <div className="bg-white p-8 rounded-3xl shadow-xl shadow-zinc-200/50 flex flex-col items-center max-w-md text-center border border-zinc-100">
+        <div className="bg-card p-8 rounded-3xl shadow-xl shadow-zinc-200/50 flex flex-col items-center max-w-md text-center border border-zinc-100">
           <div className="h-16 w-16 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-500 mb-2">
             <Mail className="h-8 w-8" />
           </div>
@@ -103,12 +103,12 @@ export default function InvoicePage() {
       : new Date();
 
   return (
-    <div className="min-h-screen bg-zinc-50/80 py-8 px-4 md:py-12 md:px-8 flex flex-col items-center print:bg-white print:p-0 print:block">
+    <div className="min-h-screen bg-zinc-50/80 py-8 px-4 md:py-12 md:px-8 flex flex-col items-center print:bg-card print:p-0 print:block">
       {/* --- ACTION BAR (Hidden on Print) --- */}
       <div className="w-full max-w-4xl mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 print:hidden animate-in fade-in slide-in-from-top-4 duration-500">
         <Link
           href="/workspace/subscription"
-          className="text-zinc-500 hover:text-zinc-900 flex items-center gap-2 text-sm font-bold transition-colors group bg-white border border-zinc-200 px-4 py-2.5 rounded-xl shadow-sm w-fit">
+          className="text-zinc-500 hover:text-zinc-900 flex items-center gap-2 text-sm font-bold transition-colors group bg-card border border-zinc-200 px-4 py-2.5 rounded-xl shadow-sm w-fit">
           <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
           Return to Subscriptions
         </Link>
@@ -120,7 +120,7 @@ export default function InvoicePage() {
       </div>
 
       {/* --- INVOICE PAPER --- */}
-      <div className="w-full max-w-4xl bg-white shadow-2xl shadow-zinc-300/50 md:rounded-3xl border border-zinc-200 overflow-hidden print:shadow-none print:border-none print:rounded-none animate-in fade-in slide-in-from-bottom-8 duration-700 mx-auto">
+      <div className="w-full max-w-4xl bg-card shadow-2xl shadow-zinc-300/50 md:rounded-3xl border border-zinc-200 overflow-hidden print:shadow-none print:border-none print:rounded-none animate-in fade-in slide-in-from-bottom-8 duration-700 mx-auto">
         {/* Accent Top Bar */}
         <div
           className="h-3 w-full print:bg-zinc-900"

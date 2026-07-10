@@ -63,10 +63,10 @@ export default function AdminWalletLedgerPage() {
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-slate-900 flex items-center gap-2">
+          <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-2">
             <Wallet className="h-8 w-8 text-emerald-600" /> Platform Ledger
           </h1>
-          <p className="text-slate-500 font-medium mt-1">
+          <p className="text-muted-foreground font-medium mt-1">
             Global view of all tenant wallets, balances, and platform liability.
           </p>
         </div>
@@ -78,7 +78,7 @@ export default function AdminWalletLedgerPage() {
       {/* KPI METRICS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="border-0 shadow-lg bg-gradient-to-br from-emerald-600 to-emerald-800 text-white relative overflow-hidden rounded-2xl">
-          <div className="absolute top-0 right-0 p-24 bg-white opacity-5 rounded-full -mr-10 -mt-10 blur-2xl" />
+          <div className="absolute top-0 right-0 p-24 bg-card opacity-5 rounded-full -mr-10 -mt-10 blur-2xl" />
           <CardContent className="p-6 relative z-10 flex flex-col justify-center h-full">
             <div className="flex items-center justify-between mb-4 opacity-90">
               <p className="text-sm font-bold uppercase tracking-wider">
@@ -95,26 +95,26 @@ export default function AdminWalletLedgerPage() {
           </CardContent>
         </Card>
 
-        <Card className="border border-slate-200 shadow-sm bg-white rounded-2xl">
+        <Card className="border border-border shadow-sm bg-card rounded-2xl">
           <CardContent className="p-6 flex flex-col justify-center h-full">
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
+              <div className="p-2.5 bg-primary/10 text-primary rounded-xl">
                 <Building2 className="h-5 w-5" />
               </div>
-              <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">
+              <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
                 Active Wallets
               </p>
             </div>
-            <h3 className="text-4xl font-black text-slate-900">
+            <h3 className="text-4xl font-black text-foreground">
               {stats.totalWallets || 0}
             </h3>
-            <p className="text-xs font-medium text-slate-400 mt-2">
+            <p className="text-xs font-medium text-muted-foreground/70 mt-2">
               Labs currently on Pay-As-You-Go
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border border-slate-200 shadow-sm bg-rose-50/50 rounded-2xl">
+        <Card className="border border-border shadow-sm bg-rose-50/50 rounded-2xl">
           <CardContent className="p-6 flex flex-col justify-center h-full">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2.5 bg-rose-100 text-rose-600 rounded-xl">
@@ -135,7 +135,7 @@ export default function AdminWalletLedgerPage() {
       </div>
 
       {/* MASTER LEDGER TABLE */}
-      <Card className="border-slate-200 shadow-sm rounded-2xl overflow-hidden bg-white">
+      <Card className="border-border shadow-sm rounded-2xl overflow-hidden bg-card">
         <CardHeader className="border-b border-slate-100 bg-slate-50/50 pb-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
@@ -150,7 +150,7 @@ export default function AdminWalletLedgerPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
                 placeholder="Search lab, email, or phone..."
-                className="pl-9 rounded-xl bg-white border-slate-200 focus:border-emerald-500 focus:ring-emerald-500"
+                className="pl-9 rounded-xl bg-card border-border focus:border-emerald-500 focus:ring-emerald-500"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -159,7 +159,7 @@ export default function AdminWalletLedgerPage() {
         </CardHeader>
         <CardContent className="p-0 overflow-x-auto">
           <table className="w-full text-sm text-left whitespace-nowrap">
-            <thead className="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-widest">
+            <thead className="bg-muted/30 border-b border-border text-xs font-bold text-muted-foreground uppercase tracking-widest">
               <tr>
                 <th className="px-6 py-4">Lab / Tenant</th>
                 <th className="px-6 py-4 text-right">Current Balance</th>
@@ -171,7 +171,7 @@ export default function AdminWalletLedgerPage() {
             <tbody className="divide-y divide-slate-100">
               {filteredWallets.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-12 text-center text-slate-500">
+                  <td colSpan={5} className="p-12 text-center text-muted-foreground">
                     No wallets found.
                   </td>
                 </tr>
@@ -179,12 +179,12 @@ export default function AdminWalletLedgerPage() {
                 filteredWallets.map((w: any) => (
                   <tr
                     key={w.id}
-                    className="hover:bg-slate-50/50 transition-colors bg-white">
+                    className="hover:bg-muted/50/50 transition-colors bg-card">
                     <td className="px-6 py-4">
-                      <p className="font-bold text-slate-900 text-base">
+                      <p className="font-bold text-foreground text-base">
                         {w.labName}
                       </p>
-                      <div className="flex items-center gap-2 mt-1 text-xs text-slate-500 font-medium">
+                      <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground font-medium">
                         <span>{w.email}</span>
                         <span>•</span>
                         <span className="flex items-center">
@@ -206,7 +206,7 @@ export default function AdminWalletLedgerPage() {
                     <td className="px-6 py-4 text-center">
                       <Badge
                         variant="outline"
-                        className="bg-slate-100 text-slate-700 border-slate-200 font-bold">
+                        className="bg-muted text-foreground/80 border-border font-bold">
                         ₹{w.perPatientFee} / Reg
                       </Badge>
                     </td>
@@ -220,7 +220,7 @@ export default function AdminWalletLedgerPage() {
                           <AlertTriangle className="w-4 h-4 mr-1.5" /> Suspended
                         </div>
                       )}
-                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
+                      <p className="text-[10px] text-muted-foreground/70 font-bold uppercase tracking-widest mt-1">
                         Ends:{" "}
                         {w.validityEndDate
                           ? format(new Date(w.validityEndDate), "dd MMM yyyy")
@@ -232,7 +232,7 @@ export default function AdminWalletLedgerPage() {
                         variant="ghost"
                         size="sm"
                         asChild
-                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 font-bold rounded-lg">
+                        className="text-primary hover:text-primary hover:bg-primary/10 font-bold rounded-lg">
                         <Link href={`/admin/labs/${w.labId}`}>
                           Manage <ArrowRight className="w-4 h-4 ml-1.5" />
                         </Link>

@@ -316,26 +316,26 @@ export default function AgenciesPage() {
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
       {/* HEADER & EXPORT CONTROLS */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center bg-white p-6 rounded-2xl shadow-sm border border-slate-200 gap-4">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center bg-card p-6 rounded-2xl shadow-sm border border-border gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">
             B2B Agencies & Wallets
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Manage your network, tier settings, and agency portal access.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
           {/* Date Range Selector */}
-          <div className="flex items-center bg-slate-50 border rounded-lg px-2 shadow-sm mr-2">
+          <div className="flex items-center bg-muted/30 border rounded-lg px-2 shadow-sm mr-2">
             <Input
               type="date"
               className="border-0 bg-transparent text-xs h-9 w-[130px] shadow-none focus-visible:ring-0"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
             />
-            <span className="text-slate-400 text-xs">to</span>
+            <span className="text-muted-foreground/70 text-xs">to</span>
             <Input
               type="date"
               className="border-0 bg-transparent text-xs h-9 w-[130px] shadow-none focus-visible:ring-0"
@@ -349,7 +349,7 @@ export default function AgenciesPage() {
             size="icon"
             onClick={() => refetch()}
             title="Refresh Data">
-            <RefreshCw className="h-4 w-4 text-slate-600" />
+            <RefreshCw className="h-4 w-4 text-muted-foreground" />
           </Button>
           <Button
             variant="outline"
@@ -365,7 +365,7 @@ export default function AgenciesPage() {
           </Button>
           <Button
             onClick={handleAddNew}
-            className="bg-blue-600 hover:bg-blue-700 text-white shadow-md ml-2">
+            className="bg-primary hover:bg-blue-700 text-white shadow-md ml-2">
             <Plus className="h-4 w-4 mr-2" /> Add Agency
           </Button>
         </div>
@@ -379,29 +379,29 @@ export default function AgenciesPage() {
           placeholder="Search by agency name or phone..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 transition-all shadow-sm"
+          className="w-full pl-10 pr-4 py-2.5 bg-card border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 transition-all shadow-sm"
         />
       </div>
 
       {/* AGENCIES TABLE */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader className="bg-slate-50/80">
               <TableRow>
-                <TableHead className="font-semibold text-slate-600">
+                <TableHead className="font-semibold text-muted-foreground">
                   Agency Details
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600">
+                <TableHead className="font-semibold text-muted-foreground">
                   Tier & Access
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600">
+                <TableHead className="font-semibold text-muted-foreground">
                   Commission Rule
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600">
+                <TableHead className="font-semibold text-muted-foreground">
                   Total Referrals
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600 text-right">
+                <TableHead className="font-semibold text-muted-foreground text-right">
                   Actions
                 </TableHead>
               </TableRow>
@@ -411,7 +411,7 @@ export default function AgenciesPage() {
                 <TableRow>
                   <TableCell
                     colSpan={5}
-                    className="text-center py-10 text-slate-500">
+                    className="text-center py-10 text-muted-foreground">
                     <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />{" "}
                     Loading agencies...
                   </TableCell>
@@ -420,23 +420,23 @@ export default function AgenciesPage() {
                 <TableRow>
                   <TableCell
                     colSpan={5}
-                    className="text-center py-10 text-slate-500">
+                    className="text-center py-10 text-muted-foreground">
                     No B2B agencies found in your network.
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredAgencies.map((agency: any) => (
-                  <TableRow key={agency.id} className="hover:bg-slate-50/50">
+                  <TableRow key={agency.id} className="hover:bg-muted/50/50">
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 bg-indigo-50 text-indigo-700 rounded-full flex items-center justify-center font-bold">
                           <Building2 className="h-5 w-5" />
                         </div>
                         <div>
-                          <div className="font-bold text-slate-900">
+                          <div className="font-bold text-foreground">
                             {agency.agencyName}
                           </div>
-                          <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                          <div className="text-[10px] text-muted-foreground/70 font-mono mt-0.5">
                             <Phone className="h-3 w-3 inline mr-1" />
                             {agency.phone || "N/A"}
                           </div>
@@ -449,7 +449,7 @@ export default function AgenciesPage() {
                           variant="outline"
                           className={`
                           ${agency.agencyTier === "GOLD" ? "bg-yellow-50 text-yellow-700 border-yellow-200" : ""}
-                          ${agency.agencyTier === "SILVER" ? "bg-slate-100 text-slate-600 border-slate-300" : ""}
+                          ${agency.agencyTier === "SILVER" ? "bg-muted text-muted-foreground border-slate-300" : ""}
                           ${agency.agencyTier === "PLATINUM" ? "bg-indigo-50 text-indigo-700 border-indigo-200" : ""}
                           ${!agency.agencyTier || agency.agencyTier === "STANDARD" ? "bg-gray-50 text-gray-600" : ""}
                         `}>
@@ -479,7 +479,7 @@ export default function AgenciesPage() {
                           (Default)
                         </span>
                         {agency.customTestCommissions?.length > 0 && (
-                          <span className="text-[10px] text-blue-600 font-bold bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
+                          <span className="text-[10px] text-primary font-bold bg-primary/10 px-1.5 py-0.5 rounded border border-blue-100">
                             {agency.customTestCommissions.length} Custom/Net
                             Prices
                           </span>
@@ -490,7 +490,7 @@ export default function AgenciesPage() {
                       <div className="font-bold text-slate-800">
                         {agency._count?.tests || 0} Tests
                       </div>
-                      <div className="text-xs text-slate-500 font-bold text-orange-600">
+                      <div className="text-xs text-muted-foreground font-bold text-orange-600">
                         Generated: ₹{(agency.totalCommission || 0).toFixed(2)}
                       </div>
                     </TableCell>
@@ -500,21 +500,21 @@ export default function AgenciesPage() {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleView(agency)}
-                          className="text-slate-400 hover:text-indigo-600">
+                          className="text-muted-foreground/70 hover:text-indigo-600">
                           <Eye className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => handleEdit(agency)}
-                          className="text-slate-400 hover:text-blue-600">
+                          className="text-muted-foreground/70 hover:text-primary">
                           <Pencil className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => handleDelete(agency.id)}
-                          className="text-slate-400 hover:text-red-600">
+                          className="text-muted-foreground/70 hover:text-red-600">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -583,7 +583,7 @@ export default function AgenciesPage() {
                       onValueChange={(v) =>
                         setFormData({ ...formData, agencyTier: v })
                       }>
-                      <SelectTrigger className="bg-white">
+                      <SelectTrigger className="bg-card">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -704,7 +704,7 @@ export default function AgenciesPage() {
                               loginEmail: e.target.value,
                             })
                           }
-                          className="bg-white border-indigo-200 focus-visible:ring-indigo-500"
+                          className="bg-card border-indigo-200 focus-visible:ring-indigo-500"
                         />
                       </div>
                       <div className="space-y-1.5">
@@ -727,20 +727,20 @@ export default function AgenciesPage() {
                               loginPassword: e.target.value,
                             })
                           }
-                          className="bg-white border-indigo-200 focus-visible:ring-indigo-500"
+                          className="bg-card border-indigo-200 focus-visible:ring-indigo-500"
                         />
                       </div>
                     </div>
                   )}
                 </div>
 
-                <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-4 mt-4">
+                <div className="p-4 bg-muted/30 border border-border rounded-xl space-y-4 mt-4">
                   <h3 className="text-sm font-bold text-slate-800">
                     Profile Default Commission
                   </h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-slate-500 uppercase">
+                      <label className="text-xs font-semibold text-muted-foreground uppercase">
                         Commission Type
                       </label>
                       <Select
@@ -748,7 +748,7 @@ export default function AgenciesPage() {
                         onValueChange={(v) =>
                           setFormData({ ...formData, commissionType: v })
                         }>
-                        <SelectTrigger className="bg-white">
+                        <SelectTrigger className="bg-card">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -760,7 +760,7 @@ export default function AgenciesPage() {
                       </Select>
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-slate-500 uppercase">
+                      <label className="text-xs font-semibold text-muted-foreground uppercase">
                         Rate / Amount
                       </label>
                       <Input
@@ -774,11 +774,11 @@ export default function AgenciesPage() {
                             commissionRate: Number(e.target.value),
                           })
                         }
-                        className="bg-white font-bold"
+                        className="bg-card font-bold"
                       />
                     </div>
                   </div>
-                  <p className="text-[11px] text-slate-500">
+                  <p className="text-[11px] text-muted-foreground">
                     This is the fallback rate. If a test does not have a
                     specific custom rate assigned, this default rule applies.
                   </p>
@@ -793,12 +793,12 @@ export default function AgenciesPage() {
                   <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                   <Input
                     placeholder="Search to add a specific test for custom pricing..."
-                    className="pl-9 bg-slate-50 border-slate-200"
+                    className="pl-9 bg-muted/30 border-border"
                     value={testSearch}
                     onChange={(e) => setTestSearch(e.target.value)}
                   />
                   {testSearch && (
-                    <div className="absolute top-11 left-0 w-full bg-white border border-slate-200 rounded-lg shadow-xl max-h-48 overflow-y-auto z-50">
+                    <div className="absolute top-11 left-0 w-full bg-card border border-border rounded-lg shadow-xl max-h-48 overflow-y-auto z-50">
                       {allTests
                         ?.filter((t: any) =>
                           t.name
@@ -814,7 +814,7 @@ export default function AgenciesPage() {
                             <span className="font-semibold text-slate-700">
                               {t.name}
                             </span>
-                            <span className="text-xs bg-slate-100 px-2 py-0.5 rounded text-slate-500 font-mono">
+                            <span className="text-xs bg-muted px-2 py-0.5 rounded text-muted-foreground font-mono">
                               ₹{t.price}
                             </span>
                           </div>
@@ -823,9 +823,9 @@ export default function AgenciesPage() {
                   )}
                 </div>
 
-                <div className="border rounded-xl bg-white overflow-hidden">
+                <div className="border rounded-xl bg-card overflow-hidden">
                   <Table>
-                    <TableHeader className="bg-slate-50">
+                    <TableHeader className="bg-muted/30">
                       <TableRow>
                         <TableHead className="text-xs font-bold h-9">
                           Test Name
@@ -844,7 +844,7 @@ export default function AgenciesPage() {
                         <TableRow>
                           <TableCell
                             colSpan={4}
-                            className="text-center py-6 text-sm text-slate-500 bg-slate-50/30">
+                            className="text-center py-6 text-sm text-muted-foreground bg-slate-50/30">
                             No custom rates. The profile default will be used
                             for all tests.
                           </TableCell>
@@ -861,7 +861,7 @@ export default function AgenciesPage() {
                                 onValueChange={(v) =>
                                   updateCustomRate(index, "commissionType", v)
                                 }>
-                                <SelectTrigger className="h-8 text-xs bg-slate-50">
+                                <SelectTrigger className="h-8 text-xs bg-muted/30">
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -881,7 +881,7 @@ export default function AgenciesPage() {
                               <Input
                                 type="number"
                                 step="0.01"
-                                className={`h-8 text-xs font-bold ${cc.commissionType === "NET_PRICE" ? "border-blue-300 bg-blue-50 text-blue-800" : ""}`}
+                                className={`h-8 text-xs font-bold ${cc.commissionType === "NET_PRICE" ? "border-blue-300 bg-primary/10 text-blue-800" : ""}`}
                                 value={
                                   cc.commissionType === "NET_PRICE"
                                     ? cc.netPrice || 0
@@ -904,7 +904,7 @@ export default function AgenciesPage() {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => removeCustomRate(index)}
-                                className="h-7 w-7 text-slate-400 hover:text-red-600 hover:bg-red-50">
+                                className="h-7 w-7 text-muted-foreground/70 hover:text-red-600 hover:bg-red-50">
                                 <Trash2 className="h-3 w-3" />
                               </Button>
                             </TableCell>
@@ -926,7 +926,7 @@ export default function AgenciesPage() {
               </Button>
               <Button
                 type="submit"
-                className="bg-blue-600 hover:bg-blue-700 shadow-md"
+                className="bg-primary hover:bg-blue-700 shadow-md"
                 disabled={saveMutation.isPending}>
                 {saveMutation.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />

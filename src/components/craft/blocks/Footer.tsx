@@ -8,7 +8,7 @@ export const Footer = ({
   return (
     <div
       ref={connectors.connect}
-      className="border-t border-slate-200 pt-4 mt-8 text-center text-slate-500 text-xs whitespace-pre-wrap">
+      className="border-t border-border pt-4 mt-8 text-center text-muted-foreground text-xs whitespace-pre-wrap">
       {text}
     </div>
   );

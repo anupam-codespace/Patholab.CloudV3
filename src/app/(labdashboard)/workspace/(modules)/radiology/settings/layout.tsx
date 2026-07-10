@@ -16,7 +16,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       {/* Horizontal Navigation Bar */}
-      <div className="border-b border-slate-200">
+      <div className="border-b border-border">
         <nav className="flex gap-8">
           {tabs.map((tab) => {
             const isActive = pathname.startsWith(tab.path);
@@ -27,7 +27,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                 className={`flex items-center gap-2 pb-4 pt-2 font-bold text-sm border-b-2 transition-colors ${
                   isActive 
                     ? "border-indigo-600 text-indigo-700" 
-                    : "border-transparent text-slate-500 hover:text-slate-800"
+                    : "border-transparent text-muted-foreground hover:text-slate-800"
                 }`}
               >
                 <tab.icon className="w-4 h-4" />
@@ -39,7 +39,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
       </div>
 
       {/* Page Content */}
-      <main className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+      <main className="bg-card p-6 rounded-xl border border-border shadow-sm">
         {children}
       </main>
     </div>

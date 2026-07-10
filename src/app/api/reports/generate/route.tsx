@@ -138,13 +138,10 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
   const mRight = pt(layout?.margins?.right ?? 10);
 
   const headerHeight = header.show ? pxToPt(header.height || 120) : 0;
-  const patientBlockHeight = patientBlock.show ? 90 : 0;
   const footerHeight = footer.show ? pxToPt(footer.height || 80) : 0;
   const qrSize = pxToPt(config.qrCode?.size || 60);
 
-  // ✅ DYNAMIC SPACING: Pushes content exactly below the Header + Patient Block
-  const topSpacing = headerHeight + patientBlockHeight + 15;
-  const pagePaddingTop = mTop + topSpacing;
+  const pagePaddingTop = headerHeight + mTop + 15;
   const pagePaddingBottom = footerHeight + mBottom + 30;
 
   const styles = StyleSheet.create({
@@ -156,37 +153,6 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
       fontFamily: "Helvetica",
       fontSize: branding.globalFontSize || 10,
       color: "#1e293b",
-    },
-    topFixedZone: {
-      position: "absolute",
-      top: mTop,
-      left: mLeft,
-      right: mRight,
-    },
-    headerZone: {
-      height: headerHeight,
-      borderBottomWidth: header.mode === "image" ? 0 : 2,
-      borderBottomColor: branding.primaryColor,
-      flexDirection: "row",
-      alignItems: "center",
-    },
-    patientBlock: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      borderBottomWidth: 1,
-      borderBottomColor: "#cbd5e1",
-      paddingTop: 10,
-      paddingBottom: 10,
-      fontSize: patientBlock.fontSize || 11,
-      lineHeight: 1.4,
-    },
-    footerZone: {
-      position: "absolute",
-      bottom: mBottom,
-      left: mLeft,
-      right: mRight,
-      height: footerHeight,
-      borderTopWidth: 0,
     },
     pageBorder: {
       position: "absolute",
@@ -214,6 +180,35 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
       objectFit: "contain",
       opacity: branding?.watermarkOpacity || 0.05,
       transform: "rotate(-30deg)",
+    },
+    headerZone: {
+      position: "absolute",
+      top: mTop,
+      left: mLeft,
+      right: mRight,
+      height: headerHeight,
+      borderBottomWidth: header.mode === "image" ? 0 : 2,
+      borderBottomColor: branding.primaryColor,
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    footerZone: {
+      position: "absolute",
+      bottom: mBottom,
+      left: mLeft,
+      right: mRight,
+      height: footerHeight,
+      borderTopWidth: 0, // 🌟 FIX: Removed Top Border Line
+    },
+    patientBlock: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      borderBottomWidth: 1,
+      borderBottomColor: "#cbd5e1",
+      paddingBottom: 10,
+      marginBottom: 15,
+      fontSize: patientBlock.fontSize || 11,
+      lineHeight: 1.4,
     },
     patientCol: { flex: 1, flexDirection: "column", gap: 3 },
     label: { color: "#64748b" },
@@ -246,12 +241,14 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
       alignItems: "center",
       fontSize: bodyOptions.tableFontSize || 11,
     },
+    // 🌟 FIX: Strict boundaries force text to wrap downwards instead of overlapping
     colParam: { width: "40%", paddingRight: 10 },
     colResult: { width: "20%", paddingRight: 5 },
     colUnit: { width: "15%", paddingRight: 5 },
     colRef: { width: "25%", paddingRight: 5 },
   });
 
+  // 🌟 FIX: Simplified Page Number element to ensure it triggers correctly
   const PageNumberElement = () => (
     <Text
       style={{
@@ -267,6 +264,7 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
     />
   );
 
+  // 🌟 FIX: QR Code Renderer with explicit height constraint
   const RenderQR = () => {
     if (!config.qrCode?.show || !qrCodeDataUrl) return null;
 
@@ -289,177 +287,182 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
     <Document>
       <Page size="A4" style={styles.page}>
         {layout?.border?.show && <View style={styles.pageBorder} fixed />}
-
         {branding?.watermarkUrl && (
           <View style={styles.watermarkWrapper} fixed>
             <Image src={branding.watermarkUrl} style={styles.watermarkImage} />
           </View>
         )}
 
-        {/* ================================================================ */}
-        {/* ✅ FIXED TOP ZONE: Repeats Header + Patient Details on Every Page */}
-        {/* ================================================================ */}
-        <View style={styles.topFixedZone} fixed>
-          {/* --- HEADER --- */}
-          {header.show && (
-            <View style={styles.headerZone}>
-              {header.mode === "image" && header.fullImage ? (
-                <>
-                  <Image
-                    src={header.fullImage}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "contain",
-                      objectPosition: "left top",
-                    }}
-                  />
-                  {config.qrCode?.mode === "preset" &&
-                    config.qrCode.position.includes("header") && (
-                      <View
-                        style={{
-                          position: "absolute",
-                          right:
-                            config.qrCode.position === "header-right"
-                              ? 10
-                              : undefined,
-                          left:
-                            config.qrCode.position === "header-left"
-                              ? 10
-                              : undefined,
-                          top: 10,
-                        }}>
-                        <RenderQR />
-                      </View>
-                    )}
-                </>
-              ) : (
+        {/* --- CUSTOM ABSOLUTE QR --- */}
+        {config.qrCode?.show && config.qrCode.mode === "custom" && (
+          <View
+            style={{
+              position: "absolute",
+              left: pxToPt(config.qrCode.x),
+              top: pxToPt(config.qrCode.y),
+            }}
+            fixed>
+            <RenderQR />
+          </View>
+        )}
+
+        {/* --- HEADER --- */}
+        {header.show && (
+          <View style={styles.headerZone} fixed>
+            {header.mode === "image" && header.fullImage ? (
+              <>
+                <Image
+                  src={header.fullImage}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "contain",
+                    objectPosition: "left top",
+                  }}
+                />
+                {/* Overlay QR on Image Letterheads */}
+                {config.qrCode?.mode === "preset" &&
+                  config.qrCode.position.includes("header") && (
+                    <View
+                      style={{
+                        position: "absolute",
+                        right:
+                          config.qrCode.position === "header-right"
+                            ? 10
+                            : undefined,
+                        left:
+                          config.qrCode.position === "header-left"
+                            ? 10
+                            : undefined,
+                        top: 10,
+                      }}>
+                      <RenderQR />
+                    </View>
+                  )}
+              </>
+            ) : (
+              <View
+                style={{ flex: 1, flexDirection: "row", alignItems: "center" }}>
+                {config.qrCode?.mode === "preset" &&
+                config.qrCode.position === "header-left" ? (
+                  <RenderQR />
+                ) : (
+                  <View style={{ width: qrSize }} />
+                )}
+
                 <View
                   style={{
                     flex: 1,
                     flexDirection: "row",
                     alignItems: "center",
-                  }}>
-                  {config.qrCode?.mode === "preset" &&
-                  config.qrCode.position === "header-left" ? (
-                    <RenderQR />
-                  ) : (
-                    <View style={{ width: qrSize }} />
-                  )}
-                  <View
-                    style={{
-                      flex: 1,
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}>
-                    {header.logoUrl && (
-                      <Image
-                        src={header.logoUrl}
-                        style={{
-                          maxWidth: pxToPt(150),
-                          height: headerHeight - 20,
-                          objectFit: "contain",
-                          marginRight: 15,
-                        }}
-                      />
-                    )}
-                    <View style={{ textAlign: "center" }}>
-                      <Text
-                        style={{
-                          fontSize: 20,
-                          fontWeight: "bold",
-                          color: branding.primaryColor,
-                          textTransform: "uppercase",
-                        }}>
-                        {header.title || lab?.name}
-                      </Text>
-                      <Text
-                        style={{
-                          fontSize: 10,
-                          color: branding.secondaryColor || "#64748b",
-                          marginTop: 2,
-                        }}>
-                        {header.subTitle}
-                      </Text>
-                    </View>
-                  </View>
-                  {config.qrCode?.mode === "preset" &&
-                  config.qrCode.position === "header-right" ? (
-                    <RenderQR />
-                  ) : (
-                    <View style={{ width: qrSize }} />
-                  )}
-                </View>
-              )}
-            </View>
-          )}
-
-          {/* --- PATIENT INFO BLOCK --- */}
-          {patientBlock.show && (
-            <View style={styles.patientBlock}>
-              <View style={styles.patientCol}>
-                {patientBlock.showName && (
-                  <Text>
-                    <Text style={styles.label}>Patient Name: </Text>
-                    <Text style={styles.value}>{patient.name}</Text>
-                  </Text>
-                )}
-                {patientBlock.showPatientId && (
-                  <Text>
-                    <Text style={styles.label}>Patient ID/UHID: </Text>
-                    <Text style={styles.value}>{patient.patientId}</Text>
-                  </Text>
-                )}
-                {patientBlock.showRefDoctor && (
-                  <Text>
-                    <Text style={styles.label}>Referred By: </Text>
-                    <Text style={styles.value}>{timestamps.refDoctor}</Text>
-                  </Text>
-                )}
-              </View>
-              <View style={styles.patientCol}>
-                {patientBlock.showAgeSex && (
-                  <Text>
-                    <Text style={styles.label}>Age / Sex: </Text>
-                    <Text style={styles.value}>
-                      {patient.age} {patient.ageUnit} / {patient.gender}
-                    </Text>
-                  </Text>
-                )}
-                {patientBlock.showSampleCollection && (
-                  <Text>
-                    <Text style={styles.label}>Sample Collected: </Text>
-                    <Text style={styles.value}>{timestamps.collected}</Text>
-                  </Text>
-                )}
-                {patientBlock.showReportReleased && (
-                  <Text>
-                    <Text style={styles.label}>Report Released: </Text>
-                    <Text style={styles.value}>{timestamps.reported}</Text>
-                  </Text>
-                )}
-              </View>
-              {patientBlock.barcode?.show && barcodeValue && (
-                <View
-                  style={{
                     justifyContent: "center",
-                    alignItems: "flex-end",
-                    width: pxToPt(140),
                   }}>
-                  <Image
-                    src={`https://bwipjs-api.metafloor.com/?bcid=code128&text=${barcodeValue}&scaleX=2&scaleY=1`}
-                    style={{ width: "100%", height: pxToPt(35) }}
-                  />
-                  <Text style={{ fontSize: 7, marginTop: 2 }}>
-                    {barcodeValue}
-                  </Text>
+                  {header.logoUrl && (
+                    <Image
+                      src={header.logoUrl}
+                      style={{
+                        maxWidth: pxToPt(150),
+                        height: headerHeight - 20,
+                        objectFit: "contain",
+                        marginRight: 15,
+                      }}
+                    />
+                  )}
+                  <View style={{ textAlign: "center" }}>
+                    <Text
+                      style={{
+                        fontSize: 20,
+                        fontWeight: "bold",
+                        color: branding.primaryColor,
+                        textTransform: "uppercase",
+                      }}>
+                      {header.title || lab?.name}
+                    </Text>
+                    <Text
+                      style={{
+                        fontSize: 10,
+                        color: branding.secondaryColor || "#64748b",
+                        marginTop: 2,
+                      }}>
+                      {header.subTitle}
+                    </Text>
+                  </View>
                 </View>
+
+                {config.qrCode?.mode === "preset" &&
+                config.qrCode.position === "header-right" ? (
+                  <RenderQR />
+                ) : (
+                  <View style={{ width: qrSize }} />
+                )}
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* --- PATIENT INFO BLOCK --- */}
+        {patientBlock.show && (
+          <View style={styles.patientBlock}>
+            <View style={styles.patientCol}>
+              {patientBlock.showName && (
+                <Text>
+                  <Text style={styles.label}>Patient Name: </Text>
+                  <Text style={styles.value}>{patient.name}</Text>
+                </Text>
+              )}
+              {patientBlock.showPatientId && (
+                <Text>
+                  <Text style={styles.label}>Patient ID/UHID: </Text>
+                  <Text style={styles.value}>{patient.patientId}</Text>
+                </Text>
+              )}
+              {patientBlock.showRefDoctor && (
+                <Text>
+                  <Text style={styles.label}>Referred By: </Text>
+                  <Text style={styles.value}>{timestamps.refDoctor}</Text>
+                </Text>
               )}
             </View>
-          )}
-        </View>
-        {/* ================================================================ */}
+            <View style={styles.patientCol}>
+              {patientBlock.showAgeSex && (
+                <Text>
+                  <Text style={styles.label}>Age / Sex: </Text>
+                  <Text style={styles.value}>
+                    {patient.age} {patient.ageUnit} / {patient.gender}
+                  </Text>
+                </Text>
+              )}
+              {patientBlock.showSampleCollection && (
+                <Text>
+                  <Text style={styles.label}>Sample Collected: </Text>
+                  <Text style={styles.value}>{timestamps.collected}</Text>
+                </Text>
+              )}
+              {patientBlock.showReportReleased && (
+                <Text>
+                  <Text style={styles.label}>Report Released: </Text>
+                  <Text style={styles.value}>{timestamps.reported}</Text>
+                </Text>
+              )}
+            </View>
+            {patientBlock.barcode?.show && barcodeValue && (
+              <View
+                style={{
+                  justifyContent: "center",
+                  alignItems: "flex-end",
+                  width: pxToPt(140),
+                }}>
+                <Image
+                  src={`https://bwipjs-api.metafloor.com/?bcid=code128&text=${barcodeValue}&scaleX=2&scaleY=1`}
+                  style={{ width: "100%", height: pxToPt(35) }}
+                />
+                <Text style={{ fontSize: 7, marginTop: 2 }}>
+                  {barcodeValue}
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
 
         {/* --- RESULTS BODY --- */}
         {body.map((block: any, idx: number) => {
@@ -475,22 +478,14 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
                   const hasResults = test.results && test.results.length > 0;
                   if (!hasResults) return null;
 
-                  // Safely Extract Department Name
-                  const departmentName =
-                    test.testTemplate?.department?.name ||
-                    test.testTemplate?.Department?.name ||
-                    "PATHOLOGY";
-
                   return (
-                    <View
-                      key={testIdx}
-                      style={{ marginBottom: 20 }}
-                      break={testIdx > 0}>
-                      {/* ✅ DEPARTMENT HEADER FOR EACH TEST */}
-                      {bodyOptions.groupDepartmentWise && (
-                        <Text style={styles.deptHeader}>{departmentName}</Text>
-                      )}
-
+                    <View key={testIdx} style={{ marginBottom: 20 }}>
+                      {bodyOptions.groupDepartmentWise &&
+                        test.testTemplate?.department?.name && (
+                          <Text style={styles.deptHeader}>
+                            {test.testTemplate.department.name}
+                          </Text>
+                        )}
                       <Text
                         style={{
                           fontSize: branding.globalFontSize + 2,
@@ -534,36 +529,32 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
 
                         const { min, max } = getMinMax(res);
                         const valNum = parseFloat(val);
-                        const textVal = val.toString().toLowerCase();
-
                         let flagStatus = "NONE";
-                        let isAbnormal = false;
-
-                        // ✅ BOLD/ABNORMAL LOGIC - Handles Numbers & Text (Positive/Reactive)
-                        const isTextAbnormal =
-                          textVal.includes("positive") ||
-                          textVal.includes("reactive") ||
-                          res.flag === "ABNORMAL" ||
-                          res.flag === "CRITICAL" ||
-                          res.isAbnormal;
 
                         if (!isNaN(valNum) && min !== null && max !== null) {
-                          if (valNum < min) {
-                            flagStatus = "LOW";
-                            isAbnormal = true;
-                          } else if (valNum > max) {
-                            flagStatus = "HIGH";
-                            isAbnormal = true;
-                          } else {
-                            flagStatus = "NORMAL";
-                          }
-                        } else if (isTextAbnormal) {
-                          flagStatus = "HIGH"; // arbitrary high to trigger coloring
-                          isAbnormal = true;
+                          if (valNum < min) flagStatus = "LOW";
+                          else if (valNum > max) flagStatus = "HIGH";
+                          else flagStatus = "NORMAL";
+                        } else if (
+                          res.flag === "ABNORMAL" ||
+                          res.flag === "CRITICAL" ||
+                          res.isAbnormal
+                        ) {
+                          flagStatus = "HIGH";
                         }
 
                         let valColor = "#0f172a";
                         let icon = "";
+                        let isAbnormal = false;
+
+                        if (
+                          flagStatus === "LOW" ||
+                          flagStatus === "HIGH" ||
+                          res.flag === "ABNORMAL" ||
+                          res.flag === "CRITICAL"
+                        ) {
+                          isAbnormal = true;
+                        }
 
                         if (
                           bodyOptions?.showClinicalFlags &&
@@ -579,7 +570,7 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
                             valColor = "#059669";
                           }
                         } else if (isAbnormal) {
-                          valColor = "#dc2626"; // Fallback to red if flags are off but it's abnormal
+                          valColor = "#dc2626";
                           icon = " *";
                         }
 
@@ -589,7 +580,6 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
                               <Text>{pName}</Text>
                             </View>
                             <View style={styles.colResult}>
-                              {/* ✅ SET FONT WEIGHT TO BOLD IF ABNORMAL */}
                               <Text
                                 style={{
                                   fontWeight: isAbnormal ? "bold" : "normal",
@@ -661,6 +651,7 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
                     objectPosition: "center bottom",
                   }}
                 />
+                {/* Overlay QR on Image Footers */}
                 {config.qrCode?.mode === "preset" &&
                   config.qrCode.position.includes("footer") && (
                     <View
@@ -694,6 +685,7 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
                   ) : (
                     <View style={{ width: qrSize }} />
                   )}
+
                   <View
                     style={{
                       flexDirection: "row",
@@ -745,6 +737,7 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
                         ),
                     )}
                   </View>
+
                   {config.qrCode?.mode === "preset" &&
                   config.qrCode.position === "footer-right" ? (
                     <RenderQR />
@@ -752,6 +745,7 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
                     <View style={{ width: qrSize }} />
                   )}
                 </View>
+
                 <Text
                   style={{
                     fontSize: 8,
@@ -766,7 +760,7 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
           </View>
         )}
 
-        {/* --- GLOBAL BOTTOM PAGE NUMBERS --- */}
+        {/* --- GLOBAL BOTTOM PAGE NUMBERS (IF SELECTED) --- */}
         {config.qrCode?.showPageNumber &&
           config.qrCode.pageNumberPosition === "bottom-center" && (
             <Text
@@ -788,7 +782,7 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
       </Page>
     </Document>
   );
-};
+};;;;
 
 // ============================================================================
 // MAIN API HANDLER
@@ -798,6 +792,7 @@ export async function POST(req: NextRequest) {
     const payload = await req.json();
     let finalPayload = payload;
 
+    // --- SECURE PUBLIC & INTERNAL DOWNLOAD INTERCEPT ---
     if (
       payload.action === "public_download" ||
       payload.action === "generate_invoice_report"
@@ -808,7 +803,7 @@ export async function POST(req: NextRequest) {
         lab: { include: { reportTemplates: true } },
         patient: true,
         results: { orderBy: { order: "asc" as any } },
-        testTemplate: { include: { department: true, Department: true } }, // Safely attempts both casings
+        testTemplate: { include: { Department: true } },
         sample: true,
         doctor: { include: { user: true } },
         agency: true,
@@ -910,7 +905,10 @@ export async function POST(req: NextRequest) {
 
       const qrCodeDataUrl = await QRCode.toDataURL(
         payload.verificationUrl || "https://patholab.cloud/verify",
-        { margin: 0, color: { dark: "#0f172a", light: "#ffffff" } },
+        {
+          margin: 0,
+          color: { dark: "#0f172a", light: "#ffffff" },
+        },
       );
 
       finalPayload = {
@@ -923,13 +921,19 @@ export async function POST(req: NextRequest) {
           primaryTest.sample?.sampleId || primaryTest.patient.patientId,
         timestamps: {
           collected: primaryTest.sampleCollectedAt
-            ? format(new Date(primaryTest.sampleCollectedAt), "dd/MM/yy HH:mm")
+            ? format(
+                new Date(primaryTest.sampleCollectedAt),
+                "dd/MM/yy HH:mm:ss",
+              )
             : "-",
           received: primaryTest.sampleReceivedAt
-            ? format(new Date(primaryTest.sampleReceivedAt), "dd/MM/yy HH:mm")
+            ? format(
+                new Date(primaryTest.sampleReceivedAt),
+                "dd/MM/yy HH:mm:ss",
+              )
             : "-",
           reported: primaryTest.approvedAt
-            ? format(new Date(primaryTest.approvedAt), "dd/MM/yy HH:mm")
+            ? format(new Date(primaryTest.approvedAt), "dd/MM/yy HH:mm:ss")
             : "-",
           refDoctor:
             primaryTest.doctor?.user?.name ||

@@ -51,7 +51,7 @@ export function DynamicTestFields({
 
   return (
     <div className={cn("space-y-4 border-t border-slate-100 pt-4 mt-4 bg-slate-50/50 p-4 rounded-md", className)}>
-      <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-2">
+      <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-2">
         <span>Additional Information</span>
         <div className="h-px bg-slate-200 flex-1"></div>
       </h4>
@@ -63,7 +63,7 @@ export function DynamicTestFields({
 
           return (
             <div key={def.id} className="space-y-1.5">
-              <Label className="text-xs text-slate-700 font-medium flex items-center gap-2">
+              <Label className="text-xs text-foreground/80 font-medium flex items-center gap-2">
                 {def.name} 
                 {mapping.required && <span className="text-red-500">*</span>}
               </Label>
@@ -76,7 +76,7 @@ export function DynamicTestFields({
                   value={currentVal}
                   onChange={(e) => onChange(def.id, e.target.value)}
                   disabled={readOnly}
-                  className="bg-white min-h-[80px] text-sm resize-y"
+                  className="bg-card min-h-[80px] text-sm resize-y"
                   placeholder={`Enter ${def.name.toLowerCase()}...`}
                 />
               
@@ -87,7 +87,7 @@ export function DynamicTestFields({
                   onValueChange={(val) => onChange(def.id, val)} 
                   disabled={readOnly}
                 >
-                   <SelectTrigger className="bg-white h-9 text-sm">
+                   <SelectTrigger className="bg-card h-9 text-sm">
                       <SelectValue placeholder="Select option..." />
                    </SelectTrigger>
                    <SelectContent>
@@ -101,7 +101,7 @@ export function DynamicTestFields({
 
               /* 3. ✅ INTERACTIVE: IMAGE (Upload Preview) */
               ) : def.type === 'IMAGE' ? (
-                <div className="relative border-2 border-dashed border-slate-300 rounded-md p-6 flex flex-col items-center justify-center bg-white hover:bg-slate-50 transition group overflow-hidden">
+                <div className="relative border-2 border-dashed border-border rounded-md p-6 flex flex-col items-center justify-center bg-card hover:bg-muted/30 transition group overflow-hidden">
                     {/* Hidden Native File Input */}
                     <input 
                       type="file"
@@ -124,18 +124,18 @@ export function DynamicTestFields({
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={currentVal} alt="Preview" className="max-h-32 rounded-md shadow-sm object-contain relative z-0" />
                         {!readOnly && (
-                            <span className="text-xs text-blue-600 underline group-hover:text-blue-800 relative z-20 bg-white/80 px-2 py-1 rounded mt-1">
+                            <span className="text-xs text-primary underline group-hover:text-blue-800 relative z-20 bg-card/80 px-2 py-1 rounded mt-1">
                               Click to replace image
                             </span>
                         )}
                       </div>
                     ) : (
                       <>
-                        <div className="bg-slate-100 p-2 rounded-full mb-2 group-hover:bg-blue-50 transition-colors">
-                            <UploadCloud className="h-5 w-5 text-slate-400 group-hover:text-blue-500" />
+                        <div className="bg-muted p-2 rounded-full mb-2 group-hover:bg-primary/10 transition-colors">
+                            <UploadCloud className="h-5 w-5 text-muted-foreground/70 group-hover:text-blue-500" />
                         </div>
-                        <span className="text-xs text-slate-500 font-medium group-hover:text-slate-700">Click or drag to upload Image</span>
-                        <span className="text-[10px] text-slate-400 mt-1">(Max 2MB)</span>
+                        <span className="text-xs text-muted-foreground font-medium group-hover:text-slate-700">Click or drag to upload Image</span>
+                        <span className="text-[10px] text-muted-foreground/70 mt-1">(Max 2MB)</span>
                       </>
                     )}
                 </div>
@@ -147,7 +147,7 @@ export function DynamicTestFields({
                       value={currentVal}
                       onChange={(e) => onChange(def.id, e.target.value)}
                       disabled={readOnly}
-                      className="bg-slate-50 min-h-[100px] text-sm font-mono border-slate-300 focus:bg-white"
+                      className="bg-muted/30 min-h-[100px] text-sm font-mono border-border focus:bg-card"
                       placeholder={`<b>Patient Note:</b><br/>Enter HTML content here...`}
                     />
                     <div className="flex items-center gap-1 text-[10px] text-slate-400">
@@ -162,7 +162,7 @@ export function DynamicTestFields({
                   onChange={(e) => onChange(def.id, e.target.value)}
                   disabled={readOnly}
                   type={def.type === 'DATE' ? 'date' : 'text'}
-                  className="bg-white h-9 text-sm"
+                  className="bg-card h-9 text-sm"
                   placeholder={def.type === 'DATE' ? undefined : `Enter ${def.name.toLowerCase()}...`}
                 />
               )}

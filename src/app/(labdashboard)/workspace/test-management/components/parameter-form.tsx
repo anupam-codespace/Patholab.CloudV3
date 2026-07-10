@@ -284,13 +284,13 @@ export default function ParameterForm({
 
       {/* GLOBAL WARNING BANNER */}
       {initialData?.isGlobal && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex gap-3">
-          <Globe className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
+        <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 flex gap-3">
+          <Globe className="h-5 w-5 text-primary shrink-0 mt-0.5" />
           <div>
             <h4 className="text-blue-800 font-semibold text-sm">
               Global Master Parameter
             </h4>
-            <p className="text-blue-700 text-xs mt-1 leading-relaxed">
+            <p className="text-primary text-xs mt-1 leading-relaxed">
               You are editing a master catalog parameter. If you modify its
               details or reference ranges, a customized local copy will
               automatically be generated specifically for your laboratory to
@@ -302,7 +302,7 @@ export default function ParameterForm({
 
       <Tabs defaultValue="core" className="w-full">
         {/* SMART TABS: Highlight Red on Error */}
-        <TabsList className="grid w-full grid-cols-4 bg-slate-100 p-1 rounded-lg">
+        <TabsList className="grid w-full grid-cols-4 bg-muted p-1 rounded-lg">
           <TabsTrigger
             value="core"
             className={
@@ -481,7 +481,7 @@ export default function ParameterForm({
         {/* --- TAB: REFERENCE RANGES --- */}
         <TabsContent value="ranges" className="space-y-4 pt-4">
           <div className="space-y-6">
-            <div className="bg-blue-50 p-3 rounded-md text-xs text-blue-700 flex gap-2">
+            <div className="bg-primary/10 p-3 rounded-md text-xs text-primary flex gap-2">
               <FileText className="w-4 h-4 mt-0.5 shrink-0" />
               <div>
                 <strong>Text Reporting:</strong> Paste long text in "Report
@@ -500,9 +500,9 @@ export default function ParameterForm({
               return (
                 <Card
                   key={field.id}
-                  className={`relative shadow-sm overflow-hidden ${rangeErrs ? "border-red-300 ring-1 ring-red-100" : "border-slate-200"}`}>
+                  className={`relative shadow-sm overflow-hidden ${rangeErrs ? "border-red-300 ring-1 ring-red-100" : "border-border"}`}>
                   <div
-                    className={`absolute top-0 left-0 w-1 h-full ${rangeErrs ? "bg-red-500" : "bg-blue-500"}`}></div>
+                    className={`absolute top-0 left-0 w-1 h-full ${rangeErrs ? "bg-red-500" : "bg-primary/100"}`}></div>
                   <Button
                     type="button"
                     variant="ghost"
@@ -514,13 +514,13 @@ export default function ParameterForm({
 
                   <CardContent className="p-4 grid gap-5">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-700 flex items-center gap-2">
-                        <FileText className="w-3.5 h-3.5 text-blue-600" />
+                      <label className="text-xs font-bold text-foreground/80 flex items-center gap-2">
+                        <FileText className="w-3.5 h-3.5 text-primary" />
                         Report Display Text (Ref Range Column)
                       </label>
                       <Textarea
                         {...register(`ranges.${index}.textValue`)}
-                        className="min-h-[60px] text-xs font-mono bg-slate-50 border-slate-200 focus:bg-white"
+                        className="min-h-[60px] text-xs font-mono bg-muted/30 border-border focus:bg-card"
                         placeholder={
                           ">6.5 DIABETIC\n5.7-6.4 PRE DIABETIC\n<5.7 NON DIABETIC"
                         }
@@ -529,7 +529,7 @@ export default function ParameterForm({
 
                     <div className="grid grid-cols-12 gap-3 items-end border-b pb-4 border-slate-100">
                       <div className="col-span-3 space-y-1">
-                        <label className="text-xs text-slate-500 font-medium flex items-center gap-1">
+                        <label className="text-xs text-muted-foreground font-medium flex items-center gap-1">
                           Gender / Condition{" "}
                           <span className="text-red-500">*</span>
                         </label>
@@ -549,7 +549,7 @@ export default function ParameterForm({
                             <SelectItem value="BOTH">Both</SelectItem>
                             <SelectItem
                               value="CUSTOM"
-                              className="font-bold text-blue-600">
+                              className="font-bold text-primary">
                               Custom
                             </SelectItem>
                           </SelectContent>
@@ -558,14 +558,14 @@ export default function ParameterForm({
 
                       <div className="col-span-3 space-y-1">
                         <label
-                          className={`text-xs font-medium flex items-center gap-1 ${isCustom ? "text-blue-700" : "text-slate-300"}`}>
+                          className={`text-xs font-medium flex items-center gap-1 ${isCustom ? "text-primary" : "text-slate-300"}`}>
                           Custom Label{" "}
                           {isCustom && <span className="text-red-500">*</span>}
                         </label>
                         <Input
                           {...register(`ranges.${index}.customLabel`)}
                           disabled={!isCustom}
-                          className={`h-8 text-xs transition-colors ${isCustom ? "bg-yellow-50 border-yellow-300 text-slate-900" : "bg-slate-100 border-slate-200 text-slate-400"} ${rangeErrs?.customLabel ? "border-red-500" : ""}`}
+                          className={`h-8 text-xs transition-colors ${isCustom ? "bg-yellow-50 border-yellow-300 text-foreground" : "bg-muted border-border text-slate-400"} ${rangeErrs?.customLabel ? "border-red-500" : ""}`}
                           placeholder={
                             isCustom ? "e.g. High Risk" : "Select Custom first"
                           }
@@ -578,7 +578,7 @@ export default function ParameterForm({
                       </div>
 
                       <div className="col-span-2 space-y-1">
-                        <label className="text-xs text-slate-500 font-medium flex items-center gap-1">
+                        <label className="text-xs text-muted-foreground font-medium flex items-center gap-1">
                           Min Age <span className="text-red-500">*</span>
                         </label>
                         <Input
@@ -594,7 +594,7 @@ export default function ParameterForm({
                       </div>
 
                       <div className="col-span-2 space-y-1">
-                        <label className="text-xs text-slate-500 font-medium flex items-center gap-1">
+                        <label className="text-xs text-muted-foreground font-medium flex items-center gap-1">
                           Max Age <span className="text-red-500">*</span>
                         </label>
                         <Input
@@ -610,7 +610,7 @@ export default function ParameterForm({
                       </div>
 
                       <div className="col-span-2 space-y-1">
-                        <label className="text-xs text-slate-500 font-medium flex items-center gap-1">
+                        <label className="text-xs text-muted-foreground font-medium flex items-center gap-1">
                           Unit <span className="text-red-500">*</span>
                         </label>
                         <Select
@@ -639,7 +639,7 @@ export default function ParameterForm({
                           type="number"
                           step="0.01"
                           {...register(`ranges.${index}.lowValue`)}
-                          className={`h-8 text-xs ${rangeErrs?.lowValue ? "border-red-500 bg-red-50" : "bg-white"}`}
+                          className={`h-8 text-xs ${rangeErrs?.lowValue ? "border-red-500 bg-red-50" : "bg-card"}`}
                           placeholder="0"
                         />
                         {rangeErrs?.lowValue && (
@@ -656,7 +656,7 @@ export default function ParameterForm({
                           type="number"
                           step="0.01"
                           {...register(`ranges.${index}.highValue`)}
-                          className={`h-8 text-xs ${rangeErrs?.highValue ? "border-red-500 bg-red-50" : "bg-white"}`}
+                          className={`h-8 text-xs ${rangeErrs?.highValue ? "border-red-500 bg-red-50" : "bg-card"}`}
                           placeholder="0"
                         />
                         {rangeErrs?.highValue && (
@@ -706,7 +706,7 @@ export default function ParameterForm({
 
         {/* --- TAB: FORMULA --- */}
         <TabsContent value="formula" className="pt-4 space-y-4">
-          <div className="p-4 bg-blue-50 text-blue-800 rounded-md text-sm">
+          <div className="p-4 bg-primary/10 text-blue-800 rounded-md text-sm">
             <strong>How to use:</strong> Use parameter codes in calculations.
             Example: <code>(TP - ALB)</code>
           </div>
@@ -739,9 +739,9 @@ export default function ParameterForm({
               return (
                 <div
                   key={field.id}
-                  className={`flex items-start gap-3 bg-white p-3 rounded-lg border shadow-sm relative group ${reagentErrors ? "border-red-300 bg-red-50/30" : "border-slate-200"}`}>
+                  className={`flex items-start gap-3 bg-card p-3 rounded-lg border shadow-sm relative group ${reagentErrors ? "border-red-300 bg-red-50/30" : "border-border"}`}>
                   <div className="flex-1 space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
+                    <label className="text-xs font-bold text-foreground/80 flex items-center gap-1">
                       Inventory Catalog Item{" "}
                       <span className="text-red-500">*</span>
                     </label>
@@ -751,7 +751,7 @@ export default function ParameterForm({
                       }
                       defaultValue={(field as any).inventoryItemId}>
                       <SelectTrigger
-                        className={`bg-slate-50 ${reagentErrors?.inventoryItemId ? "border-red-500 ring-1 ring-red-200" : ""}`}>
+                        className={`bg-muted/30 ${reagentErrors?.inventoryItemId ? "border-red-500 ring-1 ring-red-200" : ""}`}>
                         <SelectValue placeholder="Search or select an item..." />
                       </SelectTrigger>
                       <SelectContent>
@@ -773,7 +773,7 @@ export default function ParameterForm({
                   </div>
 
                   <div className="w-1/3 space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
+                    <label className="text-xs font-bold text-foreground/80 flex items-center gap-1">
                       Quantity per Test <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
@@ -785,7 +785,7 @@ export default function ParameterForm({
                         className={`pr-16 ${reagentErrors?.quantity ? "border-red-500 bg-red-50" : ""}`}
                         placeholder="0.0"
                       />
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-xs text-slate-400 font-medium">
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-xs text-muted-foreground/70 font-medium">
                         {unitLabel}
                       </div>
                     </div>
@@ -800,7 +800,7 @@ export default function ParameterForm({
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="mt-6 text-slate-400 hover:text-red-500 hover:bg-red-50"
+                    className="mt-6 text-muted-foreground/70 hover:text-red-500 hover:bg-red-50"
                     onClick={() => removeReagent(index)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -827,7 +827,7 @@ export default function ParameterForm({
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="bg-blue-600 hover:bg-blue-700">
+          className="bg-primary hover:bg-blue-700">
           {isSubmitting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (

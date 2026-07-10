@@ -16,6 +16,8 @@ export function useAuth() {
 
   return {
     user: data?.user,
+    lab: data?.lab,
+    permissions: data?.permissions,
     isLoading,
     isAuthenticated: !!data?.user,
     error,

@@ -114,51 +114,51 @@ export default function CustomFieldForm({ initialData, onSuccess }: { initialDat
 
         {/* ✅ NEW: Layout Selector (Only shows when Image is selected) */}
         {watchedType === 'IMAGE' && (
-            <div className="bg-blue-50 p-4 rounded-md border border-blue-100">
+            <div className="bg-primary/10 p-4 rounded-md border border-blue-100">
                 <Label className="flex items-center gap-2 mb-3 text-blue-800 text-xs font-bold uppercase tracking-wide">
                     <LayoutTemplate className="h-4 w-4"/> Report Display Size
                 </Label>
                 <div className="grid grid-cols-3 gap-2">
                     {/* Full Width Option */}
                     <div 
-                        className={`cursor-pointer border-2 rounded-md p-2 flex flex-col items-center gap-2 text-xs font-medium transition-all ${watchedLayout === 'FULL' ? 'border-blue-600 bg-white shadow-sm ring-1 ring-blue-600' : 'border-slate-200 bg-white/50 hover:bg-white'}`}
+                        className={`cursor-pointer border-2 rounded-md p-2 flex flex-col items-center gap-2 text-xs font-medium transition-all ${watchedLayout === 'FULL' ? 'border-blue-600 bg-card shadow-sm ring-1 ring-blue-600' : 'border-border bg-card/50 hover:bg-white'}`}
                         onClick={() => form.setValue('reportLayout', 'FULL')}
                     >
                         <div className="w-full h-6 bg-slate-300 rounded border border-slate-400"></div>
-                        <span className="text-[10px] text-slate-600">Full Width (1/1)</span>
+                        <span className="text-[10px] text-muted-foreground">Full Width (1/1)</span>
                     </div>
 
                     {/* Half Width Option */}
                     <div 
-                        className={`cursor-pointer border-2 rounded-md p-2 flex flex-col items-center gap-2 text-xs font-medium transition-all ${watchedLayout === 'HALF' ? 'border-blue-600 bg-white shadow-sm ring-1 ring-blue-600' : 'border-slate-200 bg-white/50 hover:bg-white'}`}
+                        className={`cursor-pointer border-2 rounded-md p-2 flex flex-col items-center gap-2 text-xs font-medium transition-all ${watchedLayout === 'HALF' ? 'border-blue-600 bg-card shadow-sm ring-1 ring-blue-600' : 'border-border bg-card/50 hover:bg-white'}`}
                         onClick={() => form.setValue('reportLayout', 'HALF')}
                     >
                         <div className="flex gap-1 w-full h-6">
                             <div className="w-1/2 bg-slate-300 rounded border border-slate-400"></div>
-                            <div className="w-1/2 bg-slate-200 rounded border border-slate-300 border-dashed"></div>
+                            <div className="w-1/2 bg-slate-200 rounded border border-border border-dashed"></div>
                         </div>
-                        <span className="text-[10px] text-slate-600">Half Width (1/2)</span>
+                        <span className="text-[10px] text-muted-foreground">Half Width (1/2)</span>
                     </div>
 
                     {/* Third Width Option */}
                     <div 
-                        className={`cursor-pointer border-2 rounded-md p-2 flex flex-col items-center gap-2 text-xs font-medium transition-all ${watchedLayout === 'THIRD' ? 'border-blue-600 bg-white shadow-sm ring-1 ring-blue-600' : 'border-slate-200 bg-white/50 hover:bg-white'}`}
+                        className={`cursor-pointer border-2 rounded-md p-2 flex flex-col items-center gap-2 text-xs font-medium transition-all ${watchedLayout === 'THIRD' ? 'border-blue-600 bg-card shadow-sm ring-1 ring-blue-600' : 'border-border bg-card/50 hover:bg-white'}`}
                         onClick={() => form.setValue('reportLayout', 'THIRD')}
                     >
                         <div className="flex gap-1 w-full h-6">
                             <div className="w-1/3 bg-slate-300 rounded border border-slate-400"></div>
-                            <div className="w-1/3 bg-slate-200 rounded border border-slate-300 border-dashed"></div>
-                            <div className="w-1/3 bg-slate-200 rounded border border-slate-300 border-dashed"></div>
+                            <div className="w-1/3 bg-slate-200 rounded border border-border border-dashed"></div>
+                            <div className="w-1/3 bg-slate-200 rounded border border-border border-dashed"></div>
                         </div>
-                        <span className="text-[10px] text-slate-600">Small (1/3)</span>
+                        <span className="text-[10px] text-muted-foreground">Small (1/3)</span>
                     </div>
                 </div>
-                <p className="text-[10px] text-blue-600/80 mt-2">Select how much width this image should take on the printed report.</p>
+                <p className="text-[10px] text-primary/80 mt-2">Select how much width this image should take on the printed report.</p>
             </div>
         )}
 
         {watchedType === 'DROPDOWN' && (
-          <div className="bg-slate-50 p-3 rounded-md border border-slate-200">
+          <div className="bg-muted/30 p-3 rounded-md border border-border">
             <Label className="text-xs">Dropdown Options</Label>
             <div className="flex gap-2 mt-2 mb-3">
               <Input 
@@ -174,7 +174,7 @@ export default function CustomFieldForm({ initialData, onSuccess }: { initialDat
             </div>
             <div className="flex flex-wrap gap-2">
               {options.map((opt, i) => (
-                <Badge key={i} variant="outline" className="bg-white pl-2 pr-1 py-0.5 text-[10px]">
+                <Badge key={i} variant="outline" className="bg-card pl-2 pr-1 py-0.5 text-[10px]">
                   {opt} <X className="h-3 w-3 ml-1 cursor-pointer hover:text-red-500" onClick={() => removeOption(i)}/>
                 </Badge>
               ))}
@@ -183,16 +183,16 @@ export default function CustomFieldForm({ initialData, onSuccess }: { initialDat
         )}
 
         <div className="flex justify-end gap-3 mt-6">
-          <Button type="submit" disabled={isSubmitting} className="bg-blue-600 hover:bg-blue-700">
+          <Button type="submit" disabled={isSubmitting} className="bg-primary hover:bg-blue-700">
             {isSubmitting && <Loader2 className="animate-spin mr-2 h-4 w-4" />} Save
           </Button>
         </div>
       </form>
 
       {/* RIGHT: PREVIEW */}
-      <div className="bg-slate-100/50 p-6 rounded-lg border-2 border-dashed border-slate-200 flex flex-col justify-center">
-        <div className="bg-white p-4 shadow-sm border border-slate-200 rounded-md">
-           <p className="text-[10px] text-slate-400 mb-2 uppercase tracking-wider font-bold">Preview (Data Entry Form)</p>
+      <div className="bg-slate-100/50 p-6 rounded-lg border-2 border-dashed border-border flex flex-col justify-center">
+        <div className="bg-card p-4 shadow-sm border border-border rounded-md">
+           <p className="text-[10px] text-muted-foreground/70 mb-2 uppercase tracking-wider font-bold">Preview (Data Entry Form)</p>
            <DynamicTestFields 
               fields={previewFields} 
               values={[]} 

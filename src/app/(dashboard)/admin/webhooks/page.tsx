@@ -114,7 +114,7 @@ export default function DetailedWebhooksPage() {
         );
       case "IGNORED":
         return (
-          <span className="flex w-fit items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-800 border border-slate-200">
+          <span className="flex w-fit items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-muted text-foreground border border-border">
             <AlertCircle size={14} /> Ignored
           </span>
         );
@@ -129,8 +129,8 @@ export default function DetailedWebhooksPage() {
 
   if (loading)
     return (
-      <div className="flex flex-col h-[50vh] items-center justify-center text-slate-500 space-y-4">
-        <RefreshCw className="animate-spin text-blue-600" size={32} />
+      <div className="flex flex-col h-[50vh] items-center justify-center text-muted-foreground space-y-4">
+        <RefreshCw className="animate-spin text-primary" size={32} />
         <p className="animate-pulse font-medium">
           Loading flight recorder data...
         </p>
@@ -142,30 +142,30 @@ export default function DetailedWebhooksPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">
+          <h1 className="text-2xl font-bold text-foreground">
             WooCommerce Webhook Ledger
           </h1>
-          <p className="text-slate-500 mt-1">
+          <p className="text-muted-foreground mt-1">
             Live monitoring of your SaaS payments and provisioning engine.
           </p>
         </div>
         <button
           onClick={fetchLogs}
-          className="flex items-center justify-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition text-sm font-medium shadow-sm">
+          className="flex items-center justify-center gap-2 px-4 py-2 bg-card border border-border text-foreground/80 rounded-lg hover:bg-muted/30 transition text-sm font-medium shadow-sm">
           <RefreshCw size={16} />
           Refresh Logs
         </button>
       </div>
 
       {/* Manual Sync Tool */}
-      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-end gap-6 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-1 h-full bg-blue-600"></div>
+      <div className="bg-card p-6 rounded-xl border border-border shadow-sm flex flex-col md:flex-row md:items-end gap-6 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-1 h-full bg-primary"></div>
         <div className="flex-1">
-          <h2 className="text-sm font-bold text-slate-800 mb-1 flex items-center gap-2">
-            <HardDriveDownload size={16} className="text-blue-600" />
+          <h2 className="text-sm font-bold text-foreground mb-1 flex items-center gap-2">
+            <HardDriveDownload size={16} className="text-primary" />
             Manual Order Sync
           </h2>
-          <p className="text-xs text-slate-500 mb-4">
+          <p className="text-xs text-muted-foreground mb-4">
             If a WooCommerce webhook was missed due to downtime, enter the Order
             ID here to force database provisioning.
           </p>
@@ -177,7 +177,7 @@ export default function DetailedWebhooksPage() {
               placeholder="e.g., 10452"
               value={syncOrderId}
               onChange={(e) => setSyncOrderId(e.target.value)}
-              className="w-full sm:max-w-xs px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-all text-sm"
+              className="w-full sm:max-w-xs px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-blue-500 focus:outline-none transition-all text-sm"
             />
             <button
               type="submit"
@@ -214,11 +214,11 @@ export default function DetailedWebhooksPage() {
       </div>
 
       {/* Webhooks Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider font-semibold text-slate-500">
+              <tr className="bg-muted/30 border-b border-border text-xs uppercase tracking-wider font-semibold text-muted-foreground">
                 <th className="p-4">Timestamp</th>
                 <th className="p-4">Event Source</th>
                 <th className="p-4">Status</th>
@@ -231,7 +231,7 @@ export default function DetailedWebhooksPage() {
                 <tr>
                   <td
                     colSpan={5}
-                    className="p-12 text-center text-slate-500 flex flex-col items-center justify-center">
+                    className="p-12 text-center text-muted-foreground flex flex-col items-center justify-center">
                     <Activity size={32} className="text-slate-300 mb-3" />
                     <p>No webhook events logged yet. Waiting for orders...</p>
                   </td>
@@ -240,8 +240,8 @@ export default function DetailedWebhooksPage() {
                 logs.map((log) => (
                   <tr
                     key={log.id}
-                    className="hover:bg-slate-50 transition-colors">
-                    <td className="p-4 text-sm text-slate-800 whitespace-nowrap">
+                    className="hover:bg-muted/30 transition-colors">
+                    <td className="p-4 text-sm text-foreground whitespace-nowrap">
                       {format(
                         new Date(log.createdAt),
                         "MMM d, yyyy • h:mm:ss a",
@@ -252,7 +252,7 @@ export default function DetailedWebhooksPage() {
                         <span className="font-mono text-xs font-bold text-slate-700">
                           {log.source || "WOOCOMMERCE"}
                         </span>
-                        <span className="font-mono text-xs text-slate-500 mt-0.5">
+                        <span className="font-mono text-xs text-muted-foreground mt-0.5">
                           {log.event}
                         </span>
                       </div>
@@ -268,7 +268,7 @@ export default function DetailedWebhooksPage() {
                           {log.errorMessage}
                         </span>
                       ) : (
-                        <span className="text-slate-400 italic">
+                        <span className="text-muted-foreground/70 italic">
                           Clean execution
                         </span>
                       )}
@@ -276,7 +276,7 @@ export default function DetailedWebhooksPage() {
                     <td className="p-4 text-right">
                       <button
                         onClick={() => setSelectedPayload(log.payload)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors border border-blue-100">
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-primary bg-primary/10 hover:bg-blue-100 rounded-md transition-colors border border-blue-100">
                         <Eye size={14} />
                         View Payload
                       </button>
@@ -292,24 +292,24 @@ export default function DetailedWebhooksPage() {
       {/* JSON PAYLOAD MODAL */}
       {selectedPayload && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50">
+          <div className="bg-card rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-4 border-b border-border bg-muted/30">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded bg-slate-800 flex items-center justify-center">
                   <span className="text-white font-mono text-xs">{"{ }"}</span>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-slate-800 text-sm">
+                  <h3 className="font-semibold text-foreground text-sm">
                     Raw Webhook Payload
                   </h3>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-muted-foreground">
                     Unmodified JSON data received from source
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setSelectedPayload(null)}
-                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                className="p-1.5 text-muted-foreground/70 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
                 <X size={20} />
               </button>
             </div>

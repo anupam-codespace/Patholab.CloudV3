@@ -77,12 +77,12 @@ export default function PlanManagementPage() {
   if (isLoading) return <PlansSkeleton />;
 
   return (
-    <div className="p-8 space-y-8 bg-slate-50 min-h-screen">
+    <div className="p-8 space-y-8 bg-muted/30 min-h-screen">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900">
+        <h1 className="text-3xl font-bold text-foreground">
           Plan & Limits Control
         </h1>
-        <p className="text-slate-500">
+        <p className="text-muted-foreground">
           Manage limits, pricing, and feature access for all SaaS tiers.
         </p>
       </div>
@@ -121,9 +121,9 @@ export default function PlanManagementPage() {
                   </div>
                   <Badge
                     variant="outline"
-                    className="text-lg px-3 py-1 bg-slate-50">
+                    className="text-lg px-3 py-1 bg-muted/30">
                     ₹{plan.price}
-                    <span className="text-xs text-slate-400 font-normal ml-1">
+                    <span className="text-xs text-muted-foreground/70 font-normal ml-1">
                       /mo
                     </span>
                   </Badge>
@@ -133,7 +133,7 @@ export default function PlanManagementPage() {
               <CardContent className="space-y-6">
                 {/* LIMITS SECTION */}
                 <div className="space-y-3">
-                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                  <h4 className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">
                     Usage Limits
                   </h4>
 
@@ -170,7 +170,7 @@ export default function PlanManagementPage() {
 
                 {/* FEATURES TOGGLES */}
                 <div className="space-y-3 pt-4 border-t border-slate-100">
-                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                  <h4 className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">
                     Feature Flags
                   </h4>
 
@@ -258,7 +258,7 @@ function LimitRow({
 }: any) {
   return (
     <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2 text-sm text-slate-600">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <Icon className="h-4 w-4 text-slate-400" /> {label}
       </div>
       {isEditing ? (
@@ -281,12 +281,12 @@ function LimitRow({
 function ToggleRow({ label, checked, isEditing, onChange }: any) {
   return (
     <div className="flex items-center justify-between">
-      <Label className="text-sm text-slate-600 cursor-pointer">{label}</Label>
+      <Label className="text-sm text-muted-foreground cursor-pointer">{label}</Label>
       <Switch
         checked={checked}
         onCheckedChange={onChange}
         disabled={!isEditing}
-        className="data-[state=checked]:bg-blue-600"
+        className="data-[state=checked]:bg-primary"
       />
     </div>
   );

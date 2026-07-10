@@ -27,6 +27,7 @@ import {
   History,
   Wallet,
   HelpCircle,
+  Home,
 } from "lucide-react";
 
 export type NavItem = {
@@ -50,7 +51,8 @@ export const adminNav: NavGroup[] = [
   {
     title: "Overview",
     items: [
-      { name: "Dashboard", href: "/workspace", icon: LayoutDashboard },
+      { name: "Home", href: "/workspace", icon: Home },
+      { name:"Dashboard", href:"/workspace/dashboard", icon: LayoutDashboard},
       { name: "Financial Analytics", href: "/workspace/analytics", icon: BarChart3 },
       { name: "Online Booking", href: "/workspace/bookings", icon: CalendarDays, badge: "New"},
       // { name: "Appointments", href: "/workspace/appointments", icon: CalendarDays,  },
@@ -61,7 +63,7 @@ export const adminNav: NavGroup[] = [
     items: [
       { name: "Patient Registration", href: "/workspace/registration", icon: UserPlus, badge: "New" },
       { name: "Patient Directory", href: "/workspace/patients", icon: Users },
-      { name: "Test Catalog", href: "/workspace/test-management", icon: TestTube },
+      { name: "Test Management", href: "/workspace/test-management", icon: TestTube },
       { name: "Worklist & Results", href: "/workspace/results", icon: ClipboardCheck, badge: "Live" },
       { name: "Report Dispatch", href: "/workspace/reports", icon: Send },
     ],
@@ -70,8 +72,8 @@ export const adminNav: NavGroup[] = [
     title: "Resources & Logistics",
     items: [
       // ✅ Using uppercase DB-friendly tags
-      { name: "Inventory & Stock", href: "/workspace/inventory", icon: Box, moduleTag: "INVENTORY" },
-      { name: "Logistics / Trips", href: "/workspace/logistics", icon: Truck, moduleTag: "LOGISTICS" },
+      { name: "Inventory & Stock", href: "/workspace/inventory", icon: Box, moduleTag: "inventory" },
+      { name: "Logistics / Trips", href: "/workspace/logistics", icon: Truck, moduleTag: "logistics" },
     ],
   },
 
@@ -79,22 +81,22 @@ export const adminNav: NavGroup[] = [
     title: "Machine & AI",
     items: [
       // ✅ Using uppercase DB-friendly tags
-      { name: "Analyzer", href: "/workspace/analyzers", icon: Cpu, moduleTag: "MACHINE" },
-      { name: "Visual Mapper", href: "/workspace/analyzers/mapper", icon: BrainCircuit, moduleTag: "MACHINE" },
-      { name: "Mappings", href: "/workspace/analyzers/mappings", icon: ScanBarcode, moduleTag: "MACHINE" },
-      { name: "AI Analysis", href: "/workspace/analyzers/ai", icon: Activity, moduleTag: "AI" },
+      { name: "Analyzer", href: "/workspace/analyzers", icon: Cpu, moduleTag: "iot" },
+      { name: "Visual Mapper", href: "/workspace/analyzers/mapper", icon: BrainCircuit, moduleTag: "iot" },
+      { name: "Mappings", href: "/workspace/analyzers/mappings", icon: ScanBarcode, moduleTag: "iot" },
+      { name: "AI Analysis", href: "/workspace/analyzers/ai", icon: Activity, moduleTag: "ai" },
     ],
   },
 
   
   {
     title: "B2B & Growth",
-    moduleTag: "B2B", // Locks the whole group if B2B is not purchased
+    moduleTag: "b2b", // Locks the whole group if B2B is not purchased
     items: [
       { name: "Referral Doctors", href: "/workspace/doctors", icon: Stethoscope },
       { name: "Corporate Agencies", href: "/workspace/agencies", icon: Briefcase },
       { name: "Commissions Payout", href: "/workspace/commissions", icon: Receipt },
-      { name: "B2B Settings", href: "/workspace/settings/b2b-tiers", icon: ShieldCheck, moduleTag: "B2B" }, // Only show if B2B is purchased
+      { name: "B2B Settings", href: "/workspace/settings/b2b-tiers", icon: ShieldCheck, moduleTag: "b2b" }, // Only show if B2B is purchased
 
     ],
   },
@@ -125,7 +127,7 @@ export const receptionistNav: NavGroup[] = [
       { name: "New Registration", href: "/workspace/registration", icon: UserPlus, badge: "Start" },
       { name: "Patient Records", href: "/workspace/patients", icon: ClipboardList },
       { name: "Appointments", href: "/workspace/appointments", icon: CalendarDays },
-      { name: "Home Collection", href: "/workspace/logistics", icon: Truck, moduleTag: "LOGISTICS" },
+      { name: "Home Collection", href: "/workspace/logistics", icon: Truck, moduleTag: "logistics" },
     ],
   },
   {
@@ -152,15 +154,15 @@ export const technicianNav: NavGroup[] = [
   {
     title: "Processing",
     items: [
-      { name: "Machine Results", href: "/workspace/analyzers", icon: Cpu, moduleTag: "MACHINE_IOT" },
-      { name: "AI Review", href: "/workspace/ai-review", icon: BrainCircuit, moduleTag: "AI_REVIEW" },
+      { name: "Machine Results", href: "/workspace/analyzers", icon: Cpu, moduleTag: "iot" },
+      { name: "AI Review", href: "/workspace/ai-review", icon: BrainCircuit, moduleTag: "ai" },
       { name: "Verify & Approve", href: "/workspace/approvals", icon: CheckSquare },
     ],
   },
   {
     title: "Lab Resources",
     items: [
-      { name: "Request Inventory", href: "/workspace/inventory-requests", icon: Box, moduleTag: "INVENTORY" },
+      { name: "Request Inventory", href: "/workspace/inventory-requests", icon: Box, moduleTag: "inventory" },
     ],
   },
 ];
@@ -170,7 +172,7 @@ export const technicianNav: NavGroup[] = [
 // ==========================================
 export const radiologyNav: NavGroup = {
   title: "Radiology (RIS)",
-  moduleTag: "RADIOLOGY", 
+  moduleTag: "radiology", 
   items: [
     { name: "RIS Dashboard", href: "/workspace/radiology/dashboard", icon: Activity },
     { name: "Scan Schedule", href: "/workspace/radiology/appointments", icon: CalendarDays },

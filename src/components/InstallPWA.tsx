@@ -54,30 +54,30 @@ export default function InstallPWA() {
 
   return (
     <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-5 fade-in duration-500">
-      <div className="bg-white rounded-xl shadow-2xl border border-slate-200 p-4 w-80 flex gap-4 items-start relative">
+      <div className="bg-card rounded-xl shadow-2xl border border-border p-4 w-80 flex gap-4 items-start relative">
         {/* Close Button */}
         <button
           onClick={() => setIsDismissed(true)}
-          className="absolute top-2 right-2 text-slate-400 hover:text-slate-600">
+          className="absolute top-2 right-2 text-muted-foreground/70 hover:text-muted-foreground">
           <X size={16} />
         </button>
 
         {/* App Icon Mockup */}
-        <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow-inner">
+        <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center flex-shrink-0 shadow-inner">
           <Download className="text-white w-6 h-6" />
         </div>
 
         <div className="flex-1 pt-1">
-          <h4 className="font-bold text-slate-900 text-sm">
+          <h4 className="font-bold text-foreground text-sm">
             Install Patholab.cloud App
           </h4>
-          <p className="text-xs text-slate-500 mt-0.5 mb-3 leading-snug">
+          <p className="text-xs text-muted-foreground mt-0.5 mb-3 leading-snug">
             Install on your device for faster access and offline capabilities.
           </p>
           <Button
             onClick={handleInstallClick}
             size="sm"
-            className="w-full bg-blue-600 hover:bg-blue-700 h-8 text-xs font-bold shadow-sm">
+            className="w-full bg-primary hover:bg-blue-700 h-8 text-xs font-bold shadow-sm">
             Install Now
           </Button>
         </div>

@@ -106,22 +106,22 @@ export default function MediaDispatchPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-slate-50 font-sans relative selection:bg-indigo-100 pb-12">
+    <div className="min-h-[calc(100vh-4rem)] bg-muted/30 font-sans relative selection:bg-indigo-100 pb-12">
       {/* Decorative Background Mesh */}
       <div className="absolute top-0 inset-x-0 h-64 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-100/40 via-slate-50 to-transparent pointer-events-none z-0" />
 
       {/* FLOATING HEADER */}
-      <header className="sticky top-0 z-30 bg-white/70 backdrop-blur-xl border-b border-slate-200/60 shadow-sm">
+      <header className="sticky top-0 z-30 bg-card/70 backdrop-blur-xl border-b border-slate-200/60 shadow-sm">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex items-center gap-4">
             <div className="h-12 w-12 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-inner shrink-0">
               <Disc className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-900 tracking-tight leading-tight">
+              <h1 className="text-xl font-bold text-foreground tracking-tight leading-tight">
                 Films & Media Dispatch
               </h1>
-              <p className="text-xs font-medium text-slate-500 mt-0.5">
+              <p className="text-xs font-medium text-muted-foreground mt-0.5">
                 Manage film printing, DICOM CD burning, and digital handovers.
               </p>
             </div>
@@ -135,7 +135,7 @@ export default function MediaDispatchPage() {
               })
             }
             disabled={isLoading}
-            className="h-11 rounded-xl bg-white border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-colors shadow-sm w-full md:w-auto">
+            className="h-11 rounded-xl bg-card border-border text-foreground/80 font-bold hover:bg-muted/30 transition-colors shadow-sm w-full md:w-auto">
             <RefreshCw
               className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
             />
@@ -147,51 +147,51 @@ export default function MediaDispatchPage() {
       <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10 space-y-6">
         {/* STATS GRID */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="border-0 shadow-sm rounded-2xl hover:shadow-md transition-shadow bg-white overflow-hidden relative">
+          <Card className="border-0 shadow-sm rounded-2xl hover:shadow-md transition-shadow bg-card overflow-hidden relative">
             <div className="absolute top-0 inset-x-0 h-1 bg-amber-400" />
             <CardContent className="p-6 flex items-center gap-5">
               <div className="h-14 w-14 rounded-2xl flex items-center justify-center shrink-0 border bg-amber-50 border-amber-200/50">
                 <Clock className="h-6 w-6 text-amber-600" />
               </div>
               <div>
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">
                   Processing
                 </p>
-                <h3 className="text-2xl font-black text-slate-900 tracking-tight leading-none">
+                <h3 className="text-2xl font-black text-foreground tracking-tight leading-none">
                   {processingCount}
                 </h3>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-sm rounded-2xl hover:shadow-md transition-shadow bg-white overflow-hidden relative">
+          <Card className="border-0 shadow-sm rounded-2xl hover:shadow-md transition-shadow bg-card overflow-hidden relative">
             <div className="absolute top-0 inset-x-0 h-1 bg-indigo-500" />
             <CardContent className="p-6 flex items-center gap-5">
               <div className="h-14 w-14 rounded-2xl flex items-center justify-center shrink-0 border bg-indigo-50 border-indigo-200/50">
                 <CheckCircle2 className="h-6 w-6 text-indigo-600" />
               </div>
               <div>
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">
                   Ready for Handover
                 </p>
-                <h3 className="text-2xl font-black text-slate-900 tracking-tight leading-none">
+                <h3 className="text-2xl font-black text-foreground tracking-tight leading-none">
                   {readyCount}
                 </h3>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-sm rounded-2xl hover:shadow-md transition-shadow bg-white overflow-hidden relative">
+          <Card className="border-0 shadow-sm rounded-2xl hover:shadow-md transition-shadow bg-card overflow-hidden relative">
             <div className="absolute top-0 inset-x-0 h-1 bg-emerald-500" />
             <CardContent className="p-6 flex items-center gap-5">
               <div className="h-14 w-14 rounded-2xl flex items-center justify-center shrink-0 border bg-emerald-50 border-emerald-200/50">
                 <Send className="h-6 w-6 text-emerald-600" />
               </div>
               <div>
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">
                   Total Dispatched
                 </p>
-                <h3 className="text-2xl font-black text-slate-900 tracking-tight leading-none">
+                <h3 className="text-2xl font-black text-foreground tracking-tight leading-none">
                   {dispatchedCount}
                 </h3>
               </div>
@@ -200,7 +200,7 @@ export default function MediaDispatchPage() {
         </div>
 
         {/* MAIN CONTENT AREA */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden min-h-[500px] flex flex-col">
+        <div className="bg-card rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden min-h-[500px] flex flex-col">
           {/* Toolbar */}
           <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex flex-col md:flex-row justify-between gap-4">
             {/* Filter Pills */}
@@ -211,8 +211,8 @@ export default function MediaDispatchPage() {
                   onClick={() => setActiveFilter(filter)}
                   className={`px-5 py-2 text-xs font-bold rounded-lg whitespace-nowrap transition-all ${
                     activeFilter === filter
-                      ? "bg-white text-indigo-700 shadow-sm border border-slate-200/50"
-                      : "text-slate-500 hover:text-slate-800 hover:bg-slate-200/50"
+                      ? "bg-card text-indigo-700 shadow-sm border border-slate-200/50"
+                      : "text-muted-foreground hover:text-foreground hover:bg-slate-200/50"
                   }`}>
                   {filter}
                 </button>
@@ -226,7 +226,7 @@ export default function MediaDispatchPage() {
                 placeholder="Search patient or accession no..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 h-11 bg-white border-slate-200 focus:border-indigo-300 focus:ring-indigo-500/20 rounded-xl text-sm transition-all shadow-sm"
+                className="pl-9 h-11 bg-card border-border focus:border-indigo-300 focus:ring-indigo-500/20 rounded-xl text-sm transition-all shadow-sm"
               />
             </div>
           </div>
@@ -236,13 +236,13 @@ export default function MediaDispatchPage() {
             {isLoading ? (
               <div className="flex flex-col h-[400px] items-center justify-center space-y-4">
                 <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-                <p className="text-sm font-bold text-slate-400 uppercase tracking-widest animate-pulse">
+                <p className="text-sm font-bold text-muted-foreground/70 uppercase tracking-widest animate-pulse">
                   Loading Queue
                 </p>
               </div>
             ) : (
-              <table className="w-full text-left text-sm text-slate-600 whitespace-nowrap">
-                <thead className="bg-slate-50/80 backdrop-blur-sm text-slate-500 font-bold uppercase tracking-wider text-[10px] border-b border-slate-200/80 sticky top-0 z-10">
+              <table className="w-full text-left text-sm text-muted-foreground whitespace-nowrap">
+                <thead className="bg-slate-50/80 backdrop-blur-sm text-muted-foreground font-bold uppercase tracking-wider text-[10px] border-b border-slate-200/80 sticky top-0 z-10">
                   <tr>
                     <th className="px-6 py-4">Patient & Scan</th>
                     <th className="px-6 py-4">Required Media Prep</th>
@@ -254,12 +254,12 @@ export default function MediaDispatchPage() {
                   {filteredQueue.length === 0 ? (
                     <tr>
                       <td colSpan={4} className="px-6 py-20 text-center">
-                        <div className="flex flex-col items-center justify-center text-slate-400 space-y-3">
-                          <div className="h-16 w-16 bg-slate-50 rounded-full flex items-center justify-center">
+                        <div className="flex flex-col items-center justify-center text-muted-foreground/70 space-y-3">
+                          <div className="h-16 w-16 bg-muted/30 rounded-full flex items-center justify-center">
                             <Disc className="h-8 w-8 text-slate-300" />
                           </div>
                           <div>
-                            <p className="font-bold text-slate-600 text-base">
+                            <p className="font-bold text-muted-foreground text-base">
                               No Dispatches Found
                             </p>
                             <p className="text-xs mt-1">
@@ -285,35 +285,35 @@ export default function MediaDispatchPage() {
                       return (
                         <tr
                           key={item.id}
-                          className="hover:bg-slate-50/80 transition-colors group">
+                          className="hover:bg-muted/50/80 transition-colors group">
                           {/* Patient Col */}
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-4">
-                              <Avatar className="h-10 w-10 border border-slate-200 shadow-sm hidden sm:flex shrink-0">
-                                <AvatarFallback className="bg-slate-100 text-slate-600 font-bold text-xs">
+                              <Avatar className="h-10 w-10 border border-border shadow-sm hidden sm:flex shrink-0">
+                                <AvatarFallback className="bg-muted text-muted-foreground font-bold text-xs">
                                   {initials}
                                 </AvatarFallback>
                               </Avatar>
                               <div className="flex flex-col min-w-0">
-                                <span className="font-bold text-slate-900 truncate text-base">
+                                <span className="font-bold text-foreground truncate text-base">
                                   {pName}
                                 </span>
                                 <div className="flex items-center gap-2 mt-1">
-                                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200 flex items-center gap-1">
+                                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground border border-border flex items-center gap-1">
                                     <Fingerprint className="h-2.5 w-2.5" />{" "}
                                     {item.id}
                                   </span>
                                   <Badge
                                     variant="outline"
-                                    className="text-[9px] font-bold uppercase tracking-wider bg-slate-50 text-slate-700 border-slate-200">
+                                    className="text-[9px] font-bold uppercase tracking-wider bg-muted/30 text-foreground/80 border-border">
                                     {item.modality || "N/A"}
                                   </Badge>
                                 </div>
                                 <div className="flex items-center gap-2 mt-1.5">
-                                  <span className="text-xs font-medium text-slate-600 truncate">
+                                  <span className="text-xs font-medium text-muted-foreground truncate">
                                     {item.scanName || "Unknown Scan"}
                                   </span>
-                                  <span className="text-[10px] font-medium text-slate-400 flex items-center gap-1">
+                                  <span className="text-[10px] font-medium text-muted-foreground/70 flex items-center gap-1">
                                     <Clock className="h-2.5 w-2.5" />{" "}
                                     {item.time}
                                   </span>
@@ -414,7 +414,7 @@ export default function MediaDispatchPage() {
                                   }
                                   className={`h-10 w-10 rounded-xl flex items-center justify-center border shadow-sm transition-all ${
                                     !isReportFinal
-                                      ? "border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed"
+                                      ? "border-border bg-muted text-muted-foreground/70 cursor-not-allowed"
                                       : mStatus.digital === "PENDING"
                                         ? "border-amber-300 bg-amber-50 text-amber-600 hover:bg-amber-100 hover:scale-105 active:scale-95"
                                         : "border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:scale-105 active:scale-95"
@@ -512,7 +512,7 @@ export default function MediaDispatchPage() {
                                     mStatus.overallStatus === "READY" &&
                                     isReportFinal
                                       ? "bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white hover:-translate-y-0.5 shadow-indigo-500/25"
-                                      : "bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed shadow-none"
+                                      : "bg-muted text-muted-foreground/70 border border-border cursor-not-allowed shadow-none"
                                   }`}>
                                   {updateMutation.isPending &&
                                   mStatus.overallStatus !== "DISPATCHED" ? (

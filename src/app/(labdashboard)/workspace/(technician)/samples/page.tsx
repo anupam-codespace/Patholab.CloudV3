@@ -100,18 +100,18 @@ export default function SampleAccessioningPage() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] bg-slate-50 font-sans relative overflow-hidden selection:bg-indigo-100">
+    <div className="flex flex-col h-[calc(100vh-4rem)] bg-muted/30 font-sans relative overflow-hidden selection:bg-indigo-100">
       <div className="absolute top-0 inset-x-0 h-64 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-100/50 via-slate-50 to-transparent pointer-events-none z-0" />
 
       <div className="flex-1 flex flex-col p-4 sm:p-6 z-10 overflow-hidden max-w-[1600px] mx-auto w-full">
         {/* --- HEADER & BARCODE SCANNER --- */}
         <div className="flex-none mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="md:col-span-2 bg-white/70 backdrop-blur-xl p-6 rounded-2xl border border-slate-200/60 shadow-sm flex flex-col justify-center">
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+          <div className="md:col-span-2 bg-card/70 backdrop-blur-xl p-6 rounded-2xl border border-slate-200/60 shadow-sm flex flex-col justify-center">
+            <h1 className="text-2xl font-black text-foreground tracking-tight flex items-center gap-2">
               <ScanBarcode className="h-7 w-7 text-indigo-600" />
               Sample Accessioning
             </h1>
-            <p className="text-sm font-medium text-slate-500 mt-1">
+            <p className="text-sm font-medium text-muted-foreground mt-1">
               Scan vials to mark them as received in the laboratory.
             </p>
           </div>
@@ -129,7 +129,7 @@ export default function SampleAccessioningPage() {
                 value={barcodeInput}
                 onChange={(e) => setBarcodeInput(e.target.value)}
                 placeholder="Scan Barcode here..."
-                className="h-12 bg-white/10 border-white/20 text-white placeholder:text-slate-400 focus:border-indigo-400 focus:ring-indigo-400/30 text-lg tracking-widest font-mono rounded-xl"
+                className="h-12 bg-card/10 border-white/20 text-white placeholder:text-muted-foreground/70 focus:border-indigo-400 focus:ring-indigo-400/30 text-lg tracking-widest font-mono rounded-xl"
                 autoFocus
               />
               <Button type="submit" className="hidden">
@@ -140,9 +140,9 @@ export default function SampleAccessioningPage() {
         </div>
 
         {/* --- MAIN DATA TABLE --- */}
-        <Card className="flex-1 flex flex-col shadow-sm border-slate-200/80 overflow-hidden rounded-2xl bg-white">
+        <Card className="flex-1 flex flex-col shadow-sm border-slate-200/80 overflow-hidden rounded-2xl bg-card">
           <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-            <h3 className="font-bold text-slate-700 flex items-center gap-2">
+            <h3 className="font-bold text-foreground/80 flex items-center gap-2">
               <FlaskConical className="h-4 w-4 text-slate-400" />
               Incoming Samples ({samples.length})
             </h3>
@@ -154,7 +154,7 @@ export default function SampleAccessioningPage() {
               </Badge>
               <Badge
                 variant="outline"
-                className="bg-blue-50 text-blue-700 border-blue-200">
+                className="bg-primary/10 text-primary border-primary/20">
                 In Transit
               </Badge>
             </div>
@@ -162,18 +162,18 @@ export default function SampleAccessioningPage() {
 
           <div className="flex-1 overflow-auto relative custom-scrollbar p-2">
             {isLoading ? (
-              <div className="h-full flex flex-col items-center justify-center text-slate-500 space-y-3">
+              <div className="h-full flex flex-col items-center justify-center text-muted-foreground space-y-3">
                 <Loader2 className="animate-spin h-8 w-8 text-indigo-600" />
                 <span className="text-xs font-medium uppercase tracking-widest animate-pulse">
                   Loading Samples...
                 </span>
               </div>
             ) : samples.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-slate-400 space-y-3">
-                <div className="h-20 w-20 bg-slate-50 rounded-full flex items-center justify-center mb-2">
+              <div className="h-full flex flex-col items-center justify-center text-muted-foreground/70 space-y-3">
+                <div className="h-20 w-20 bg-muted/30 rounded-full flex items-center justify-center mb-2">
                   <CheckCircle2 className="h-10 w-10 text-emerald-400" />
                 </div>
-                <p className="font-bold text-slate-600 text-lg">
+                <p className="font-bold text-muted-foreground text-lg">
                   All Caught Up!
                 </p>
                 <p className="text-sm">
@@ -185,42 +185,42 @@ export default function SampleAccessioningPage() {
                 {samples.map((sample: any) => (
                   <Card
                     key={sample.id}
-                    className="p-4 border-slate-200 shadow-sm hover:border-indigo-300 transition-all">
+                    className="p-4 border-border shadow-sm hover:border-indigo-300 transition-all">
                     <div className="flex justify-between items-start mb-3">
                       <div>
-                        <span className="font-mono font-bold text-lg text-slate-800 tracking-wider bg-slate-100 px-2 py-0.5 rounded">
+                        <span className="font-mono font-bold text-lg text-foreground tracking-wider bg-muted px-2 py-0.5 rounded">
                           {sample.sampleId}
                         </span>
-                        <p className="text-xs text-slate-500 mt-1 font-bold">
+                        <p className="text-xs text-muted-foreground mt-1 font-bold">
                           {sample.sampleType} • {sample.containerType}
                         </p>
                       </div>
                       <Badge
                         className={
                           sample.status === "IN_TRANSIT"
-                            ? "bg-blue-100 text-blue-700"
+                            ? "bg-blue-100 text-primary"
                             : "bg-amber-100 text-amber-700"
                         }>
                         {sample.status.replace("_", " ")}
                       </Badge>
                     </div>
 
-                    <div className="space-y-2 mb-4 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <div className="space-y-2 mb-4 bg-muted/30 p-3 rounded-xl border border-slate-100">
                       <div className="flex items-center gap-2 text-sm">
                         <User className="h-4 w-4 text-slate-400" />
-                        <span className="font-semibold text-slate-700 truncate">
+                        <span className="font-semibold text-foreground/80 truncate">
                           {sample.patient?.name}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 text-sm">
                         <MapPin className="h-4 w-4 text-slate-400" />
-                        <span className="text-slate-600 truncate">
+                        <span className="text-muted-foreground truncate">
                           {sample.collectionMode.replace("_", " ")}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 text-sm">
                         <Clock className="h-4 w-4 text-slate-400" />
-                        <span className="text-slate-600">
+                        <span className="text-muted-foreground">
                           Collected:{" "}
                           {format(
                             new Date(sample.collectedAt),

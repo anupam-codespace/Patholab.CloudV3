@@ -155,7 +155,7 @@ export default function ReportTemplateBuilder() {
       reader.readAsDataURL(file);
   };
 
-  if (!config) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin text-blue-600"/></div>;
+  if (!config) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin text-primary"/></div>;
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-100px)] p-6">
@@ -188,13 +188,13 @@ export default function ReportTemplateBuilder() {
                         </div>
 
                         {/* MODE SELECTOR */}
-                        <div className="grid grid-cols-3 bg-slate-100 p-1 rounded-md gap-1">
+                        <div className="grid grid-cols-3 bg-muted p-1 rounded-md gap-1">
                             {['standard', 'html', 'image'].map((mode) => (
                                 <button 
                                     key={mode}
                                     onClick={() => setConfig({...config, header: {...config.header, mode}})}
                                     className={`text-xs py-1.5 font-medium rounded-sm transition-all capitalize flex items-center justify-center gap-1
-                                    ${config.header?.mode === mode ? 'bg-white shadow text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
+                                    ${config.header?.mode === mode ? 'bg-card shadow text-primary' : 'text-muted-foreground hover:text-slate-700'}`}
                                 >
                                     {mode === 'standard' && <LayoutTemplate className="h-3 w-3"/>}
                                     {mode === 'html' && <Code className="h-3 w-3"/>}
@@ -206,22 +206,22 @@ export default function ReportTemplateBuilder() {
 
                         {/* MODE: IMAGE UPLOAD */}
                         {config.header?.mode === 'image' && (
-                            <div className="space-y-4 border p-3 rounded-lg bg-slate-50">
+                            <div className="space-y-4 border p-3 rounded-lg bg-muted/30">
                                 <Label>Full Header Image</Label>
-                                <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 flex flex-col items-center justify-center text-center bg-white hover:bg-slate-50 transition cursor-pointer relative">
+                                <div className="border-2 border-dashed border-border rounded-lg p-6 flex flex-col items-center justify-center text-center bg-card hover:bg-muted/30 transition cursor-pointer relative">
                                     <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileUpload(e, 'header', 'fullImage')} />
                                     {config.header?.fullImage ? (
                                         <img src={config.header.fullImage} className="h-20 object-contain mb-2" />
                                     ) : (
                                         <UploadCloud className="h-8 w-8 text-slate-300 mb-2"/>
                                     )}
-                                    <span className="text-xs text-slate-500">{config.header?.fullImage ? "Click to change" : "Upload Image (PNG/JPG)"}</span>
+                                    <span className="text-xs text-muted-foreground">{config.header?.fullImage ? "Click to change" : "Upload Image (PNG/JPG)"}</span>
                                 </div>
                                 
                                 <div>
                                     <div className="flex justify-between mb-1">
                                         <Label className="text-xs">Image Height</Label>
-                                        <span className="text-xs text-slate-500">{config.header?.height || 150}px</span>
+                                        <span className="text-xs text-muted-foreground">{config.header?.height || 150}px</span>
                                     </div>
                                     <input 
                                         type="range" min="50" max="400" step="10" 
@@ -267,13 +267,13 @@ export default function ReportTemplateBuilder() {
                         </div>
 
                         {/* MODE SELECTOR */}
-                        <div className="grid grid-cols-3 bg-slate-100 p-1 rounded-md gap-1">
+                        <div className="grid grid-cols-3 bg-muted p-1 rounded-md gap-1">
                             {['standard', 'html', 'image'].map((mode) => (
                                 <button 
                                     key={mode}
                                     onClick={() => setConfig({...config, footer: {...config.footer, mode}})}
                                     className={`text-xs py-1.5 font-medium rounded-sm transition-all capitalize flex items-center justify-center gap-1
-                                    ${config.footer?.mode === mode ? 'bg-white shadow text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
+                                    ${config.footer?.mode === mode ? 'bg-card shadow text-primary' : 'text-muted-foreground hover:text-slate-700'}`}
                                 >
                                     {mode === 'standard' && <LayoutTemplate className="h-3 w-3"/>}
                                     {mode === 'html' && <Code className="h-3 w-3"/>}
@@ -285,21 +285,21 @@ export default function ReportTemplateBuilder() {
 
                         {/* MODE: IMAGE UPLOAD */}
                         {config.footer?.mode === 'image' && (
-                            <div className="space-y-4 border p-3 rounded-lg bg-slate-50">
+                            <div className="space-y-4 border p-3 rounded-lg bg-muted/30">
                                 <Label>Full Footer Image (Includes Signatures)</Label>
-                                <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 flex flex-col items-center justify-center text-center bg-white hover:bg-slate-50 transition cursor-pointer relative">
+                                <div className="border-2 border-dashed border-border rounded-lg p-6 flex flex-col items-center justify-center text-center bg-card hover:bg-muted/30 transition cursor-pointer relative">
                                     <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileUpload(e, 'footer', 'fullImage')} />
                                     {config.footer?.fullImage ? (
                                         <img src={config.footer.fullImage} className="h-20 object-contain mb-2" />
                                     ) : (
                                         <UploadCloud className="h-8 w-8 text-slate-300 mb-2"/>
                                     )}
-                                    <span className="text-xs text-slate-500">{config.footer?.fullImage ? "Click to change" : "Upload Image"}</span>
+                                    <span className="text-xs text-muted-foreground">{config.footer?.fullImage ? "Click to change" : "Upload Image"}</span>
                                 </div>
                                 <div>
                                     <div className="flex justify-between mb-1">
                                         <Label className="text-xs">Image Height</Label>
-                                        <span className="text-xs text-slate-500">{config.footer?.height || 100}px</span>
+                                        <span className="text-xs text-muted-foreground">{config.footer?.height || 100}px</span>
                                     </div>
                                     <input type="range" min="50" max="300" step="10" value={config.footer?.height || 100} onChange={(e) => setConfig({...config, footer: {...config.footer, height: parseInt(e.target.value)}})} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer" />
                                 </div>
@@ -315,12 +315,12 @@ export default function ReportTemplateBuilder() {
                                     <Label>ISO / NABL Marks</Label>
                                     <div className="grid grid-cols-3 gap-2">
                                         {config.footer?.isoMarkUrls?.map((url: string, idx: number) => (
-                                            <div key={idx} className="relative group border rounded p-1 bg-slate-50 h-14 flex items-center justify-center">
+                                            <div key={idx} className="relative group border rounded p-1 bg-muted/30 h-14 flex items-center justify-center">
                                                 <img src={url} className="h-full w-auto object-contain" />
                                                 <button onClick={() => setConfig((p:any)=>({...p, footer: {...p.footer, isoMarkUrls: p.footer.isoMarkUrls.filter((_:any, i:number)=>i!==idx)}}))} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100"><X className="h-3 w-3"/></button>
                                             </div>
                                         ))}
-                                        <label className="cursor-pointer border border-dashed rounded h-14 flex items-center justify-center hover:bg-slate-50"><Plus className="h-4 w-4 text-slate-400"/><input type="file" multiple accept="image/*" onChange={handleIsoUpload} className="hidden" /></label>
+                                        <label className="cursor-pointer border border-dashed rounded h-14 flex items-center justify-center hover:bg-muted/30"><Plus className="h-4 w-4 text-slate-400"/><input type="file" multiple accept="image/*" onChange={handleIsoUpload} className="hidden" /></label>
                                     </div>
                                 </div>
 
@@ -329,13 +329,13 @@ export default function ReportTemplateBuilder() {
                                     <div className="flex justify-between items-center"><Label>Signatories</Label><Button variant="outline" size="sm" onClick={addSignatory}><Plus className="h-3 w-3 mr-1"/> Add</Button></div>
                                     <div className="space-y-4">
                                         {config.footer?.signatures?.map((sig: any, idx: number) => (
-                                            <div key={idx} className="border p-3 rounded-lg bg-slate-50 relative">
-                                                <button onClick={() => removeSignatory(idx)} className="absolute top-2 right-2 text-slate-400 hover:text-red-500"><Trash2 className="h-4 w-4"/></button>
+                                            <div key={idx} className="border p-3 rounded-lg bg-muted/30 relative">
+                                                <button onClick={() => removeSignatory(idx)} className="absolute top-2 right-2 text-muted-foreground/70 hover:text-red-500"><Trash2 className="h-4 w-4"/></button>
                                                 <div className="space-y-3">
-                                                    <Input value={sig.title} onChange={(e) => updateSignatory(idx, 'title', e.target.value)} className="h-8 text-xs bg-white" placeholder="Title" />
+                                                    <Input value={sig.title} onChange={(e) => updateSignatory(idx, 'title', e.target.value)} className="h-8 text-xs bg-card" placeholder="Title" />
                                                     <div className="flex items-center gap-3">
-                                                        <div className="h-10 w-24 border bg-white flex items-center justify-center overflow-hidden rounded">{sig.imageUrl ? <img src={sig.imageUrl} className="h-full object-contain" /> : <span className="text-[9px] text-slate-300">No Sig</span>}</div>
-                                                        <label className="cursor-pointer text-xs bg-white border px-2 py-1 rounded shadow-sm hover:bg-slate-100 inline-block">Upload<input type="file" accept="image/*" onChange={(e) => handleSigUpload(idx, e)} className="hidden" /></label>
+                                                        <div className="h-10 w-24 border bg-card flex items-center justify-center overflow-hidden rounded">{sig.imageUrl ? <img src={sig.imageUrl} className="h-full object-contain" /> : <span className="text-[9px] text-slate-300">No Sig</span>}</div>
+                                                        <label className="cursor-pointer text-xs bg-card border px-2 py-1 rounded shadow-sm hover:bg-muted inline-block">Upload<input type="file" accept="image/*" onChange={(e) => handleSigUpload(idx, e)} className="hidden" /></label>
                                                     </div>
                                                 </div>
                                             </div>
@@ -359,7 +359,7 @@ export default function ReportTemplateBuilder() {
 
       {/* --- PREVIEW (Simplistic) --- */}
       <div className="w-full lg:w-2/3 bg-slate-200/50 flex justify-center p-10 overflow-y-auto">
-         <div className="bg-white shadow-xl relative flex flex-col justify-between" style={{ width: '210mm', minHeight: '297mm', padding: '10mm', borderTop: `6px solid ${config.branding?.primaryColor}` }}>
+         <div className="bg-card shadow-xl relative flex flex-col justify-between" style={{ width: '210mm', minHeight: '297mm', padding: '10mm', borderTop: `6px solid ${config.branding?.primaryColor}` }}>
             <div className="text-center text-slate-300 mt-20">Live Preview is available in "Reports & Print" section.</div>
          </div>
       </div>

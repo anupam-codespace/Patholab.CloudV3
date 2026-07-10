@@ -209,15 +209,15 @@ export default function AdvancedAnalyticsPage() {
       variants={containerVar}
       initial="hidden"
       animate="show"
-      className="space-y-6 p-4 md:p-8 min-h-screen bg-slate-50/50 text-slate-900">
+      className="space-y-6 p-4 md:p-8 min-h-screen bg-slate-50/50 text-foreground">
       {/* --- HEADER CONTROLS --- */}
-      <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-4 border-b border-slate-200 pb-6">
+      <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-4 border-b border-border pb-6">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-slate-900 flex items-center gap-2">
+          <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-2">
             <BarChart3 className="h-8 w-8 text-emerald-600" /> Platform
             Intelligence
           </h1>
-          <p className="text-slate-500 mt-1 font-medium">
+          <p className="text-muted-foreground mt-1 font-medium">
             Deep-dive metrics from{" "}
             <span className="font-bold text-emerald-600">
               {format(dateRange.from, "MMM dd")}
@@ -233,7 +233,7 @@ export default function AdvancedAnalyticsPage() {
           <Tabs
             value={activeTab}
             onValueChange={handlePresetChange}
-            className="hidden lg:block bg-white shadow-sm rounded-xl p-1 border border-slate-200">
+            className="hidden lg:block bg-card shadow-sm rounded-xl p-1 border border-border">
             <TabsList className="bg-transparent h-9">
               <TabsTrigger
                 value="7d"
@@ -262,7 +262,7 @@ export default function AdvancedAnalyticsPage() {
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className={`bg-white shadow-sm rounded-xl font-bold border-slate-200 ${activeTab === "custom" ? "border-emerald-500 text-emerald-700 bg-emerald-50" : "text-slate-600"}`}>
+                className={`bg-card shadow-sm rounded-xl font-bold border-border ${activeTab === "custom" ? "border-emerald-500 text-emerald-700 bg-emerald-50" : "text-muted-foreground"}`}>
                 <CalendarIcon className="mr-2 h-4 w-4" /> Custom Range
               </Button>
             </PopoverTrigger>
@@ -294,9 +294,9 @@ export default function AdvancedAnalyticsPage() {
             size="icon"
             onClick={() => refetch()}
             disabled={isRefetching}
-            className="bg-white shadow-sm rounded-xl border-slate-200">
+            className="bg-card shadow-sm rounded-xl border-border">
             <RefreshCcw
-              className={`h-4 w-4 text-slate-600 ${isRefetching ? "animate-spin text-emerald-600" : ""}`}
+              className={`h-4 w-4 text-muted-foreground ${isRefetching ? "animate-spin text-emerald-600" : ""}`}
             />
           </Button>
         </div>
@@ -304,7 +304,7 @@ export default function AdvancedAnalyticsPage() {
 
       {/* --- 1. TIER 1: FINANCIAL & SAAS KPIs --- */}
       <div>
-        <h3 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+        <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
           <Wallet className="h-4 w-4 text-emerald-600" /> Platform Economics &
           Health
         </h3>
@@ -323,7 +323,7 @@ export default function AdvancedAnalyticsPage() {
             trend="Active Period"
             trendUp={true}
             icon={Activity}
-            color="text-blue-600"
+            color="text-primary"
           />
           <MetricCard
             title="Active Labs"
@@ -346,7 +346,7 @@ export default function AdvancedAnalyticsPage() {
 
       {/* --- 2. TIER 2: OPERATIONAL & MEDICAL KPIs --- */}
       <div>
-        <h3 className="text-sm font-bold text-slate-800 mb-3 mt-2 flex items-center gap-2">
+        <h3 className="text-sm font-bold text-foreground mb-3 mt-2 flex items-center gap-2">
           <Activity className="h-4 w-4 text-purple-500" /> Clinical Volume
         </h3>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -387,7 +387,7 @@ export default function AdvancedAnalyticsPage() {
 
       {/* --- 3. MASTER REVENUE CHART --- */}
       <motion.div variants={itemVar}>
-        <Card className="shadow-sm border-slate-200 rounded-2xl overflow-hidden bg-white">
+        <Card className="shadow-sm border-border rounded-2xl overflow-hidden bg-card">
           <CardHeader className="pb-4 bg-slate-50/50 border-b border-slate-100">
             <CardTitle className="text-lg flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-emerald-500" /> Revenue
@@ -453,7 +453,7 @@ export default function AdvancedAnalyticsPage() {
       {/* --- 4. SAAS SPLIT --- */}
       <div className="grid gap-6 lg:grid-cols-2">
         <motion.div variants={itemVar}>
-          <Card className="shadow-sm border-slate-200 h-full rounded-2xl bg-white overflow-hidden">
+          <Card className="shadow-sm border-border h-full rounded-2xl bg-card overflow-hidden">
             <CardHeader className="bg-slate-50/50 border-b border-slate-100">
               <CardTitle className="text-base flex items-center gap-2">
                 <PieChartIcon className="h-4 w-4 text-emerald-500" /> Revenue by
@@ -493,7 +493,7 @@ export default function AdvancedAnalyticsPage() {
         </motion.div>
 
         <motion.div variants={itemVar}>
-          <Card className="shadow-sm border-slate-200 h-full rounded-2xl bg-white overflow-hidden">
+          <Card className="shadow-sm border-border h-full rounded-2xl bg-card overflow-hidden">
             <CardHeader className="bg-slate-50/50 border-b border-slate-100">
               <CardTitle className="text-base">
                 Labs by Region (State)
@@ -545,7 +545,7 @@ export default function AdvancedAnalyticsPage() {
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Most Popular Tests */}
         <motion.div variants={itemVar} className="lg:col-span-2">
-          <Card className="shadow-sm border-slate-200 h-full rounded-2xl bg-white overflow-hidden">
+          <Card className="shadow-sm border-border h-full rounded-2xl bg-card overflow-hidden">
             <CardHeader className="bg-slate-50/50 border-b border-slate-100">
               <CardTitle className="text-base">Top 10 Executed Tests</CardTitle>
               <CardDescription>
@@ -594,7 +594,7 @@ export default function AdvancedAnalyticsPage() {
 
         {/* Patient Age Demographics */}
         <motion.div variants={itemVar}>
-          <Card className="shadow-sm border-slate-200 h-full rounded-2xl bg-white overflow-hidden">
+          <Card className="shadow-sm border-border h-full rounded-2xl bg-card overflow-hidden">
             <CardHeader className="bg-slate-50/50 border-b border-slate-100">
               <CardTitle className="text-base">Patient Age Groups</CardTitle>
             </CardHeader>
@@ -635,7 +635,7 @@ export default function AdvancedAnalyticsPage() {
 
       {/* --- 6. TOP PERFORMERS TABLE --- */}
       <motion.div variants={itemVar}>
-        <Card className="shadow-sm border-slate-200 rounded-2xl bg-white overflow-hidden">
+        <Card className="shadow-sm border-border rounded-2xl bg-card overflow-hidden">
           <CardHeader className="bg-slate-50/50 border-b border-slate-100">
             <CardTitle>Top Performing Labs (Selected Period)</CardTitle>
             <CardDescription>
@@ -645,7 +645,7 @@ export default function AdvancedAnalyticsPage() {
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">
-                <thead className="bg-slate-50 text-xs uppercase text-slate-500 font-bold border-b border-slate-200">
+                <thead className="bg-muted/30 text-xs uppercase text-muted-foreground font-bold border-b border-border">
                   <tr>
                     <th className="px-6 py-4">Rank</th>
                     <th className="px-6 py-4">Lab Name</th>
@@ -658,20 +658,20 @@ export default function AdvancedAnalyticsPage() {
                   {safeData.topPerformers.map((lab: any, index: number) => (
                     <tr
                       key={index}
-                      className="hover:bg-slate-50/50 transition-colors">
+                      className="hover:bg-muted/50/50 transition-colors">
                       <td className="px-6 py-4 font-black text-slate-400">
                         #{index + 1}
                       </td>
                       <td className="px-6 py-4 font-bold text-slate-800">
                         {lab.name}
                       </td>
-                      <td className="px-6 py-4 text-slate-500 font-medium">
+                      <td className="px-6 py-4 text-muted-foreground font-medium">
                         {lab.location}
                       </td>
                       <td className="px-6 py-4 text-right">
                         <Badge
                           variant="outline"
-                          className="bg-white border-slate-200 font-bold">
+                          className="bg-card border-border font-bold">
                           {lab.tests.toLocaleString()}
                         </Badge>
                       </td>
@@ -684,7 +684,7 @@ export default function AdvancedAnalyticsPage() {
                     <tr>
                       <td
                         colSpan={5}
-                        className="px-6 py-12 text-center text-slate-500 font-medium">
+                        className="px-6 py-12 text-center text-muted-foreground font-medium">
                         No financial data available for this period.
                       </td>
                     </tr>
@@ -711,9 +711,9 @@ function MetricCard({
 }: any) {
   return (
     <motion.div variants={itemVar}>
-      <Card className="hover:shadow-md transition-shadow bg-white border-slate-200 rounded-2xl">
+      <Card className="hover:shadow-md transition-shadow bg-card border-border rounded-2xl">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500">
+          <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
             {title}
           </CardTitle>
           <div
@@ -722,7 +722,7 @@ function MetricCard({
           </div>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-black text-slate-900 tracking-tight">
+          <div className="text-2xl font-black text-foreground tracking-tight">
             {value}
           </div>
           <div className="flex items-center mt-2 text-xs">
@@ -735,7 +735,7 @@ function MetricCard({
               )}
               {trend}
             </span>
-            <span className="text-slate-400 ml-1.5 font-medium">
+            <span className="text-muted-foreground/70 ml-1.5 font-medium">
               {subText || "in period"}
             </span>
           </div>
@@ -747,8 +747,8 @@ function MetricCard({
 
 function AnalyticsSkeleton() {
   return (
-    <div className="p-8 space-y-8 bg-slate-50 min-h-screen">
-      <div className="flex justify-between items-center pb-6 border-b border-slate-200">
+    <div className="p-8 space-y-8 bg-muted/30 min-h-screen">
+      <div className="flex justify-between items-center pb-6 border-b border-border">
         <Skeleton className="h-10 w-64 bg-slate-200 rounded-xl" />
         <div className="flex gap-2">
           <Skeleton className="h-10 w-24 bg-slate-200 rounded-xl" />

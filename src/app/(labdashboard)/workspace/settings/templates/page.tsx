@@ -60,19 +60,19 @@ export default function TemplateGalleryPage() {
             Create multiple designs and select the active one for printing.
           </p>
         </div>
-        <Button
+        <Button  className="bg-black"
           onClick={() => router.push("/workspace/settings/templates/new")}>
-          <Plus className="h-4 w-4 mr-2" /> Create New Template
+          <Plus className="h-4 w-4 mr-2 " /> Create New Template
         </Button>
       </div>
 
       {loading ? (
         <div className="flex justify-center py-20">
-          <Loader2 className="animate-spin text-blue-600" />
+          <Loader2 className="animate-spin text-primary" />
         </div>
       ) : templates.length === 0 ? (
-        <div className="text-center py-20 bg-slate-50 rounded-lg border border-dashed">
-          <p className="text-slate-500 mb-4">No templates found.</p>
+        <div className="text-center py-20 bg-muted/30 rounded-lg border border-dashed">
+          <p className="text-muted-foreground mb-4">No templates found.</p>
           <Button
             onClick={() => router.push("/workspace/settings/templates/new")}>
             Create Your First Template
@@ -83,9 +83,9 @@ export default function TemplateGalleryPage() {
           {templates.map((t) => (
             <Card
               key={t.id}
-              className={`relative transition-all hover:shadow-lg ${t.isActive ? "border-2 border-blue-600 ring-4 ring-blue-50" : "border-slate-200"}`}>
+              className={`relative transition-all hover:shadow-lg ${t.isActive ? "border-2 border-blue-600 ring-4 ring-blue-50" : "border-border"}`}>
               {t.isActive && (
-                <div className="absolute top-0 right-0 bg-blue-600 text-white text-xs px-3 py-1 rounded-bl-lg font-bold flex items-center">
+                <div className="absolute top-0 right-0 bg-primary text-white text-xs px-3 py-1 rounded-bl-lg font-bold flex items-center">
                   <CheckCircle className="h-3 w-3 mr-1" /> ACTIVE
                 </div>
               )}
@@ -96,7 +96,7 @@ export default function TemplateGalleryPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-32 bg-slate-100 rounded-md mb-4 flex items-center justify-center overflow-hidden border">
+                <div className="h-32 bg-muted rounded-md mb-4 flex items-center justify-center overflow-hidden border">
                   {/* Tiny Preview of Header if Image Mode */}
                   {t.config?.header?.mode === "image" &&
                   t.config.header.fullImage ? (
@@ -105,7 +105,7 @@ export default function TemplateGalleryPage() {
                       className="w-full object-cover opacity-80"
                     />
                   ) : (
-                    <span className="text-xs text-slate-400 font-mono">
+                    <span className="text-xs text-muted-foreground/70 font-mono">
                       Standard Layout
                     </span>
                   )}
@@ -114,7 +114,7 @@ export default function TemplateGalleryPage() {
                 <div className="flex gap-2">
                   <Button
                     variant={t.isActive ? "secondary" : "default"}
-                    className="flex-1"
+                    className="flex-1 bg-black"
                     onClick={() => handleActivate(t.id)}
                     disabled={t.isActive}>
                     {t.isActive ? "Currently Active" : "Set as Active"}

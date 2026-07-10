@@ -95,7 +95,7 @@ export default function AuditLogsPage() {
         );
       case "UPDATE":
         return (
-          <Badge className="bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100">
+          <Badge className="bg-blue-100 text-blue-800 border-primary/20 hover:bg-blue-100">
             UPDATE
           </Badge>
         );
@@ -146,13 +146,13 @@ export default function AuditLogsPage() {
   return (
     <div className="flex-1 space-y-6 p-6 pt-6 max-w-[1600px] mx-auto w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-200 pb-6">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border pb-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
             <ShieldAlert className="h-8 w-8 text-indigo-600" /> System Audit
             Logs
           </h1>
-          <p className="text-base text-slate-500 mt-1 max-w-2xl">
+          <p className="text-base text-muted-foreground mt-1 max-w-2xl">
             Immutable compliance records. Track every creation, modification,
             and deletion event across the laboratory system to comply with NABL
             and ISO 15189 standards.
@@ -161,7 +161,7 @@ export default function AuditLogsPage() {
       </div>
 
       {/* FILTERS & CONTROLS */}
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row gap-4 items-center justify-between">
+      <div className="bg-card p-4 rounded-xl shadow-sm border border-border flex flex-col md:flex-row gap-4 items-center justify-between">
         <div className="relative w-full md:w-96 shrink-0">
           <Search
             className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
@@ -169,14 +169,14 @@ export default function AuditLogsPage() {
           />
           <Input
             placeholder="Search by Entity ID or User ID..."
-            className="pl-10 focus-visible:ring-indigo-500 border-slate-300 w-full"
+            className="pl-10 focus-visible:ring-indigo-500 border-border w-full"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
 
         <div className="flex items-center gap-3 w-full md:w-auto overflow-x-auto">
-          <div className="flex items-center gap-2 text-sm font-medium text-slate-600 shrink-0">
+          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground shrink-0">
             <Filter size={16} /> Filters:
           </div>
 
@@ -212,26 +212,26 @@ export default function AuditLogsPage() {
       </div>
 
       {/* DATA TABLE */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="bg-slate-50 border-b border-slate-200 hover:bg-slate-50">
-              <TableHead className="font-semibold text-slate-600 w-[200px]">
+            <TableRow className="bg-muted/30 border-b border-border hover:bg-muted/30">
+              <TableHead className="font-semibold text-muted-foreground w-[200px]">
                 Timestamp
               </TableHead>
-              <TableHead className="font-semibold text-slate-600 w-[120px]">
+              <TableHead className="font-semibold text-muted-foreground w-[120px]">
                 Action
               </TableHead>
-              <TableHead className="font-semibold text-slate-600 w-[150px]">
+              <TableHead className="font-semibold text-muted-foreground w-[150px]">
                 Entity
               </TableHead>
-              <TableHead className="font-semibold text-slate-600 w-[200px]">
+              <TableHead className="font-semibold text-muted-foreground w-[200px]">
                 Entity ID
               </TableHead>
-              <TableHead className="font-semibold text-slate-600">
+              <TableHead className="font-semibold text-muted-foreground">
                 User ID & IP
               </TableHead>
-              <TableHead className="text-right font-semibold text-slate-600">
+              <TableHead className="text-right font-semibold text-muted-foreground">
                 Details
               </TableHead>
             </TableRow>
@@ -241,7 +241,7 @@ export default function AuditLogsPage() {
               <TableRow>
                 <TableCell
                   colSpan={6}
-                  className="text-center h-48 text-slate-500"
+                  className="text-center h-48 text-muted-foreground"
                 >
                   <div className="flex flex-col items-center justify-center">
                     <Loader2 className="h-8 w-8 animate-spin text-indigo-600 mb-2" />
@@ -253,7 +253,7 @@ export default function AuditLogsPage() {
               <TableRow>
                 <TableCell
                   colSpan={6}
-                  className="text-center h-48 text-slate-500"
+                  className="text-center h-48 text-muted-foreground"
                 >
                   No audit logs found matching your filters.
                 </TableCell>
@@ -262,7 +262,7 @@ export default function AuditLogsPage() {
               filteredLogs.map((log) => (
                 <TableRow
                   key={log.id}
-                  className="hover:bg-slate-50/80 transition-colors"
+                  className="hover:bg-muted/50/80 transition-colors"
                 >
                   {/* Timestamp */}
                   <TableCell className="text-sm font-medium text-slate-700">
@@ -284,7 +284,7 @@ export default function AuditLogsPage() {
                   </TableCell>
 
                   {/* Entity ID */}
-                  <TableCell className="font-mono text-xs text-slate-500">
+                  <TableCell className="font-mono text-xs text-muted-foreground">
                     {log.entityId}
                   </TableCell>
 
@@ -294,7 +294,7 @@ export default function AuditLogsPage() {
                       <div className="flex items-center gap-1.5 text-xs font-semibold text-indigo-700">
                         <User className="h-3.5 w-3.5" /> {log.userId}
                       </div>
-                      <div className="text-[10px] text-slate-400 ml-5 font-mono">
+                      <div className="text-[10px] text-muted-foreground/70 ml-5 font-mono">
                         IP: {log.ipAddress || "System"}
                       </div>
                     </div>
@@ -325,8 +325,8 @@ export default function AuditLogsPage() {
         open={!!selectedLog}
         onOpenChange={(open) => !open && setSelectedLog(null)}
       >
-        <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col p-0 overflow-hidden bg-slate-50">
-          <DialogHeader className="p-6 bg-white border-b border-slate-200 shrink-0">
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col p-0 overflow-hidden bg-muted/30">
+          <DialogHeader className="p-6 bg-card border-b border-border shrink-0">
             <div className="flex items-center gap-3 mb-2">
               <div className="bg-indigo-100 p-2 rounded-lg">
                 <ShieldAlert className="h-5 w-5 text-indigo-700" />
@@ -337,7 +337,7 @@ export default function AuditLogsPage() {
                 </DialogTitle>
                 <DialogDescription className="mt-1">
                   Log ID:{" "}
-                  <span className="font-mono text-slate-500">
+                  <span className="font-mono text-muted-foreground">
                     {selectedLog?.id}
                   </span>
                 </DialogDescription>
@@ -347,9 +347,9 @@ export default function AuditLogsPage() {
 
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
             {/* Quick Context Bar */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-card p-4 rounded-xl border border-border shadow-sm">
               <div className="min-w-0">
-                <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">
+                <p className="text-[10px] uppercase font-bold text-muted-foreground/70 mb-1">
                   Action
                 </p>
 
@@ -358,7 +358,7 @@ export default function AuditLogsPage() {
                 </div>
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">
+                <p className="text-[10px] uppercase font-bold text-muted-foreground/70 mb-1">
                   Entity
                 </p>
                 <p className="font-bold text-sm text-slate-800">
@@ -366,18 +366,18 @@ export default function AuditLogsPage() {
                 </p>
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">
+                <p className="text-[10px] uppercase font-bold text-muted-foreground/70 mb-1">
                   Record ID
                 </p>
-                <p className="font-mono text-xs font-semibold text-slate-600">
+                <p className="font-mono text-xs font-semibold text-muted-foreground">
                   {selectedLog?.entityId}
                 </p>
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">
+                <p className="text-[10px] uppercase font-bold text-muted-foreground/70 mb-1">
                   Timestamp
                 </p>
-                <p className="text-xs font-bold text-slate-600">
+                <p className="text-xs font-bold text-muted-foreground">
                   {selectedLog &&
                     format(
                       new Date(selectedLog.createdAt),
@@ -401,7 +401,7 @@ export default function AuditLogsPage() {
                     {selectedLog?.oldData ? (
                       JSON.stringify(selectedLog.oldData, null, 2)
                     ) : (
-                      <span className="text-slate-600 italic">
+                      <span className="text-muted-foreground italic">
                         No previous data (New Record)
                       </span>
                     )}
@@ -426,7 +426,7 @@ export default function AuditLogsPage() {
                     {selectedLog?.newData ? (
                       JSON.stringify(selectedLog.newData, null, 2)
                     ) : (
-                      <span className="text-slate-600 italic">
+                      <span className="text-muted-foreground italic">
                         No new data (Record Deleted)
                       </span>
                     )}
@@ -436,7 +436,7 @@ export default function AuditLogsPage() {
             </div>
           </div>
 
-          <div className="p-4 bg-white border-t border-slate-200 flex justify-end shrink-0">
+          <div className="p-4 bg-card border-t border-border flex justify-end shrink-0">
             <Button
               variant="outline"
               onClick={() => setSelectedLog(null)}

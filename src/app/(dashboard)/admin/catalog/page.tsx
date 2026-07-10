@@ -116,34 +116,34 @@ export default function MasterCatalogPage() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">
             Master Catalog
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Configure the global medical engine available to all SaaS tenants.
           </p>
         </div>
         <Button
           onClick={openCreateDialog}
-          className="bg-blue-600 hover:bg-blue-700">
+          className="bg-primary hover:bg-blue-700">
           <Plus className="h-4 w-4 mr-2" /> Add{" "}
           {currentTabConfig.label.split(" ")[0]}
         </Button>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="bg-white border border-slate-200 shadow-sm p-1 rounded-lg flex space-x-1 overflow-x-auto w-full justify-start h-auto">
+        <TabsList className="bg-card border border-border shadow-sm p-1 rounded-lg flex space-x-1 overflow-x-auto w-full justify-start h-auto">
           {TABS.map((tab) => (
             <TabsTrigger
               key={tab.id}
               value={tab.id}
-              className="flex items-center gap-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 py-2.5 px-4">
+              className="flex items-center gap-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary py-2.5 px-4">
               <tab.icon className="h-4 w-4" /> {tab.label}
             </TabsTrigger>
           ))}
         </TabsList>
 
-        <Card className="mt-4 border-slate-200 shadow-sm">
+        <Card className="mt-4 border-border shadow-sm">
           <CardContent className="p-0">
             {isLoading ? (
               <div className="flex justify-center items-center h-64 text-slate-400">
@@ -152,7 +152,7 @@ export default function MasterCatalogPage() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left">
-                  <thead className="bg-slate-50 text-xs uppercase text-slate-500 font-bold border-b border-slate-200">
+                  <thead className="bg-muted/30 text-xs uppercase text-muted-foreground font-bold border-b border-border">
                     <tr>
                       {currentTabConfig.columns.map((col) => (
                         <th key={col} className="px-6 py-4">
@@ -166,11 +166,11 @@ export default function MasterCatalogPage() {
                     {records.map((record: any) => (
                       <tr
                         key={record.id}
-                        className="hover:bg-slate-50/50 transition-colors">
+                        className="hover:bg-muted/50/50 transition-colors">
                         {currentTabConfig.columns.map((col) => (
                           <td
                             key={col}
-                            className="px-6 py-4 text-slate-700 font-medium">
+                            className="px-6 py-4 text-foreground/80 font-medium">
                             {/* Format arrays or booleans nicely */}
                             {typeof record[col] === "boolean" ? (
                               <Badge variant="outline">
@@ -186,7 +186,7 @@ export default function MasterCatalogPage() {
                             variant="ghost"
                             size="icon"
                             onClick={() => openEditDialog(record)}
-                            className="text-blue-600 hover:bg-blue-50 h-8 w-8">
+                            className="text-primary hover:bg-primary/10 h-8 w-8">
                             <Edit className="h-4 w-4" />
                           </Button>
                           <Button
@@ -203,7 +203,7 @@ export default function MasterCatalogPage() {
                       <tr>
                         <td
                           colSpan={currentTabConfig.columns.length + 1}
-                          className="p-8 text-center text-slate-500">
+                          className="p-8 text-center text-muted-foreground">
                           No records found. Create one to get started.
                         </td>
                       </tr>

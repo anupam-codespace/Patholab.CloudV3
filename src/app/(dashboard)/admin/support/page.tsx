@@ -93,7 +93,7 @@ export default function AdminSupportPage() {
 // --- SUB-COMPONENT: TICKET CARD ---
 function TicketCard({ ticket, onClick }: any) {
   const priorityColors = {
-    LOW: 'bg-blue-100 text-blue-700',
+    LOW: 'bg-blue-100 text-primary',
     MEDIUM: 'bg-yellow-100 text-yellow-700',
     HIGH: 'bg-orange-100 text-orange-700',
     URGENT: 'bg-red-100 text-red-700',
@@ -279,7 +279,7 @@ function TicketDetailSheet({ ticketId, onClose }: { ticketId: string | null, onC
                   <div className={`p-3 rounded-lg text-sm ${
                     msg.isStaff 
                       ? 'bg-primary text-primary-foreground rounded-tr-none' 
-                      : 'bg-white border rounded-tl-none shadow-sm'
+                      : 'bg-card border rounded-tl-none shadow-sm'
                   }`}>
                     {msg.message}
                   </div>

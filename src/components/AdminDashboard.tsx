@@ -169,15 +169,15 @@ function MiniStat({
   colorClass: string;
 }) {
   return (
-    <div className="flex items-center gap-3 p-3 bg-white border border-slate-100 rounded-lg shadow-sm">
+    <div className="flex items-center gap-3 p-3 bg-card border border-slate-100 rounded-lg shadow-sm">
       <div className={`p-2 rounded-md ${colorClass} bg-opacity-10`}>
         <Icon className={`h-4 w-4 ${colorClass.replace("bg-", "text-")}`} />
       </div>
       <div>
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider line-clamp-1">
+        <p className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider line-clamp-1">
           {title}
         </p>
-        <p className="text-lg font-bold text-slate-800 leading-none mt-0.5">
+        <p className="text-lg font-bold text-foreground leading-none mt-0.5">
           {new Intl.NumberFormat("en-IN").format(value)}
         </p>
       </div>
@@ -201,17 +201,17 @@ export default async function SuperAdminDashboard() {
       {/* --- HEADER --- */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-2xl font-black text-foreground tracking-tight">
             God Mode Command Center
           </h1>
-          <p className="text-sm font-medium text-slate-500 mt-1">
+          <p className="text-sm font-medium text-muted-foreground mt-1">
             Omniscient view of Patholab Cloud's Pay-As-You-Go ecosystem.
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Badge
             variant="outline"
-            className="bg-white px-3 py-1.5 text-slate-600 border-slate-200 shadow-sm font-bold uppercase tracking-widest text-[10px]">
+            className="bg-card px-3 py-1.5 text-muted-foreground border-border shadow-sm font-bold uppercase tracking-widest text-[10px]">
             <Network className="h-3 w-3 text-indigo-500 mr-2" />
             {m.saas.totalBranches} Active Branches
           </Badge>
@@ -237,30 +237,30 @@ export default async function SuperAdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm bg-white">
+        <Card className="border-none shadow-sm bg-card">
           <CardContent className="p-5">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                 Consumed (MTD)
               </p>
               <Activity className="h-4 w-4 text-indigo-500" />
             </div>
-            <h3 className="text-3xl font-black text-slate-900">
+            <h3 className="text-3xl font-black text-foreground">
               {formatCurrency(m.financials.deductionsMTD)}
             </h3>
-            <p className="text-xs font-medium text-slate-400 mt-2">
+            <p className="text-xs font-medium text-muted-foreground/70 mt-2">
               Platform usage revenue burned
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm bg-white">
+        <Card className="border-none shadow-sm bg-card">
           <CardContent className="p-5 flex justify-between items-center h-full">
             <div>
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
                 Active Tenants
               </p>
-              <h3 className="text-3xl font-black text-slate-900">
+              <h3 className="text-3xl font-black text-foreground">
                 {m.saas.activeLabsCount}
               </h3>
             </div>
@@ -268,7 +268,7 @@ export default async function SuperAdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 shadow-sm bg-rose-50/50">
+        <Card className="border-border shadow-sm bg-rose-50/50">
           <CardContent className="p-5 flex justify-between items-center h-full">
             <div>
               <p className="text-xs font-bold text-rose-600 uppercase tracking-wider mb-2">
@@ -285,7 +285,7 @@ export default async function SuperAdminDashboard() {
 
       {/* --- ROW 2: PLATFORM SCALE (Hyper Dense Grid) --- */}
       <div>
-        <h3 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+        <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
           <Activity className="h-4 w-4 text-blue-500" /> Platform Medical Volume
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
@@ -293,7 +293,7 @@ export default async function SuperAdminDashboard() {
             title="Patients"
             value={m.volume.totalPatients}
             icon={Users}
-            colorClass="bg-blue-500"
+            colorClass="bg-primary/100"
           />
           <MiniStat
             title="Tests Run"
@@ -336,7 +336,7 @@ export default async function SuperAdminDashboard() {
 
       {/* --- ROW 3: TEST ENGINE CONFIGURATION (Hyper Dense Grid) --- */}
       <div>
-        <h3 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+        <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
           <Layers className="h-4 w-4 text-indigo-500" /> Catalog Engine &
           Parameters
         </h3>
@@ -345,7 +345,7 @@ export default async function SuperAdminDashboard() {
             title="Global Tests"
             value={m.engine.globalTests}
             icon={Globe}
-            colorClass="bg-blue-600"
+            colorClass="bg-primary"
           />
           <MiniStat
             title="Local Tests"
@@ -383,21 +383,21 @@ export default async function SuperAdminDashboard() {
       {/* --- ROW 4: BOTTOM THREE COLUMNS --- */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Col 1: System Liability & Economics */}
-        <Card className="border-slate-200 shadow-sm flex flex-col bg-white">
+        <Card className="border-border shadow-sm flex flex-col bg-card">
           <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/50">
-            <CardTitle className="text-sm font-bold text-slate-800 flex items-center gap-2">
+            <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
               <Wallet className="h-4 w-4 text-indigo-500" /> Platform Economics
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6 flex-1 flex flex-col justify-center space-y-6">
             <div className="space-y-2">
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center justify-between">
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center justify-between">
                 Total Unspent Wallet Credits
               </p>
-              <h4 className="text-4xl font-black text-slate-900 tracking-tighter">
+              <h4 className="text-4xl font-black text-foreground tracking-tighter">
                 {formatCurrency(m.financials.platformLiability)}
               </h4>
-              <p className="text-xs font-medium text-slate-500 leading-snug">
+              <p className="text-xs font-medium text-muted-foreground leading-snug">
                 This represents prepaid balances held across all active client
                 lab wallets.
               </p>
@@ -427,20 +427,20 @@ export default async function SuperAdminDashboard() {
         </Card>
 
         {/* Col 2: Tenant Pipeline */}
-        <Card className="border-slate-200 shadow-sm flex flex-col bg-white">
+        <Card className="border-border shadow-sm flex flex-col bg-card">
           <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-slate-100 bg-slate-50/50">
             <CardTitle className="text-sm font-bold text-slate-800">
               Recent Deployments
             </CardTitle>
             <Link
               href="/admin/labs"
-              className="text-[10px] text-blue-600 font-bold uppercase hover:underline">
+              className="text-[10px] text-primary font-bold uppercase hover:underline">
               View All
             </Link>
           </CardHeader>
           <CardContent className="p-0 flex-1">
             <table className="w-full text-xs text-left">
-              <thead className="text-[10px] text-slate-400 font-bold uppercase bg-slate-50 border-b border-slate-100">
+              <thead className="text-[10px] text-muted-foreground/70 font-bold uppercase bg-muted/30 border-b border-slate-100">
                 <tr>
                   <th className="px-4 py-3">Lab Name</th>
                   <th className="px-4 py-3 text-right">Wallet Bal.</th>
@@ -450,12 +450,12 @@ export default async function SuperAdminDashboard() {
                 {m.feeds.recentLabs.map((lab) => (
                   <tr
                     key={lab.id}
-                    className="hover:bg-slate-50 transition-colors">
+                    className="hover:bg-muted/30 transition-colors">
                     <td className="px-4 py-3">
-                      <p className="font-bold text-slate-800 truncate max-w-[150px]">
+                      <p className="font-bold text-foreground truncate max-w-[150px]">
                         {lab.name}
                       </p>
-                      <p className="text-[10px] text-slate-400 font-medium">
+                      <p className="text-[10px] text-muted-foreground/70 font-medium">
                         {new Date(lab.createdAt).toLocaleDateString()}
                       </p>
                     </td>
@@ -480,9 +480,9 @@ export default async function SuperAdminDashboard() {
         </Card>
 
         {/* Col 3: Live Omniscient Feed */}
-        <Card className="border-slate-200 shadow-sm flex flex-col h-[350px] bg-white">
+        <Card className="border-border shadow-sm flex flex-col h-[350px] bg-card">
           <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-slate-100 bg-slate-50/50">
-            <CardTitle className="text-sm font-bold text-slate-800 flex items-center gap-2">
+            <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
               <Activity className="h-4 w-4 text-blue-500" /> Live Audit Log
             </CardTitle>
             <div className="flex items-center gap-1.5">
@@ -490,7 +490,7 @@ export default async function SuperAdminDashboard() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
               </span>
-              <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+              <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
                 Live
               </span>
             </div>
@@ -501,25 +501,25 @@ export default async function SuperAdminDashboard() {
                 {m.feeds.recentActivity.map((log) => (
                   <div
                     key={log.id}
-                    className="p-3 hover:bg-slate-50 transition-colors">
+                    className="p-3 hover:bg-muted/30 transition-colors">
                     <div className="flex gap-3">
-                      <div className="h-7 w-7 rounded-xl bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200">
-                        <span className="text-[10px] font-black text-slate-500">
+                      <div className="h-7 w-7 rounded-xl bg-muted flex items-center justify-center shrink-0 border border-border">
+                        <span className="text-[10px] font-black text-muted-foreground">
                           {log.user?.name.charAt(0) || "S"}
                         </span>
                       </div>
                       <div>
-                        <p className="text-xs text-slate-800 leading-tight">
+                        <p className="text-xs text-foreground leading-tight">
                           <span className="font-bold">
                             {log.user?.name || "System"}
                           </span>{" "}
                           {log.description}
                         </p>
                         <div className="flex items-center gap-2 mt-1.5">
-                          <span className="text-[9px] font-black text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded uppercase">
+                          <span className="text-[9px] font-black text-muted-foreground/70 bg-muted px-1.5 py-0.5 rounded uppercase">
                             {log.action}
                           </span>
-                          <span className="text-[9px] font-medium text-slate-400 flex items-center gap-1">
+                          <span className="text-[9px] font-medium text-muted-foreground/70 flex items-center gap-1">
                             <Clock className="h-2.5 w-2.5" />
                             {new Date(log.createdAt).toLocaleTimeString(
                               "en-US",

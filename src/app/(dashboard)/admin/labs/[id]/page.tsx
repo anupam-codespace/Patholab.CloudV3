@@ -117,7 +117,7 @@ export default function LabDetailPage() {
   if (isLoading) return <DetailPageSkeleton />;
   if (!lab)
     return (
-      <div className="p-8 flex justify-center text-slate-500 font-bold">
+      <div className="p-8 flex justify-center text-muted-foreground font-bold">
         Lab not found
       </div>
     );
@@ -135,7 +135,7 @@ export default function LabDetailPage() {
             size="icon"
             onClick={() => router.back()}
             className="rounded-xl mt-1">
-            <ArrowLeft className="h-5 w-5 text-slate-500" />
+            <ArrowLeft className="h-5 w-5 text-muted-foreground" />
           </Button>
 
           <Avatar className="h-16 w-16 border-2 border-white shadow-sm rounded-2xl">
@@ -147,7 +147,7 @@ export default function LabDetailPage() {
 
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-black tracking-tight text-slate-900">
+              <h1 className="text-2xl font-black tracking-tight text-foreground">
                 {lab.name}
               </h1>
               <Badge
@@ -167,7 +167,7 @@ export default function LabDetailPage() {
                 </Badge>
               )}
             </div>
-            <p className="text-slate-500 mt-1 flex items-center gap-2 text-sm font-medium">
+            <p className="text-muted-foreground mt-1 flex items-center gap-2 text-sm font-medium">
               <Building2 className="h-3.5 w-3.5" /> License:{" "}
               {lab.licenseNumber || "N/A"} •
               <MapPin className="h-3.5 w-3.5" /> {lab.city || "No City"},{" "}
@@ -191,54 +191,54 @@ export default function LabDetailPage() {
 
       {/* --- KPI SUMMARY --- */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card className="rounded-2xl border-slate-200 shadow-sm">
+        <Card className="rounded-2xl border-border shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+            <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
               Lifetime Top-ups
             </CardTitle>
             <Wallet className="h-4 w-4 text-emerald-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-slate-900">
+            <div className="text-2xl font-black text-foreground">
               {formatCurrency(lab.stats.totalRecharges)}
             </div>
           </CardContent>
         </Card>
-        <Card className="rounded-2xl border-slate-200 shadow-sm">
+        <Card className="rounded-2xl border-border shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+            <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
               Tests Processed
             </CardTitle>
             <TestTube className="h-4 w-4 text-indigo-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-slate-900">
+            <div className="text-2xl font-black text-foreground">
               {lab._count.tests.toLocaleString()}
             </div>
           </CardContent>
         </Card>
-        <Card className="rounded-2xl border-slate-200 shadow-sm">
+        <Card className="rounded-2xl border-border shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+            <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
               Total Staff
             </CardTitle>
             <Users className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-slate-900">
+            <div className="text-2xl font-black text-foreground">
               {lab._count.staff}
             </div>
           </CardContent>
         </Card>
-        <Card className="rounded-2xl border-slate-200 shadow-sm">
+        <Card className="rounded-2xl border-border shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+            <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
               Onboarded On
             </CardTitle>
             <Calendar className="h-4 w-4 text-amber-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-slate-900">
+            <div className="text-2xl font-black text-foreground">
               {format(new Date(lab.createdAt), "MMM yyyy")}
             </div>
           </CardContent>
@@ -247,7 +247,7 @@ export default function LabDetailPage() {
 
       {/* --- TABS CONTENT --- */}
       <Tabs defaultValue="wallet" className="space-y-6">
-        <TabsList className="bg-slate-100 p-1 rounded-xl">
+        <TabsList className="bg-muted p-1 rounded-xl">
           <TabsTrigger value="wallet" className="rounded-lg font-bold">
             Wallet & Billing
           </TabsTrigger>
@@ -268,7 +268,7 @@ export default function LabDetailPage() {
         <TabsContent value="wallet" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-3">
             {/* Wallet Settings / Health */}
-            <Card className="rounded-2xl border-slate-200 shadow-sm">
+            <Card className="rounded-2xl border-border shadow-sm">
               <CardHeader className="border-b border-slate-100 bg-slate-50/50 rounded-t-2xl">
                 <CardTitle className="flex items-center gap-2">
                   <Wallet className="h-5 w-5 text-indigo-600" />
@@ -279,7 +279,7 @@ export default function LabDetailPage() {
                 {wallet ? (
                   <>
                     <div>
-                      <p className="text-xs font-bold text-slate-400 uppercase mb-1">
+                      <p className="text-xs font-bold text-muted-foreground/70 uppercase mb-1">
                         Current Balance
                       </p>
                       <p
@@ -289,10 +289,10 @@ export default function LabDetailPage() {
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <p className="text-xs font-bold text-slate-400 uppercase mb-1">
+                        <p className="text-xs font-bold text-muted-foreground/70 uppercase mb-1">
                           Validity
                         </p>
-                        <p className="text-sm font-bold text-slate-900">
+                        <p className="text-sm font-bold text-foreground">
                           {wallet.validityEndDate
                             ? format(
                                 new Date(wallet.validityEndDate),
@@ -302,7 +302,7 @@ export default function LabDetailPage() {
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-slate-400 uppercase mb-1">
+                        <p className="text-xs font-bold text-muted-foreground/70 uppercase mb-1">
                           Status
                         </p>
                         <Badge
@@ -316,12 +316,12 @@ export default function LabDetailPage() {
 
                     {/* PRICING CONFIGURATOR */}
                     <div className="space-y-4 pt-2">
-                      <h4 className="text-sm font-bold text-slate-900">
+                      <h4 className="text-sm font-bold text-foreground">
                         Custom Pricing Rules
                       </h4>
                       <div className="space-y-3">
                         <div className="flex items-center gap-3">
-                          <Label className="w-1/2 text-xs text-slate-500">
+                          <Label className="w-1/2 text-xs text-muted-foreground">
                             Per Patient Fee (₹)
                           </Label>
                           <Input
@@ -332,7 +332,7 @@ export default function LabDetailPage() {
                           />
                         </div>
                         <div className="flex items-center gap-3">
-                          <Label className="w-1/2 text-xs text-slate-500">
+                          <Label className="w-1/2 text-xs text-muted-foreground">
                             Min Recharge (₹)
                           </Label>
                           <Input
@@ -363,7 +363,7 @@ export default function LabDetailPage() {
                     </div>
                   </>
                 ) : (
-                  <div className="text-sm text-slate-500 font-medium p-4 text-center bg-slate-50 rounded-xl">
+                  <div className="text-sm text-muted-foreground font-medium p-4 text-center bg-muted/30 rounded-xl">
                     No wallet provisioned for this lab.
                   </div>
                 )}
@@ -371,10 +371,10 @@ export default function LabDetailPage() {
             </Card>
 
             {/* Transaction Ledger */}
-            <Card className="col-span-2 rounded-2xl border-slate-200 shadow-sm">
+            <Card className="col-span-2 rounded-2xl border-border shadow-sm">
               <CardHeader className="border-b border-slate-100 bg-slate-50/50 rounded-t-2xl flex flex-row items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
-                  <Receipt className="h-5 w-5 text-slate-500" />
+                  <Receipt className="h-5 w-5 text-muted-foreground" />
                   Recent Ledger Activity
                 </CardTitle>
                 <Button
@@ -390,7 +390,7 @@ export default function LabDetailPage() {
                     {wallet.transactions.map((txn: any) => (
                       <div
                         key={txn.id}
-                        className="flex items-center justify-between p-4 hover:bg-slate-50/50 transition-colors">
+                        className="flex items-center justify-between p-4 hover:bg-muted/50/50 transition-colors">
                         <div className="flex items-center gap-4">
                           <div
                             className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 ${
@@ -405,10 +405,10 @@ export default function LabDetailPage() {
                             )}
                           </div>
                           <div>
-                            <p className="text-sm font-bold text-slate-900 line-clamp-1">
+                            <p className="text-sm font-bold text-foreground line-clamp-1">
                               {txn.description || txn.type}
                             </p>
-                            <p className="text-xs font-medium text-slate-500">
+                            <p className="text-xs font-medium text-muted-foreground">
                               {format(
                                 new Date(txn.createdAt),
                                 "MMM dd, yyyy • hh:mm a",
@@ -418,11 +418,11 @@ export default function LabDetailPage() {
                         </div>
                         <div className="text-right shrink-0 ml-4">
                           <div
-                            className={`font-black text-sm ${txn.type === "RECHARGE" ? "text-emerald-600" : "text-slate-900"}`}>
+                            className={`font-black text-sm ${txn.type === "RECHARGE" ? "text-emerald-600" : "text-foreground"}`}>
                             {txn.type === "RECHARGE" ? "+" : "-"}
                             {formatCurrency(txn.amount)}
                           </div>
-                          <div className="text-[10px] font-bold text-slate-400 mt-0.5">
+                          <div className="text-[10px] font-bold text-muted-foreground/70 mt-0.5">
                             Bal: {formatCurrency(txn.closingBalance)}
                           </div>
                         </div>
@@ -430,7 +430,7 @@ export default function LabDetailPage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="p-8 text-center text-slate-500 font-medium">
+                  <div className="p-8 text-center text-muted-foreground font-medium">
                     No transactions recorded yet.
                   </div>
                 )}
@@ -443,7 +443,7 @@ export default function LabDetailPage() {
         <TabsContent value="overview" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
             {/* Owner Details Card */}
-            <Card className="col-span-3 rounded-2xl border-slate-200 shadow-sm">
+            <Card className="col-span-3 rounded-2xl border-border shadow-sm">
               <CardHeader className="border-b border-slate-100 bg-slate-50/50 rounded-t-2xl">
                 <CardTitle>Owner Information</CardTitle>
                 <CardDescription>
@@ -458,8 +458,8 @@ export default function LabDetailPage() {
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="font-bold text-slate-900">{lab.owner.name}</p>
-                    <p className="text-xs font-medium text-slate-500">
+                    <p className="font-bold text-foreground">{lab.owner.name}</p>
+                    <p className="text-xs font-medium text-muted-foreground">
                       Master Admin
                     </p>
                   </div>
@@ -479,7 +479,7 @@ export default function LabDetailPage() {
             </Card>
 
             {/* Recharge Graph */}
-            <Card className="col-span-4 rounded-2xl border-slate-200 shadow-sm">
+            <Card className="col-span-4 rounded-2xl border-border shadow-sm">
               <CardHeader className="border-b border-slate-100 bg-slate-50/50 rounded-t-2xl">
                 <CardTitle>Wallet Top-up Activity</CardTitle>
                 <CardDescription>
@@ -549,7 +549,7 @@ export default function LabDetailPage() {
 
         {/* 3. STAFF TAB */}
         <TabsContent value="staff">
-          <Card className="rounded-2xl border-slate-200 shadow-sm">
+          <Card className="rounded-2xl border-border shadow-sm">
             <CardHeader className="border-b border-slate-100 bg-slate-50/50 rounded-t-2xl">
               <CardTitle>Staff Accounts</CardTitle>
               <CardDescription>
@@ -561,22 +561,22 @@ export default function LabDetailPage() {
                 {lab.staff.map((member: any) => (
                   <div
                     key={member.userId}
-                    className="flex items-center justify-between p-3 hover:bg-slate-50 rounded-xl transition-colors border border-transparent hover:border-slate-100">
+                    className="flex items-center justify-between p-3 hover:bg-muted/30 rounded-xl transition-colors border border-transparent hover:border-slate-100">
                     <div className="flex items-center gap-4">
                       <Avatar className="h-10 w-10 rounded-lg">
                         <AvatarImage
                           src={member.user.avatar}
                           className="rounded-lg object-cover"
                         />
-                        <AvatarFallback className="rounded-lg bg-slate-100 text-slate-600 font-bold">
+                        <AvatarFallback className="rounded-lg bg-muted text-muted-foreground font-bold">
                           {member.user.name.charAt(0)}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-bold text-sm text-slate-900">
+                        <p className="font-bold text-sm text-foreground">
                           {member.user.name}
                         </p>
-                        <p className="text-xs font-medium text-slate-500">
+                        <p className="text-xs font-medium text-muted-foreground">
                           {member.user.email}
                         </p>
                       </div>
@@ -584,7 +584,7 @@ export default function LabDetailPage() {
                     <div className="flex items-center gap-3">
                       <Badge
                         variant="secondary"
-                        className="bg-slate-100 text-slate-700 hover:bg-slate-100">
+                        className="bg-muted text-foreground/80 hover:bg-muted">
                         {member.position}
                       </Badge>
                     </div>
@@ -604,10 +604,10 @@ export default function LabDetailPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 pt-6">
-              <div className="flex items-center justify-between p-5 bg-white rounded-xl border border-red-100 shadow-sm">
+              <div className="flex items-center justify-between p-5 bg-card rounded-xl border border-red-100 shadow-sm">
                 <div>
-                  <p className="font-bold text-slate-900">Suspend Laboratory</p>
-                  <p className="text-sm font-medium text-slate-500 mt-1">
+                  <p className="font-bold text-foreground">Suspend Laboratory</p>
+                  <p className="text-sm font-medium text-muted-foreground mt-1">
                     Blocks all login access and halts their clinical operations
                     immediately.
                   </p>
@@ -655,7 +655,7 @@ function EditLabDetailsDialog({ lab, mutation }: { lab: any; mutation: any }) {
       <DialogTrigger asChild>
         <Button
           variant="outline"
-          className="rounded-xl font-bold text-slate-600 border-slate-200">
+          className="rounded-xl font-bold text-muted-foreground border-border">
           <Pencil className="mr-2 h-4 w-4 text-slate-400" /> Edit Details
         </Button>
       </DialogTrigger>
@@ -668,7 +668,7 @@ function EditLabDetailsDialog({ lab, mutation }: { lab: any; mutation: any }) {
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
           <div className="space-y-1">
-            <Label className="text-xs text-slate-500">Lab Name</Label>
+            <Label className="text-xs text-muted-foreground">Lab Name</Label>
             <Input
               value={formData.name}
               onChange={(e) =>
@@ -679,7 +679,7 @@ function EditLabDetailsDialog({ lab, mutation }: { lab: any; mutation: any }) {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <Label className="text-xs text-slate-500">Email</Label>
+              <Label className="text-xs text-muted-foreground">Email</Label>
               <Input
                 type="email"
                 value={formData.email}
@@ -690,7 +690,7 @@ function EditLabDetailsDialog({ lab, mutation }: { lab: any; mutation: any }) {
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs text-slate-500">Phone</Label>
+              <Label className="text-xs text-muted-foreground">Phone</Label>
               <Input
                 value={formData.phone}
                 onChange={(e) =>
@@ -701,7 +701,7 @@ function EditLabDetailsDialog({ lab, mutation }: { lab: any; mutation: any }) {
             </div>
           </div>
           <div className="space-y-1">
-            <Label className="text-xs text-slate-500">Address</Label>
+            <Label className="text-xs text-muted-foreground">Address</Label>
             <Input
               value={formData.address}
               onChange={(e) =>
@@ -712,7 +712,7 @@ function EditLabDetailsDialog({ lab, mutation }: { lab: any; mutation: any }) {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <Label className="text-xs text-slate-500">City</Label>
+              <Label className="text-xs text-muted-foreground">City</Label>
               <Input
                 value={formData.city}
                 onChange={(e) =>
@@ -722,7 +722,7 @@ function EditLabDetailsDialog({ lab, mutation }: { lab: any; mutation: any }) {
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs text-slate-500">State</Label>
+              <Label className="text-xs text-muted-foreground">State</Label>
               <Input
                 value={formData.state}
                 onChange={(e) =>
@@ -733,7 +733,7 @@ function EditLabDetailsDialog({ lab, mutation }: { lab: any; mutation: any }) {
             </div>
           </div>
           <div className="space-y-1">
-            <Label className="text-xs text-slate-500">
+            <Label className="text-xs text-muted-foreground">
               License / Registration No.
             </Label>
             <Input
@@ -790,7 +790,7 @@ function ResetPasswordDialog({
       <DialogTrigger asChild>
         <Button
           variant="outline"
-          className="rounded-xl font-bold text-slate-600 border-slate-200">
+          className="rounded-xl font-bold text-muted-foreground border-border">
           <Lock className="mr-2 h-4 w-4 text-slate-400" /> Reset Password
         </Button>
       </DialogTrigger>

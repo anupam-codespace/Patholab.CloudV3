@@ -15,10 +15,11 @@ export async function POST(req: NextRequest) {
       if (validUserId) {
         await prisma.activityLog.create({
           data: {
-            userId: validUserId, 
+            userId: validUserId,
             action: 'LOGOUT',
             entity: 'SESSION',
             entityId: validUserId,
+            entityType: 'SESSION',
             description: `User logged out from IP: ${ip}`,
           },
         }).catch((err) => {

@@ -112,10 +112,10 @@ export default function InvoiceDetailsPage() {
 
   if (isLoading)
     return (
-      <div className="h-screen flex items-center justify-center bg-slate-50">
+      <div className="h-screen flex items-center justify-center bg-muted/30">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
-          <p className="text-sm font-semibold text-slate-500">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+          <p className="text-sm font-semibold text-muted-foreground">
             Loading secure document...
           </p>
         </div>
@@ -124,18 +124,18 @@ export default function InvoiceDetailsPage() {
 
   if (!invoice)
     return (
-      <div className="h-screen flex items-center justify-center font-bold text-rose-500 bg-slate-50">
+      <div className="h-screen flex items-center justify-center font-bold text-rose-500 bg-muted/30">
         <XCircle className="mr-2 h-6 w-6" /> Invoice not found
       </div>
     );
 
   const colors = {
     blue: {
-      bg: "bg-blue-600",
-      text: "text-blue-600",
-      light: "bg-blue-50",
+      bg: "bg-primary",
+      text: "text-primary",
+      light: "bg-primary/10",
       border: "border-blue-600",
-      muted: "text-blue-700",
+      muted: "text-primary",
     },
     green: {
       bg: "bg-emerald-600",
@@ -146,8 +146,8 @@ export default function InvoiceDetailsPage() {
     },
     black: {
       bg: "bg-slate-900",
-      text: "text-slate-900",
-      light: "bg-slate-100",
+      text: "text-foreground",
+      light: "bg-muted",
       border: "border-slate-900",
       muted: "text-slate-700",
     },
@@ -159,11 +159,11 @@ export default function InvoiceDetailsPage() {
       muted: "text-violet-700",
     },
   }[config.accentColor as "blue" | "green" | "black" | "violet"] || {
-    bg: "bg-blue-600",
-    text: "text-blue-600",
-    light: "bg-blue-50",
+    bg: "bg-primary",
+    text: "text-primary",
+    light: "bg-primary/10",
     border: "border-blue-600",
-    muted: "text-blue-700",
+    muted: "text-primary",
   };
 
   const fontClass = config.fontStyle === "serif" ? "font-serif" : "font-sans";
@@ -198,15 +198,15 @@ export default function InvoiceDetailsPage() {
         }
       `}</style>
 
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center pb-20 print:bg-white print:p-0">
+      <div className="min-h-screen bg-muted/30 flex flex-col items-center pb-20 print:bg-card print:p-0">
         {/* --- STICKY TOOLBAR --- */}
-        <div className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-xl border-b border-slate-200 px-4 md:px-8 py-3 flex flex-col md:flex-row justify-between items-center gap-4 print:hidden shadow-sm">
+        <div className="sticky top-0 z-50 w-full bg-card/80 backdrop-blur-xl border-b border-border px-4 md:px-8 py-3 flex flex-col md:flex-row justify-between items-center gap-4 print:hidden shadow-sm">
           <div className="flex items-center gap-3 w-full md:w-auto">
             <Button
               variant="outline"
-              className="h-10 rounded-xl bg-white shadow-sm hover:bg-slate-50 transition-all text-slate-700"
+              className="h-10 rounded-xl bg-card shadow-sm hover:bg-muted/30 transition-all text-slate-700"
               onClick={() => router.push("/workspace/patients")}>
-              <Users className="h-4 w-4 mr-2 text-slate-500" />
+              <Users className="h-4 w-4 mr-2 text-muted-foreground" />
               Patient Worklist
             </Button>
             <div className="h-6 w-px bg-slate-200 hidden md:block" />
@@ -214,7 +214,7 @@ export default function InvoiceDetailsPage() {
               <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
                 Invoice Record
               </span>
-              <span className="font-mono text-sm font-bold text-slate-900">
+              <span className="font-mono text-sm font-bold text-foreground">
                 #{invoice.invoiceNumber}
               </span>
             </div>
@@ -222,8 +222,8 @@ export default function InvoiceDetailsPage() {
 
           <div className="flex flex-wrap items-center justify-center gap-3 w-full md:w-auto">
             {/* Status Switcher */}
-            <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl shadow-sm border border-slate-200">
-              <span className="text-xs font-semibold text-slate-500 mr-1">
+            <div className="flex items-center gap-2 bg-card px-3 py-1.5 rounded-xl shadow-sm border border-border">
+              <span className="text-xs font-semibold text-muted-foreground mr-1">
                 Status:
               </span>
               <Select
@@ -253,8 +253,8 @@ export default function InvoiceDetailsPage() {
               <SheetTrigger asChild>
                 <Button
                   variant="outline"
-                  className="h-10 w-10 rounded-xl bg-white shadow-sm">
-                  <Settings2 className="h-4 w-4 text-slate-600" />
+                  className="h-10 w-10 rounded-xl bg-card shadow-sm">
+                  <Settings2 className="h-4 w-4 text-muted-foreground" />
                 </Button>
               </SheetTrigger>
               <SheetContent className="w-[350px] border-none shadow-2xl rounded-l-[24px] p-6">
@@ -265,7 +265,7 @@ export default function InvoiceDetailsPage() {
                 </SheetHeader>
                 <div className="space-y-8">
                   <div className="space-y-3">
-                    <Label className="text-xs font-semibold text-slate-500 flex items-center gap-2">
+                    <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
                       <Palette className="h-4 w-4" /> Accent Theme
                     </Label>
                     <div className="flex gap-3">
@@ -277,7 +277,7 @@ export default function InvoiceDetailsPage() {
                           }
                           className={`h-8 w-8 rounded-full transition-all ${config.accentColor === c ? "ring-2 ring-offset-2 ring-slate-400 scale-110 shadow-md" : "opacity-70 hover:opacity-100"} ${
                             c === "blue"
-                              ? "bg-blue-600"
+                              ? "bg-primary"
                               : c === "green"
                                 ? "bg-emerald-600"
                                 : c === "violet"
@@ -319,7 +319,7 @@ export default function InvoiceDetailsPage() {
 
             <Button
               variant="outline"
-              className="h-10 rounded-xl bg-white shadow-sm font-semibold text-slate-700"
+              className="h-10 rounded-xl bg-card shadow-sm font-semibold text-slate-700"
               onClick={() =>
                 window.open(
                   `/workspace/print/barcodes?invoiceId=${invoice.id}`,
@@ -331,7 +331,7 @@ export default function InvoiceDetailsPage() {
 
             <Button
               variant="outline"
-              className="h-10 rounded-xl bg-white shadow-sm font-semibold text-slate-700"
+              className="h-10 rounded-xl bg-card shadow-sm font-semibold text-slate-700"
               onClick={handleDownloadPdf}
               disabled={isDownloading}>
               {isDownloading ? (
@@ -343,7 +343,7 @@ export default function InvoiceDetailsPage() {
             </Button>
 
             <Button
-              className="h-10 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-md font-semibold"
+              className="h-10 px-6 bg-primary hover:bg-blue-700 text-white rounded-xl shadow-md font-semibold"
               onClick={() => window.print()}>
               <Printer className="h-4 w-4 mr-2" />
               Print
@@ -354,7 +354,7 @@ export default function InvoiceDetailsPage() {
         {/* --- A4 INVOICE CONTAINER (PROFESSIONAL CLINICAL LOOK) --- */}
         <div
           id="invoice-container"
-          className={`bg-white shadow-xl mt-8 mx-auto ${fontClass} text-slate-800 box-border p-[15mm] relative`}
+          className={`bg-card shadow-xl mt-8 mx-auto ${fontClass} text-foreground box-border p-[15mm] relative`}
           style={{ width: "210mm", minHeight: "297mm" }}>
           {/* DOCUMENT HEADER */}
           {config.showHeader && (
@@ -368,10 +368,10 @@ export default function InvoiceDetailsPage() {
                   </div>
                 )}
                 <div>
-                  <h1 className="text-2xl font-bold text-slate-900 tracking-tight leading-none mb-2">
+                  <h1 className="text-2xl font-bold text-foreground tracking-tight leading-none mb-2">
                     {invoice.lab?.name || "Laboratory Name"}
                   </h1>
-                  <div className="text-sm text-slate-600 space-y-1">
+                  <div className="text-sm text-muted-foreground space-y-1">
                     <p className="flex items-center gap-1.5">
                       <MapPin className="h-3.5 w-3.5 text-slate-400" />
                       {invoice.lab?.address || "Lab Address Not Provided"}
@@ -396,7 +396,7 @@ export default function InvoiceDetailsPage() {
                   className={`text-2xl font-bold ${colors.text} uppercase tracking-wider mb-2`}>
                   Tax Invoice
                 </h2>
-                <div className="bg-white p-1 rounded-md border border-slate-100 mb-2">
+                <div className="bg-card p-1 rounded-md border border-slate-100 mb-2">
                   <Barcode
                     value={invoice.invoiceNumber}
                     height={30}
@@ -409,18 +409,18 @@ export default function InvoiceDetailsPage() {
                 <table className="text-sm">
                   <tbody>
                     <tr>
-                      <td className="text-slate-500 pr-3 pb-1 text-right">
+                      <td className="text-muted-foreground pr-3 pb-1 text-right">
                         Invoice No:
                       </td>
-                      <td className="font-mono font-bold text-slate-900 pb-1">
+                      <td className="font-mono font-bold text-foreground pb-1">
                         {invoice.invoiceNumber}
                       </td>
                     </tr>
                     <tr>
-                      <td className="text-slate-500 pr-3 pb-1 text-right">
+                      <td className="text-muted-foreground pr-3 pb-1 text-right">
                         Date:
                       </td>
-                      <td className="font-semibold text-slate-900 pb-1">
+                      <td className="font-semibold text-foreground pb-1">
                         {format(
                           new Date(invoice.createdAt),
                           "dd MMM yyyy, hh:mm a",
@@ -440,31 +440,31 @@ export default function InvoiceDetailsPage() {
           {/* PATIENT & REFERRAL INFO CARDS */}
           <div className="grid grid-cols-2 gap-6 mb-8">
             {/* Bill To Card */}
-            <div className="border border-slate-200 rounded-xl p-4 bg-slate-50/50">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
+            <div className="border border-border rounded-xl p-4 bg-slate-50/50">
+              <h3 className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider mb-3">
                 Patient Details
               </h3>
-              <p className="text-lg font-bold text-slate-900 mb-2">
+              <p className="text-lg font-bold text-foreground mb-2">
                 {invoice.patient?.name}
               </p>
               <table className="text-sm w-full">
                 <tbody>
                   <tr>
-                    <td className="text-slate-500 py-1 w-24">Patient ID:</td>
-                    <td className="font-medium text-slate-900">
+                    <td className="text-muted-foreground py-1 w-24">Patient ID:</td>
+                    <td className="font-medium text-foreground">
                       {invoice.patient?.patientId}
                     </td>
                   </tr>
                   <tr>
-                    <td className="text-slate-500 py-1">Age / Sex:</td>
-                    <td className="font-medium text-slate-900">
+                    <td className="text-muted-foreground py-1">Age / Sex:</td>
+                    <td className="font-medium text-foreground">
                       {invoice.patient?.age} {invoice.patient?.ageUnit} /{" "}
                       {invoice.patient?.gender}
                     </td>
                   </tr>
                   <tr>
-                    <td className="text-slate-500 py-1">Contact:</td>
-                    <td className="font-medium text-slate-900">
+                    <td className="text-muted-foreground py-1">Contact:</td>
+                    <td className="font-medium text-foreground">
                       {invoice.patient?.phone}
                     </td>
                   </tr>
@@ -473,33 +473,33 @@ export default function InvoiceDetailsPage() {
             </div>
 
             {/* Clinical Info Card */}
-            <div className="border border-slate-200 rounded-xl p-4 bg-slate-50/50">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
+            <div className="border border-border rounded-xl p-4 bg-slate-50/50">
+              <h3 className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider mb-3">
                 Clinical Reference
               </h3>
               <table className="text-sm w-full">
                 <tbody>
                   <tr>
-                    <td className="text-slate-500 py-1 flex items-center gap-2">
+                    <td className="text-muted-foreground py-1 flex items-center gap-2">
                       <ShieldCheck className="w-4 h-4" /> Referred By:
                     </td>
-                    <td className="font-semibold text-slate-900">
+                    <td className="font-semibold text-foreground">
                       {invoice.doctor?.name || "Self Referral"}
                     </td>
                   </tr>
                   <tr>
-                    <td className="text-slate-500 py-1 flex items-center gap-2">
+                    <td className="text-muted-foreground py-1 flex items-center gap-2">
                       <Building2 className="w-4 h-4" /> Agency/Client:
                     </td>
-                    <td className="font-semibold text-slate-900">
+                    <td className="font-semibold text-foreground">
                       {invoice.agency?.name || "N/A"}
                     </td>
                   </tr>
                   <tr>
-                    <td className="text-slate-500 py-1 flex items-center gap-2">
+                    <td className="text-muted-foreground py-1 flex items-center gap-2">
                       <CheckCircle2 className="w-4 h-4" /> Collection:
                     </td>
-                    <td className="font-semibold text-slate-900">
+                    <td className="font-semibold text-foreground">
                       {invoice.collectedBy || "In-Lab"}
                     </td>
                   </tr>
@@ -530,18 +530,18 @@ export default function InvoiceDetailsPage() {
                 {invoice.items?.map((item: any, i: number) => (
                   <tr
                     key={item.id}
-                    className="hover:bg-slate-50 transition-colors">
-                    <td className="py-3 px-4 text-slate-500">{i + 1}</td>
+                    className="hover:bg-muted/30 transition-colors">
+                    <td className="py-3 px-4 text-muted-foreground">{i + 1}</td>
                     <td className="py-3 px-4 font-semibold text-slate-800">
                       {item.description || "Laboratory Test"}
                     </td>
-                    <td className="py-3 px-4 text-right text-slate-600">
+                    <td className="py-3 px-4 text-right text-muted-foreground">
                       ₹
                       {item.unitPrice?.toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                       })}
                     </td>
-                    <td className="py-3 px-4 text-right font-semibold text-slate-900">
+                    <td className="py-3 px-4 text-right font-semibold text-foreground">
                       ₹
                       {item.total?.toLocaleString(undefined, {
                         minimumFractionDigits: 2,
@@ -557,10 +557,10 @@ export default function InvoiceDetailsPage() {
           <div className="flex justify-between items-start pt-4">
             {/* Terms and Notes (Left) */}
             <div className="w-1/2 pr-8">
-              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+              <h4 className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider mb-2">
                 Terms & Conditions
               </h4>
-              <ul className="text-xs text-slate-500 space-y-1.5 list-disc pl-4">
+              <ul className="text-xs text-muted-foreground space-y-1.5 list-disc pl-4">
                 <li>
                   All laboratory reports are subject to clinical correlation by
                   the referring physician.
@@ -574,11 +574,11 @@ export default function InvoiceDetailsPage() {
             </div>
 
             {/* Totals (Right) */}
-            <div className="w-5/12 border border-slate-200 rounded-xl overflow-hidden">
-              <div className="p-4 space-y-3 bg-white">
+            <div className="w-5/12 border border-border rounded-xl overflow-hidden">
+              <div className="p-4 space-y-3 bg-card">
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-slate-600">Gross Total</span>
-                  <span className="font-semibold text-slate-900">
+                  <span className="text-muted-foreground">Gross Total</span>
+                  <span className="font-semibold text-foreground">
                     ₹
                     {invoice.subtotal?.toLocaleString(undefined, {
                       minimumFractionDigits: 2,
@@ -599,7 +599,7 @@ export default function InvoiceDetailsPage() {
                 {/* Add Taxes here if applicable in future */}
               </div>
               <div
-                className={`${colors.light} p-4 border-t border-slate-200 flex justify-between items-center`}>
+                className={`${colors.light} p-4 border-t border-border flex justify-between items-center`}>
                 <span className={`text-base font-bold ${colors.muted}`}>
                   Net Payable
                 </span>
@@ -628,7 +628,7 @@ export default function InvoiceDetailsPage() {
               <p className="text-sm font-bold text-slate-800">
                 Authorized Signatory
               </p>
-              <p className="text-xs text-slate-500">{invoice.lab?.name}</p>
+              <p className="text-xs text-muted-foreground">{invoice.lab?.name}</p>
             </div>
           )}
         </div>

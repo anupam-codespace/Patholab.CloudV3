@@ -45,7 +45,7 @@ export default function AppointmentsPage() {
 
   const getStatusBadge = (status: string) => {
     const styles = {
-      SCHEDULED: 'bg-blue-100 text-blue-700',
+      SCHEDULED: 'bg-blue-100 text-primary',
       CONFIRMED: 'bg-green-100 text-green-700',
       IN_PROGRESS: 'bg-orange-100 text-orange-700',
       COMPLETED: 'bg-gray-100 text-gray-700',

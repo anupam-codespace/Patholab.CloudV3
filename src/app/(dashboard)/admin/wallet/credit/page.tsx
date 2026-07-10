@@ -107,7 +107,7 @@ export default function AdminWalletCreditPage() {
       <div className="mb-8">
         <Link
           href="/admin/wallet"
-          className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-slate-900 mb-4 transition-colors">
+          className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground mb-4 transition-colors">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Wallet Management
         </Link>
@@ -116,10 +116,10 @@ export default function AdminWalletCreditPage() {
             <ShieldCheck className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">
               Credit Lab Wallet
             </h1>
-            <p className="text-sm text-slate-500 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Manually add funds to a client's pay-as-you-go wallet.
             </p>
           </div>
@@ -127,18 +127,18 @@ export default function AdminWalletCreditPage() {
       </div>
 
       {/* Main Form Card */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
         <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6">
           {/* 1. Lab Selection */}
           <div className="space-y-2">
-            <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+            <label className="text-sm font-bold text-foreground/80 flex items-center gap-2">
               <Building2 className="h-4 w-4 text-slate-400" />
               Select Target Lab
             </label>
             <select
               value={selectedLabId}
               onChange={(e) => setSelectedLabId(e.target.value)}
-              className="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-medium text-slate-900 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all appearance-none"
+              className="w-full h-11 rounded-xl border border-border bg-muted/30 px-4 text-sm font-medium text-foreground focus:border-indigo-500 focus:bg-card focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all appearance-none"
               disabled={isFetchingLabs}>
               <option value="" disabled>
                 {isFetchingLabs ? "Loading labs..." : "Select a lab..."}
@@ -154,12 +154,12 @@ export default function AdminWalletCreditPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* 2. Amount */}
             <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+              <label className="text-sm font-bold text-foreground/80 flex items-center gap-2">
                 <IndianRupee className="h-4 w-4 text-slate-400" />
                 Credit Amount (₹)
               </label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">
                   ₹
                 </span>
                 <input
@@ -170,21 +170,21 @@ export default function AdminWalletCreditPage() {
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="5000"
-                  className="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 pl-8 pr-4 text-sm font-bold text-slate-900 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
+                  className="w-full h-11 rounded-xl border border-border bg-muted/30 pl-8 pr-4 text-sm font-bold text-foreground focus:border-indigo-500 focus:bg-card focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
                 />
               </div>
             </div>
 
             {/* 3. Payment Method */}
             <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+              <label className="text-sm font-bold text-foreground/80 flex items-center gap-2">
                 <CreditCard className="h-4 w-4 text-slate-400" />
                 Payment Method
               </label>
               <select
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
-                className="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-medium text-slate-900 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all appearance-none">
+                className="w-full h-11 rounded-xl border border-border bg-muted/30 px-4 text-sm font-medium text-foreground focus:border-indigo-500 focus:bg-card focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all appearance-none">
                 <option value="BANK_TRANSFER">Bank Transfer (NEFT/RTGS)</option>
                 <option value="UPI">UPI</option>
                 <option value="CASH">Cash</option>
@@ -195,7 +195,7 @@ export default function AdminWalletCreditPage() {
 
           {/* 4. Reference Number */}
           <div className="space-y-2">
-            <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+            <label className="text-sm font-bold text-foreground/80 flex items-center gap-2">
               <FileText className="h-4 w-4 text-slate-400" />
               Reference / UTR Number
             </label>
@@ -204,9 +204,9 @@ export default function AdminWalletCreditPage() {
               value={reference}
               onChange={(e) => setReference(e.target.value)}
               placeholder="e.g. UTR1234567890"
-              className="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-medium text-slate-900 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
+              className="w-full h-11 rounded-xl border border-border bg-muted/30 px-4 text-sm font-medium text-foreground focus:border-indigo-500 focus:bg-card focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
             />
-            <p className="text-[11px] text-slate-500 font-medium">
+            <p className="text-[11px] text-muted-foreground font-medium">
               Important for auditing and matching with your bank statement.
             </p>
           </div>
@@ -221,7 +221,7 @@ export default function AdminWalletCreditPage() {
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Add any internal notes here..."
               rows={3}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm font-medium text-slate-900 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all resize-none"
+              className="w-full rounded-xl border border-border bg-muted/30 p-4 text-sm font-medium text-foreground focus:border-indigo-500 focus:bg-card focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all resize-none"
             />
           </div>
 

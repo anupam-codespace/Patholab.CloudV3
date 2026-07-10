@@ -48,12 +48,12 @@ export default function Shell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-slate-50/50 flex">
       {/* SIDEBAR (Desktop) */}
       <aside
-        className={`hidden md:flex flex-col border-r bg-white h-screen sticky top-0 transition-all duration-300 ${
+        className={`hidden md:flex flex-col border-r bg-card h-screen sticky top-0 transition-all duration-300 ${
           isCollapsed ? "w-16" : "w-64"
         }`}>
         {/* Logo Area */}
         <div className="h-16 flex items-center px-4 border-b">
-          <div className="flex items-center gap-2 text-blue-600 font-bold text-xl overflow-hidden">
+          <div className="flex items-center gap-2 text-primary font-bold text-xl overflow-hidden">
             <Activity className="h-6 w-6 shrink-0" />
             <span
               className={`transition-opacity duration-300 ${isCollapsed ? "opacity-0 w-0" : "opacity-100"}`}>
@@ -73,14 +73,14 @@ export default function Shell({ children }: { children: React.ReactNode }) {
                   className={`w-full justify-start mb-1 ${isCollapsed ? "px-2 justify-center" : "px-4"}`}
                   title={isCollapsed ? item.label : undefined}>
                   <item.icon
-                    className={`h-5 w-5 ${isActive ? "text-blue-600" : "text-slate-500"} ${isCollapsed ? "" : "mr-3"}`}
+                    className={`h-5 w-5 ${isActive ? "text-primary" : "text-muted-foreground"} ${isCollapsed ? "" : "mr-3"}`}
                   />
                   {!isCollapsed && (
                     <span
                       className={
                         isActive
-                          ? "text-slate-900 font-medium"
-                          : "text-slate-600"
+                          ? "text-foreground font-medium"
+                          : "text-muted-foreground"
                       }>
                       {item.label}
                     </span>
@@ -112,10 +112,10 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           className="fixed inset-0 z-50 bg-black/50 md:hidden"
           onClick={() => setIsMobileOpen(false)}>
           <div
-            className="w-64 h-full bg-white p-4"
+            className="w-64 h-full bg-card p-4"
             onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-8">
-              <span className="font-bold text-lg text-blue-600">Patholab</span>
+              <span className="font-bold text-lg text-primary">Patholab</span>
               <Button
                 variant="ghost"
                 size="icon"
@@ -130,7 +130,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
                   href={item.href}
                   onClick={() => setIsMobileOpen(false)}>
                   <Button variant="ghost" className="w-full justify-start">
-                    <item.icon className="h-5 w-5 mr-3 text-slate-500" />{" "}
+                    <item.icon className="h-5 w-5 mr-3 text-muted-foreground" />{" "}
                     {item.label}
                   </Button>
                 </Link>
@@ -143,7 +143,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
       {/* MAIN CONTENT AREA */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* HEADER */}
-        <header className="h-16 border-b bg-white flex items-center justify-between px-4 md:px-8 sticky top-0 z-30">
+        <header className="h-16 border-b bg-card flex items-center justify-between px-4 md:px-8 sticky top-0 z-30">
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
@@ -158,14 +158,14 @@ export default function Shell({ children }: { children: React.ReactNode }) {
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
               <Input
                 placeholder="Search patients, Test IDs, or Mobile..."
-                className="pl-9 bg-slate-50 border-none"
+                className="pl-9 bg-muted/30 border-none"
               />
             </div>
           </div>
 
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-5 w-5 text-slate-600" />
+              <Bell className="h-5 w-5 text-muted-foreground" />
               <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full border border-white"></span>
             </Button>
 
@@ -175,18 +175,18 @@ export default function Shell({ children }: { children: React.ReactNode }) {
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="flex items-center gap-2 px-2 hover:bg-slate-100 rounded-full">
+                  className="flex items-center gap-2 px-2 hover:bg-muted rounded-full">
                   <div className="text-right hidden md:block">
                     <p className="text-sm font-medium leading-none">
                       Dr. Admin
                     </p>
-                    <p className="text-xs text-slate-500 mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       ZN Diagnostics
                     </p>
                   </div>
                   <Avatar className="h-8 w-8 border">
                     <AvatarImage src="/avatar-placeholder.png" />
-                    <AvatarFallback className="bg-blue-100 text-blue-700">
+                    <AvatarFallback className="bg-blue-100 text-primary">
                       ZN
                     </AvatarFallback>
                   </Avatar>

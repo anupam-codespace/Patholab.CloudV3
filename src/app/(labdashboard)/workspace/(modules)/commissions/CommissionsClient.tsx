@@ -177,20 +177,20 @@ export default function CommissionsClient() {
               Financial Hub
             </span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-4xl md:text-5xl font-black tracking-tight text-foreground dark:text-white">
             Payout{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">
               Commissions
             </span>
           </h1>
-          <p className="text-slate-500 font-medium italic">
+          <p className="text-muted-foreground font-medium italic">
             patholab.cloud — Real-time Referral Ledger & Settlements
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <div className="text-right hidden sm:block">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            <p className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-widest">
               Global Status
             </p>
             <div className="flex items-center gap-2 text-emerald-500 font-mono text-xs">
@@ -241,7 +241,7 @@ export default function CommissionsClient() {
         ].map((kpi, i) => (
           <div
             key={i}
-            className={`bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border ${kpi.border || "border-slate-100"} transition-all hover:shadow-md relative overflow-hidden group`}>
+            className={`bg-card dark:bg-slate-900 p-6 rounded-3xl shadow-sm border ${kpi.border || "border-slate-100"} transition-all hover:shadow-md relative overflow-hidden group`}>
             <div
               className={`absolute -right-4 -top-4 ${kpi.bg} dark:bg-slate-800 w-24 h-24 rounded-full opacity-40 group-hover:scale-110 transition-transform`}
             />
@@ -251,10 +251,10 @@ export default function CommissionsClient() {
                 <kpi.icon className={`h-5 w-5 ${kpi.color}`} />
               </div>
               <div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                <p className="text-[10px] font-black text-muted-foreground/70 uppercase tracking-widest mb-1">
                   {kpi.label}
                 </p>
-                <h2 className="text-2xl font-black text-slate-900 dark:text-white tabular-nums tracking-tighter">
+                <h2 className="text-2xl font-black text-foreground dark:text-white tabular-nums tracking-tighter">
                   {kpi.suffix === "" ? kpi.val : `₹${kpi.val.toLocaleString()}`}
                 </h2>
               </div>
@@ -266,21 +266,21 @@ export default function CommissionsClient() {
       {/* ANALYTICS SPLIT */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
         {/* Top Performers Chart */}
-        <div className="lg:col-span-8 bg-white dark:bg-slate-900 rounded-[32px] shadow-sm border border-slate-100 dark:border-slate-800 p-8">
+        <div className="lg:col-span-8 bg-card dark:bg-slate-900 rounded-[32px] shadow-sm border border-slate-100 dark:border-slate-800 p-8">
           <div className="flex items-center justify-between mb-8">
             <div className="space-y-1">
-              <h3 className="text-sm font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest flex items-center gap-2">
+              <h3 className="text-sm font-black text-foreground dark:text-slate-200 uppercase tracking-widest flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-indigo-500" /> Performance
                 Leaders
               </h3>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+              <p className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-tighter">
                 Top 5 Revenue Contributors
               </p>
             </div>
           </div>
 
           {stats.topPerformers.length === 0 ? (
-            <div className="h-64 flex flex-col items-center justify-center text-slate-400 gap-3 italic">
+            <div className="h-64 flex flex-col items-center justify-center text-muted-foreground/70 gap-3 italic">
               <History className="w-8 h-8 opacity-20" />
               <p className="text-sm font-medium">No contribution data yet.</p>
             </div>
@@ -298,11 +298,11 @@ export default function CommissionsClient() {
                   <div key={idx} className="group">
                     <div className="flex justify-between items-end mb-2">
                       <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 bg-slate-50 dark:bg-slate-800 rounded-lg flex items-center justify-center font-black text-xs text-slate-400">
+                        <div className="h-8 w-8 bg-muted/30 dark:bg-slate-800 rounded-lg flex items-center justify-center font-black text-xs text-slate-400">
                           {idx + 1}
                         </div>
                         <div>
-                          <span className="text-sm font-black text-slate-800 dark:text-white group-hover:text-indigo-600 transition-colors tracking-tight flex items-center gap-2">
+                          <span className="text-sm font-black text-foreground dark:text-white group-hover:text-indigo-600 transition-colors tracking-tight flex items-center gap-2">
                             {partner.type === "DOCTOR" ? (
                               <Stethoscope className="w-3.5 h-3.5 text-indigo-400" />
                             ) : (
@@ -312,11 +312,11 @@ export default function CommissionsClient() {
                           </span>
                         </div>
                       </div>
-                      <span className="text-sm font-black text-slate-900 dark:text-slate-200 tabular-nums">
+                      <span className="text-sm font-black text-foreground dark:text-slate-200 tabular-nums">
                         ₹{partner.totalGenerated.toLocaleString()}
                       </span>
                     </div>
-                    <div className="h-4 w-full bg-slate-50 dark:bg-slate-800 rounded-full overflow-hidden flex items-center p-1 shadow-inner">
+                    <div className="h-4 w-full bg-muted/30 dark:bg-slate-800 rounded-full overflow-hidden flex items-center p-1 shadow-inner">
                       <div
                         className="h-full flex gap-1 transition-all duration-1000"
                         style={{ width: `${totalPercent}%` }}>
@@ -367,7 +367,7 @@ export default function CommissionsClient() {
                     background: `conic-gradient(#6366f1 0% ${stats.docPercent}%, #14b8a6 ${stats.docPercent}% 100%)`,
                   }}>
                   <div className="absolute inset-8 bg-slate-900 rounded-full flex items-center justify-center flex-col">
-                    <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">
+                    <p className="text-[10px] text-muted-foreground/70 font-black uppercase tracking-widest mb-1">
                       Portfolio
                     </p>
                     <p className="text-2xl font-black text-white tabular-nums">
@@ -378,7 +378,7 @@ export default function CommissionsClient() {
               </div>
 
               <div className="space-y-4 pt-8">
-                <div className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/10">
+                <div className="flex items-center justify-between p-4 rounded-2xl bg-card/5 border border-white/10">
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]"></div>
                     <div>
@@ -394,7 +394,7 @@ export default function CommissionsClient() {
                     ₹{stats.docGenerated.toLocaleString()}
                   </span>
                 </div>
-                <div className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/10">
+                <div className="flex items-center justify-between p-4 rounded-2xl bg-card/5 border border-white/10">
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 rounded-full bg-teal-500 shadow-[0_0_10px_rgba(20,184,166,0.5)]"></div>
                     <div>
@@ -417,21 +417,21 @@ export default function CommissionsClient() {
       </div>
 
       {/* TABS & MAIN TABLE */}
-      <div className="bg-white dark:bg-slate-900 rounded-[32px] shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
+      <div className="bg-card dark:bg-slate-900 rounded-[32px] shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
         <Tabs
           defaultValue="doctors"
           onValueChange={setActiveTab}
           className="w-full">
           <div className="p-6 md:p-8 flex flex-col md:flex-row justify-between items-center gap-6 border-b border-slate-50 dark:border-slate-800">
-            <TabsList className="bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl h-auto">
+            <TabsList className="bg-muted dark:bg-slate-800 p-1.5 rounded-2xl h-auto">
               <TabsTrigger
                 value="doctors"
-                className="h-10 px-6 rounded-xl font-bold uppercase text-[10px] tracking-widest flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 data-[state=active]:shadow-sm">
+                className="h-10 px-6 rounded-xl font-bold uppercase text-[10px] tracking-widest flex items-center gap-2 data-[state=active]:bg-card dark:data-[state=active]:bg-slate-950 data-[state=active]:shadow-sm">
                 <Stethoscope className="w-3.5 h-3.5" /> Doctors
               </TabsTrigger>
               <TabsTrigger
                 value="agencies"
-                className="h-10 px-6 rounded-xl font-bold uppercase text-[10px] tracking-widest flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 data-[state=active]:shadow-sm">
+                className="h-10 px-6 rounded-xl font-bold uppercase text-[10px] tracking-widest flex items-center gap-2 data-[state=active]:bg-card dark:data-[state=active]:bg-slate-950 data-[state=active]:shadow-sm">
                 <Building2 className="w-3.5 h-3.5" /> Agencies
               </TabsTrigger>
             </TabsList>
@@ -442,7 +442,7 @@ export default function CommissionsClient() {
                 placeholder={`Find ${activeTab}...`}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full h-12 pl-12 pr-6 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-indigo-600/10 outline-none transition-all"
+                className="w-full h-12 pl-12 pr-6 bg-muted/30 dark:bg-slate-800 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-indigo-600/10 outline-none transition-all"
               />
             </div>
           </div>
@@ -457,13 +457,13 @@ export default function CommissionsClient() {
                   <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400">
                     Margin Logic
                   </TableHead>
-                  <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 text-right">
                     Outstanding (Unpaid)
                   </TableHead>
-                  <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 text-right">
                     Settled (Lifetime)
                   </TableHead>
-                  <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 text-right px-8">
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 text-right px-8">
                     Actions
                   </TableHead>
                 </TableRow>
@@ -473,7 +473,7 @@ export default function CommissionsClient() {
                   <TableRow>
                     <TableCell
                       colSpan={5}
-                      className="text-center py-20 text-slate-400 italic font-medium">
+                      className="text-center py-20 text-muted-foreground/70 italic font-medium">
                       Accessing secure ledger...
                     </TableCell>
                   </TableRow>
@@ -481,7 +481,7 @@ export default function CommissionsClient() {
                   <TableRow>
                     <TableCell
                       colSpan={5}
-                      className="text-center py-20 text-slate-400 italic font-medium">
+                      className="text-center py-20 text-muted-foreground/70 italic font-medium">
                       No partner records found.
                     </TableCell>
                   </TableRow>
@@ -494,19 +494,19 @@ export default function CommissionsClient() {
                     return (
                       <TableRow
                         key={item.id}
-                        className="group border-slate-50 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                        className="group border-slate-50 dark:border-slate-800 hover:bg-muted/30 dark:hover:bg-slate-800/40 transition-colors">
                         <TableCell className="px-8 py-5">
-                          <div className="font-black text-slate-900 dark:text-white tracking-tight leading-none mb-1">
+                          <div className="font-black text-foreground dark:text-white tracking-tight leading-none mb-1">
                             {item.name}
                           </div>
-                          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+                          <div className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-tighter">
                             {item.contact || "No contact linked"}
                           </div>
                         </TableCell>
                         <TableCell>
                           <Badge
                             variant="outline"
-                            className="h-7 px-3 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-[10px] font-black uppercase tracking-tighter text-slate-500">
+                            className="h-7 px-3 bg-card dark:bg-slate-800 border-border dark:border-slate-700 text-[10px] font-black uppercase tracking-tighter text-muted-foreground">
                             {item.commissionRule}
                           </Badge>
                         </TableCell>
@@ -521,10 +521,10 @@ export default function CommissionsClient() {
                           )}
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className="font-bold text-slate-700 dark:text-slate-300 mb-2 tabular-nums">
+                          <div className="font-bold text-foreground/80 dark:text-slate-300 mb-2 tabular-nums">
                             ₹{item.totalPaid.toLocaleString()}
                           </div>
-                          <div className="w-24 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full ml-auto overflow-hidden shadow-inner">
+                          <div className="w-24 h-1.5 bg-muted dark:bg-slate-800 rounded-full ml-auto overflow-hidden shadow-inner">
                             <div
                               className="h-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)] transition-all duration-1000"
                               style={{ width: `${progress}%` }}></div>
@@ -534,7 +534,7 @@ export default function CommissionsClient() {
                           <Button
                             onClick={() => handleOpenSettle(item)}
                             disabled={item.totalPending === 0}
-                            className={`h-11 px-6 rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95 ${item.totalPending > 0 ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200 dark:shadow-none" : "bg-slate-50 dark:bg-slate-800 text-slate-400"}`}>
+                            className={`h-11 px-6 rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95 ${item.totalPending > 0 ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200 dark:shadow-none" : "bg-muted/30 dark:bg-slate-800 text-slate-400"}`}>
                             {item.totalPending > 0
                               ? "Authorize Payout"
                               : "Cleared"}
@@ -553,7 +553,7 @@ export default function CommissionsClient() {
 
       {/* SETTLEMENT MODAL */}
       <Dialog open={isSettleModalOpen} onOpenChange={setIsSettleModalOpen}>
-        <DialogContent className="max-w-2xl p-0 overflow-hidden bg-white dark:bg-slate-950 border-none shadow-2xl rounded-[32px]">
+        <DialogContent className="max-w-2xl p-0 overflow-hidden bg-card dark:bg-slate-950 border-none shadow-2xl rounded-[32px]">
           <div className="bg-slate-900 p-8 flex items-center gap-5">
             <div className="h-14 w-14 bg-emerald-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
               <Banknote className="h-7 w-7" />
@@ -562,7 +562,7 @@ export default function CommissionsClient() {
               <DialogTitle className="text-white text-2xl font-black tracking-tight">
                 Settle Funds
               </DialogTitle>
-              <DialogDescription className="text-slate-400 font-medium italic">
+              <DialogDescription className="text-muted-foreground/70 font-medium italic">
                 {selectedEntity?.name} • Settlement Protocol
               </DialogDescription>
             </div>
@@ -580,7 +580,7 @@ export default function CommissionsClient() {
               </div>
 
               <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
                   Payment Reference / UTR
                 </Label>
                 <div className="relative group">
@@ -589,7 +589,7 @@ export default function CommissionsClient() {
                     placeholder="e.g. UPI-1294XJ"
                     value={transactionRef}
                     onChange={(e) => setTransactionRef(e.target.value)}
-                    className="h-14 pl-12 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl font-bold shadow-inner"
+                    className="h-14 pl-12 bg-muted/30 dark:bg-slate-900 border-none rounded-2xl font-bold shadow-inner"
                   />
                 </div>
               </div>
@@ -598,13 +598,13 @@ export default function CommissionsClient() {
             <div className="space-y-4">
               <div className="flex items-center gap-2 px-1">
                 <Activity className="w-4 h-4 text-indigo-500" />
-                <h4 className="font-black text-[10px] uppercase tracking-widest text-slate-800 dark:text-slate-200">
+                <h4 className="font-black text-[10px] uppercase tracking-widest text-foreground dark:text-slate-200">
                   Awaiting Settlement Ledger
                 </h4>
               </div>
-              <div className="border border-slate-100 dark:border-slate-800 rounded-3xl bg-slate-50 dark:bg-slate-900/50 overflow-hidden shadow-inner max-h-[300px] overflow-y-auto custom-scrollbar">
+              <div className="border border-slate-100 dark:border-slate-800 rounded-3xl bg-muted/30 dark:bg-slate-900/50 overflow-hidden shadow-inner max-h-[300px] overflow-y-auto custom-scrollbar">
                 <Table>
-                  <TableHeader className="sticky top-0 bg-white dark:bg-slate-800 z-10">
+                  <TableHeader className="sticky top-0 bg-card dark:bg-slate-800 z-10">
                     <TableRow className="border-none h-12">
                       <TableHead className="text-[9px] font-black uppercase tracking-widest px-6">
                         Timestamp
@@ -623,15 +623,15 @@ export default function CommissionsClient() {
                       .map((comm: any) => (
                         <TableRow
                           key={comm.id}
-                          className="border-slate-100 dark:border-slate-800 bg-white/40 dark:bg-transparent">
-                          <TableCell className="text-[11px] font-bold text-slate-400 tabular-nums px-6">
+                          className="border-slate-100 dark:border-slate-800 bg-card/40 dark:bg-transparent">
+                          <TableCell className="text-[11px] font-bold text-muted-foreground/70 tabular-nums px-6">
                             {new Date(comm.test.createdAt).toLocaleDateString()}
                           </TableCell>
                           <TableCell className="py-4">
-                            <div className="text-xs font-black text-slate-800 dark:text-slate-200 tracking-tight">
+                            <div className="text-xs font-black text-foreground dark:text-slate-200 tracking-tight">
                               {comm.test?.patient?.name}
                             </div>
-                            <div className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter italic">
+                            <div className="text-[9px] font-bold text-muted-foreground/70 uppercase tracking-tighter italic">
                               {comm.test?.testName}
                             </div>
                           </TableCell>

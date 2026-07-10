@@ -262,9 +262,9 @@ export default function ReportingDeskPage() {
 
   if (isQueueLoading) {
     return (
-      <div className="h-[calc(100vh-4rem)] flex flex-col items-center justify-center bg-slate-50 font-sans">
+      <div className="h-[calc(100vh-4rem)] flex flex-col items-center justify-center bg-muted/30 font-sans">
         <Loader2 className="h-10 w-10 animate-spin text-indigo-600 mb-4" />
-        <p className="text-sm font-bold text-slate-500 uppercase tracking-widest animate-pulse">
+        <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest animate-pulse">
           Loading Reporting Desk...
         </p>
       </div>
@@ -272,18 +272,18 @@ export default function ReportingDeskPage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-slate-50 font-sans relative selection:bg-indigo-100 pb-12 lg:h-[calc(100vh-4rem)] lg:overflow-hidden flex flex-col">
+    <div className="min-h-[calc(100vh-4rem)] bg-muted/30 font-sans relative selection:bg-indigo-100 pb-12 lg:h-[calc(100vh-4rem)] lg:overflow-hidden flex flex-col">
       <div className="absolute top-0 inset-x-0 h-64 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-100/40 via-slate-50 to-transparent pointer-events-none z-0" />
 
       <header className="shrink-0 z-30 px-4 sm:px-6 lg:px-8 py-4 w-full max-w-[1600px] mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/70 backdrop-blur-xl p-4 rounded-2xl border border-slate-200/60 shadow-sm">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card/70 backdrop-blur-xl p-4 rounded-2xl border border-slate-200/60 shadow-sm">
           <div className="flex items-center gap-4">
             <div className="h-12 w-12 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-inner shrink-0">
               <Stethoscope className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-900 tracking-tight leading-tight">Radiologist Reporting Desk</h1>
-              <p className="text-xs font-medium text-slate-500 mt-0.5">Review scans, dictate findings, and verify reports.</p>
+              <h1 className="text-xl font-bold text-foreground tracking-tight leading-tight">Radiologist Reporting Desk</h1>
+              <p className="text-xs font-medium text-muted-foreground mt-0.5">Review scans, dictate findings, and verify reports.</p>
             </div>
           </div>
           <div className="flex items-center gap-2 px-4 py-2.5 bg-indigo-50 rounded-xl border border-indigo-100 shadow-sm shrink-0 w-full md:w-auto justify-center">
@@ -296,13 +296,13 @@ export default function ReportingDeskPage() {
       <main className="flex-1 w-full max-w-[1920px] mx-auto px-2 sm:px-4 lg:px-6 pb-4 flex flex-col lg:flex-row gap-4 relative z-10 lg:h-[calc(100vh-5rem)] overflow-y-auto lg:overflow-hidden">
         
         {/* COLUMN 1: PATIENT QUEUE */}
-        <div className="w-full lg:w-[280px] xl:w-[300px] 2xl:w-[320px] flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden shrink-0 h-[400px] lg:h-full">
+        <div className="w-full lg:w-[280px] xl:w-[300px] 2xl:w-[320px] flex flex-col bg-card rounded-xl border border-border shadow-sm overflow-hidden shrink-0 h-[400px] lg:h-full">
           <div className="p-3 border-b border-slate-100 bg-slate-50/50 space-y-3 shrink-0">
             <div className="relative">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
               <Input
                 placeholder="Search patient..."
-                className="pl-9 bg-white border-slate-200 focus:border-indigo-300 focus:ring-indigo-500/20 rounded-lg h-9 text-sm shadow-sm"
+                className="pl-9 bg-card border-border focus:border-indigo-300 focus:ring-indigo-500/20 rounded-lg h-9 text-sm shadow-sm"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -313,7 +313,7 @@ export default function ReportingDeskPage() {
                   key={filter}
                   onClick={() => setActiveFilter(filter)}
                   className={`flex-1 py-1 text-[10px] uppercase tracking-wider font-bold rounded-md transition-all ${
-                    activeFilter === filter ? "bg-white text-indigo-700 shadow-sm border border-slate-200/50" : "text-slate-500 hover:text-slate-800"
+                    activeFilter === filter ? "bg-card text-indigo-700 shadow-sm border border-slate-200/50" : "text-muted-foreground hover:text-slate-800"
                   }`}>
                   {filter}
                 </button>
@@ -324,21 +324,21 @@ export default function ReportingDeskPage() {
             {filteredQueue.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full p-8 text-center text-slate-400">
                 <CheckCircle2 className="h-10 w-10 mx-auto mb-3 opacity-30 text-emerald-500" />
-                <p className="text-sm font-bold text-slate-600">Queue is clear</p>
+                <p className="text-sm font-bold text-muted-foreground">Queue is clear</p>
               </div>
             ) : (
               filteredQueue.map((item: any) => {
                 const isSelected = selectedStudy?.studyId === item.studyId;
                 return (
-                  <div key={item.id} onClick={() => setSelectedStudy(item)} className={`p-3 cursor-pointer transition-all border-l-4 group ${isSelected ? "bg-indigo-50/50 border-l-indigo-600" : item.status === "DRAFT" ? "border-l-amber-400 hover:bg-slate-50/80" : "border-l-transparent hover:bg-slate-50/80"}`}>
+                  <div key={item.id} onClick={() => setSelectedStudy(item)} className={`p-3 cursor-pointer transition-all border-l-4 group ${isSelected ? "bg-indigo-50/50 border-l-indigo-600" : item.status === "DRAFT" ? "border-l-amber-400 hover:bg-muted/50/80" : "border-l-transparent hover:bg-muted/50/80"}`}>
                     <div className="flex justify-between items-start mb-1 gap-2">
-                      <h3 className={`font-bold text-sm truncate ${isSelected ? "text-indigo-900" : "text-slate-900"}`}>{item.patient || "Unknown Patient"}</h3>
+                      <h3 className={`font-bold text-sm truncate ${isSelected ? "text-indigo-900" : "text-foreground"}`}>{item.patient || "Unknown Patient"}</h3>
                       {item.priority === "URGENT" && <div className="h-2 w-2 rounded-full bg-rose-500 animate-pulse mt-1 shrink-0" />}
                     </div>
-                    <p className="text-xs font-medium text-slate-600 mb-2 truncate" title={item.scan}>{item.scan}</p>
+                    <p className="text-xs font-medium text-muted-foreground mb-2 truncate" title={item.scan}>{item.scan}</p>
                     <div className="flex justify-between items-center mt-2 flex-wrap gap-2">
-                      <Badge variant="outline" className="text-[9px] font-bold uppercase tracking-wider bg-white border-slate-200 text-slate-700 shadow-sm">{item.modality}</Badge>
-                      <span className="text-[10px] font-medium text-slate-500">{item.time}</span>
+                      <Badge variant="outline" className="text-[9px] font-bold uppercase tracking-wider bg-card border-border text-foreground/80 shadow-sm">{item.modality}</Badge>
+                      <span className="text-[10px] font-medium text-muted-foreground">{item.time}</span>
                     </div>
                   </div>
                 );
@@ -351,30 +351,30 @@ export default function ReportingDeskPage() {
           <>
             {/* COLUMN 2: CLINICAL CONTEXT */}
             <div className="w-full lg:w-[300px] xl:w-[350px] 2xl:w-[400px] flex flex-col gap-4 overflow-y-auto custom-scrollbar shrink-0 h-auto lg:h-full pb-4 lg:pb-10 pr-1 lg:pr-2">
-              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden shrink-0">
+              <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden shrink-0">
                 <div className="bg-slate-900 px-3 py-2 flex items-center gap-2 text-white">
                   <User className="h-4 w-4 text-indigo-400" />
                   <h3 className="font-bold text-[11px] uppercase tracking-wider">Patient Info</h3>
                 </div>
                 <div className="p-3 space-y-2.5">
                   <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-                    <span className="text-[11px] text-slate-500 font-medium">Name</span>
-                    <span className="text-xs font-bold text-slate-900">{selectedStudy.patient || "Not available"}</span>
+                    <span className="text-[11px] text-muted-foreground font-medium">Name</span>
+                    <span className="text-xs font-bold text-foreground">{selectedStudy.patient || "Not available"}</span>
                   </div>
                   <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-                    <span className="text-[11px] text-slate-500 font-medium">Age / Gender</span>
+                    <span className="text-[11px] text-muted-foreground font-medium">Age / Gender</span>
                     <span className="text-xs font-semibold text-slate-700">{selectedStudy.age || "N/A"} / {selectedStudy.gender || "N/A"}</span>
                   </div>
                   <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-                    <span className="text-[11px] text-slate-500 font-medium">UHID</span>
+                    <span className="text-[11px] text-muted-foreground font-medium">UHID</span>
                     <span className="text-xs font-mono text-slate-700">{selectedStudy.uhid || "N/A"}</span>
                   </div>
                   <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-                    <span className="text-[11px] text-slate-500 font-medium">Ref Doctor</span>
+                    <span className="text-[11px] text-muted-foreground font-medium">Ref Doctor</span>
                     <span className="text-xs font-semibold text-indigo-700 truncate max-w-[120px] text-right">{selectedStudy.referringDoctor || "N/A"}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-[11px] text-slate-500 font-medium">Priority</span>
+                    <span className="text-[11px] text-muted-foreground font-medium">Priority</span>
                     <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded flex items-center gap-1 border border-rose-100">
                       <div className="h-1.5 w-1.5 rounded-full bg-rose-500" /> {selectedStudy.priority || "URGENT"}
                     </span>
@@ -382,35 +382,35 @@ export default function ReportingDeskPage() {
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden shrink-0">
+              <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden shrink-0">
                 <div className="bg-amber-50 px-3 py-2 flex items-center gap-2 border-b border-amber-100">
                   <History className="h-4 w-4 text-amber-600" />
                   <h3 className="font-bold text-[11px] uppercase tracking-wider text-amber-900">Clinical History</h3>
                 </div>
                 <div className="p-3 space-y-4">
                   <div>
-                    <h4 className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Chief Complaint</h4>
-                    <p className="text-xs font-semibold text-slate-800 bg-slate-50 p-2 rounded border border-slate-100">{selectedStudy.complaint || "Severe headache for 2 months"}</p>
+                    <h4 className="text-[9px] font-bold text-muted-foreground/70 uppercase tracking-wider mb-1">Chief Complaint</h4>
+                    <p className="text-xs font-semibold text-foreground bg-muted/30 p-2 rounded border border-slate-100">{selectedStudy.complaint || "Severe headache for 2 months"}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden shrink-0">
-                <div className="bg-slate-50 px-3 py-2 flex items-center gap-2 border-b border-slate-100">
-                  <FileText className="h-4 w-4 text-slate-600" />
+              <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden shrink-0">
+                <div className="bg-muted/30 px-3 py-2 flex items-center gap-2 border-b border-slate-100">
+                  <FileText className="h-4 w-4 text-muted-foreground" />
                   <h3 className="font-bold text-[11px] uppercase tracking-wider text-slate-700">Previous Studies</h3>
                 </div>
                 <div className="divide-y divide-slate-100">
                   {isContextLoading ? (
                     <div className="p-4 text-center text-xs text-slate-400">Loading history...</div>
                   ) : patientContext?.previousStudies?.length === 0 ? (
-                    <div className="p-4 text-center text-xs font-medium text-slate-500">No previous scans found.</div>
+                    <div className="p-4 text-center text-xs font-medium text-muted-foreground">No previous scans found.</div>
                   ) : (
                     patientContext?.previousStudies?.map((study: any) => (
-                      <div key={study.id} className="p-2.5 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                      <div key={study.id} className="p-2.5 flex items-center justify-between hover:bg-muted/30 transition-colors">
                         <div>
                           <p className="text-xs font-bold text-slate-800">{study.name}</p>
-                          <p className="text-[10px] text-slate-500">{study.date}</p>
+                          <p className="text-[10px] text-muted-foreground">{study.date}</p>
                         </div>
                         <Button 
                           variant="outline" 
@@ -425,7 +425,7 @@ export default function ReportingDeskPage() {
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden shrink-0">
+              <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden shrink-0">
                 <div className="bg-indigo-50 px-3 py-2 flex items-center gap-2 border-b border-indigo-100">
                   <TestTube className="h-4 w-4 text-indigo-600" />
                   <h3 className="font-bold text-[11px] uppercase tracking-wider text-indigo-900">Recent Lab Results</h3>
@@ -433,15 +433,15 @@ export default function ReportingDeskPage() {
                 {isContextLoading ? (
                   <div className="p-4 text-center text-xs text-slate-400">Loading labs...</div>
                 ) : !patientContext?.recentLabs ? (
-                  <div className="p-4 text-center text-xs font-medium text-slate-500">No recent bloodwork found.</div>
+                  <div className="p-4 text-center text-xs font-medium text-muted-foreground">No recent bloodwork found.</div>
                 ) : (
                   <div className="p-3 grid grid-cols-2 gap-2">
-                    <div className="flex justify-between items-center p-2 bg-slate-50 rounded border border-slate-100">
-                      <span className="text-[10px] font-bold text-slate-600">Hb</span>
+                    <div className="flex justify-between items-center p-2 bg-muted/30 rounded border border-slate-100">
+                      <span className="text-[10px] font-bold text-muted-foreground">Hb</span>
                       <span className="text-xs font-black text-rose-600">{patientContext.recentLabs.hb}</span>
                     </div>
-                    <div className="flex justify-between items-center p-2 bg-slate-50 rounded border border-slate-100">
-                      <span className="text-[10px] font-bold text-slate-600">WBC</span>
+                    <div className="flex justify-between items-center p-2 bg-muted/30 rounded border border-slate-100">
+                      <span className="text-[10px] font-bold text-muted-foreground">WBC</span>
                       <span className="text-xs font-black text-slate-800">{patientContext.recentLabs.wbc}</span>
                     </div>
                   </div>
@@ -450,7 +450,7 @@ export default function ReportingDeskPage() {
             </div>
 
             {/* COLUMN 3: REPORT EDITOR */}
-            <div className="flex-1 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden relative min-h-[600px] lg:min-h-0 lg:h-full w-full">
+            <div className="flex-1 flex flex-col bg-card rounded-xl border border-border shadow-sm overflow-hidden relative min-h-[600px] lg:min-h-0 lg:h-full w-full">
               <div className="px-3 py-2.5 border-b border-slate-100 bg-slate-50/80 shrink-0 flex flex-wrap justify-between items-center gap-2">
                 <div className="flex items-center gap-2">
                   <Wand2 className="h-4 w-4 text-indigo-600 hidden sm:block" />
@@ -458,7 +458,7 @@ export default function ReportingDeskPage() {
                 </div>
                 <div className="flex items-center gap-2 w-full sm:w-auto">
                   <Select onValueChange={handleApplyMacro}>
-                    <SelectTrigger className="flex-1 sm:w-[200px] xl:w-[220px] h-8 bg-white border-slate-200 text-xs shadow-sm">
+                    <SelectTrigger className="flex-1 sm:w-[200px] xl:w-[220px] h-8 bg-card border-border text-xs shadow-sm">
                       <SelectValue placeholder="Load Macro..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -481,28 +481,28 @@ export default function ReportingDeskPage() {
 
               <div className="flex-1 overflow-y-auto custom-scrollbar p-3 sm:p-5 flex flex-col gap-4">
                 <div className="space-y-1.5 flex-1 flex flex-col">
-                  <label className="text-xs font-bold text-slate-700 flex flex-wrap items-center justify-between gap-2">
+                  <label className="text-xs font-bold text-foreground/80 flex flex-wrap items-center justify-between gap-2">
                     <span>Technique & Findings</span>
-                    <span className="text-[9px] font-normal text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
-                      Type <kbd className="font-mono text-slate-600">/shortcode</kbd> + Space
+                    <span className="text-[9px] font-normal text-muted-foreground/70 bg-muted px-1.5 py-0.5 rounded border border-border">
+                      Type <kbd className="font-mono text-muted-foreground">/shortcode</kbd> + Space
                     </span>
                   </label>
                   <Textarea 
                     placeholder="Describe findings or type a /shortcut..." 
-                    className="flex-1 min-h-[250px] font-sans text-sm leading-relaxed bg-slate-50/50 border-slate-200 focus-visible:ring-indigo-500 p-4 shadow-inner resize-none"
+                    className="flex-1 min-h-[250px] font-sans text-sm leading-relaxed bg-slate-50/50 border-border focus-visible:ring-indigo-500 p-4 shadow-inner resize-none"
                     value={selectedStudy?.findings || ""}
                     onChange={(e) => handleSmartText('findings', e.target.value)}
                   />
                 </div>
 
                 <div className="space-y-1.5 h-[150px] xl:h-[200px] flex flex-col shrink-0">
-                  <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                  <label className="text-xs font-bold text-foreground/80 flex items-center gap-1.5">
                     <AlertCircle className="h-3.5 w-3.5 text-indigo-600" />
                     Impression / Conclusion
                   </label>
                   <Textarea 
                     placeholder="Final diagnosis or type a /shortcut..." 
-                    className="flex-1 font-sans text-sm font-semibold leading-relaxed bg-slate-50/50 border-slate-200 focus-visible:ring-indigo-500 p-4 shadow-inner resize-none"
+                    className="flex-1 font-sans text-sm font-semibold leading-relaxed bg-slate-50/50 border-border focus-visible:ring-indigo-500 p-4 shadow-inner resize-none"
                     value={selectedStudy?.impression || ""}
                     onChange={(e) => handleSmartText('impression', e.target.value)}
                   />
@@ -510,12 +510,12 @@ export default function ReportingDeskPage() {
               </div>
 
               {/* ✅ FIX 2: Added onClick handlers to these buttons */}
-              <div className="p-3 border-t border-slate-100 bg-slate-50 flex justify-between items-center shrink-0">
+              <div className="p-3 border-t border-slate-100 bg-muted/30 flex justify-between items-center shrink-0">
                 <Button 
                   variant="outline" 
                   onClick={() => handleAction("DRAFT")}
                   disabled={saveMutation.isPending}
-                  className="h-9 text-xs font-bold text-slate-600 bg-white border-slate-200 shadow-sm">
+                  className="h-9 text-xs font-bold text-muted-foreground bg-card border-border shadow-sm">
                   <Save className="h-3 w-3 mr-2 text-slate-400" /> Save Draft
                 </Button>
                 <Button 
@@ -529,12 +529,12 @@ export default function ReportingDeskPage() {
             </div>
           </>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-8 bg-white rounded-xl border border-slate-200 shadow-sm">
-            <div className="h-20 w-20 bg-slate-50 rounded-full flex items-center justify-center shadow-sm mb-4 border border-slate-100">
+          <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground/70 p-8 bg-card rounded-xl border border-border shadow-sm">
+            <div className="h-20 w-20 bg-muted/30 rounded-full flex items-center justify-center shadow-sm mb-4 border border-slate-100">
               <Stethoscope className="h-8 w-8 text-indigo-300" />
             </div>
-            <h3 className="text-lg font-bold text-slate-700 mb-1">Ready to Report</h3>
-            <p className="text-xs text-center max-w-sm leading-relaxed text-slate-500">
+            <h3 className="text-lg font-bold text-foreground/80 mb-1">Ready to Report</h3>
+            <p className="text-xs text-center max-w-sm leading-relaxed text-muted-foreground">
               Select a patient from the queue to begin reporting.
             </p>
           </div>

@@ -38,7 +38,7 @@ export default function PortalSettings({
   };
 
   return (
-    <div className="bg-white p-6 rounded-xl border shadow-sm max-w-2xl">
+    <div className="bg-card p-6 rounded-xl border shadow-sm max-w-2xl">
       <h2 className="text-xl font-bold mb-4">Public Booking Portal</h2>
       <p className="text-gray-500 mb-6 text-sm">
         Allow patients to book tests directly online. Claim your unique lab URL
@@ -53,7 +53,7 @@ export default function PortalSettings({
             checked={isActive}
             onChange={(e) => setIsActive(e.target.checked)}
           />
-          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
           <span className="ml-3 text-sm font-medium text-gray-900">
             {isActive ? "Portal is Enabled" : "Portal is Disabled"}
           </span>
@@ -74,7 +74,7 @@ export default function PortalSettings({
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
               placeholder="e.g., my-city-lab"
-              className="flex-1 border p-2 rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 border p-2 rounded-r-md focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
           <p className="text-xs text-gray-400 mt-2">
@@ -86,7 +86,7 @@ export default function PortalSettings({
       <button
         onClick={handleSave}
         disabled={loading || (isActive && !slug)}
-        className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50">
+        className="bg-primary text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50">
         {loading ? "Saving..." : "Save Changes"}
       </button>
     </div>

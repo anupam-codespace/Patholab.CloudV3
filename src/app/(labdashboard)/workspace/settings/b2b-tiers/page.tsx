@@ -165,7 +165,7 @@ export default function B2BTiersSettingsPage() {
 
   if (isRulesLoading) {
     return (
-      <div className="p-12 text-center text-slate-500">
+      <div className="p-12 text-center text-muted-foreground">
         <Loader2 className="h-8 w-8 animate-spin mx-auto" />
       </div>
     );
@@ -174,16 +174,16 @@ export default function B2BTiersSettingsPage() {
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6">
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-2xl shadow-sm border border-slate-200 gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-card p-6 rounded-2xl shadow-sm border border-border gap-4">
         <div className="flex items-center gap-4">
-          <div className="h-12 w-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center shadow-inner">
+          <div className="h-12 w-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center shadow-inner">
             <Shield className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">
               B2B Tier Configuration
             </h1>
-            <p className="text-sm text-slate-500 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Define global master rules for B2B net pricing and commission
               margins.
             </p>
@@ -192,7 +192,7 @@ export default function B2BTiersSettingsPage() {
         <Button
           onClick={handleSave}
           disabled={saveMutation.isPending}
-          className="bg-blue-600 hover:bg-blue-700 text-white shadow-md w-full md:w-auto">
+          className="bg-primary hover:bg-blue-700 text-white shadow-md w-full md:w-auto">
           {saveMutation.isPending ? (
             <Loader2 className="h-4 w-4 animate-spin mr-2" />
           ) : (
@@ -202,8 +202,8 @@ export default function B2BTiersSettingsPage() {
         </Button>
       </div>
 
-      <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex gap-3 text-blue-800 text-sm">
-        <Info className="h-5 w-5 text-blue-600 shrink-0" />
+      <div className="bg-primary/10 border border-blue-100 rounded-xl p-4 flex gap-3 text-blue-800 text-sm">
+        <Info className="h-5 w-5 text-primary shrink-0" />
         <p>
           <strong>How Tiers Work:</strong> When you assign an agency to a tier
           (e.g., GOLD), the system will apply these pricing rules automatically.
@@ -213,7 +213,7 @@ export default function B2BTiersSettingsPage() {
       </div>
 
       {/* TIER TABS & WORKSPACE */}
-      <Card className="shadow-sm border-slate-200 overflow-hidden">
+      <Card className="shadow-sm border-border overflow-hidden">
         <Tabs
           value={activeTier}
           onValueChange={setActiveTier}
@@ -224,7 +224,7 @@ export default function B2BTiersSettingsPage() {
                 <TabsTrigger
                   key={tier.id}
                   value={tier.id}
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent py-3 px-1 text-sm font-bold data-[state=active]:text-blue-700 text-slate-500">
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent py-3 px-1 text-sm font-bold data-[state=active]:text-primary text-muted-foreground">
                   <span
                     className={`px-2 py-0.5 rounded text-[11px] mr-2 ${tier.color}`}>
                     {tier.label}
@@ -242,18 +242,18 @@ export default function B2BTiersSettingsPage() {
               className="m-0 focus-visible:outline-none">
               <div className="p-6 space-y-6">
                 {/* TOOLBAR: SEARCH & BULK ACTIONS */}
-                <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-muted/30 p-4 rounded-xl border border-slate-100">
                   <div className="flex items-center gap-2 w-full md:w-auto">
                     <div className="w-full md:w-80 relative z-10">
                       <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                       <Input
                         placeholder="Search to add single test..."
-                        className="pl-9 bg-white border-slate-200 shadow-sm"
+                        className="pl-9 bg-card border-border shadow-sm"
                         value={testSearch}
                         onChange={(e) => setTestSearch(e.target.value)}
                       />
                       {testSearch && (
-                        <div className="absolute top-11 left-0 w-full bg-white border border-slate-200 rounded-lg shadow-xl max-h-48 overflow-y-auto z-50">
+                        <div className="absolute top-11 left-0 w-full bg-card border border-border rounded-lg shadow-xl max-h-48 overflow-y-auto z-50">
                           {isTestsLoading ? (
                             <div className="p-4 text-center text-sm">
                               Loading...
@@ -269,11 +269,11 @@ export default function B2BTiersSettingsPage() {
                                 <div
                                   key={t.id}
                                   onClick={() => addTestToTier(t)}
-                                  className="p-3 text-sm border-b hover:bg-blue-50 cursor-pointer flex justify-between items-center">
+                                  className="p-3 text-sm border-b hover:bg-primary/10 cursor-pointer flex justify-between items-center">
                                   <span className="font-semibold">
                                     {t.name}
                                   </span>
-                                  <span className="text-xs bg-slate-100 px-2 py-0.5 rounded font-mono">
+                                  <span className="text-xs bg-muted px-2 py-0.5 rounded font-mono">
                                     ₹{t.price}
                                   </span>
                                 </div>
@@ -287,7 +287,7 @@ export default function B2BTiersSettingsPage() {
                     <Button
                       variant="outline"
                       onClick={handleAddAllTests}
-                      className="bg-white border-slate-200 text-slate-700 hover:text-blue-700">
+                      className="bg-card border-border text-foreground/80 hover:text-primary">
                       <Layers className="h-4 w-4 mr-2 text-blue-500" /> Add All
                       Catalog Tests
                     </Button>
@@ -301,27 +301,27 @@ export default function B2BTiersSettingsPage() {
                     )}
                   </div>
 
-                  <div className="text-sm text-slate-500 font-medium flex items-center shrink-0">
+                  <div className="text-sm text-muted-foreground font-medium flex items-center shrink-0">
                     <CheckCircle2 className="h-4 w-4 mr-1.5 text-emerald-500" />
                     {(tierRules[tier.id] || []).length} Active Rules
                   </div>
                 </div>
 
                 {/* RULES TABLE */}
-                <div className="border rounded-xl bg-white overflow-hidden shadow-sm">
+                <div className="border rounded-xl bg-card overflow-hidden shadow-sm">
                   <Table>
-                    <TableHeader className="bg-slate-50">
+                    <TableHeader className="bg-muted/30">
                       <TableRow>
-                        <TableHead className="font-semibold text-slate-600 h-10">
+                        <TableHead className="font-semibold text-muted-foreground h-10">
                           Test Name
                         </TableHead>
-                        <TableHead className="font-semibold text-slate-600 h-10">
+                        <TableHead className="font-semibold text-muted-foreground h-10">
                           Base MRP
                         </TableHead>
-                        <TableHead className="font-semibold text-slate-600 h-10 w-48">
+                        <TableHead className="font-semibold text-muted-foreground h-10 w-48">
                           Rule Type
                         </TableHead>
-                        <TableHead className="font-semibold text-slate-600 h-10 w-36">
+                        <TableHead className="font-semibold text-muted-foreground h-10 w-36">
                           Value
                         </TableHead>
                         <TableHead className="h-10 w-12 text-right">
@@ -334,7 +334,7 @@ export default function B2BTiersSettingsPage() {
                         <TableRow>
                           <TableCell
                             colSpan={5}
-                            className="text-center py-12 text-slate-500 bg-slate-50/30">
+                            className="text-center py-12 text-muted-foreground bg-slate-50/30">
                             <p className="text-base font-semibold text-slate-700">
                               No specific rules configured.
                             </p>
@@ -348,11 +348,11 @@ export default function B2BTiersSettingsPage() {
                         (tierRules[tier.id] || []).map((rule, index) => (
                           <TableRow
                             key={index}
-                            className="hover:bg-slate-50/50 group transition-colors">
+                            className="hover:bg-muted/50/50 group transition-colors">
                             <TableCell className="font-semibold text-sm text-slate-800">
                               {rule.testName}
                             </TableCell>
-                            <TableCell className="text-slate-500 font-mono text-xs">
+                            <TableCell className="text-muted-foreground font-mono text-xs">
                               ₹{rule.basePrice}
                             </TableCell>
                             <TableCell>
@@ -361,7 +361,7 @@ export default function B2BTiersSettingsPage() {
                                 onValueChange={(v) =>
                                   updateRule(index, "ruleType", v)
                                 }>
-                                <SelectTrigger className="h-8 text-xs bg-white shadow-sm border-slate-200">
+                                <SelectTrigger className="h-8 text-xs bg-card shadow-sm border-border">
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -379,7 +379,7 @@ export default function B2BTiersSettingsPage() {
                             </TableCell>
                             <TableCell>
                               <div className="relative">
-                                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold">
+                                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/70 text-xs font-bold">
                                   {rule.ruleType === "PERCENTAGE" ? "%" : "₹"}
                                 </span>
                                 <Input
@@ -388,7 +388,7 @@ export default function B2BTiersSettingsPage() {
                                   className={`h-8 text-xs font-bold pl-7 ${
                                     rule.ruleType === "NET_PRICE"
                                       ? "border-emerald-300 bg-emerald-50 text-emerald-800"
-                                      : "border-blue-200"
+                                      : "border-primary/20"
                                   }`}
                                   value={rule.value}
                                   onChange={(e) =>
@@ -407,7 +407,7 @@ export default function B2BTiersSettingsPage() {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => removeRule(index)}
-                                className="h-8 w-8 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-red-600 hover:bg-red-50">
+                                className="h-8 w-8 text-muted-foreground/70 opacity-0 group-hover:opacity-100 hover:text-red-600 hover:bg-red-50">
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </TableCell>

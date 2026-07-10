@@ -31,7 +31,7 @@ const getNotificationStyle = (type?: string) => {
     case "PAYMENT":
       return { icon: CreditCard, color: "text-green-600 bg-green-100" };
     case "TEST":
-      return { icon: TestTube, color: "text-blue-600 bg-blue-100" };
+      return { icon: TestTube, color: "text-primary bg-blue-100" };
     case "LAB_UPDATE":
       return { icon: RefreshCw, color: "text-purple-600 bg-purple-100" };
     case "SYSTEM":
@@ -39,7 +39,7 @@ const getNotificationStyle = (type?: string) => {
     case "PROMOTION":
       return { icon: Megaphone, color: "text-pink-600 bg-pink-100" };
     default:
-      return { icon: Info, color: "text-slate-600 bg-slate-100" };
+      return { icon: Info, color: "text-muted-foreground bg-muted" };
   }
 };
 
@@ -84,7 +84,7 @@ export default function NotificationDropdown() {
         <Button
           variant="ghost"
           size="icon"
-          className="relative text-slate-500 hover:text-blue-600">
+          className="relative text-muted-foreground hover:text-primary">
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
             <span className="absolute top-2 right-2 h-2.5 w-2.5 bg-red-500 rounded-full border-2 border-white animate-pulse" />
@@ -94,7 +94,7 @@ export default function NotificationDropdown() {
 
       <PopoverContent
         align="end"
-        className="w-80 sm:w-96 p-0 shadow-xl border-slate-200">
+        className="w-80 sm:w-96 p-0 shadow-xl border-border">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50/50">
           <h4 className="font-semibold text-sm text-slate-700">
@@ -103,7 +103,7 @@ export default function NotificationDropdown() {
           {unreadCount > 0 && (
             <Badge
               variant="secondary"
-              className="bg-blue-100 text-blue-700 hover:bg-blue-100">
+              className="bg-blue-100 text-primary hover:bg-blue-100">
               {unreadCount} New
             </Badge>
           )}
@@ -116,7 +116,7 @@ export default function NotificationDropdown() {
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="h-12 bg-slate-100 rounded-lg animate-pulse"
+                  className="h-12 bg-muted rounded-lg animate-pulse"
                 />
               ))}
             </div>
@@ -135,8 +135,8 @@ export default function NotificationDropdown() {
                   <div
                     key={notif.id}
                     className={cn(
-                      "flex gap-3 p-4 transition-colors hover:bg-slate-50 items-start",
-                      !notif.isRead ? "bg-blue-50/30" : "bg-white",
+                      "flex gap-3 p-4 transition-colors hover:bg-muted/30 items-start",
+                      !notif.isRead ? "bg-primary/10/30" : "bg-card",
                     )}>
                     {/* Icon */}
                     <div
@@ -152,17 +152,17 @@ export default function NotificationDropdown() {
                       <p
                         className={cn(
                           "text-sm font-medium leading-tight",
-                          !notif.isRead ? "text-slate-900" : "text-slate-700",
+                          !notif.isRead ? "text-foreground" : "text-slate-700",
                         )}>
                         {notif.title}
                       </p>
-                      <p className="text-xs text-slate-500 leading-relaxed">
+                      <p className="text-xs text-muted-foreground leading-relaxed">
                         {notif.message}
                       </p>
 
                       {/* ✨ Rich Media: Image */}
                       {notif.imageUrl && (
-                        <div className="relative w-full h-32 mt-2 rounded-md overflow-hidden border border-slate-100 bg-slate-100">
+                        <div className="relative w-full h-32 mt-2 rounded-md overflow-hidden border border-slate-100 bg-muted">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={notif.imageUrl}
@@ -184,14 +184,14 @@ export default function NotificationDropdown() {
                             onClick={(e) => e.stopPropagation()}>
                             <Badge
                               variant="outline"
-                              className="bg-white hover:bg-blue-50 text-blue-600 border-blue-200 cursor-pointer transition-colors">
+                              className="bg-card hover:bg-primary/10 text-primary border-primary/20 cursor-pointer transition-colors">
                               View Details &rarr;
                             </Badge>
                           </a>
                         </div>
                       )}
 
-                      <p className="text-[10px] text-slate-400 font-medium pt-1">
+                      <p className="text-[10px] text-muted-foreground/70 font-medium pt-1">
                         {formatDistanceToNow(new Date(notif.createdAt), {
                           addSuffix: true,
                         })}
@@ -200,7 +200,7 @@ export default function NotificationDropdown() {
 
                     {/* Unread Dot */}
                     {!notif.isRead && (
-                      <div className="h-2 w-2 rounded-full bg-blue-500 mt-2 shrink-0" />
+                      <div className="h-2 w-2 rounded-full bg-primary/100 mt-2 shrink-0" />
                     )}
                   </div>
                 );
@@ -213,7 +213,7 @@ export default function NotificationDropdown() {
         <div className="p-2 border-t border-slate-100 bg-slate-50/50">
           <Button
             variant="ghost"
-            className="w-full text-xs h-8 text-slate-500 hover:text-blue-600"
+            className="w-full text-xs h-8 text-muted-foreground hover:text-primary"
             onClick={() => markReadMutation.mutate()}
             disabled={unreadCount === 0}>
             <Check className="h-3 w-3 mr-2" /> Mark all as read

@@ -146,19 +146,19 @@ export default function ScanSchedulePage() {
   const completedCount = safeAppointments.filter((a: any) => a?.status === "COMPLETED").length;
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-slate-50 font-sans relative selection:bg-indigo-100 pb-12">
+    <div className="min-h-[calc(100vh-4rem)] bg-muted/30 font-sans relative selection:bg-indigo-100 pb-12">
       <div className="absolute top-0 inset-x-0 h-64 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-100/40 via-slate-50 to-transparent pointer-events-none z-0" />
 
       {/* HEADER */}
-      <header className="sticky top-0 z-30 bg-white/70 backdrop-blur-xl border-b border-slate-200/60 shadow-sm">
+      <header className="sticky top-0 z-30 bg-card/70 backdrop-blur-xl border-b border-slate-200/60 shadow-sm">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex items-center gap-4">
             <div className="h-12 w-12 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-inner shrink-0">
               <CalendarDays className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-900 tracking-tight leading-tight">Scan Schedule & Triage</h1>
-              <p className="text-xs font-medium text-slate-500 mt-0.5">Manage patient flow, machine allocation, and daily appointments.</p>
+              <h1 className="text-xl font-bold text-foreground tracking-tight leading-tight">Scan Schedule & Triage</h1>
+              <p className="text-xs font-medium text-muted-foreground mt-0.5">Manage patient flow, machine allocation, and daily appointments.</p>
             </div>
           </div>
           {/* THE FIXED BUTTON */}
@@ -175,28 +175,28 @@ export default function ScanSchedulePage() {
         
         {/* STATS ROW */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="border-0 shadow-sm rounded-2xl bg-white overflow-hidden">
+          <Card className="border-0 shadow-sm rounded-2xl bg-card overflow-hidden">
             <CardContent className="p-5 flex items-center gap-4">
-              <div className="h-12 w-12 rounded-xl bg-slate-100 flex items-center justify-center"><CalendarIcon className="h-5 w-5 text-slate-600" /></div>
-              <div><p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Today</p><h3 className="text-xl font-black text-slate-900">{safeAppointments.length}</h3></div>
+              <div className="h-12 w-12 rounded-xl bg-muted flex items-center justify-center"><CalendarIcon className="h-5 w-5 text-muted-foreground" /></div>
+              <div><p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Total Today</p><h3 className="text-xl font-black text-foreground">{safeAppointments.length}</h3></div>
             </CardContent>
           </Card>
-          <Card className="border-0 shadow-sm rounded-2xl bg-white overflow-hidden">
+          <Card className="border-0 shadow-sm rounded-2xl bg-card overflow-hidden">
             <CardContent className="p-5 flex items-center gap-4">
               <div className="h-12 w-12 rounded-xl bg-amber-50 flex items-center justify-center"><User className="h-5 w-5 text-amber-600" /></div>
-              <div><p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Waiting / Arrived</p><h3 className="text-xl font-black text-slate-900">{arrivedCount}</h3></div>
+              <div><p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Waiting / Arrived</p><h3 className="text-xl font-black text-foreground">{arrivedCount}</h3></div>
             </CardContent>
           </Card>
-          <Card className="border-0 shadow-sm rounded-2xl bg-white overflow-hidden">
+          <Card className="border-0 shadow-sm rounded-2xl bg-card overflow-hidden">
             <CardContent className="p-5 flex items-center gap-4">
               <div className="h-12 w-12 rounded-xl bg-rose-50 flex items-center justify-center"><Activity className="h-5 w-5 text-rose-600 animate-pulse" /></div>
-              <div><p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Currently Scanning</p><h3 className="text-xl font-black text-slate-900">{scanningCount}</h3></div>
+              <div><p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Currently Scanning</p><h3 className="text-xl font-black text-foreground">{scanningCount}</h3></div>
             </CardContent>
           </Card>
-          <Card className="border-0 shadow-sm rounded-2xl bg-white overflow-hidden">
+          <Card className="border-0 shadow-sm rounded-2xl bg-card overflow-hidden">
             <CardContent className="p-5 flex items-center gap-4">
               <div className="h-12 w-12 rounded-xl bg-emerald-50 flex items-center justify-center"><CheckCircle2 className="h-5 w-5 text-emerald-600" /></div>
-              <div><p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Completed Scans</p><h3 className="text-xl font-black text-slate-900">{completedCount}</h3></div>
+              <div><p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Completed Scans</p><h3 className="text-xl font-black text-foreground">{completedCount}</h3></div>
             </CardContent>
           </Card>
         </div>
@@ -206,8 +206,8 @@ export default function ScanSchedulePage() {
           
           {/* Left Sidebar: Filters */}
           <div className="w-full lg:w-64 shrink-0 space-y-4">
-            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-4">
-              <div className="flex items-center gap-2 mb-4 text-slate-700 font-bold text-sm">
+            <div className="bg-card rounded-2xl border border-slate-200/80 shadow-sm p-4">
+              <div className="flex items-center gap-2 mb-4 text-foreground/80 font-bold text-sm">
                 <Filter className="h-4 w-4" /> Modality Filter
               </div>
               <div className="flex flex-col gap-1.5">
@@ -216,7 +216,7 @@ export default function ScanSchedulePage() {
                     key={mod}
                     onClick={() => setActiveModality(mod)}
                     className={`text-left px-3 py-2 rounded-lg text-xs font-bold transition-all ${
-                      activeModality === mod ? "bg-indigo-50 text-indigo-700 shadow-sm border border-indigo-100" : "text-slate-600 hover:bg-slate-50 border border-transparent"
+                      activeModality === mod ? "bg-indigo-50 text-indigo-700 shadow-sm border border-indigo-100" : "text-muted-foreground hover:bg-muted/30 border border-transparent"
                     }`}>
                     {mod === "ALL" ? "All Modalities" : `${mod} Scans`}
                   </button>
@@ -226,7 +226,7 @@ export default function ScanSchedulePage() {
           </div>
 
           {/* Right Main: Appointment List */}
-          <div className="flex-1 bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col min-h-[500px]">
+          <div className="flex-1 bg-card rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col min-h-[500px]">
             <div className="p-4 border-b border-slate-100 bg-slate-50/50">
               <div className="relative max-w-md w-full">
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
@@ -234,14 +234,14 @@ export default function ScanSchedulePage() {
                   placeholder="Search patient name or ID..." 
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  className="pl-9 h-10 bg-white border-slate-200 rounded-xl shadow-sm text-sm" 
+                  className="pl-9 h-10 bg-card border-border rounded-xl shadow-sm text-sm" 
                 />
               </div>
             </div>
 
             <div className="flex-1 overflow-x-auto">
               <table className="w-full text-left text-sm whitespace-nowrap">
-                <thead className="bg-slate-50/80 text-slate-500 font-bold uppercase tracking-wider text-[10px] border-b border-slate-200/80">
+                <thead className="bg-slate-50/80 text-muted-foreground font-bold uppercase tracking-wider text-[10px] border-b border-slate-200/80">
                   <tr>
                     <th className="px-6 py-4">Time</th>
                     <th className="px-6 py-4">Patient Details</th>
@@ -260,23 +260,23 @@ export default function ScanSchedulePage() {
                     </tr>
                   ) : (
                     filteredAppointments.map((apt: any) => (
-                      <tr key={apt.id} className="hover:bg-slate-50/80 transition-colors group">
+                      <tr key={apt.id} className="hover:bg-muted/50/80 transition-colors group">
                         <td className="px-6 py-4">
-                          <span className="font-bold text-slate-700 flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 text-slate-400"/> {apt.time}</span>
+                          <span className="font-bold text-foreground/80 flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 text-slate-400"/> {apt.time}</span>
                         </td>
                         <td className="px-6 py-4">
-                          <p className="font-bold text-slate-900 text-sm">{apt.patient || "Unknown Patient"}</p>
-                          <p className="text-[10px] font-medium text-slate-500 mt-0.5">{apt.id} • {apt.age || "N/A"} / {apt.gender || "N/A"}</p>
+                          <p className="font-bold text-foreground text-sm">{apt.patient || "Unknown Patient"}</p>
+                          <p className="text-[10px] font-medium text-muted-foreground mt-0.5">{apt.id} • {apt.age || "N/A"} / {apt.gender || "N/A"}</p>
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-[9px] font-bold bg-slate-50">{apt.modality || "N/A"}</Badge>
+                            <Badge variant="outline" className="text-[9px] font-bold bg-muted/30">{apt.modality || "N/A"}</Badge>
                             <span className="text-xs font-semibold text-slate-700">{apt.scan || "N/A"}</span>
                           </div>
                         </td>
                         <td className="px-6 py-4">
                           <Badge variant="outline" className={`text-[9px] font-bold uppercase tracking-wider border shadow-sm ${
-                            apt.status === 'SCHEDULED' ? 'bg-slate-50 text-slate-600 border-slate-200' :
+                            apt.status === 'SCHEDULED' ? 'bg-muted/30 text-muted-foreground border-slate-200' :
                             apt.status === 'ARRIVED' ? 'bg-amber-50 text-amber-700 border-amber-200' :
                             apt.status === 'SCANNING' ? 'bg-rose-50 text-rose-700 border-rose-200 animate-pulse' :
                             'bg-emerald-50 text-emerald-700 border-emerald-200'
@@ -295,7 +295,7 @@ export default function ScanSchedulePage() {
                             {apt.status === "SCANNING" && (
                               <Button size="sm" onClick={() => updateStatusMutation.mutate({ id: apt.id, status: "COMPLETED" })} className="h-7 text-[10px] font-bold bg-emerald-100 hover:bg-emerald-200 text-emerald-700"><CheckCircle2 className="h-3 w-3 mr-1"/> Finish</Button>
                             )}
-                            <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-400 hover:text-slate-700"><MoreVertical className="h-4 w-4" /></Button>
+                            <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground/70 hover:text-slate-700"><MoreVertical className="h-4 w-4" /></Button>
                           </div>
                         </td>
                       </tr>

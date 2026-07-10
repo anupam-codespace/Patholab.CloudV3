@@ -179,16 +179,16 @@ export default function ExpensesClient() {
               Financial Outflow
             </span>
           </div>
-          <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+          <h1 className="text-4xl font-black text-foreground dark:text-white tracking-tight">
             Expenses <span className="text-slate-400">&</span> Ledger
           </h1>
-          <p className="text-slate-500 font-medium">
+          <p className="text-muted-foreground font-medium">
             Monitoring reagents, commissions, and operational overhead.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-          <div className="flex items-center bg-white dark:bg-slate-900 rounded-2xl p-1.5 shadow-sm border border-slate-200 dark:border-slate-800">
+          <div className="flex items-center bg-card dark:bg-slate-900 rounded-2xl p-1.5 shadow-sm border border-border dark:border-slate-800">
             <Button
               variant="ghost"
               size="icon"
@@ -196,7 +196,7 @@ export default function ExpensesClient() {
               onClick={() => changeMonth(-1)}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <div className="px-4 font-bold text-sm min-w-[140px] text-center text-slate-700 dark:text-slate-200 uppercase tracking-tighter">
+            <div className="px-4 font-bold text-sm min-w-[140px] text-center text-foreground/80 dark:text-slate-200 uppercase tracking-tighter">
               {currentDate.toLocaleString("default", {
                 month: "long",
                 year: "numeric",
@@ -242,8 +242,8 @@ export default function ExpensesClient() {
             label: "Operations",
             val: data?.totalOperational,
             icon: Building2,
-            color: "text-blue-600",
-            bg: "bg-blue-50",
+            color: "text-primary",
+            bg: "bg-primary/10",
           },
           {
             label: "Inventory",
@@ -262,15 +262,15 @@ export default function ExpensesClient() {
         ].map((stat, i) => (
           <div
             key={i}
-            className="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 transition-all hover:shadow-md">
+            className="bg-card dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 transition-all hover:shadow-md">
             <div
               className={`w-10 h-10 ${stat.bg} dark:bg-slate-800 rounded-xl flex items-center justify-center mb-4`}>
               <stat.icon className={`w-5 h-5 ${stat.color}`} />
             </div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+            <p className="text-[10px] font-black text-muted-foreground/70 uppercase tracking-widest mb-1">
               {stat.label}
             </p>
-            <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 tabular-nums tracking-tighter">
+            <h2 className="text-2xl font-black text-foreground dark:text-slate-100 tabular-nums tracking-tighter">
               ₹{(stat.val || 0).toLocaleString()}
             </h2>
           </div>
@@ -280,15 +280,15 @@ export default function ExpensesClient() {
       {/* VISUALS SECTION */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Trend Chart */}
-        <div className="lg:col-span-8 bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 p-6">
+        <div className="lg:col-span-8 bg-card dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 p-6">
           <div className="flex items-center justify-between mb-8">
-            <h3 className="text-sm font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest flex items-center gap-2">
+            <h3 className="text-sm font-black text-foreground dark:text-slate-200 uppercase tracking-widest flex items-center gap-2">
               <BarChart3 className="w-4 h-4 text-red-500" /> Daily Trend
             </h3>
           </div>
 
           {isLoading ? (
-            <div className="h-64 flex items-center justify-center text-slate-400 font-medium italic">
+            <div className="h-64 flex items-center justify-center text-muted-foreground/70 font-medium italic">
               Synchronizing...
             </div>
           ) : (
@@ -304,11 +304,11 @@ export default function ExpensesClient() {
                     ₹{dayData.amount.toLocaleString()}
                   </div>
                   <div
-                    className={`w-full max-w-[14px] rounded-t-full transition-all duration-700 ease-out delay-[${idx * 20}ms] ${dayData.amount > 0 ? "bg-gradient-to-t from-red-500 to-red-400" : "bg-slate-50 dark:bg-slate-800"}`}
+                    className={`w-full max-w-[14px] rounded-t-full transition-all duration-700 ease-out delay-[${idx * 20}ms] ${dayData.amount > 0 ? "bg-gradient-to-t from-red-500 to-red-400" : "bg-muted/30 dark:bg-slate-800"}`}
                     style={{
                       height: `${Math.max(dayData.heightPercent, 4)}%`,
                     }}></div>
-                  <span className="text-[9px] font-bold text-slate-400 mt-3 group-hover:text-red-500 transition-colors">
+                  <span className="text-[9px] font-bold text-muted-foreground/70 mt-3 group-hover:text-red-500 transition-colors">
                     {dayData.day}
                   </span>
                 </div>
@@ -318,13 +318,13 @@ export default function ExpensesClient() {
         </div>
 
         {/* Categories Donut */}
-        <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 p-6 flex flex-col">
-          <h3 className="text-sm font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest flex items-center gap-2 mb-8">
+        <div className="lg:col-span-4 bg-card dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 p-6 flex flex-col">
+          <h3 className="text-sm font-black text-foreground dark:text-slate-200 uppercase tracking-widest flex items-center gap-2 mb-8">
             <PieChart className="w-4 h-4 text-red-500" /> Breakdown
           </h3>
 
           {!data || data.totalExpenses === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-slate-400 gap-2">
+            <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground/70 gap-2">
               <div className="w-20 h-20 rounded-full border-4 border-dashed border-slate-100 dark:border-slate-800" />
               <p className="text-xs font-medium italic">No data records</p>
             </div>
@@ -333,11 +333,11 @@ export default function ExpensesClient() {
               <div
                 className="relative w-44 h-44 rounded-full mb-8"
                 style={{ background: `conic-gradient(${pieGradients})` }}>
-                <div className="absolute inset-6 bg-white dark:bg-slate-900 rounded-full flex flex-col items-center justify-center shadow-inner">
-                  <span className="text-[10px] text-slate-400 font-black uppercase tracking-tighter">
+                <div className="absolute inset-6 bg-card dark:bg-slate-900 rounded-full flex flex-col items-center justify-center shadow-inner">
+                  <span className="text-[10px] text-muted-foreground/70 font-black uppercase tracking-tighter">
                     Monthly Out
                   </span>
-                  <span className="text-xl font-black text-slate-800 dark:text-slate-100 tabular-nums">
+                  <span className="text-xl font-black text-foreground dark:text-slate-100 tabular-nums">
                     ₹{((data?.totalExpenses || 0) / 1000).toFixed(1)}k
                   </span>
                 </div>
@@ -354,11 +354,11 @@ export default function ExpensesClient() {
                         style={{
                           backgroundColor: COLORS[idx % COLORS.length],
                         }}></div>
-                      <span className="text-[11px] font-bold text-slate-500 group-hover:text-slate-800 dark:group-hover:text-slate-200 transition-colors uppercase tracking-tight truncate max-w-[120px]">
+                      <span className="text-[11px] font-bold text-muted-foreground group-hover:text-foreground dark:group-hover:text-slate-200 transition-colors uppercase tracking-tight truncate max-w-[120px]">
                         {slice.name}
                       </span>
                     </div>
-                    <span className="font-black text-xs text-slate-700 dark:text-slate-300">
+                    <span className="font-black text-xs text-foreground/80 dark:text-slate-300">
                       ₹{slice.value.toLocaleString()}
                     </span>
                   </div>
@@ -370,30 +370,30 @@ export default function ExpensesClient() {
       </div>
 
       {/* LEDGER TABLE */}
-      <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
+      <div className="bg-card dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
         <div className="p-6 border-b border-slate-50 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-slate-900 dark:bg-slate-800 rounded-xl">
               <Receipt className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h3 className="font-black text-slate-800 dark:text-slate-100 uppercase tracking-widest text-sm">
+              <h3 className="font-black text-foreground dark:text-slate-100 uppercase tracking-widest text-sm">
                 Unified Ledger
               </h3>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+              <p className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-tighter">
                 Transaction History
               </p>
             </div>
           </div>
 
           <div className="relative w-full md:w-80 group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-red-500 transition-colors" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/70 group-focus-within:text-red-500 transition-colors" />
             <input
               type="text"
               placeholder="Search expenses, categories, ref..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-red-500/20 transition-all outline-none font-medium"
+              className="w-full pl-11 pr-4 py-3 bg-muted/30 dark:bg-slate-800/50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-red-500/20 transition-all outline-none font-medium"
             />
           </div>
         </div>
@@ -424,7 +424,7 @@ export default function ExpensesClient() {
                 <TableRow>
                   <TableCell
                     colSpan={5}
-                    className="text-center py-20 text-slate-400 italic">
+                    className="text-center py-20 text-muted-foreground/70 italic">
                     Accessing secure ledger...
                   </TableCell>
                 </TableRow>
@@ -432,7 +432,7 @@ export default function ExpensesClient() {
                 <TableRow>
                   <TableCell
                     colSpan={5}
-                    className="text-center py-20 text-slate-400 italic">
+                    className="text-center py-20 text-muted-foreground/70 italic">
                     No records found for this period.
                   </TableCell>
                 </TableRow>
@@ -440,25 +440,25 @@ export default function ExpensesClient() {
                 filteredLedger.map((item: any) => (
                   <TableRow
                     key={item.id}
-                    className="group border-slate-50 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                    className="group border-slate-50 dark:border-slate-800 hover:bg-muted/30 dark:hover:bg-slate-800/50 transition-colors">
                     <TableCell className="py-4">
                       <div className="flex flex-col">
-                        <span className="font-black text-xs text-slate-700 dark:text-slate-300">
+                        <span className="font-black text-xs text-foreground/80 dark:text-slate-300">
                           {format(new Date(item.date), "dd MMM")}
                         </span>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+                        <span className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-tighter">
                           {format(new Date(item.date), "yyyy")}
                         </span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col gap-1">
-                        <span className="font-bold text-slate-800 dark:text-slate-200 text-sm max-w-[280px] truncate">
+                        <span className="font-bold text-foreground dark:text-slate-200 text-sm max-w-[280px] truncate">
                           {item.title}
                         </span>
                         <div className="flex items-center gap-2">
                           {item.ref && (
-                            <span className="text-[9px] font-mono text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded uppercase">
+                            <span className="text-[9px] font-mono text-muted-foreground/70 bg-muted dark:bg-slate-800 px-1.5 py-0.5 rounded uppercase">
                               Ref: {item.ref}
                             </span>
                           )}
@@ -473,7 +473,7 @@ export default function ExpensesClient() {
                     <TableCell>
                       <Badge
                         variant="outline"
-                        className="text-[9px] font-black uppercase tracking-tighter border-slate-200 dark:border-slate-700 text-slate-500">
+                        className="text-[9px] font-black uppercase tracking-tighter border-border dark:border-slate-700 text-muted-foreground">
                         {item.category.replace("_", " ")}
                       </Badge>
                     </TableCell>
@@ -504,7 +504,7 @@ export default function ExpensesClient() {
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         ) : (
-                          <Badge className="bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-0 text-[8px] font-black uppercase tracking-widest">
+                          <Badge className="bg-muted dark:bg-slate-800 text-muted-foreground/70 dark:text-muted-foreground border-0 text-[8px] font-black uppercase tracking-widest">
                             System Lock
                           </Badge>
                         )}
@@ -520,7 +520,7 @@ export default function ExpensesClient() {
 
       {/* FORM MODAL */}
       <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-        <DialogContent className="max-w-lg bg-white dark:bg-slate-950 p-0 overflow-hidden border-none shadow-2xl rounded-3xl">
+        <DialogContent className="max-w-lg bg-card dark:bg-slate-950 p-0 overflow-hidden border-none shadow-2xl rounded-3xl">
           <div className="bg-slate-900 p-6 flex items-center gap-4">
             <div className="p-3 bg-red-600 rounded-2xl">
               <Wallet className="w-6 h-6 text-white" />
@@ -529,7 +529,7 @@ export default function ExpensesClient() {
               <DialogTitle className="text-white text-xl font-black tracking-tight">
                 Record Expense
               </DialogTitle>
-              <p className="text-slate-400 text-xs font-medium italic">
+              <p className="text-muted-foreground/70 text-xs font-medium italic">
                 Manual operational entry protocol
               </p>
             </div>
@@ -537,7 +537,7 @@ export default function ExpensesClient() {
 
           <form onSubmit={handleAddSubmit} className="p-8 space-y-6">
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
                 Expense Description
               </Label>
               <Input
@@ -547,13 +547,13 @@ export default function ExpensesClient() {
                   setFormData({ ...formData, title: e.target.value })
                 }
                 required
-                className="h-12 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl focus-visible:ring-red-500/20 font-bold"
+                className="h-12 bg-muted/30 dark:bg-slate-900 border-none rounded-2xl focus-visible:ring-red-500/20 font-bold"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
                   Amount (₹)
                 </Label>
                 <div className="relative">
@@ -566,15 +566,15 @@ export default function ExpensesClient() {
                       setFormData({ ...formData, amount: e.target.value })
                     }
                     required
-                    className="h-12 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl focus-visible:ring-red-500/20 font-black pl-8"
+                    className="h-12 bg-muted/30 dark:bg-slate-900 border-none rounded-2xl focus-visible:ring-red-500/20 font-black pl-8"
                   />
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/70 font-bold">
                     ₹
                   </span>
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
                   Date
                 </Label>
                 <Input
@@ -584,14 +584,14 @@ export default function ExpensesClient() {
                     setFormData({ ...formData, date: e.target.value })
                   }
                   required
-                  className="h-12 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl focus-visible:ring-red-500/20 font-bold"
+                  className="h-12 bg-muted/30 dark:bg-slate-900 border-none rounded-2xl focus-visible:ring-red-500/20 font-bold"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
                   Category
                 </Label>
                 <Select
@@ -599,7 +599,7 @@ export default function ExpensesClient() {
                   onValueChange={(v) =>
                     setFormData({ ...formData, category: v })
                   }>
-                  <SelectTrigger className="h-12 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl font-bold uppercase text-[10px] tracking-widest">
+                  <SelectTrigger className="h-12 bg-muted/30 dark:bg-slate-900 border-none rounded-2xl font-bold uppercase text-[10px] tracking-widest">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="rounded-2xl border-none shadow-xl">
@@ -615,7 +615,7 @@ export default function ExpensesClient() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
                   Payment Mode
                 </Label>
                 <Select
@@ -623,7 +623,7 @@ export default function ExpensesClient() {
                   onValueChange={(v) =>
                     setFormData({ ...formData, paymentMode: v })
                   }>
-                  <SelectTrigger className="h-12 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl font-bold uppercase text-[10px] tracking-widest">
+                  <SelectTrigger className="h-12 bg-muted/30 dark:bg-slate-900 border-none rounded-2xl font-bold uppercase text-[10px] tracking-widest">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="rounded-2xl border-none shadow-xl">
@@ -648,7 +648,7 @@ export default function ExpensesClient() {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
                 Ref / Invoice No (Optional)
               </Label>
               <Input
@@ -657,7 +657,7 @@ export default function ExpensesClient() {
                 onChange={(e) =>
                   setFormData({ ...formData, referenceNo: e.target.value })
                 }
-                className="h-12 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl focus-visible:ring-red-500/20 font-mono text-xs"
+                className="h-12 bg-muted/30 dark:bg-slate-900 border-none rounded-2xl focus-visible:ring-red-500/20 font-mono text-xs"
               />
             </div>
 

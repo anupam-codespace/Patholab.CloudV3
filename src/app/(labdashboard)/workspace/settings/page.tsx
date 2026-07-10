@@ -470,7 +470,7 @@ export default function ProfileSettingsPage() {
     return (
       <div className="min-h-[80vh] flex flex-col items-center justify-center space-y-4">
         <Loader2 className="animate-spin h-10 w-10 text-emerald-500" />
-        <p className="text-sm font-bold text-slate-500 animate-pulse tracking-widest uppercase">
+        <p className="text-sm font-bold text-muted-foreground animate-pulse tracking-widest uppercase">
           Loading Settings...
         </p>
       </div>
@@ -478,13 +478,13 @@ export default function ProfileSettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4 md:p-8 selection:bg-emerald-500 selection:text-white">
+    <div className="min-h-screen bg-muted/30 p-4 md:p-8 selection:bg-emerald-500 selection:text-white">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-2">
+          <h1 className="text-3xl md:text-4xl font-black text-foreground tracking-tight mb-2">
             Configuration Console
           </h1>
-          <p className="text-slate-500 font-medium">
+          <p className="text-muted-foreground font-medium">
             Manage your personal profile, lab workspace, and enterprise
             settings.
           </p>
@@ -493,10 +493,10 @@ export default function ProfileSettingsPage() {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* === LEFT SIDEBAR NAVIGATION === */}
           <div className="lg:w-64 shrink-0">
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-3 sticky top-24">
+            <div className="bg-card rounded-2xl border border-border shadow-sm p-3 sticky top-24">
               {["Personal", "Workspace"].map((groupName) => (
                 <div key={groupName} className="mb-6 last:mb-0">
-                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-3 mb-2">
+                  <h4 className="text-[10px] font-black text-muted-foreground/70 uppercase tracking-widest px-3 mb-2">
                     {groupName}
                   </h4>
                   <div className="space-y-1">
@@ -510,7 +510,7 @@ export default function ProfileSettingsPage() {
                           className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 ${
                             isActive
                               ? "bg-emerald-50 text-emerald-700 shadow-sm"
-                              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                              : "text-muted-foreground hover:bg-muted/30 hover:text-foreground"
                           }`}>
                           <Icon
                             className={`w-4 h-4 ${isActive ? "text-emerald-600" : "text-slate-400"}`}
@@ -527,19 +527,19 @@ export default function ProfileSettingsPage() {
 
           {/* === RIGHT CONTENT AREA === */}
           <div className="flex-1 min-w-0">
-            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 min-h-[600px]">
+            <div className="bg-card rounded-3xl border border-border shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 min-h-[600px]">
               {/* === TAB: PROFILE === */}
               {activeTab === "profile" && (
                 <div className="p-6 sm:p-10 space-y-10">
                   <div>
-                    <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+                    <h2 className="text-2xl font-extrabold text-foreground tracking-tight">
                       Personal Profile
                     </h2>
-                    <p className="text-sm text-slate-500 font-medium">
+                    <p className="text-sm text-muted-foreground font-medium">
                       Manage your personal details and security.
                     </p>
                   </div>
-                  <div className="flex items-center gap-8 p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                  <div className="flex items-center gap-8 p-6 bg-muted/30 rounded-2xl border border-slate-100">
                     <div className="relative group">
                       {profileData.avatar ? (
                         <img
@@ -552,7 +552,7 @@ export default function ProfileSettingsPage() {
                           {profileData.name?.charAt(0) || "U"}
                         </div>
                       )}
-                      <label className="absolute -bottom-3 -right-3 bg-white border border-slate-200 text-slate-700 p-2 rounded-xl cursor-pointer hover:text-emerald-600 hover:border-emerald-200 transition-all shadow-sm">
+                      <label className="absolute -bottom-3 -right-3 bg-card border border-border text-foreground/80 p-2 rounded-xl cursor-pointer hover:text-emerald-600 hover:border-emerald-200 transition-all shadow-sm">
                         <Upload className="w-4 h-4" />
                         <input
                           type="file"
@@ -566,17 +566,17 @@ export default function ProfileSettingsPage() {
                       </label>
                     </div>
                     <div>
-                      <h3 className="text-lg font-bold text-slate-900">
+                      <h3 className="text-lg font-bold text-foreground">
                         {profileData.name || "Your Name"}
                       </h3>
-                      <p className="text-sm text-slate-500 font-medium">
+                      <p className="text-sm text-muted-foreground font-medium">
                         {profileData.email || "your.email@example.com"}
                       </p>
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                      <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                         Full Name
                       </Label>
                       <Input
@@ -587,11 +587,11 @@ export default function ProfileSettingsPage() {
                             name: e.target.value,
                           })
                         }
-                        className="h-12 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-emerald-500 font-medium"
+                        className="h-12 rounded-xl bg-muted/30 border-border focus:bg-card focus:border-emerald-500 font-medium"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                      <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                         Email Address
                       </Label>
                       <Input
@@ -603,7 +603,7 @@ export default function ProfileSettingsPage() {
                             email: e.target.value,
                           })
                         }
-                        className="h-12 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-emerald-500 font-medium"
+                        className="h-12 rounded-xl bg-muted/30 border-border focus:bg-card focus:border-emerald-500 font-medium"
                       />
                     </div>
                   </div>
@@ -621,18 +621,18 @@ export default function ProfileSettingsPage() {
                     </Button>
                   </div>
                   {/* Password Section */}
-                  <div className="pt-10 border-t border-slate-200 space-y-6">
+                  <div className="pt-10 border-t border-border space-y-6">
                     <div>
-                      <h3 className="text-xl font-extrabold text-slate-900 tracking-tight">
+                      <h3 className="text-xl font-extrabold text-foreground tracking-tight">
                         Security
                       </h3>
-                      <p className="text-sm text-slate-500 font-medium">
+                      <p className="text-sm text-muted-foreground font-medium">
                         Update your password to keep your account secure.
                       </p>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-muted/30 p-6 rounded-2xl border border-slate-100">
                       <div className="md:col-span-2 space-y-2">
-                        <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                           Current Password
                         </Label>
                         <Input
@@ -644,11 +644,11 @@ export default function ProfileSettingsPage() {
                               currentPassword: e.target.value,
                             })
                           }
-                          className="h-12 rounded-xl bg-white border-slate-200 focus:border-emerald-500 font-medium"
+                          className="h-12 rounded-xl bg-card border-border focus:border-emerald-500 font-medium"
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                           New Password
                         </Label>
                         <Input
@@ -660,11 +660,11 @@ export default function ProfileSettingsPage() {
                               newPassword: e.target.value,
                             })
                           }
-                          className="h-12 rounded-xl bg-white border-slate-200 focus:border-emerald-500 font-medium"
+                          className="h-12 rounded-xl bg-card border-border focus:border-emerald-500 font-medium"
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                           Confirm Password
                         </Label>
                         <Input
@@ -676,7 +676,7 @@ export default function ProfileSettingsPage() {
                               confirmPassword: e.target.value,
                             })
                           }
-                          className="h-12 rounded-xl bg-white border-slate-200 focus:border-emerald-500 font-medium"
+                          className="h-12 rounded-xl bg-card border-border focus:border-emerald-500 font-medium"
                         />
                       </div>
                       <div className="md:col-span-2 flex justify-end mt-2">
@@ -684,7 +684,7 @@ export default function ProfileSettingsPage() {
                           onClick={handlePasswordChange}
                           disabled={saving}
                           variant="outline"
-                          className="h-12 px-8 rounded-xl font-bold border-slate-300 text-slate-700 hover:bg-slate-100">
+                          className="h-12 px-8 rounded-xl font-bold border-border text-foreground/80 hover:bg-muted">
                           Update Password
                         </Button>
                       </div>
@@ -697,17 +697,17 @@ export default function ProfileSettingsPage() {
               {activeTab === "general" && (
                 <div className="p-6 sm:p-10 space-y-10">
                   <div>
-                    <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+                    <h2 className="text-2xl font-extrabold text-foreground tracking-tight">
                       Workspace Details
                     </h2>
-                    <p className="text-sm text-slate-500 font-medium">
+                    <p className="text-sm text-muted-foreground font-medium">
                       Core contact and operational information for your
                       laboratory.
                     </p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2 md:col-span-2">
-                      <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                      <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                         Laboratory Name
                       </Label>
                       <Input
@@ -718,11 +718,11 @@ export default function ProfileSettingsPage() {
                             name: e.target.value,
                           })
                         }
-                        className="h-12 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-emerald-500 font-bold text-lg"
+                        className="h-12 rounded-xl bg-muted/30 border-border focus:bg-card focus:border-emerald-500 font-bold text-lg"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                      <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                         Official Email
                       </Label>
                       <Input
@@ -734,11 +734,11 @@ export default function ProfileSettingsPage() {
                             email: e.target.value,
                           })
                         }
-                        className="h-12 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-emerald-500 font-medium"
+                        className="h-12 rounded-xl bg-muted/30 border-border focus:bg-card focus:border-emerald-500 font-medium"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                      <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                         Office Phone
                       </Label>
                       <Input
@@ -750,17 +750,17 @@ export default function ProfileSettingsPage() {
                             phone: e.target.value,
                           })
                         }
-                        className="h-12 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-emerald-500 font-medium"
+                        className="h-12 rounded-xl bg-muted/30 border-border focus:bg-card focus:border-emerald-500 font-medium"
                       />
                     </div>
                   </div>
-                  <div className="space-y-6 pt-6 border-t border-slate-200">
-                    <h3 className="text-lg font-bold text-slate-900 tracking-tight">
+                  <div className="space-y-6 pt-6 border-t border-border">
+                    <h3 className="text-lg font-bold text-foreground tracking-tight">
                       Headquarters Address
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <div className="space-y-2 md:col-span-3">
-                        <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                           Street Address
                         </Label>
                         <Input
@@ -771,11 +771,11 @@ export default function ProfileSettingsPage() {
                               address: e.target.value,
                             })
                           }
-                          className="h-12 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-emerald-500 font-medium"
+                          className="h-12 rounded-xl bg-muted/30 border-border focus:bg-card focus:border-emerald-500 font-medium"
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                           City
                         </Label>
                         <Input
@@ -786,11 +786,11 @@ export default function ProfileSettingsPage() {
                               city: e.target.value,
                             })
                           }
-                          className="h-12 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-emerald-500 font-medium"
+                          className="h-12 rounded-xl bg-muted/30 border-border focus:bg-card focus:border-emerald-500 font-medium"
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                           State
                         </Label>
                         <Input
@@ -801,11 +801,11 @@ export default function ProfileSettingsPage() {
                               state: e.target.value,
                             })
                           }
-                          className="h-12 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-emerald-500 font-medium"
+                          className="h-12 rounded-xl bg-muted/30 border-border focus:bg-card focus:border-emerald-500 font-medium"
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                           Pincode
                         </Label>
                         <Input
@@ -816,7 +816,7 @@ export default function ProfileSettingsPage() {
                               pincode: e.target.value,
                             })
                           }
-                          className="h-12 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-emerald-500 font-medium"
+                          className="h-12 rounded-xl bg-muted/30 border-border focus:bg-card focus:border-emerald-500 font-medium"
                         />
                       </div>
                     </div>
@@ -847,7 +847,7 @@ export default function ProfileSettingsPage() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex justify-end pt-6 border-t border-slate-200">
+                  <div className="flex justify-end pt-6 border-t border-border">
                     <Button
                       onClick={handleSaveLabSettings}
                       disabled={saving}
@@ -867,17 +867,17 @@ export default function ProfileSettingsPage() {
               {activeTab === "legal" && (
                 <div className="p-6 sm:p-10 space-y-10">
                   <div>
-                    <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+                    <h2 className="text-2xl font-extrabold text-foreground tracking-tight">
                       Legal & Financial
                     </h2>
-                    <p className="text-sm text-slate-500 font-medium">
+                    <p className="text-sm text-muted-foreground font-medium">
                       Registration details required for B2B billing and
                       compliance.
                     </p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                      <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                         Business Entity Type
                       </Label>
                       <select
@@ -888,7 +888,7 @@ export default function ProfileSettingsPage() {
                             entityType: e.target.value,
                           })
                         }
-                        className="w-full h-12 px-4 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-emerald-500 font-medium outline-none transition-all">
+                        className="w-full h-12 px-4 rounded-xl bg-muted/30 border-border focus:bg-card focus:border-emerald-500 font-medium outline-none transition-all">
                         <option value="">Select Type</option>
                         <option value="Proprietorship">
                           Sole Proprietorship
@@ -902,7 +902,7 @@ export default function ProfileSettingsPage() {
                       </select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                      <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                         Clinical Est. License No.
                       </Label>
                       <Input
@@ -913,11 +913,11 @@ export default function ProfileSettingsPage() {
                             licenseNumber: e.target.value,
                           })
                         }
-                        className="h-12 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-emerald-500 font-medium"
+                        className="h-12 rounded-xl bg-muted/30 border-border focus:bg-card focus:border-emerald-500 font-medium"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                      <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                         GST Number
                       </Label>
                       <Input
@@ -928,11 +928,11 @@ export default function ProfileSettingsPage() {
                             gstNumber: e.target.value,
                           })
                         }
-                        className="h-12 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-emerald-500 font-medium uppercase"
+                        className="h-12 rounded-xl bg-muted/30 border-border focus:bg-card focus:border-emerald-500 font-medium uppercase"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                      <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                         PAN Number
                       </Label>
                       <Input
@@ -943,18 +943,18 @@ export default function ProfileSettingsPage() {
                             panNumber: e.target.value,
                           })
                         }
-                        className="h-12 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-emerald-500 font-medium uppercase"
+                        className="h-12 rounded-xl bg-muted/30 border-border focus:bg-card focus:border-emerald-500 font-medium uppercase"
                       />
                     </div>
                   </div>
-                  <div className="space-y-6 pt-6 border-t border-slate-200">
-                    <h3 className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                  <div className="space-y-6 pt-6 border-t border-border">
+                    <h3 className="text-lg font-bold text-foreground tracking-tight flex items-center gap-2">
                       <CreditCard className="w-5 h-5 text-emerald-500" /> Bank
                       Account Details
                     </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-muted/30 p-6 rounded-2xl border border-slate-100">
                       <div className="space-y-2 md:col-span-2">
-                        <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                           Account Holder Name
                         </Label>
                         <Input
@@ -965,11 +965,11 @@ export default function ProfileSettingsPage() {
                               accountHolder: e.target.value,
                             })
                           }
-                          className="h-12 rounded-xl bg-white border-slate-200 focus:border-emerald-500 font-medium"
+                          className="h-12 rounded-xl bg-card border-border focus:border-emerald-500 font-medium"
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                           Bank Name
                         </Label>
                         <Input
@@ -980,11 +980,11 @@ export default function ProfileSettingsPage() {
                               bankName: e.target.value,
                             })
                           }
-                          className="h-12 rounded-xl bg-white border-slate-200 focus:border-emerald-500 font-medium"
+                          className="h-12 rounded-xl bg-card border-border focus:border-emerald-500 font-medium"
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                           Account Number
                         </Label>
                         <Input
@@ -995,11 +995,11 @@ export default function ProfileSettingsPage() {
                               accountNumber: e.target.value,
                             })
                           }
-                          className="h-12 rounded-xl bg-white border-slate-200 focus:border-emerald-500 font-medium"
+                          className="h-12 rounded-xl bg-card border-border focus:border-emerald-500 font-medium"
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                           IFSC Code
                         </Label>
                         <Input
@@ -1010,12 +1010,12 @@ export default function ProfileSettingsPage() {
                               ifscCode: e.target.value,
                             })
                           }
-                          className="h-12 rounded-xl bg-white border-slate-200 focus:border-emerald-500 font-medium uppercase"
+                          className="h-12 rounded-xl bg-card border-border focus:border-emerald-500 font-medium uppercase"
                         />
                       </div>
                     </div>
                   </div>
-                  <div className="flex justify-end pt-6 border-t border-slate-200">
+                  <div className="flex justify-end pt-6 border-t border-border">
                     <Button
                       onClick={handleSaveLabSettings}
                       disabled={saving}
@@ -1035,17 +1035,17 @@ export default function ProfileSettingsPage() {
               {activeTab === "branding" && (
                 <div className="p-6 sm:p-10 space-y-10">
                   <div>
-                    <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+                    <h2 className="text-2xl font-extrabold text-foreground tracking-tight">
                       Brand Assets
                     </h2>
-                    <p className="text-sm text-slate-500 font-medium">
+                    <p className="text-sm text-muted-foreground font-medium">
                       Upload images to be used on reports, invoices, and the
                       patient portal.
                     </p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 flex flex-col items-center text-center">
-                      <div className="w-32 h-32 bg-white rounded-2xl flex items-center justify-center border-2 border-dashed border-slate-300 overflow-hidden mb-4 shadow-sm">
+                    <div className="bg-muted/30 p-6 rounded-2xl border border-slate-100 flex flex-col items-center text-center">
+                      <div className="w-32 h-32 bg-card rounded-2xl flex items-center justify-center border-2 border-dashed border-border overflow-hidden mb-4 shadow-sm">
                         {labSettings.logo ? (
                           <img
                             src={labSettings.logo}
@@ -1056,13 +1056,13 @@ export default function ProfileSettingsPage() {
                           <ImageIcon className="w-10 h-10 text-slate-300" />
                         )}
                       </div>
-                      <h4 className="font-bold text-slate-900 mb-1">
+                      <h4 className="font-bold text-foreground mb-1">
                         Company Logo
                       </h4>
-                      <p className="text-xs text-slate-500 mb-4">
+                      <p className="text-xs text-muted-foreground mb-4">
                         Recommended: Square, transparent PNG
                       </p>
-                      <label className="px-6 py-2 bg-white border border-slate-200 rounded-xl font-bold text-xs text-slate-700 uppercase tracking-widest shadow-sm hover:bg-slate-50 cursor-pointer transition-colors">
+                      <label className="px-6 py-2 bg-card border border-border rounded-xl font-bold text-xs text-foreground/80 uppercase tracking-widest shadow-sm hover:bg-muted/30 cursor-pointer transition-colors">
                         Upload Logo
                         <input
                           type="file"
@@ -1075,8 +1075,8 @@ export default function ProfileSettingsPage() {
                         />
                       </label>
                     </div>
-                    <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 flex flex-col items-center text-center">
-                      <div className="w-48 h-24 bg-white rounded-2xl flex items-center justify-center border-2 border-dashed border-slate-300 overflow-hidden mb-4 shadow-sm">
+                    <div className="bg-muted/30 p-6 rounded-2xl border border-slate-100 flex flex-col items-center text-center">
+                      <div className="w-48 h-24 bg-card rounded-2xl flex items-center justify-center border-2 border-dashed border-border overflow-hidden mb-4 shadow-sm">
                         {labSettings.signature ? (
                           <img
                             src={labSettings.signature}
@@ -1087,13 +1087,13 @@ export default function ProfileSettingsPage() {
                           <FileText className="w-8 h-8 text-slate-300" />
                         )}
                       </div>
-                      <h4 className="font-bold text-slate-900 mb-1">
+                      <h4 className="font-bold text-foreground mb-1">
                         Authorized Signature
                       </h4>
-                      <p className="text-xs text-slate-500 mb-4">
+                      <p className="text-xs text-muted-foreground mb-4">
                         Used for digital report signing. Transparent PNG.
                       </p>
-                      <label className="px-6 py-2 bg-white border border-slate-200 rounded-xl font-bold text-xs text-slate-700 uppercase tracking-widest shadow-sm hover:bg-slate-50 cursor-pointer transition-colors">
+                      <label className="px-6 py-2 bg-card border border-border rounded-xl font-bold text-xs text-foreground/80 uppercase tracking-widest shadow-sm hover:bg-muted/30 cursor-pointer transition-colors">
                         Upload Signature
                         <input
                           type="file"
@@ -1106,15 +1106,15 @@ export default function ProfileSettingsPage() {
                         />
                       </label>
                     </div>
-                    <div className="md:col-span-2 bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                      <h4 className="font-bold text-slate-900 mb-1">
+                    <div className="md:col-span-2 bg-muted/30 p-6 rounded-2xl border border-slate-100">
+                      <h4 className="font-bold text-foreground mb-1">
                         Pre-Printed Letterhead (Digital Fallback)
                       </h4>
-                      <p className="text-xs text-slate-500 mb-4">
+                      <p className="text-xs text-muted-foreground mb-4">
                         If you email reports, upload a high-res image of your
                         letterhead header to be injected into the PDF.
                       </p>
-                      <div className="w-full h-32 bg-white rounded-xl flex items-center justify-center border-2 border-dashed border-slate-300 overflow-hidden mb-4 relative group">
+                      <div className="w-full h-32 bg-card rounded-xl flex items-center justify-center border-2 border-dashed border-border overflow-hidden mb-4 relative group">
                         {labSettings.letterhead ? (
                           <img
                             src={labSettings.letterhead}
@@ -1122,12 +1122,12 @@ export default function ProfileSettingsPage() {
                             className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
                           />
                         ) : (
-                          <span className="text-slate-400 font-medium text-sm">
+                          <span className="text-muted-foreground/70 font-medium text-sm">
                             No header uploaded
                           </span>
                         )}
                       </div>
-                      <label className="inline-flex px-6 py-2 bg-white border border-slate-200 rounded-xl font-bold text-xs text-slate-700 uppercase tracking-widest shadow-sm hover:bg-slate-50 cursor-pointer transition-colors">
+                      <label className="inline-flex px-6 py-2 bg-card border border-border rounded-xl font-bold text-xs text-foreground/80 uppercase tracking-widest shadow-sm hover:bg-muted/30 cursor-pointer transition-colors">
                         Upload Letterhead
                         <input
                           type="file"
@@ -1144,7 +1144,7 @@ export default function ProfileSettingsPage() {
                       </label>
                     </div>
                   </div>
-                  <div className="flex justify-end pt-6 border-t border-slate-200">
+                  <div className="flex justify-end pt-6 border-t border-border">
                     <Button
                       onClick={handleSaveLabSettings}
                       disabled={saving}
@@ -1165,10 +1165,10 @@ export default function ProfileSettingsPage() {
                 <div className="p-6 sm:p-10 space-y-8">
                   <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                     <div>
-                      <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+                      <h2 className="text-2xl font-extrabold text-foreground tracking-tight">
                         Locations & Branches
                       </h2>
-                      <p className="text-sm text-slate-500 font-medium mt-1">
+                      <p className="text-sm text-muted-foreground font-medium mt-1">
                         Manage physical locations for sample collection and
                         operations.
                       </p>
@@ -1189,15 +1189,15 @@ export default function ProfileSettingsPage() {
                     {branches.map((branch) => (
                       <div
                         key={branch.id}
-                        className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 hover:border-emerald-200 transition-colors shadow-sm">
+                        className="bg-card border border-border rounded-2xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 hover:border-emerald-200 transition-colors shadow-sm">
                         <div className="flex items-start gap-4">
                           <div
-                            className={`p-3 rounded-xl ${branch.isMainBranch ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-slate-500"}`}>
+                            className={`p-3 rounded-xl ${branch.isMainBranch ? "bg-emerald-100 text-emerald-600" : "bg-muted text-muted-foreground"}`}>
                             <MapPin className="w-6 h-6" />
                           </div>
                           <div>
                             <div className="flex items-center gap-2 mb-1">
-                              <h4 className="text-lg font-bold text-slate-900">
+                              <h4 className="text-lg font-bold text-foreground">
                                 {branch.name}
                               </h4>
                               {branch.isMainBranch && (
@@ -1213,10 +1213,10 @@ export default function ProfileSettingsPage() {
                                 </Badge>
                               )}
                             </div>
-                            <p className="text-sm text-slate-500 font-medium">
+                            <p className="text-sm text-muted-foreground font-medium">
                               {branch.address}, {branch.city} - {branch.pincode}
                             </p>
-                            <p className="text-xs text-slate-400 mt-1">
+                            <p className="text-xs text-muted-foreground/70 mt-1">
                               {branch.email} • {branch.phone}
                             </p>
                           </div>
@@ -1224,7 +1224,7 @@ export default function ProfileSettingsPage() {
                         <Button
                           variant="outline"
                           onClick={() => openEditBranchModal(branch)}
-                          className="rounded-xl font-bold text-slate-700 w-full md:w-auto h-10">
+                          className="rounded-xl font-bold text-foreground/80 w-full md:w-auto h-10">
                           Edit
                         </Button>
                       </div>
@@ -1232,7 +1232,7 @@ export default function ProfileSettingsPage() {
                   </div>
 
                   {/* Add Branch Action */}
-                  <div className="pt-6 border-t border-slate-200 flex flex-col items-center justify-center p-8 bg-slate-50 border-dashed rounded-2xl">
+                  <div className="pt-6 border-t border-border flex flex-col items-center justify-center p-8 bg-muted/30 border-dashed rounded-2xl">
                     <Button
                       onClick={openAddBranchModal}
                       className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl h-12 px-8 shadow-md">
@@ -1246,10 +1246,10 @@ export default function ProfileSettingsPage() {
               {activeTab === "modules" && (
                 <div className="p-6 sm:p-10 space-y-8">
                   <div>
-                    <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+                    <h2 className="text-2xl font-extrabold text-foreground tracking-tight">
                       App Modules
                     </h2>
-                    <p className="text-sm text-slate-500 font-medium mt-1">
+                    <p className="text-sm text-muted-foreground font-medium mt-1">
                       Toggle specific features to customize your workspace
                       sidebar.
                     </p>
@@ -1263,7 +1263,7 @@ export default function ProfileSettingsPage() {
                           className={`relative p-6 rounded-2xl border-2 transition-all duration-300 flex flex-col ${
                             isToggledOn
                               ? "border-emerald-500 bg-emerald-50/30 shadow-md"
-                              : "border-slate-200 bg-white hover:border-slate-300"
+                              : "border-border bg-card hover:border-slate-300"
                           }`}>
                           <div className="flex items-start gap-4 mb-6">
                             <div
@@ -1271,16 +1271,16 @@ export default function ProfileSettingsPage() {
                               <module.icon className="w-6 h-6" />
                             </div>
                             <div>
-                              <h3 className="text-lg font-bold text-slate-900">
+                              <h3 className="text-lg font-bold text-foreground">
                                 {module.name}
                               </h3>
-                              <p className="text-sm text-slate-500 font-medium mt-1 leading-relaxed">
+                              <p className="text-sm text-muted-foreground font-medium mt-1 leading-relaxed">
                                 {module.desc}
                               </p>
                             </div>
                           </div>
                           <div className="mt-auto pt-4 border-t border-slate-100/80 flex items-center justify-between">
-                            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                            <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
                               {isToggledOn
                                 ? "Visible in Sidebar"
                                 : "Hidden from Sidebar"}
@@ -1292,7 +1292,7 @@ export default function ProfileSettingsPage() {
                                 checked={isToggledOn}
                                 onChange={() => toggleModule(module.id)}
                               />
-                              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
                             </label>
                           </div>
                         </div>
@@ -1300,7 +1300,7 @@ export default function ProfileSettingsPage() {
                     })}
                   </div>
                   {/* ✅ Added Save Modules Button */}
-                  <div className="flex justify-end pt-6 border-t border-slate-200">
+                  <div className="flex justify-end pt-6 border-t border-border">
                     <Button
                       onClick={handleSaveModules}
                       disabled={saving}
@@ -1320,17 +1320,17 @@ export default function ProfileSettingsPage() {
               {activeTab === "commissions" && (
                 <div className="p-6 sm:p-10 space-y-10">
                   <div>
-                    <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+                    <h2 className="text-2xl font-extrabold text-foreground tracking-tight">
                       Commission Logic
                     </h2>
-                    <p className="text-sm text-slate-500 font-medium">
+                    <p className="text-sm text-muted-foreground font-medium">
                       Set the global default payout rates for doctors and B2B
                       agencies.
                     </p>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-muted/30 p-6 rounded-2xl border border-slate-100">
                     <div className="space-y-2">
-                      <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                      <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                         Commission Logic
                       </Label>
                       <select
@@ -1341,7 +1341,7 @@ export default function ProfileSettingsPage() {
                             commissionType: e.target.value,
                           })
                         }
-                        className="w-full h-12 px-4 rounded-xl bg-white border-slate-200 focus:bg-white focus:border-emerald-500 font-bold outline-none">
+                        className="w-full h-12 px-4 rounded-xl bg-card border-border focus:bg-card focus:border-emerald-500 font-bold outline-none">
                         <option value="PERCENTAGE">
                           Percentage (%) of Test Price
                         </option>
@@ -1349,7 +1349,7 @@ export default function ProfileSettingsPage() {
                       </select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1">
+                      <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1">
                         <User className="w-3 h-3" /> Default Doctor Rate
                       </Label>
                       <div className="relative">
@@ -1365,10 +1365,10 @@ export default function ProfileSettingsPage() {
                                   : parseFloat(e.target.value),
                             })
                           }
-                          className="h-12 pl-10 rounded-xl bg-white border-slate-200 focus:bg-white focus:border-emerald-500 font-bold"
+                          className="h-12 pl-10 rounded-xl bg-card border-border focus:bg-card focus:border-emerald-500 font-bold"
                           step="0.01"
                         />
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/70 font-bold">
                           {labSettings.commissionType === "PERCENTAGE"
                             ? "%"
                             : "₹"}
@@ -1376,7 +1376,7 @@ export default function ProfileSettingsPage() {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1">
+                      <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1">
                         <Briefcase className="w-3 h-3" /> Default Agency Rate
                       </Label>
                       <div className="relative">
@@ -1392,10 +1392,10 @@ export default function ProfileSettingsPage() {
                                   : parseFloat(e.target.value),
                             })
                           }
-                          className="h-12 pl-10 rounded-xl bg-white border-slate-200 focus:bg-white focus:border-emerald-500 font-bold"
+                          className="h-12 pl-10 rounded-xl bg-card border-border focus:bg-card focus:border-emerald-500 font-bold"
                           step="0.01"
                         />
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/70 font-bold">
                           {labSettings.commissionType === "PERCENTAGE"
                             ? "%"
                             : "₹"}
@@ -1417,7 +1417,7 @@ export default function ProfileSettingsPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex justify-end pt-6 border-t border-slate-200">
+                  <div className="flex justify-end pt-6 border-t border-border">
                     <Button
                       onClick={handleSaveLabSettings}
                       disabled={saving}
@@ -1437,24 +1437,24 @@ export default function ProfileSettingsPage() {
               {activeTab === "integrations" && (
                 <div className="p-6 sm:p-10 space-y-10">
                   <div>
-                    <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+                    <h2 className="text-2xl font-extrabold text-foreground tracking-tight">
                       Integrations & APIs
                     </h2>
-                    <p className="text-sm text-slate-500 font-medium">
+                    <p className="text-sm text-muted-foreground font-medium">
                       Configure WhatsApp and SMS gateways for patient
                       notifications.
                     </p>
                   </div>
 
                   <div className="space-y-6">
-                    <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 space-y-6">
-                      <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                    <div className="bg-muted/30 p-6 rounded-2xl border border-slate-100 space-y-6">
+                      <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
                         <MessageSquare className="w-5 h-5 text-emerald-500" />{" "}
                         WhatsApp API Settings
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                          <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                          <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                             WhatsApp Access Token / API Key
                           </Label>
                           <Input
@@ -1466,12 +1466,12 @@ export default function ProfileSettingsPage() {
                                 whatsappApiKey: e.target.value,
                               })
                             }
-                            className="h-12 rounded-xl bg-white border-slate-200 focus:border-emerald-500 font-medium"
+                            className="h-12 rounded-xl bg-card border-border focus:border-emerald-500 font-medium"
                             placeholder="Enter Meta / 3rd Party API Key"
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                          <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                             WhatsApp Phone ID
                           </Label>
                           <Input
@@ -1482,21 +1482,21 @@ export default function ProfileSettingsPage() {
                                 whatsappPhoneId: e.target.value,
                               })
                             }
-                            className="h-12 rounded-xl bg-white border-slate-200 focus:border-emerald-500 font-medium"
+                            className="h-12 rounded-xl bg-card border-border focus:border-emerald-500 font-medium"
                             placeholder="e.g. 10934812039123"
                           />
                         </div>
                       </div>
                     </div>
 
-                    <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 space-y-6">
-                      <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                    <div className="bg-muted/30 p-6 rounded-2xl border border-slate-100 space-y-6">
+                      <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
                         <Webhook className="w-5 h-5 text-emerald-500" /> SMS
                         Gateway Settings
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                          <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                          <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                             SMS API Key
                           </Label>
                           <Input
@@ -1508,12 +1508,12 @@ export default function ProfileSettingsPage() {
                                 smsApiKey: e.target.value,
                               })
                             }
-                            className="h-12 rounded-xl bg-white border-slate-200 focus:border-emerald-500 font-medium"
+                            className="h-12 rounded-xl bg-card border-border focus:border-emerald-500 font-medium"
                             placeholder="Enter SMS Gateway API Key"
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                          <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                             Sender ID
                           </Label>
                           <Input
@@ -1524,7 +1524,7 @@ export default function ProfileSettingsPage() {
                                 smsSenderId: e.target.value,
                               })
                             }
-                            className="h-12 rounded-xl bg-white border-slate-200 focus:border-emerald-500 font-medium uppercase"
+                            className="h-12 rounded-xl bg-card border-border focus:border-emerald-500 font-medium uppercase"
                             placeholder="e.g. LABMSG"
                             maxLength={6}
                           />
@@ -1533,7 +1533,7 @@ export default function ProfileSettingsPage() {
                     </div>
                   </div>
 
-                  <div className="flex justify-end pt-6 border-t border-slate-200">
+                  <div className="flex justify-end pt-6 border-t border-border">
                     <Button
                       onClick={handleSaveLabSettings}
                       disabled={saving}
@@ -1561,21 +1561,21 @@ export default function ProfileSettingsPage() {
               <DialogTitle className="text-xl font-black">
                 {editingBranch ? "Edit Location" : "Add New Location"}
               </DialogTitle>
-              <p className="text-slate-400 text-sm font-medium mt-1">
+              <p className="text-muted-foreground/70 text-sm font-medium mt-1">
                 Manage physical branch details and address.
               </p>
             </div>
             <button
               onClick={() => setIsBranchModalOpen(false)}
-              className="text-slate-400 hover:text-white transition-colors bg-slate-800 p-2 rounded-xl">
+              className="text-muted-foreground/70 hover:text-white transition-colors bg-slate-800 p-2 rounded-xl">
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          <div className="p-6 space-y-6 bg-white">
+          <div className="p-6 space-y-6 bg-card">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div className="space-y-2 sm:col-span-2">
-                <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                   Branch Name
                 </Label>
                 <Input
@@ -1584,11 +1584,11 @@ export default function ProfileSettingsPage() {
                     setBranchForm({ ...branchForm, name: e.target.value })
                   }
                   placeholder="e.g. South City Clinic"
-                  className="h-12 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-emerald-500 font-bold"
+                  className="h-12 rounded-xl bg-muted/30 border-border focus:bg-card focus:border-emerald-500 font-bold"
                 />
               </div>
               <div className="space-y-2 sm:col-span-2">
-                <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                   Full Address
                 </Label>
                 <Input
@@ -1596,11 +1596,11 @@ export default function ProfileSettingsPage() {
                   onChange={(e) =>
                     setBranchForm({ ...branchForm, address: e.target.value })
                   }
-                  className="h-12 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-emerald-500"
+                  className="h-12 rounded-xl bg-muted/30 border-border focus:bg-card focus:border-emerald-500"
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                   City
                 </Label>
                 <Input
@@ -1608,11 +1608,11 @@ export default function ProfileSettingsPage() {
                   onChange={(e) =>
                     setBranchForm({ ...branchForm, city: e.target.value })
                   }
-                  className="h-12 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-emerald-500"
+                  className="h-12 rounded-xl bg-muted/30 border-border focus:bg-card focus:border-emerald-500"
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                   State
                 </Label>
                 <Input
@@ -1620,11 +1620,11 @@ export default function ProfileSettingsPage() {
                   onChange={(e) =>
                     setBranchForm({ ...branchForm, state: e.target.value })
                   }
-                  className="h-12 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-emerald-500"
+                  className="h-12 rounded-xl bg-muted/30 border-border focus:bg-card focus:border-emerald-500"
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                   Pincode
                 </Label>
                 <Input
@@ -1632,11 +1632,11 @@ export default function ProfileSettingsPage() {
                   onChange={(e) =>
                     setBranchForm({ ...branchForm, pincode: e.target.value })
                   }
-                  className="h-12 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-emerald-500"
+                  className="h-12 rounded-xl bg-muted/30 border-border focus:bg-card focus:border-emerald-500"
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                   Phone
                 </Label>
                 <Input
@@ -1644,13 +1644,13 @@ export default function ProfileSettingsPage() {
                   onChange={(e) =>
                     setBranchForm({ ...branchForm, phone: e.target.value })
                   }
-                  className="h-12 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-emerald-500"
+                  className="h-12 rounded-xl bg-muted/30 border-border focus:bg-card focus:border-emerald-500"
                 />
               </div>
             </div>
 
             <div className="pt-4 border-t border-slate-100 flex flex-col gap-3">
-              <div className="flex items-center space-x-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+              <div className="flex items-center space-x-3 bg-muted/30 p-3 rounded-xl border border-slate-100">
                 <Checkbox
                   id="isMainBranch"
                   checked={branchForm.isMainBranch}
@@ -1661,11 +1661,11 @@ export default function ProfileSettingsPage() {
                 />
                 <label
                   htmlFor="isMainBranch"
-                  className="text-sm font-bold text-slate-700 cursor-pointer">
+                  className="text-sm font-bold text-foreground/80 cursor-pointer">
                   Mark as Headquarters / Main Branch
                 </label>
               </div>
-              <div className="flex items-center space-x-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+              <div className="flex items-center space-x-3 bg-muted/30 p-3 rounded-xl border border-slate-100">
                 <Checkbox
                   id="isActive"
                   checked={branchForm.isActive}
@@ -1676,7 +1676,7 @@ export default function ProfileSettingsPage() {
                 />
                 <label
                   htmlFor="isActive"
-                  className="text-sm font-bold text-slate-700 cursor-pointer">
+                  className="text-sm font-bold text-foreground/80 cursor-pointer">
                   Branch is active and operational
                 </label>
               </div>
@@ -1686,7 +1686,7 @@ export default function ProfileSettingsPage() {
               <Button
                 variant="outline"
                 onClick={() => setIsBranchModalOpen(false)}
-                className="h-12 rounded-xl font-bold text-slate-600">
+                className="h-12 rounded-xl font-bold text-muted-foreground">
                 Cancel
               </Button>
               <Button

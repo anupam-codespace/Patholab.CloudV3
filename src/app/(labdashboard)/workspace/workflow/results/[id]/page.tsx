@@ -41,12 +41,12 @@ import { CustomFieldInput } from "@/components/workflow/custom-field-input";
 // ✅ HELPER 1: Range Checker
 const checkRange = (val: string, ranges: any[]) => {
   if (!val || isNaN(Number(val)) || !ranges || ranges.length === 0)
-    return { status: "NORMAL", color: "text-slate-900" };
+    return { status: "NORMAL", color: "text-foreground" };
 
   const num = Number(val);
   const range = ranges[0];
 
-  if (!range) return { status: "NORMAL", color: "text-slate-900" };
+  if (!range) return { status: "NORMAL", color: "text-foreground" };
 
   if (range.criticalLow != null && num <= range.criticalLow)
     return { status: "CRITICAL LOW", color: "text-red-700 font-bold" };
@@ -212,7 +212,7 @@ export default function ResultEntryPage() {
 
   if (isLoading)
     return (
-      <div className="h-screen bg-slate-50 flex items-center justify-center">
+      <div className="h-screen bg-muted/30 flex items-center justify-center">
         <Skeleton className="w-[800px] h-[600px]" />
       </div>
     );
@@ -220,15 +220,15 @@ export default function ResultEntryPage() {
     return <div className="p-10 text-center">Patient not found</div>;
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20">
-      <div className="bg-white border-b px-6 py-4 sticky top-0 z-10 shadow-sm flex justify-between items-center">
+    <div className="min-h-screen bg-muted/30 pb-20">
+      <div className="bg-card border-b px-6 py-4 sticky top-0 z-10 shadow-sm flex justify-between items-center">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => router.back()}>
-            <ArrowLeft className="h-5 w-5 text-slate-500" />
+            <ArrowLeft className="h-5 w-5 text-muted-foreground" />
           </Button>
           <div>
-            <h1 className="text-xl font-bold text-slate-900">{patient.name}</h1>
-            <div className="flex gap-3 text-xs text-slate-500 mt-1">
+            <h1 className="text-xl font-bold text-foreground">{patient.name}</h1>
+            <div className="flex gap-3 text-xs text-muted-foreground mt-1">
               <span className="flex items-center gap-1">
                 <User className="h-3 w-3" /> {patient.age} {patient.ageUnit}/
                 {patient.gender}
@@ -241,7 +241,7 @@ export default function ResultEntryPage() {
         </div>
         <Badge
           variant="outline"
-          className="bg-blue-50 text-blue-700 border-blue-200 px-3 py-1">
+          className="bg-primary/10 text-primary border-primary/20 px-3 py-1">
           Clinical Worksheet
         </Badge>
       </div>
@@ -262,18 +262,18 @@ export default function ResultEntryPage() {
               <AccordionItem
                 key={test.id}
                 value={test.id}
-                className="bg-white border rounded-lg shadow-sm px-0 overflow-hidden">
+                className="bg-card border rounded-lg shadow-sm px-0 overflow-hidden">
                 <AccordionTrigger
-                  className={`px-6 py-4 hover:no-underline ${isLocked ? "bg-green-50/50" : "hover:bg-slate-50"}`}>
+                  className={`px-6 py-4 hover:no-underline ${isLocked ? "bg-green-50/50" : "hover:bg-muted/30"}`}>
                   <div className="flex items-center gap-4 w-full">
                     <div
-                      className={`w-2 h-2 rounded-full ${isLocked ? "bg-green-600" : isReviewReady ? "bg-blue-500" : "bg-orange-500"}`}
+                      className={`w-2 h-2 rounded-full ${isLocked ? "bg-green-600" : isReviewReady ? "bg-primary/100" : "bg-orange-500"}`}
                     />
                     <div className="text-left flex-1">
                       <h3 className="font-bold text-slate-800">
                         {test.testName}
                       </h3>
-                      <p className="text-xs text-slate-500 font-mono">
+                      <p className="text-xs text-muted-foreground font-mono">
                         {test.testCode}
                       </p>
                     </div>
@@ -283,7 +283,7 @@ export default function ResultEntryPage() {
                           <ShieldCheck className="w-3 h-3 mr-1" /> Approved
                         </Badge>
                       ) : isReviewReady ? (
-                        <Badge className="bg-blue-600 hover:bg-blue-700">
+                        <Badge className="bg-primary hover:bg-blue-700">
                           Review Ready
                         </Badge>
                       ) : (
@@ -302,12 +302,12 @@ export default function ResultEntryPage() {
 
                   <div className="bg-slate-50/50 p-4 border-b border-slate-100 flex items-center gap-4">
                     <div className="flex items-center gap-2">
-                      <Label className="text-xs font-semibold text-slate-500 flex items-center gap-1">
+                      <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
                         <Clock className="h-3 w-3" /> Sample Received At:
                       </Label>
                       <Input
                         type="datetime-local"
-                        className="h-8 w-[200px] bg-white text-xs"
+                        className="h-8 w-[200px] bg-card text-xs"
                         value={results[`${test.id}_RECEIVED`] || ""}
                         onChange={(e) =>
                           setResults({
@@ -322,7 +322,7 @@ export default function ResultEntryPage() {
 
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left">
-                      <thead className="bg-slate-50 text-slate-500 font-medium border-b">
+                      <thead className="bg-muted/30 text-muted-foreground font-medium border-b">
                         <tr>
                           <th className="px-6 py-3 w-[30%]">Parameter</th>
                           <th className="px-6 py-3 w-[25%]">Ref. Range</th>
@@ -343,21 +343,21 @@ export default function ResultEntryPage() {
                           return (
                             <tr
                               key={pName}
-                              className="hover:bg-slate-50/50 align-top">
-                              <td className="px-6 py-3 font-medium text-slate-700 pt-4">
+                              className="hover:bg-muted/50/50 align-top">
+                              <td className="px-6 py-3 font-medium text-foreground/80 pt-4">
                                 {pName}
                               </td>
 
-                              <td className="px-6 py-3 text-slate-500 text-xs pt-4">
+                              <td className="px-6 py-3 text-muted-foreground text-xs pt-4">
                                 {range ? (
                                   range.textValue ? (
-                                    <div className="whitespace-pre-wrap font-mono text-[10px] leading-tight text-slate-600">
+                                    <div className="whitespace-pre-wrap font-mono text-[10px] leading-tight text-muted-foreground">
                                       {range.textValue}
                                     </div>
                                   ) : (
                                     <span>
                                       {range.customLabel ? (
-                                        <span className="font-bold text-blue-600 block mb-1">
+                                        <span className="font-bold text-primary block mb-1">
                                           {range.customLabel}:
                                         </span>
                                       ) : null}
@@ -382,7 +382,7 @@ export default function ResultEntryPage() {
                                   disabled={isLocked}
                                 />
                               </td>
-                              <td className="px-6 py-3 text-slate-500 pt-4">
+                              <td className="px-6 py-3 text-muted-foreground pt-4">
                                 {param.unit || "-"}
                               </td>
                               <td className="px-6 py-3 pt-4">
@@ -409,8 +409,8 @@ export default function ResultEntryPage() {
                   {/* Custom Fields Section */}
                   {test.testTemplate?.customFields &&
                     test.testTemplate.customFields.length > 0 && (
-                      <div className="bg-slate-50/80 p-6 border-t border-b border-slate-200">
-                        <h4 className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2 mb-4">
+                      <div className="bg-slate-50/80 p-6 border-t border-b border-border">
+                        <h4 className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-2 mb-4">
                           <FileText className="h-3 w-3" /> Additional
                           Information
                         </h4>
@@ -439,13 +439,13 @@ export default function ResultEntryPage() {
                       </div>
                     )}
 
-                  <div className="grid grid-cols-2 gap-6 p-6 bg-slate-50/50 border-t border-slate-200">
+                  <div className="grid grid-cols-2 gap-6 p-6 bg-slate-50/50 border-t border-border">
                     <div>
-                      <Label className="mb-2 flex items-center gap-2 text-xs font-bold text-slate-500 uppercase">
+                      <Label className="mb-2 flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase">
                         <Info className="h-3 w-3" /> Lab Notes
                       </Label>
                       <Textarea
-                        className="bg-white min-h-[80px] text-xs resize-none"
+                        className="bg-card min-h-[80px] text-xs resize-none"
                         value={results[`${test.id}_NOTES`] || ""}
                         onChange={(e) =>
                           setResults({
@@ -457,11 +457,11 @@ export default function ResultEntryPage() {
                       />
                     </div>
                     <div>
-                      <Label className="mb-2 flex items-center gap-2 text-xs font-bold text-slate-500 uppercase">
+                      <Label className="mb-2 flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase">
                         <Activity className="h-3 w-3" /> Impression
                       </Label>
                       <Textarea
-                        className="bg-white min-h-[80px] text-xs font-medium resize-none"
+                        className="bg-card min-h-[80px] text-xs font-medium resize-none"
                         value={results[`${test.id}_IMPRESSION`] || ""}
                         onChange={(e) =>
                           setResults({
@@ -474,7 +474,7 @@ export default function ResultEntryPage() {
                     </div>
                   </div>
 
-                  <div className="bg-white p-4 border-t flex justify-end gap-3 items-center">
+                  <div className="bg-card p-4 border-t flex justify-end gap-3 items-center">
                     {isLocked ? (
                       <>
                         <p className="text-xs text-green-600 font-bold mr-auto flex items-center gap-2">
@@ -518,7 +518,7 @@ export default function ResultEntryPage() {
                           </Button>
                         ) : (
                           <Button
-                            className="bg-blue-600 hover:bg-blue-700"
+                            className="bg-primary hover:bg-blue-700"
                             onClick={() =>
                               actionMutation.mutate({
                                 testId: test.id,

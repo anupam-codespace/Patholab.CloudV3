@@ -161,18 +161,18 @@ export default function StaffManagementPage() {
   );
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] bg-slate-50 font-sans relative overflow-hidden selection:bg-indigo-100">
+    <div className="flex flex-col h-[calc(100vh-4rem)] bg-muted/30 font-sans relative overflow-hidden selection:bg-indigo-100">
       <div className="absolute top-0 inset-x-0 h-64 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-100/40 via-slate-50 to-transparent pointer-events-none z-0" />
 
       <div className="flex-1 flex flex-col p-4 sm:p-6 z-10 overflow-hidden max-w-[1600px] mx-auto w-full">
         {/* --- HEADER --- */}
-        <div className="flex-none mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/70 backdrop-blur-xl p-4 rounded-2xl border border-slate-200/60 shadow-sm">
+        <div className="flex-none mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-card/70 backdrop-blur-xl p-4 rounded-2xl border border-slate-200/60 shadow-sm">
           <div className="flex items-center gap-4 w-full sm:w-auto">
             <div className="h-10 w-10 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-inner shrink-0">
               <Users className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2 leading-tight">
+              <h1 className="text-xl font-bold text-foreground tracking-tight flex items-center gap-2 leading-tight">
                 Staff Directory
                 <Badge
                   variant="secondary"
@@ -180,7 +180,7 @@ export default function StaffManagementPage() {
                   {staffList.length} Members
                 </Badge>
               </h1>
-              <p className="text-xs font-medium text-slate-500 mt-0.5">
+              <p className="text-xs font-medium text-muted-foreground mt-0.5">
                 Manage access, roles, and branch assignments.
               </p>
             </div>
@@ -191,7 +191,7 @@ export default function StaffManagementPage() {
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
               <Input
                 placeholder="Search staff ID, name..."
-                className="pl-9 h-10 bg-white border-slate-200 rounded-xl focus:border-indigo-500 shadow-sm text-sm"
+                className="pl-9 h-10 bg-card border-border rounded-xl focus:border-indigo-500 shadow-sm text-sm"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -205,10 +205,10 @@ export default function StaffManagementPage() {
         </div>
 
         {/* --- DATA TABLE --- */}
-        <div className="flex-1 flex flex-col shadow-sm border border-slate-200/80 overflow-hidden rounded-2xl bg-white">
+        <div className="flex-1 flex flex-col shadow-sm border border-slate-200/80 overflow-hidden rounded-2xl bg-card">
           <div className="flex-1 overflow-auto relative custom-scrollbar">
             <table className="w-full text-left border-collapse whitespace-nowrap">
-              <thead className="sticky top-0 z-20 bg-slate-50/90 backdrop-blur-md text-slate-500 font-bold uppercase tracking-wider text-[10px] border-b border-slate-200">
+              <thead className="sticky top-0 z-20 bg-slate-50/90 backdrop-blur-md text-muted-foreground font-bold uppercase tracking-wider text-[10px] border-b border-border">
                 <tr>
                   <th className="px-6 py-4 w-[250px]">Employee</th>
                   <th className="px-4 py-4 w-[120px]">Employee ID</th>
@@ -223,7 +223,7 @@ export default function StaffManagementPage() {
                   <tr>
                     <td colSpan={6} className="h-64 text-center">
                       <Loader2 className="animate-spin h-8 w-8 mx-auto text-indigo-600 mb-3" />
-                      <span className="text-xs font-medium text-slate-500 uppercase tracking-widest animate-pulse">
+                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-widest animate-pulse">
                         Loading Directory...
                       </span>
                     </td>
@@ -232,7 +232,7 @@ export default function StaffManagementPage() {
                   <tr>
                     <td colSpan={6} className="h-64 text-center">
                       <Search className="h-8 w-8 text-slate-300 mx-auto mb-3" />
-                      <p className="font-bold text-slate-600">
+                      <p className="font-bold text-muted-foreground">
                         No staff members found.
                       </p>
                     </td>
@@ -241,19 +241,19 @@ export default function StaffManagementPage() {
                   filteredStaff.map((staff: any) => (
                     <tr
                       key={staff.id}
-                      className="group hover:bg-slate-50/80 transition-colors">
+                      className="group hover:bg-muted/50/80 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <Avatar className="h-9 w-9 border border-slate-200">
+                          <Avatar className="h-9 w-9 border border-border">
                             <AvatarFallback className="bg-indigo-50 text-indigo-700 font-bold text-xs">
                               {staff.user.name.charAt(0)}
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex flex-col min-w-0">
-                            <div className="font-bold text-slate-900 truncate">
+                            <div className="font-bold text-foreground truncate">
                               {staff.user.name}
                             </div>
-                            <div className="text-[10px] text-slate-500 flex items-center gap-1.5 mt-0.5 truncate">
+                            <div className="text-[10px] text-muted-foreground flex items-center gap-1.5 mt-0.5 truncate">
                               <Mail className="h-3 w-3 shrink-0" />{" "}
                               {staff.user.email}
                             </div>
@@ -262,25 +262,25 @@ export default function StaffManagementPage() {
                       </td>
 
                       <td className="px-4 py-4">
-                        <div className="flex items-center gap-1.5 text-slate-700 font-mono font-bold text-xs bg-slate-100 px-2 py-1 rounded w-max border border-slate-200">
+                        <div className="flex items-center gap-1.5 text-foreground/80 font-mono font-bold text-xs bg-muted px-2 py-1 rounded w-max border border-border">
                           <User className="h-3.5 w-3.5 text-slate-400" />
                           {staff.employeeId || "PENDING"}
                         </div>
                       </td>
 
                       <td className="px-4 py-4">
-                        <div className="font-bold text-slate-700 text-xs">
+                        <div className="font-bold text-foreground/80 text-xs">
                           {staff.position}
                         </div>
                         <Badge
                           variant="outline"
-                          className="text-[9px] mt-1 bg-slate-50 text-slate-500 uppercase tracking-wider">
+                          className="text-[9px] mt-1 bg-muted/30 text-muted-foreground uppercase tracking-wider">
                           {staff.user.role.replace("_", " ")}
                         </Badge>
                       </td>
 
                       <td className="px-4 py-4">
-                        <div className="flex items-center gap-1.5 text-xs font-medium text-slate-600">
+                        <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                           <Building className="h-3.5 w-3.5 text-slate-400" />
                           {staff.branch?.name || "Main Branch"}
                         </div>
@@ -304,19 +304,19 @@ export default function StaffManagementPage() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 data-[state=open]:bg-indigo-50 data-[state=open]:text-indigo-600 transition-colors">
+                              className="h-8 w-8 rounded-lg text-muted-foreground/70 hover:text-indigo-600 hover:bg-indigo-50 data-[state=open]:bg-indigo-50 data-[state=open]:text-indigo-600 transition-colors">
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent
                             align="end"
                             className="w-48 p-1.5 shadow-xl border-slate-100 rounded-xl">
-                            <DropdownMenuLabel className="text-xs text-slate-400 font-bold uppercase tracking-wider">
+                            <DropdownMenuLabel className="text-xs text-muted-foreground/70 font-bold uppercase tracking-wider">
                               Manage
                             </DropdownMenuLabel>
 
                             <DropdownMenuItem
-                              className="cursor-pointer font-medium rounded-lg text-slate-700 py-2"
+                              className="cursor-pointer font-medium rounded-lg text-foreground/80 py-2"
                               onClick={() =>
                                 setEditData({ isOpen: true, staff })
                               }>
@@ -325,7 +325,7 @@ export default function StaffManagementPage() {
                             </DropdownMenuItem>
 
                             <DropdownMenuItem
-                              className="cursor-pointer font-medium rounded-lg text-slate-700 py-2"
+                              className="cursor-pointer font-medium rounded-lg text-foreground/80 py-2"
                               onClick={() =>
                                 setActivityData({ isOpen: true, staff })
                               }>
@@ -333,10 +333,10 @@ export default function StaffManagementPage() {
                               View Activity
                             </DropdownMenuItem>
 
-                            <DropdownMenuSeparator className="bg-slate-100 my-1" />
+                            <DropdownMenuSeparator className="bg-muted my-1" />
 
                             <DropdownMenuItem
-                              className="cursor-pointer font-medium rounded-lg text-slate-700 py-2"
+                              className="cursor-pointer font-medium rounded-lg text-foreground/80 py-2"
                               onClick={() =>
                                 setIsPasswordOpen({ isOpen: true, staff })
                               }>
@@ -345,7 +345,7 @@ export default function StaffManagementPage() {
                             </DropdownMenuItem>
 
                             <DropdownMenuItem
-                              className="cursor-pointer font-medium rounded-lg text-slate-700 py-2"
+                              className="cursor-pointer font-medium rounded-lg text-foreground/80 py-2"
                               onClick={() => {
                                 if (
                                   window.confirm(
@@ -451,11 +451,11 @@ function AddStaffModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden border-none rounded-2xl shadow-2xl">
-        <div className="bg-slate-50 p-6 border-b border-slate-100">
+        <div className="bg-muted/30 p-6 border-b border-slate-100">
           <DialogTitle className="text-xl font-bold text-slate-800">
             Add Staff Member
           </DialogTitle>
-          <DialogDescription className="text-xs text-slate-500 mt-1">
+          <DialogDescription className="text-xs text-muted-foreground mt-1">
             System will auto-generate a 9-digit Employee ID.
           </DialogDescription>
         </div>
@@ -546,7 +546,7 @@ function AddStaffModal({
             <Input
               {...form.register("password")}
               placeholder="Leave blank for Password@123"
-              className="h-10 rounded-xl bg-white"
+              className="h-10 rounded-xl bg-card"
             />
           </div>
           <div className="pt-4 border-t border-slate-100 flex justify-end gap-3">
@@ -621,11 +621,11 @@ function EditStaffModal({
         if (!val) onClose();
       }}>
       <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden border-none rounded-2xl shadow-2xl">
-        <div className="bg-slate-50 p-6 border-b border-slate-100">
+        <div className="bg-muted/30 p-6 border-b border-slate-100">
           <DialogTitle className="text-xl font-bold text-slate-800">
             Edit Details
           </DialogTitle>
-          <DialogDescription className="text-xs text-slate-500 mt-1">
+          <DialogDescription className="text-xs text-muted-foreground mt-1">
             Updating profile for {staff?.user?.name}
           </DialogDescription>
         </div>
@@ -769,7 +769,7 @@ function ChangePasswordModal({
             </DialogTitle>
           </div>
         </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 bg-white">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 bg-card">
           <div className="space-y-1.5">
             <Label className="text-xs font-bold text-slate-700">
               New Password
@@ -826,10 +826,10 @@ function ActivityLogModal({ open, staff, onClose }: any) {
       onOpenChange={(val) => {
         if (!val) onClose();
       }}>
-      <DialogContent className="sm:max-w-[500px] p-0 border-none rounded-2xl shadow-2xl overflow-hidden bg-slate-50">
-        <div className="bg-white p-6 border-b border-slate-200 flex justify-between items-center">
+      <DialogContent className="sm:max-w-[500px] p-0 border-none rounded-2xl shadow-2xl overflow-hidden bg-muted/30">
+        <div className="bg-card p-6 border-b border-border flex justify-between items-center">
           <div>
-            <DialogTitle className="text-lg font-bold text-slate-800 flex items-center gap-2">
+            <DialogTitle className="text-lg font-bold text-foreground flex items-center gap-2">
               <ActivitySquare className="h-5 w-5 text-indigo-500" /> Activity
               Log
             </DialogTitle>
@@ -845,7 +845,7 @@ function ActivityLogModal({ open, staff, onClose }: any) {
               <Loader2 className="animate-spin h-6 w-6 mb-2" /> Loading logs...
             </div>
           ) : logs.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-slate-400 text-sm">
+            <div className="flex flex-col items-center justify-center h-full text-muted-foreground/70 text-sm">
               <Clock className="h-8 w-8 mb-2 opacity-50" /> No activity recorded
               yet.
             </div>
@@ -858,16 +858,16 @@ function ActivityLogModal({ open, staff, onClose }: any) {
                   <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-indigo-100 text-indigo-600 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
                     <ActivitySquare className="h-4 w-4" />
                   </div>
-                  <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                  <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-card p-4 rounded-xl shadow-sm border border-slate-100">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="font-bold text-slate-800 text-xs uppercase tracking-wider">
+                      <span className="font-bold text-foreground text-xs uppercase tracking-wider">
                         {log.action.replace("_", " ")}
                       </span>
-                      <span className="text-[10px] text-slate-400 font-medium">
+                      <span className="text-[10px] text-muted-foreground/70 font-medium">
                         {format(new Date(log.createdAt), "MMM dd, h:mm a")}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-600 leading-relaxed">
+                    <p className="text-xs text-muted-foreground leading-relaxed">
                       {log.description}
                     </p>
                   </div>

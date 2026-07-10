@@ -14,8 +14,8 @@ export default function OnlineBookingsTable() {
   if (isLoading) return <div>Loading bookings...</div>;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-      <div className="p-4 border-b bg-slate-50 flex justify-between items-center">
+    <div className="bg-card rounded-xl shadow-sm border overflow-hidden">
+      <div className="p-4 border-b bg-muted/30 flex justify-between items-center">
         <h2 className="font-bold text-lg">Online Appointments</h2>
         <span className="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full">
           {bookings?.length || 0} Total
@@ -69,7 +69,7 @@ export default function OnlineBookingsTable() {
                 </p>
               </td>
               <td className="p-4">
-                <span className="px-2 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded text-xs">
+                <span className="px-2 py-1 bg-primary/10 text-primary border border-primary/20 rounded text-xs">
                   {booking.status.replace("_", " ")}
                 </span>
               </td>

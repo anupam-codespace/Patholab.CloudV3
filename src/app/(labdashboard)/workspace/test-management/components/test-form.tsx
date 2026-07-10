@@ -312,13 +312,13 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {initialData?.isGlobal && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex gap-3">
-          <Globe className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
+        <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 flex gap-3">
+          <Globe className="h-5 w-5 text-primary shrink-0 mt-0.5" />
           <div>
             <h4 className="text-blue-800 font-semibold text-sm">
               Global Catalog Test
             </h4>
-            <p className="text-blue-700 text-xs mt-1 leading-relaxed">
+            <p className="text-primary text-xs mt-1 leading-relaxed">
               You are editing a master catalog test. If you change its pricing,
               a quick override will be applied. If you modify its clinical
               details (parameters, sample type, etc.), a customized local copy
@@ -330,7 +330,7 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
       )}
 
       <Tabs defaultValue="basic" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 bg-slate-100 p-1 rounded-lg">
+        <TabsList className="grid w-full grid-cols-3 bg-muted p-1 rounded-lg">
           <TabsTrigger
             value="basic"
             className={
@@ -512,7 +512,7 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
             </div>
           </div>
 
-          <div className="p-4 bg-slate-50 border rounded-lg mt-4">
+          <div className="p-4 bg-muted/30 border rounded-lg mt-4">
             <CustomFieldSelector
               selectedIds={customFieldIds}
               onChange={setCustomFieldIds}
@@ -522,7 +522,7 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
 
         {/* --- TAB: PARAMETER MAPPING --- */}
         <TabsContent value="parameters" className="space-y-4 pt-4">
-          <div className="p-4 bg-slate-50 border rounded-lg space-y-3">
+          <div className="p-4 bg-muted/30 border rounded-lg space-y-3">
             <Label className="text-xs font-semibold uppercase text-muted-foreground flex items-center justify-between">
               <span>Add Parameters</span>
               {isLoadingRefs && (
@@ -538,7 +538,7 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
                 onChange={(e) => setParamSearch(e.target.value)}
               />
               {paramSearch && (
-                <div className="absolute z-10 w-full bg-white border rounded-md shadow-lg mt-1 max-h-48 overflow-y-auto">
+                <div className="absolute z-10 w-full bg-card border rounded-md shadow-lg mt-1 max-h-48 overflow-y-auto">
                   {paramLibrary
                     .filter(
                       (p) =>
@@ -553,7 +553,7 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
                     .map((p) => (
                       <div
                         key={p.id}
-                        className="p-2 hover:bg-blue-50 cursor-pointer text-sm flex justify-between"
+                        className="p-2 hover:bg-primary/10 cursor-pointer text-sm flex justify-between"
                         onClick={() => addParameter(p.id)}>
                         <span>{p.name}</span>
                         <span className="text-xs text-muted-foreground font-mono">
@@ -567,7 +567,7 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
           </div>
 
           <div
-            className={`space-y-2 border rounded-md p-2 ${errors.components ? "border-red-300 bg-red-50" : fields.length === 0 ? "border-amber-200 bg-amber-50" : "border-slate-200"}`}>
+            className={`space-y-2 border rounded-md p-2 ${errors.components ? "border-red-300 bg-red-50" : fields.length === 0 ? "border-amber-200 bg-amber-50" : "border-border"}`}>
             <div className="flex justify-between items-center">
               <div className="text-sm font-medium">
                 Selected Components ({fields.length})
@@ -595,11 +595,11 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
                   onDragOver={(e) => handleDragOver(e, index)}
                   onDrop={(e) => handleDrop(e, index)}
                   onDragEnd={() => setDraggedIndex(null)}
-                  className={`flex items-center gap-3 bg-white p-2 border rounded shadow-sm group transition-all
+                  className={`flex items-center gap-3 bg-card p-2 border rounded shadow-sm group transition-all
                     ${draggedIndex === index ? "opacity-50" : "opacity-100 hover:border-blue-400"}
                   `}>
                   <div className="cursor-grab active:cursor-grabbing p-1">
-                    <GripVertical className="h-5 w-5 text-slate-400 hover:text-slate-600" />
+                    <GripVertical className="h-5 w-5 text-muted-foreground/70 hover:text-muted-foreground" />
                   </div>
 
                   <div className="flex-1 grid grid-cols-2 gap-4 items-center">
@@ -629,7 +629,7 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
                       type="button"
                       onClick={() => index > 0 && move(index, index - 1)}
                       disabled={index === 0}
-                      className="text-slate-400 hover:text-blue-600 disabled:opacity-30 disabled:hover:text-slate-400">
+                      className="text-muted-foreground/70 hover:text-primary disabled:opacity-30 disabled:hover:text-slate-400">
                       <ChevronUp className="h-4 w-4" />
                     </button>
                     <button
@@ -638,7 +638,7 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
                         index < fields.length - 1 && move(index, index + 1)
                       }
                       disabled={index === fields.length - 1}
-                      className="text-slate-400 hover:text-blue-600 disabled:opacity-30 disabled:hover:text-slate-400">
+                      className="text-muted-foreground/70 hover:text-primary disabled:opacity-30 disabled:hover:text-slate-400">
                       <ChevronDown className="h-4 w-4" />
                     </button>
                   </div>
@@ -669,7 +669,7 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
                 {liveReagentList.map((r: any, idx: number) => (
                   <div
                     key={idx}
-                    className="bg-white border border-emerald-200 px-3 py-1.5 rounded-md text-sm font-medium text-slate-700 shadow-sm">
+                    className="bg-card border border-emerald-200 px-3 py-1.5 rounded-md text-sm font-medium text-foreground/80 shadow-sm">
                     {r.name}:{" "}
                     <span className="font-bold text-emerald-700">
                       {r.totalQuantity.toFixed(2)} {r.unit}
@@ -692,7 +692,7 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
                 type="number"
                 step="0.01"
                 {...register("price")}
-                className={`font-semibold text-slate-900 ${errors.price ? "border-red-500 bg-red-50" : ""}`}
+                className={`font-semibold text-foreground ${errors.price ? "border-red-500 bg-red-50" : ""}`}
               />
               {errors.price && (
                 <span className="text-xs text-red-500">
@@ -764,7 +764,7 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
         <Button
           type="submit"
           disabled={isSubmitting || isLoadingRefs}
-          className="bg-blue-600 hover:bg-blue-700">
+          className="bg-primary hover:bg-blue-700">
           {isSubmitting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (

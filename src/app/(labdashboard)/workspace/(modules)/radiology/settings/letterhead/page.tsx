@@ -81,23 +81,23 @@ export default function LetterheadSettingsPage() {
   return (
     <div className="max-w-4xl mx-auto py-8 space-y-6 animate-in fade-in duration-500">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Report Letterhead</h1>
-        <p className="text-slate-500 text-sm mt-1">
+        <h1 className="text-2xl font-bold text-foreground tracking-tight">Report Letterhead</h1>
+        <p className="text-muted-foreground text-sm mt-1">
           Upload your clinic's official header and footer. These will automatically appear on all printed A4 reports.
         </p>
       </div>
 
       {/* HEADER UPLOAD CARD */}
-      <Card className="border-slate-200 shadow-sm">
+      <Card className="border-border shadow-sm">
         <CardHeader className="bg-slate-50/50 border-b border-slate-100">
           <CardTitle className="text-lg">Header Image</CardTitle>
           <CardDescription>Recommended size: 2100px wide by 300px tall. Max 2MB.</CardDescription>
         </CardHeader>
         <CardContent className="p-6">
-          <div className="border-2 border-dashed border-slate-200 rounded-xl p-8 text-center bg-slate-50/50 hover:bg-slate-50 transition-colors relative group">
+          <div className="border-2 border-dashed border-border rounded-xl p-8 text-center bg-slate-50/50 hover:bg-muted/30 transition-colors relative group">
             {headerImage ? (
               <div className="relative inline-block w-full">
-                <img src={headerImage} alt="Header Preview" className="max-h-32 mx-auto object-contain mb-4 border border-slate-200 shadow-sm bg-white" />
+                <img src={headerImage} alt="Header Preview" className="max-h-32 mx-auto object-contain mb-4 border border-border shadow-sm bg-card" />
                 <Button 
                   size="sm" 
                   variant="destructive" 
@@ -110,11 +110,11 @@ export default function LetterheadSettingsPage() {
             ) : (
               <div className="py-4">
                 <ImageIcon className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-                <p className="text-sm font-semibold text-slate-600 mb-4">No header image uploaded</p>
+                <p className="text-sm font-semibold text-muted-foreground mb-4">No header image uploaded</p>
               </div>
             )}
             <input type="file" id="header-upload" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, "header")} />
-            <label htmlFor="header-upload" className="cursor-pointer bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-md font-bold text-sm shadow-sm hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 inline-flex items-center transition-colors">
+            <label htmlFor="header-upload" className="cursor-pointer bg-card border border-border text-foreground/80 px-4 py-2 rounded-md font-bold text-sm shadow-sm hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 inline-flex items-center transition-colors">
               <Upload className="w-4 h-4 mr-2" /> {headerImage ? "Replace Header" : "Upload Header Image"}
             </label>
           </div>
@@ -122,16 +122,16 @@ export default function LetterheadSettingsPage() {
       </Card>
 
       {/* FOOTER UPLOAD CARD */}
-      <Card className="border-slate-200 shadow-sm">
+      <Card className="border-border shadow-sm">
         <CardHeader className="bg-slate-50/50 border-b border-slate-100">
           <CardTitle className="text-lg">Footer Image</CardTitle>
           <CardDescription>Recommended size: 2100px wide by 200px tall. Max 2MB.</CardDescription>
         </CardHeader>
         <CardContent className="p-6">
-          <div className="border-2 border-dashed border-slate-200 rounded-xl p-8 text-center bg-slate-50/50 hover:bg-slate-50 transition-colors relative group">
+          <div className="border-2 border-dashed border-border rounded-xl p-8 text-center bg-slate-50/50 hover:bg-muted/30 transition-colors relative group">
             {footerImage ? (
               <div className="relative inline-block w-full">
-                <img src={footerImage} alt="Footer Preview" className="max-h-24 mx-auto object-contain mb-4 border border-slate-200 shadow-sm bg-white" />
+                <img src={footerImage} alt="Footer Preview" className="max-h-24 mx-auto object-contain mb-4 border border-border shadow-sm bg-card" />
                 <Button 
                   size="sm" 
                   variant="destructive" 
@@ -144,11 +144,11 @@ export default function LetterheadSettingsPage() {
             ) : (
               <div className="py-4">
                 <ImageIcon className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-                <p className="text-sm font-semibold text-slate-600 mb-4">No footer image uploaded</p>
+                <p className="text-sm font-semibold text-muted-foreground mb-4">No footer image uploaded</p>
               </div>
             )}
             <input type="file" id="footer-upload" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, "footer")} />
-            <label htmlFor="footer-upload" className="cursor-pointer bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-md font-bold text-sm shadow-sm hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 inline-flex items-center transition-colors">
+            <label htmlFor="footer-upload" className="cursor-pointer bg-card border border-border text-foreground/80 px-4 py-2 rounded-md font-bold text-sm shadow-sm hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 inline-flex items-center transition-colors">
               <Upload className="w-4 h-4 mr-2" /> {footerImage ? "Replace Footer" : "Upload Footer Image"}
             </label>
           </div>

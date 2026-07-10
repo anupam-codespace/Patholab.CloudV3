@@ -1,11 +1,33 @@
 "use client";
 
 import Link from "next/link";
-import { ShieldAlert, ArrowLeft, LockKeyhole, LogOut } from "lucide-react";
+import {
+  ShieldAlert,
+  ArrowLeft,
+  LockKeyhole,
+  LogOut,
+  ShieldX,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function UnauthorizedPage() {
   const router = useRouter();
+
+  // ✅ ADDED: Client-side logout handler to properly clear session and redirect
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+      });
+      // Force redirect to login page after successful API call
+      router.push("/login");
+      router.refresh(); // Optional: clears Next.js router cache
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // Fallback redirect just in case
+      router.push("/login");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
@@ -46,15 +68,31 @@ export default function UnauthorizedPage() {
           {/* Details Section */}
           <div className="p-8 space-y-6">
             <div className="flex items-start gap-4 p-4 bg-slate-50 rounded-lg border border-slate-100">
-              <LockKeyhole className="h-5 w-5 text-slate-400 mt-0.5 flex-shrink-0" />
+              <ShieldX className="h-5 w-5 text-slate-500 mt-0.5 flex-shrink-0" />
               <div>
                 <h3 className="text-sm font-semibold text-slate-900">
                   Why am I seeing this?
                 </h3>
-                <p className="text-sm text-slate-500 mt-1">
-                  You might be logged in as a user who doesn't have{" "}
-                  <strong>Super Admin</strong> or <strong>Lab Owner</strong>{" "}
-                  privileges for this specific page.
+                {/* ✅ UPDATED: Detailed access explanations */}
+                <ul className="text-sm text-slate-600 mt-2 space-y-2 list-disc list-inside">
+                  <li>
+                    You are attempting to access a module (like Financials or
+                    Settings) reserved strictly for <strong>Lab Owners</strong>{" "}
+                    or <strong>Super Admins</strong>.
+                  </li>
+                  <li>
+                    You are restricted to a specific <strong>Branch</strong> and
+                    cannot view Master Lab configurations.
+                  </li>
+                  <li>
+                    Your current assigned role (e.g., Receptionist,
+                    Phlebotomist) does not have read/write clearance for this
+                    specific page.
+                  </li>
+                </ul>
+                <p className="text-sm text-slate-500 mt-3 border-t border-slate-200 pt-3">
+                  If you believe this is a mistake, please contact your Lab
+                  Administrator to update your role permissions.
                 </p>
               </div>
             </div>
@@ -75,18 +113,13 @@ export default function UnauthorizedPage() {
                   Dashboard
                 </Link>
 
-                {/* Logout Button (Using API) */}
-                <form
-                  action="/api/auth/logout"
-                  method="POST"
-                  className="w-full">
-                  <button
-                    type="submit"
-                    className="w-full flex items-center justify-center gap-2 bg-red-50 border border-red-100 hover:bg-red-100 text-red-600 font-medium py-3 rounded-lg transition-all">
-                    <LogOut className="h-4 w-4" />
-                    Logout
-                  </button>
-                </form>
+                {/* ✅ UPDATED: Logout Button triggers client-side handler */}
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center justify-center gap-2 bg-red-50 border border-red-100 hover:bg-red-100 text-red-600 font-medium py-3 rounded-lg transition-all">
+                  <LogOut className="h-4 w-4" />
+                  Logout
+                </button>
               </div>
             </div>
           </div>

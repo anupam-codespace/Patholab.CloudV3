@@ -18,8 +18,6 @@ import {
   FlaskConical,
   CreditCard,
   Plus,
-  Building2,
-  Stethoscope,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 
@@ -64,42 +62,29 @@ const accessionSchema = z.object({
   printSlip: z.boolean().default(true),
   printBarcode: z.boolean().default(true),
   isUrgent: z.boolean().default(false),
-  doctorId: z.string().optional().default("Self"),
-  agencyId: z.string().optional().default("Direct"),
 });
 
 type AccessionFormData = z.infer<typeof accessionSchema>;
 
 // --- 2. DATA FETCHER ---
 const fetchAccessionData = async (patientId: string) => {
-  const [patientRes, catalogRes, parametersRes, doctorsRes, agenciesRes] =
-    await Promise.all([
-      fetch(`/api/workspace/patients/${patientId}`).then((r) =>
-        r.ok ? r.json() : null,
-      ),
-      fetch(`/api/workspace/test-catalog`).then((r) =>
-        r.ok ? r.json() : null,
-      ),
-      fetch(`/api/workspace/parameters`).then((r) =>
-        r.ok ? r.json() : { parameters: [] },
-      ),
-      fetch(`/api/workspace/doctors`).then((r) =>
-        r.ok ? r.json() : { data: [] },
-      ),
-      fetch(`/api/workspace/agencies`).then((r) =>
-        r.ok ? r.json() : { data: [] },
-      ),
-    ]);
+  const [patientRes, catalogRes, parametersRes] = await Promise.all([
+    fetch(`/api/workspace/patients/${patientId}`).then((r) =>
+      r.ok ? r.json() : null,
+    ),
+    fetch(`/api/workspace/test-catalog`).then((r) => (r.ok ? r.json() : null)),
+    fetch(`/api/workspace/parameters`).then((r) =>
+      r.ok ? r.json() : { parameters: [] },
+    ),
+  ]);
 
   if (!patientRes) throw new Error("Failed to fetch patient data");
 
   const catalogArray = catalogRes?.tests || catalogRes?.data || [];
   const parametersArray =
     parametersRes?.parameters || parametersRes?.data || [];
-  const patientData = patientRes?.patient || patientRes?.data || patientRes;
 
-  const doctorsArray = doctorsRes?.data || doctorsRes?.doctors || [];
-  const agenciesArray = agenciesRes?.data || agenciesRes?.agencies || [];
+  const patientData = patientRes?.patient || patientRes?.data || patientRes;
 
   if (!patientData || !patientData.id) {
     throw new Error("Patient profile data is missing or incomplete.");
@@ -119,8 +104,6 @@ const fetchAccessionData = async (patientId: string) => {
   return {
     patient: patientData,
     catalog: [...catalogArray, ...formattedParameters],
-    doctors: doctorsArray,
-    agencies: agenciesArray,
   };
 };
 
@@ -131,8 +114,8 @@ export default function AccessionPage() {
 
   const patientId = searchParams.get("patientId");
   const isNewVisit = searchParams.get("isNewVisit") === "true";
-  const doctorNameParam = searchParams.get("doc") || "Self";
-  const agencyNameParam = searchParams.get("agency") || "Direct";
+  const doctorNameParam = searchParams.get("doc");
+  const agencyNameParam = searchParams.get("agency");
   const collectedByParam = searchParams.get("colBy") || "";
 
   // Safely map URL payment parameters to strict Zod Enums
@@ -177,8 +160,6 @@ export default function AccessionPage() {
       printSlip: true,
       printBarcode: true,
       isUrgent: false,
-      doctorId: doctorNameParam,
-      agencyId: agencyNameParam,
     },
   });
 
@@ -189,8 +170,6 @@ export default function AccessionPage() {
     register("printSlip");
     register("printBarcode");
     register("isUrgent");
-    register("doctorId");
-    register("agencyId");
   }, [register]);
 
   const selectedTests = watch("tests");
@@ -198,8 +177,6 @@ export default function AccessionPage() {
   const paidAmount = watch("paidAmount");
   const paymentMode = watch("paymentMode");
   const isUrgent = watch("isUrgent");
-  const selectedDoctorId = watch("doctorId");
-  const selectedAgencyId = watch("agencyId");
 
   const subTotal = selectedTests.reduce(
     (acc: number, t: CatalogItem) => acc + (Number(t.price) || 0),
@@ -268,10 +245,10 @@ export default function AccessionPage() {
       subtotal: subTotal,
       discountAmount: formData.discount,
       grandTotal: netPayable,
-      doctorId: formData.doctorId === "Self" ? null : formData.doctorId,
-      agencyId: formData.agencyId === "Direct" ? null : formData.agencyId,
+      doctorId: doctorNameParam === "Self" ? null : doctorNameParam,
+      agencyId: agencyNameParam === "Direct" ? null : agencyNameParam,
       tests: formData.tests.map((t: CatalogItem) => ({
-        testTemplateId: t.id,
+        testTemplateId: t.id, // ✅ FIXED: Crucial parameter mapped properly
         testCode: t.code,
         testName: t.name,
         price: t.price,
@@ -320,31 +297,18 @@ export default function AccessionPage() {
     });
   }, [data?.catalog, search, filterType]);
 
-  // Find names for the sticky header
-  const getSelectedDoctorName = () => {
-    if (selectedDoctorId === "Self") return "Self";
-    const doc = data?.doctors?.find((d: any) => d.id === selectedDoctorId);
-    return doc ? doc.name : selectedDoctorId;
-  };
-
-  const getSelectedAgencyName = () => {
-    if (selectedAgencyId === "Direct") return "Direct";
-    const agency = data?.agencies?.find((a: any) => a.id === selectedAgencyId);
-    return agency ? agency.agencyName || agency.name : selectedAgencyId;
-  };
-
   // --- SAFETY SCREENS ---
   if (!patientId) {
     return (
-      <div className="h-[calc(100vh-60px)] flex flex-col items-center justify-center bg-slate-50 text-slate-600 gap-4">
+      <div className="h-[calc(100vh-60px)] flex flex-col items-center justify-center bg-muted/30 text-muted-foreground gap-4">
         <div className="bg-amber-100 p-5 rounded-full shadow-inner">
           <UserCheck className="w-12 h-12 text-amber-600" />
         </div>
         <div className="text-center">
-          <h2 className="text-2xl font-extrabold text-slate-800 tracking-tight">
+          <h2 className="text-2xl font-extrabold text-foreground tracking-tight">
             No Patient Selected
           </h2>
-          <p className="text-sm font-medium text-slate-500 mt-1">
+          <p className="text-sm font-medium text-muted-foreground mt-1">
             Accession flow requires a linked patient profile.
           </p>
         </div>
@@ -359,7 +323,7 @@ export default function AccessionPage() {
 
   if (isLoading)
     return (
-      <div className="h-[calc(100vh-60px)] flex items-center justify-center text-slate-500">
+      <div className="h-[calc(100vh-60px)] flex items-center justify-center text-muted-foreground">
         <Loader2 className="w-8 h-8 animate-spin mr-3 text-indigo-600" />{" "}
         Preparing Workspace...
       </div>
@@ -386,18 +350,18 @@ export default function AccessionPage() {
     <form
       id="accession-form"
       onSubmit={handleSubmit(onSubmit, onFormError)}
-      className="flex flex-col h-[calc(100vh-80px)] bg-slate-50 font-sans relative pb-20 lg:pb-0">
+      className="flex flex-col h-[calc(100vh-80px)] bg-muted/30 font-sans relative pb-20 lg:pb-0">
       {/* 🌟 STICKY TOP HEADER BAR */}
-      <div className="flex-none h-[72px] bg-white border-b border-slate-200 px-4 lg:px-6 flex justify-between items-center shadow-sm z-30">
+      <div className="flex-none h-[72px] bg-card border-b border-border px-4 lg:px-6 flex justify-between items-center shadow-sm z-30">
         <div className="flex items-center gap-3 lg:gap-4">
           <div className="hidden sm:flex h-11 w-11 bg-indigo-100 text-indigo-700 font-bold text-base rounded-xl items-center justify-center shadow-inner shrink-0">
             {initials}
           </div>
           <div>
-            <h1 className="font-bold text-lg lg:text-xl text-slate-900 leading-tight truncate max-w-[200px] sm:max-w-md">
+            <h1 className="font-bold text-lg lg:text-xl text-foreground leading-tight truncate max-w-[200px] sm:max-w-md">
               {data.patient.name || "Unknown Patient"}
             </h1>
-            <div className="flex items-center gap-2 text-xs lg:text-sm font-semibold text-slate-500 mt-0.5">
+            <div className="flex items-center gap-2 text-xs lg:text-sm font-semibold text-muted-foreground mt-0.5">
               <span>
                 {data.patient.age} {data.patient.ageUnit || "Y"} •{" "}
                 {data.patient.gender}
@@ -411,25 +375,13 @@ export default function AccessionPage() {
         </div>
 
         <div className="flex items-center gap-6">
-          {selectedDoctorId !== "Self" && (
+          {doctorNameParam && doctorNameParam !== "Self" && (
             <div className="flex flex-col items-end">
-              <span className="text-[10px] lg:text-xs font-bold text-slate-400 uppercase tracking-widest">
+              <span className="text-[10px] lg:text-xs font-bold text-muted-foreground/70 uppercase tracking-widest">
                 Referral
               </span>
-              <span className="text-sm font-bold text-slate-700 flex items-center gap-1.5 truncate max-w-[120px] sm:max-w-xs">
-                <Stethoscope className="w-3.5 h-3.5 text-indigo-500" />{" "}
-                {getSelectedDoctorName()}
-              </span>
-            </div>
-          )}
-          {selectedAgencyId !== "Direct" && (
-            <div className="hidden sm:flex flex-col items-end border-l pl-4 border-slate-200">
-              <span className="text-[10px] lg:text-xs font-bold text-slate-400 uppercase tracking-widest">
-                Agency
-              </span>
-              <span className="text-sm font-bold text-slate-700 flex items-center gap-1.5 truncate max-w-[120px] sm:max-w-xs">
-                <Building2 className="w-3.5 h-3.5 text-indigo-500" />{" "}
-                {getSelectedAgencyName()}
+              <span className="text-sm font-bold text-foreground/80 flex items-center gap-1.5 truncate max-w-[120px] sm:max-w-xs">
+                <User className="w-3.5 h-3.5 opacity-50" /> {doctorNameParam}
               </span>
             </div>
           )}
@@ -439,13 +391,13 @@ export default function AccessionPage() {
       {/* 🧩 RESPONSIVE 3-COLUMN LAYOUT */}
       <div className="flex-1 flex flex-col lg:grid lg:grid-cols-12 overflow-hidden">
         {/* 📚 LEFT: TEST CATALOG */}
-        <div className="lg:col-span-3 bg-white border-r border-slate-200 flex flex-col h-full z-10 shadow-sm overflow-hidden">
-          <div className="p-4 border-b border-slate-100 space-y-3 bg-slate-50 flex-none">
+        <div className="lg:col-span-3 bg-card border-r border-border flex flex-col h-full z-10 shadow-sm overflow-hidden">
+          <div className="p-4 border-b border-slate-100 space-y-3 bg-muted/30 flex-none">
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
               <Input
                 placeholder="Search tests..."
-                className="pl-9 h-10 bg-white border-slate-200 focus:border-indigo-500 rounded-xl text-sm font-medium shadow-sm"
+                className="pl-9 h-10 bg-card border-border focus:border-indigo-500 rounded-xl text-sm font-medium shadow-sm"
                 autoFocus
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -486,15 +438,15 @@ export default function AccessionPage() {
                 <div
                   key={item.id}
                   onClick={() => addTest(item)}
-                  className="p-3 hover:bg-indigo-50 bg-white rounded-xl cursor-pointer group transition-all flex justify-between items-center border border-slate-100 hover:border-indigo-200">
+                  className="p-3 hover:bg-indigo-50 bg-card rounded-xl cursor-pointer group transition-all flex justify-between items-center border border-slate-100 hover:border-indigo-200">
                   <div className="space-y-1">
-                    <div className="font-semibold text-sm text-slate-800 leading-tight">
+                    <div className="font-semibold text-sm text-foreground leading-tight">
                       {item.name}
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge
                         variant="outline"
-                        className="text-[9px] text-slate-500 font-mono border-slate-200 bg-slate-50">
+                        className="text-[9px] text-muted-foreground font-mono border-border bg-muted/30">
                         {item.code}
                       </Badge>
                       {item.type === "PROFILE" && (
@@ -517,9 +469,9 @@ export default function AccessionPage() {
         </div>
 
         {/* 🔬 CENTER: SELECTED CART */}
-        <div className="lg:col-span-5 bg-slate-50/50 flex flex-col h-full border-r border-slate-200 relative overflow-hidden">
+        <div className="lg:col-span-5 bg-slate-50/50 flex flex-col h-full border-r border-border relative overflow-hidden">
           <div
-            className={`p-4 border-b border-slate-200 flex justify-between items-center flex-none h-14 transition-colors ${isUrgent ? "bg-red-50" : "bg-white"}`}>
+            className={`p-4 border-b border-border flex justify-between items-center flex-none h-14 transition-colors ${isUrgent ? "bg-red-50" : "bg-card"}`}>
             <div className="flex items-center gap-3">
               <h2
                 className={`font-bold text-base ${isUrgent ? "text-red-700" : "text-slate-800"}`}>
@@ -546,10 +498,10 @@ export default function AccessionPage() {
           <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
             {selectedTests.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-slate-400">
-                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-4">
+                <div className="w-16 h-16 bg-card rounded-full flex items-center justify-center shadow-sm mb-4">
                   <FlaskConical className="h-8 w-8 text-slate-300" />
                 </div>
-                <span className="font-bold text-slate-600 text-lg">
+                <span className="font-bold text-muted-foreground text-lg">
                   Cart is Empty
                 </span>
                 <span className="text-xs font-medium text-center mt-1">
@@ -561,19 +513,19 @@ export default function AccessionPage() {
                 {selectedTests.map((t: CatalogItem, idx: number) => (
                   <div
                     key={`${t.id}-${idx}`}
-                    className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between group">
+                    className="bg-card p-3.5 rounded-xl border border-border shadow-sm flex items-center justify-between group">
                     <div className="space-y-1">
-                      <div className="font-semibold text-sm text-slate-900">
+                      <div className="font-semibold text-sm text-foreground">
                         {t.name}
                       </div>
-                      <div className="flex gap-2 text-[10px] font-semibold text-slate-500">
+                      <div className="flex gap-2 text-[10px] font-semibold text-muted-foreground">
                         <span>Spl: {t.sampleType?.name || "-"}</span>
                         <span>•</span>
                         <span>TAT: {t.tat || "-"}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
-                      <span className="font-bold text-base text-slate-900">
+                      <span className="font-bold text-base text-foreground">
                         ₹{t.price}
                       </span>
                       <Button
@@ -593,10 +545,10 @@ export default function AccessionPage() {
         </div>
 
         {/* 💳 RIGHT: FINANCIALS & BILLING */}
-        <div className="lg:col-span-4 bg-white flex flex-col h-full z-20 relative overflow-hidden">
-          <div className="p-4 border-b border-slate-100 bg-slate-50 flex-none h-14 flex items-center gap-2">
+        <div className="lg:col-span-4 bg-card flex flex-col h-full z-20 relative overflow-hidden">
+          <div className="p-4 border-b border-slate-100 bg-muted/30 flex-none h-14 flex items-center gap-2">
             <Receipt className="h-4 w-4 text-indigo-600" />
-            <h3 className="font-bold text-slate-800 text-sm">
+            <h3 className="font-bold text-foreground text-sm">
               Checkout & Billing
             </h3>
           </div>
@@ -605,35 +557,35 @@ export default function AccessionPage() {
             {/* Financial Ledger */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-[10px] uppercase font-bold text-slate-500">
+                <Label className="text-[10px] uppercase font-bold text-muted-foreground">
                   Gross Total
                 </Label>
                 <Input
                   readOnly
                   value={subTotal}
-                  className="h-10 bg-slate-50 font-bold text-lg border-slate-200 rounded-xl"
+                  className="h-10 bg-muted/30 font-bold text-lg border-border rounded-xl"
                   tabIndex={-1}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[10px] uppercase font-bold text-slate-500">
+                <Label className="text-[10px] uppercase font-bold text-muted-foreground">
                   Discount (₹)
                 </Label>
                 <Input
                   type="number"
                   {...register("discount")}
-                  className="h-10 text-rose-600 font-bold text-lg border-slate-200 rounded-xl"
+                  className="h-10 text-rose-600 font-bold text-lg border-border rounded-xl"
                 />
                 <div className="flex gap-2 mt-1">
                   <Badge
                     variant="outline"
-                    className="text-[9px] px-2 h-5 cursor-pointer hover:bg-slate-100 text-slate-600"
+                    className="text-[9px] px-2 h-5 cursor-pointer hover:bg-muted text-muted-foreground"
                     onClick={() => applyDiscountPercent(10)}>
                     10%
                   </Badge>
                   <Badge
                     variant="outline"
-                    className="text-[9px] px-2 h-5 cursor-pointer hover:bg-slate-100 text-slate-600"
+                    className="text-[9px] px-2 h-5 cursor-pointer hover:bg-muted text-muted-foreground"
                     onClick={() => applyDiscountPercent(20)}>
                     20%
                   </Badge>
@@ -659,7 +611,7 @@ export default function AccessionPage() {
             {/* Payment & Mode */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-[10px] uppercase font-bold text-slate-500">
+                <Label className="text-[10px] uppercase font-bold text-muted-foreground">
                   Paid Today
                 </Label>
                 <Input
@@ -669,7 +621,7 @@ export default function AccessionPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[10px] uppercase font-bold text-slate-500">
+                <Label className="text-[10px] uppercase font-bold text-muted-foreground">
                   Pay Mode
                 </Label>
                 <Select
@@ -677,7 +629,7 @@ export default function AccessionPage() {
                     setValue("paymentMode", v as any, { shouldValidate: true })
                   }
                   value={paymentMode}>
-                  <SelectTrigger className="h-10 text-xs font-bold border-slate-200 rounded-xl">
+                  <SelectTrigger className="h-10 text-xs font-bold border-border rounded-xl">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
@@ -691,7 +643,7 @@ export default function AccessionPage() {
             </div>
 
             <div className="flex justify-between items-center text-sm font-bold border-t border-slate-100 pt-4">
-              <span className="text-slate-500">Balance Due</span>
+              <span className="text-muted-foreground">Balance Due</span>
               <span
                 className={
                   balance > 0
@@ -704,71 +656,22 @@ export default function AccessionPage() {
 
             {/* Logistics & Meta */}
             <div className="space-y-4 pt-4 border-t border-slate-100">
-              {/* Added: Referral Doctor & Agency */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label className="text-[10px] uppercase font-bold text-slate-500">
-                    Ref. Doctor
-                  </Label>
-                  <Select
-                    value={selectedDoctorId}
-                    onValueChange={(v) =>
-                      setValue("doctorId", v, { shouldValidate: true })
-                    }>
-                    <SelectTrigger className="h-10 text-xs font-bold border-slate-200 rounded-xl bg-slate-50">
-                      <SelectValue placeholder="Select Doctor" />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-xl">
-                      <SelectItem value="Self">Self / None</SelectItem>
-                      {data.doctors?.map((doc: any) => (
-                        <SelectItem key={doc.id} value={doc.id}>
-                          {doc.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label className="text-[10px] uppercase font-bold text-slate-500">
-                    Ref. Agency
-                  </Label>
-                  <Select
-                    value={selectedAgencyId}
-                    onValueChange={(v) =>
-                      setValue("agencyId", v, { shouldValidate: true })
-                    }>
-                    <SelectTrigger className="h-10 text-xs font-bold border-slate-200 rounded-xl bg-slate-50">
-                      <SelectValue placeholder="Select Agency" />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-xl">
-                      <SelectItem value="Direct">Direct / None</SelectItem>
-                      {data.agencies?.map((agency: any) => (
-                        <SelectItem key={agency.id} value={agency.id}>
-                          {agency.agencyName || agency.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
               <div className="space-y-1.5">
-                <Label className="text-[10px] uppercase font-bold text-slate-500">
+                <Label className="text-[10px] uppercase font-bold text-muted-foreground">
                   Collector / Phleb.
                 </Label>
                 <div className="relative">
                   <UserCheck className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <Input
                     {...register("collectedBy")}
-                    className="h-10 pl-9 text-sm border-slate-200 bg-slate-50 rounded-xl"
+                    className="h-10 pl-9 text-sm border-border bg-muted/30 rounded-xl"
                     placeholder="Staff Name..."
                   />
                 </div>
               </div>
 
               <div className="flex gap-3">
-                <div className="flex items-center space-x-2 bg-slate-50 px-3 py-2 rounded-xl border border-slate-200 flex-1">
+                <div className="flex items-center space-x-2 bg-muted/30 px-3 py-2 rounded-xl border border-border flex-1">
                   <Checkbox
                     id="slip"
                     checked={watch("printSlip")}
@@ -777,11 +680,11 @@ export default function AccessionPage() {
                   />
                   <label
                     htmlFor="slip"
-                    className="text-xs font-bold text-slate-700 cursor-pointer">
+                    className="text-xs font-bold text-foreground/80 cursor-pointer">
                     Print Slip
                   </label>
                 </div>
-                <div className="flex items-center space-x-2 bg-slate-50 px-3 py-2 rounded-xl border border-slate-200 flex-1">
+                <div className="flex items-center space-x-2 bg-muted/30 px-3 py-2 rounded-xl border border-border flex-1">
                   <Checkbox
                     id="barcode"
                     checked={watch("printBarcode")}
@@ -790,7 +693,7 @@ export default function AccessionPage() {
                   />
                   <label
                     htmlFor="barcode"
-                    className="text-xs font-bold text-slate-700 cursor-pointer">
+                    className="text-xs font-bold text-foreground/80 cursor-pointer">
                     Barcodes
                   </label>
                 </div>
@@ -813,24 +716,24 @@ export default function AccessionPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-[10px] uppercase font-bold text-slate-500">
+                <Label className="text-[10px] uppercase font-bold text-muted-foreground">
                   Internal Notes
                 </Label>
                 <Textarea
                   {...register("note")}
                   placeholder="Clinical history..."
-                  className="h-16 text-xs resize-none border-slate-200 rounded-xl bg-slate-50"
+                  className="h-16 text-xs resize-none border-border rounded-xl bg-muted/30"
                 />
               </div>
             </div>
           </div>
 
           {/* DESKTOP STICKY BOTTOM BAR */}
-          <div className="hidden lg:flex p-4 border-t border-slate-200 bg-white flex-none">
+          <div className="hidden lg:flex p-4 border-t border-border bg-card flex-none">
             <Button
               type="button"
               variant="outline"
-              className="w-1/3 h-12 font-bold text-slate-600 rounded-xl mr-3"
+              className="w-1/3 h-12 font-bold text-muted-foreground rounded-xl mr-3"
               onClick={() => router.back()}>
               Cancel
             </Button>
@@ -850,9 +753,9 @@ export default function AccessionPage() {
       </div>
 
       {/* 📱 MOBILE STICKY BOTTOM ACTION BAR */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-3 bg-white border-t border-slate-200 shadow-[0_-10px_30px_-10px_rgba(0,0,0,0.1)] z-50 flex items-center justify-between pb-safe">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-3 bg-card border-t border-border shadow-[0_-10px_30px_-10px_rgba(0,0,0,0.1)] z-50 flex items-center justify-between pb-safe">
         <div className="flex flex-col">
-          <span className="text-[10px] font-bold text-slate-500 uppercase">
+          <span className="text-[10px] font-bold text-muted-foreground uppercase">
             Total ({selectedTests.length})
           </span>
           <span className="text-xl font-black text-indigo-700">

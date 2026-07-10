@@ -137,12 +137,12 @@ export default function ParametersTab() {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* TOOLBAR */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="bg-card p-4 rounded-xl border border-border shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="relative w-full max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input
             placeholder="Search by parameter name or code..."
-            className="pl-10 focus-visible:ring-blue-500 border-slate-300 w-full"
+            className="pl-10 focus-visible:ring-primary border-border w-full"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -157,12 +157,12 @@ export default function ParametersTab() {
           }}>
           <Button
             onClick={handleAddNew}
-            className="bg-blue-600 hover:bg-blue-700 shadow-sm shrink-0 w-full sm:w-auto">
+            className="bg-primary hover:bg-blue-700 shadow-sm shrink-0 w-full sm:w-auto">
             <Plus className="mr-2 h-4 w-4" /> Create Custom Parameter
           </Button>
 
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0 border-0">
-            <DialogHeader className="px-6 py-4 border-b bg-slate-50 sticky top-0 z-10">
+            <DialogHeader className="px-6 py-4 border-b bg-muted/30 sticky top-0 z-10">
               <DialogTitle className="text-xl text-slate-800">
                 {editingParam
                   ? `Edit Parameter: ${editingParam.name}`
@@ -188,33 +188,33 @@ export default function ParametersTab() {
       </div>
 
       {/* TABLE */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
         <div className="overflow-x-auto">
           <Table className="min-w-[1000px]">
             <TableHeader>
-              <TableRow className="bg-slate-50 border-b border-slate-200 hover:bg-slate-50">
-                <TableHead className="w-[100px] font-semibold text-slate-600">
+              <TableRow className="bg-muted/30 border-b border-border hover:bg-muted/30">
+                <TableHead className="w-[100px] font-semibold text-muted-foreground">
                   Code
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600">
+                <TableHead className="font-semibold text-muted-foreground">
                   Parameter Details
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600">
+                <TableHead className="font-semibold text-muted-foreground">
                   Scope
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600">
+                <TableHead className="font-semibold text-muted-foreground">
                   Input Type
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600">
+                <TableHead className="font-semibold text-muted-foreground">
                   Tube
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600">
+                <TableHead className="font-semibold text-muted-foreground">
                   Auto-Reagents
                 </TableHead>
-                <TableHead className="text-right font-semibold text-slate-600">
+                <TableHead className="text-right font-semibold text-muted-foreground">
                   Price (₹)
                 </TableHead>
-                <TableHead className="text-right font-semibold text-slate-600">
+                <TableHead className="text-right font-semibold text-muted-foreground">
                   Actions
                 </TableHead>
               </TableRow>
@@ -224,7 +224,7 @@ export default function ParametersTab() {
                 <TableRow>
                   <TableCell
                     colSpan={8}
-                    className="text-center h-32 text-slate-500 animate-pulse">
+                    className="text-center h-32 text-muted-foreground animate-pulse">
                     Loading parameter dictionary...
                   </TableCell>
                 </TableRow>
@@ -245,7 +245,7 @@ export default function ParametersTab() {
                 <TableRow>
                   <TableCell
                     colSpan={8}
-                    className="text-center h-32 text-slate-500">
+                    className="text-center h-32 text-muted-foreground">
                     No parameters found matching your search.
                   </TableCell>
                 </TableRow>
@@ -253,25 +253,25 @@ export default function ParametersTab() {
                 filteredParams.map((param) => (
                   <TableRow
                     key={param.id}
-                    className={`hover:bg-slate-50/80 transition-colors ${param.isGlobal ? "bg-slate-50/30" : ""}`}>
+                    className={`hover:bg-muted/50/80 transition-colors ${param.isGlobal ? "bg-slate-50/30" : ""}`}>
                     <TableCell>
-                      <span className="font-mono text-xs font-semibold bg-slate-100 px-2 py-1 rounded text-slate-600 border border-slate-200">
+                      <span className="font-mono text-xs font-semibold bg-muted px-2 py-1 rounded text-muted-foreground border border-border">
                         {param.code}
                       </span>
                     </TableCell>
 
                     <TableCell>
                       <div className="flex flex-col">
-                        <span className="text-slate-900 font-medium">
+                        <span className="text-foreground font-medium">
                           {param.name}
                         </span>
                         <div className="flex items-center gap-2 mt-0.5">
                           {param.unit ? (
-                            <span className="text-[11px] text-blue-600 font-semibold">
+                            <span className="text-[11px] text-primary font-semibold">
                               {param.unit}
                             </span>
                           ) : (
-                            <span className="text-[11px] text-slate-400 italic">
+                            <span className="text-[11px] text-muted-foreground/70 italic">
                               No Unit
                             </span>
                           )}
@@ -279,7 +279,7 @@ export default function ParametersTab() {
                             param.printName !== param.name && (
                               <>
                                 <span className="text-slate-300">•</span>
-                                <span className="text-[10px] text-slate-500">
+                                <span className="text-[10px] text-muted-foreground">
                                   Print: {param.printName}
                                 </span>
                               </>
@@ -301,7 +301,7 @@ export default function ParametersTab() {
                     </TableCell>
 
                     <TableCell>
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-muted text-muted-foreground border border-border">
                         {param.inputType}
                       </span>
                     </TableCell>
@@ -310,18 +310,18 @@ export default function ParametersTab() {
                       {param.containerType ? (
                         <div className="flex items-center gap-2">
                           <div
-                            className="w-3 h-3 rounded-full border border-slate-300 shadow-sm"
+                            className="w-3 h-3 rounded-full border border-border shadow-sm"
                             style={{
                               backgroundColor:
                                 param.containerType.capColor || "#ccc",
                             }}
                           />
-                          <span className="text-xs text-slate-700 font-medium">
+                          <span className="text-xs text-foreground/80 font-medium">
                             {param.containerType.code}
                           </span>
                         </div>
                       ) : (
-                        <span className="text-slate-400 text-xs italic">
+                        <span className="text-muted-foreground/70 text-xs italic">
                           Unassigned
                         </span>
                       )}
@@ -348,13 +348,13 @@ export default function ParametersTab() {
                           ))}
                         </div>
                       ) : (
-                        <span className="text-slate-400 text-[11px] italic">
+                        <span className="text-muted-foreground/70 text-[11px] italic">
                           Not linked
                         </span>
                       )}
                     </TableCell>
 
-                    <TableCell className="text-right font-medium text-slate-900">
+                    <TableCell className="text-right font-medium text-foreground">
                       {param.price ? (
                         `₹${param.price}`
                       ) : (
@@ -368,7 +368,7 @@ export default function ParametersTab() {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleEdit(param)}
-                          className="text-slate-400 hover:text-blue-600 hover:bg-blue-50 h-8 w-8 transition-colors"
+                          className="text-muted-foreground/70 hover:text-primary hover:bg-primary/10 h-8 w-8 transition-colors"
                           title={
                             param.isGlobal ? "View Details" : "Edit Parameter"
                           }>
@@ -385,7 +385,7 @@ export default function ParametersTab() {
                             (deleteMutation.isPending &&
                               deleteMutation.variables === param.id)
                           }
-                          className="text-slate-400 hover:text-red-600 hover:bg-red-50 h-8 w-8 transition-colors disabled:opacity-30 disabled:hover:bg-transparent"
+                          className="text-muted-foreground/70 hover:text-red-600 hover:bg-red-50 h-8 w-8 transition-colors disabled:opacity-30 disabled:hover:bg-transparent"
                           title={
                             param.isGlobal
                               ? "Cannot delete global master parameters"

@@ -38,7 +38,7 @@ const ADDON_CATALOG = [
     sku: "ADDON_RADIOLOGY",
     name: "Radiology / RIS",
     icon: Activity,
-    color: "text-blue-600",
+    color: "text-primary",
     bg: "bg-blue-100",
   },
   {
@@ -142,7 +142,7 @@ export default function AdminAddonsPage() {
 
   if (loading)
     return (
-      <div className="flex h-[50vh] items-center justify-center animate-pulse text-slate-500">
+      <div className="flex h-[50vh] items-center justify-center animate-pulse text-muted-foreground">
         Loading module distribution...
       </div>
     );
@@ -151,10 +151,10 @@ export default function AdminAddonsPage() {
     <div className="max-w-7xl mx-auto space-y-8 pb-12">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-          <Puzzle className="text-blue-600" /> Module & Add-on Intelligence
+        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+          <Puzzle className="text-primary" /> Module & Add-on Intelligence
         </h1>
-        <p className="text-slate-500 mt-1">
+        <p className="text-muted-foreground mt-1">
           Monitor feature adoption and manually provision modules for specific
           labs.
         </p>
@@ -168,22 +168,22 @@ export default function AdminAddonsPage() {
           return (
             <div
               key={addon.sku}
-              className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center text-center transition hover:shadow-md">
+              className="bg-card p-5 rounded-xl border border-border shadow-sm flex flex-col items-center text-center transition hover:shadow-md">
               <div
                 className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${addon.bg} ${addon.color}`}>
                 <Icon size={24} />
               </div>
-              <h3 className="font-semibold text-slate-800 text-sm">
+              <h3 className="font-semibold text-foreground text-sm">
                 {addon.name}
               </h3>
-              <p className="text-xs text-slate-400 font-mono mt-1">
+              <p className="text-xs text-muted-foreground/70 font-mono mt-1">
                 {addon.sku}
               </p>
-              <div className="mt-4 py-1.5 px-3 bg-slate-50 rounded-lg w-full">
+              <div className="mt-4 py-1.5 px-3 bg-muted/30 rounded-lg w-full">
                 <span className="text-lg font-bold text-slate-800">
                   {activeCount}
                 </span>
-                <span className="text-xs text-slate-500 ml-1">Active Labs</span>
+                <span className="text-xs text-muted-foreground ml-1">Active Labs</span>
               </div>
             </div>
           );
@@ -191,8 +191,8 @@ export default function AdminAddonsPage() {
       </div>
 
       {/* 2. Lab Assignment Matrix */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="p-5 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+      <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
+        <div className="p-5 border-b border-border bg-muted/30 flex justify-between items-center">
           <h2 className="font-semibold text-slate-800">
             Add-on Distribution Matrix
           </h2>
@@ -200,8 +200,8 @@ export default function AdminAddonsPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[800px]">
             <thead>
-              <tr className="border-b border-slate-200 text-xs uppercase tracking-wider font-semibold text-slate-500">
-                <th className="p-4 bg-white sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0]">
+              <tr className="border-b border-border text-xs uppercase tracking-wider font-semibold text-muted-foreground">
+                <th className="p-4 bg-card sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0]">
                   Laboratory
                 </th>
                 <th className="p-4">Base Plan</th>
@@ -212,24 +212,24 @@ export default function AdminAddonsPage() {
             </thead>
             <tbody className="divide-y divide-slate-200">
               {subscriptions.map((sub) => (
-                <tr key={sub.id} className="hover:bg-slate-50">
-                  <td className="p-4 bg-white sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0]">
+                <tr key={sub.id} className="hover:bg-muted/30">
+                  <td className="p-4 bg-card sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0]">
                     <div className="font-semibold text-sm text-slate-800">
                       {sub.lab.name}
                     </div>
-                    <div className="text-xs font-mono text-slate-500">
+                    <div className="text-xs font-mono text-muted-foreground">
                       {sub.lab.labCode}
                     </div>
                   </td>
                   <td className="p-4">
-                    <span className="text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded-md font-semibold">
+                    <span className="text-xs bg-muted text-foreground/80 px-2 py-1 rounded-md font-semibold">
                       {sub.plan.displayName.replace("Patholab Cloud - ", "")}
                     </span>
                   </td>
                   <td className="p-4">
                     <div className="flex flex-wrap gap-1.5">
                       {(sub.unlockedFeatures || []).length === 0 ? (
-                        <span className="text-xs text-slate-400 italic">
+                        <span className="text-xs text-muted-foreground/70 italic">
                           None
                         </span>
                       ) : (
@@ -250,7 +250,7 @@ export default function AdminAddonsPage() {
                     </div>
                   </td>
                   <td className="p-4">
-                    <div className="flex gap-3 text-xs text-slate-600">
+                    <div className="flex gap-3 text-xs text-muted-foreground">
                       {sub.boosterBranches > 0 && (
                         <span
                           className="flex items-center gap-1"
@@ -275,7 +275,7 @@ export default function AdminAddonsPage() {
                       {sub.boosterBranches === 0 &&
                         sub.boosterStaff === 0 &&
                         sub.boosterStorage === 0 && (
-                          <span className="text-slate-400 italic">
+                          <span className="text-muted-foreground/70 italic">
                             Standard Limits
                           </span>
                         )}
@@ -284,7 +284,7 @@ export default function AdminAddonsPage() {
                   <td className="p-4 text-right">
                     <button
                       onClick={() => setEditingSub(sub)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-md transition-colors">
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-foreground/80 bg-card border border-border hover:bg-muted/30 rounded-md transition-colors">
                       <Edit3 size={14} />
                       Override
                     </button>
@@ -299,19 +299,19 @@ export default function AdminAddonsPage() {
       {/* 3. EDIT OVERRIDE MODAL */}
       {editingSub && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="p-5 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+          <div className="bg-card rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-5 border-b border-border bg-muted/30 flex justify-between items-center">
               <div>
                 <h3 className="font-bold text-slate-800">
                   Provision Overrides
                 </h3>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-muted-foreground">
                   Editing access for {editingSub.lab.name}
                 </p>
               </div>
               <button
                 onClick={() => setEditingSub(null)}
-                className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                className="p-1.5 text-muted-foreground/70 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
                 <X size={20} />
               </button>
             </div>
@@ -330,12 +330,12 @@ export default function AdminAddonsPage() {
                     return (
                       <label
                         key={feature.sku}
-                        className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-colors ${isUnlocked ? "bg-blue-50/50 border-blue-200" : "hover:bg-slate-50 border-slate-200"}`}>
+                        className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-colors ${isUnlocked ? "bg-primary/10/50 border-primary/20" : "hover:bg-muted/30 border-border"}`}>
                         <input
                           type="checkbox"
                           checked={isUnlocked}
                           onChange={() => toggleFeature(feature.sku)}
-                          className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300"
+                          className="w-4 h-4 rounded text-primary focus:ring-primary border-slate-300"
                         />
                         <div
                           className={`w-8 h-8 rounded-lg flex items-center justify-center ${feature.bg} ${feature.color}`}>
@@ -362,8 +362,8 @@ export default function AdminAddonsPage() {
                   Add Capacity Boosters
                 </label>
                 <div className="grid grid-cols-3 gap-4">
-                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                    <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block mb-1">
+                  <div className="bg-muted/30 p-3 rounded-lg border border-border">
+                    <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
                       Extra Branches
                     </label>
                     <input
@@ -376,11 +376,11 @@ export default function AdminAddonsPage() {
                           boosterBranches: Number(e.target.value),
                         })
                       }
-                      className="w-full border-slate-300 rounded-md py-1.5 text-sm focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full border-border rounded-md py-1.5 text-sm focus:ring-primary focus:border-blue-500"
                     />
                   </div>
-                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                    <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block mb-1">
+                  <div className="bg-muted/30 p-3 rounded-lg border border-border">
+                    <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
                       Extra Staff
                     </label>
                     <input
@@ -393,11 +393,11 @@ export default function AdminAddonsPage() {
                           boosterStaff: Number(e.target.value),
                         })
                       }
-                      className="w-full border-slate-300 rounded-md py-1.5 text-sm focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full border-border rounded-md py-1.5 text-sm focus:ring-primary focus:border-blue-500"
                     />
                   </div>
-                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                    <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block mb-1">
+                  <div className="bg-muted/30 p-3 rounded-lg border border-border">
+                    <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
                       Storage (GB)
                     </label>
                     <input
@@ -410,7 +410,7 @@ export default function AdminAddonsPage() {
                           boosterStorage: Number(e.target.value),
                         })
                       }
-                      className="w-full border-slate-300 rounded-md py-1.5 text-sm focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full border-border rounded-md py-1.5 text-sm focus:ring-primary focus:border-blue-500"
                     />
                   </div>
                 </div>
@@ -420,13 +420,13 @@ export default function AdminAddonsPage() {
                 <button
                   type="button"
                   onClick={() => setEditingSub(null)}
-                  className="px-5 py-2 text-sm font-medium border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50">
+                  className="px-5 py-2 text-sm font-medium border border-border text-foreground/80 rounded-lg hover:bg-muted/30">
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="px-5 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                  className="px-5 py-2 text-sm font-medium bg-primary text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
                   {isSaving ? "Saving..." : "Save Overrides"}
                 </button>
               </div>

@@ -55,25 +55,25 @@ export default function PricingOverrideModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+      <div className="bg-card rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
         {/* Header */}
-        <div className="p-5 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+        <div className="p-5 border-b border-border bg-muted/30 flex justify-between items-center">
           <div>
             <h3 className="font-bold text-slate-800">Manage Test Pricing</h3>
-            <p className="text-xs text-slate-500 font-mono mt-0.5">
+            <p className="text-xs text-muted-foreground font-mono mt-0.5">
               {test.code} • {test.name}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+            className="p-1.5 text-muted-foreground/70 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
             <X size={20} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {test.isGlobal && (
-            <div className="bg-blue-50 border border-blue-200 text-blue-800 p-3 rounded-lg text-xs flex gap-2 items-start">
+            <div className="bg-primary/10 border border-primary/20 text-blue-800 p-3 rounded-lg text-xs flex gap-2 items-start">
               <AlertCircle size={14} className="shrink-0 mt-0.5" />
               <p>
                 This is a Global Master test. Changes made here will only apply
@@ -85,7 +85,7 @@ export default function PricingOverrideModal({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">
+              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">
                 Patient Price (₹)
               </label>
               <input
@@ -94,11 +94,11 @@ export default function PricingOverrideModal({
                 required
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:outline-none"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">
+              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">
                 B2B / Agency Price (₹)
               </label>
               <input
@@ -107,13 +107,13 @@ export default function PricingOverrideModal({
                 required
                 value={b2bPrice}
                 onChange={(e) => setB2BPrice(e.target.value)}
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:outline-none"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">
+            <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">
               Turnaround Time (TAT)
             </label>
             <input
@@ -121,22 +121,22 @@ export default function PricingOverrideModal({
               placeholder="e.g., 24 Hours, 2 Days"
               value={tat}
               onChange={(e) => setTat(e.target.value)}
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:outline-none"
             />
           </div>
 
-          <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+          <label className="flex items-center gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-muted/30 transition-colors">
             <input
               type="checkbox"
               checked={isActive}
               onChange={(e) => setIsActive(e.target.checked)}
-              className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 border-slate-300"
+              className="w-4 h-4 text-primary rounded focus:ring-primary border-slate-300"
             />
             <div>
               <div className="text-sm font-medium text-slate-800">
                 Test is Active
               </div>
-              <div className="text-xs text-slate-500">
+              <div className="text-xs text-muted-foreground">
                 Uncheck to hide this test from your reception billing desk.
               </div>
             </div>
@@ -146,13 +146,13 @@ export default function PricingOverrideModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+              className="px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-muted rounded-lg transition-colors">
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="px-5 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2 transition-all">
+              className="px-5 py-2 text-sm font-medium bg-primary text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2 transition-all">
               {saving ? (
                 "Saving..."
               ) : (

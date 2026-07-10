@@ -56,23 +56,23 @@ export default async function AdminDeductionsPage() {
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-slate-900 flex items-center gap-2">
+          <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-2">
             <ArrowUpRight className="h-8 w-8 text-rose-600" /> Usage Deductions
           </h1>
-          <p className="text-slate-500 font-medium mt-1">
+          <p className="text-muted-foreground font-medium mt-1">
             Real-time firehose of clinical operations burning platform credits.
           </p>
         </div>
         <Button
           variant="outline"
-          className="text-slate-700 rounded-xl shadow-sm font-bold border-slate-200">
+          className="text-foreground/80 rounded-xl shadow-sm font-bold border-border">
           <Download className="w-4 h-4 mr-2" /> Export Ledger
         </Button>
       </div>
 
       {/* KPI METRIC */}
       <Card className="border-0 shadow-lg bg-gradient-to-br from-rose-500 to-rose-700 text-white relative overflow-hidden rounded-2xl w-full md:w-1/3">
-        <div className="absolute top-0 right-0 p-24 bg-white opacity-5 rounded-full -mr-10 -mt-10 blur-2xl" />
+        <div className="absolute top-0 right-0 p-24 bg-card opacity-5 rounded-full -mr-10 -mt-10 blur-2xl" />
         <CardContent className="p-6 relative z-10 flex flex-col justify-center">
           <div className="flex items-center justify-between mb-2 opacity-90">
             <p className="text-sm font-bold uppercase tracking-wider">
@@ -87,9 +87,9 @@ export default async function AdminDeductionsPage() {
       </Card>
 
       {/* DEDUCTIONS TABLE */}
-      <Card className="border-slate-200 shadow-sm rounded-2xl overflow-hidden bg-white">
+      <Card className="border-border shadow-sm rounded-2xl overflow-hidden bg-card">
         <CardHeader className="border-b border-slate-100 bg-slate-50/50 pb-4">
-          <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2">
+          <CardTitle className="text-lg font-bold text-foreground flex items-center gap-2">
             <Activity className="w-5 h-5 text-rose-600" /> Live Burn Firehose
           </CardTitle>
           <CardDescription>
@@ -98,7 +98,7 @@ export default async function AdminDeductionsPage() {
         </CardHeader>
         <CardContent className="p-0 overflow-x-auto">
           <table className="w-full text-sm text-left whitespace-nowrap">
-            <thead className="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-widest">
+            <thead className="bg-muted/30 border-b border-border text-xs font-bold text-muted-foreground uppercase tracking-widest">
               <tr>
                 <th className="px-6 py-4">Tenant Lab</th>
                 <th className="px-6 py-4">Timestamp</th>
@@ -111,7 +111,7 @@ export default async function AdminDeductionsPage() {
                 <tr>
                   <td
                     colSpan={4}
-                    className="p-12 text-center text-slate-500 font-medium">
+                    className="p-12 text-center text-muted-foreground font-medium">
                     No deductions found.
                   </td>
                 </tr>
@@ -119,30 +119,30 @@ export default async function AdminDeductionsPage() {
                 transactions.map((tx) => (
                   <tr
                     key={tx.id}
-                    className="hover:bg-slate-50 transition-colors bg-white">
+                    className="hover:bg-muted/30 transition-colors bg-card">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-slate-100 text-slate-500 rounded-lg border border-slate-200">
+                        <div className="p-2 bg-muted text-muted-foreground rounded-lg border border-border">
                           <Building2 className="w-4 h-4" />
                         </div>
                         <div>
-                          <p className="font-bold text-slate-900">
+                          <p className="font-bold text-foreground">
                             {tx.wallet.lab?.name || "Unknown Lab"}
                           </p>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <p className="font-bold text-slate-800 flex items-center gap-1.5">
+                      <p className="font-bold text-foreground flex items-center gap-1.5">
                         <Clock className="w-3.5 h-3.5 text-slate-400" />{" "}
                         {format(new Date(tx.createdAt), "hh:mm:ss a")}
                       </p>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">
+                      <p className="text-[10px] font-bold text-muted-foreground/70 uppercase mt-0.5">
                         {format(new Date(tx.createdAt), "dd MMM yyyy")}
                       </p>
                     </td>
                     <td className="px-6 py-4">
-                      <p className="text-sm font-semibold text-slate-700 truncate max-w-[300px]">
+                      <p className="text-sm font-semibold text-foreground/80 truncate max-w-[300px]">
                         {tx.description}
                       </p>
                       <Badge
@@ -155,7 +155,7 @@ export default async function AdminDeductionsPage() {
                       <span className="font-black text-lg text-rose-600">
                         -{formatCurrency(Number(tx.amount))}
                       </span>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                      <p className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-widest mt-1">
                         Bal: {formatCurrency(Number(tx.closingBalance))}
                       </p>
                     </td>

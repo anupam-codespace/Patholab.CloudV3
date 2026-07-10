@@ -113,31 +113,31 @@ export default function AdminArchivesPage() {
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-slate-900 flex items-center gap-2">
+          <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-2">
             <Trash2 className="h-8 w-8 text-rose-600" /> Platform Recycle Bin
           </h1>
-          <p className="text-slate-500 font-medium mt-1">
+          <p className="text-muted-foreground font-medium mt-1">
             Omniscient view of all soft-deleted records. Restore data or purge
             it permanently.
           </p>
         </div>
       </div>
 
-      <Card className="border-slate-200 shadow-sm rounded-2xl bg-white overflow-hidden">
+      <Card className="border-border shadow-sm rounded-2xl bg-card overflow-hidden">
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-4 items-center bg-slate-50/50 p-4 border-b border-slate-100">
           <div className="relative flex-1 w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
               placeholder="Search by ID, Name, or Lab..."
-              className="pl-9 rounded-xl bg-white border-slate-200 focus:border-rose-500"
+              className="pl-9 rounded-xl bg-card border-border focus:border-rose-500"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-full sm:w-[200px] rounded-xl bg-white border-slate-200">
-              <div className="flex items-center gap-2 font-bold text-slate-600">
+            <SelectTrigger className="w-full sm:w-[200px] rounded-xl bg-card border-border">
+              <div className="flex items-center gap-2 font-bold text-muted-foreground">
                 <Database className="h-4 w-4 text-slate-400" />
                 <SelectValue placeholder="Category" />
               </div>
@@ -157,21 +157,21 @@ export default function AdminArchivesPage() {
         {/* Table */}
         <div className="overflow-x-auto">
           <Table>
-            <TableHeader className="bg-slate-50">
+            <TableHeader className="bg-muted/30">
               <TableRow>
-                <TableHead className="font-bold text-slate-500 uppercase tracking-widest text-xs">
+                <TableHead className="font-bold text-muted-foreground uppercase tracking-widest text-xs">
                   Entity Type
                 </TableHead>
-                <TableHead className="font-bold text-slate-500 uppercase tracking-widest text-xs">
+                <TableHead className="font-bold text-muted-foreground uppercase tracking-widest text-xs">
                   Identity / Name
                 </TableHead>
-                <TableHead className="font-bold text-slate-500 uppercase tracking-widest text-xs">
+                <TableHead className="font-bold text-muted-foreground uppercase tracking-widest text-xs">
                   Tenant Lab
                 </TableHead>
-                <TableHead className="font-bold text-slate-500 uppercase tracking-widest text-xs">
+                <TableHead className="font-bold text-muted-foreground uppercase tracking-widest text-xs">
                   Deleted At
                 </TableHead>
-                <TableHead className="text-right font-bold text-slate-500 uppercase tracking-widest text-xs">
+                <TableHead className="text-right font-bold text-muted-foreground uppercase tracking-widest text-xs">
                   Actions
                 </TableHead>
               </TableRow>
@@ -181,7 +181,7 @@ export default function AdminArchivesPage() {
                 <TableRow>
                   <TableCell
                     colSpan={5}
-                    className="h-32 text-center text-slate-500">
+                    className="h-32 text-center text-muted-foreground">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto text-rose-500 mb-2" />
                     Scanning database archives...
                   </TableCell>
@@ -190,7 +190,7 @@ export default function AdminArchivesPage() {
                 <TableRow>
                   <TableCell
                     colSpan={5}
-                    className="h-32 text-center text-slate-500 font-medium">
+                    className="h-32 text-center text-muted-foreground font-medium">
                     No soft-deleted records found.
                   </TableCell>
                 </TableRow>
@@ -198,7 +198,7 @@ export default function AdminArchivesPage() {
                 filteredArchives.map((item: any) => (
                   <TableRow
                     key={`${item.type}-${item.id}`}
-                    className="hover:bg-slate-50/50 transition-colors">
+                    className="hover:bg-muted/50/50 transition-colors">
                     <TableCell>
                       <Badge
                         variant="outline"
@@ -207,22 +207,22 @@ export default function AdminArchivesPage() {
                           item.type === "LAB"
                             ? "bg-indigo-50 text-indigo-700 border-indigo-200"
                             : item.type === "PATIENT"
-                              ? "bg-blue-50 text-blue-700 border-blue-200"
+                              ? "bg-primary/10 text-primary border-primary/20"
                               : item.type === "STAFF"
                                 ? "bg-amber-50 text-amber-700 border-amber-200"
-                                : "bg-slate-100 text-slate-700 border-slate-200"
+                                : "bg-muted text-foreground/80 border-border"
                         }`}>
                         {item.type}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <p className="font-bold text-slate-900">{item.name}</p>
-                      <p className="text-[10px] font-mono text-slate-400 mt-0.5">
+                      <p className="font-bold text-foreground">{item.name}</p>
+                      <p className="text-[10px] font-mono text-muted-foreground/70 mt-0.5">
                         {item.id}
                       </p>
                     </TableCell>
                     <TableCell>
-                      <span className="text-sm font-semibold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-md">
+                      <span className="text-sm font-semibold text-foreground/80 bg-muted px-2.5 py-1 rounded-md">
                         {item.labName}
                       </span>
                     </TableCell>
@@ -242,11 +242,11 @@ export default function AdminArchivesPage() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg">
+                              className="text-muted-foreground/70 hover:text-primary hover:bg-primary/10 rounded-lg">
                               <Eye className="w-4 h-4" />
                             </Button>
                           </DialogTrigger>
-                          <DialogContent className="max-w-2xl bg-white rounded-2xl">
+                          <DialogContent className="max-w-2xl bg-card rounded-2xl">
                             <DialogHeader>
                               <DialogTitle className="flex items-center gap-2 text-xl font-black text-slate-800">
                                 <FileJson className="w-5 h-5 text-indigo-500" />{" "}

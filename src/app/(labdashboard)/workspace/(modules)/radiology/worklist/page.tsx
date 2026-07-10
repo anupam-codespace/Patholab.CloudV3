@@ -119,13 +119,13 @@ export default function TechnicianWorklistPage() {
   return (
     <div className="p-6 max-w-[1600px] mx-auto space-y-6">
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200 pb-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-border pb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-            <ScanLine className="h-6 w-6 text-blue-600" />
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <ScanLine className="h-6 w-6 text-primary" />
             Technician Worklist
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Live queue of arrived patients. Manage safety checks and scan
             execution.
           </p>
@@ -143,7 +143,7 @@ export default function TechnicianWorklistPage() {
               })
             }
             disabled={isFetching}
-            className="bg-white">
+            className="bg-card">
             <RefreshCw
               className={`h-4 w-4 mr-2 ${isFetching ? "animate-spin" : ""}`}
             />{" "}
@@ -153,11 +153,11 @@ export default function TechnicianWorklistPage() {
       </div>
 
       {/* TOOLBAR */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between gap-4">
-        <div className="flex gap-2 bg-slate-100 p-1 rounded-lg overflow-x-auto scrollbar-hide">
+      <div className="bg-card p-4 rounded-xl border border-border shadow-sm flex flex-col md:flex-row justify-between gap-4">
+        <div className="flex gap-2 bg-muted p-1 rounded-lg overflow-x-auto scrollbar-hide">
           <button
             onClick={() => setActiveModality("ALL")}
-            className={`px-6 py-1.5 text-sm font-bold rounded-md whitespace-nowrap transition-colors ${activeModality === "ALL" ? "bg-blue-600 text-white shadow-sm" : "text-slate-500 hover:text-slate-900 hover:bg-slate-200/50"}`}>
+            className={`px-6 py-1.5 text-sm font-bold rounded-md whitespace-nowrap transition-colors ${activeModality === "ALL" ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-slate-200/50"}`}>
             ALL Rooms
           </button>
           {uniqueModalityTypes.map((mod: any) => (
@@ -166,8 +166,8 @@ export default function TechnicianWorklistPage() {
               onClick={() => setActiveModality(mod)}
               className={`px-6 py-1.5 text-sm font-bold rounded-md whitespace-nowrap transition-colors ${
                 activeModality === mod
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "text-slate-500 hover:text-slate-900 hover:bg-slate-200/50"
+                  ? "bg-primary text-white shadow-sm"
+                  : "text-muted-foreground hover:text-foreground hover:bg-slate-200/50"
               }`}>
               {mod} Room
             </button>
@@ -178,7 +178,7 @@ export default function TechnicianWorklistPage() {
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
           <Input
             placeholder="Search accession or patient..."
-            className="pl-9 bg-white"
+            className="pl-9 bg-card"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -189,12 +189,12 @@ export default function TechnicianWorklistPage() {
       <div className="space-y-4 min-h-[400px]">
         {isLoading ? (
           <div className="flex h-64 items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : filteredList.length === 0 ? (
-          <div className="bg-white rounded-xl border border-slate-200 p-16 text-center text-slate-400 shadow-sm">
+          <div className="bg-card rounded-xl border border-border p-16 text-center text-muted-foreground/70 shadow-sm">
             <CheckCircle2 className="h-16 w-16 mx-auto mb-4 opacity-20 text-emerald-500" />
-            <h3 className="text-xl font-bold text-slate-600">Queue is Clear</h3>
+            <h3 className="text-xl font-bold text-muted-foreground">Queue is Clear</h3>
             <p className="text-sm mt-2 max-w-sm mx-auto">
               No arrived patients waiting for this modality. Take a break or
               check the scheduled list.
@@ -204,19 +204,19 @@ export default function TechnicianWorklistPage() {
           filteredList.map((item: any) => (
             <div
               key={item.id}
-              className={`bg-white rounded-xl border shadow-sm transition-all overflow-hidden flex flex-col md:flex-row ${
+              className={`bg-card rounded-xl border shadow-sm transition-all overflow-hidden flex flex-col md:flex-row ${
                 item.status === "IN_PROGRESS"
                   ? "border-blue-400 shadow-blue-100 ring-1 ring-blue-400"
-                  : "border-slate-200 hover:border-slate-300"
+                  : "border-border hover:border-slate-300"
               }`}>
               {/* Left Color Bar & Time */}
               <div
                 className={`w-full md:w-48 p-4 md:p-6 flex flex-row md:flex-col justify-between md:justify-center items-center md:border-r border-slate-100 ${
                   item.status === "IN_PROGRESS"
-                    ? "bg-blue-50"
+                    ? "bg-primary/10"
                     : item.status === "ARRIVED"
                       ? "bg-amber-50"
-                      : "bg-slate-50"
+                      : "bg-muted/30"
                 }`}>
                 <div className="text-center">
                   <span className="block text-xl font-black text-slate-800">
@@ -228,7 +228,7 @@ export default function TechnicianWorklistPage() {
                         ? "bg-blue-200 text-blue-800"
                         : item.status === "ARRIVED"
                           ? "bg-amber-200 text-amber-800"
-                          : "bg-slate-200 text-slate-600"
+                          : "bg-slate-200 text-muted-foreground"
                     }`}>
                     {item.status === "IN_PROGRESS" && (
                       <Activity className="h-3 w-3 animate-pulse" />
@@ -247,24 +247,24 @@ export default function TechnicianWorklistPage() {
                 <div className="flex flex-col md:flex-row justify-between items-start gap-4">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-mono border border-slate-200">
+                      <span className="text-xs font-bold px-2 py-0.5 rounded bg-muted text-muted-foreground font-mono border border-border">
                         {item.study?.accessionNumber || "NO-ACCESSION"}
                       </span>
                       <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
                         <Server className="h-3 w-3" /> MWL Linked
                       </span>
                     </div>
-                    <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                    <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
                       {item.patient.name}
-                      <span className="text-sm font-normal text-slate-500">
+                      <span className="text-sm font-normal text-muted-foreground">
                         ({item.patient.age} {item.patient.ageUnit.charAt(0)} /{" "}
                         {item.patient.gender.charAt(0)})
                       </span>
                     </h2>
-                    <p className="text-base font-bold text-blue-700 mt-1 flex items-center gap-1.5">
+                    <p className="text-base font-bold text-primary mt-1 flex items-center gap-1.5">
                       <Radio className="h-4 w-4" /> {item.scanName}
                     </p>
-                    <p className="text-xs font-medium text-slate-500 mt-0.5">
+                    <p className="text-xs font-medium text-muted-foreground mt-0.5">
                       Machine: {item.modality.name}
                     </p>
                   </div>
@@ -272,8 +272,8 @@ export default function TechnicianWorklistPage() {
                   {/* Clinical Notes & Safety */}
                   <div className="w-full md:w-72 space-y-2">
                     {item.notes && (
-                      <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-lg text-xs text-slate-700 flex items-start gap-2">
-                        <FileText className="h-4 w-4 text-slate-400 shrink-0 mt-0.5" />
+                      <div className="p-2.5 bg-muted/30 border border-slate-100 rounded-lg text-xs text-foreground/80 flex items-start gap-2">
+                        <FileText className="h-4 w-4 text-muted-foreground/70 shrink-0 mt-0.5" />
                         <p>
                           <span className="font-bold text-slate-800">
                             Desk Notes:
@@ -296,9 +296,9 @@ export default function TechnicianWorklistPage() {
               </div>
 
               {/* Right Content - Actions */}
-              <div className="p-4 md:p-6 border-t md:border-t-0 md:border-l border-slate-100 flex flex-row md:flex-col justify-end items-center gap-3 bg-white w-full md:w-56">
+              <div className="p-4 md:p-6 border-t md:border-t-0 md:border-l border-slate-100 flex flex-row md:flex-col justify-end items-center gap-3 bg-card w-full md:w-56">
                 {item.status === "SCHEDULED" && (
-                  <p className="text-xs font-bold text-slate-400 text-center w-full">
+                  <p className="text-xs font-bold text-muted-foreground/70 text-center w-full">
                     Waiting for Front Desk Check-in
                   </p>
                 )}
@@ -306,14 +306,14 @@ export default function TechnicianWorklistPage() {
                 {item.status === "ARRIVED" && (
                   <Button
                     onClick={() => handleStartClick(item)}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-md h-12">
+                    className="w-full bg-primary hover:bg-blue-700 text-white shadow-md h-12">
                     <ScanLine className="h-5 w-5 mr-2" /> Start Examination
                   </Button>
                 )}
 
                 {item.status === "IN_PROGRESS" && (
                   <div className="w-full flex flex-col gap-2">
-                    <p className="text-xs font-bold text-blue-600 text-center uppercase tracking-wider flex items-center justify-center gap-1 mb-1">
+                    <p className="text-xs font-bold text-primary text-center uppercase tracking-wider flex items-center justify-center gap-1 mb-1">
                       <Activity className="h-4 w-4 animate-pulse" /> Scanning...
                     </p>
                     <Button
@@ -338,38 +338,38 @@ export default function TechnicianWorklistPage() {
       {/* PRE-SCAN SAFETY CHECKLIST MODAL */}
       {activeScan && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="px-6 py-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+          <div className="bg-card rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b border-slate-100 bg-muted/30 flex justify-between items-center">
               <div>
                 <h2 className="text-lg font-bold text-slate-800">
                   Pre-Scan Safety Verification
                 </h2>
-                <p className="text-xs font-medium text-slate-500 mt-1">
+                <p className="text-xs font-medium text-muted-foreground mt-1">
                   Accession: {activeScan.study?.accessionNumber}
                 </p>
               </div>
             </div>
 
             <div className="p-6 space-y-6">
-              <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 flex gap-3 items-start">
-                <User className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
+              <div className="bg-primary/10 p-4 rounded-lg border border-blue-100 flex gap-3 items-start">
+                <User className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                 <div>
                   <h4 className="font-bold text-blue-900 text-base">
                     {activeScan.patient.name}
                   </h4>
-                  <p className="text-sm text-blue-700">{activeScan.scanName}</p>
+                  <p className="text-sm text-primary">{activeScan.scanName}</p>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <h4 className="font-bold text-slate-800 text-sm uppercase tracking-wider border-b pb-2">
+                <h4 className="font-bold text-foreground text-sm uppercase tracking-wider border-b pb-2">
                   Mandatory Checks
                 </h4>
 
-                <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+                <label className="flex items-center gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-muted/30 transition-colors">
                   <input
                     type="checkbox"
-                    className="h-5 w-5 text-blue-600 rounded border-slate-300 focus:ring-blue-600"
+                    className="h-5 w-5 text-primary rounded border-border focus:ring-blue-600"
                     checked={checklist.idVerified}
                     onChange={(e) =>
                       setChecklist({
@@ -379,19 +379,19 @@ export default function TechnicianWorklistPage() {
                     }
                   />
                   <div>
-                    <p className="font-bold text-slate-800 text-sm">
+                    <p className="font-bold text-foreground text-sm">
                       Patient ID Verified
                     </p>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-muted-foreground">
                       I have verbally confirmed the patient's name and DOB.
                     </p>
                   </div>
                 </label>
 
-                <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+                <label className="flex items-center gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-muted/30 transition-colors">
                   <input
                     type="checkbox"
-                    className="h-5 w-5 text-blue-600 rounded border-slate-300 focus:ring-blue-600"
+                    className="h-5 w-5 text-primary rounded border-border focus:ring-blue-600"
                     checked={checklist.safetyCleared}
                     onChange={(e) =>
                       setChecklist({
@@ -401,10 +401,10 @@ export default function TechnicianWorklistPage() {
                     }
                   />
                   <div>
-                    <p className="font-bold text-slate-800 text-sm">
+                    <p className="font-bold text-foreground text-sm">
                       Safety Screening Passed
                     </p>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-muted-foreground">
                       Checked for metal implants, pacemakers, and pregnancy if
                       applicable.
                     </p>
@@ -412,10 +412,10 @@ export default function TechnicianWorklistPage() {
                 </label>
 
                 {activeScan.scanName.toLowerCase().includes("contrast") && (
-                  <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+                  <label className="flex items-center gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-muted/30 transition-colors">
                     <input
                       type="checkbox"
-                      className="h-5 w-5 text-blue-600 rounded border-slate-300 focus:ring-blue-600"
+                      className="h-5 w-5 text-primary rounded border-border focus:ring-blue-600"
                       checked={checklist.consentSigned}
                       onChange={(e) =>
                         setChecklist({
@@ -425,10 +425,10 @@ export default function TechnicianWorklistPage() {
                       }
                     />
                     <div>
-                      <p className="font-bold text-slate-800 text-sm">
+                      <p className="font-bold text-foreground text-sm">
                         Contrast Consent Signed
                       </p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-muted-foreground">
                         Renal function (Creatinine) verified and consent
                         obtained.
                       </p>
@@ -438,11 +438,11 @@ export default function TechnicianWorklistPage() {
               </div>
             </div>
 
-            <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+            <div className="px-6 py-4 border-t border-slate-100 bg-muted/30 flex justify-end gap-3">
               <Button
                 variant="ghost"
                 onClick={() => setActiveScan(null)}
-                className="text-slate-600">
+                className="text-muted-foreground">
                 Cancel
               </Button>
               <Button
@@ -454,7 +454,7 @@ export default function TechnicianWorklistPage() {
                     !checklist.consentSigned) ||
                   actionMutation.isPending
                 }
-                className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6">
+                className="bg-primary hover:bg-blue-700 text-white font-bold px-6">
                 {actionMutation.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : null}

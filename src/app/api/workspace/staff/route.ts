@@ -181,6 +181,7 @@ export async function PATCH(req: NextRequest) {
             userId: admin.id,
             action: isActive ? "ACTIVATE_STAFF" : "SUSPEND_STAFF",
             entity: "STAFF",
+            entityType: "STAFF",
             entityId: staffId,
             description: `${isActive ? 'Activated' : 'Suspended'} access for ${staffRecord.user.name}`
           }
@@ -213,6 +214,7 @@ export async function PATCH(req: NextRequest) {
             userId: admin.id,
             action: "UPDATE_STAFF",
             entity: "STAFF",
+            entityType: "STAFF",
             entityId: staffId,
             description: `Updated profile details for staff member: ${name}`
           }
@@ -243,6 +245,7 @@ export async function PATCH(req: NextRequest) {
             userId: admin.id,
             action: "REMOVE_STAFF",
             entity: "STAFF",
+            entityType: "STAFF",
             entityId: staffId,
             description: `Removed staff member: ${staffRecord.user.name}`
           }

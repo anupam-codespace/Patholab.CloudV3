@@ -35,6 +35,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { ThemeToggle } from "@/components/common/ThemeToggle";
 
 interface AdminHeaderProps {
   user: { name: string; role: string; avatar?: string };
@@ -98,7 +99,7 @@ export function AdminHeader({ user }: AdminHeaderProps) {
   }, [query]);
 
   return (
-    <header className="bg-white border-b border-slate-200 h-16 px-4 md:px-8 flex items-center justify-between sticky top-0 z-40">
+    <header className="bg-card border-b border-border h-16 px-4 md:px-8 flex items-center justify-between sticky top-0 z-40">
       {/* ================= LEFT SIDE: SEARCH ================= */}
       <div className="flex items-center gap-4 w-full max-w-md md:max-w-xl lg:w-1/2">
         {/* Environment Badge */}
@@ -113,7 +114,7 @@ export function AdminHeader({ user }: AdminHeaderProps) {
           {isSearching ? (
             <Loader2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-500 animate-spin" />
           ) : (
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/70 group-focus-within:text-emerald-500 transition-colors" />
           )}
 
           <Input
@@ -121,20 +122,20 @@ export function AdminHeader({ user }: AdminHeaderProps) {
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => query.length >= 2 && setShowResults(true)}
             placeholder="Search labs, invoices, or users..."
-            className="pl-9 pr-12 bg-slate-50 border-slate-200 focus:bg-white focus:ring-2 focus:ring-emerald-100 transition-all rounded-lg w-full"
+            className="pl-9 pr-12 bg-muted/30 border-border focus:bg-card focus:ring-2 focus:ring-emerald-100 transition-all rounded-lg w-full"
           />
 
-          <div className="absolute right-2 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-0.5 bg-white border border-slate-200 px-1.5 py-0.5 rounded text-[10px] font-mono text-slate-400 shadow-sm pointer-events-none">
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-0.5 bg-card border border-border px-1.5 py-0.5 rounded text-[10px] font-mono text-muted-foreground/70 shadow-sm pointer-events-none">
             <Command className="h-3 w-3" />K
           </div>
 
           {/* SEARCH RESULTS DROPDOWN */}
           {showResults && results && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-lg shadow-xl overflow-hidden z-50 max-h-[400px] overflow-y-auto">
+            <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-lg shadow-xl overflow-hidden z-50 max-h-[400px] overflow-y-auto">
               {/* Labs Section */}
               {results.labs?.length > 0 && (
                 <div className="p-2">
-                  <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 px-2 flex items-center gap-2">
+                  <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2 px-2 flex items-center gap-2">
                     <Building2 className="h-3 w-3" /> Labs
                   </h3>
                   {results.labs.map((lab) => (
@@ -145,11 +146,11 @@ export function AdminHeader({ user }: AdminHeaderProps) {
                         setShowResults(false);
                         setQuery("");
                       }}
-                      className="w-full text-left px-3 py-2 hover:bg-slate-50 rounded-md transition-colors flex flex-col">
+                      className="w-full text-left px-3 py-2 hover:bg-muted/30 rounded-md transition-colors flex flex-col">
                       <span className="text-sm font-semibold text-slate-800">
                         {lab.name}
                       </span>
-                      <span className="text-xs text-slate-500">
+                      <span className="text-xs text-muted-foreground">
                         License: {lab.licenseNumber || "N/A"}
                       </span>
                     </button>
@@ -160,7 +161,7 @@ export function AdminHeader({ user }: AdminHeaderProps) {
               {/* Invoices Section */}
               {results.invoices?.length > 0 && (
                 <div className="p-2 border-t border-slate-100">
-                  <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 px-2 flex items-center gap-2">
+                  <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2 px-2 flex items-center gap-2">
                     <Receipt className="h-3 w-3" /> Invoices
                   </h3>
                   {results.invoices.map((inv) => (
@@ -171,12 +172,12 @@ export function AdminHeader({ user }: AdminHeaderProps) {
                         setShowResults(false);
                         setQuery("");
                       }}
-                      className="w-full text-left px-3 py-2 hover:bg-slate-50 rounded-md transition-colors flex justify-between items-center">
+                      className="w-full text-left px-3 py-2 hover:bg-muted/30 rounded-md transition-colors flex justify-between items-center">
                       <div>
                         <span className="text-sm font-semibold text-slate-800">
                           {inv.invoiceNumber}
                         </span>
-                        <span className="text-xs text-slate-500 block">
+                        <span className="text-xs text-muted-foreground block">
                           Status: {inv.status}
                         </span>
                       </div>
@@ -191,7 +192,7 @@ export function AdminHeader({ user }: AdminHeaderProps) {
               {/* Users Section */}
               {results.users?.length > 0 && (
                 <div className="p-2 border-t border-slate-100">
-                  <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 px-2 flex items-center gap-2">
+                  <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2 px-2 flex items-center gap-2">
                     <Users className="h-3 w-3" /> Users
                   </h3>
                   {results.users.map((u) => (
@@ -202,11 +203,11 @@ export function AdminHeader({ user }: AdminHeaderProps) {
                         setShowResults(false);
                         setQuery("");
                       }}
-                      className="w-full text-left px-3 py-2 hover:bg-slate-50 rounded-md transition-colors flex flex-col">
+                      className="w-full text-left px-3 py-2 hover:bg-muted/30 rounded-md transition-colors flex flex-col">
                       <span className="text-sm font-semibold text-slate-800">
                         {u.name}
                       </span>
-                      <span className="text-xs text-slate-500">{u.email}</span>
+                      <span className="text-xs text-muted-foreground">{u.email}</span>
                     </button>
                   ))}
                 </div>
@@ -216,7 +217,7 @@ export function AdminHeader({ user }: AdminHeaderProps) {
               {results.labs?.length === 0 &&
                 results.invoices?.length === 0 &&
                 results.users?.length === 0 && (
-                  <div className="p-6 text-center text-sm text-slate-500">
+                  <div className="p-6 text-center text-sm text-muted-foreground">
                     No results found for "{query}"
                   </div>
                 )}
@@ -238,7 +239,7 @@ export function AdminHeader({ user }: AdminHeaderProps) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel className="text-xs text-slate-500 uppercase tracking-wider">
+            <DropdownMenuLabel className="text-xs text-muted-foreground uppercase tracking-wider">
               Platform Economics
             </DropdownMenuLabel>
             <DropdownMenuItem asChild>
@@ -250,28 +251,28 @@ export function AdminHeader({ user }: AdminHeaderProps) {
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuLabel className="text-xs text-slate-500 uppercase tracking-wider">
+            <DropdownMenuLabel className="text-xs text-muted-foreground uppercase tracking-wider">
               Tenants
             </DropdownMenuLabel>
             <DropdownMenuItem asChild>
               <Link
                 href="/admin/labs/new"
                 className="cursor-pointer flex items-center gap-2 font-medium">
-                <Building2 className="h-4 w-4 text-slate-500" /> Onboard New Lab
+                <Building2 className="h-4 w-4 text-muted-foreground" /> Onboard New Lab
               </Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
         {/* Action Icons (Help & Notifications) */}
-        <div className="flex items-center gap-1 border-r border-slate-200 pr-2 md:pr-3 mr-1">
+        <div className="flex items-center gap-1 border-r border-border pr-2 md:pr-3 mr-1">
           <TooltipProvider delayDuration={0}>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-full h-9 w-9 hidden md:inline-flex">
+                  className="text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50 rounded-full h-9 w-9 hidden md:inline-flex">
                   <HelpCircle className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
@@ -285,7 +286,7 @@ export function AdminHeader({ user }: AdminHeaderProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-full h-9 w-9 relative">
+                  className="text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50 rounded-full h-9 w-9 relative">
                   <Bell className="h-4 w-4" />
                   <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full border-2 border-white"></span>
                 </Button>
@@ -295,6 +296,9 @@ export function AdminHeader({ user }: AdminHeaderProps) {
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
+
+          {/* Theme Toggle */}
+          <ThemeToggle />
         </div>
 
         {/* User Profile Dropdown */}
@@ -302,12 +306,12 @@ export function AdminHeader({ user }: AdminHeaderProps) {
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="flex items-center gap-3 pl-2 pr-2 md:pr-3 py-1 h-auto hover:bg-slate-50 rounded-full border border-transparent hover:border-slate-200 transition-all focus-visible:ring-0 focus-visible:ring-offset-0">
+              className="flex items-center gap-3 pl-2 pr-2 md:pr-3 py-1 h-auto hover:bg-muted/30 rounded-full border border-transparent hover:border-border transition-all focus-visible:ring-0 focus-visible:ring-offset-0">
               <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-emerald-600 to-emerald-400 flex items-center justify-center text-white font-bold text-xs shadow-sm shadow-emerald-200 shrink-0">
                 {user?.name ? user.name.charAt(0).toUpperCase() : "A"}
               </div>
               <div className="text-left hidden md:block">
-                <p className="text-sm font-bold text-slate-700 leading-none truncate max-w-[120px]">
+                <p className="text-sm font-bold text-foreground/80 leading-none truncate max-w-[120px]">
                   {user?.name || "Admin"}
                 </p>
                 <p className="text-[10px] text-emerald-600 font-bold uppercase mt-1 tracking-widest">
@@ -318,7 +322,7 @@ export function AdminHeader({ user }: AdminHeaderProps) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56 mt-2">
             <div className="px-2 py-1.5 mb-1">
-              <p className="text-sm font-bold text-slate-900 truncate">
+              <p className="text-sm font-bold text-foreground truncate">
                 {user?.name || "Admin"}
               </p>
               <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 mt-0.5">
