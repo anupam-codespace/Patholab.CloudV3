@@ -173,8 +173,9 @@ export async function POST(
                         ...(notes && notes[test.id] !== undefined ? { notes: notes[test.id] } : {}),
                         ...(impressions && impressions[test.id] !== undefined ? { impression: impressions[test.id] } : {}),
                         
-                        ...(newStatus ? { 
+                        ...(newStatus ? {
                             status: newStatus as any,
+                            ...(newStatus === 'COMPLETED' ? { completedAt: new Date(), checkedAt: new Date(), checkedBy: user.name } : {}),
                             ...(newStatus === 'APPROVED' ? { approvedAt: new Date(), approvedBy: user.name } : {})
                         } : {})
                     }

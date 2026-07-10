@@ -90,7 +90,7 @@ export default function ComingSoon({
 
         {/* Feature Highlights */}
         {highlights.length > 0 && (
-          <div className="mb-8 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+          <div className="mb-8 p-6 bg-card dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
             <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
               What's on the way:
             </h2>

@@ -57,17 +57,21 @@ export default function ForgotPasswordPage() {
   const onSendOtp = async (data: any) => {
     setLoading(true);
     try {
-      await fetch("/api/auth/forgot-password", {
+      const res = await fetch("/api/auth/forgot-password", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      // Always show success for security
-      toast.success(`If account exists, OTP sent to ${data.email}`);
+      const result = await res.json();
+      if (!res.ok) {
+        throw new Error(result.error || "Failed to send reset code");
+      }
+      toast.success(`Reset code sent to ${data.email}`);
       setEmail(data.email);
       setStep(2);
       setTimer(60);
-    } catch (e) {
-      toast.error("Error sending code");
+    } catch (e: any) {
+      toast.error(e.message || "Error sending code");
     } finally {
       setLoading(false);
     }
@@ -78,7 +82,8 @@ export default function ForgotPasswordPage() {
     try {
       const res = await fetch("/api/auth/reset-password", {
         method: "POST",
-        body: JSON.stringify({ email, ...data }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, code: data.otp, newPassword: data.newPassword }),
       });
       const result = await res.json();
       if (!res.ok) throw new Error(result.error);

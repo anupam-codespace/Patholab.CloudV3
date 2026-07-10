@@ -40,7 +40,7 @@ export default function PageManagement() {
           <p className="text-muted-foreground">Manage public facing pages and content</p>
         </div>
         <Link href="/admin/pages/editor">
-          <Button className="bg-blue-600 hover:bg-blue-700"><Plus className="mr-2 h-4 w-4"/> Create Page</Button>
+          <Button className="bg-primary hover:bg-blue-700"><Plus className="mr-2 h-4 w-4"/> Create Page</Button>
         </Link>
       </div>
 
@@ -60,19 +60,19 @@ export default function PageManagement() {
               {pages?.map((page: any) => (
                 <TableRow key={page.id}>
                   <TableCell className="font-medium">{page.title}</TableCell>
-                  <TableCell className="font-mono text-xs text-slate-500">/{page.slug}</TableCell>
+                  <TableCell className="font-mono text-xs text-muted-foreground">/{page.slug}</TableCell>
                   <TableCell>
                     <Badge variant={page.isPublished ? 'default' : 'secondary'}>
                       {page.isPublished ? 'Published' : 'Draft'}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-xs text-slate-500">{format(new Date(page.updatedAt), 'dd MMM yyyy')}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{format(new Date(page.updatedAt), 'dd MMM yyyy')}</TableCell>
                   <TableCell className="text-right space-x-2">
                     <Link href={`/${page.slug}`} target="_blank">
-                       <Button variant="ghost" size="icon" title="View Live"><Eye className="h-4 w-4 text-slate-500"/></Button>
+                       <Button variant="ghost" size="icon" title="View Live"><Eye className="h-4 w-4 text-muted-foreground"/></Button>
                     </Link>
                     <Link href={`/admin/pages/editor?id=${page.id}`}>
-                       <Button variant="ghost" size="icon" title="Edit"><Edit className="h-4 w-4 text-blue-600"/></Button>
+                       <Button variant="ghost" size="icon" title="Edit"><Edit className="h-4 w-4 text-primary"/></Button>
                     </Link>
                     <Button variant="ghost" size="icon" onClick={() => { if(confirm('Delete page?')) deleteMutation.mutate(page.id) }}>
                        <Trash2 className="h-4 w-4 text-red-600"/>

@@ -170,10 +170,10 @@ export default function AdminLabsPage() {
           <div className="flex flex-col">
             <Link
               href={`/admin/labs/${row.original.id}`}
-              className="font-bold text-sm text-slate-900 hover:text-indigo-600 transition-colors line-clamp-1">
+              className="font-bold text-sm text-foreground hover:text-indigo-600 transition-colors line-clamp-1">
               {row.original.name}
             </Link>
-            <span className="text-xs text-slate-500 font-medium">
+            <span className="text-xs text-muted-foreground font-medium">
               {row.original.licenseNumber || "No License"}
             </span>
           </div>
@@ -190,7 +190,7 @@ export default function AdminLabsPage() {
           </span>
           <a
             href={`mailto:${row.original.owner.email}`}
-            className="text-xs text-slate-500 hover:text-indigo-600 font-medium">
+            className="text-xs text-muted-foreground hover:text-indigo-600 font-medium">
             {row.original.owner.email}
           </a>
         </div>
@@ -200,15 +200,15 @@ export default function AdminLabsPage() {
       id: "metrics",
       header: "Usage Metrics",
       cell: ({ row }) => (
-        <div className="flex items-center gap-3 text-xs font-bold text-slate-600">
+        <div className="flex items-center gap-3 text-xs font-bold text-muted-foreground">
           <div
-            className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md"
+            className="flex items-center gap-1.5 bg-muted/30 px-2 py-1 rounded-md"
             title="Total Tests">
             <TestTube className="h-3.5 w-3.5 text-indigo-500" />{" "}
             {row.original._count.tests}
           </div>
           <div
-            className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md"
+            className="flex items-center gap-1.5 bg-muted/30 px-2 py-1 rounded-md"
             title="Total Patients">
             <Users className="h-3.5 w-3.5 text-blue-500" />{" "}
             {row.original._count.patients}
@@ -336,10 +336,10 @@ export default function AdminLabsPage() {
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-slate-900">
+          <h1 className="text-3xl font-black tracking-tight text-foreground">
             Lab Management
           </h1>
-          <p className="text-slate-500 font-medium mt-1">
+          <p className="text-muted-foreground font-medium mt-1">
             Monitor, manage, and audit all registered tenants.
           </p>
         </div>
@@ -353,15 +353,15 @@ export default function AdminLabsPage() {
       {/* STATS CARDS */}
       {data?.stats && !search && page === 1 && (
         <div className="grid gap-4 md:grid-cols-3">
-          <Card className="rounded-2xl border-slate-200 shadow-sm">
+          <Card className="rounded-2xl border-border shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                 Total Laboratories
               </CardTitle>
               <Building2 className="h-4 w-4 text-indigo-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-black text-slate-900">
+              <div className="text-2xl font-black text-foreground">
                 {data.stats.totalLabs}
               </div>
               <p className="text-xs font-bold text-emerald-600">
@@ -369,15 +369,15 @@ export default function AdminLabsPage() {
               </p>
             </CardContent>
           </Card>
-          <Card className="rounded-2xl border-slate-200 shadow-sm">
+          <Card className="rounded-2xl border-border shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                 Total Wallet Funds
               </CardTitle>
               <Wallet className="h-4 w-4 text-emerald-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-black text-slate-900">
+              <div className="text-2xl font-black text-foreground">
                 {formatCurrency(data.stats.totalSystemWalletBalance || 0)}
               </div>
               <p className="text-xs font-bold text-slate-400">
@@ -385,9 +385,9 @@ export default function AdminLabsPage() {
               </p>
             </CardContent>
           </Card>
-          <Card className="rounded-2xl border-slate-200 shadow-sm">
+          <Card className="rounded-2xl border-border shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                 System Health
               </CardTitle>
               <CheckCircle2 className="h-4 w-4 text-emerald-500" />
@@ -403,7 +403,7 @@ export default function AdminLabsPage() {
       )}
 
       {/* FILTER BAR */}
-      <div className="flex flex-col sm:flex-row items-center gap-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+      <div className="flex flex-col sm:flex-row items-center gap-4 bg-card p-4 rounded-2xl border border-border shadow-sm">
         <div className="relative flex-1 w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input
@@ -413,7 +413,7 @@ export default function AdminLabsPage() {
               setSearch(e.target.value);
               setPage(1);
             }}
-            className="pl-9 bg-slate-50 border-slate-200 rounded-xl h-11"
+            className="pl-9 bg-muted/30 border-border rounded-xl h-11"
           />
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
@@ -423,7 +423,7 @@ export default function AdminLabsPage() {
               setStatusFilter(v);
               setPage(1);
             }}>
-            <SelectTrigger className="w-full sm:w-[180px] bg-slate-50 border-slate-200 rounded-xl h-11">
+            <SelectTrigger className="w-full sm:w-[180px] bg-muted/30 border-border rounded-xl h-11">
               <Filter className="mr-2 h-4 w-4 text-slate-400" />
               <SelectValue placeholder="Status" />
             </SelectTrigger>
@@ -437,17 +437,17 @@ export default function AdminLabsPage() {
       </div>
 
       {/* DATA TABLE */}
-      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+      <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
         <Table>
           <TableHeader className="bg-slate-50/80">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow
                 key={headerGroup.id}
-                className="border-slate-200 hover:bg-transparent">
+                className="border-border hover:bg-transparent">
                 {headerGroup.headers.map((header) => (
                   <TableHead
                     key={header.id}
-                    className="text-xs font-bold text-slate-500 uppercase tracking-wider h-11">
+                    className="text-xs font-bold text-muted-foreground uppercase tracking-wider h-11">
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -467,7 +467,7 @@ export default function AdminLabsPage() {
                   className="h-32 text-center">
                   <div className="flex items-center justify-center gap-2">
                     <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
-                    <span className="text-slate-500 font-medium">
+                    <span className="text-muted-foreground font-medium">
                       Loading laboratories...
                     </span>
                   </div>
@@ -478,7 +478,7 @@ export default function AdminLabsPage() {
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className="border-slate-100 hover:bg-slate-50/50">
+                  className="border-slate-100 hover:bg-muted/50/50">
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className="py-3">
                       {flexRender(
@@ -495,10 +495,10 @@ export default function AdminLabsPage() {
                   colSpan={columns.length}
                   className="h-32 text-center">
                   <div className="flex flex-col items-center justify-center gap-2">
-                    <div className="h-12 w-12 rounded-full bg-slate-50 flex items-center justify-center mb-1">
+                    <div className="h-12 w-12 rounded-full bg-muted/30 flex items-center justify-center mb-1">
                       <Users className="h-6 w-6 text-slate-300" />
                     </div>
-                    <span className="text-slate-500 font-medium">
+                    <span className="text-muted-foreground font-medium">
                       No labs found matching your filters.
                     </span>
                   </div>
@@ -511,14 +511,14 @@ export default function AdminLabsPage() {
 
       {/* PAGINATION */}
       <div className="flex items-center justify-between py-2">
-        <div className="text-sm font-bold text-slate-500">
+        <div className="text-sm font-bold text-muted-foreground">
           Showing page {page} of {data?.meta?.totalPages || 1}
         </div>
         <div className="flex space-x-2">
           <Button
             variant="outline"
             size="sm"
-            className="rounded-xl font-bold border-slate-200"
+            className="rounded-xl font-bold border-border"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1 || isLoading}>
             Previous
@@ -526,7 +526,7 @@ export default function AdminLabsPage() {
           <Button
             variant="outline"
             size="sm"
-            className="rounded-xl font-bold border-slate-200"
+            className="rounded-xl font-bold border-border"
             onClick={() => setPage((p) => p + 1)}
             disabled={page >= (data?.meta?.totalPages || 1) || isLoading}>
             Next
@@ -608,10 +608,10 @@ function OnboardLabDialog({
 
       <DialogContent className="sm:max-w-[550px] rounded-2xl">
         <DialogHeader>
-          <DialogTitle className="text-xl font-black text-slate-900">
+          <DialogTitle className="text-xl font-black text-foreground">
             Onboard New Laboratory
           </DialogTitle>
-          <DialogDescription className="font-medium text-slate-500">
+          <DialogDescription className="font-medium text-muted-foreground">
             Create a new tenant. They will automatically be provisioned a
             Pay-As-You-Go Wallet starting at ₹0.
           </DialogDescription>
@@ -623,28 +623,28 @@ function OnboardLabDialog({
               <div className="space-y-2">
                 <Label
                   htmlFor="labName"
-                  className="text-xs font-bold text-slate-600">
+                  className="text-xs font-bold text-muted-foreground">
                   Lab Name <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="labName"
                   name="labName"
                   placeholder="e.g. Apex Diagnostics"
-                  className="rounded-xl h-11 bg-slate-50"
+                  className="rounded-xl h-11 bg-muted/30"
                   required
                 />
               </div>
               <div className="space-y-2">
                 <Label
                   htmlFor="licenseNumber"
-                  className="text-xs font-bold text-slate-600">
+                  className="text-xs font-bold text-muted-foreground">
                   License No. <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="licenseNumber"
                   name="licenseNumber"
                   placeholder="DL-12345"
-                  className="rounded-xl h-11 bg-slate-50"
+                  className="rounded-xl h-11 bg-muted/30"
                   required
                 />
               </div>
@@ -653,14 +653,14 @@ function OnboardLabDialog({
             <div className="space-y-2">
               <Label
                 htmlFor="ownerName"
-                className="text-xs font-bold text-slate-600">
+                className="text-xs font-bold text-muted-foreground">
                 Owner Name <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="ownerName"
                 name="ownerName"
                 placeholder="Dr. John Doe"
-                className="rounded-xl h-11 bg-slate-50"
+                className="rounded-xl h-11 bg-muted/30"
                 required
               />
             </div>
@@ -669,7 +669,7 @@ function OnboardLabDialog({
               <div className="space-y-2">
                 <Label
                   htmlFor="email"
-                  className="text-xs font-bold text-slate-600">
+                  className="text-xs font-bold text-muted-foreground">
                   Email <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -677,21 +677,21 @@ function OnboardLabDialog({
                   name="email"
                   type="email"
                   placeholder="admin@apex.com"
-                  className="rounded-xl h-11 bg-slate-50"
+                  className="rounded-xl h-11 bg-muted/30"
                   required
                 />
               </div>
               <div className="space-y-2">
                 <Label
                   htmlFor="phone"
-                  className="text-xs font-bold text-slate-600">
+                  className="text-xs font-bold text-muted-foreground">
                   Phone <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="phone"
                   name="phone"
                   placeholder="9876543210"
-                  className="rounded-xl h-11 bg-slate-50"
+                  className="rounded-xl h-11 bg-muted/30"
                   required
                 />
               </div>
@@ -701,27 +701,27 @@ function OnboardLabDialog({
               <div className="space-y-2">
                 <Label
                   htmlFor="city"
-                  className="text-xs font-bold text-slate-600">
+                  className="text-xs font-bold text-muted-foreground">
                   City
                 </Label>
                 <Input
                   id="city"
                   name="city"
                   placeholder="Mumbai"
-                  className="rounded-xl h-11 bg-slate-50"
+                  className="rounded-xl h-11 bg-muted/30"
                 />
               </div>
               <div className="space-y-2">
                 <Label
                   htmlFor="state"
-                  className="text-xs font-bold text-slate-600">
+                  className="text-xs font-bold text-muted-foreground">
                   State
                 </Label>
                 <Input
                   id="state"
                   name="state"
                   placeholder="Maharashtra"
-                  className="rounded-xl h-11 bg-slate-50"
+                  className="rounded-xl h-11 bg-muted/30"
                 />
               </div>
             </div>
@@ -767,44 +767,44 @@ function OnboardLabDialog({
               </div>
             </div>
 
-            <div className="space-y-3 border border-slate-200 rounded-xl p-5 bg-slate-50">
+            <div className="space-y-3 border border-border rounded-xl p-5 bg-muted/30">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-bold text-slate-500">
+                <span className="text-sm font-bold text-muted-foreground">
                   Login Email:
                 </span>
                 <div className="flex items-center gap-2">
-                  <code className="text-sm font-mono font-black text-slate-900 select-all">
+                  <code className="text-sm font-mono font-black text-foreground select-all">
                     {credentials.email}
                   </code>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 bg-white rounded-lg border border-slate-200"
+                    className="h-8 w-8 bg-card rounded-lg border border-border"
                     onClick={() => {
                       navigator.clipboard.writeText(credentials.email);
                       toast.success("Email copied");
                     }}>
-                    <Copy className="h-4 w-4 text-slate-500" />
+                    <Copy className="h-4 w-4 text-muted-foreground" />
                   </Button>
                 </div>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-bold text-slate-500">
+                <span className="text-sm font-bold text-muted-foreground">
                   Temp Password:
                 </span>
                 <div className="flex items-center gap-2">
-                  <code className="text-sm font-mono font-black text-slate-900 bg-white px-3 py-1.5 rounded-lg border border-slate-200 select-all">
+                  <code className="text-sm font-mono font-black text-foreground bg-card px-3 py-1.5 rounded-lg border border-border select-all">
                     {credentials.tempPassword}
                   </code>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 bg-white rounded-lg border border-slate-200"
+                    className="h-8 w-8 bg-card rounded-lg border border-border"
                     onClick={() => {
                       navigator.clipboard.writeText(credentials.tempPassword);
                       toast.success("Password copied");
                     }}>
-                    <Copy className="h-4 w-4 text-slate-500" />
+                    <Copy className="h-4 w-4 text-muted-foreground" />
                   </Button>
                 </div>
               </div>

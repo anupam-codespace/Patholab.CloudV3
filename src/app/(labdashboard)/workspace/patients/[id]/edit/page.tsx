@@ -172,9 +172,9 @@ export default function EditPatientPage() {
 
   if (isLoading) {
     return (
-      <div className="h-screen flex flex-col items-center justify-center bg-slate-50">
+      <div className="h-screen flex flex-col items-center justify-center bg-muted/30">
         <Loader2 className="animate-spin h-10 w-10 text-indigo-600 mb-4" />
-        <p className="text-sm font-medium text-slate-500 animate-pulse">
+        <p className="text-sm font-medium text-muted-foreground animate-pulse">
           Loading patient record...
         </p>
       </div>
@@ -182,22 +182,22 @@ export default function EditPatientPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans selection:bg-indigo-100 relative">
+    <div className="min-h-screen bg-muted/30 flex flex-col font-sans selection:bg-indigo-100 relative">
       {/* Decorative Background Mesh */}
       <div className="absolute top-0 inset-x-0 h-64 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-100/50 via-slate-50 to-transparent pointer-events-none z-0" />
 
       {/* --- FLOATING HEADER --- */}
-      <header className="sticky top-0 z-30 bg-white/70 backdrop-blur-xl border-b border-slate-200/60 shadow-sm">
+      <header className="sticky top-0 z-30 bg-card/70 backdrop-blur-xl border-b border-slate-200/60 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-inner">
               <User className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight text-slate-900 leading-tight">
+              <h1 className="text-xl font-bold tracking-tight text-foreground leading-tight">
                 Edit Patient
               </h1>
-              <p className="text-xs font-medium text-slate-500 flex items-center gap-1 uppercase tracking-wider mt-0.5">
+              <p className="text-xs font-medium text-muted-foreground flex items-center gap-1 uppercase tracking-wider mt-0.5">
                 ID:{" "}
                 <span className="font-mono text-indigo-600 font-bold">
                   {patientId}
@@ -208,7 +208,7 @@ export default function EditPatientPage() {
           <Button
             variant="ghost"
             size="icon"
-            className="h-10 w-10 rounded-full hover:bg-slate-100 text-slate-500"
+            className="h-10 w-10 rounded-full hover:bg-muted text-muted-foreground"
             onClick={() => router.back()}>
             <X className="h-5 w-5" />
           </Button>
@@ -224,10 +224,10 @@ export default function EditPatientPage() {
           {/* LEFT COLUMN: Core Identity & Contact (Spans 7 cols) */}
           <div className="lg:col-span-7 space-y-6">
             {/* Panel 1: Personal Identity */}
-            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+            <div className="bg-card rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
               <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2">
                 <Activity className="h-4 w-4 text-indigo-500" />
-                <h2 className="text-sm font-semibold text-slate-800 tracking-wide uppercase">
+                <h2 className="text-sm font-semibold text-foreground tracking-wide uppercase">
                   Patient Identity
                 </h2>
               </div>
@@ -235,13 +235,13 @@ export default function EditPatientPage() {
               <div className="p-6 space-y-5">
                 <div className="flex flex-col sm:flex-row gap-4">
                   <div className="w-full sm:w-28 space-y-1.5">
-                    <Label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                    <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                       Title <span className="text-red-500">*</span>
                     </Label>
                     <Select
                       onValueChange={(v) => setValue("title", v)}
                       value={watch("title")}>
-                      <SelectTrigger className="h-11 bg-slate-50 border-slate-200 focus:ring-indigo-500/20 rounded-xl">
+                      <SelectTrigger className="h-11 bg-muted/30 border-border focus:ring-indigo-500/20 rounded-xl">
                         <SelectValue placeholder="Title" />
                       </SelectTrigger>
                       <SelectContent>
@@ -253,12 +253,12 @@ export default function EditPatientPage() {
                     </Select>
                   </div>
                   <div className="flex-1 space-y-1.5">
-                    <Label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                    <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                       Full Name <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       {...form.register("name")}
-                      className="h-11 bg-slate-50 border-slate-200 focus:ring-indigo-500/20 focus:bg-white rounded-xl transition-colors"
+                      className="h-11 bg-muted/30 border-border focus:ring-indigo-500/20 focus:bg-card rounded-xl transition-colors"
                       placeholder="e.g. John Doe"
                     />
                     {form.formState.errors.name && (
@@ -272,23 +272,23 @@ export default function EditPatientPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
                   <div className="sm:col-span-5 grid grid-cols-2 gap-2">
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                      <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                         Age <span className="text-red-500">*</span>
                       </Label>
                       <Input
                         {...form.register("age")}
                         type="number"
-                        className="h-11 bg-slate-50 border-slate-200 focus:ring-indigo-500/20 rounded-xl text-center"
+                        className="h-11 bg-muted/30 border-border focus:ring-indigo-500/20 rounded-xl text-center"
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                      <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                         Unit
                       </Label>
                       <Select
                         value={watch("ageUnit")}
                         onValueChange={(v) => setValue("ageUnit", v as any)}>
-                        <SelectTrigger className="h-11 bg-slate-50 border-slate-200 focus:ring-indigo-500/20 rounded-xl px-2">
+                        <SelectTrigger className="h-11 bg-muted/30 border-border focus:ring-indigo-500/20 rounded-xl px-2">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -301,13 +301,13 @@ export default function EditPatientPage() {
                   </div>
 
                   <div className="sm:col-span-4 space-y-1.5">
-                    <Label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                    <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                       Sex <span className="text-red-500">*</span>
                     </Label>
                     <Select
                       value={watch("gender")}
                       onValueChange={(v) => setValue("gender", v as any)}>
-                      <SelectTrigger className="h-11 bg-slate-50 border-slate-200 focus:ring-indigo-500/20 rounded-xl">
+                      <SelectTrigger className="h-11 bg-muted/30 border-border focus:ring-indigo-500/20 rounded-xl">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -319,13 +319,13 @@ export default function EditPatientPage() {
                   </div>
 
                   <div className="sm:col-span-3 space-y-1.5">
-                    <Label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                    <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                       Birth Date
                     </Label>
                     <Input
                       type="date"
                       {...form.register("dob")}
-                      className="h-11 bg-slate-50 border-slate-200 focus:ring-indigo-500/20 rounded-xl px-3"
+                      className="h-11 bg-muted/30 border-border focus:ring-indigo-500/20 rounded-xl px-3"
                     />
                   </div>
                 </div>
@@ -333,10 +333,10 @@ export default function EditPatientPage() {
             </div>
 
             {/* Panel 2: Contact Details */}
-            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+            <div className="bg-card rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
               <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-indigo-500" />
-                <h2 className="text-sm font-semibold text-slate-800 tracking-wide uppercase">
+                <h2 className="text-sm font-semibold text-foreground tracking-wide uppercase">
                   Contact & Location
                 </h2>
               </div>
@@ -344,14 +344,14 @@ export default function EditPatientPage() {
               <div className="p-6 space-y-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                    <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                       Phone Number <span className="text-red-500">*</span>
                     </Label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
                       <Input
                         {...form.register("phone")}
-                        className="h-11 pl-10 bg-slate-50 border-slate-200 focus:ring-indigo-500/20 rounded-xl"
+                        className="h-11 pl-10 bg-muted/30 border-border focus:ring-indigo-500/20 rounded-xl"
                         placeholder="10-digit number"
                         maxLength={10}
                       />
@@ -363,7 +363,7 @@ export default function EditPatientPage() {
                     )}
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                    <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                       Email Address
                     </Label>
                     <div className="relative">
@@ -371,7 +371,7 @@ export default function EditPatientPage() {
                       <Input
                         type="email"
                         {...form.register("email")}
-                        className="h-11 pl-10 bg-slate-50 border-slate-200 focus:ring-indigo-500/20 rounded-xl"
+                        className="h-11 pl-10 bg-muted/30 border-border focus:ring-indigo-500/20 rounded-xl"
                         placeholder="patient@example.com"
                       />
                     </div>
@@ -379,12 +379,12 @@ export default function EditPatientPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                  <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                     Home Address
                   </Label>
                   <Textarea
                     {...form.register("address")}
-                    className="min-h-[80px] bg-slate-50 border-slate-200 focus:ring-indigo-500/20 rounded-xl resize-none py-3"
+                    className="min-h-[80px] bg-muted/30 border-border focus:ring-indigo-500/20 rounded-xl resize-none py-3"
                     placeholder="Apartment, Street, City..."
                   />
                 </div>
@@ -395,31 +395,31 @@ export default function EditPatientPage() {
           {/* RIGHT COLUMN: Clinical & Logistics (Spans 5 cols) */}
           <div className="lg:col-span-5 space-y-6">
             {/* Panel 3: Logistics & Referrals */}
-            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+            <div className="bg-card rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
               <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2">
                 <Stethoscope className="h-4 w-4 text-indigo-500" />
-                <h2 className="text-sm font-semibold text-slate-800 tracking-wide uppercase">
+                <h2 className="text-sm font-semibold text-foreground tracking-wide uppercase">
                   Clinical Routing
                 </h2>
               </div>
 
               <div className="p-6 space-y-5">
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                  <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                     Referring Doctor
                   </Label>
                   <div className="relative group">
                     <Input
                       {...form.register("doctorId")}
                       placeholder="Self"
-                      className="h-11 pr-10 bg-slate-50 border-slate-200 focus:ring-indigo-500/20 rounded-xl transition-colors"
+                      className="h-11 pr-10 bg-muted/30 border-border focus:ring-indigo-500/20 rounded-xl transition-colors"
                     />
-                    <Search className="absolute right-3 top-3.5 h-4 w-4 text-slate-400 group-hover:text-indigo-500 transition-colors cursor-pointer" />
+                    <Search className="absolute right-3 top-3.5 h-4 w-4 text-muted-foreground/70 group-hover:text-indigo-500 transition-colors cursor-pointer" />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                  <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                     Sourcing Agency
                   </Label>
                   <div className="relative group">
@@ -427,37 +427,37 @@ export default function EditPatientPage() {
                     <Input
                       {...form.register("agencyId")}
                       placeholder="Direct"
-                      className="h-11 pl-10 pr-10 bg-slate-50 border-slate-200 focus:ring-indigo-500/20 rounded-xl transition-colors"
+                      className="h-11 pl-10 pr-10 bg-muted/30 border-border focus:ring-indigo-500/20 rounded-xl transition-colors"
                     />
-                    <Search className="absolute right-3 top-3.5 h-4 w-4 text-slate-400 group-hover:text-indigo-500 transition-colors cursor-pointer" />
+                    <Search className="absolute right-3 top-3.5 h-4 w-4 text-muted-foreground/70 group-hover:text-indigo-500 transition-colors cursor-pointer" />
                   </div>
                 </div>
 
-                <div className="h-px w-full bg-slate-100 my-4" />
+                <div className="h-px w-full bg-muted my-4" />
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                    <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                       Sample Date
                     </Label>
                     <div className="relative">
                       <Input
                         type="date"
                         {...form.register("collectionDate")}
-                        className="h-11 bg-slate-50 border-slate-200 focus:ring-indigo-500/20 rounded-xl"
+                        className="h-11 bg-muted/30 border-border focus:ring-indigo-500/20 rounded-xl"
                       />
                     </div>
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                    <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                       Sample Time
                     </Label>
                     <div className="relative">
-                      <Clock className="absolute right-3 top-3.5 h-4 w-4 text-slate-400 pointer-events-none" />
+                      <Clock className="absolute right-3 top-3.5 h-4 w-4 text-muted-foreground/70 pointer-events-none" />
                       <Input
                         type="time"
                         {...form.register("collectionTime")}
-                        className="h-11 bg-slate-50 border-slate-200 focus:ring-indigo-500/20 rounded-xl pr-10"
+                        className="h-11 bg-muted/30 border-border focus:ring-indigo-500/20 rounded-xl pr-10"
                       />
                     </div>
                   </div>
@@ -466,24 +466,24 @@ export default function EditPatientPage() {
             </div>
 
             {/* Panel 4: Government IDs */}
-            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+            <div className="bg-card rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
               <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2">
                 <ShieldCheck className="h-4 w-4 text-indigo-500" />
-                <h2 className="text-sm font-semibold text-slate-800 tracking-wide uppercase">
+                <h2 className="text-sm font-semibold text-foreground tracking-wide uppercase">
                   Identification
                 </h2>
               </div>
 
               <div className="p-6 space-y-4">
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                  <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                     Aadhar Number
                   </Label>
                   <div className="relative">
                     <Hash className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
                     <Input
                       {...form.register("abhaNumber")}
-                      className="h-11 pl-10 bg-slate-50 border-slate-200 focus:ring-indigo-500/20 rounded-xl font-mono text-sm"
+                      className="h-11 pl-10 bg-muted/30 border-border focus:ring-indigo-500/20 rounded-xl font-mono text-sm"
                       placeholder="XXXX-XXXX-XXXX"
                     />
                   </div>
@@ -491,22 +491,22 @@ export default function EditPatientPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                    <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                       Passport
                     </Label>
                     <Input
                       {...form.register("passport")}
-                      className="h-11 bg-slate-50 border-slate-200 focus:ring-indigo-500/20 rounded-xl font-mono text-sm"
+                      className="h-11 bg-muted/30 border-border focus:ring-indigo-500/20 rounded-xl font-mono text-sm"
                       placeholder="Optional"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                    <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                       SRF ID
                     </Label>
                     <Input
                       {...form.register("srfId")}
-                      className="h-11 bg-slate-50 border-slate-200 focus:ring-indigo-500/20 rounded-xl font-mono text-sm"
+                      className="h-11 bg-muted/30 border-border focus:ring-indigo-500/20 rounded-xl font-mono text-sm"
                       placeholder="Optional"
                     />
                   </div>
@@ -518,11 +518,11 @@ export default function EditPatientPage() {
       </main>
 
       {/* --- STICKY BOTTOM ACTION BAR --- */}
-      <div className="sticky bottom-0 z-40 bg-white border-t border-slate-200 p-4 sm:px-8 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] mt-auto">
+      <div className="sticky bottom-0 z-40 bg-card border-t border-border p-4 sm:px-8 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] mt-auto">
         <div className="max-w-7xl mx-auto flex flex-col-reverse sm:flex-row justify-between items-center gap-4">
           <Button
             variant="outline"
-            className="w-full sm:w-auto h-12 rounded-xl border-slate-200 text-slate-500 bg-slate-50 hover:bg-slate-100 font-medium"
+            className="w-full sm:w-auto h-12 rounded-xl border-border text-muted-foreground bg-muted/30 hover:bg-muted font-medium"
             disabled>
             <ScanLine className="h-4 w-4 mr-2" /> Scan Aadhar QR (Locked)
           </Button>
@@ -531,7 +531,7 @@ export default function EditPatientPage() {
             <Button
               type="button"
               variant="ghost"
-              className="flex-1 sm:flex-none h-12 rounded-xl text-slate-600 hover:bg-slate-100 font-medium"
+              className="flex-1 sm:flex-none h-12 rounded-xl text-muted-foreground hover:bg-muted font-medium"
               onClick={() => router.back()}>
               Cancel
             </Button>

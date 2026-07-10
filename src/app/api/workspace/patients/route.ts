@@ -263,13 +263,13 @@ export async function POST(req: NextRequest) {
         // A. Create Patient
         const patient = await tx.patient.create({
             data: {
-                labId: user.labId,
-                branchId: isGlobal ? null : user.branchId,
-                userId: user.id,
+                lab: { connect: { id: user.labId } },
+                ...(user.branchId && !isGlobal ? { branch: { connect: { id: user.branchId } } } : {}),
+                ...(user.id ? { user: { connect: { id: user.id } } } : {}),
                 patientId: nextId, 
                 name: safeName,
                 age: safeAge,
-                ageUnit: body.ageUnit || null,
+                ageUnit: body.ageUnit || "Years",
                 dateOfBirth: calculatedDob, 
                 gender: body.gender ? (body.gender.toUpperCase() as any) : 'OTHER', 
                 phone: safePhone,
@@ -279,8 +279,8 @@ export async function POST(req: NextRequest) {
                 srfId: body.srfId?.trim() || null,
                 passportNumber: body.passport?.trim() || null,
                 abhaNumber: body.abhaNumber?.trim() || null, 
-                doctorId: finalDoctorId,
-                agencyId: finalAgencyId
+                ...(finalDoctorId ? { doctor: { connect: { id: finalDoctorId } } } : {}),
+                ...(finalAgencyId ? { agency: { connect: { id: finalAgencyId } } } : {})
             }
         });
 

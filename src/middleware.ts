@@ -62,14 +62,17 @@ export async function middleware(request: NextRequest) {
   }
 
   // 6. Role-Based Access Control (RBAC) Logic
+  // ALL lab roles (LAB_OWNER, LAB_MANAGER, TECHNICIAN, RECEPTIONIST, PHLEBOTOMIST, DOCTOR, AGENCY)
+  // access /workspace — the workspace dashboard renders role-specific content
   const allowedPaths: Record<string, string[]> = {
     SUPER_ADMIN: ['/admin', '/workspace'],
     LAB_OWNER: ['/workspace'],
     LAB_MANAGER: ['/workspace'],
     TECHNICIAN: ['/workspace'],
     RECEPTIONIST: ['/workspace'],
-    DOCTOR: ['/doctor'],
-    AGENCY: ['/agency'],
+    PHLEBOTOMIST: ['/workspace'],
+    DOCTOR: ['/workspace'],
+    AGENCY: ['/workspace'],
     B2B_PARTNER: ['/b2b'],
     PATIENT: ['/portal']
   };

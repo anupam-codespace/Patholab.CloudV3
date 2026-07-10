@@ -6,11 +6,10 @@ import InstallPWA from "@/components/InstallPWA"; // ✅ ADDED PWA Component
 import { prisma } from "@/lib/prisma"; // Adjust this path to your Prisma client
 import { GoogleAnalytics } from "@next/third-parties/google"; // npm i @next/third-parties
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 
-// ✅ PWA VIEWPORT CONFIGURATION
 export const viewport: Viewport = {
-  themeColor: "#3b82f6",
+  themeColor: "#2196F3",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -91,21 +90,20 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Inject Dynamic Brand Colors */}
         {config && (
           <style>
             {`
               :root {
-                --primary: ${config.primaryColor || "#3b82f6"};
+                --primary: ${config.primaryColor || "#2196F3"};
                 --secondary: ${config.secondaryColor || "#8b5cf6"};
               }
             `}
           </style>
         )}
       </head>
-      <body className={inter.className}>
+      <body className={`${inter.variable} font-sans antialiased`}>
         {/* Wrap everything in the Client-Side Provider */}
         <Providers>{children}</Providers>
 

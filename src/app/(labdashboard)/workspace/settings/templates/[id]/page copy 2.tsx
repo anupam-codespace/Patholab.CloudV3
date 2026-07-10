@@ -271,7 +271,7 @@ export default function ReportBuilderPage() {
             <ArrowLeft size={18} />
           </Button>
           <div className="flex items-center gap-3">
-            <div className="bg-blue-600/20 p-2 rounded text-blue-500">
+            <div className="bg-primary/20 p-2 rounded text-blue-500">
               <LayoutTemplate size={18} />
             </div>
             <div>
@@ -309,7 +309,7 @@ export default function ReportBuilderPage() {
 
           <Button
             size="sm"
-            className="h-8 text-xs bg-blue-600 hover:bg-blue-700 text-white"
+            className="h-8 text-xs bg-primary hover:bg-blue-700 text-white"
             onClick={() => handleSave()}>
             <Save size={14} className="mr-2" /> Save Template
           </Button>

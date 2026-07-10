@@ -43,11 +43,11 @@ export default function AdminLayoutClient({
 
   // Prevent hydration mismatch flashes
   if (!mounted) {
-    return <div className="min-h-screen bg-slate-50" />;
+    return <div className="min-h-screen bg-muted/30" />;
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex font-sans text-slate-900 overflow-hidden">
+    <div className="min-h-screen bg-muted/30 flex font-sans text-foreground overflow-hidden">
       {/* 1. Sidebar (Fixed Left) */}
       {/* Note: Removed the user={user} prop as our updated AdminSidebar doesn't require it */}
       <AdminSidebar

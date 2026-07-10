@@ -43,17 +43,17 @@ function TestManagementContent() {
   // Reusable High-Contrast Class for Standard Tabs
   const standardTabClass =
     "shrink-0 whitespace-nowrap flex items-center px-4 py-2.5 h-10 rounded-md transition-all font-medium text-sm border shadow-sm " +
-    "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900 " +
+    "bg-card text-muted-foreground border-border hover:bg-muted/30 hover:text-foreground " +
     "data-[state=active]:bg-blue-700 data-[state=active]:text-white data-[state=active]:border-blue-700 data-[state=active]:shadow-md";
 
   return (
     <div className="flex-1 space-y-4 md:space-y-6 p-4 md:p-6 pt-6 max-w-[1600px] mx-auto w-full">
       {/* Page Header - Scales down on mobile */}
       <div className="flex flex-col gap-1.5 md:gap-2">
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
           Test Management
         </h1>
-        <p className="text-sm md:text-base text-slate-500 max-w-3xl">
+        <p className="text-sm md:text-base text-muted-foreground max-w-3xl">
           Manage your test menu, parameters, reference ranges, and global
           pricing overrides.
         </p>
@@ -108,7 +108,7 @@ function TestManagementContent() {
         </div>
 
         {/* --- TAB CONTENT AREAS --- */}
-        <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-0 md:p-1 overflow-hidden">
+        <div className="bg-card border border-border rounded-xl shadow-sm p-0 md:p-1 overflow-hidden">
           <TabsContent
             value="tests"
             className="m-0 border-none p-0 outline-none focus-visible:ring-0">
@@ -169,7 +169,7 @@ export default function TestManagementPage() {
       fallback={
         <div className="flex flex-col items-center justify-center min-h-[400px] p-8 text-center space-y-4">
           <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-sm font-medium text-slate-500 animate-pulse">
+          <p className="text-sm font-medium text-muted-foreground animate-pulse">
             Loading Module Configuration...
           </p>
         </div>

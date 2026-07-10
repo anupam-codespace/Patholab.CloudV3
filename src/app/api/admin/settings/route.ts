@@ -63,6 +63,7 @@ export async function PUT(req: Request) {
           data: {
             action: 'UPDATE_SETTINGS',
             entity: 'SYSTEM',
+            entityType: 'SYSTEM',
             entityId: 'GLOBAL',
             description: 'System settings updated via Admin Console',
             userId: admin.id

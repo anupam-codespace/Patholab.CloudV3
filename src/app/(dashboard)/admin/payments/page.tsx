@@ -95,18 +95,18 @@ export default function AdminPaymentsAndAddons() {
       {/* 1. PAYMENTS LEDGER */}
       <section>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-            <CreditCard className="text-blue-600" /> Revenue Ledger
+          <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <CreditCard className="text-primary" /> Revenue Ledger
           </h2>
           <button
             onClick={fetchData}
-            className="p-2 bg-white border rounded-md hover:bg-slate-50">
+            className="p-2 bg-card border rounded-md hover:bg-muted/30">
             <RefreshCw size={16} />
           </button>
         </div>
-        <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+        <div className="bg-card rounded-xl shadow-sm border overflow-hidden">
           <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 border-b">
+            <thead className="bg-muted/30 border-b">
               <tr>
                 <th className="p-4">Date</th>
                 <th className="p-4">Invoice / Txn</th>
@@ -117,7 +117,7 @@ export default function AdminPaymentsAndAddons() {
             </thead>
             <tbody className="divide-y">
               {payments.map((pay) => (
-                <tr key={pay.id} className="hover:bg-slate-50">
+                <tr key={pay.id} className="hover:bg-muted/30">
                   <td className="p-4">
                     {format(new Date(pay.createdAt), "MMM d, yyyy")}
                   </td>
@@ -128,7 +128,7 @@ export default function AdminPaymentsAndAddons() {
                     <div className="font-semibold">
                       {pay.subscription?.lab?.name}
                     </div>
-                    <div className="text-xs text-slate-500">
+                    <div className="text-xs text-muted-foreground">
                       {pay.subscription?.lab?.owner?.email}
                     </div>
                   </td>
@@ -149,18 +149,18 @@ export default function AdminPaymentsAndAddons() {
 
       {/* 2. ADD-ON MANAGER */}
       <section>
-        <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2 mb-4">
+        <h2 className="text-2xl font-bold text-foreground flex items-center gap-2 mb-4">
           <Database className="text-purple-600" /> Subscription & Add-on Manager
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {subscriptions.map((sub) => (
             <div
               key={sub.id}
-              className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+              className="bg-card p-5 rounded-xl shadow-sm border border-border">
               <div className="flex justify-between items-start mb-3">
                 <div>
                   <h3 className="font-bold text-slate-800">{sub.lab.name}</h3>
-                  <span className="text-xs font-mono bg-slate-100 px-2 py-0.5 rounded text-slate-600">
+                  <span className="text-xs font-mono bg-muted px-2 py-0.5 rounded text-muted-foreground">
                     {sub.lab.labCode}
                   </span>
                 </div>
@@ -169,7 +169,7 @@ export default function AdminPaymentsAndAddons() {
                 </span>
               </div>
 
-              <div className="space-y-2 mt-4 text-sm text-slate-600">
+              <div className="space-y-2 mt-4 text-sm text-muted-foreground">
                 <p>
                   <strong>Features Unlocked:</strong>{" "}
                   {sub.unlockedFeatures?.length || 0}
@@ -200,14 +200,14 @@ export default function AdminPaymentsAndAddons() {
       {/* EDIT MODAL */}
       {editingSub && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden">
-            <div className="p-4 border-b bg-slate-50 flex justify-between items-center">
+          <div className="bg-card rounded-xl shadow-2xl w-full max-w-lg overflow-hidden">
+            <div className="p-4 border-b bg-muted/30 flex justify-between items-center">
               <h3 className="font-bold">
                 Manage Add-ons: {editingSub.lab.name}
               </h3>
               <button
                 onClick={() => setEditingSub(null)}
-                className="text-slate-400 hover:text-red-500">
+                className="text-muted-foreground/70 hover:text-red-500">
                 ✕
               </button>
             </div>
@@ -230,14 +230,14 @@ export default function AdminPaymentsAndAddons() {
                   ].map((feature) => (
                     <label
                       key={feature.sku}
-                      className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-slate-50">
+                      className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/30">
                       <input
                         type="checkbox"
                         checked={(editingSub.unlockedFeatures || []).includes(
                           feature.sku,
                         )}
                         onChange={() => toggleFeature(feature.sku)}
-                        className="w-5 h-5 rounded text-blue-600 focus:ring-blue-500"
+                        className="w-5 h-5 rounded text-primary focus:ring-primary"
                       />
                       <span className="text-sm font-medium">
                         {feature.label}
@@ -262,7 +262,7 @@ export default function AdminPaymentsAndAddons() {
                 </label>
                 <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <label className="text-xs text-slate-500">
+                    <label className="text-xs text-muted-foreground">
                       Extra Branches
                     </label>
                     <input
@@ -279,7 +279,7 @@ export default function AdminPaymentsAndAddons() {
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-slate-500">
+                    <label className="text-xs text-muted-foreground">
                       Extra Staff
                     </label>
                     <input
@@ -296,7 +296,7 @@ export default function AdminPaymentsAndAddons() {
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-slate-500">
+                    <label className="text-xs text-muted-foreground">
                       Extra Storage (GB)
                     </label>
                     <input
@@ -319,12 +319,12 @@ export default function AdminPaymentsAndAddons() {
                 <button
                   type="button"
                   onClick={() => setEditingSub(null)}
-                  className="px-4 py-2 text-sm border rounded-lg hover:bg-slate-50">
+                  className="px-4 py-2 text-sm border rounded-lg hover:bg-muted/30">
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                  className="px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-blue-700">
                   Save Assignments
                 </button>
               </div>

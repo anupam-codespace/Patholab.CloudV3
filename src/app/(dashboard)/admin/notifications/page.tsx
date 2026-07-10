@@ -77,7 +77,7 @@ export default function AdminNotificationsPage() {
     <div className="max-w-6xl mx-auto space-y-6 pb-10">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Broadcast Center</h1>
-        <p className="text-slate-500">
+        <p className="text-muted-foreground">
           Send announcements, updates, and alerts to your users.
         </p>
       </div>
@@ -206,35 +206,35 @@ export default function AdminNotificationsPage() {
 
         {/* RIGHT: PREVIEW */}
         <div className="space-y-6">
-          <h3 className="text-lg font-semibold text-slate-900">Live Preview</h3>
+          <h3 className="text-lg font-semibold text-foreground">Live Preview</h3>
 
           {/* Phone Mockup */}
-          <div className="border border-slate-200 bg-white rounded-xl shadow-sm overflow-hidden max-w-sm mx-auto">
-            <div className="bg-slate-50 p-3 border-b flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-500">
+          <div className="border border-border bg-card rounded-xl shadow-sm overflow-hidden max-w-sm mx-auto">
+            <div className="bg-muted/30 p-3 border-b flex items-center justify-between">
+              <span className="text-xs font-semibold text-muted-foreground">
                 Notifications
               </span>
               <Bell className="h-4 w-4 text-slate-400" />
             </div>
 
             <div className="p-0">
-              <div className="bg-blue-50/50 p-4 border-l-4 border-blue-500">
+              <div className="bg-primary/10/50 p-4 border-l-4 border-blue-500">
                 <div className="flex gap-3">
-                  <div className="mt-1 h-8 w-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                  <div className="mt-1 h-8 w-8 rounded-full bg-blue-100 text-primary flex items-center justify-center shrink-0">
                     <Megaphone className="h-4 w-4" />
                   </div>
                   <div className="space-y-1 flex-1">
-                    <p className="text-sm font-semibold text-slate-900">
+                    <p className="text-sm font-semibold text-foreground">
                       {formData.title || "Notification Title"}
                     </p>
-                    <p className="text-xs text-slate-500 leading-relaxed">
+                    <p className="text-xs text-muted-foreground leading-relaxed">
                       {formData.message ||
                         "Your notification message will appear here. It can be up to 3-4 lines long."}
                     </p>
 
                     {/* Image Preview */}
                     {formData.imageUrl && (
-                      <div className="mt-2 rounded-lg overflow-hidden border border-slate-200">
+                      <div className="mt-2 rounded-lg overflow-hidden border border-border">
                         <img
                           src={formData.imageUrl}
                           alt="Preview"
@@ -248,13 +248,13 @@ export default function AdminNotificationsPage() {
                       <div className="mt-2">
                         <Badge
                           variant="outline"
-                          className="text-blue-600 bg-blue-50 hover:bg-blue-100 cursor-pointer">
+                          className="text-primary bg-primary/10 hover:bg-blue-100 cursor-pointer">
                           Action Required &rarr;
                         </Badge>
                       </div>
                     )}
 
-                    <p className="text-[10px] text-slate-400 font-medium pt-2">
+                    <p className="text-[10px] text-muted-foreground/70 font-medium pt-2">
                       Just now
                     </p>
                   </div>

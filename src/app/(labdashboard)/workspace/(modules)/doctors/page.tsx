@@ -216,18 +216,18 @@ export default function DoctorsPage() {
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-2xl shadow-sm border border-slate-200 gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-card p-6 rounded-2xl shadow-sm border border-border gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">
             Doctors & Referrals
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Manage your network of referring doctors and their commission rules.
           </p>
         </div>
         <Button
           onClick={handleAddNew}
-          className="bg-blue-600 hover:bg-blue-700 text-white shadow-md">
+          className="bg-primary hover:bg-blue-700 text-white shadow-md">
           <Plus className="h-4 w-4 mr-2" /> Add Doctor
         </Button>
       </div>
@@ -240,29 +240,29 @@ export default function DoctorsPage() {
           placeholder="Search by doctor name or phone..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 transition-all shadow-sm"
+          className="w-full pl-10 pr-4 py-2.5 bg-card border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 transition-all shadow-sm"
         />
       </div>
 
       {/* DOCTORS TABLE */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader className="bg-slate-50/80">
               <TableRow>
-                <TableHead className="font-semibold text-slate-600">
+                <TableHead className="font-semibold text-muted-foreground">
                   Doctor Profile
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600">
+                <TableHead className="font-semibold text-muted-foreground">
                   Contact & Clinic
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600">
+                <TableHead className="font-semibold text-muted-foreground">
                   Commission Rule
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600">
+                <TableHead className="font-semibold text-muted-foreground">
                   Total Referrals
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600 text-right">
+                <TableHead className="font-semibold text-muted-foreground text-right">
                   Actions
                 </TableHead>
               </TableRow>
@@ -272,7 +272,7 @@ export default function DoctorsPage() {
                 <TableRow>
                   <TableCell
                     colSpan={5}
-                    className="text-center py-10 text-slate-500">
+                    className="text-center py-10 text-muted-foreground">
                     Loading doctors...
                   </TableCell>
                 </TableRow>
@@ -280,34 +280,34 @@ export default function DoctorsPage() {
                 <TableRow>
                   <TableCell
                     colSpan={5}
-                    className="text-center py-10 text-slate-500">
+                    className="text-center py-10 text-muted-foreground">
                     No doctors found in your network.
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredDoctors.map((doc) => (
-                  <TableRow key={doc.id} className="hover:bg-slate-50/50">
+                  <TableRow key={doc.id} className="hover:bg-muted/50/50">
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 bg-blue-50 text-blue-700 rounded-full flex items-center justify-center font-bold">
+                        <div className="h-10 w-10 bg-primary/10 text-primary rounded-full flex items-center justify-center font-bold">
                           <Stethoscope className="h-5 w-5" />
                         </div>
                         <div>
-                          <div className="font-bold text-slate-900">
+                          <div className="font-bold text-foreground">
                             {doc.name}
                           </div>
-                          <div className="text-xs text-slate-500">
+                          <div className="text-xs text-muted-foreground">
                             {doc.specialization || "General Physician"}
                           </div>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="text-sm text-slate-700 flex items-center gap-1">
+                      <div className="text-sm text-foreground/80 flex items-center gap-1">
                         <Phone className="h-3 w-3 text-slate-400" />{" "}
                         {doc.phone || "-"}
                       </div>
-                      <div className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
+                      <div className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                         <MapPin className="h-3 w-3 text-slate-400" />{" "}
                         {doc.clinic || "-"}
                       </div>
@@ -327,7 +327,7 @@ export default function DoctorsPage() {
                         </span>
                         {/* ✅ SHOW BADGE IF THEY HAVE CUSTOM RATES */}
                         {doc.customTestCommissions?.length > 0 && (
-                          <span className="text-[10px] text-blue-600 font-bold bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
+                          <span className="text-[10px] text-primary font-bold bg-primary/10 px-1.5 py-0.5 rounded border border-blue-100">
                             {doc.customTestCommissions.length} Custom Test Rates
                           </span>
                         )}
@@ -337,7 +337,7 @@ export default function DoctorsPage() {
                       <div className="font-bold text-slate-800">
                         {doc._count?.tests || 0} Tests
                       </div>
-                      <div className="text-xs text-slate-500 font-bold text-orange-600">
+                      <div className="text-xs text-muted-foreground font-bold text-orange-600">
                         Lifetime Generated: ₹
                         {(doc as any).totalCommission.toFixed(2)}
                       </div>
@@ -348,21 +348,21 @@ export default function DoctorsPage() {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleView(doc)}
-                          className="text-slate-400 hover:text-indigo-600 bg-indigo-50/0 hover:bg-indigo-50">
+                          className="text-muted-foreground/70 hover:text-indigo-600 bg-indigo-50/0 hover:bg-indigo-50">
                           <Eye className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => handleEdit(doc)}
-                          className="text-slate-400 hover:text-blue-600">
+                          className="text-muted-foreground/70 hover:text-primary">
                           <Pencil className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => handleDelete(doc.id)}
-                          className="text-slate-400 hover:text-red-600">
+                          className="text-muted-foreground/70 hover:text-red-600">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -377,8 +377,8 @@ export default function DoctorsPage() {
 
       {/* DETAILED VIEW MODAL (LEDGER) - UNCHANGED */}
       <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
-        <DialogContent className="max-w-4xl bg-slate-50">
-          <DialogHeader className="bg-white p-4 -mx-6 -mt-6 border-b rounded-t-lg shadow-sm">
+        <DialogContent className="max-w-4xl bg-muted/30">
+          <DialogHeader className="bg-card p-4 -mx-6 -mt-6 border-b rounded-t-lg shadow-sm">
             <div className="flex items-center gap-3">
               <div className="h-12 w-12 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center">
                 <Stethoscope className="h-6 w-6" />
@@ -394,8 +394,8 @@ export default function DoctorsPage() {
             </div>
 
             <div className="flex gap-6 mt-4">
-              <div className="bg-slate-50 px-4 py-2 rounded-lg border">
-                <p className="text-[10px] text-slate-500 font-bold uppercase">
+              <div className="bg-muted/30 px-4 py-2 rounded-lg border">
+                <p className="text-[10px] text-muted-foreground font-bold uppercase">
                   Total Referrals
                 </p>
                 <p className="text-lg font-black text-slate-800">
@@ -414,12 +414,12 @@ export default function DoctorsPage() {
           </DialogHeader>
 
           <div className="mt-4">
-            <h3 className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
+            <h3 className="text-sm font-bold text-foreground/80 mb-3 flex items-center gap-2">
               <FileText className="w-4 h-4" /> Referral & Commission Ledger
             </h3>
-            <div className="bg-white rounded-xl border shadow-sm max-h-[400px] overflow-y-auto">
+            <div className="bg-card rounded-xl border shadow-sm max-h-[400px] overflow-y-auto">
               <Table>
-                <TableHeader className="sticky top-0 bg-slate-100 z-10 shadow-sm">
+                <TableHeader className="sticky top-0 bg-muted z-10 shadow-sm">
                   <TableRow>
                     <TableHead className="text-xs">Date</TableHead>
                     <TableHead className="text-xs">Patient</TableHead>
@@ -443,8 +443,8 @@ export default function DoctorsPage() {
                     </TableRow>
                   ) : (
                     viewingDoctor?.commissions?.map((comm: any) => (
-                      <TableRow key={comm.id} className="hover:bg-slate-50">
-                        <TableCell className="text-xs text-slate-500 font-mono">
+                      <TableRow key={comm.id} className="hover:bg-muted/30">
+                        <TableCell className="text-xs text-muted-foreground font-mono">
                           {new Date(comm.test.createdAt).toLocaleDateString()}
                         </TableCell>
                         <TableCell className="font-medium text-sm text-slate-800">
@@ -575,13 +575,13 @@ export default function DoctorsPage() {
                   </div>
                 </div>
 
-                <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-4 mt-2">
-                  <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                <div className="p-4 bg-muted/30 border border-border rounded-xl space-y-4 mt-2">
+                  <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                     Profile Default Commission
                   </h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                      <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                         Commission Type
                       </label>
                       <Select
@@ -589,7 +589,7 @@ export default function DoctorsPage() {
                         onValueChange={(v) =>
                           setFormData({ ...formData, commissionType: v })
                         }>
-                        <SelectTrigger className="bg-white">
+                        <SelectTrigger className="bg-card">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -601,7 +601,7 @@ export default function DoctorsPage() {
                       </Select>
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                      <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                         Rate / Amount
                       </label>
                       <Input
@@ -615,11 +615,11 @@ export default function DoctorsPage() {
                             commissionRate: Number(e.target.value),
                           })
                         }
-                        className="bg-white font-bold"
+                        className="bg-card font-bold"
                       />
                     </div>
                   </div>
-                  <p className="text-[11px] text-slate-500 leading-tight">
+                  <p className="text-[11px] text-muted-foreground leading-tight">
                     This is the fallback rate. If a test does not have a
                     specific custom rate assigned in the next tab, this default
                     rule will apply.
@@ -633,12 +633,12 @@ export default function DoctorsPage() {
                   <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                   <Input
                     placeholder="Search to add a specific test..."
-                    className="pl-9 bg-slate-50 border-slate-200"
+                    className="pl-9 bg-muted/30 border-border"
                     value={testSearch}
                     onChange={(e) => setTestSearch(e.target.value)}
                   />
                   {testSearch && (
-                    <div className="absolute top-11 left-0 w-full bg-white border border-slate-200 rounded-lg shadow-xl max-h-48 overflow-y-auto z-50">
+                    <div className="absolute top-11 left-0 w-full bg-card border border-border rounded-lg shadow-xl max-h-48 overflow-y-auto z-50">
                       {allTests
                         ?.filter((t: any) =>
                           t.name
@@ -654,7 +654,7 @@ export default function DoctorsPage() {
                             <span className="font-semibold text-slate-700">
                               {t.name}
                             </span>
-                            <span className="text-xs bg-slate-100 px-2 py-0.5 rounded text-slate-500 font-mono">
+                            <span className="text-xs bg-muted px-2 py-0.5 rounded text-muted-foreground font-mono">
                               ₹{t.price}
                             </span>
                           </div>
@@ -663,9 +663,9 @@ export default function DoctorsPage() {
                   )}
                 </div>
 
-                <div className="border rounded-xl bg-white overflow-hidden">
+                <div className="border rounded-xl bg-card overflow-hidden">
                   <Table>
-                    <TableHeader className="bg-slate-50">
+                    <TableHeader className="bg-muted/30">
                       <TableRow>
                         <TableHead className="text-xs font-bold h-9">
                           Test Name
@@ -684,7 +684,7 @@ export default function DoctorsPage() {
                         <TableRow>
                           <TableCell
                             colSpan={4}
-                            className="text-center py-6 text-sm text-slate-500 bg-slate-50/30">
+                            className="text-center py-6 text-sm text-muted-foreground bg-slate-50/30">
                             No custom rates. The profile default will be used
                             for all tests.
                           </TableCell>
@@ -701,7 +701,7 @@ export default function DoctorsPage() {
                                 onValueChange={(v) =>
                                   updateCustomRate(index, "commissionType", v)
                                 }>
-                                <SelectTrigger className="h-8 text-xs bg-slate-50">
+                                <SelectTrigger className="h-8 text-xs bg-muted/30">
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -735,7 +735,7 @@ export default function DoctorsPage() {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => removeCustomRate(index)}
-                                className="h-7 w-7 text-slate-400 hover:text-red-600 hover:bg-red-50">
+                                className="h-7 w-7 text-muted-foreground/70 hover:text-red-600 hover:bg-red-50">
                                 <Trash2 className="h-3 w-3" />
                               </Button>
                             </TableCell>
@@ -757,7 +757,7 @@ export default function DoctorsPage() {
               </Button>
               <Button
                 type="submit"
-                className="bg-blue-600 hover:bg-blue-700 shadow-md"
+                className="bg-primary hover:bg-blue-700 shadow-md"
                 disabled={saveMutation.isPending}>
                 {saveMutation.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />

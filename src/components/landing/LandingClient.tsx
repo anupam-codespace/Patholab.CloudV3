@@ -146,7 +146,7 @@ export default function LandingClient() {
     <div className="min-h-screen bg-stone-50 font-sans text-stone-900 overflow-x-hidden selection:bg-rose-500 selection:text-white">
       {/* --- FLOATING NAVBAR --- */}
       <header className="fixed top-4 left-0 right-0 z-50 px-4 md:px-0">
-        <div className="max-w-5xl mx-auto bg-white/80 backdrop-blur-xl border border-stone-200/50 shadow-sm rounded-full h-16 flex items-center justify-between px-4 sm:px-6">
+        <div className="max-w-5xl mx-auto bg-card/80 backdrop-blur-xl border border-stone-200/50 shadow-sm rounded-full h-16 flex items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-2.5 font-bold text-xl text-stone-900">
             <div className="bg-stone-900 text-white p-1.5 rounded-full shadow-sm">
               <Layers className="h-4 w-4" />
@@ -193,7 +193,7 @@ export default function LandingClient() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden absolute top-20 left-4 right-4 bg-white border border-stone-200 rounded-2xl p-4 shadow-xl flex flex-col space-y-2 animate-in slide-in-from-top-4">
+          <div className="md:hidden absolute top-20 left-4 right-4 bg-card border border-stone-200 rounded-2xl p-4 shadow-xl flex flex-col space-y-2 animate-in slide-in-from-top-4">
             {["Tour", "Features", "Pricing", "Login"].map((item) => (
               <Link
                 key={item}
@@ -260,7 +260,7 @@ export default function LandingClient() {
         <div id="tour"></div>
 
         {/* --- SECTION 1: REPORTING (Asymmetric Grid) --- */}
-        <section className="py-24 bg-white border-y border-stone-200">
+        <section className="py-24 bg-card border-y border-stone-200">
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
             <div className="flex flex-col md:flex-row items-end justify-between mb-16 gap-6">
               <div className="max-w-2xl">
@@ -282,7 +282,7 @@ export default function LandingClient() {
               {/* Feature Cards */}
               <div className="bg-stone-50 p-8 rounded-3xl border border-stone-200 flex flex-col justify-between">
                 <div>
-                  <div className="h-10 w-10 bg-white rounded-full flex items-center justify-center shadow-sm mb-6">
+                  <div className="h-10 w-10 bg-card rounded-full flex items-center justify-center shadow-sm mb-6">
                     <Calculator className="h-4 w-4 text-stone-900" />
                   </div>
                   <h4 className="font-bold text-stone-900 text-xl mb-2">
@@ -297,7 +297,7 @@ export default function LandingClient() {
 
               <div className="bg-stone-50 p-8 rounded-3xl border border-stone-200 flex flex-col justify-between">
                 <div>
-                  <div className="h-10 w-10 bg-white rounded-full flex items-center justify-center shadow-sm mb-6">
+                  <div className="h-10 w-10 bg-card rounded-full flex items-center justify-center shadow-sm mb-6">
                     <QrCode className="h-4 w-4 text-stone-900" />
                   </div>
                   <h4 className="font-bold text-stone-900 text-xl mb-2">
@@ -321,7 +321,7 @@ export default function LandingClient() {
                     pathologist.
                   </p>
                 </div>
-                <div className="bg-white/10 p-4 rounded-xl border border-white/20 flex items-center justify-between backdrop-blur-sm">
+                <div className="bg-card/10 p-4 rounded-xl border border-white/20 flex items-center justify-between backdrop-blur-sm">
                   <span className="text-sm font-semibold">
                     Report Generated
                   </span>
@@ -339,7 +339,7 @@ export default function LandingClient() {
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
               {/* Brutalist Abstract UI */}
-              <div className="bg-white rounded-[2rem] border-2 border-stone-900 shadow-[8px_8px_0px_0px_rgba(28,25,23,1)] p-8 relative overflow-hidden">
+              <div className="bg-card rounded-[2rem] border-2 border-stone-900 shadow-[8px_8px_0px_0px_rgba(28,25,23,1)] p-8 relative overflow-hidden">
                 <div className="flex flex-col gap-6">
                   <div className="flex justify-between items-center border-b-2 border-stone-100 pb-4">
                     <div className="flex items-center gap-3">
@@ -494,12 +494,12 @@ export default function LandingClient() {
         </section>
 
         {/* --- SECTION 4 & 5 Combined: Inventory & Finance --- */}
-        <section className="py-24 bg-white border-b border-stone-200">
+        <section className="py-24 bg-card border-b border-stone-200">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-24">
             {/* Inventory */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
               <div className="order-last lg:order-first bg-stone-50 rounded-3xl p-8 border border-stone-200 flex flex-col gap-4">
-                <div className="bg-white p-5 rounded-2xl shadow-sm border border-stone-200 flex justify-between items-center">
+                <div className="bg-card p-5 rounded-2xl shadow-sm border border-stone-200 flex justify-between items-center">
                   <div className="flex items-center gap-3">
                     <div className="bg-rose-50 p-2 rounded-lg">
                       <Microscope className="h-5 w-5 text-rose-600" />
@@ -517,7 +517,7 @@ export default function LandingClient() {
                 <div className="flex justify-center">
                   <ArrowDownRight className="h-6 w-6 text-stone-300" />
                 </div>
-                <div className="bg-white p-5 rounded-2xl shadow-sm border border-stone-200 flex justify-between items-center">
+                <div className="bg-card p-5 rounded-2xl shadow-sm border border-stone-200 flex justify-between items-center">
                   <div>
                     <h4 className="font-bold text-sm text-stone-900">
                       Cholesterol Reagent
@@ -631,7 +631,7 @@ export default function LandingClient() {
                   ].map((item, i) => (
                     <div
                       key={i}
-                      className={`relative flex items-center gap-4 bg-white p-4 rounded-2xl border z-10 shadow-sm transition-opacity ${item.active ? "border-stone-300 opacity-100" : "border-stone-100 opacity-50"}`}>
+                      className={`relative flex items-center gap-4 bg-card p-4 rounded-2xl border z-10 shadow-sm transition-opacity ${item.active ? "border-stone-300 opacity-100" : "border-stone-100 opacity-50"}`}>
                       <div
                         className={`h-10 w-10 rounded-full flex items-center justify-center font-black text-sm ${item.active ? "bg-stone-900 text-white" : "bg-stone-100 text-stone-400"}`}>
                         {item.num}
@@ -681,7 +681,7 @@ export default function LandingClient() {
               {FEATURES.map((feat, i) => (
                 <div
                   key={i}
-                  className="bg-white rounded-3xl p-8 border border-stone-200 hover:border-stone-300 transition-colors">
+                  className="bg-card rounded-3xl p-8 border border-stone-200 hover:border-stone-300 transition-colors">
                   <feat.icon className="h-8 w-8 text-rose-600 mb-6" />
                   <h3 className="text-xl font-bold text-stone-900 mb-3">
                     {feat.title}
@@ -698,7 +698,7 @@ export default function LandingClient() {
         {/* --- PRICING SECTION --- */}
         <section
           id="pricing"
-          className="py-24 bg-white border-b border-stone-200">
+          className="py-24 bg-card border-b border-stone-200">
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-5xl font-black tracking-tight text-stone-900 mb-6">
@@ -708,12 +708,12 @@ export default function LandingClient() {
               <div className="inline-flex bg-stone-100 p-1.5 rounded-full border border-stone-200">
                 <button
                   onClick={() => setIsYearly(false)}
-                  className={`h-10 px-6 rounded-full text-sm font-bold transition-all ${!isYearly ? "bg-white text-stone-900 shadow-sm" : "text-stone-500 hover:text-stone-900"}`}>
+                  className={`h-10 px-6 rounded-full text-sm font-bold transition-all ${!isYearly ? "bg-card text-stone-900 shadow-sm" : "text-stone-500 hover:text-stone-900"}`}>
                   Monthly
                 </button>
                 <button
                   onClick={() => setIsYearly(true)}
-                  className={`h-10 px-6 rounded-full text-sm font-bold transition-all flex items-center gap-2 ${isYearly ? "bg-white text-stone-900 shadow-sm" : "text-stone-500 hover:text-stone-900"}`}>
+                  className={`h-10 px-6 rounded-full text-sm font-bold transition-all flex items-center gap-2 ${isYearly ? "bg-card text-stone-900 shadow-sm" : "text-stone-500 hover:text-stone-900"}`}>
                   Yearly{" "}
                   <span className="bg-rose-100 text-rose-700 text-[10px] px-2 py-0.5 rounded-full uppercase">
                     Save 20%
@@ -735,7 +735,7 @@ export default function LandingClient() {
                 {displayedPlans.map((plan: any) => (
                   <div
                     key={plan.id}
-                    className={`flex flex-col bg-white rounded-[2rem] p-8 border-2 transition-all ${plan.isPopular ? "border-stone-900 shadow-[8px_8px_0px_0px_rgba(28,25,23,1)] scale-105 z-10 bg-stone-50" : "border-stone-200"}`}>
+                    className={`flex flex-col bg-card rounded-[2rem] p-8 border-2 transition-all ${plan.isPopular ? "border-stone-900 shadow-[8px_8px_0px_0px_rgba(28,25,23,1)] scale-105 z-10 bg-stone-50" : "border-stone-200"}`}>
                     {plan.isPopular && (
                       <div className="mb-6">
                         <Badge className="bg-stone-900 text-white hover:bg-stone-900 uppercase tracking-widest text-[10px] font-bold px-3 py-1">
@@ -802,7 +802,7 @@ export default function LandingClient() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/register?planId=growth&cycle=MONTHLY">
-                <Button className="w-full sm:w-auto h-14 px-10 rounded-full text-lg font-bold bg-white text-stone-900 hover:bg-stone-200 transition-transform hover:-translate-y-1">
+                <Button className="w-full sm:w-auto h-14 px-10 rounded-full text-lg font-bold bg-card text-stone-900 hover:bg-stone-200 transition-transform hover:-translate-y-1">
                   Get Started Now
                 </Button>
               </Link>
@@ -815,7 +815,7 @@ export default function LandingClient() {
       </main>
 
       {/* --- FOOTER --- */}
-      <footer className="py-12 bg-white text-stone-600 border-t border-stone-200">
+      <footer className="py-12 bg-card text-stone-600 border-t border-stone-200">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2 font-black text-lg text-stone-900">
             <Layers className="h-5 w-5 text-rose-600" />

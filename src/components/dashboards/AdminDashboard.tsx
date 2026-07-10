@@ -14,10 +14,10 @@ export default function AdminDashboard({
     <div className="p-6 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-500">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-2xl font-black text-foreground tracking-tight">
             Business Overview
           </h1>
-          <p className="text-sm font-medium text-slate-500">
+          <p className="text-sm font-medium text-muted-foreground">
             Welcome back. Here is your lab's performance today.
           </p>
         </div>
@@ -39,8 +39,8 @@ export default function AdminDashboard({
             label: "New Patients",
             value: "42",
             icon: Users,
-            color: "text-blue-600",
-            bg: "bg-blue-50",
+            color: "text-primary",
+            bg: "bg-primary/10",
           },
           {
             label: "Tests Processed",
@@ -59,13 +59,13 @@ export default function AdminDashboard({
         ].map((stat, i) => (
           <Card
             key={i}
-            className="p-5 border-slate-200 shadow-sm flex items-center gap-4 rounded-2xl">
+            className="p-5 border-border shadow-sm flex items-center gap-4 rounded-2xl">
             <div
               className={`h-12 w-12 rounded-full ${stat.bg} flex items-center justify-center shrink-0`}>
               <stat.icon className={`h-6 w-6 ${stat.color}`} />
             </div>
             <div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              <p className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">
                 {stat.label}
               </p>
               <p className="text-2xl font-black text-slate-800">{stat.value}</p>

@@ -4,6 +4,7 @@ export const dynamic = "force-dynamic";
 import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useKeyboardShortcut } from "@/hooks/useKeyboardShortcut";
 import {
   Search,
   Plus,
@@ -120,7 +121,7 @@ const getTestStatusBadge = (status: string) => {
       return "text-amber-700 bg-amber-50 border-amber-200";
     case "PENDING":
     default:
-      return "text-slate-600 bg-slate-100 border-slate-200";
+      return "text-muted-foreground bg-muted border-border";
   }
 };
 
@@ -136,6 +137,14 @@ export default function PatientWorklistPage() {
   const [activeTabFilter, setActiveTabFilter] = useState("ALL");
   const [page, setPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  // ⌨️ Keyboard shortcuts
+  useKeyboardShortcut("n", () => router.push("/workspace/registration"), { description: "New patient registration" });
+  useKeyboardShortcut("/", () => { const el = document.querySelector('input[type="text"]') as HTMLInputElement; el?.focus(); }, { description: "Focus search" });
+  useKeyboardShortcut("ArrowRight", () => setPage(p => p + 1), { ctrl: true, description: "Next page" });
+  useKeyboardShortcut("ArrowLeft", () => setPage(p => Math.max(1, p - 1)), { ctrl: true, description: "Previous page" });
+  useKeyboardShortcut("Escape", () => router.push("/workspace"), { description: "Go back to dashboard" });
+  useKeyboardShortcut("r", () => queryClient.invalidateQueries({ queryKey: ["patients"] }), { description: "Refresh patient list" });
 
   // Search Debounce
   useEffect(() => {
@@ -255,19 +264,19 @@ export default function PatientWorklistPage() {
     SEARCH_CRITERIA.find((c) => c.id === searchField)?.label || "Global Search";
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] bg-slate-50 font-sans relative overflow-hidden selection:bg-indigo-100">
+    <div className="flex flex-col h-[calc(100vh-4rem)] bg-muted/30 font-sans relative overflow-hidden selection:bg-indigo-100">
       <div className="absolute top-0 inset-x-0 h-64 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-100/40 via-slate-50 to-transparent pointer-events-none z-0" />
 
       <div className="flex-1 flex flex-col p-4 sm:p-6 z-10 overflow-hidden max-w-[1600px] mx-auto w-full">
         {/* --- CONTROL BAR PACKET --- */}
-        <div className="flex-none mb-4 flex flex-col gap-4 bg-white/70 backdrop-blur-xl p-4 rounded-2xl border border-slate-200/60 shadow-sm">
+        <div className="flex-none mb-4 flex flex-col gap-4 bg-card/70 backdrop-blur-xl p-4 rounded-2xl border border-slate-200/60 shadow-sm">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex items-center gap-4 w-full sm:w-auto">
               <div className="h-10 w-10 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-inner shrink-0">
                 <FlaskConical className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2 leading-none">
+                <h1 className="text-xl font-bold text-foreground tracking-tight flex items-center gap-2 leading-none">
                   Patient Visit Worklist
                   <Badge
                     variant="secondary"
@@ -275,7 +284,7 @@ export default function PatientWorklistPage() {
                     {filteredVisits.length} Records
                   </Badge>
                 </h1>
-                <p className="text-xs font-medium text-slate-500 mt-1">
+                <p className="text-xs font-medium text-muted-foreground mt-1">
                   Click any row to open the full patient profile.
                 </p>
               </div>
@@ -285,12 +294,12 @@ export default function PatientWorklistPage() {
               <Popover open={isSearchOpen} onOpenChange={setIsSearchOpen}>
                 <PopoverTrigger asChild>
                   <div className="relative w-full sm:w-72 group cursor-pointer">
-                    <div className="absolute left-3 top-2.5 text-slate-400 group-hover:text-indigo-600 transition-colors">
+                    <div className="absolute left-3 top-2.5 text-muted-foreground/70 group-hover:text-indigo-600 transition-colors">
                       <ActiveIcon className="h-4 w-4" />
                     </div>
                     <Input
                       placeholder={`Search by ${activeLabel}...`}
-                      className="pl-9 pr-9 h-10 bg-white border-slate-200 focus:border-indigo-500 rounded-xl cursor-pointer font-medium shadow-sm"
+                      className="pl-9 pr-9 h-10 bg-card border-border focus:border-indigo-500 rounded-xl cursor-pointer font-medium shadow-sm"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -310,7 +319,7 @@ export default function PatientWorklistPage() {
                         placeholder="Filter criteria fields..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="h-10 bg-white pl-9 rounded-xl focus:border-indigo-500"
+                        className="h-10 bg-card pl-9 rounded-xl focus:border-indigo-500"
                       />
                       <ActiveIcon className="absolute left-3 top-3 h-4 w-4 text-indigo-500" />
                     </div>
@@ -332,7 +341,7 @@ export default function PatientWorklistPage() {
                             />
                             <Label
                               htmlFor={criteria.id}
-                              className="flex items-center gap-2 px-3 py-2 rounded-xl border border-transparent cursor-pointer hover:bg-slate-50 peer-data-[state=checked]:bg-indigo-50 peer-data-[state=checked]:text-indigo-700 transition-all text-xs font-semibold">
+                              className="flex items-center gap-2 px-3 py-2 rounded-xl border border-transparent cursor-pointer hover:bg-muted/30 peer-data-[state=checked]:bg-indigo-50 peer-data-[state=checked]:text-indigo-700 transition-all text-xs font-semibold">
                               <criteria.icon className="h-3.5 w-3.5 opacity-75" />
                               {criteria.label}
                             </Label>
@@ -360,7 +369,7 @@ export default function PatientWorklistPage() {
               <TabsList className="bg-slate-100/80 p-1 rounded-xl flex justify-start gap-1 w-full sm:w-max overflow-x-auto">
                 <TabsTrigger
                   value="ALL"
-                  className="rounded-lg text-xs font-bold px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm">
+                  className="rounded-lg text-xs font-bold px-4 py-2 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm">
                   All Visits ({processedVisits.length})
                 </TabsTrigger>
                 <TabsTrigger
@@ -384,11 +393,11 @@ export default function PatientWorklistPage() {
         </div>
 
         {/* --- GRID MASTER TABLE --- */}
-        <Card className="flex-1 flex flex-col shadow-sm border-slate-200/80 overflow-hidden rounded-2xl bg-white">
+        <Card className="flex-1 flex flex-col shadow-sm border-slate-200/80 overflow-hidden rounded-2xl bg-card">
           <TooltipProvider delayDuration={300}>
             <div className="flex-1 overflow-auto relative custom-scrollbar">
               <table className="w-full text-left border-collapse whitespace-nowrap">
-                <thead className="sticky top-0 z-20 bg-slate-50/90 backdrop-blur-md text-slate-500 font-bold uppercase tracking-wider text-[10px] border-b border-slate-200">
+                <thead className="sticky top-0 z-20 bg-slate-50/90 backdrop-blur-md text-muted-foreground font-bold uppercase tracking-wider text-[10px] border-b border-border">
                   <tr>
                     <th className="px-4 py-3 w-[150px]">Visit ID</th>
                     <th className="px-4 py-3 w-[350px]">
@@ -407,7 +416,7 @@ export default function PatientWorklistPage() {
                   {isLoading ? (
                     <tr>
                       <td colSpan={7} className="h-64 text-center">
-                        <div className="flex flex-col items-center justify-center text-slate-500 space-y-2">
+                        <div className="flex flex-col items-center justify-center text-muted-foreground space-y-2">
                           <Loader2 className="animate-spin h-6 w-6 text-indigo-600" />
                           <span className="text-[10px] uppercase tracking-widest font-bold animate-pulse">
                             Loading Visits...
@@ -418,9 +427,9 @@ export default function PatientWorklistPage() {
                   ) : filteredVisits.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="h-64 text-center">
-                        <div className="flex flex-col items-center justify-center text-slate-400 space-y-2">
+                        <div className="flex flex-col items-center justify-center text-muted-foreground/70 space-y-2">
                           <Search className="h-6 w-6 text-slate-300" />
-                          <p className="font-bold text-xs text-slate-600">
+                          <p className="font-bold text-xs text-muted-foreground">
                             Zero visits found
                           </p>
                         </div>
@@ -449,7 +458,7 @@ export default function PatientWorklistPage() {
                               `/workspace/patients/${visit.patient.id}`,
                             )
                           }
-                          className={`group transition-all cursor-pointer ${isRowSelected ? "bg-indigo-50/30" : "hover:bg-slate-50/70"}`}>
+                          className={`group transition-all cursor-pointer ${isRowSelected ? "bg-indigo-50/30" : "hover:bg-muted/50/70"}`}>
                           {/* 🆔 DYNAMIC VISIT TRACKER ID */}
                           <td className="px-4 py-4">
                             <div className="flex flex-col gap-1 w-max">
@@ -458,7 +467,7 @@ export default function PatientWorklistPage() {
                                 className="font-mono bg-indigo-50/50 font-black text-indigo-700 border-indigo-100 text-[11px] px-2 py-0.5 rounded-md shadow-sm">
                                 {visit.visitId}
                               </Badge>
-                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide flex items-center gap-1 pl-0.5 mt-0.5">
+                              <span className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wide flex items-center gap-1 pl-0.5 mt-0.5">
                                 <Calendar className="w-3 h-3 text-slate-300" />{" "}
                                 {safeFormatDate(visit.date)}
                               </span>
@@ -469,20 +478,20 @@ export default function PatientWorklistPage() {
                           <td className="px-4 py-4">
                             <div className="flex flex-col gap-1 w-max">
                               <div className="flex items-center gap-2">
-                                <span className="font-extrabold text-slate-900 text-sm tracking-tight">
+                                <span className="font-extrabold text-foreground text-sm tracking-tight">
                                   {visit.patient.name}
                                 </span>
-                                <Badge className="bg-slate-100 text-slate-600 hover:bg-slate-200 border-none px-1.5 py-0 text-[9px] uppercase tracking-wider font-bold">
+                                <Badge className="bg-muted text-muted-foreground hover:bg-slate-200 border-none px-1.5 py-0 text-[9px] uppercase tracking-wider font-bold">
                                   {visit.patient.age}{" "}
                                   {visit.patient.ageUnit?.slice(0, 1)} •{" "}
                                   {visit.patient.gender}
                                 </Badge>
-                                <span className="text-[10px] font-mono font-bold text-slate-400 ml-1">
+                                <span className="text-[10px] font-mono font-bold text-muted-foreground/70 ml-1">
                                   {visit.patient.patientId}
                                 </span>
                               </div>
                               <div className="flex items-center gap-2 mt-0.5">
-                                <span className="text-xs font-semibold text-slate-500 flex items-center gap-1">
+                                <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
                                   <Phone className="w-3 h-3 text-slate-400" />{" "}
                                   {visit.patient.phone}
                                 </span>
@@ -527,7 +536,7 @@ export default function PatientWorklistPage() {
                                     <p className="font-bold text-sm mb-1">
                                       {testItem.testName}
                                     </p>
-                                    <p className="text-[10px] text-slate-400 uppercase tracking-wider">
+                                    <p className="text-[10px] text-muted-foreground/70 uppercase tracking-wider">
                                       Status:{" "}
                                       <span className="text-white font-bold">
                                         {testItem.status}
@@ -537,7 +546,7 @@ export default function PatientWorklistPage() {
                                 </Tooltip>
                               ))}
                               {visit.tests.length === 0 && (
-                                <span className="text-slate-400 text-xs italic font-semibold flex items-center gap-1">
+                                <span className="text-muted-foreground/70 text-xs italic font-semibold flex items-center gap-1">
                                   <AlertCircle className="w-3.5 h-3.5" /> No
                                   Tests Billed
                                 </span>
@@ -548,12 +557,12 @@ export default function PatientWorklistPage() {
                           {/* 🩺 REFERRED BY COLUMN */}
                           <td className="px-4 py-4">
                             <div className="flex flex-col gap-0.5 text-xs">
-                              <span className="font-bold text-slate-700 flex items-center gap-1.5 truncate max-w-[140px]">
-                                <Stethoscope className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                              <span className="font-bold text-foreground/80 flex items-center gap-1.5 truncate max-w-[140px]">
+                                <Stethoscope className="h-3.5 w-3.5 text-muted-foreground/70 shrink-0" />
                                 {derivedDoctor}
                               </span>
                               {derivedAgency && (
-                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 truncate max-w-[140px]">
+                                <span className="text-[9px] font-black text-muted-foreground/70 uppercase tracking-widest flex items-center gap-1.5 truncate max-w-[140px]">
                                   <Briefcase className="h-3 w-3 text-slate-300 shrink-0" />
                                   {derivedAgency}
                                 </span>
@@ -576,14 +585,14 @@ export default function PatientWorklistPage() {
                                   </div>
                                 </HoverCardTrigger>
                                 <HoverCardContent
-                                  className="w-64 p-0 shadow-2xl border-slate-200 rounded-xl overflow-hidden z-50"
+                                  className="w-64 p-0 shadow-2xl border-border rounded-xl overflow-hidden z-50"
                                   align="center">
-                                  <div className="bg-slate-50 px-4 py-2 border-b text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1.5">
+                                  <div className="bg-muted/30 px-4 py-2 border-b text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1.5">
                                     <Receipt className="h-3.5 w-3.5" /> Invoice
                                     Summary
                                   </div>
                                   <div className="p-4 space-y-2 text-xs font-semibold">
-                                    <div className="flex justify-between text-slate-500">
+                                    <div className="flex justify-between text-muted-foreground">
                                       <span>Subtotal</span>{" "}
                                       <span>
                                         ₹
@@ -592,7 +601,7 @@ export default function PatientWorklistPage() {
                                         ).toFixed(2)}
                                       </span>
                                     </div>
-                                    <div className="border-t border-dashed pt-2 flex justify-between font-black text-slate-900 text-sm">
+                                    <div className="border-t border-dashed pt-2 flex justify-between font-black text-foreground text-sm">
                                       <span>Net Payable</span>{" "}
                                       <span>
                                         ₹
@@ -607,7 +616,7 @@ export default function PatientWorklistPage() {
                             ) : (
                               <Badge
                                 variant="outline"
-                                className="text-slate-400 border-dashed text-[10px] uppercase">
+                                className="text-muted-foreground/70 border-dashed text-[10px] uppercase">
                                 Unbilled
                               </Badge>
                             )}
@@ -621,7 +630,7 @@ export default function PatientWorklistPage() {
                               <DropdownMenuTrigger asChild>
                                 <Button
                                   variant="ghost"
-                                  className="h-8 w-8 p-0 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50">
+                                  className="h-8 w-8 p-0 rounded-lg text-muted-foreground/70 hover:text-indigo-600 hover:bg-indigo-50">
                                   <span className="sr-only">Open menu</span>
                                   <MoreHorizontal className="h-5 w-5" />
                                 </Button>
@@ -669,7 +678,7 @@ export default function PatientWorklistPage() {
                                   </DropdownMenuItem>
                                 )}
 
-                                <DropdownMenuSeparator className="bg-slate-100 my-1" />
+                                <DropdownMenuSeparator className="bg-muted my-1" />
 
                                 {/* Invoice Actions (Using specific Invoice ID!) */}
                                 {visit.invoice && (
@@ -680,7 +689,7 @@ export default function PatientWorklistPage() {
                                           `/workspace/billing/${visit.invoice.id}`,
                                         )
                                       }
-                                      className="cursor-pointer font-medium text-slate-700 rounded-lg py-2">
+                                      className="cursor-pointer font-medium text-foreground/80 rounded-lg py-2">
                                       <Receipt className="mr-2 h-4 w-4 text-slate-400" />{" "}
                                       View Invoice
                                     </DropdownMenuItem>
@@ -690,14 +699,14 @@ export default function PatientWorklistPage() {
                                           `/workspace/print/barcodes?invoiceId=${visit.invoice.id}`,
                                         )
                                       }
-                                      className="cursor-pointer font-medium text-slate-700 rounded-lg py-2">
+                                      className="cursor-pointer font-medium text-foreground/80 rounded-lg py-2">
                                       <ScanBarcode className="mr-2 h-4 w-4 text-slate-400" />{" "}
                                       Print Barcodes
                                     </DropdownMenuItem>
                                   </>
                                 )}
 
-                                <DropdownMenuSeparator className="bg-slate-100 my-1" />
+                                <DropdownMenuSeparator className="bg-muted my-1" />
                                 <DropdownMenuItem
                                   className="text-rose-600 focus:text-rose-700 focus:bg-rose-50 font-bold rounded-lg py-2"
                                   onClick={() =>
@@ -719,10 +728,10 @@ export default function PatientWorklistPage() {
           </TooltipProvider>
 
           {/* --- PAGINATION CONSOLE FOOTER --- */}
-          <div className="flex-none px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4 bg-white z-20">
-            <div className="text-xs text-slate-500 font-bold tracking-wide uppercase">
-              Page <span className="text-slate-900 font-black">{page}</span> /{" "}
-              <span className="text-slate-900 font-black">{totalPages}</span>
+          <div className="flex-none px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4 bg-card z-20">
+            <div className="text-xs text-muted-foreground font-bold tracking-wide uppercase">
+              Page <span className="text-foreground font-black">{page}</span> /{" "}
+              <span className="text-foreground font-black">{totalPages}</span>
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -730,7 +739,7 @@ export default function PatientWorklistPage() {
                 size="sm"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="h-9 px-4 rounded-xl text-xs font-black border-slate-200 text-slate-600 hover:bg-slate-50">
+                className="h-9 px-4 rounded-xl text-xs font-black border-border text-muted-foreground hover:bg-muted/30">
                 <ChevronLeft className="h-4 w-4 mr-1" /> Prev
               </Button>
               <Button
@@ -738,7 +747,7 @@ export default function PatientWorklistPage() {
                 size="sm"
                 onClick={() => setPage((p) => p + 1)}
                 disabled={page >= totalPages}
-                className="h-9 px-4 rounded-xl text-xs font-black border-slate-200 text-slate-600 hover:bg-slate-50">
+                className="h-9 px-4 rounded-xl text-xs font-black border-border text-muted-foreground hover:bg-muted/30">
                 Next <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </div>

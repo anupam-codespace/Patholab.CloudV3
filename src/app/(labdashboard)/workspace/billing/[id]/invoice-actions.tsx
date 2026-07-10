@@ -22,14 +22,14 @@ export default function InvoiceActions() {
       {/* Visual background glow for the action area */}
       <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 to-blue-500/20 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
       
-      <div className="relative flex flex-wrap items-center gap-3 p-2 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-sm">
+      <div className="relative flex flex-wrap items-center gap-3 p-2 bg-card dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-sm">
         
         {/* EMAIL ACTION */}
         <Button 
           variant="ghost" 
           size="sm" 
           onClick={() => alert("Email feature coming soon")}
-          className="h-10 px-4 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-indigo-600 transition-all active:scale-95 flex items-center gap-2 group/btn"
+          className="h-10 px-4 rounded-xl text-muted-foreground dark:text-slate-300 hover:bg-muted/30 dark:hover:bg-slate-800 hover:text-indigo-600 transition-all active:scale-95 flex items-center gap-2 group/btn"
         >
           <div className="p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 group-hover/btn:scale-110 transition-transform">
             <Send className="h-3.5 w-3.5" />
@@ -37,14 +37,14 @@ export default function InvoiceActions() {
           <span className="text-[11px] font-black uppercase tracking-widest">Send Email</span>
         </Button>
 
-        <div className="w-px h-6 bg-slate-100 dark:bg-slate-800 hidden sm:block"></div>
+        <div className="w-px h-6 bg-muted dark:bg-slate-800 hidden sm:block"></div>
 
         {/* PRINT ACTION */}
         <Button 
           variant="ghost" 
           size="sm" 
           onClick={() => window.print()}
-          className="h-10 px-4 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-emerald-600 transition-all active:scale-95 flex items-center gap-2 group/btn"
+          className="h-10 px-4 rounded-xl text-muted-foreground dark:text-slate-300 hover:bg-muted/30 dark:hover:bg-slate-800 hover:text-emerald-600 transition-all active:scale-95 flex items-center gap-2 group/btn"
         >
           <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 group-hover/btn:scale-110 transition-transform">
             <Printer className="h-3.5 w-3.5" />
@@ -67,7 +67,7 @@ export default function InvoiceActions() {
         <Button 
           variant="ghost" 
           size="icon" 
-          className="h-10 w-10 rounded-xl text-slate-400 hover:text-slate-900 sm:hidden"
+          className="h-10 w-10 rounded-xl text-muted-foreground/70 hover:text-foreground sm:hidden"
         >
           <Share2 className="h-4 w-4" />
         </Button>

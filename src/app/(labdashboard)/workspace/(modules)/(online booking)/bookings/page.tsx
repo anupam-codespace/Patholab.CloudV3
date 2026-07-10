@@ -52,10 +52,10 @@ export default async function BookingsDashboardPage() {
       {/* --- HEADER --- */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">
             Online Bookings
           </h1>
-          <p className="text-slate-500 mt-1">
+          <p className="text-muted-foreground mt-1">
             Manage B2B2C patient appointments and home collections.
           </p>
         </div>
@@ -65,7 +65,7 @@ export default async function BookingsDashboardPage() {
             <Link
               href={`/book/${lab.portalSlug}`}
               target="_blank"
-              className="flex items-center gap-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-lg font-medium transition-colors text-sm">
+              className="flex items-center gap-2 bg-card border border-border text-foreground/80 hover:bg-muted/30 px-4 py-2 rounded-lg font-medium transition-colors text-sm">
               <ExternalLink className="w-4 h-4" /> View Live Portal
             </Link>
           ) : (
@@ -84,39 +84,39 @@ export default async function BookingsDashboardPage() {
 
       {/* --- QUICK STATS WIDGETS --- */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
-          <div className="bg-blue-100 p-3 rounded-lg text-blue-600">
+        <div className="bg-card p-5 rounded-xl border border-border shadow-sm flex items-center gap-4">
+          <div className="bg-blue-100 p-3 rounded-lg text-primary">
             <Activity className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-sm font-medium text-slate-500">
+            <p className="text-sm font-medium text-muted-foreground">
               New Bookings Today
             </p>
-            <h3 className="text-2xl font-bold text-slate-900">{totalToday}</h3>
+            <h3 className="text-2xl font-bold text-foreground">{totalToday}</h3>
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+        <div className="bg-card p-5 rounded-xl border border-border shadow-sm flex items-center gap-4">
           <div className="bg-amber-100 p-3 rounded-lg text-amber-600">
             <Clock className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-sm font-medium text-slate-500">Pending Action</p>
-            <h3 className="text-2xl font-bold text-slate-900">
+            <p className="text-sm font-medium text-muted-foreground">Pending Action</p>
+            <h3 className="text-2xl font-bold text-foreground">
               {totalPending}
             </h3>
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+        <div className="bg-card p-5 rounded-xl border border-border shadow-sm flex items-center gap-4">
           <div className="bg-green-100 p-3 rounded-lg text-green-600">
             <CalendarCheck className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-sm font-medium text-slate-500">
+            <p className="text-sm font-medium text-muted-foreground">
               Total Revenue (Online)
             </p>
-            <h3 className="text-2xl font-bold text-slate-900">
+            <h3 className="text-2xl font-bold text-foreground">
               Auto-Calculated
             </h3>
           </div>

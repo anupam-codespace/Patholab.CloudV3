@@ -111,10 +111,10 @@ export default async function FinancialAnalyticsPage() {
     <div className="p-6 max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-slate-900">
+          <h1 className="text-3xl font-black tracking-tight text-foreground">
             Financial Analytics
           </h1>
-          <p className="text-slate-500 font-medium mt-1">
+          <p className="text-muted-foreground font-medium mt-1">
             Comprehensive overview of your enterprise's financial health.
           </p>
         </div>
@@ -150,7 +150,7 @@ export default async function FinancialAnalyticsPage() {
           title="Net Profit"
           value={formatINR(netProfit)}
           icon={TrendingUp}
-          color="text-blue-600"
+          color="text-primary"
           bg="bg-blue-100"
         />
         <StatCard
@@ -164,33 +164,33 @@ export default async function FinancialAnalyticsPage() {
 
       {/* === GST / DISCOUNT BREAKDOWN === */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card className="border-slate-200 shadow-sm">
+        <Card className="border-border shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+            <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
               Gross Billing
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-slate-900">
+            <div className="text-2xl font-black text-foreground">
               {formatINR(grossBilling)}
             </div>
-            <p className="text-xs text-slate-500 mt-1 font-medium">
+            <p className="text-xs text-muted-foreground mt-1 font-medium">
               Subtotal before adjustments.
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 shadow-sm">
+        <Card className="border-border shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+            <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
               Discounts Given
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-slate-900">
+            <div className="text-2xl font-black text-foreground">
               {formatINR(totalDiscounts)}
             </div>
-            <p className="text-xs text-slate-500 mt-1 font-medium">
+            <p className="text-xs text-muted-foreground mt-1 font-medium">
               {grossBilling > 0
                 ? ((totalDiscounts / grossBilling) * 100).toFixed(1)
                 : 0}
@@ -199,33 +199,33 @@ export default async function FinancialAnalyticsPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 shadow-sm">
+        <Card className="border-border shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+            <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
               CGST Collected
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-slate-900">
+            <div className="text-2xl font-black text-foreground">
               {formatINR(totalCGST)}
             </div>
-            <p className="text-xs text-slate-500 mt-1 font-medium">
+            <p className="text-xs text-muted-foreground mt-1 font-medium">
               Central GST.
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 shadow-sm">
+        <Card className="border-border shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+            <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
               SGST Collected
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-slate-900">
+            <div className="text-2xl font-black text-foreground">
               {formatINR(totalSGST)}
             </div>
-            <p className="text-xs text-slate-500 mt-1 font-medium">
+            <p className="text-xs text-muted-foreground mt-1 font-medium">
               State GST.
             </p>
           </CardContent>
@@ -235,16 +235,16 @@ export default async function FinancialAnalyticsPage() {
       {/* === DETAILED LEDGERS === */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Invoices Ledger */}
-        <Card className="border-slate-200 shadow-sm overflow-hidden">
+        <Card className="border-border shadow-sm overflow-hidden">
           <CardHeader className="border-b border-slate-100 bg-slate-50/80 pb-4">
             <CardTitle className="flex items-center gap-2 text-lg font-black text-slate-800">
-              <Receipt className="w-5 h-5 text-blue-600" /> Recent Invoices
+              <Receipt className="w-5 h-5 text-primary" /> Recent Invoices
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">
-                <thead className="bg-white text-xs font-bold text-slate-500 uppercase tracking-widest border-b border-slate-100">
+                <thead className="bg-card text-xs font-bold text-muted-foreground uppercase tracking-widest border-b border-slate-100">
                   <tr>
                     <th className="px-5 py-4">Invoice</th>
                     <th className="px-5 py-4">Billed To</th>
@@ -252,7 +252,7 @@ export default async function FinancialAnalyticsPage() {
                     <th className="px-5 py-4 text-center">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 bg-white">
+                <tbody className="divide-y divide-slate-100 bg-card">
                   {recentInvoices.map((inv: any) => {
                     // FIXED: Properly querying inv.agency.agencyName
                     const entityName = inv.isB2B
@@ -262,19 +262,19 @@ export default async function FinancialAnalyticsPage() {
                     return (
                       <tr
                         key={inv.id}
-                        className="hover:bg-slate-50 transition-colors">
-                        <td className="px-5 py-4 font-bold text-blue-600 whitespace-nowrap">
+                        className="hover:bg-muted/30 transition-colors">
+                        <td className="px-5 py-4 font-bold text-primary whitespace-nowrap">
                           {inv.invoiceNumber}
                         </td>
-                        <td className="px-5 py-4 text-slate-700 font-medium">
+                        <td className="px-5 py-4 text-foreground/80 font-medium">
                           {entityName}
                           {inv.isB2B && (
-                            <span className="ml-2 inline-block px-1.5 py-0.5 rounded text-[10px] bg-slate-100 text-slate-600 font-bold uppercase">
+                            <span className="ml-2 inline-block px-1.5 py-0.5 rounded text-[10px] bg-muted text-muted-foreground font-bold uppercase">
                               B2B
                             </span>
                           )}
                         </td>
-                        <td className="px-5 py-4 text-right font-black text-slate-900 whitespace-nowrap">
+                        <td className="px-5 py-4 text-right font-black text-foreground whitespace-nowrap">
                           {formatINR(Number(inv.grandTotal))}
                         </td>
                         <td className="px-5 py-4 text-center">
@@ -296,7 +296,7 @@ export default async function FinancialAnalyticsPage() {
                     <tr>
                       <td
                         colSpan={4}
-                        className="px-5 py-8 text-center text-slate-400 font-medium">
+                        className="px-5 py-8 text-center text-muted-foreground/70 font-medium">
                         No recent invoices found.
                       </td>
                     </tr>
@@ -308,7 +308,7 @@ export default async function FinancialAnalyticsPage() {
         </Card>
 
         {/* Expenses Ledger */}
-        <Card className="border-slate-200 shadow-sm overflow-hidden">
+        <Card className="border-border shadow-sm overflow-hidden">
           <CardHeader className="border-b border-slate-100 bg-slate-50/80 pb-4">
             <CardTitle className="flex items-center gap-2 text-lg font-black text-slate-800">
               <Wallet className="w-5 h-5 text-rose-600" /> Recent Expenses
@@ -317,7 +317,7 @@ export default async function FinancialAnalyticsPage() {
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">
-                <thead className="bg-white text-xs font-bold text-slate-500 uppercase tracking-widest border-b border-slate-100">
+                <thead className="bg-card text-xs font-bold text-muted-foreground uppercase tracking-widest border-b border-slate-100">
                   <tr>
                     <th className="px-5 py-4">Date</th>
                     <th className="px-5 py-4">Category</th>
@@ -325,12 +325,12 @@ export default async function FinancialAnalyticsPage() {
                     <th className="px-5 py-4 text-right">Amount</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 bg-white">
+                <tbody className="divide-y divide-slate-100 bg-card">
                   {recentExpenses.map((exp: any) => (
                     <tr
                       key={exp.id}
-                      className="hover:bg-slate-50 transition-colors">
-                      <td className="px-5 py-4 text-slate-500 font-medium whitespace-nowrap">
+                      className="hover:bg-muted/30 transition-colors">
+                      <td className="px-5 py-4 text-muted-foreground font-medium whitespace-nowrap">
                         {new Date(exp.date).toLocaleDateString("en-IN", {
                           day: "2-digit",
                           month: "short",
@@ -338,15 +338,15 @@ export default async function FinancialAnalyticsPage() {
                         })}
                       </td>
                       <td className="px-5 py-4">
-                        <div className="font-bold text-slate-900">
+                        <div className="font-bold text-foreground">
                           {exp.title || "—"}
                         </div>
-                        <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mt-0.5">
+                        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mt-0.5">
                           {exp.category}
                         </div>
                       </td>
                       <td className="px-5 py-4">
-                        <span className="px-2 py-1 rounded bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-wider">
+                        <span className="px-2 py-1 rounded bg-muted text-muted-foreground text-[10px] font-bold uppercase tracking-wider">
                           {exp.paymentMode || "—"}
                         </span>
                       </td>
@@ -359,7 +359,7 @@ export default async function FinancialAnalyticsPage() {
                     <tr>
                       <td
                         colSpan={4}
-                        className="px-5 py-8 text-center text-slate-400 font-medium">
+                        className="px-5 py-8 text-center text-muted-foreground/70 font-medium">
                         No recent expenses recorded.
                       </td>
                     </tr>
@@ -377,9 +377,9 @@ export default async function FinancialAnalyticsPage() {
 // Reusable KPI Card Component
 function StatCard({ title, value, icon: Icon, color, bg }: any) {
   return (
-    <Card className="border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+    <Card className="border-border shadow-sm hover:shadow-md transition-shadow">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+        <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
           {title}
         </CardTitle>
         <div className={`p-2.5 rounded-xl ${bg}`}>
@@ -387,7 +387,7 @@ function StatCard({ title, value, icon: Icon, color, bg }: any) {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-black text-slate-900 tracking-tight">
+        <div className="text-2xl font-black text-foreground tracking-tight">
           {value}
         </div>
       </CardContent>

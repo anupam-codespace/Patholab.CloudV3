@@ -212,7 +212,7 @@ export default function AdminSidebar({
             {navGroups.map((group) => (
               <div key={group.title}>
                 {!collapsed && (
-                  <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 px-3 transition-opacity duration-300">
+                  <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 px-3 transition-opacity duration-300">
                     {group.title}
                   </h3>
                 )}
@@ -236,7 +236,7 @@ export default function AdminSidebar({
                                 "h-5 w-5 shrink-0 transition-colors",
                                 isActive
                                   ? "text-emerald-400"
-                                  : "text-slate-500 group-hover:text-slate-300",
+                                  : "text-muted-foreground group-hover:text-slate-300",
                               )}
                             />
 
@@ -271,7 +271,7 @@ export default function AdminSidebar({
         <div className="p-3 border-t border-slate-800 bg-slate-900">
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="w-full flex items-center justify-center p-2 mb-2 rounded-lg hover:bg-slate-800 text-slate-500 hover:text-white transition-colors">
+            className="w-full flex items-center justify-center p-2 mb-2 rounded-lg hover:bg-slate-800 text-muted-foreground hover:text-white transition-colors">
             {collapsed ? (
               <ChevronRight className="h-4 w-4" />
             ) : (

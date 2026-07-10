@@ -123,9 +123,9 @@ export default function RisDashboard() {
   // ── Loading / error states ──
   if (isLoading) {
     return (
-      <div className="h-[calc(100vh-4rem)] flex flex-col items-center justify-center bg-slate-50 font-sans">
+      <div className="h-[calc(100vh-4rem)] flex flex-col items-center justify-center bg-muted/30 font-sans">
         <Loader2 className="h-10 w-10 animate-spin text-indigo-600 mb-4" />
-        <p className="text-sm font-bold text-slate-500 uppercase tracking-widest animate-pulse">
+        <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest animate-pulse">
           Loading Dashboard...
         </p>
       </div>
@@ -134,10 +134,10 @@ export default function RisDashboard() {
 
   if (isError || !data) {
     return (
-      <div className="h-[calc(100vh-4rem)] flex flex-col items-center justify-center bg-slate-50 font-sans">
+      <div className="h-[calc(100vh-4rem)] flex flex-col items-center justify-center bg-muted/30 font-sans">
         <AlertCircle className="h-12 w-12 text-rose-400 mb-4" />
         <h2 className="text-xl font-bold text-slate-800">Connection Error</h2>
-        <p className="text-slate-500 mb-6 max-w-md text-center">
+        <p className="text-muted-foreground mb-6 max-w-md text-center">
           Failed to load the radiology dashboard data. Please check your connection or try again.
         </p>
         <Button onClick={() => window.location.reload()} variant="outline">
@@ -148,30 +148,30 @@ export default function RisDashboard() {
   }
 
   const dynamicStats = [
-    { label: "Today's Scans",    value: data?.stats?.scansToday    || 0,       icon: Activity,   color: "text-blue-600",    bg: "bg-blue-100",    border: "border-blue-200/50"    },
+    { label: "Today's Scans",    value: data?.stats?.scansToday    || 0,       icon: Activity,   color: "text-primary",    bg: "bg-blue-100",    border: "border-primary/20/50"    },
     { label: "Pending Reports",  value: data?.stats?.pendingReports || 0,       icon: FileText,   color: "text-orange-600",  bg: "bg-orange-100",  border: "border-orange-200/50"  },
     { label: "Avg. Turnaround",  value: data?.stats?.avgTat        || "0h 0m",  icon: Clock,      color: "text-purple-600",  bg: "bg-purple-100",  border: "border-purple-200/50"  },
     { label: "Revenue (Today)",  value: data?.stats?.revenueToday  || "₹0",     icon: TrendingUp, color: "text-emerald-600", bg: "bg-emerald-100", border: "border-emerald-200/50" },
   ];
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-slate-50 font-sans relative selection:bg-indigo-100 pb-12">
+    <div className="min-h-[calc(100vh-4rem)] bg-muted/30 font-sans relative selection:bg-indigo-100 pb-12">
       {/* Decorative Background Mesh */}
       <div className="absolute top-0 inset-x-0 h-64 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-100/40 via-slate-50 to-transparent pointer-events-none z-0" />
 
       <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10 space-y-8">
 
         {/* ── HEADER ── */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white/70 backdrop-blur-xl p-5 rounded-2xl border border-slate-200/60 shadow-sm">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-card/70 backdrop-blur-xl p-5 rounded-2xl border border-slate-200/60 shadow-sm">
           <div className="flex items-center gap-4">
             <div className="h-12 w-12 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-inner shrink-0">
               <MonitorPlay className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight leading-tight">
+              <h1 className="text-2xl font-extrabold text-foreground tracking-tight leading-tight">
                 Radiology Command Center
               </h1>
-              <p className="text-sm font-medium text-slate-500 mt-0.5">
+              <p className="text-sm font-medium text-muted-foreground mt-0.5">
                 Monitor modalities, track appointment flow, and manage reporting queues.
               </p>
             </div>
@@ -181,7 +181,7 @@ export default function RisDashboard() {
             <Button
               variant="outline"
               onClick={() => router.push("/workspace/radiology/appointments")}
-              className="w-full md:w-auto bg-white h-11 rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 font-bold transition-colors"
+              className="w-full md:w-auto bg-card h-11 rounded-xl border-border text-foreground/80 hover:bg-muted/30 font-bold transition-colors"
             >
               <CalendarClock className="h-4 w-4 mr-2 text-indigo-500" />
               View Calendar
@@ -201,15 +201,15 @@ export default function RisDashboard() {
         {/* ── STATS GRID ── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {dynamicStats.map((stat, i) => (
-            <Card key={i} className="border-0 shadow-sm rounded-2xl hover:shadow-md transition-shadow bg-white overflow-hidden relative">
+            <Card key={i} className="border-0 shadow-sm rounded-2xl hover:shadow-md transition-shadow bg-card overflow-hidden relative">
               <div className={`absolute top-0 inset-x-0 h-1 ${stat.bg}`} />
               <CardContent className="p-6 flex items-center gap-5">
                 <div className={`h-14 w-14 rounded-2xl flex items-center justify-center shrink-0 border ${stat.bg} ${stat.border}`}>
                   <stat.icon className={`h-6 w-6 ${stat.color}`} />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">{stat.label}</p>
-                  <h3 className="text-2xl font-black text-slate-900 tracking-tight leading-none">{stat.value}</h3>
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">{stat.label}</p>
+                  <h3 className="text-2xl font-black text-foreground tracking-tight leading-none">{stat.value}</h3>
                 </div>
               </CardContent>
             </Card>
@@ -217,29 +217,29 @@ export default function RisDashboard() {
         </div>
 
         {/* ── LIVE WORKFLOW PIPELINE ── */}
-        <Card className="border-slate-200/80 shadow-sm rounded-2xl bg-white overflow-hidden">
+        <Card className="border-slate-200/80 shadow-sm rounded-2xl bg-card overflow-hidden">
           <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-4">
-            <CardTitle className="text-sm font-bold text-slate-800 flex items-center gap-2 uppercase tracking-wider">
+            <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2 uppercase tracking-wider">
               <Activity className="h-4 w-4 text-indigo-500" /> Today's Live Workflow
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
             <div className="flex flex-col md:flex-row items-center justify-between w-full">
               {[
-                { label: "Scheduled", count: data?.workflow?.scheduled || 0, icon: Calendar,      color: "text-slate-500",   bg: "bg-slate-100"  },
+                { label: "Scheduled", count: data?.workflow?.scheduled || 0, icon: Calendar,      color: "text-muted-foreground",   bg: "bg-muted"  },
                 { label: "Waiting",   count: data?.workflow?.waiting   || 0, icon: Users,         color: "text-amber-600",   bg: "bg-amber-100"  },
-                { label: "Scanning",  count: data?.workflow?.scanning  || 0, icon: Activity,      color: "text-blue-600",    bg: "bg-blue-100"   },
+                { label: "Scanning",  count: data?.workflow?.scanning  || 0, icon: Activity,      color: "text-primary",    bg: "bg-blue-100"   },
                 { label: "Reporting", count: data?.workflow?.reporting || 0, icon: FileText,      color: "text-purple-600",  bg: "bg-purple-100" },
                 { label: "Verified",  count: data?.workflow?.verified  || 0, icon: CheckCircle2,  color: "text-emerald-600", bg: "bg-emerald-100"},
               ].map((step, index, array) => (
                 <div key={step.label} className="flex items-center w-full md:w-auto">
-                  <div className="flex flex-row md:flex-col items-center gap-4 md:gap-2 w-full md:w-32 p-3 md:p-0 rounded-xl hover:bg-slate-50 transition-colors">
+                  <div className="flex flex-row md:flex-col items-center gap-4 md:gap-2 w-full md:w-32 p-3 md:p-0 rounded-xl hover:bg-muted/30 transition-colors">
                     <div className={`h-12 w-12 rounded-full flex items-center justify-center ${step.bg}`}>
                       <step.icon className={`h-6 w-6 ${step.color}`} />
                     </div>
                     <div className="flex-1 md:text-center">
-                      <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-0.5">{step.label}</p>
-                      <p className={`text-2xl font-black ${step.count > 0 ? "text-slate-900" : "text-slate-300"}`}>
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-0.5">{step.label}</p>
+                      <p className={`text-2xl font-black ${step.count > 0 ? "text-foreground" : "text-slate-300"}`}>
                         {step.count}
                       </p>
                     </div>
@@ -263,9 +263,9 @@ export default function RisDashboard() {
 
           {/* Modality Fleet */}
           <div className="lg:col-span-8 space-y-6">
-            <Card className="border-slate-200/80 shadow-sm rounded-2xl overflow-hidden min-h-[450px] flex flex-col bg-white">
+            <Card className="border-slate-200/80 shadow-sm rounded-2xl overflow-hidden min-h-[450px] flex flex-col bg-card">
               <CardHeader className="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex flex-row items-center justify-between space-y-0">
-                <CardTitle className="text-base font-bold text-slate-800 flex items-center gap-2">
+                <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
                   <Server className="h-5 w-5 text-indigo-500" /> Modality Fleet Status
                 </CardTitle>
                 <Link href="/workspace/radiology/modalities" className="text-xs font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors">
@@ -276,15 +276,15 @@ export default function RisDashboard() {
                 {!data.modalities || data.modalities.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-slate-400">
                     <Server className="h-12 w-12 mx-auto mb-3 opacity-20" />
-                    <p className="font-bold text-slate-600">No machines registered</p>
+                    <p className="font-bold text-muted-foreground">No machines registered</p>
                     <p className="text-xs mt-1">Add modalities to start tracking utilization.</p>
                   </div>
                 ) : (
                   <div className="divide-y divide-slate-100">
                     {data.modalities.map((mod: any, i: number) => (
-                      <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 p-6 hover:bg-slate-50/50 transition-colors">
+                      <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 p-6 hover:bg-muted/50/50 transition-colors">
                         <div className="w-full sm:w-1/3">
-                          <p className="font-bold text-slate-900 text-base">{mod.name}</p>
+                          <p className="font-bold text-foreground text-base">{mod.name}</p>
                           <div className="flex items-center gap-2 mt-1.5">
                             {mod.status === "ACTIVE" && (
                               <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-none px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5">
@@ -297,27 +297,27 @@ export default function RisDashboard() {
                               </Badge>
                             )}
                             {mod.status === "INACTIVE" && (
-                              <Badge variant="outline" className="bg-slate-100 text-slate-600 border-none px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5">
+                              <Badge variant="outline" className="bg-muted text-muted-foreground border-none px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5">
                                 <span className="h-1.5 w-1.5 rounded-full bg-slate-400" /> Inactive
                               </Badge>
                             )}
                           </div>
                         </div>
                         <div className="w-full sm:w-1/3 flex flex-col justify-center">
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Current Patient</p>
+                          <p className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider mb-0.5">Current Patient</p>
                           <p className="font-bold text-indigo-700 truncate text-sm">
                             {mod.currentPatient && mod.currentPatient !== "-" ? mod.currentPatient : "Idle / Available"}
                           </p>
-                          <p className="text-[10px] font-medium text-slate-500 mt-1 flex items-center gap-1">
+                          <p className="text-[10px] font-medium text-muted-foreground mt-1 flex items-center gap-1">
                             <Clock className="h-3 w-3" /> Next Slot: <span className="font-bold">{mod.nextSlot || "None"}</span>
                           </p>
                         </div>
                         <div className="w-full sm:w-1/3">
                           <div className="flex justify-between items-end text-xs mb-1.5">
-                            <span className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Daily Load</span>
+                            <span className="font-bold text-muted-foreground uppercase tracking-wider text-[10px]">Daily Load</span>
                             <span className="font-black text-slate-800">{mod.load || 0}%</span>
                           </div>
-                          <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                          <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
                             <div
                               className={`h-full rounded-full transition-all duration-1000 ${(mod.load || 0) > 80 ? "bg-orange-500" : (mod.load || 0) === 0 ? "bg-slate-300" : "bg-indigo-500"}`}
                               style={{ width: `${mod.load || 0}%` }}
@@ -334,9 +334,9 @@ export default function RisDashboard() {
 
           {/* Radiologist Queue */}
           <div className="lg:col-span-4 space-y-6">
-            <Card className="border-slate-200/80 shadow-sm rounded-2xl overflow-hidden min-h-[450px] flex flex-col bg-white">
+            <Card className="border-slate-200/80 shadow-sm rounded-2xl overflow-hidden min-h-[450px] flex flex-col bg-card">
               <CardHeader className="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex flex-row items-center justify-between space-y-0 shrink-0">
-                <CardTitle className="text-base font-bold text-slate-800 flex items-center gap-2">
+                <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
                   <Stethoscope className="h-5 w-5 text-purple-600" /> Pending Queue
                 </CardTitle>
                 <Badge variant="secondary" className="bg-purple-100 text-purple-700 hover:bg-purple-100 font-mono text-xs font-bold">
@@ -345,9 +345,9 @@ export default function RisDashboard() {
               </CardHeader>
               <CardContent className="p-0 flex-1 overflow-y-auto custom-scrollbar">
                 {!data.pendingQueue || data.pendingQueue.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-slate-400 p-6 text-center">
+                  <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-muted-foreground/70 p-6 text-center">
                     <CheckCircle2 className="h-12 w-12 mx-auto mb-3 opacity-30 text-emerald-500" />
-                    <p className="font-bold text-slate-600 text-base">Queue is Clear</p>
+                    <p className="font-bold text-muted-foreground text-base">Queue is Clear</p>
                     <p className="text-xs mt-1">All scans have been reported by the radiologist.</p>
                   </div>
                 ) : (
@@ -357,7 +357,7 @@ export default function RisDashboard() {
                         <div className="p-5 hover:bg-purple-50/40 transition-colors flex items-start justify-between">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1.5">
-                              <span className="text-[9px] font-bold font-mono text-slate-500 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded">
+                              <span className="text-[9px] font-bold font-mono text-muted-foreground bg-muted border border-border px-1.5 py-0.5 rounded">
                                 {item.id || "N/A"}
                               </span>
                               {item.priority === "URGENT" && (
@@ -366,14 +366,14 @@ export default function RisDashboard() {
                                 </Badge>
                               )}
                             </div>
-                            <p className="font-bold text-slate-900 text-sm truncate">{item.patient || "Unknown Patient"}</p>
-                            <p className="text-xs font-medium text-slate-600 truncate mt-0.5">{item.scan || "Unknown Scan"}</p>
-                            <p className="text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-wider flex items-center gap-1.5">
+                            <p className="font-bold text-foreground text-sm truncate">{item.patient || "Unknown Patient"}</p>
+                            <p className="text-xs font-medium text-muted-foreground truncate mt-0.5">{item.scan || "Unknown Scan"}</p>
+                            <p className="text-[10px] font-bold text-muted-foreground/70 mt-2 uppercase tracking-wider flex items-center gap-1.5">
                               <Clock className="h-3 w-3" /> Scanned: {item.time || "-"}
                             </p>
                           </div>
                           <div className="pl-3 flex items-center justify-center h-full shrink-0">
-                            <div className="h-8 w-8 rounded-full bg-white border border-slate-100 shadow-sm flex items-center justify-center text-purple-400 group-hover:bg-purple-600 group-hover:text-white group-hover:border-purple-600 transition-all">
+                            <div className="h-8 w-8 rounded-full bg-card border border-slate-100 shadow-sm flex items-center justify-center text-purple-400 group-hover:bg-purple-600 group-hover:text-white group-hover:border-purple-600 transition-all">
                               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                             </div>
                           </div>
@@ -383,7 +383,7 @@ export default function RisDashboard() {
                   </div>
                 )}
               </CardContent>
-              <div className="p-4 border-t border-slate-100 bg-slate-50 text-center shrink-0">
+              <div className="p-4 border-t border-slate-100 bg-muted/30 text-center shrink-0">
                 <Link href="/workspace/radiology/reporting" className="text-sm font-bold text-purple-600 hover:text-purple-700 flex items-center justify-center gap-1.5 group transition-colors">
                   Open Radiologist Desk <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Link>
@@ -399,13 +399,13 @@ export default function RisDashboard() {
          ══════════════════════════════════════════════════════════════════ */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-100 flex flex-col max-h-[90vh]">
+          <div className="bg-card rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-100 flex flex-col max-h-[90vh]">
 
             {/* Modal Header */}
-            <div className="px-6 py-5 border-b border-slate-100 bg-white flex items-center justify-between shrink-0">
+            <div className="px-6 py-5 border-b border-slate-100 bg-card flex items-center justify-between shrink-0">
               <div>
-                <h2 className="text-lg font-bold text-slate-900">Book Radiology Scan</h2>
-                <p className="text-xs font-medium text-slate-500 mt-0.5">
+                <h2 className="text-lg font-bold text-foreground">Book Radiology Scan</h2>
+                <p className="text-xs font-medium text-muted-foreground mt-0.5">
                   Scheduling for {format(new Date(), "MMM dd, yyyy")}
                 </p>
               </div>
@@ -413,7 +413,7 @@ export default function RisDashboard() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsModalOpen(false)}
-                className="h-8 w-8 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full"
+                className="h-8 w-8 text-muted-foreground/70 hover:text-foreground/80 hover:bg-muted rounded-full"
               >
                 <X className="h-5 w-5" />
               </Button>
@@ -425,20 +425,20 @@ export default function RisDashboard() {
               {formLoading ? (
                 <div className="flex items-center justify-center py-12">
                   <Loader2 className="h-6 w-6 animate-spin text-indigo-500 mr-3" />
-                  <span className="text-sm font-bold text-slate-500">Loading patient & modality data...</span>
+                  <span className="text-sm font-bold text-muted-foreground">Loading patient & modality data...</span>
                 </div>
               ) : (
                 <>
                   {/* Patient */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    <Label className="text-xs font-bold text-foreground/80 uppercase tracking-wider">
                       Select Patient <span className="text-red-500">*</span>
                     </Label>
                     <div className="relative">
-                      <User className="absolute left-3 top-3.5 h-4 w-4 text-slate-400 pointer-events-none" />
+                      <User className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground/70 pointer-events-none" />
                       <select
                         id="modal-patient-select"
-                        className="flex h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm font-medium outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all appearance-none cursor-pointer"
+                        className="flex h-11 w-full rounded-xl border border-border bg-muted/30 pl-10 pr-4 text-sm font-medium outline-none focus:bg-card focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all appearance-none cursor-pointer"
                         value={formData.patientId}
                         onChange={(e) => setFormData({ ...formData, patientId: e.target.value })}
                       >
@@ -453,14 +453,14 @@ export default function RisDashboard() {
                   {/* Modality + Scan Name */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      <Label className="text-xs font-bold text-foreground/80 uppercase tracking-wider">
                         Modality <span className="text-red-500">*</span>
                       </Label>
                       <div className="relative">
-                        <Microscope className="absolute left-3 top-3.5 h-4 w-4 text-slate-400 pointer-events-none" />
+                        <Microscope className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground/70 pointer-events-none" />
                         <select
                           id="modal-modality-select"
-                          className="flex h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm font-medium outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all appearance-none cursor-pointer"
+                          className="flex h-11 w-full rounded-xl border border-border bg-muted/30 pl-10 pr-4 text-sm font-medium outline-none focus:bg-card focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all appearance-none cursor-pointer"
                           value={formData.modalityId}
                           onChange={(e) => setFormData({ ...formData, modalityId: e.target.value })}
                         >
@@ -473,7 +473,7 @@ export default function RisDashboard() {
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      <Label className="text-xs font-bold text-foreground/80 uppercase tracking-wider">
                         Scan Name <span className="text-red-500">*</span>
                       </Label>
                       <Input
@@ -481,7 +481,7 @@ export default function RisDashboard() {
                         placeholder="e.g. MRI Brain with Contrast"
                         value={formData.scanName}
                         onChange={(e) => setFormData({ ...formData, scanName: e.target.value })}
-                        className="h-11 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:ring-indigo-500/20 text-sm font-medium"
+                        className="h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-indigo-500/20 text-sm font-medium"
                       />
                     </div>
                   </div>
@@ -489,23 +489,23 @@ export default function RisDashboard() {
                   {/* Time Slot + Notes */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      <Label className="text-xs font-bold text-foreground/80 uppercase tracking-wider">
                         Time Slot <span className="text-red-500">*</span>
                       </Label>
                       <div className="relative">
-                        <Clock className="absolute right-3 top-3.5 h-4 w-4 text-slate-400 pointer-events-none" />
+                        <Clock className="absolute right-3 top-3.5 h-4 w-4 text-muted-foreground/70 pointer-events-none" />
                         <Input
                           id="modal-time-slot"
                           type="time"
                           value={formData.timeStr}
                           onChange={(e) => setFormData({ ...formData, timeStr: e.target.value })}
-                          className="h-11 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:ring-indigo-500/20 text-sm font-medium pr-10"
+                          className="h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-indigo-500/20 text-sm font-medium pr-10"
                         />
                       </div>
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      <Label className="text-xs font-bold text-foreground/80 uppercase tracking-wider">
                         Front Desk Notes
                       </Label>
                       <Input
@@ -513,7 +513,7 @@ export default function RisDashboard() {
                         placeholder="Safety alerts, instructions..."
                         value={formData.notes}
                         onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                        className="h-11 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:ring-indigo-500/20 text-sm font-medium"
+                        className="h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-indigo-500/20 text-sm font-medium"
                       />
                     </div>
                   </div>
@@ -531,11 +531,11 @@ export default function RisDashboard() {
             </div>
 
             {/* Modal Footer */}
-            <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex flex-col-reverse sm:flex-row justify-end gap-3 shrink-0">
+            <div className="px-6 py-4 border-t border-slate-100 bg-muted/30 flex flex-col-reverse sm:flex-row justify-end gap-3 shrink-0">
               <Button
                 variant="outline"
                 onClick={() => setIsModalOpen(false)}
-                className="h-11 rounded-xl font-bold text-slate-600 bg-white w-full sm:w-auto"
+                className="h-11 rounded-xl font-bold text-muted-foreground bg-card w-full sm:w-auto"
               >
                 Cancel
               </Button>

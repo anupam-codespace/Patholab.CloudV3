@@ -16,7 +16,7 @@ export const BarcodeSticker = ({
   sampleId, patientName, ageGender, containerType, testCodes, date 
 }: StickerProps) => {
   return (
-    <div className="flex flex-col items-center justify-between bg-white text-black overflow-hidden box-border"
+    <div className="flex flex-col items-center justify-between bg-card text-black overflow-hidden box-border"
          style={{ 
              width: '50mm', 
              height: '25mm', 

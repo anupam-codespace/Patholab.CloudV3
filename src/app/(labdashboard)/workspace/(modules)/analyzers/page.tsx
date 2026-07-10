@@ -109,13 +109,13 @@ export default async function AnalyzerPage() {
               LIS Interface Engine
             </span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-black tracking-tight text-slate-900">
+          <h1 className="text-4xl md:text-5xl font-black tracking-tight text-foreground">
             Analyzer{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">
               Integrations
             </span>
           </h1>
-          <p className="text-slate-500 font-medium italic">
+          <p className="text-muted-foreground font-medium italic">
             patholab.cloud — Real-time HL7/ASTM machine synchronization
           </p>
         </div>
@@ -132,7 +132,7 @@ export default async function AnalyzerPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* LEFT COLUMN: CONNECTION HUB */}
         <div className="lg:col-span-8 space-y-8">
-          <div className="bg-white rounded-[32px] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)] border border-slate-100 relative overflow-hidden">
+          <div className="bg-card rounded-[32px] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)] border border-slate-100 relative overflow-hidden">
             <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
               <Terminal className="w-64 h-64" />
             </div>
@@ -142,10 +142,10 @@ export default async function AnalyzerPage() {
                 <Network className="w-6 h-6" />
               </div>
               <div>
-                <h2 className="text-xl font-black text-slate-900 tracking-tight uppercase">
+                <h2 className="text-xl font-black text-foreground tracking-tight uppercase">
                   Connection Settings
                 </h2>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                <p className="text-xs font-bold text-muted-foreground/70 uppercase tracking-widest">
                   Handshake Credentials for Local Agent
                 </p>
               </div>
@@ -155,7 +155,7 @@ export default async function AnalyzerPage() {
               {/* Webhook URL */}
               <div className="group">
                 <div className="flex items-center justify-between mb-4">
-                  <label className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                  <label className="flex items-center gap-2 text-[10px] font-black text-muted-foreground/70 uppercase tracking-widest ml-1">
                     <Globe className="w-3 h-3 text-indigo-500" /> Remote
                     Endpoint URL
                   </label>
@@ -164,7 +164,7 @@ export default async function AnalyzerPage() {
                   <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none border-r border-slate-100 pr-4">
                     <Zap className="h-4 w-4 text-indigo-400" />
                   </div>
-                  <code className="block w-full bg-slate-50 border border-slate-100 rounded-2xl px-16 py-6 text-sm text-indigo-600 font-mono select-all transition-all group-hover:border-indigo-200 group-hover:bg-indigo-50/30">
+                  <code className="block w-full bg-muted/30 border border-slate-100 rounded-2xl px-16 py-6 text-sm text-indigo-600 font-mono select-all transition-all group-hover:border-indigo-200 group-hover:bg-indigo-50/30">
                     {realWebhookUrl}
                   </code>
                 </div>
@@ -173,7 +173,7 @@ export default async function AnalyzerPage() {
               {/* API Key */}
               <div className="group">
                 <div className="flex items-center justify-between mb-4">
-                  <label className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                  <label className="flex items-center gap-2 text-[10px] font-black text-muted-foreground/70 uppercase tracking-widest ml-1">
                     <Key className="w-3 h-3 text-emerald-500" /> Secure Lab
                     Identity (API Key)
                   </label>
@@ -215,21 +215,21 @@ export default async function AnalyzerPage() {
             </div>
 
             <div className="space-y-8">
-              <div className="p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">
+              <div className="p-6 rounded-2xl bg-card/5 border border-white/10 backdrop-blur-sm">
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">
                   Listener Profile
                 </p>
                 <p className="text-2xl font-black text-emerald-400 tracking-tight">
                   ACTIVE
                 </p>
-                <p className="text-[10px] font-bold text-slate-500 mt-2 italic uppercase">
+                <p className="text-[10px] font-bold text-muted-foreground mt-2 italic uppercase">
                   System ready for HL7 packets
                 </p>
               </div>
 
               <div className="flex items-center justify-between px-2 pt-4 border-t border-white/10">
                 <div className="space-y-1">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  <p className="text-[10px] font-black text-muted-foreground/70 uppercase tracking-widest">
                     Global Synced Parameters
                   </p>
                   <h3 className="text-4xl font-black tabular-nums tracking-tighter text-indigo-300">
@@ -242,12 +242,12 @@ export default async function AnalyzerPage() {
           </div>
 
           {/* Specs Card */}
-          <div className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm relative group overflow-hidden">
+          <div className="bg-card rounded-[32px] p-8 border border-slate-100 shadow-sm relative group overflow-hidden">
             <Box className="absolute -right-4 -top-4 w-24 h-24 text-slate-50 -rotate-12 transition-transform group-hover:scale-110" />
-            <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-6 flex items-center gap-2 relative z-10">
+            <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground/70 mb-6 flex items-center gap-2 relative z-10">
               <HardDrive className="w-4 h-4" /> Agent Specs
             </h3>
-            <ul className="space-y-4 text-[11px] font-black text-slate-600 uppercase tracking-tight relative z-10">
+            <ul className="space-y-4 text-[11px] font-black text-muted-foreground uppercase tracking-tight relative z-10">
               <li className="flex items-center gap-3">
                 <div className="h-1.5 w-1.5 rounded-full bg-indigo-500 shadow-sm shadow-indigo-200" />
                 Win 10/11 Architecture
@@ -265,17 +265,17 @@ export default async function AnalyzerPage() {
         </div>
 
         {/* LIVE FEED TABLE */}
-        <div className="lg:col-span-12 bg-white rounded-[40px] shadow-[0_30px_60px_rgba(0,0,0,0.03)] border border-slate-100 overflow-hidden mt-4">
+        <div className="lg:col-span-12 bg-card rounded-[40px] shadow-[0_30px_60px_rgba(0,0,0,0.03)] border border-slate-100 overflow-hidden mt-4">
           <div className="px-10 py-8 border-b border-slate-50 flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-50/50">
             <div className="flex items-center gap-4">
               <div className="p-3 bg-indigo-100 rounded-2xl">
                 <Activity className="w-6 h-6 text-indigo-600" />
               </div>
               <div>
-                <h2 className="font-black text-slate-900 text-lg tracking-tight uppercase">
+                <h2 className="font-black text-foreground text-lg tracking-tight uppercase">
                   Live Telemetry Feed
                 </h2>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                <p className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-widest">
                   Real-time capturing from hardware nodes
                 </p>
               </div>
@@ -293,13 +293,13 @@ export default async function AnalyzerPage() {
 
           {recentSyncs.length === 0 ? (
             <div className="p-24 text-center flex flex-col items-center">
-              <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-8 shadow-inner">
+              <div className="w-24 h-24 bg-muted/30 rounded-full flex items-center justify-center mb-8 shadow-inner">
                 <Cpu className="w-10 h-10 text-slate-200" />
               </div>
               <h3 className="text-xl font-bold text-slate-800">
                 Standby: No hardware signal detected.
               </h3>
-              <p className="text-xs text-slate-500 mt-3 font-bold uppercase tracking-widest max-w-sm mx-auto leading-relaxed">
+              <p className="text-xs text-muted-foreground mt-3 font-bold uppercase tracking-widest max-w-sm mx-auto leading-relaxed">
                 Connect your Local Agent and transmit a test message to initiate
                 the handshake.
               </p>
@@ -308,7 +308,7 @@ export default async function AnalyzerPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="bg-white text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] border-b border-slate-50">
+                  <tr className="bg-card text-muted-foreground/70 text-[10px] font-black uppercase tracking-[0.2em] border-b border-slate-50">
                     <th className="px-10 py-6">Hardware Reference</th>
                     <th className="px-10 py-6">Subject Identity</th>
                     <th className="px-10 py-6">Capture Window</th>
@@ -320,21 +320,21 @@ export default async function AnalyzerPage() {
                   {recentSyncs.map((sample) => (
                     <tr
                       key={sample.id}
-                      className="group hover:bg-slate-50 transition-all duration-300">
+                      className="group hover:bg-muted/30 transition-all duration-300">
                       <td className="px-10 py-8">
                         <span className="font-mono font-black text-sm text-indigo-600 bg-indigo-50 px-4 py-2 rounded-xl group-hover:bg-indigo-600 group-hover:text-white transition-colors">
                           {sample.sampleId}
                         </span>
                       </td>
                       <td className="px-10 py-8">
-                        <p className="font-black text-slate-800 text-base tracking-tight mb-1">
+                        <p className="font-black text-foreground text-base tracking-tight mb-1">
                           {sample.patient?.name || "Unknown Identity"}
                         </p>
                         <p className="text-[8px] font-black uppercase tracking-widest text-slate-400">
                           Captured via HL7 Node
                         </p>
                       </td>
-                      <td className="px-10 py-8 font-mono text-xs text-slate-400 tabular-nums">
+                      <td className="px-10 py-8 font-mono text-xs text-muted-foreground/70 tabular-nums">
                         {new Date(sample.updatedAt).toLocaleTimeString([], {
                           hour: "2-digit",
                           minute: "2-digit",
@@ -350,7 +350,7 @@ export default async function AnalyzerPage() {
                       <td className="px-10 py-8 text-right">
                         <Link
                           href={`/workspace/samples/${sample.sampleId}`}
-                          className="inline-flex items-center gap-2 text-slate-900 hover:text-indigo-600 font-black text-[10px] uppercase tracking-widest transition-all group/link">
+                          className="inline-flex items-center gap-2 text-foreground hover:text-indigo-600 font-black text-[10px] uppercase tracking-widest transition-all group/link">
                           Review Result Matrix
                           <ChevronRight className="w-4 h-4 transition-transform group-hover/link:translate-x-1" />
                         </Link>

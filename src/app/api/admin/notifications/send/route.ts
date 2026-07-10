@@ -59,6 +59,7 @@ export async function POST(req: NextRequest) {
         userId: admin.userId,
         action: 'BROADCAST',
         entity: 'NOTIFICATION',
+        entityType: 'NOTIFICATION',
         entityId: 'BROADCAST', // 👈 ADDED THIS LINE TO FIX THE ERROR
         description: `Sent broadcast "${title}" to ${users.length} users.`,
       }

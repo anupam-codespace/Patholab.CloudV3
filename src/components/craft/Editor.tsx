@@ -33,9 +33,9 @@ const CraftEditor = ({ onReady }: { onReady?: (ref: any) => void }) => {
   return (
     <div className="h-full w-full flex">
       {/* Sidebar: Components & Layers */}
-      <div className="w-64 bg-slate-100 border-r border-slate-200 p-4 overflow-y-auto">
+      <div className="w-64 bg-muted border-r border-border p-4 overflow-y-auto">
         <div className="mb-6">
-          <h3 className="font-bold text-sm text-slate-700 mb-2">Components</h3>
+          <h3 className="font-bold text-sm text-foreground/80 mb-2">Components</h3>
           <div className="space-y-2">
             <button
               onClick={() => {
@@ -44,7 +44,7 @@ const CraftEditor = ({ onReady }: { onReady?: (ref: any) => void }) => {
                   actions.addNode({ type: Header, props: {} });
                 }
               }}
-              className="w-full text-left px-3 py-2 bg-white rounded border hover:bg-slate-50 text-xs">
+              className="w-full text-left px-3 py-2 bg-card rounded border hover:bg-muted/30 text-xs">
               Header
             </button>
             <button
@@ -54,7 +54,7 @@ const CraftEditor = ({ onReady }: { onReady?: (ref: any) => void }) => {
                   actions.addNode({ type: PatientInfo, props: {} });
                 }
               }}
-              className="w-full text-left px-3 py-2 bg-white rounded border hover:bg-slate-50 text-xs">
+              className="w-full text-left px-3 py-2 bg-card rounded border hover:bg-muted/30 text-xs">
               Patient Info
             </button>
             <button
@@ -64,7 +64,7 @@ const CraftEditor = ({ onReady }: { onReady?: (ref: any) => void }) => {
                   actions.addNode({ type: ResultsTable, props: {} });
                 }
               }}
-              className="w-full text-left px-3 py-2 bg-white rounded border hover:bg-slate-50 text-xs">
+              className="w-full text-left px-3 py-2 bg-card rounded border hover:bg-muted/30 text-xs">
               Results Table
             </button>
             <button
@@ -74,7 +74,7 @@ const CraftEditor = ({ onReady }: { onReady?: (ref: any) => void }) => {
                   actions.addNode({ type: Footer, props: {} });
                 }
               }}
-              className="w-full text-left px-3 py-2 bg-white rounded border hover:bg-slate-50 text-xs">
+              className="w-full text-left px-3 py-2 bg-card rounded border hover:bg-muted/30 text-xs">
               Footer
             </button>
             <button
@@ -84,7 +84,7 @@ const CraftEditor = ({ onReady }: { onReady?: (ref: any) => void }) => {
                   actions.addNode({ type: TextBlock, props: {} });
                 }
               }}
-              className="w-full text-left px-3 py-2 bg-white rounded border hover:bg-slate-50 text-xs">
+              className="w-full text-left px-3 py-2 bg-card rounded border hover:bg-muted/30 text-xs">
               Text
             </button>
             <button
@@ -94,7 +94,7 @@ const CraftEditor = ({ onReady }: { onReady?: (ref: any) => void }) => {
                   actions.addNode({ type: ImageBlock, props: {} });
                 }
               }}
-              className="w-full text-left px-3 py-2 bg-white rounded border hover:bg-slate-50 text-xs">
+              className="w-full text-left px-3 py-2 bg-card rounded border hover:bg-muted/30 text-xs">
               Image
             </button>
             <button
@@ -104,13 +104,13 @@ const CraftEditor = ({ onReady }: { onReady?: (ref: any) => void }) => {
                   actions.addNode({ type: Spacer, props: {} });
                 }
               }}
-              className="w-full text-left px-3 py-2 bg-white rounded border hover:bg-slate-50 text-xs">
+              className="w-full text-left px-3 py-2 bg-card rounded border hover:bg-muted/30 text-xs">
               Spacer
             </button>
           </div>
         </div>
         <div>
-          <h3 className="font-bold text-sm text-slate-700 mb-2">Layers</h3>
+          <h3 className="font-bold text-sm text-foreground/80 mb-2">Layers</h3>
           <Layers />
         </div>
       </div>

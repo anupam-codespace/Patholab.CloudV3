@@ -57,11 +57,11 @@ export default async function AdminRechargesPage() {
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-slate-900 flex items-center gap-2">
+          <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-2">
             <ArrowDownRight className="h-8 w-8 text-emerald-600" /> Recharge
             History
           </h1>
-          <p className="text-slate-500 font-medium mt-1">
+          <p className="text-muted-foreground font-medium mt-1">
             Global inflow ledger tracking all wallet top-ups across the
             platform.
           </p>
@@ -73,7 +73,7 @@ export default async function AdminRechargesPage() {
 
       {/* KPI METRIC */}
       <Card className="border-0 shadow-lg bg-gradient-to-br from-emerald-600 to-emerald-800 text-white relative overflow-hidden rounded-2xl w-full md:w-1/3">
-        <div className="absolute top-0 right-0 p-24 bg-white opacity-5 rounded-full -mr-10 -mt-10 blur-2xl" />
+        <div className="absolute top-0 right-0 p-24 bg-card opacity-5 rounded-full -mr-10 -mt-10 blur-2xl" />
         <CardContent className="p-6 relative z-10 flex flex-col justify-center">
           <div className="flex items-center justify-between mb-2 opacity-90">
             <p className="text-sm font-bold uppercase tracking-wider">
@@ -88,9 +88,9 @@ export default async function AdminRechargesPage() {
       </Card>
 
       {/* RECHARGES TABLE */}
-      <Card className="border-slate-200 shadow-sm rounded-2xl overflow-hidden bg-white">
+      <Card className="border-border shadow-sm rounded-2xl overflow-hidden bg-card">
         <CardHeader className="border-b border-slate-100 bg-slate-50/50 pb-4">
-          <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2">
+          <CardTitle className="text-lg font-bold text-foreground flex items-center gap-2">
             <Receipt className="w-5 h-5 text-emerald-600" /> Platform Top-Ups
           </CardTitle>
           <CardDescription>
@@ -99,7 +99,7 @@ export default async function AdminRechargesPage() {
         </CardHeader>
         <CardContent className="p-0 overflow-x-auto">
           <table className="w-full text-sm text-left whitespace-nowrap">
-            <thead className="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-widest">
+            <thead className="bg-muted/30 border-b border-border text-xs font-bold text-muted-foreground uppercase tracking-widest">
               <tr>
                 <th className="px-6 py-4">Tenant Lab</th>
                 <th className="px-6 py-4">Date & Time</th>
@@ -112,7 +112,7 @@ export default async function AdminRechargesPage() {
                 <tr>
                   <td
                     colSpan={4}
-                    className="p-12 text-center text-slate-500 font-medium">
+                    className="p-12 text-center text-muted-foreground font-medium">
                     No recharges found.
                   </td>
                 </tr>
@@ -120,17 +120,17 @@ export default async function AdminRechargesPage() {
                 transactions.map((tx) => (
                   <tr
                     key={tx.id}
-                    className="hover:bg-slate-50 transition-colors bg-white">
+                    className="hover:bg-muted/30 transition-colors bg-card">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
                           <Building2 className="w-4 h-4" />
                         </div>
                         <div>
-                          <p className="font-bold text-slate-900">
+                          <p className="font-bold text-foreground">
                             {tx.wallet.lab?.name || "Unknown Lab"}
                           </p>
-                          <p className="text-[10px] text-slate-500 font-mono mt-0.5">
+                          <p className="text-[10px] text-muted-foreground font-mono mt-0.5">
                             {tx.wallet.labId.split("-")[0]}
                           </p>
                         </div>
@@ -140,13 +140,13 @@ export default async function AdminRechargesPage() {
                       <p className="font-bold text-slate-800">
                         {format(new Date(tx.createdAt), "dd MMM yyyy")}
                       </p>
-                      <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
+                      <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                         <Calendar className="w-3 h-3" />{" "}
                         {format(new Date(tx.createdAt), "hh:mm a")}
                       </p>
                     </td>
                     <td className="px-6 py-4">
-                      <p className="text-sm font-semibold text-slate-700 truncate max-w-[250px]">
+                      <p className="text-sm font-semibold text-foreground/80 truncate max-w-[250px]">
                         {tx.description}
                       </p>
                       <Badge
@@ -159,7 +159,7 @@ export default async function AdminRechargesPage() {
                       <span className="font-black text-lg text-emerald-600">
                         +{formatCurrency(Number(tx.amount))}
                       </span>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                      <p className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-widest mt-1">
                         Bal: {formatCurrency(Number(tx.closingBalance))}
                       </p>
                     </td>

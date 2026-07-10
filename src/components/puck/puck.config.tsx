@@ -270,7 +270,7 @@ export const config: Config<Props, RootProps> = {
       // This styles the "paper" the user is working on.
       return (
         <div
-          className="relative print:m-0 print:border-none print:shadow-none mx-auto bg-white shadow-xl overflow-hidden"
+          className="relative print:m-0 print:border-none print:shadow-none mx-auto bg-card shadow-xl overflow-hidden"
           style={{
             width: props.pageWidth,
             minHeight: props.pageHeight,
@@ -313,7 +313,7 @@ export const config: Config<Props, RootProps> = {
           {/* Page Numbers (CSS Counters for Print) */}
           {props.showPageNumbers && (
             <div
-              className="absolute text-[10px] text-slate-500 print-page-number z-50 hidden print:block"
+              className="absolute text-[10px] text-muted-foreground print-page-number z-50 hidden print:block"
               style={{
                 bottom: `${props.marginBottom}mm`,
                 left:
@@ -427,7 +427,7 @@ export const config: Config<Props, RootProps> = {
                   height: `${props.logoSize}px`,
                   width: `${props.logoSize}px`,
                 }}
-                className="mx-4 bg-slate-100 border border-slate-300 flex items-center justify-center text-slate-400 text-xs rounded">
+                className="mx-4 bg-muted border border-border flex items-center justify-center text-muted-foreground/70 text-xs rounded">
                 LOGO
               </div>
             )}
@@ -511,10 +511,10 @@ export const config: Config<Props, RootProps> = {
             className="border rounded-lg mb-6 relative w-full">
             {props.showBarcode && props.barcodePosition === "top-right" && (
               <div className="absolute top-2 right-4 flex flex-col items-center">
-                <div className="h-10 w-32 border border-slate-300 bg-white flex items-center justify-center text-slate-400 text-xs">
+                <div className="h-10 w-32 border border-border bg-card flex items-center justify-center text-muted-foreground/70 text-xs">
                   Barcode Area
                 </div>
-                <span className="text-[9px] mt-1 font-mono text-slate-500">
+                <span className="text-[9px] mt-1 font-mono text-muted-foreground">
                   {props.barcodeValue}
                 </span>
               </div>
@@ -596,8 +596,8 @@ export const config: Config<Props, RootProps> = {
             </div>
 
             {props.showBarcode && props.barcodePosition === "bottom" && (
-              <div className="mt-4 pt-4 border-t border-slate-200 flex flex-col items-center">
-                <div className="h-12 w-48 border border-slate-300 bg-white flex items-center justify-center text-slate-400 text-xs">
+              <div className="mt-4 pt-4 border-t border-border flex flex-col items-center">
+                <div className="h-12 w-48 border border-border bg-card flex items-center justify-center text-muted-foreground/70 text-xs">
                   Barcode Area
                 </div>
               </div>
@@ -740,10 +740,10 @@ export const config: Config<Props, RootProps> = {
                     </td>
                   )}
                   {props.showUnits && (
-                    <td className="p-2 text-slate-600">mg/dL</td>
+                    <td className="p-2 text-muted-foreground">mg/dL</td>
                   )}
                   {props.showRefRange && (
-                    <td className="p-2 text-slate-600">0.7 - 1.3</td>
+                    <td className="p-2 text-muted-foreground">0.7 - 1.3</td>
                   )}
                 </tr>
                 <tr
@@ -757,15 +757,15 @@ export const config: Config<Props, RootProps> = {
                     <td className="p-2 text-center text-slate-400">-</td>
                   )}
                   {props.showUnits && (
-                    <td className="p-2 text-slate-600">mg/dL</td>
+                    <td className="p-2 text-muted-foreground">mg/dL</td>
                   )}
                   {props.showRefRange && (
-                    <td className="p-2 text-slate-600">10.0 - 50.0</td>
+                    <td className="p-2 text-muted-foreground">10.0 - 50.0</td>
                   )}
                 </tr>
               </tbody>
             </table>
-            <div className="mt-2 text-center text-[10px] text-slate-400 italic font-mono">
+            <div className="mt-2 text-center text-[10px] text-muted-foreground/70 italic font-mono">
               [Dynamic Area: In production, this table maps to actual patient
               TestResults]
             </div>
@@ -892,7 +892,7 @@ export const config: Config<Props, RootProps> = {
               }}
             />
             {props.caption && (
-              <span className="text-[10px] mt-1 text-slate-500">
+              <span className="text-[10px] mt-1 text-muted-foreground">
                 {props.caption}
               </span>
             )}
@@ -954,7 +954,7 @@ export const config: Config<Props, RootProps> = {
                   className="h-full w-auto object-contain"
                 />
               ) : (
-                <div className="w-[80%] h-full border border-dashed border-slate-300 bg-slate-50 flex items-center justify-center text-[10px] text-slate-400">
+                <div className="w-[80%] h-full border border-dashed border-border bg-muted/30 flex items-center justify-center text-[10px] text-slate-400">
                   Signature Image Area
                 </div>
               )}
@@ -966,7 +966,7 @@ export const config: Config<Props, RootProps> = {
                 {props.doctorName}
               </p>
               {props.qualifications && (
-                <p className="text-[10px] m-0 text-slate-600">
+                <p className="text-[10px] m-0 text-muted-foreground">
                   {props.qualifications}
                 </p>
               )}
@@ -1037,7 +1037,7 @@ export const config: Config<Props, RootProps> = {
                 style={{ fontSize: `${props.size * 0.8}px` }}></i>
             </div>
             {props.showLabel && (
-              <span className="text-[9px] mt-1 font-bold text-slate-500 uppercase tracking-widest">
+              <span className="text-[9px] mt-1 font-bold text-muted-foreground uppercase tracking-widest">
                 {props.labelText}
               </span>
             )}
@@ -1102,7 +1102,7 @@ export const config: Config<Props, RootProps> = {
               backgroundColor: props.footerBgColor,
               color: props.footerTextColor,
             }}
-            className="w-full pt-4 border-t border-slate-200 mt-8 pb-4 flex flex-col items-center justify-center text-center">
+            className="w-full pt-4 border-t border-border mt-8 pb-4 flex flex-col items-center justify-center text-center">
             {props.accreditationLogos && (
               <img
                 src={props.accreditationLogos}

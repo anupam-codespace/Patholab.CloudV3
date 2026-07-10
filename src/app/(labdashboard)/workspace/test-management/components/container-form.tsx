@@ -87,14 +87,14 @@ export default function ContainerForm({ onSuccess, initialData }: { onSuccess: (
       </div>
 
       {/* Visual Preview */}
-      <div className="p-4 bg-slate-50 rounded flex items-center justify-center gap-3 border border-dashed">
+      <div className="p-4 bg-muted/30 rounded flex items-center justify-center gap-3 border border-dashed">
         <div 
           className="w-10 h-10 rounded-full border shadow-sm flex items-center justify-center transition-colors duration-200" 
           style={{ backgroundColor: currentColor }}
         >
           <TestTube2 className="h-5 w-5 text-white/90 drop-shadow-md" />
         </div>
-        <span className="text-sm text-slate-500 font-medium">Cap Color Preview</span>
+        <span className="text-sm text-muted-foreground font-medium">Cap Color Preview</span>
       </div>
 
       <div className="flex justify-end gap-2 pt-2">

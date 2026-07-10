@@ -457,12 +457,12 @@ async function main() {
 
       if (paramId) {
         let mapping = await prisma.testTemplateParameter.findFirst({
-          where: { testTemplateId: createdTest.id, parameterId: paramId }
+          where: { templateId: createdTest.id, parameterId: paramId }
         });
 
         if (!mapping) {
           await prisma.testTemplateParameter.create({
-            data: { testTemplateId: createdTest.id, parameterId: paramId, order: i + 1 }
+            data: { templateId: createdTest.id, parameterId: paramId, order: i + 1 }
           });
         }
       }

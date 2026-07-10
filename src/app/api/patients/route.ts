@@ -106,6 +106,7 @@ export async function POST(request: NextRequest) {
           userId: currentUser.userId,
           action: 'CREATE',
           entity: 'PATIENT',
+          entityType: 'PATIENT',
           entityId: patient.id,
           description: `Patient registered: ${patient.name} (${patientId})`,
         },

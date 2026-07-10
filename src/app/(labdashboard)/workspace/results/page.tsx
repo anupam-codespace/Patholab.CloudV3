@@ -172,25 +172,25 @@ export default function ResultEntryPage() {
     if (!val || min === null || max === null)
       return {
         status: "NORMAL",
-        color: "text-slate-900",
-        bg: "bg-white",
-        border: "border-slate-200",
+        color: "text-foreground",
+        bg: "bg-card",
+        border: "border-border",
       };
     const num = parseFloat(val);
     if (isNaN(num))
       return {
         status: "TEXT",
-        color: "text-slate-900",
-        bg: "bg-white",
-        border: "border-slate-200",
+        color: "text-foreground",
+        bg: "bg-card",
+        border: "border-border",
       };
 
     if (num < min)
       return {
         status: "LOW",
-        color: "text-blue-700",
-        bg: "bg-blue-50",
-        border: "border-blue-300 ring-1 ring-blue-500/20",
+        color: "text-primary",
+        bg: "bg-primary/10",
+        border: "border-blue-300 ring-1 ring-primary/20",
       };
     if (num > max)
       return {
@@ -203,8 +203,8 @@ export default function ResultEntryPage() {
     return {
       status: "NORMAL",
       color: "text-emerald-700",
-      bg: "bg-white",
-      border: "border-slate-200 focus:border-emerald-500",
+      bg: "bg-card",
+      border: "border-border focus:border-emerald-500",
     };
   };
 
@@ -228,13 +228,13 @@ export default function ResultEntryPage() {
       {/* HEADER & TABS */}
       <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-slate-900 flex items-center gap-3">
+          <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
             Clinical Results Entry
             <Badge className="bg-indigo-50 text-indigo-700 border-indigo-200 font-bold uppercase tracking-wider text-[10px]">
               Live Data
             </Badge>
           </h1>
-          <p className="text-slate-500 font-medium mt-1">
+          <p className="text-muted-foreground font-medium mt-1">
             Process patient parameters, add diagnostic impressions, and finalize
             reports.
           </p>
@@ -262,8 +262,8 @@ export default function ResultEntryPage() {
                 }}
                 className={`flex items-center gap-2 px-4 py-2.5 text-sm font-bold rounded-lg whitespace-nowrap transition-all duration-200 ${
                   activeTab === tab.id
-                    ? "bg-white text-indigo-600 shadow-sm"
-                    : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
+                    ? "bg-card text-indigo-600 shadow-sm"
+                    : "text-muted-foreground hover:text-foreground/80 hover:bg-slate-200/50"
                 }`}>
                 <Icon
                   className={`w-4 h-4 ${activeTab === tab.id ? "text-indigo-500" : "text-slate-400"}`}
@@ -280,13 +280,13 @@ export default function ResultEntryPage() {
         {/* LEFT PANE: WORKLIST QUEUE                                 */}
         {/* ========================================================= */}
         <Card
-          className={`w-full lg:w-[380px] shrink-0 flex flex-col border-slate-200 shadow-sm overflow-hidden bg-white ${selectedInvoice ? "hidden lg:flex" : "flex"}`}>
+          className={`w-full lg:w-[380px] shrink-0 flex flex-col border-border shadow-sm overflow-hidden bg-card ${selectedInvoice ? "hidden lg:flex" : "flex"}`}>
           <div className="p-4 border-b border-slate-100 bg-slate-50/80">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/70 w-4 h-4" />
               <Input
                 placeholder="Search Patient or SID..."
-                className="pl-9 bg-white h-11 rounded-xl border-slate-200 focus:border-indigo-500 focus:ring-indigo-500/20 shadow-sm text-sm font-medium"
+                className="pl-9 bg-card h-11 rounded-xl border-border focus:border-indigo-500 focus:ring-indigo-500/20 shadow-sm text-sm font-medium"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -295,16 +295,16 @@ export default function ResultEntryPage() {
 
           <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2 bg-slate-50/50">
             {isLoading ? (
-              <div className="p-8 text-center text-slate-400 flex flex-col items-center justify-center h-full">
+              <div className="p-8 text-center text-muted-foreground/70 flex flex-col items-center justify-center h-full">
                 <Loader2 className="w-8 h-8 animate-spin mb-3 text-indigo-400" />
                 <p className="text-sm font-bold tracking-wide uppercase">
                   Syncing Queue...
                 </p>
               </div>
             ) : filteredWorklist.length === 0 ? (
-              <div className="p-8 text-center text-slate-400 flex flex-col items-center justify-center h-full">
+              <div className="p-8 text-center text-muted-foreground/70 flex flex-col items-center justify-center h-full">
                 <CheckCircle2 className="w-12 h-12 mb-3 text-emerald-200" />
-                <p className="font-bold text-slate-600 text-lg">
+                <p className="font-bold text-muted-foreground text-lg">
                   Queue is empty!
                 </p>
                 <p className="text-sm mt-1">
@@ -319,23 +319,23 @@ export default function ResultEntryPage() {
                   className={`w-full text-left p-4 rounded-2xl transition-all duration-200 border group ${
                     selectedInvoice?.invoiceId === inv.invoiceId
                       ? "bg-indigo-50 border-indigo-200 shadow-sm ring-1 ring-indigo-500/20"
-                      : "bg-white border-slate-200 hover:border-indigo-300 hover:shadow-md"
+                      : "bg-card border-border hover:border-indigo-300 hover:shadow-md"
                   }`}>
                   <div className="flex justify-between items-start mb-2">
                     <span
-                      className={`font-bold text-sm truncate pr-2 ${selectedInvoice?.invoiceId === inv.invoiceId ? "text-indigo-900" : "text-slate-900 group-hover:text-indigo-700"}`}>
+                      className={`font-bold text-sm truncate pr-2 ${selectedInvoice?.invoiceId === inv.invoiceId ? "text-indigo-900" : "text-foreground group-hover:text-indigo-700"}`}>
                       {inv.patient.name}
                     </span>
-                    <span className="text-[10px] text-slate-500 font-bold bg-slate-100 px-2 py-1 rounded-md shrink-0 border border-slate-200">
+                    <span className="text-[10px] text-muted-foreground font-bold bg-muted px-2 py-1 rounded-md shrink-0 border border-border">
                       {format(new Date(inv.createdAt), "dd MMM, HH:mm")}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 text-xs font-medium text-slate-500 mb-3">
+                  <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground mb-3">
                     <span className="font-mono text-slate-400">
                       {inv.invoiceNumber}
                     </span>
                     <span>•</span>
-                    <span className="bg-slate-100 px-1.5 py-0.5 rounded text-[10px] uppercase font-bold text-slate-500">
+                    <span className="bg-muted px-1.5 py-0.5 rounded text-[10px] uppercase font-bold text-muted-foreground">
                       {inv.patient.age}y {inv.patient.gender.charAt(0)}
                     </span>
                   </div>
@@ -349,7 +349,7 @@ export default function ResultEntryPage() {
                         </Badge>
                       ))}
                       {inv.tests.length > 3 && (
-                        <Badge className="bg-slate-300 text-slate-700 border-white text-[9px] px-1.5 py-0">
+                        <Badge className="bg-slate-300 text-foreground/80 border-white text-[9px] px-1.5 py-0">
                           +{inv.tests.length - 3}
                         </Badge>
                       )}
@@ -368,13 +368,13 @@ export default function ResultEntryPage() {
         {/* RIGHT PANE: DATA ENTRY WORKSTATION                        */}
         {/* ========================================================= */}
         <Card
-          className={`w-full flex-1 flex-col border-slate-200 shadow-sm overflow-hidden bg-slate-50 ${!selectedInvoice ? "hidden lg:flex" : "flex"}`}>
+          className={`w-full flex-1 flex-col border-border shadow-sm overflow-hidden bg-muted/30 ${!selectedInvoice ? "hidden lg:flex" : "flex"}`}>
           {!selectedInvoice ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-8 bg-white/50">
+            <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground/70 p-8 bg-card/50">
               <div className="w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center mb-6 shadow-inner border border-indigo-100/50">
                 <Microscope className="w-10 h-10 text-indigo-300" />
               </div>
-              <h3 className="text-xl font-bold text-slate-600">
+              <h3 className="text-xl font-bold text-muted-foreground">
                 Workstation Ready
               </h3>
               <p className="text-sm font-medium mt-2 max-w-sm text-center">
@@ -385,7 +385,7 @@ export default function ResultEntryPage() {
           ) : (
             <>
               {/* --- PATIENT HEADER BANNER --- */}
-              <div className="bg-white border-b border-slate-200 p-4 md:p-6 shrink-0 relative overflow-hidden">
+              <div className="bg-card border-b border-border p-4 md:p-6 shrink-0 relative overflow-hidden">
                 <div className="absolute right-0 top-0 w-64 h-full bg-gradient-to-l from-indigo-50/50 to-transparent pointer-events-none" />
 
                 {/* Mobile Back Button */}
@@ -401,20 +401,20 @@ export default function ResultEntryPage() {
                       {selectedInvoice.patient.name.charAt(0)}
                     </div>
                     <div>
-                      <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+                      <h2 className="text-2xl font-black text-foreground tracking-tight">
                         {selectedInvoice.patient.name}
                       </h2>
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-1.5 text-xs font-bold text-slate-500 uppercase tracking-wide">
-                        <span className="flex items-center gap-1.5 bg-slate-100 px-2 py-1 rounded-md">
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-1.5 text-xs font-bold text-muted-foreground uppercase tracking-wide">
+                        <span className="flex items-center gap-1.5 bg-muted px-2 py-1 rounded-md">
                           <User className="w-3.5 h-3.5 text-slate-400" />{" "}
                           {selectedInvoice.patient.age} Yrs •{" "}
                           {selectedInvoice.patient.gender}
                         </span>
-                        <span className="flex items-center gap-1.5 bg-slate-100 px-2 py-1 rounded-md">
+                        <span className="flex items-center gap-1.5 bg-muted px-2 py-1 rounded-md">
                           <Phone className="w-3.5 h-3.5 text-slate-400" />{" "}
                           {selectedInvoice.patient.phone}
                         </span>
-                        <span className="flex items-center gap-1.5 bg-slate-100 px-2 py-1 rounded-md font-mono">
+                        <span className="flex items-center gap-1.5 bg-muted px-2 py-1 rounded-md font-mono">
                           <FileText className="w-3.5 h-3.5 text-slate-400" />{" "}
                           SID: {selectedInvoice.invoiceNumber}
                         </span>
@@ -449,7 +449,7 @@ export default function ResultEntryPage() {
                 {selectedInvoice.tests.map((test) => (
                   <div
                     key={test.id}
-                    className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2">
+                    className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2">
                     {/* Test Title Strip */}
                     <div className="bg-slate-900 px-5 py-3.5 flex items-center justify-between">
                       <h3 className="font-bold text-white tracking-wide text-sm md:text-base flex items-center gap-2">
@@ -466,7 +466,7 @@ export default function ResultEntryPage() {
                     {/* Parameter Table */}
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm text-left whitespace-nowrap">
-                        <thead className="bg-slate-50 border-b border-slate-200 text-xs font-black text-slate-500 uppercase tracking-widest">
+                        <thead className="bg-muted/30 border-b border-border text-xs font-black text-muted-foreground uppercase tracking-widest">
                           <tr>
                             <th className="px-5 py-4 w-1/3">
                               Parameter Definition
@@ -488,8 +488,8 @@ export default function ResultEntryPage() {
                             return (
                               <tr
                                 key={param.id}
-                                className="hover:bg-slate-50/50 transition-colors group">
-                                <td className="px-5 py-4 font-bold text-slate-800 flex items-center gap-2">
+                                className="hover:bg-muted/50/50 transition-colors group">
+                                <td className="px-5 py-4 font-bold text-foreground flex items-center gap-2">
                                   {param.parameterName}
                                 </td>
                                 <td className="px-5 py-3">
@@ -511,7 +511,7 @@ export default function ResultEntryPage() {
                                 </td>
                                 <td className="px-5 py-3">
                                   {evalResult.status === "LOW" && (
-                                    <Badge className="bg-blue-100 hover:bg-blue-100 text-blue-700 border-none font-black px-2 py-1">
+                                    <Badge className="bg-blue-100 hover:bg-blue-100 text-primary border-none font-black px-2 py-1">
                                       <ArrowDown
                                         className="w-3 h-3 mr-1"
                                         strokeWidth={3}
@@ -539,13 +539,13 @@ export default function ResultEntryPage() {
                                       </Badge>
                                     )}
                                 </td>
-                                <td className="px-5 py-3 text-slate-500 font-bold text-xs">
+                                <td className="px-5 py-3 text-muted-foreground font-bold text-xs">
                                   {param.unit || "-"}
                                 </td>
-                                <td className="px-5 py-3 text-xs font-semibold text-slate-600 bg-slate-50/30">
+                                <td className="px-5 py-3 text-xs font-semibold text-muted-foreground bg-slate-50/30">
                                   {param.refRangeMin !== null &&
                                   param.refRangeMax !== null ? (
-                                    <span className="bg-slate-100 px-2 py-1 rounded border border-slate-200">
+                                    <span className="bg-muted px-2 py-1 rounded border border-border">
                                       {param.refRangeMin} - {param.refRangeMax}
                                     </span>
                                   ) : (
@@ -560,9 +560,9 @@ export default function ResultEntryPage() {
                     </div>
 
                     {/* Notes & Impression Block */}
-                    <div className="p-5 bg-slate-50 border-t border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="p-5 bg-muted/30 border-t border-border grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                        <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
                           <FileText className="w-3.5 h-3.5 text-indigo-500" />{" "}
                           Internal Lab Notes
                         </label>
@@ -576,11 +576,11 @@ export default function ResultEntryPage() {
                             }))
                           }
                           placeholder="Add specific remarks or technical notes..."
-                          className="resize-none h-20 bg-white border-slate-200 rounded-xl text-sm focus:border-indigo-500 shadow-sm"
+                          className="resize-none h-20 bg-card border-border rounded-xl text-sm focus:border-indigo-500 shadow-sm"
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                        <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
                           <ClipboardSignature className="w-3.5 h-3.5 text-violet-500" />{" "}
                           Doctor's Clinical Impression
                         </label>
@@ -594,7 +594,7 @@ export default function ResultEntryPage() {
                             }))
                           }
                           placeholder="Final clinical impression (prints on official report)..."
-                          className="resize-none h-20 bg-white border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:border-violet-500 shadow-sm"
+                          className="resize-none h-20 bg-card border-border rounded-xl text-sm font-semibold text-foreground focus:border-violet-500 shadow-sm"
                         />
                       </div>
                     </div>
@@ -603,14 +603,14 @@ export default function ResultEntryPage() {
               </div>
 
               {/* --- ACTION FOOTER --- */}
-              <div className="p-4 border-t border-slate-200 bg-white/80 backdrop-blur flex flex-wrap justify-between gap-3 items-center shrink-0 z-10 relative">
+              <div className="p-4 border-t border-border bg-card/80 backdrop-blur flex flex-wrap justify-between gap-3 items-center shrink-0 z-10 relative">
                 {activeTab !== "COMPLETED" ? (
                   <>
                     <Button
                       variant="outline"
                       onClick={() => handleAction("SAVE_DRAFT")}
                       disabled={saveResultsMutation.isPending}
-                      className="h-12 rounded-xl font-bold text-slate-700 bg-white hover:bg-slate-50 border-slate-300 shadow-sm w-full sm:w-auto">
+                      className="h-12 rounded-xl font-bold text-foreground/80 bg-card hover:bg-muted/30 border-border shadow-sm w-full sm:w-auto">
                       <Save className="w-4 h-4 mr-2" /> Save Draft
                     </Button>
 

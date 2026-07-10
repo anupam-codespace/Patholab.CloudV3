@@ -30,6 +30,7 @@ export default function LoginPage() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ email, password }),
       });
 
@@ -44,7 +45,8 @@ export default function LoginPage() {
       }
 
       // Success! Redirect based on the API response
-      router.push(data.redirect || "/dashboard");
+      // Hard navigation guarantees the auth cookie is re-evaluated server-side before the dashboard renders
+      window.location.href = data.redirect || "/dashboard";
     } catch (err) {
       setError("An unexpected error occurred. Please try again.");
       setLoading(false);

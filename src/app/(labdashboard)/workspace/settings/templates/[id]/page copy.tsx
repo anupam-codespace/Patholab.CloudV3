@@ -187,13 +187,13 @@ const AsyncQRCode = ({
     return (
       <div
         style={{ width: size, height: size }}
-        className="bg-slate-100 animate-pulse border shadow-sm"
+        className="bg-muted animate-pulse border shadow-sm"
       />
     );
 
   return (
     <div
-      className="flex flex-col items-center bg-white p-1 border shadow-sm"
+      className="flex flex-col items-center bg-card p-1 border shadow-sm"
       style={{ width: size, height: size + (showPageNumber ? 15 : 0) }}>
       <img
         src={src}
@@ -201,7 +201,7 @@ const AsyncQRCode = ({
         style={{ width: size - 8, height: size - 8 }}
       />
       {showPageNumber && (
-        <span className="text-[8px] mt-1 font-bold text-slate-500 whitespace-nowrap">
+        <span className="text-[8px] mt-1 font-bold text-muted-foreground whitespace-nowrap">
           Page 1 of 1
         </span>
       )}
@@ -431,12 +431,12 @@ export default function UltimateTemplateBuilder() {
 
   const renderSetupTab = () => (
     <div className="space-y-6 animate-in fade-in">
-      <Card className="shadow-none border-slate-200">
-        <CardHeader className="pb-3 bg-slate-50">
+      <Card className="shadow-none border-border">
+        <CardHeader className="pb-3 bg-muted/30">
           <CardTitle className="text-sm">Page Layout (A4)</CardTitle>
         </CardHeader>
         <CardContent className="pt-4 space-y-4">
-          <Label className="text-xs font-bold text-slate-500 uppercase">
+          <Label className="text-xs font-bold text-muted-foreground uppercase">
             Margins (mm)
           </Label>
           <div className="grid grid-cols-4 gap-2">
@@ -462,8 +462,8 @@ export default function UltimateTemplateBuilder() {
         </CardContent>
       </Card>
 
-      <Card className="shadow-none border-slate-200">
-        <CardHeader className="pb-3 bg-slate-50 flex flex-row items-center justify-between">
+      <Card className="shadow-none border-border">
+        <CardHeader className="pb-3 bg-muted/30 flex flex-row items-center justify-between">
           <CardTitle className="text-sm">Page Border</CardTitle>
           <Switch
             checked={config.layout.border.show}
@@ -542,8 +542,8 @@ export default function UltimateTemplateBuilder() {
         )}
       </Card>
 
-      <Card className="shadow-none border-slate-200">
-        <CardHeader className="pb-3 bg-slate-50">
+      <Card className="shadow-none border-border">
+        <CardHeader className="pb-3 bg-muted/30">
           <CardTitle className="text-sm">Typography & Watermark</CardTitle>
         </CardHeader>
         <CardContent className="pt-4 space-y-4">
@@ -634,7 +634,7 @@ export default function UltimateTemplateBuilder() {
 
   const renderHeaderTab = () => (
     <div className="space-y-6 animate-in fade-in">
-      <div className="flex justify-between items-center bg-blue-50 p-3 rounded-lg border border-blue-100">
+      <div className="flex justify-between items-center bg-primary/10 p-3 rounded-lg border border-blue-100">
         <Label className="font-bold text-blue-900">Enable Header Zone</Label>
         <Switch
           checked={config.header.show}
@@ -643,14 +643,14 @@ export default function UltimateTemplateBuilder() {
       </div>
 
       {config.header.show && (
-        <Card className="shadow-none border-slate-200">
+        <Card className="shadow-none border-border">
           <CardContent className="pt-4 space-y-4">
-            <div className="grid grid-cols-3 bg-slate-100 p-1 rounded-md gap-1">
+            <div className="grid grid-cols-3 bg-muted p-1 rounded-md gap-1">
               {(["standard", "html", "image"] as const).map((mode) => (
                 <button
                   key={mode}
                   onClick={() => updateConfig("header", "mode", mode)}
-                  className={`text-xs py-1.5 font-medium rounded-sm capitalize flex items-center justify-center gap-1 ${config.header.mode === mode ? "bg-white shadow text-blue-600" : "text-slate-500"}`}>
+                  className={`text-xs py-1.5 font-medium rounded-sm capitalize flex items-center justify-center gap-1 ${config.header.mode === mode ? "bg-card shadow text-primary" : "text-muted-foreground"}`}>
                   {mode === "standard" && (
                     <LayoutTemplate className="h-3 w-3" />
                   )}
@@ -739,8 +739,8 @@ export default function UltimateTemplateBuilder() {
       )}
 
       {/* QR CODE SETTINGS */}
-      <Card className="shadow-none border-slate-200">
-        <CardHeader className="pb-2 bg-slate-50 flex flex-row items-center justify-between">
+      <Card className="shadow-none border-border">
+        <CardHeader className="pb-2 bg-muted/30 flex flex-row items-center justify-between">
           <CardTitle className="text-sm flex items-center gap-2">
             <QrCode size={16} /> Report QR Verification
           </CardTitle>
@@ -756,7 +756,7 @@ export default function UltimateTemplateBuilder() {
               <Select
                 value={config.qrCode.mode}
                 onValueChange={(v) => updateConfig("qrCode", "mode", v)}>
-                <SelectTrigger className="h-8 text-xs bg-white">
+                <SelectTrigger className="h-8 text-xs bg-card">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -775,7 +775,7 @@ export default function UltimateTemplateBuilder() {
                     onValueChange={(v) =>
                       updateConfig("qrCode", "position", v)
                     }>
-                    <SelectTrigger className="h-8 text-xs bg-white">
+                    <SelectTrigger className="h-8 text-xs bg-card">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -811,7 +811,7 @@ export default function UltimateTemplateBuilder() {
                 </div>
               </div>
             ) : (
-              <div className="bg-blue-50 border border-blue-200 p-3 rounded text-[10px] text-blue-800 flex gap-2">
+              <div className="bg-primary/10 border border-primary/20 p-3 rounded text-[10px] text-blue-800 flex gap-2">
                 <Move size={14} className="shrink-0" /> Drag the QR code freely
                 in the preview panel to set its absolute coordinates.
               </div>
@@ -834,7 +834,7 @@ export default function UltimateTemplateBuilder() {
             </div>
 
             <div className="flex items-center justify-between pt-2 border-t">
-              <Label className="text-xs font-bold text-slate-600">
+              <Label className="text-xs font-bold text-muted-foreground">
                 Show Page Numbers below QR
               </Label>
               <Switch
@@ -852,7 +852,7 @@ export default function UltimateTemplateBuilder() {
 
   const renderPatientTab = () => (
     <div className="space-y-6 animate-in fade-in">
-      <div className="flex justify-between items-center bg-blue-50 p-3 rounded-lg border border-blue-100">
+      <div className="flex justify-between items-center bg-primary/10 p-3 rounded-lg border border-blue-100">
         <Label className="font-bold text-blue-900">Show Demographics</Label>
         <Switch
           checked={config.patientBlock.show}
@@ -862,8 +862,8 @@ export default function UltimateTemplateBuilder() {
 
       {config.patientBlock.show && (
         <>
-          <Card className="shadow-none border-slate-200">
-            <CardHeader className="pb-2 bg-slate-50 flex flex-row items-center justify-between">
+          <Card className="shadow-none border-border">
+            <CardHeader className="pb-2 bg-muted/30 flex flex-row items-center justify-between">
               <CardTitle className="text-sm flex items-center gap-2">
                 <BarcodeIcon size={16} /> Sample Barcode
               </CardTitle>
@@ -888,7 +888,7 @@ export default function UltimateTemplateBuilder() {
                         v,
                       )
                     }>
-                    <SelectTrigger className="h-8 text-xs bg-white">
+                    <SelectTrigger className="h-8 text-xs bg-card">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -944,7 +944,7 @@ export default function UltimateTemplateBuilder() {
             )}
           </Card>
 
-          <Card className="shadow-none border-slate-200">
+          <Card className="shadow-none border-border">
             <CardContent className="pt-4 space-y-4">
               <div className="space-y-2">
                 <div className="flex justify-between">
@@ -964,10 +964,10 @@ export default function UltimateTemplateBuilder() {
                 />
               </div>
 
-              <Label className="text-xs font-bold text-slate-500 uppercase mt-4 block">
+              <Label className="text-xs font-bold text-muted-foreground uppercase mt-4 block">
                 Visible Fields
               </Label>
-              <div className="grid grid-cols-2 gap-3 bg-slate-50 p-4 border rounded-lg">
+              <div className="grid grid-cols-2 gap-3 bg-muted/30 p-4 border rounded-lg">
                 {[
                   { k: "showName", l: "Patient Name" },
                   { k: "showPatientId", l: "Patient ID / UHID" },
@@ -1001,15 +1001,15 @@ export default function UltimateTemplateBuilder() {
 
   const renderBodyTab = () => (
     <div className="space-y-6 animate-in fade-in">
-      <Card className="shadow-none border-slate-200">
-        <CardHeader className="pb-3 bg-slate-50">
+      <Card className="shadow-none border-border">
+        <CardHeader className="pb-3 bg-muted/30">
           <CardTitle className="text-sm">Table Settings</CardTitle>
         </CardHeader>
         <CardContent className="pt-4 space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <Label className="text-xs">Group by Department</Label>
-              <p className="text-[9px] text-slate-500">
+              <p className="text-[9px] text-muted-foreground">
                 Adds headers like BIOCHEMISTRY
               </p>
             </div>
@@ -1035,7 +1035,7 @@ export default function UltimateTemplateBuilder() {
           <div className="flex items-center justify-between">
             <div>
               <Label className="text-xs">Show Test Timestamps</Label>
-              <p className="text-[9px] text-slate-500">
+              <p className="text-[9px] text-muted-foreground">
                 Collected, Received, Reported below table
               </p>
             </div>
@@ -1065,7 +1065,7 @@ export default function UltimateTemplateBuilder() {
       </Card>
 
       <div className="space-y-2">
-        <Label className="text-xs font-bold uppercase text-slate-500">
+        <Label className="text-xs font-bold uppercase text-muted-foreground">
           Document Flow Blocks
         </Label>
         <div className="grid grid-cols-4 gap-2 pb-2">
@@ -1157,7 +1157,7 @@ export default function UltimateTemplateBuilder() {
                 }
               }}
               onDragEnd={() => setDraggedIdx(null)}
-              className="bg-white border border-slate-200 rounded-lg p-3 shadow-sm group cursor-move hover:border-blue-400 hover:shadow-md transition-all">
+              className="bg-card border border-border rounded-lg p-3 shadow-sm group cursor-move hover:border-blue-400 hover:shadow-md transition-all">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <GripVertical className="h-4 w-4 text-slate-300" />
@@ -1170,7 +1170,7 @@ export default function UltimateTemplateBuilder() {
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="h-5 w-5 text-slate-400 hover:text-red-500"
+                  className="h-5 w-5 text-muted-foreground/70 hover:text-red-500"
                   onClick={() => {
                     const n = [...config.body];
                     n.splice(idx, 1);
@@ -1205,7 +1205,7 @@ export default function UltimateTemplateBuilder() {
                             (n[idx].content || "") + tag.tag + " ";
                           setConfig({ ...config, body: n });
                         }}
-                        className="text-[8px] bg-slate-100 border text-slate-600 px-1.5 py-0.5 rounded hover:bg-blue-50">
+                        className="text-[8px] bg-muted border text-muted-foreground px-1.5 py-0.5 rounded hover:bg-primary/10">
                         + {tag.label}
                       </button>
                     ))}
@@ -1269,7 +1269,7 @@ export default function UltimateTemplateBuilder() {
 
   const renderFooterTab = () => (
     <div className="space-y-6 animate-in fade-in pb-10">
-      <div className="flex justify-between items-center bg-blue-50 p-3 rounded-lg border border-blue-100">
+      <div className="flex justify-between items-center bg-primary/10 p-3 rounded-lg border border-blue-100">
         <Label className="font-bold text-blue-900">Enable Footer</Label>
         <Switch
           checked={config.footer.show}
@@ -1277,14 +1277,14 @@ export default function UltimateTemplateBuilder() {
         />
       </div>
       {config.footer.show && (
-        <Card className="shadow-none border-slate-200">
+        <Card className="shadow-none border-border">
           <CardContent className="pt-4 space-y-6">
-            <div className="grid grid-cols-3 bg-slate-100 p-1 rounded-md gap-1">
+            <div className="grid grid-cols-3 bg-muted p-1 rounded-md gap-1">
               {(["standard", "html", "image"] as const).map((mode) => (
                 <button
                   key={mode}
                   onClick={() => updateConfig("footer", "mode", mode)}
-                  className={`text-xs py-1.5 font-medium rounded-sm capitalize flex items-center justify-center gap-1 ${config.footer.mode === mode ? "bg-white shadow text-blue-600" : "text-slate-500"}`}>
+                  className={`text-xs py-1.5 font-medium rounded-sm capitalize flex items-center justify-center gap-1 ${config.footer.mode === mode ? "bg-card shadow text-primary" : "text-muted-foreground"}`}>
                   {mode === "standard" && (
                     <LayoutTemplate className="h-3 w-3" />
                   )}
@@ -1297,7 +1297,7 @@ export default function UltimateTemplateBuilder() {
             {config.footer.mode === "standard" && (
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <Label className="text-xs font-bold text-slate-500 uppercase">
+                  <Label className="text-xs font-bold text-muted-foreground uppercase">
                     Signatories
                   </Label>
                   <Button
@@ -1325,7 +1325,7 @@ export default function UltimateTemplateBuilder() {
                 {config.footer.signatures.map((sig, idx) => (
                   <div
                     key={sig.id}
-                    className="border border-slate-200 p-3 rounded-lg bg-slate-50 relative space-y-3">
+                    className="border border-border p-3 rounded-lg bg-muted/30 relative space-y-3">
                     <div className="flex justify-between items-center mb-1">
                       <Switch
                         checked={sig.show}
@@ -1341,7 +1341,7 @@ export default function UltimateTemplateBuilder() {
                           n.splice(idx, 1);
                           updateConfig("footer", "signatures", n);
                         }}
-                        className="text-slate-400 hover:text-red-500">
+                        className="text-muted-foreground/70 hover:text-red-500">
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
@@ -1353,7 +1353,7 @@ export default function UltimateTemplateBuilder() {
                           n[idx].name = e.target.value;
                           updateConfig("footer", "signatures", n);
                         }}
-                        className="h-8 text-xs bg-white"
+                        className="h-8 text-xs bg-card"
                         placeholder="Name"
                       />
                       <Input
@@ -1363,7 +1363,7 @@ export default function UltimateTemplateBuilder() {
                           n[idx].qualifications = e.target.value;
                           updateConfig("footer", "signatures", n);
                         }}
-                        className="h-8 text-xs bg-white"
+                        className="h-8 text-xs bg-card"
                         placeholder="Qualifications"
                       />
                       <Input
@@ -1373,12 +1373,12 @@ export default function UltimateTemplateBuilder() {
                           n[idx].title = e.target.value;
                           updateConfig("footer", "signatures", n);
                         }}
-                        className="h-8 text-xs bg-white col-span-2"
+                        className="h-8 text-xs bg-card col-span-2"
                         placeholder="Designation"
                       />
                     </div>
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-20 border bg-white flex items-center justify-center overflow-hidden rounded shrink-0">
+                      <div className="h-10 w-20 border bg-card flex items-center justify-center overflow-hidden rounded shrink-0">
                         {sig.imageUrl ? (
                           <img
                             src={sig.imageUrl}
@@ -1427,7 +1427,7 @@ export default function UltimateTemplateBuilder() {
                   </div>
                 ))}
                 <div className="space-y-2 pt-4 border-t">
-                  <Label className="text-xs font-bold text-slate-500 uppercase">
+                  <Label className="text-xs font-bold text-muted-foreground uppercase">
                     Bottom Image (Accreditations)
                   </Label>
                   <Input
@@ -1485,7 +1485,7 @@ export default function UltimateTemplateBuilder() {
             )}
 
             <div className="space-y-2 pt-4 border-t">
-              <Label className="text-xs font-bold text-slate-500 uppercase">
+              <Label className="text-xs font-bold text-muted-foreground uppercase">
                 Disclaimer Text
               </Label>
               <Textarea
@@ -1535,7 +1535,7 @@ export default function UltimateTemplateBuilder() {
               updateConfig("qrCode", "y", d.y);
             }}
             bounds="parent"
-            className="z-50 border-2 border-dashed border-blue-500 bg-blue-50/50 hover:cursor-move flex flex-col items-center justify-center">
+            className="z-50 border-2 border-dashed border-blue-500 bg-primary/10/50 hover:cursor-move flex flex-col items-center justify-center">
             {qrContent}
           </Rnd>
         );
@@ -1566,14 +1566,14 @@ export default function UltimateTemplateBuilder() {
             variant="outline"
             size="sm"
             onClick={() => setShowJsonEditor(true)}
-            className="bg-white shadow-sm hover:text-blue-600">
+            className="bg-card shadow-sm hover:text-primary">
             <Code className="w-4 h-4 mr-2" /> JSON
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={() => setPurePreviewMode(!purePreviewMode)}
-            className={`bg-white shadow-sm ${purePreviewMode ? "text-blue-600 border-blue-400" : ""}`}>
+            className={`bg-card shadow-sm ${purePreviewMode ? "text-primary border-blue-400" : ""}`}>
             <Eye className="w-4 h-4 mr-2" />{" "}
             {purePreviewMode ? "Edit Mode" : "Print Preview"}
           </Button>
@@ -1581,7 +1581,7 @@ export default function UltimateTemplateBuilder() {
 
         {/* THE PAPER */}
         <div
-          className="bg-white shadow-2xl relative flex flex-col transition-all duration-300 ease-in-out overflow-hidden"
+          className="bg-card shadow-2xl relative flex flex-col transition-all duration-300 ease-in-out overflow-hidden"
           style={{
             width: "210mm",
             minHeight: "297mm",
@@ -1631,7 +1631,7 @@ export default function UltimateTemplateBuilder() {
             {/* HEADER ZONE */}
             {config.header.show && (
               <div
-                className={`w-full mb-4 pb-4 ${purePreviewMode ? "" : "border-dashed hover:bg-slate-50/50 cursor-pointer"} ${config.header.mode === "image" ? "" : "border-b-[3px]"}`}
+                className={`w-full mb-4 pb-4 ${purePreviewMode ? "" : "border-dashed hover:bg-muted/50/50 cursor-pointer"} ${config.header.mode === "image" ? "" : "border-b-[3px]"}`}
                 style={{
                   borderColor: purePreviewMode
                     ? config.branding.primaryColor
@@ -1640,7 +1640,7 @@ export default function UltimateTemplateBuilder() {
                 }}>
                 {config.header.mode === "image" ? (
                   <div
-                    className="w-full bg-slate-100 flex items-center justify-center text-slate-400 overflow-hidden"
+                    className="w-full bg-muted flex items-center justify-center text-muted-foreground/70 overflow-hidden"
                     style={{ height: `${config.header.height}px` }}>
                     {config.header.fullImage ? (
                       <img
@@ -1669,7 +1669,7 @@ export default function UltimateTemplateBuilder() {
                         alt="Logo"
                       />
                     ) : (
-                      <div className="h-16 w-32 bg-slate-100 border rounded flex items-center justify-center text-xs text-slate-400">
+                      <div className="h-16 w-32 bg-muted border rounded flex items-center justify-center text-xs text-slate-400">
                         Logo
                       </div>
                     )}
@@ -1693,7 +1693,7 @@ export default function UltimateTemplateBuilder() {
             {/* PATIENT BLOCK ZONE */}
             {config.patientBlock.show && (
               <div
-                className={`mb-6 break-inside-avoid ${purePreviewMode ? "" : "border border-dashed border-transparent hover:border-slate-300 p-2 -mx-2 rounded"}`}>
+                className={`mb-6 break-inside-avoid ${purePreviewMode ? "" : "border border-dashed border-transparent hover:border-border p-2 -mx-2 rounded"}`}>
                 {config.patientBlock.barcode.show && (
                   <div
                     className="mb-4 mt-2"
@@ -1831,7 +1831,7 @@ export default function UltimateTemplateBuilder() {
                   {block.type === "RESULTS_TABLE" && (
                     <div className="mb-6 w-full break-inside-avoid">
                       {config.bodyOptions.groupDepartmentWise && (
-                        <div className="bg-slate-100 font-bold py-1.5 px-3 mb-4 text-[12px] uppercase text-center border-y border-slate-300 tracking-wider">
+                        <div className="bg-muted font-bold py-1.5 px-3 mb-4 text-[12px] uppercase text-center border-y border-border tracking-wider">
                           BIOCHEMISTRY
                         </div>
                       )}
@@ -1867,11 +1867,11 @@ export default function UltimateTemplateBuilder() {
                               Bilirubin (Total)
                             </td>
                             <td className="py-2.5 px-1 font-bold">0.50</td>
-                            <td className="py-2.5 px-1 text-slate-500">
+                            <td className="py-2.5 px-1 text-muted-foreground">
                               mg/dl
                             </td>
                             {config.bodyOptions.showBiologicalRef && (
-                              <td className="py-2.5 px-1 text-slate-500">
+                              <td className="py-2.5 px-1 text-muted-foreground">
                                 0.2 - 1.2
                               </td>
                             )}
@@ -1883,9 +1883,9 @@ export default function UltimateTemplateBuilder() {
                             <td className="py-2.5 px-1 font-bold text-red-600">
                               45.2 (H)
                             </td>
-                            <td className="py-2.5 px-1 text-slate-500">IU/L</td>
+                            <td className="py-2.5 px-1 text-muted-foreground">IU/L</td>
                             {config.bodyOptions.showBiologicalRef && (
-                              <td className="py-2.5 px-1 text-slate-500">
+                              <td className="py-2.5 px-1 text-muted-foreground">
                                 0 - 40
                               </td>
                             )}
@@ -1895,7 +1895,7 @@ export default function UltimateTemplateBuilder() {
 
                       {/* ✅ NEW: TEST METADATA / TIMESTAMPS FOOTER */}
                       {config.bodyOptions.showTestTimestamps && (
-                        <div className="mt-4 text-[10px] text-slate-500 italic space-y-1">
+                        <div className="mt-4 text-[10px] text-muted-foreground italic space-y-1">
                           <p>
                             (Collected At: 12/05/2026 08:30 AM, Received At:
                             12/05/2026 09:15 AM, Reported At: 12/05/2026 02:15
@@ -1928,13 +1928,13 @@ export default function UltimateTemplateBuilder() {
                   {block.type === "SPACER" && (
                     <div
                       style={{ height: `${block.height || 20}px` }}
-                      className={`${purePreviewMode ? "" : "bg-blue-50/50 flex items-center justify-center text-[10px] text-blue-400"}`}>
+                      className={`${purePreviewMode ? "" : "bg-primary/10/50 flex items-center justify-center text-[10px] text-blue-400"}`}>
                       {!purePreviewMode && `${block.height}px Spacer`}
                     </div>
                   )}
                   {block.type === "IMAGE" && (
                     <div
-                      className={`flex justify-center mb-4 ${!block.imageUrl && !purePreviewMode ? "h-32 bg-slate-100 border border-dashed flex items-center justify-center text-slate-400" : ""}`}>
+                      className={`flex justify-center mb-4 ${!block.imageUrl && !purePreviewMode ? "h-32 bg-muted border border-dashed flex items-center justify-center text-slate-400" : ""}`}>
                       {block.imageUrl ? (
                         <img
                           src={block.imageUrl}
@@ -1953,7 +1953,7 @@ export default function UltimateTemplateBuilder() {
               ))}
 
               <div className="text-center mt-auto mb-6 break-inside-avoid">
-                <span className="text-[10px] font-bold text-slate-400 border-t border-b border-slate-200 py-1 px-8 tracking-widest uppercase">
+                <span className="text-[10px] font-bold text-muted-foreground/70 border-t border-b border-border py-1 px-8 tracking-widest uppercase">
                   *** End of Report ***
                 </span>
               </div>
@@ -1962,11 +1962,11 @@ export default function UltimateTemplateBuilder() {
             {/* FOOTER ZONE */}
             {config.footer.show && (
               <div
-                className={`mt-auto pt-4 relative ${purePreviewMode ? "" : "border border-dashed border-transparent hover:border-slate-300 p-2 -mx-2 rounded"} ${config.footer.mode === "image" ? "" : "border-t-2"}`}
+                className={`mt-auto pt-4 relative ${purePreviewMode ? "" : "border border-dashed border-transparent hover:border-border p-2 -mx-2 rounded"} ${config.footer.mode === "image" ? "" : "border-t-2"}`}
                 style={{ borderTopColor: config.branding.primaryColor }}>
                 {config.footer.mode === "image" ? (
                   <div
-                    className="w-full bg-slate-100 flex items-center justify-center text-slate-400 overflow-hidden"
+                    className="w-full bg-muted flex items-center justify-center text-muted-foreground/70 overflow-hidden"
                     style={{ height: `${config.footer.height}px` }}>
                     {config.footer.fullImage ? (
                       <img
@@ -2011,17 +2011,17 @@ export default function UltimateTemplateBuilder() {
                                   )
                                 )}
                               </div>
-                              <div className="w-full text-center border-t border-slate-300 pt-1">
-                                <p className="font-bold text-[11px] text-slate-900 leading-tight whitespace-nowrap">
+                              <div className="w-full text-center border-t border-border pt-1">
+                                <p className="font-bold text-[11px] text-foreground leading-tight whitespace-nowrap">
                                   {sig.name || "Doctor Name"}
                                 </p>
                                 {sig.qualifications && (
-                                  <p className="text-[9px] text-slate-600 leading-tight whitespace-nowrap">
+                                  <p className="text-[9px] text-muted-foreground leading-tight whitespace-nowrap">
                                     {sig.qualifications}
                                   </p>
                                 )}
                                 {sig.title && (
-                                  <p className="font-bold text-[9px] text-slate-800 uppercase mt-0.5 whitespace-nowrap">
+                                  <p className="font-bold text-[9px] text-foreground uppercase mt-0.5 whitespace-nowrap">
                                     {sig.title}
                                   </p>
                                 )}
@@ -2042,7 +2042,7 @@ export default function UltimateTemplateBuilder() {
                   </div>
                 )}
                 <div
-                  className="text-[9px] text-center mt-4 pb-2 pt-2 border-t border-slate-200"
+                  className="text-[9px] text-center mt-4 pb-2 pt-2 border-t border-border"
                   style={{ color: config.branding.secondaryColor }}
                   dangerouslySetInnerHTML={{ __html: config.footer.text || "" }}
                 />
@@ -2057,8 +2057,8 @@ export default function UltimateTemplateBuilder() {
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar Controls */}
-      <div className="w-[400px] border-r bg-white flex flex-col shrink-0 z-20 shadow-xl">
-        <div className="p-4 border-b bg-slate-50 flex items-center justify-between shrink-0">
+      <div className="w-[400px] border-r bg-card flex flex-col shrink-0 z-20 shadow-xl">
+        <div className="p-4 border-b bg-muted/30 flex items-center justify-between shrink-0">
           <Button
             variant="ghost"
             size="icon"
@@ -2076,7 +2076,7 @@ export default function UltimateTemplateBuilder() {
             onClick={handleSave}
             disabled={saving}
             size="sm"
-            className="bg-blue-600 h-8">
+            className="bg-primary h-8">
             {saving ? (
               <Loader2 className="animate-spin" size={14} />
             ) : (
@@ -2141,7 +2141,7 @@ export default function UltimateTemplateBuilder() {
               </Button>
             </CardHeader>
             <CardContent className="pt-4 space-y-4">
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-muted-foreground">
                 Copy this JSON to backup your template, or paste JSON from
                 another environment to import it.
               </p>

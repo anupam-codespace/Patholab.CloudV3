@@ -86,11 +86,11 @@ export default function AdminActivityLogsPage() {
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-slate-900 flex items-center gap-2">
+          <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-2">
             <Activity className="h-8 w-8 text-emerald-600" /> Platform Audit
             Logs
           </h1>
-          <p className="text-slate-500 font-medium mt-1">
+          <p className="text-muted-foreground font-medium mt-1">
             Global monitoring of all user and system operations.
           </p>
         </div>
@@ -103,7 +103,7 @@ export default function AdminActivityLogsPage() {
         <TabsList className="bg-slate-200/50 p-1 rounded-xl">
           <TabsTrigger
             value="TENANT"
-            className="rounded-lg font-bold data-[state=active]:bg-white data-[state=active]:text-emerald-700 data-[state=active]:shadow-sm">
+            className="rounded-lg font-bold data-[state=active]:bg-card data-[state=active]:text-emerald-700 data-[state=active]:shadow-sm">
             <Building2 className="w-4 h-4 mr-2" /> Tenant Activity
           </TabsTrigger>
           <TabsTrigger
@@ -114,7 +114,7 @@ export default function AdminActivityLogsPage() {
         </TabsList>
 
         <TabsContent value={activeTab} className="space-y-6 mt-0">
-          <Card className="border-slate-200 shadow-sm rounded-2xl bg-white overflow-hidden">
+          <Card className="border-border shadow-sm rounded-2xl bg-card overflow-hidden">
             {/* ADVANCED FILTERS */}
             <div className="flex flex-wrap gap-4 items-center bg-slate-50/50 p-4 border-b border-slate-100">
               {/* Search */}
@@ -122,7 +122,7 @@ export default function AdminActivityLogsPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <Input
                   placeholder="Search description or user..."
-                  className="pl-9 rounded-xl bg-white border-slate-200 focus:border-emerald-500"
+                  className="pl-9 rounded-xl bg-card border-border focus:border-emerald-500"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
@@ -131,8 +131,8 @@ export default function AdminActivityLogsPage() {
               {/* Lab Filter (Only visible in Tenant Tab) */}
               {activeTab === "TENANT" && (
                 <Select value={labId} onValueChange={setLabId}>
-                  <SelectTrigger className="w-full sm:w-[200px] rounded-xl bg-white border-slate-200 font-medium">
-                    <Building2 className="h-4 w-4 text-slate-400 mr-2" />
+                  <SelectTrigger className="w-full sm:w-[200px] rounded-xl bg-card border-border font-medium">
+                    <Building2 className="h-4 w-4 text-muted-foreground/70 mr-2" />
                     <SelectValue placeholder="All Labs" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
@@ -148,8 +148,8 @@ export default function AdminActivityLogsPage() {
 
               {/* Category Filter */}
               <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger className="w-full sm:w-[160px] rounded-xl bg-white border-slate-200 font-medium">
-                  <Database className="h-4 w-4 text-slate-400 mr-2" />
+                <SelectTrigger className="w-full sm:w-[160px] rounded-xl bg-card border-border font-medium">
+                  <Database className="h-4 w-4 text-muted-foreground/70 mr-2" />
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl">
@@ -165,8 +165,8 @@ export default function AdminActivityLogsPage() {
 
               {/* Action Filter */}
               <Select value={actionType} onValueChange={setActionType}>
-                <SelectTrigger className="w-full sm:w-[150px] rounded-xl bg-white border-slate-200 font-medium">
-                  <Filter className="h-4 w-4 text-slate-400 mr-2" />
+                <SelectTrigger className="w-full sm:w-[150px] rounded-xl bg-card border-border font-medium">
+                  <Filter className="h-4 w-4 text-muted-foreground/70 mr-2" />
                   <SelectValue placeholder="Action" />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl">
@@ -182,7 +182,7 @@ export default function AdminActivityLogsPage() {
             {/* AUDIT TABLE */}
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left whitespace-nowrap">
-                <thead className="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-widest">
+                <thead className="bg-muted/30 border-b border-border text-xs font-bold text-muted-foreground uppercase tracking-widest">
                   <tr>
                     <th className="px-6 py-4">User Identity</th>
                     {activeTab === "TENANT" && (
@@ -199,7 +199,7 @@ export default function AdminActivityLogsPage() {
                     <tr>
                       <td
                         colSpan={6}
-                        className="h-32 text-center text-slate-500">
+                        className="h-32 text-center text-muted-foreground">
                         <Loader2 className="w-6 h-6 animate-spin mx-auto text-emerald-500 mb-2" />
                         Fetching secure logs...
                       </td>
@@ -208,7 +208,7 @@ export default function AdminActivityLogsPage() {
                     <tr>
                       <td
                         colSpan={6}
-                        className="h-32 text-center text-slate-500 font-medium">
+                        className="h-32 text-center text-muted-foreground font-medium">
                         No logs match your current filters.
                       </td>
                     </tr>
@@ -216,10 +216,10 @@ export default function AdminActivityLogsPage() {
                     logs.map((log: any) => (
                       <tr
                         key={log.id}
-                        className="hover:bg-slate-50/50 transition-colors bg-white">
+                        className="hover:bg-muted/50/50 transition-colors bg-card">
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
-                            <div className="p-2 bg-slate-100 text-slate-500 rounded-lg">
+                            <div className="p-2 bg-muted text-muted-foreground rounded-lg">
                               {activeTab === "ADMIN" ? (
                                 <ShieldCheck className="w-4 h-4 text-emerald-600" />
                               ) : (
@@ -227,10 +227,10 @@ export default function AdminActivityLogsPage() {
                               )}
                             </div>
                             <div>
-                              <p className="font-bold text-slate-900">
+                              <p className="font-bold text-foreground">
                                 {log.user?.name || "System"}
                               </p>
-                              <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-0.5">
+                              <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold mt-0.5">
                                 {log.user?.role.replace("_", " ")}
                               </p>
                             </div>
@@ -252,33 +252,33 @@ export default function AdminActivityLogsPage() {
                                 log.action === "CREATE"
                                   ? "bg-emerald-100 text-emerald-700"
                                   : log.action === "UPDATE"
-                                    ? "bg-blue-100 text-blue-700"
+                                    ? "bg-blue-100 text-primary"
                                     : log.action === "DELETE"
                                       ? "bg-rose-100 text-rose-700"
-                                      : "bg-slate-100 text-slate-700"
+                                      : "bg-muted text-slate-700"
                               }`}>
                               {log.action}
                             </Badge>
                             <Badge
                               variant="outline"
-                              className="bg-slate-50 text-slate-500 border-slate-200 font-bold uppercase tracking-widest text-[9px]">
+                              className="bg-muted/30 text-muted-foreground border-border font-bold uppercase tracking-widest text-[9px]">
                               {log.entity || "SYSTEM"}
                             </Badge>
                           </div>
                         </td>
 
                         <td className="px-6 py-4">
-                          <p className="text-sm font-medium text-slate-700 truncate max-w-[300px]">
+                          <p className="text-sm font-medium text-foreground/80 truncate max-w-[300px]">
                             {log.description}
                           </p>
                         </td>
 
                         <td className="px-6 py-4">
-                          <p className="font-bold text-slate-800 flex items-center gap-1.5">
+                          <p className="font-bold text-foreground flex items-center gap-1.5">
                             <Clock className="w-3.5 h-3.5 text-slate-400" />{" "}
                             {format(new Date(log.createdAt), "hh:mm:ss a")}
                           </p>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">
+                          <p className="text-[10px] font-bold text-muted-foreground/70 uppercase mt-0.5">
                             {format(new Date(log.createdAt), "dd MMM yyyy")}
                           </p>
                         </td>
@@ -289,11 +289,11 @@ export default function AdminActivityLogsPage() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg">
+                                className="text-muted-foreground/70 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg">
                                 <Eye className="w-4 h-4 mr-1.5" /> View
                               </Button>
                             </DialogTrigger>
-                            <DialogContent className="max-w-2xl bg-slate-50 rounded-3xl p-6 border-slate-200 shadow-2xl">
+                            <DialogContent className="max-w-2xl bg-muted/30 rounded-3xl p-6 border-border shadow-2xl">
                               <DialogHeader>
                                 <DialogTitle className="flex items-center gap-2 text-xl font-black text-slate-800">
                                   <FileJson className="w-5 h-5 text-emerald-600" />{" "}
@@ -302,28 +302,28 @@ export default function AdminActivityLogsPage() {
                               </DialogHeader>
 
                               <div className="grid grid-cols-2 gap-4 mt-4 mb-2">
-                                <div className="bg-white p-3 rounded-xl border border-slate-200">
-                                  <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">
+                                <div className="bg-card p-3 rounded-xl border border-border">
+                                  <p className="text-[10px] uppercase font-bold text-muted-foreground/70 tracking-widest">
                                     Performed By
                                   </p>
-                                  <p className="font-bold text-slate-800 mt-0.5">
+                                  <p className="font-bold text-foreground mt-0.5">
                                     {log.user?.name}
                                   </p>
-                                  <p className="text-xs text-slate-500">
+                                  <p className="text-xs text-muted-foreground">
                                     {log.user?.email}
                                   </p>
                                 </div>
-                                <div className="bg-white p-3 rounded-xl border border-slate-200">
-                                  <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">
+                                <div className="bg-card p-3 rounded-xl border border-border">
+                                  <p className="text-[10px] uppercase font-bold text-muted-foreground/70 tracking-widest">
                                     Time & Date
                                   </p>
-                                  <p className="font-bold text-slate-800 mt-0.5">
+                                  <p className="font-bold text-foreground mt-0.5">
                                     {format(
                                       new Date(log.createdAt),
                                       "hh:mm:ss a",
                                     )}
                                   </p>
-                                  <p className="text-xs text-slate-500">
+                                  <p className="text-xs text-muted-foreground">
                                     {format(
                                       new Date(log.createdAt),
                                       "dd MMM yyyy",
@@ -332,7 +332,7 @@ export default function AdminActivityLogsPage() {
                                 </div>
                               </div>
 
-                              <p className="text-sm font-semibold text-slate-700 bg-white p-3 rounded-xl border border-slate-200 my-2">
+                              <p className="text-sm font-semibold text-foreground/80 bg-card p-3 rounded-xl border border-border my-2">
                                 {log.description}
                               </p>
 

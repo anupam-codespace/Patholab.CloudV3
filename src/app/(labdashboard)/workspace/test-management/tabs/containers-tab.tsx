@@ -117,12 +117,12 @@ export default function ContainersTab() {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* TOOLBAR */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="bg-card p-4 rounded-xl border border-border shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="relative w-full max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input
             placeholder="Search by container name or code..."
-            className="pl-10 focus-visible:ring-blue-500 border-slate-300 w-full"
+            className="pl-10 focus-visible:ring-primary border-border w-full"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -137,12 +137,12 @@ export default function ContainersTab() {
           }}>
           <Button
             onClick={handleAddNew}
-            className="bg-blue-600 hover:bg-blue-700 shadow-sm shrink-0 w-full sm:w-auto">
+            className="bg-primary hover:bg-blue-700 shadow-sm shrink-0 w-full sm:w-auto">
             <Plus className="mr-2 h-4 w-4" /> Create Custom Container
           </Button>
 
           <DialogContent className="max-w-md p-0 border-0 overflow-hidden">
-            <DialogHeader className="px-6 py-4 border-b bg-slate-50 sticky top-0 z-10">
+            <DialogHeader className="px-6 py-4 border-b bg-muted/30 sticky top-0 z-10">
               <DialogTitle className="text-xl text-slate-800">
                 {editingContainer
                   ? `Edit Container: ${editingContainer.name}`
@@ -168,27 +168,27 @@ export default function ContainersTab() {
       </div>
 
       {/* TABLE */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
         <div className="overflow-x-auto">
           <Table className="min-w-[700px]">
             <TableHeader>
-              <TableRow className="bg-slate-50 border-b border-slate-200 hover:bg-slate-50">
-                <TableHead className="w-[80px] font-semibold text-slate-600">
+              <TableRow className="bg-muted/30 border-b border-border hover:bg-muted/30">
+                <TableHead className="w-[80px] font-semibold text-muted-foreground">
                   Preview
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600">
+                <TableHead className="font-semibold text-muted-foreground">
                   Container Name
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600">
+                <TableHead className="font-semibold text-muted-foreground">
                   Code
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600">
+                <TableHead className="font-semibold text-muted-foreground">
                   Scope
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600">
+                <TableHead className="font-semibold text-muted-foreground">
                   Hex Color
                 </TableHead>
-                <TableHead className="text-right font-semibold text-slate-600">
+                <TableHead className="text-right font-semibold text-muted-foreground">
                   Actions
                 </TableHead>
               </TableRow>
@@ -198,7 +198,7 @@ export default function ContainersTab() {
                 <TableRow>
                   <TableCell
                     colSpan={6}
-                    className="text-center h-32 text-slate-500 animate-pulse">
+                    className="text-center h-32 text-muted-foreground animate-pulse">
                     Loading containers dictionary...
                   </TableCell>
                 </TableRow>
@@ -219,7 +219,7 @@ export default function ContainersTab() {
                 <TableRow>
                   <TableCell
                     colSpan={6}
-                    className="text-center h-32 text-slate-500">
+                    className="text-center h-32 text-muted-foreground">
                     No containers found matching your search.
                   </TableCell>
                 </TableRow>
@@ -227,10 +227,10 @@ export default function ContainersTab() {
                 filteredContainers.map((container) => (
                   <TableRow
                     key={container.id}
-                    className={`transition-colors ${editingContainer?.id === container.id ? "bg-blue-50/50" : "hover:bg-slate-50/80"} ${container.isGlobal ? "bg-slate-50/30" : ""}`}>
+                    className={`transition-colors ${editingContainer?.id === container.id ? "bg-primary/10/50" : "hover:bg-muted/50/80"} ${container.isGlobal ? "bg-slate-50/30" : ""}`}>
                     <TableCell>
                       <div
-                        className="w-8 h-8 rounded-full border border-slate-300 shadow-sm flex items-center justify-center"
+                        className="w-8 h-8 rounded-full border border-border shadow-sm flex items-center justify-center"
                         style={{
                           backgroundColor: container.capColor || "#ccc",
                         }}>
@@ -238,12 +238,12 @@ export default function ContainersTab() {
                       </div>
                     </TableCell>
 
-                    <TableCell className="font-medium text-slate-900">
+                    <TableCell className="font-medium text-foreground">
                       {container.name}
                     </TableCell>
 
                     <TableCell>
-                      <span className="font-mono text-xs font-semibold bg-slate-100 px-2 py-1 rounded text-slate-600 border border-slate-200">
+                      <span className="font-mono text-xs font-semibold bg-muted px-2 py-1 rounded text-muted-foreground border border-border">
                         {container.code}
                       </span>
                     </TableCell>
@@ -260,7 +260,7 @@ export default function ContainersTab() {
                       )}
                     </TableCell>
 
-                    <TableCell className="text-xs text-slate-500 font-mono uppercase">
+                    <TableCell className="text-xs text-muted-foreground font-mono uppercase">
                       {container.capColor || "—"}
                     </TableCell>
 
@@ -277,7 +277,7 @@ export default function ContainersTab() {
                               ? "Global containers cannot be edited"
                               : "Edit Container"
                           }
-                          className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors disabled:opacity-30 disabled:hover:bg-transparent">
+                          className="h-8 w-8 text-muted-foreground/70 hover:text-primary hover:bg-primary/10 transition-colors disabled:opacity-30 disabled:hover:bg-transparent">
                           <Pencil className="h-4 w-4" />
                         </Button>
 
@@ -296,7 +296,7 @@ export default function ContainersTab() {
                               ? "Global containers cannot be deleted"
                               : "Delete Container"
                           }
-                          className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-30 disabled:hover:bg-transparent">
+                          className="h-8 w-8 text-muted-foreground/70 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-30 disabled:hover:bg-transparent">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>

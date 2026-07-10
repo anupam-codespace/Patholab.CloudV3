@@ -84,8 +84,8 @@ export default function RegisterPage() {
     if (!formData.name.trim()) errors.name = "Full name is required";
     if (!formData.email.trim() || !/\S+@\S+\.\S+/.test(formData.email))
       errors.email = "Valid email is required";
-    if (!formData.phone.trim() || formData.phone.length < 10)
-      errors.phone = "Valid phone number is required";
+    if (formData.phone.trim() && !/^[6-9]\d{9}$/.test(formData.phone.trim()))
+      errors.phone = "Enter a valid 10-digit Indian mobile number (or leave blank)";
 
     if (formData.password.length < 8) {
       errors.password = "Password must be at least 8 characters";
@@ -244,7 +244,7 @@ export default function RegisterPage() {
 
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                  Phone Number <span className="text-red-500">*</span>
+                  Phone Number <span className="text-slate-400 text-xs font-normal">(optional)</span>
                 </label>
                 <div className="relative">
                   <Phone className="absolute left-3.5 top-3 h-5 w-5 text-gray-400" />

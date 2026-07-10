@@ -16,23 +16,23 @@ export default async function GlobalTestsListPage() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <Database className="h-6 w-6 text-blue-500" /> Global Test Catalog
           </h1>
-          <p className="text-slate-500 text-sm mt-1">
+          <p className="text-muted-foreground text-sm mt-1">
             Manage the master catalog available to all SaaS tenants.
           </p>
         </div>
         <Link href="/admin/global-tests/new">
-          <Button className="bg-blue-600 hover:bg-blue-700">
+          <Button className="bg-primary hover:bg-blue-700">
             <Plus className="h-4 w-4 mr-2" /> Add Global Test
           </Button>
         </Link>
       </div>
 
-      <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-card rounded-lg border border-border shadow-sm overflow-hidden">
         <table className="w-full text-sm text-left">
-          <thead className="bg-slate-50 text-xs uppercase text-slate-500 font-bold border-b border-slate-200">
+          <thead className="bg-muted/30 text-xs uppercase text-muted-foreground font-bold border-b border-border">
             <tr>
               <th className="px-6 py-4">Test Name & Code</th>
               <th className="px-6 py-4">Type</th>
@@ -45,15 +45,15 @@ export default async function GlobalTestsListPage() {
             {tests.map((test) => (
               <tr
                 key={test.id}
-                className="hover:bg-slate-50/50 transition-colors">
+                className="hover:bg-muted/50/50 transition-colors">
                 <td className="px-6 py-4">
                   <div className="font-bold text-slate-800">{test.name}</div>
-                  <div className="text-xs text-slate-500 font-mono mt-0.5">
+                  <div className="text-xs text-muted-foreground font-mono mt-0.5">
                     {test.code}
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  <Badge variant="outline" className="bg-white">
+                  <Badge variant="outline" className="bg-card">
                     {test.type}
                   </Badge>
                 </td>
@@ -66,7 +66,7 @@ export default async function GlobalTestsListPage() {
                       Active
                     </Badge>
                   ) : (
-                    <Badge className="bg-slate-100 text-slate-500 hover:bg-slate-100 border-none">
+                    <Badge className="bg-muted text-muted-foreground hover:bg-muted border-none">
                       Archived
                     </Badge>
                   )}
@@ -76,7 +76,7 @@ export default async function GlobalTestsListPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-50">
+                      className="h-8 w-8 p-0 text-primary hover:bg-primary/10">
                       <Edit className="h-4 w-4" />
                     </Button>
                   </Link>
@@ -87,7 +87,7 @@ export default async function GlobalTestsListPage() {
             ))}
             {tests.length === 0 && (
               <tr>
-                <td colSpan={5} className="p-8 text-center text-slate-500">
+                <td colSpan={5} className="p-8 text-center text-muted-foreground">
                   No global tests found.
                 </td>
               </tr>

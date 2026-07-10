@@ -33,9 +33,9 @@ function BarcodePrintContent() {
 
   if (loading) {
     return (
-      <div className="h-screen flex flex-col items-center justify-center bg-slate-50">
+      <div className="h-screen flex flex-col items-center justify-center bg-muted/30">
         <Loader2 className="animate-spin h-10 w-10 text-indigo-600 mb-4" />
-        <p className="text-sm font-medium text-slate-500 animate-pulse">
+        <p className="text-sm font-medium text-muted-foreground animate-pulse">
           Generating Labels...
         </p>
       </div>
@@ -44,10 +44,10 @@ function BarcodePrintContent() {
 
   if (!invoiceId || samples.length === 0) {
     return (
-      <div className="h-screen flex flex-col items-center justify-center bg-slate-50">
-        <AlertCircle className="h-12 w-12 text-slate-400 mb-4" />
+      <div className="h-screen flex flex-col items-center justify-center bg-muted/30">
+        <AlertCircle className="h-12 w-12 text-muted-foreground/70 mb-4" />
         <h2 className="text-xl font-bold text-slate-800">No Samples Found</h2>
-        <p className="text-slate-500 mb-6">
+        <p className="text-muted-foreground mb-6">
           No barcode labels are available for this request.
         </p>
       </div>
@@ -55,7 +55,7 @@ function BarcodePrintContent() {
   }
 
   return (
-    <div className="flex flex-col items-center p-4 sm:p-8 bg-slate-100 min-h-screen font-sans print:bg-white print:p-0 print:min-h-0 print:block">
+    <div className="flex flex-col items-center p-4 sm:p-8 bg-muted min-h-screen font-sans print:bg-card print:p-0 print:min-h-0 print:block">
       {/* --- STRICT PRINT CSS (Preserved 100%) --- */}
       <style jsx global>{`
         @media print {
@@ -112,14 +112,14 @@ function BarcodePrintContent() {
 
       {/* --- CONTROLS (Hidden when printing) --- */}
       <div className="mb-8 print:hidden flex flex-col items-center gap-6 w-full max-w-4xl z-10 relative">
-        <div className="bg-white/70 backdrop-blur-md p-6 rounded-2xl border border-slate-200/60 shadow-sm text-center flex flex-col items-center w-full">
+        <div className="bg-card/70 backdrop-blur-md p-6 rounded-2xl border border-slate-200/60 shadow-sm text-center flex flex-col items-center w-full">
           <div className="h-12 w-12 bg-indigo-50 rounded-xl flex items-center justify-center mb-4">
             <ScanLine className="h-6 w-6 text-indigo-600" />
           </div>
-          <h1 className="text-xl font-bold text-slate-900 mb-1">
+          <h1 className="text-xl font-bold text-foreground mb-1">
             Print Sample Labels
           </h1>
-          <p className="text-sm font-medium text-slate-500 mb-6 max-w-md">
+          <p className="text-sm font-medium text-muted-foreground mb-6 max-w-md">
             Load thermal label stock or A4 sticker sheets. Verify printer
             settings before proceeding.
           </p>
@@ -134,12 +134,12 @@ function BarcodePrintContent() {
       {/* --- PRINTABLE AREA (A4 Simulation for UI Preview) --- */}
       <div
         id="printable-area"
-        className="bg-white shadow-2xl print:shadow-none print:bg-transparent w-[210mm] min-h-[297mm] p-[10mm] print:p-0 flex flex-wrap content-start gap-[5mm] mx-auto rounded-sm relative z-0">
+        className="bg-card shadow-2xl print:shadow-none print:bg-transparent w-[210mm] min-h-[297mm] p-[10mm] print:p-0 flex flex-wrap content-start gap-[5mm] mx-auto rounded-sm relative z-0">
         {samples.map((sample) => (
           /* 📐 INDIVIDUAL STICKER (50mm x 25mm) */
           <div
             key={sample.id}
-            className="barcode-label relative w-[50mm] h-[25mm] border border-slate-300 rounded-sm bg-white text-black font-sans flex flex-col justify-between p-[1mm] box-border overflow-hidden">
+            className="barcode-label relative w-[50mm] h-[25mm] border border-border rounded-sm bg-card text-black font-sans flex flex-col justify-between p-[1mm] box-border overflow-hidden">
             {/* ROW 1: Header */}
             <div className="flex justify-between items-start pt-[1px] w-full">
               <div className="flex flex-col leading-none w-[70%]">
@@ -148,7 +148,7 @@ function BarcodePrintContent() {
                   {sample.patient.name.substring(0, 18)}
                 </span>
                 {/* Age/Date */}
-                <span className="text-[8px] text-slate-600 font-medium mt-[1px] block">
+                <span className="text-[8px] text-muted-foreground font-medium mt-[1px] block">
                   {sample.patient.age}/{sample.patient.gender?.charAt(0)} •{" "}
                   {format(
                     new Date(sample.collectedAt || new Date()),
@@ -201,7 +201,7 @@ export default function BarcodePage() {
   return (
     <Suspense
       fallback={
-        <div className="h-screen flex items-center justify-center bg-slate-50">
+        <div className="h-screen flex items-center justify-center bg-muted/30">
           <Loader2 className="animate-spin text-indigo-600 h-8 w-8" />
         </div>
       }>

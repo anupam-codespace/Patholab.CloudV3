@@ -132,7 +132,7 @@ export default function TestMasterDirectoryPage() {
         );
       default:
         return (
-          <Badge className="bg-blue-50 text-blue-700 hover:bg-blue-50 border border-blue-100 px-2 text-[10px] uppercase tracking-wider">
+          <Badge className="bg-primary/10 text-primary hover:bg-primary/10 border border-blue-100 px-2 text-[10px] uppercase tracking-wider">
             <TestTube2 className="h-3 w-3 mr-1" /> Single
           </Badge>
         );
@@ -140,19 +140,19 @@ export default function TestMasterDirectoryPage() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] bg-slate-50 font-sans relative overflow-hidden selection:bg-indigo-100">
+    <div className="flex flex-col h-[calc(100vh-4rem)] bg-muted/30 font-sans relative overflow-hidden selection:bg-indigo-100">
       {/* Decorative Background */}
       <div className="absolute top-0 inset-x-0 h-64 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-100/40 via-slate-50 to-transparent pointer-events-none z-0" />
 
       <div className="flex-1 flex flex-col p-4 sm:p-6 z-10 overflow-hidden max-w-[1600px] mx-auto w-full">
         {/* --- HEADER --- */}
-        <div className="flex-none mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/70 backdrop-blur-xl p-4 rounded-2xl border border-slate-200/60 shadow-sm">
+        <div className="flex-none mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-card/70 backdrop-blur-xl p-4 rounded-2xl border border-slate-200/60 shadow-sm">
           <div className="flex items-center gap-4 w-full sm:w-auto">
             <div className="h-10 w-10 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-inner shrink-0">
               <Microscope className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2 leading-tight">
+              <h1 className="text-xl font-bold text-foreground tracking-tight flex items-center gap-2 leading-tight">
                 Test Directory
                 <Badge
                   variant="secondary"
@@ -160,7 +160,7 @@ export default function TestMasterDirectoryPage() {
                   {totalRecords} Total
                 </Badge>
               </h1>
-              <p className="text-xs font-medium text-slate-500 mt-0.5">
+              <p className="text-xs font-medium text-muted-foreground mt-0.5">
                 Manage your laboratory's complete test menu and pricing.
               </p>
             </div>
@@ -179,15 +179,15 @@ export default function TestMasterDirectoryPage() {
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
             <Input
               placeholder="Search by Test Name or Code..."
-              className="pl-9 h-10 bg-white border-slate-200 rounded-xl focus:border-indigo-500 focus:ring-indigo-500/20 shadow-sm text-sm"
+              className="pl-9 h-10 bg-card border-border rounded-xl focus:border-indigo-500 focus:ring-indigo-500/20 shadow-sm text-sm"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
 
           <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
-            <SelectTrigger className="w-[200px] h-10 bg-white border-slate-200 rounded-xl shadow-sm text-sm font-medium">
-              <div className="flex items-center gap-2 text-slate-600">
+            <SelectTrigger className="w-[200px] h-10 bg-card border-border rounded-xl shadow-sm text-sm font-medium">
+              <div className="flex items-center gap-2 text-muted-foreground">
                 <FolderOpen className="h-4 w-4" />
                 <SelectValue placeholder="All Departments" />
               </div>
@@ -203,8 +203,8 @@ export default function TestMasterDirectoryPage() {
           </Select>
 
           <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-[180px] h-10 bg-white border-slate-200 rounded-xl shadow-sm text-sm font-medium">
-              <div className="flex items-center gap-2 text-slate-600">
+            <SelectTrigger className="w-[180px] h-10 bg-card border-border rounded-xl shadow-sm text-sm font-medium">
+              <div className="flex items-center gap-2 text-muted-foreground">
                 <Filter className="h-4 w-4" />
                 <SelectValue placeholder="Test Type" />
               </div>
@@ -218,10 +218,10 @@ export default function TestMasterDirectoryPage() {
         </div>
 
         {/* --- DATA TABLE --- */}
-        <Card className="flex-1 flex flex-col shadow-sm border-slate-200/80 overflow-hidden rounded-2xl bg-white">
+        <Card className="flex-1 flex flex-col shadow-sm border-slate-200/80 overflow-hidden rounded-2xl bg-card">
           <div className="flex-1 overflow-auto relative custom-scrollbar">
             <table className="w-full text-left border-collapse whitespace-nowrap">
-              <thead className="sticky top-0 z-20 bg-slate-50/90 backdrop-blur-md text-slate-500 font-bold uppercase tracking-wider text-[10px] border-b border-slate-200">
+              <thead className="sticky top-0 z-20 bg-slate-50/90 backdrop-blur-md text-muted-foreground font-bold uppercase tracking-wider text-[10px] border-b border-border">
                 <tr>
                   <th className="px-6 py-4 w-[100px]">Test Code</th>
                   <th className="px-4 py-4 min-w-[250px]">
@@ -238,7 +238,7 @@ export default function TestMasterDirectoryPage() {
                 {isLoading ? (
                   <tr>
                     <td colSpan={7} className="h-64 text-center">
-                      <div className="flex flex-col items-center justify-center text-slate-500 space-y-3">
+                      <div className="flex flex-col items-center justify-center text-muted-foreground space-y-3">
                         <Loader2 className="animate-spin h-8 w-8 text-indigo-600" />
                         <span className="text-xs font-medium uppercase tracking-widest animate-pulse">
                           Loading Catalog...
@@ -249,12 +249,12 @@ export default function TestMasterDirectoryPage() {
                 ) : tests.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="h-64 text-center">
-                      <div className="flex flex-col items-center justify-center text-slate-400 space-y-3">
-                        <div className="h-16 w-16 bg-slate-50 rounded-full flex items-center justify-center">
+                      <div className="flex flex-col items-center justify-center text-muted-foreground/70 space-y-3">
+                        <div className="h-16 w-16 bg-muted/30 rounded-full flex items-center justify-center">
                           <Search className="h-8 w-8 text-slate-300" />
                         </div>
                         <div>
-                          <p className="font-bold text-slate-600">
+                          <p className="font-bold text-muted-foreground">
                             No tests found
                           </p>
                           <p className="text-xs mt-1 max-w-xs mx-auto">
@@ -269,30 +269,30 @@ export default function TestMasterDirectoryPage() {
                   tests.map((test: any) => (
                     <tr
                       key={test.id}
-                      className="group hover:bg-slate-50/80 transition-colors">
+                      className="group hover:bg-muted/50/80 transition-colors">
                       <td className="px-6 py-4">
-                        <span className="font-mono text-xs font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded-md border border-slate-200">
+                        <span className="font-mono text-xs font-bold text-foreground/80 bg-muted px-2 py-1 rounded-md border border-border">
                           {test.code}
                         </span>
                       </td>
 
                       <td className="px-4 py-4">
                         <div className="flex flex-col min-w-0">
-                          <div className="font-bold text-slate-900 truncate flex items-center gap-2">
+                          <div className="font-bold text-foreground truncate flex items-center gap-2">
                             {test.name}
                             {getTestTypeBadge(test.type)}
                           </div>
                           {test.description && (
-                            <div className="text-[10px] text-slate-500 font-medium truncate max-w-[300px] mt-0.5">
+                            <div className="text-[10px] text-muted-foreground font-medium truncate max-w-[300px] mt-0.5">
                               {test.description}
                             </div>
                           )}
                         </div>
                       </td>
 
-                      <td className="px-4 py-4 text-slate-600 font-medium">
+                      <td className="px-4 py-4 text-muted-foreground font-medium">
                         {test.department?.name || (
-                          <span className="text-slate-400 italic">
+                          <span className="text-muted-foreground/70 italic">
                             Unassigned
                           </span>
                         )}
@@ -301,14 +301,14 @@ export default function TestMasterDirectoryPage() {
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-1.5">
                           <FlaskConical className="h-3.5 w-3.5 text-rose-400" />
-                          <span className="text-slate-700 font-medium text-xs">
+                          <span className="text-foreground/80 font-medium text-xs">
                             {test.sampleType?.name || "-"}
                           </span>
                         </div>
                       </td>
 
                       <td className="px-4 py-4 text-right">
-                        <span className="font-black text-slate-800 text-[15px]">
+                        <span className="font-black text-foreground text-[15px]">
                           {/* Using Number().toFixed() safely formats the decimal price */}
                           ₹{Number(test.price || 0).toFixed(2)}
                         </span>
@@ -322,7 +322,7 @@ export default function TestMasterDirectoryPage() {
                         ) : (
                           <Badge
                             variant="outline"
-                            className="text-slate-400 border-dashed text-[10px] px-2 uppercase tracking-wider font-bold bg-slate-50">
+                            className="text-muted-foreground/70 border-dashed text-[10px] px-2 uppercase tracking-wider font-bold bg-muted/30">
                             Inactive
                           </Badge>
                         )}
@@ -334,7 +334,7 @@ export default function TestMasterDirectoryPage() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 data-[state=open]:bg-indigo-50 data-[state=open]:text-indigo-600 transition-colors">
+                              className="h-8 w-8 rounded-lg text-muted-foreground/70 hover:text-indigo-600 hover:bg-indigo-50 data-[state=open]:bg-indigo-50 data-[state=open]:text-indigo-600 transition-colors">
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -343,18 +343,18 @@ export default function TestMasterDirectoryPage() {
                             className="w-48 p-1.5 shadow-xl border-slate-100 rounded-xl">
                             <Link
                               href={`/workspace/tests/${test.id}/parameters`}>
-                              <DropdownMenuItem className="cursor-pointer font-medium rounded-lg text-slate-700 py-2">
+                              <DropdownMenuItem className="cursor-pointer font-medium rounded-lg text-foreground/80 py-2">
                                 <Settings2 className="mr-2 h-4 w-4 text-indigo-500" />{" "}
                                 Config Parameters
                               </DropdownMenuItem>
                             </Link>
                             <Link href={`/workspace/tests/${test.id}`}>
-                              <DropdownMenuItem className="cursor-pointer font-medium rounded-lg text-slate-700 py-2">
+                              <DropdownMenuItem className="cursor-pointer font-medium rounded-lg text-foreground/80 py-2">
                                 <Edit className="mr-2 h-4 w-4 text-blue-500" />{" "}
                                 Edit Test Details
                               </DropdownMenuItem>
                             </Link>
-                            <DropdownMenuSeparator className="bg-slate-100 my-1" />
+                            <DropdownMenuSeparator className="bg-muted my-1" />
                             <DropdownMenuItem
                               className="text-rose-600 focus:text-rose-700 focus:bg-rose-50 cursor-pointer font-bold rounded-lg py-2"
                               onClick={() => handleDelete(test.id)}>
@@ -371,10 +371,10 @@ export default function TestMasterDirectoryPage() {
           </div>
 
           {/* --- PAGINATION FOOTER --- */}
-          <div className="flex-none px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4 bg-white z-20">
-            <div className="text-xs text-slate-500 font-semibold tracking-wide">
-              Showing Page <span className="text-slate-900">{page}</span> of{" "}
-              <span className="text-slate-900">{totalPages}</span>
+          <div className="flex-none px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4 bg-card z-20">
+            <div className="text-xs text-muted-foreground font-semibold tracking-wide">
+              Showing Page <span className="text-foreground">{page}</span> of{" "}
+              <span className="text-foreground">{totalPages}</span>
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -382,7 +382,7 @@ export default function TestMasterDirectoryPage() {
                 size="sm"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="h-9 px-4 rounded-xl text-xs font-bold border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
+                className="h-9 px-4 rounded-xl text-xs font-bold border-border text-muted-foreground hover:bg-muted/30 transition-colors">
                 <ChevronLeft className="h-4 w-4 mr-1" /> Prev
               </Button>
               <Button
@@ -390,7 +390,7 @@ export default function TestMasterDirectoryPage() {
                 size="sm"
                 onClick={() => setPage((p) => p + 1)}
                 disabled={page >= totalPages}
-                className="h-9 px-4 rounded-xl text-xs font-bold border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
+                className="h-9 px-4 rounded-xl text-xs font-bold border-border text-muted-foreground hover:bg-muted/30 transition-colors">
                 Next <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </div>

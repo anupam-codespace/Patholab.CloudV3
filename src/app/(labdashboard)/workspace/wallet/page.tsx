@@ -125,10 +125,10 @@ export default function WalletDashboard() {
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 flex items-center gap-2">
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
             <Wallet className="h-8 w-8 text-indigo-600" /> Wallet & Billing
           </h1>
-          <p className="text-slate-500 mt-1">
+          <p className="text-muted-foreground mt-1">
             Manage your pay-as-you-go clinical credits and invoices.
           </p>
         </div>
@@ -145,7 +145,7 @@ export default function WalletDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Main Balance Card */}
         <Card className="border-0 shadow-xl bg-gradient-to-br from-slate-900 via-indigo-950 to-indigo-900 text-white overflow-hidden relative rounded-2xl">
-          <div className="absolute top-0 right-0 p-32 bg-white opacity-5 rounded-full -mr-20 -mt-20 blur-3xl" />
+          <div className="absolute top-0 right-0 p-32 bg-card opacity-5 rounded-full -mr-20 -mt-20 blur-3xl" />
           <CardContent className="p-6 md:p-8 relative z-10 flex flex-col justify-between h-full space-y-6">
             <div className="flex justify-between items-start">
               <div className="space-y-1">
@@ -205,40 +205,40 @@ export default function WalletDashboard() {
         </Card>
 
         {/* Total Recharged */}
-        <Card className="border-slate-200 shadow-sm rounded-2xl bg-white">
+        <Card className="border-border shadow-sm rounded-2xl bg-card">
           <CardContent className="p-6 md:p-8 flex flex-col justify-center h-full">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-3 bg-emerald-100 text-emerald-600 rounded-xl">
                 <ArrowDownRight className="h-6 w-6" />
               </div>
-              <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">
+              <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
                 Total Recharged
               </p>
             </div>
-            <h3 className="text-3xl font-black text-slate-900">
+            <h3 className="text-3xl font-black text-foreground">
               {formatCurrency(metrics.totalRecharged)}
             </h3>
-            <p className="text-xs font-medium text-slate-400 mt-2">
+            <p className="text-xs font-medium text-muted-foreground/70 mt-2">
               Lifetime wallet additions & refunds
             </p>
           </CardContent>
         </Card>
 
         {/* Total Spent */}
-        <Card className="border-slate-200 shadow-sm rounded-2xl bg-white">
+        <Card className="border-border shadow-sm rounded-2xl bg-card">
           <CardContent className="p-6 md:p-8 flex flex-col justify-center h-full">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-3 bg-rose-100 text-rose-600 rounded-xl">
                 <ArrowUpRight className="h-6 w-6" />
               </div>
-              <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">
+              <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
                 Total Consumed
               </p>
             </div>
-            <h3 className="text-3xl font-black text-slate-900">
+            <h3 className="text-3xl font-black text-foreground">
               {formatCurrency(metrics.totalSpent)}
             </h3>
-            <p className="text-xs font-medium text-slate-400 mt-2">
+            <p className="text-xs font-medium text-muted-foreground/70 mt-2">
               Spent on clinical operations & setups
             </p>
           </CardContent>
@@ -246,7 +246,7 @@ export default function WalletDashboard() {
       </div>
 
       {/* TRANSACTION HISTORY WITH PAGINATION */}
-      <Card className="border-slate-200 shadow-sm rounded-2xl overflow-hidden bg-white">
+      <Card className="border-border shadow-sm rounded-2xl overflow-hidden bg-card">
         <CardHeader className="border-b border-slate-100 bg-slate-50/50 pb-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
@@ -263,7 +263,7 @@ export default function WalletDashboard() {
                   setStartDate(e.target.value);
                   setPage(1);
                 }}
-                className="bg-white md:w-40"
+                className="bg-card md:w-40"
               />
               <Input
                 type="date"
@@ -272,14 +272,14 @@ export default function WalletDashboard() {
                   setEndDate(e.target.value);
                   setPage(1);
                 }}
-                className="bg-white md:w-40"
+                className="bg-card md:w-40"
               />
 
               <div className="relative w-full md:w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <Input
                   placeholder="Search this page..."
-                  className="pl-9 rounded-full bg-white"
+                  className="pl-9 rounded-full bg-card"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -307,7 +307,7 @@ export default function WalletDashboard() {
               className="p-0 m-0 border-none outline-none"
             >
               {filteredTransactions.length === 0 ? (
-                <div className="p-12 text-center text-slate-500 flex flex-col items-center">
+                <div className="p-12 text-center text-muted-foreground flex flex-col items-center">
                   <Receipt className="h-12 w-12 text-slate-200 mb-3" />
                   <p>No transactions found.</p>
                 </div>
@@ -317,7 +317,7 @@ export default function WalletDashboard() {
                     <div
                       key={tx.id}
                       onClick={() => setSelectedTx(tx)}
-                      className="group flex flex-col md:flex-row md:items-center justify-between p-4 md:px-6 hover:bg-slate-50 cursor-pointer transition-colors"
+                      className="group flex flex-col md:flex-row md:items-center justify-between p-4 md:px-6 hover:bg-muted/30 cursor-pointer transition-colors"
                     >
                       {/* Left: Icon & Description */}
                       <div className="flex items-center gap-4 mb-3 md:mb-0">
@@ -331,10 +331,10 @@ export default function WalletDashboard() {
                           )}
                         </div>
                         <div>
-                          <p className="font-bold text-sm text-slate-900 line-clamp-1">
+                          <p className="font-bold text-sm text-foreground line-clamp-1">
                             {tx.description || tx.type}
                           </p>
-                          <div className="flex items-center gap-3 text-xs text-slate-500 mt-1 font-medium">
+                          <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1 font-medium">
                             <span className="flex items-center">
                               <Calendar className="h-3 w-3 mr-1" />{" "}
                               {format(new Date(tx.createdAt), "dd MMM yyyy")}
@@ -358,7 +358,7 @@ export default function WalletDashboard() {
                               : "-"}
                             {formatCurrency(tx.amount)}
                           </p>
-                          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mt-0.5">
+                          <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-wider mt-0.5">
                             Bal: {formatCurrency(tx.closingBalance)}
                           </p>
                         </div>
@@ -366,7 +366,7 @@ export default function WalletDashboard() {
                           <Button
                             variant="outline"
                             size="icon"
-                            className="h-8 w-8 rounded-full border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 shrink-0"
+                            className="h-8 w-8 rounded-full border-border text-muted-foreground hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 shrink-0"
                             onClick={(e) => handleViewInvoice(tx.id, e)}
                           >
                             <Eye className="h-4 w-4" />
@@ -381,7 +381,7 @@ export default function WalletDashboard() {
               {/* PAGINATION FOOTER */}
               {pagination && pagination.totalPages > 1 && (
                 <div className="flex items-center justify-between p-4 px-6 border-t border-slate-100 bg-slate-50/50">
-                  <p className="text-sm font-medium text-slate-500">
+                  <p className="text-sm font-medium text-muted-foreground">
                     Showing Page{" "}
                     <span className="font-bold text-slate-800">
                       {pagination.page}
@@ -423,7 +423,7 @@ export default function WalletDashboard() {
               <div
                 className={`p-6 text-white text-center ${selectedTx.type === "RECHARGE" || selectedTx.type === "REFUND" ? "bg-emerald-600" : "bg-rose-600"}`}
               >
-                <div className="mx-auto w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mb-4">
+                <div className="mx-auto w-12 h-12 bg-card/20 rounded-full flex items-center justify-center mb-4">
                   {selectedTx.type === "RECHARGE" ||
                   selectedTx.type === "REFUND" ? (
                     <ArrowDownRight className="h-6 w-6 text-white" />
@@ -447,41 +447,41 @@ export default function WalletDashboard() {
                 </p>
               </div>
 
-              <div className="p-6 space-y-6 bg-slate-50">
+              <div className="p-6 space-y-6 bg-muted/30">
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-500 font-medium">Date</span>
-                    <span className="text-slate-900 font-semibold">
+                    <span className="text-muted-foreground font-medium">Date</span>
+                    <span className="text-foreground font-semibold">
                       {format(new Date(selectedTx.createdAt), "dd MMM yyyy")}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-500 font-medium">Time</span>
-                    <span className="text-slate-900 font-semibold">
+                    <span className="text-muted-foreground font-medium">Time</span>
+                    <span className="text-foreground font-semibold">
                       {format(new Date(selectedTx.createdAt), "hh:mm:ss a")}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-500 font-medium">
+                    <span className="text-muted-foreground font-medium">
                       Closing Balance
                     </span>
-                    <span className="text-slate-900 font-bold">
+                    <span className="text-foreground font-bold">
                       {formatCurrency(selectedTx.closingBalance)}
                     </span>
                   </div>
                 </div>
 
-                <div className="p-4 bg-white border border-slate-200 rounded-xl space-y-2">
-                  <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">
+                <div className="p-4 bg-card border border-border rounded-xl space-y-2">
+                  <p className="text-xs text-muted-foreground/70 font-bold uppercase tracking-wider">
                     Description
                   </p>
-                  <p className="text-sm font-medium text-slate-700 leading-snug">
+                  <p className="text-sm font-medium text-foreground/80 leading-snug">
                     {selectedTx.description || selectedTx.type}
                   </p>
                   {selectedTx.type === "RECHARGE" && (
                     <div className="pt-3 mt-3 border-t border-slate-100 flex items-center gap-2">
                       <CreditCard className="h-4 w-4 text-slate-400" />
-                      <span className="text-xs text-slate-500 font-medium">
+                      <span className="text-xs text-muted-foreground font-medium">
                         Gateway: Razorpay
                       </span>
                       <Badge

@@ -44,8 +44,8 @@ export const ResultsTable = ({
             }}>
             <td className="p-2">Serum Creatinine</td>
             <td className="p-2 font-bold text-red-600">1.8</td>
-            <td className="p-2 text-slate-600">mg/dL</td>
-            <td className="p-2 text-slate-600">0.7 - 1.3</td>
+            <td className="p-2 text-muted-foreground">mg/dL</td>
+            <td className="p-2 text-muted-foreground">0.7 - 1.3</td>
           </tr>
           <tr
             style={{
@@ -54,8 +54,8 @@ export const ResultsTable = ({
             }}>
             <td className="p-2">Urea</td>
             <td className="p-2 font-bold">25.0</td>
-            <td className="p-2 text-slate-600">mg/dL</td>
-            <td className="p-2 text-slate-600">10.0 - 50.0</td>
+            <td className="p-2 text-muted-foreground">mg/dL</td>
+            <td className="p-2 text-muted-foreground">10.0 - 50.0</td>
           </tr>
         </tbody>
       </table>

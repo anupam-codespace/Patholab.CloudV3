@@ -36,7 +36,7 @@ const config = await prisma.systemConfig.findFirst();
   const scanDate = study.performedAt ? format(new Date(study.performedAt), "dd-MMM-yyyy hh:mm a") : "N/A";
 
   return (
-    <div className="min-h-screen bg-slate-200 py-8 print:py-0 print:bg-white font-sans text-black relative">
+    <div className="min-h-screen bg-slate-200 py-8 print:py-0 print:bg-card font-sans text-black relative">
       
       {/* 🚀 THE MAGIC FIX: Strict Print CSS overrides the Dashboard Layout */}
       <style dangerouslySetInnerHTML={{
@@ -74,7 +74,7 @@ const config = await prisma.systemConfig.findFirst();
       </div>
 
       {/* A4 PAPER CONTAINER - Notice the ID we added here! */}
-      <div id="printable-a4"className="w-full max-w-[210mm] min-h-[297mm] mx-auto bg-white shadow-xl relative overflow-hidden">
+      <div id="printable-a4"className="w-full max-w-[210mm] min-h-[297mm] mx-auto bg-card shadow-xl relative overflow-hidden">
         
         {/* HEADER: Dynamic Clinic / Hospital Details */}
         {/* HEADER: Dynamic Letterhead */}
@@ -143,7 +143,7 @@ const config = await prisma.systemConfig.findFirst();
 
           <div className="mt-8">
             <h3 className="font-black underline mb-2 uppercase">Impression:</h3>
-            <div className="whitespace-pre-wrap font-bold pl-2 bg-slate-50 border border-slate-200 p-3 rounded print:border-none print:bg-transparent">
+            <div className="whitespace-pre-wrap font-bold pl-2 bg-muted/30 border border-border p-3 rounded print:border-none print:bg-transparent">
               {study.report.impression}
             </div>
           </div>
@@ -170,7 +170,7 @@ const config = await prisma.systemConfig.findFirst();
         Chief Radiologist
       </p>
 
-      <p className="text-xs font-bold text-slate-600">
+      <p className="text-xs font-bold text-muted-foreground">
         Electronically Verified
       </p>
     </div>

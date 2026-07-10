@@ -13,16 +13,34 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, isLoading, isAuthenticated } = useAuth();
+  const { user, lab, isLoading, isAuthenticated } = useAuth();
   const router = useRouter();
   const [isChecking, setIsChecking] = useState(true);
 
-  // Sidebar toggle state
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  // ✅ Changed: Default to true, but handle actual screen size in useEffect
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
-  // ✅ ADDED: States to catch real data from your API route
+  // States to catch real data from your API route
   const [liveWalletBalance, setLiveWalletBalance] = useState<number>(0);
   const [liveLabName, setLiveLabName] = useState<string>("");
+
+  // ✅ ADDED: Auto-handle Sidebar state based on screen size (Mobile vs Desktop)
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1024) {
+        setIsSidebarOpen(false); // Auto-close on mobile/tablet
+      } else {
+        setIsSidebarOpen(true); // Auto-open on desktop
+      }
+    };
+
+    // Trigger on initial load
+    handleResize();
+
+    // Listen for window resize
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     const checkAccess = async () => {
@@ -39,12 +57,9 @@ export default function DashboardLayout({
 
           if (res.ok) {
             const data = await res.json();
-
-            // Extract the nested wallet object built in your API route
             const activeWallet = data.wallet;
 
             if (activeWallet) {
-              // ✅ 1. Safely catch the Lab Name from the API response
               if (activeWallet.labName) {
                 setLiveLabName(activeWallet.labName);
               }
@@ -53,12 +68,10 @@ export default function DashboardLayout({
                 activeWallet.status !== "NO_WALLET" &&
                 activeWallet.status !== "PENDING_SETUP"
               ) {
-                // ✅ 2. Safely catch the real Wallet Balance
                 if (activeWallet.balance !== undefined) {
                   setLiveWalletBalance(Number(activeWallet.balance));
                 }
 
-                // Expiration Check
                 if (activeWallet.validityEndDate) {
                   const expiryDate = new Date(activeWallet.validityEndDate);
                   if (expiryDate < new Date()) {
@@ -69,7 +82,6 @@ export default function DashboardLayout({
                   }
                 }
 
-                // Empty Balance Check
                 if (Number(activeWallet.balance) <= 0) {
                   toast.error(
                     "Wallet balance is empty. Paid actions like Patient Registration are currently locked. Please recharge.",
@@ -101,43 +113,50 @@ export default function DashboardLayout({
     return null;
   }
 
-  // ✅ Maps data to Header: Prioritizes data fetched directly from API, then user object, then fallback strings
   const headerUserData = {
     name: user?.name || "User",
     email: user?.email || "",
     avatar: user?.avatar || null,
     role: user?.role || "LAB_OWNER",
     employeeId: user?.employeeId || null,
-
-    // 👇 Injects the exact lab name & wallet balance caught from your API
     labName: liveLabName || user?.lab?.name || "Patholab Cloud",
     walletBalance: liveWalletBalance,
-
     currencySymbol: user?.lab?.currencySymbol || user?.currencySymbol || "₹",
     currentBranchName: user?.currentBranch?.name || "Main Branch",
     branches: user?.branches || user?.lab?.branches || [],
   };
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-slate-50">
+    <div className="flex h-screen w-full overflow-hidden bg-background">
+      
+      {/* ✅ ADDED: Mobile Overlay Backdrop. Clicking this closes the sidebar on mobile */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden transition-opacity"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       <Sidebar
         role={user.role}
         subscription={user.subscription || null}
-        activeModules={user?.lab?.activeModules || []} // ✅ Pass the DB array down
+        activeModules={(lab?.activeModules as string[]) ?? []}
         isOpen={isSidebarOpen}
         setIsOpen={setIsSidebarOpen}
       />
 
+      {/* ✅ CHANGED: Dynamic margin applied to push content ONLY when sidebar is open */}
       <div
         className={`flex flex-1 flex-col overflow-hidden relative transition-all duration-300 ease-in-out ${
           isSidebarOpen ? "lg:ml-[280px]" : "ml-0"
-        }`}>
+        }`}
+      >
         <Header
           userData={headerUserData}
           toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         />
 
-        <main className="flex-1 overflow-y-auto w-full relative z-0">
+        <main className="flex-1 overflow-y-auto w-full relative z-0 bg-muted/30">
           {children}
         </main>
       </div>

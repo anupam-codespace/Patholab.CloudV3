@@ -11,11 +11,17 @@ function generateOTP() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name, email, password, phone, labName } = body;
+    const { name, email, password, labName } = body;
+    const phone = body.phone?.trim() || null;
 
-    // 1. Validate all required fields
-    if (!name || !email || !password || !phone || !labName) {
+    // 1. Validate required fields (phone is optional)
+    if (!name || !email || !password || !labName) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+
+    // 1b. Validate phone format only if provided
+    if (phone && !/^[6-9]\d{9}$/.test(phone)) {
+      return NextResponse.json({ error: "Enter a valid 10-digit Indian mobile number (or leave blank)" }, { status: 400 });
     }
 
     // 2. Normalize the email to prevent case-sensitivity mismatches
@@ -47,10 +53,10 @@ export async function POST(req: NextRequest) {
           // Upsert Lab (In case they changed the lab name on their second attempt)
           const lab = await tx.lab.upsert({
             where: { ownerId: existingUser.id },
-            update: { name: labName, phone },
+            update: { name: labName, ...(phone ? { phone } : {}) },
             create: {
               name: labName,
-              phone,
+              phone: phone || "",
               email: normalizedEmail,
               ownerId: existingUser.id,
               isActive: true,
@@ -115,7 +121,7 @@ export async function POST(req: NextRequest) {
       const lab = await tx.lab.create({
         data: {
           name: labName,
-          phone,
+          phone: phone || "",
           email: normalizedEmail,
           ownerId: user.id,
           isActive: true,

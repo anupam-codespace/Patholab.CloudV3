@@ -95,7 +95,7 @@ export default async function VisualMapperPage() {
         <div className="space-y-3">
           <Link
             href="/workspace/analyzer/mappings"
-            className="group inline-flex items-center gap-2 text-slate-400 hover:text-indigo-600 transition-colors text-xs font-black uppercase tracking-widest">
+            className="group inline-flex items-center gap-2 text-muted-foreground/70 hover:text-indigo-600 transition-colors text-xs font-black uppercase tracking-widest">
             <ArrowLeft className="w-3 h-3 transition-transform group-hover:-translate-x-1" />
             Back to Dictionary
           </Link>
@@ -107,13 +107,13 @@ export default async function VisualMapperPage() {
                 Protocol Mapping
               </span>
             </div>
-            <h1 className="text-4xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-white">
+            <h1 className="text-4xl md:text-5xl font-black tracking-tight text-foreground dark:text-white">
               Visual{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">
                 Mapper
               </span>
             </h1>
-            <p className="text-slate-500 font-medium italic max-w-2xl">
+            <p className="text-muted-foreground font-medium italic max-w-2xl">
               Translate incoming hardware signals into clinical parameters. Data
               identified by the analyzer webhook is queued below for routing.
             </p>
@@ -121,15 +121,15 @@ export default async function VisualMapperPage() {
         </div>
 
         {/* System Stats Highlight */}
-        <div className="hidden lg:flex items-center gap-4 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
+        <div className="hidden lg:flex items-center gap-4 bg-card dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
           <div className="p-3 bg-emerald-50 rounded-xl">
             <Zap className="w-5 h-5 text-emerald-600" />
           </div>
           <div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">
+            <p className="text-[10px] font-black text-muted-foreground/70 uppercase tracking-tighter">
               Queue Status
             </p>
-            <p className="text-sm font-bold text-slate-900 dark:text-white uppercase tabular-nums">
+            <p className="text-sm font-bold text-foreground dark:text-white uppercase tabular-nums">
               {Object.keys(groupedQueue).length} Pending Batches
             </p>
           </div>
@@ -140,7 +140,7 @@ export default async function VisualMapperPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* LEFT COLUMN: THE VISUAL MAPPER CANVAS */}
         <div className="lg:col-span-8">
-          <div className="bg-white dark:bg-slate-900 rounded-[32px] p-2 md:p-6 shadow-[0_20px_50px_rgba(0,0,0,0.02)] border border-slate-100 dark:border-slate-800 min-h-[600px] relative overflow-hidden">
+          <div className="bg-card dark:bg-slate-900 rounded-[32px] p-2 md:p-6 shadow-[0_20px_50px_rgba(0,0,0,0.02)] border border-slate-100 dark:border-slate-800 min-h-[600px] relative overflow-hidden">
             {/* Subtle background decoration */}
             <div className="absolute top-0 right-0 p-8 opacity-[0.02] pointer-events-none">
               <Workflow className="w-64 h-64" />
@@ -164,7 +164,7 @@ export default async function VisualMapperPage() {
 
             <div className="space-y-6 relative z-10">
               <div className="flex gap-4">
-                <div className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center shrink-0 font-black text-xs">
+                <div className="h-8 w-8 rounded-full bg-card/10 flex items-center justify-center shrink-0 font-black text-xs">
                   1
                 </div>
                 <p className="text-sm text-slate-300 leading-relaxed">
@@ -176,7 +176,7 @@ export default async function VisualMapperPage() {
                 </p>
               </div>
               <div className="flex gap-4">
-                <div className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center shrink-0 font-black text-xs">
+                <div className="h-8 w-8 rounded-full bg-card/10 flex items-center justify-center shrink-0 font-black text-xs">
                   2
                 </div>
                 <p className="text-sm text-slate-300 leading-relaxed">
@@ -188,7 +188,7 @@ export default async function VisualMapperPage() {
                 </p>
               </div>
               <div className="flex gap-4">
-                <div className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center shrink-0 font-black text-xs">
+                <div className="h-8 w-8 rounded-full bg-card/10 flex items-center justify-center shrink-0 font-black text-xs">
                   3
                 </div>
                 <p className="text-sm text-slate-300 leading-relaxed">
@@ -199,8 +199,8 @@ export default async function VisualMapperPage() {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 rounded-[32px] p-8 border border-slate-100 dark:border-slate-800 shadow-sm">
-            <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-6 flex items-center gap-2">
+          <div className="bg-card dark:bg-slate-900 rounded-[32px] p-8 border border-slate-100 dark:border-slate-800 shadow-sm">
+            <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground/70 mb-6 flex items-center gap-2">
               <History className="w-4 h-4" /> Recent Handshakes
             </h3>
             <div className="space-y-4">
@@ -209,10 +209,10 @@ export default async function VisualMapperPage() {
                   key={i}
                   className="flex items-center justify-between border-b border-slate-50 dark:border-slate-800 pb-3 last:border-0">
                   <div>
-                    <p className="text-[11px] font-black text-slate-700 dark:text-slate-200 uppercase tracking-tighter">
+                    <p className="text-[11px] font-black text-foreground/80 dark:text-slate-200 uppercase tracking-tighter">
                       Code: {item.machineCode}
                     </p>
-                    <p className="text-[9px] text-slate-400 font-bold uppercase">
+                    <p className="text-[9px] text-muted-foreground/70 font-bold uppercase">
                       {item.analyzer.name}
                     </p>
                   </div>
@@ -225,7 +225,7 @@ export default async function VisualMapperPage() {
                 </div>
               ))}
               {unmappedQueue.length === 0 && (
-                <p className="text-xs text-slate-400 italic">
+                <p className="text-xs text-muted-foreground/70 italic">
                   No recent queue activity.
                 </p>
               )}

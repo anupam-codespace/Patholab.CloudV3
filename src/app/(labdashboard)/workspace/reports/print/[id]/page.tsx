@@ -232,12 +232,12 @@ export default function ClinicalReportPage() {
   if (isLoading)
     return (
       <div className="h-screen flex items-center justify-center">
-        <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
+        <Loader2 className="animate-spin h-8 w-8 text-primary" />
       </div>
     );
   if (!patient || groupedVisits.length === 0)
     return (
-      <div className="p-10 text-center text-slate-500">
+      <div className="p-10 text-center text-muted-foreground">
         No completed tests available for this patient.
       </div>
     );
@@ -373,7 +373,7 @@ export default function ClinicalReportPage() {
 
     const qrContent = (
       <div
-        className="flex flex-col items-center bg-white p-1 border shadow-sm"
+        className="flex flex-col items-center bg-card p-1 border shadow-sm"
         style={{
           width: config.qrCode.size,
           height: config.qrCode.size + (config.qrCode.showPageNumber ? 15 : 0),
@@ -387,7 +387,7 @@ export default function ClinicalReportPage() {
           }}
         />
         {config.qrCode.showPageNumber && (
-          <span className="text-[8px] mt-1 font-bold text-slate-800 whitespace-nowrap">
+          <span className="text-[8px] mt-1 font-bold text-foreground whitespace-nowrap">
             Page 1 of 1
           </span>
         )}
@@ -414,23 +414,23 @@ export default function ClinicalReportPage() {
   const m = config.layout.margins;
 
   return (
-    <div className="flex flex-col items-center py-10 bg-slate-900 min-h-screen print:bg-white print:py-0 print:block">
+    <div className="flex flex-col items-center py-10 bg-slate-900 min-h-screen print:bg-card print:py-0 print:block">
       {/* ============================================================== */}
       {/* TOP ACTION BAR (Latest Report) - 🚫 Hidden on Print */}
       {/* ============================================================== */}
-      <div className="w-[210mm] print:hidden flex flex-col md:flex-row justify-between items-center mb-6 sticky top-4 z-50 bg-white/95 backdrop-blur-md p-4 rounded-xl shadow-xl border border-blue-200 gap-4">
+      <div className="w-[210mm] print:hidden flex flex-col md:flex-row justify-between items-center mb-6 sticky top-4 z-50 bg-card/95 backdrop-blur-md p-4 rounded-xl shadow-xl border border-primary/20 gap-4">
         <div className="flex items-center gap-4">
-          <div className="bg-blue-600 p-3 rounded-lg text-white shadow-inner hidden md:block">
+          <div className="bg-primary p-3 rounded-lg text-white shadow-inner hidden md:block">
             <FileCheck2 size={28} />
           </div>
           <div>
-            <h1 className="text-xl font-black text-slate-800 flex items-center gap-2">
+            <h1 className="text-xl font-black text-foreground flex items-center gap-2">
               Latest Report{" "}
-              <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full uppercase tracking-wider">
+              <span className="bg-blue-100 text-primary text-xs px-2 py-0.5 rounded-full uppercase tracking-wider">
                 {latestVisit.invoiceNumber}
               </span>
             </h1>
-            <p className="text-sm font-medium text-slate-500 mt-1 flex items-center gap-1.5">
+            <p className="text-sm font-medium text-muted-foreground mt-1 flex items-center gap-1.5">
               <Calendar className="w-4 h-4" /> {latestVisit.formattedDate}
             </p>
           </div>
@@ -441,7 +441,7 @@ export default function ClinicalReportPage() {
           <Button
             variant="outline"
             onClick={() => setShowFlags(!showFlags)}
-            className={`h-11 rounded-lg font-bold border-2 transition-all mr-2 ${showFlags ? "bg-indigo-50 text-indigo-700 border-indigo-200" : "text-slate-600 border-slate-200"}`}>
+            className={`h-11 rounded-lg font-bold border-2 transition-all mr-2 ${showFlags ? "bg-indigo-50 text-indigo-700 border-indigo-200" : "text-muted-foreground border-border"}`}>
             <Activity className="w-4 h-4 md:mr-2" />
             <span className="hidden md:inline">
               {showFlags ? "Flags: ON" : "Flags: OFF"}
@@ -459,13 +459,13 @@ export default function ClinicalReportPage() {
           <Button
             variant="outline"
             onClick={() => handleEmailShare(latestVisit)}
-            className="text-blue-600 border-blue-200 hover:bg-blue-50 h-11 rounded-lg">
+            className="text-primary border-primary/20 hover:bg-primary/10 h-11 rounded-lg">
             <Mail className="w-4 h-4 md:mr-2" />
             <span className="hidden md:inline">Email</span>
           </Button>
 
           <Button
-            className="bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all h-11 rounded-lg font-bold"
+            className="bg-primary hover:bg-blue-700 text-white shadow-md transition-all h-11 rounded-lg font-bold"
             onClick={() => handleDownload(latestVisit)}
             disabled={isDownloading === latestVisit.invoiceId}>
             {isDownloading === latestVisit.invoiceId ? (
@@ -495,14 +495,14 @@ export default function ClinicalReportPage() {
                   <p className="text-slate-200 text-sm font-bold">
                     {visit.invoiceNumber}
                   </p>
-                  <p className="text-slate-400 text-xs mt-0.5">
+                  <p className="text-muted-foreground/70 text-xs mt-0.5">
                     {visit.formattedDate}
                   </p>
                 </div>
                 <Button
                   variant="secondary"
                   size="sm"
-                  className="bg-slate-600 hover:bg-blue-600 text-white border-0 h-8"
+                  className="bg-slate-600 hover:bg-primary text-white border-0 h-8"
                   onClick={() => handleDownload(visit)}
                   disabled={isDownloading === visit.invoiceId}>
                   {isDownloading === visit.invoiceId ? (
@@ -530,7 +530,7 @@ export default function ClinicalReportPage() {
           color: "#1e293b",
           boxSizing: "border-box",
         }}
-        className="bg-white shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative flex flex-col mx-auto overflow-hidden rounded-sm print:shadow-none print:m-0">
+        className="bg-card shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative flex flex-col mx-auto overflow-hidden rounded-sm print:shadow-none print:m-0">
         {config.layout.border.show && (
           <div
             className="absolute pointer-events-none"
@@ -597,7 +597,7 @@ export default function ClinicalReportPage() {
                         alt="Logo"
                       />
                     ) : (
-                      <div className="h-16 w-16 mr-4 bg-slate-50 flex items-center justify-center border font-bold rounded text-slate-400">
+                      <div className="h-16 w-16 mr-4 bg-muted/30 flex items-center justify-center border font-bold rounded text-slate-400">
                         {patient.lab?.name?.charAt(0) || "L"}
                       </div>
                     )}
@@ -766,7 +766,7 @@ export default function ClinicalReportPage() {
                         <div key={test.id} className="mb-6 w-full">
                           {config.bodyOptions?.groupDepartmentWise &&
                             test.testTemplate?.department?.name && (
-                              <div className="bg-slate-100 font-bold py-1.5 px-3 mb-4 text-[12px] uppercase text-center border-y border-slate-300 tracking-wider">
+                              <div className="bg-muted font-bold py-1.5 px-3 mb-4 text-[12px] uppercase text-center border-y border-border tracking-wider">
                                 {test.testTemplate.department.name}
                               </div>
                             )}
@@ -831,12 +831,12 @@ export default function ClinicalReportPage() {
                                   else flagStatus = "NORMAL";
                                 }
 
-                                let valColor = "text-slate-900";
+                                let valColor = "text-foreground";
                                 let icon = null;
 
                                 if (showFlags && flagStatus !== "NONE") {
                                   if (flagStatus === "LOW") {
-                                    valColor = "text-blue-600";
+                                    valColor = "text-primary";
                                     icon = (
                                       <ArrowDown
                                         className="w-3.5 h-3.5 inline ml-1.5"
@@ -883,11 +883,11 @@ export default function ClinicalReportPage() {
                                       className={`py-2.5 px-1 font-bold ${valColor}`}>
                                       {val} {icon}
                                     </td>
-                                    <td className="py-2.5 px-1 text-slate-500">
+                                    <td className="py-2.5 px-1 text-muted-foreground">
                                       {unt}
                                     </td>
                                     {config.bodyOptions.showBiologicalRef && (
-                                      <td className="py-2.5 px-1 text-slate-500 whitespace-pre-wrap leading-tight">
+                                      <td className="py-2.5 px-1 text-muted-foreground whitespace-pre-wrap leading-tight">
                                         {getReferenceRange(res, test, patient)}
                                       </td>
                                     )}
@@ -964,14 +964,14 @@ export default function ClinicalReportPage() {
                                   />
                                 )}
                               </div>
-                              <div className="w-full text-center border-t border-slate-300 pt-1">
-                                <p className="font-bold text-[11px] text-slate-900 whitespace-nowrap">
+                              <div className="w-full text-center border-t border-border pt-1">
+                                <p className="font-bold text-[11px] text-foreground whitespace-nowrap">
                                   {sig.name}
                                 </p>
-                                <p className="text-[9px] text-slate-600 whitespace-nowrap">
+                                <p className="text-[9px] text-muted-foreground whitespace-nowrap">
                                   {sig.qualifications}
                                 </p>
-                                <p className="font-bold text-[9px] text-slate-800 uppercase mt-0.5 whitespace-nowrap">
+                                <p className="font-bold text-[9px] text-foreground uppercase mt-0.5 whitespace-nowrap">
                                   {sig.title}
                                 </p>
                               </div>
@@ -986,7 +986,7 @@ export default function ClinicalReportPage() {
                 </div>
               )}
               <div
-                className="text-[9px] text-center mt-4 pb-2 pt-2 border-t border-slate-200"
+                className="text-[9px] text-center mt-4 pb-2 pt-2 border-t border-border"
                 style={{ color: secondaryColor }}
                 dangerouslySetInnerHTML={{ __html: config.footer.text || "" }}
               />

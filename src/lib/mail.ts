@@ -4,8 +4,13 @@
 // =========================================================================
 import { Resend } from 'resend';
 
-// Initialize Resend
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy-initialize Resend only when actually needed (prevents crash on module load if API key is missing)
+let _resend: Resend | null = null;
+function getResend(): Resend | null {
+  if (!process.env.RESEND_API_KEY) return null;
+  if (!_resend) _resend = new Resend(process.env.RESEND_API_KEY);
+  return _resend;
+}
 const SENDER_EMAIL = process.env.SENDER_EMAIL || 'Patholab.Cloud <noreply@patholab.cloud>';
 
 interface EmailOptions {
@@ -20,14 +25,19 @@ interface EmailOptions {
 // =========================================================================
 export async function sendEmail({ to, subject, html, text }: EmailOptions) {
   try {
+    const resend = getResend();
+    if (!resend) {
+      console.warn('[MAIL] RESEND_API_KEY not set — skipping email send to', to);
+      return { success: false, error: 'Email service not configured (RESEND_API_KEY missing)' };
+    }
     const data = await resend.emails.send({
       from: SENDER_EMAIL,
       to,
       subject,
       html,
-      text: text || subject, // Fallback text
+      text: text || subject,
     });
-    
+
     return { success: true, data };
   } catch (error) {
     console.error('[RESEND_EMAIL_ERROR]', error);

@@ -128,7 +128,7 @@ export default function LogisticsPage() {
       <div className="relative z-10 px-4 md:px-6 lg:px-8 max-w-7xl mx-auto space-y-6 lg:space-y-8 -mt-10 lg:-mt-14 animate-in slide-in-from-bottom-4 duration-500 delay-150 fill-mode-both">
         {/* --- STATS RIBBON --- */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-          <div className="bg-white p-5 rounded-2xl border border-zinc-200 shadow-sm flex flex-col">
+          <div className="bg-card p-5 rounded-2xl border border-zinc-200 shadow-sm flex flex-col">
             <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1">
               Total Staff
             </p>
@@ -139,7 +139,7 @@ export default function LogisticsPage() {
               <Truck className="h-6 w-6 text-indigo-600 mb-1" />
             </div>
           </div>
-          <div className="bg-white p-5 rounded-2xl border border-zinc-200 shadow-sm flex flex-col">
+          <div className="bg-card p-5 rounded-2xl border border-zinc-200 shadow-sm flex flex-col">
             <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1">
               Active Trips
             </p>
@@ -150,7 +150,7 @@ export default function LogisticsPage() {
               <AlertCircle className="h-6 w-6 text-rose-500 mb-1" />
             </div>
           </div>
-          <div className="bg-white p-5 rounded-2xl border border-zinc-200 shadow-sm flex flex-col">
+          <div className="bg-card p-5 rounded-2xl border border-zinc-200 shadow-sm flex flex-col">
             <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1">
               En Route
             </p>
@@ -161,7 +161,7 @@ export default function LogisticsPage() {
               <Map className="h-6 w-6 text-blue-500 mb-1" />
             </div>
           </div>
-          <div className="bg-white p-5 rounded-2xl border border-zinc-200 shadow-sm flex flex-col">
+          <div className="bg-card p-5 rounded-2xl border border-zinc-200 shadow-sm flex flex-col">
             <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1">
               Completed
             </p>
@@ -187,27 +187,27 @@ export default function LogisticsPage() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search address or client..."
-                    className="w-full pl-9 pr-4 py-2.5 bg-white border border-zinc-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                    className="w-full pl-9 pr-4 py-2.5 bg-card border border-zinc-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
                   />
                 </div>
               </div>
 
               <div className="space-y-4">
                 {filteredTasks.length === 0 ? (
-                  <div className="bg-white rounded-2xl border-2 border-dashed border-zinc-200 p-12 text-center text-zinc-400 font-bold">
+                  <div className="bg-card rounded-2xl border-2 border-dashed border-zinc-200 p-12 text-center text-zinc-400 font-bold">
                     No active collection trips found in database.
                   </div>
                 ) : (
                   filteredTasks.map((task: any) => (
                     <div
                       key={task.id}
-                      className="bg-white rounded-2xl border border-zinc-200 p-5 lg:p-6 shadow-sm hover:border-indigo-200 hover:shadow-md transition-all group flex flex-col sm:flex-row gap-5">
+                      className="bg-card rounded-2xl border border-zinc-200 p-5 lg:p-6 shadow-sm hover:border-indigo-200 hover:shadow-md transition-all group flex flex-col sm:flex-row gap-5">
                       <div className="flex-1 space-y-4">
                         <div className="flex items-start justify-between">
                           <div>
                             <div className="flex items-center gap-2 mb-1.5">
                               <span
-                                className={`px-2.5 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest ${task.type === "HOME_COLLECTION" ? "bg-violet-50 text-violet-700" : "bg-blue-50 text-blue-700"}`}>
+                                className={`px-2.5 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest ${task.type === "HOME_COLLECTION" ? "bg-violet-50 text-violet-700" : "bg-primary/10 text-primary"}`}>
                                 {task.type.replace("_", " ")}
                               </span>
                               <span className="text-xs font-mono font-bold text-zinc-400">
@@ -282,7 +282,7 @@ export default function LogisticsPage() {
 
                   {/* CUSTOM FILTER DROPDOWN */}
                   {showFilterMenu && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white border border-zinc-200 rounded-xl shadow-xl z-50 p-1.5 animate-in fade-in zoom-in-95 duration-200">
+                    <div className="absolute right-0 mt-2 w-48 bg-card border border-zinc-200 rounded-xl shadow-xl z-50 p-1.5 animate-in fade-in zoom-in-95 duration-200">
                       <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-3 py-2 border-b border-zinc-100 mb-1">
                         Filter Staff By
                       </p>
@@ -315,7 +315,7 @@ export default function LogisticsPage() {
                 </div>
               </div>
 
-              <div className="bg-white rounded-3xl border border-zinc-200 shadow-sm overflow-hidden flex flex-col h-[600px]">
+              <div className="bg-card rounded-3xl border border-zinc-200 shadow-sm overflow-hidden flex flex-col h-[600px]">
                 <div className="overflow-y-auto p-2">
                   {filteredFleet.length === 0 ? (
                     <div className="p-8 text-center text-sm font-medium text-zinc-400">
@@ -360,7 +360,7 @@ export default function LogisticsPage() {
             </div>
           </div>
         ) : (
-          <div className="bg-white rounded-3xl border border-zinc-200 shadow-sm overflow-hidden h-[600px] flex items-center justify-center flex-col gap-4 relative">
+          <div className="bg-card rounded-3xl border border-zinc-200 shadow-sm overflow-hidden h-[600px] flex items-center justify-center flex-col gap-4 relative">
             <Map className="h-16 w-16 text-zinc-200 absolute opacity-20 scale-[5] right-10 bottom-10" />
             <MapPin className="h-12 w-12 text-zinc-300 animate-bounce" />
             <h2 className="text-2xl font-black text-zinc-800 tracking-tight">
@@ -383,7 +383,7 @@ export default function LogisticsPage() {
           <div
             className="absolute inset-0 bg-zinc-950/60 backdrop-blur-md transition-opacity"
             onClick={() => setSelectedTask(null)}></div>
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden relative z-10 animate-in zoom-in-95 duration-300">
+          <div className="bg-card rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden relative z-10 animate-in zoom-in-95 duration-300">
             <div className="p-6 md:p-8 border-b bg-indigo-50/50">
               <h2 className="text-2xl font-black text-zinc-900 tracking-tight mb-1">
                 Dispatch Assignment
@@ -414,7 +414,7 @@ export default function LogisticsPage() {
                 </Label>
                 <select
                   required
-                  className="w-full bg-white border border-zinc-200 rounded-xl p-4 text-sm font-bold text-zinc-900 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm appearance-none cursor-pointer">
+                  className="w-full bg-card border border-zinc-200 rounded-xl p-4 text-sm font-bold text-zinc-900 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm appearance-none cursor-pointer">
                   <option value="">-- Choose staff member --</option>
                   {fleet
                     .filter((f: any) => f.status === "AVAILABLE")

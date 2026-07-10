@@ -18,7 +18,7 @@ export const Header = ({
       ref={connectors.connect}
       className="flex items-center border-b-3 pb-3 mb-4"
       style={{ borderBottomColor: themeColor }}>
-      <div className="w-16 h-16 bg-slate-200 rounded flex items-center justify-center mr-4 text-slate-400 text-xs">
+      <div className="w-16 h-16 bg-slate-200 rounded flex items-center justify-center mr-4 text-muted-foreground/70 text-xs">
         LOGO
       </div>
       <div>
@@ -27,7 +27,7 @@ export const Header = ({
           style={{ color: themeColor }}>
           {labName}
         </h1>
-        <p className="text-sm text-slate-600">{tagline}</p>
+        <p className="text-sm text-muted-foreground">{tagline}</p>
       </div>
     </div>
   );

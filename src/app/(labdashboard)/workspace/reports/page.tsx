@@ -203,7 +203,7 @@ export default function ReportsDispatchPage() {
     switch (status) {
       case "DRAFT":
         return (
-          <Badge variant="secondary" className="text-slate-500">
+          <Badge variant="secondary" className="text-muted-foreground">
             Draft
           </Badge>
         );
@@ -211,7 +211,7 @@ export default function ReportsDispatchPage() {
         return (
           <Badge
             variant="outline"
-            className="bg-blue-50 text-blue-700 border-blue-200">
+            className="bg-primary/10 text-primary border-primary/20">
             Generated
           </Badge>
         );
@@ -255,7 +255,7 @@ export default function ReportsDispatchPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">
             Report Dispatch
           </h1>
           <p className="text-base text-muted-foreground mt-1">
@@ -271,7 +271,7 @@ export default function ReportsDispatchPage() {
           />
           <Input
             placeholder="Search by patient name or phone..."
-            className="pl-10 focus-visible:ring-blue-500 shadow-sm border-slate-300"
+            className="pl-10 focus-visible:ring-primary shadow-sm border-slate-300"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -279,23 +279,23 @@ export default function ReportsDispatchPage() {
       </div>
 
       {/* Main Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="bg-slate-50 border-b border-slate-200 hover:bg-slate-50">
-              <TableHead className="font-semibold text-slate-600">
+            <TableRow className="bg-muted/30 border-b border-border hover:bg-muted/30">
+              <TableHead className="font-semibold text-muted-foreground">
                 Patient Details
               </TableHead>
-              <TableHead className="font-semibold text-slate-600">
+              <TableHead className="font-semibold text-muted-foreground">
                 Date Generated
               </TableHead>
-              <TableHead className="font-semibold text-slate-600">
+              <TableHead className="font-semibold text-muted-foreground">
                 Version
               </TableHead>
-              <TableHead className="font-semibold text-slate-600">
+              <TableHead className="font-semibold text-muted-foreground">
                 Status
               </TableHead>
-              <TableHead className="text-right font-semibold text-slate-600">
+              <TableHead className="text-right font-semibold text-muted-foreground">
                 Actions
               </TableHead>
             </TableRow>
@@ -305,7 +305,7 @@ export default function ReportsDispatchPage() {
               <TableRow>
                 <TableCell
                   colSpan={5}
-                  className="text-center h-32 text-slate-500 animate-pulse">
+                  className="text-center h-32 text-muted-foreground animate-pulse">
                   Loading reports...
                 </TableCell>
               </TableRow>
@@ -313,7 +313,7 @@ export default function ReportsDispatchPage() {
               <TableRow>
                 <TableCell
                   colSpan={5}
-                  className="text-center h-32 text-slate-500">
+                  className="text-center h-32 text-muted-foreground">
                   No reports found.
                 </TableCell>
               </TableRow>
@@ -321,12 +321,12 @@ export default function ReportsDispatchPage() {
               filteredReports.map((report) => (
                 <TableRow
                   key={report.id}
-                  className="hover:bg-slate-50/80 transition-colors group">
+                  className="hover:bg-muted/50/80 transition-colors group">
                   <TableCell>
-                    <div className="font-bold text-slate-900 text-sm">
+                    <div className="font-bold text-foreground text-sm">
                       {report.patient.name}
                     </div>
-                    <div className="text-xs text-slate-500 mt-0.5">
+                    <div className="text-xs text-muted-foreground mt-0.5">
                       {report.patient.phone}
                     </div>
                   </TableCell>
@@ -336,7 +336,7 @@ export default function ReportsDispatchPage() {
                   </TableCell>
 
                   <TableCell>
-                    <span className="inline-flex items-center justify-center bg-slate-100 text-slate-600 font-mono text-xs font-bold px-2 py-1 rounded border border-slate-200">
+                    <span className="inline-flex items-center justify-center bg-muted text-muted-foreground font-mono text-xs font-bold px-2 py-1 rounded border border-border">
                       v{report.version}.0
                     </span>
                     {report.isAmended && (
@@ -356,13 +356,13 @@ export default function ReportsDispatchPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="border-slate-200 text-slate-700 hover:bg-slate-100 w-[110px]"
+                        className="border-border text-foreground/80 hover:bg-muted w-[110px]"
                         onClick={() => handleDownload(report)}
                         disabled={downloadingId === report.id}>
                         {downloadingId === report.id ? (
-                          <Loader2 className="h-4 w-4 mr-2 text-blue-600 animate-spin" />
+                          <Loader2 className="h-4 w-4 mr-2 text-primary animate-spin" />
                         ) : (
-                          <Download className="h-4 w-4 mr-2 text-blue-600" />
+                          <Download className="h-4 w-4 mr-2 text-primary" />
                         )}
                         Download
                       </Button>
@@ -372,7 +372,7 @@ export default function ReportsDispatchPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => setAmendReport(report)}
-                        className="text-slate-400 hover:text-amber-600 hover:bg-amber-50 h-9 w-9"
+                        className="text-muted-foreground/70 hover:text-amber-600 hover:bg-amber-50 h-9 w-9"
                         title="Amend Report">
                         <FileEdit className="h-4 w-4" />
                       </Button>
@@ -382,7 +382,7 @@ export default function ReportsDispatchPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => setShareReport(report)}
-                        className="text-slate-400 hover:text-green-600 hover:bg-green-50 h-9 w-9"
+                        className="text-muted-foreground/70 hover:text-green-600 hover:bg-green-50 h-9 w-9"
                         title="Share Verification Link">
                         <Share2 className="h-4 w-4" />
                       </Button>
@@ -425,9 +425,9 @@ export default function ReportsDispatchPage() {
             <Button
               size="lg"
               variant="outline"
-              className="w-full border-2 border-blue-600 text-blue-700 hover:bg-blue-50 text-lg h-16"
+              className="w-full border-2 border-blue-600 text-primary hover:bg-primary/10 text-lg h-16"
               onClick={() => shareReport && handleEmailShare(shareReport)}>
-              <Mail className="mr-3 h-6 w-6 text-blue-600" /> Send via Email
+              <Mail className="mr-3 h-6 w-6 text-primary" /> Send via Email
             </Button>
           </div>
         </DialogContent>
@@ -449,7 +449,7 @@ export default function ReportsDispatchPage() {
             <DialogTitle className="text-xl text-amber-700 flex items-center gap-2">
               <AlertCircle className="w-5 h-5" /> Amend Medical Report
             </DialogTitle>
-            <DialogDescription className="text-slate-600 mt-2">
+            <DialogDescription className="text-muted-foreground mt-2">
               You are about to unlock report{" "}
               <strong>v{amendReport?.version}.0</strong> for{" "}
               {amendReport?.patient.name}. This will increment the version to{" "}
@@ -468,7 +468,7 @@ export default function ReportsDispatchPage() {
                 placeholder="e.g., Corrected typo in clinical notes, re-ran sample for verification..."
                 value={amendmentReason}
                 onChange={(e) => setAmendmentReason(e.target.value)}
-                className="min-h-[100px] border-slate-300 focus-visible:ring-amber-500"
+                className="min-h-[100px] border-border focus-visible:ring-amber-500"
               />
             </div>
           </div>

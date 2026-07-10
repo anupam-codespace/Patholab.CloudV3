@@ -82,7 +82,7 @@ export function FilterSheet({
         <Button
           variant="outline"
           size="icon"
-          className={`h-9 w-9 shrink-0 bg-white ${hasActiveFilters ? "border-blue-600 text-blue-600" : "border-slate-200 text-slate-500"}`}>
+          className={`h-9 w-9 shrink-0 bg-card ${hasActiveFilters ? "border-blue-600 text-primary" : "border-border text-muted-foreground"}`}>
           <Filter className="h-4 w-4" />
         </Button>
       </SheetTrigger>
@@ -98,7 +98,7 @@ export function FilterSheet({
         <div className="flex-1 overflow-y-auto py-6 space-y-6">
           {config.map((field) => (
             <div key={field.id} className="space-y-2">
-              <Label className="text-xs font-bold uppercase text-slate-500">
+              <Label className="text-xs font-bold uppercase text-muted-foreground">
                 {field.label}
               </Label>
 
@@ -173,13 +173,13 @@ export function FilterSheet({
 
         <SheetFooter className="border-t pt-4 flex-col gap-2 sm:flex-col sm:space-x-0">
           <Button
-            className="w-full bg-blue-600 hover:bg-blue-700"
+            className="w-full bg-primary hover:bg-blue-700"
             onClick={handleApply}>
             Apply Filters
           </Button>
           <Button
             variant="ghost"
-            className="w-full text-slate-500"
+            className="w-full text-muted-foreground"
             onClick={handleReset}>
             Reset All
           </Button>

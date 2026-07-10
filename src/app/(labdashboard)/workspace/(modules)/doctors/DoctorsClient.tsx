@@ -221,13 +221,13 @@ export default function DoctorsClient() {
               Network Management
             </span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-4xl md:text-5xl font-black tracking-tight text-foreground dark:text-white">
             Referral{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">
               Partners
             </span>
           </h1>
-          <p className="text-slate-500 font-medium italic">
+          <p className="text-muted-foreground font-medium italic">
             patholab.cloud — Managing B2B Physician Relations
           </p>
         </div>
@@ -248,12 +248,12 @@ export default function DoctorsClient() {
           placeholder="Search by name, specialization, or phone..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full h-14 pl-12 pr-6 bg-white dark:bg-slate-900 border-none shadow-sm rounded-2xl text-lg focus:ring-2 focus:ring-indigo-500/20 transition-all outline-none font-medium placeholder:text-slate-300"
+          className="w-full h-14 pl-12 pr-6 bg-card dark:bg-slate-900 border-none shadow-sm rounded-2xl text-lg focus:ring-2 focus:ring-indigo-500/20 transition-all outline-none font-medium placeholder:text-slate-300"
         />
       </div>
 
       {/* MAIN TABLE CONTAINER */}
-      <div className="bg-white dark:bg-slate-900 rounded-[32px] p-2 shadow-[0_20px_50px_rgba(0,0,0,0.04)] border border-slate-100 dark:border-slate-800 overflow-hidden">
+      <div className="bg-card dark:bg-slate-900 rounded-[32px] p-2 shadow-[0_20px_50px_rgba(0,0,0,0.04)] border border-slate-100 dark:border-slate-800 overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader className="bg-slate-50/50 dark:bg-slate-800/30">
@@ -280,7 +280,7 @@ export default function DoctorsClient() {
                 <TableRow>
                   <TableCell
                     colSpan={5}
-                    className="text-center py-24 text-slate-400 italic font-medium">
+                    className="text-center py-24 text-muted-foreground/70 italic font-medium">
                     Accessing physician registry...
                   </TableCell>
                 </TableRow>
@@ -288,7 +288,7 @@ export default function DoctorsClient() {
                 <TableRow>
                   <TableCell
                     colSpan={5}
-                    className="text-center py-24 text-slate-400 italic font-medium">
+                    className="text-center py-24 text-muted-foreground/70 italic font-medium">
                     No partners found in this segment.
                   </TableCell>
                 </TableRow>
@@ -296,14 +296,14 @@ export default function DoctorsClient() {
                 filteredDoctors.map((doc) => (
                   <TableRow
                     key={doc.id}
-                    className="group border-slate-50 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                    className="group border-slate-50 dark:border-slate-800 hover:bg-muted/30 dark:hover:bg-slate-800/40 transition-colors">
                     <TableCell className="px-6 py-5">
                       <div className="flex items-center gap-4">
                         <div className="h-12 w-12 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110">
                           <Stethoscope className="h-6 w-6" />
                         </div>
                         <div>
-                          <div className="font-black text-slate-900 dark:text-white tracking-tight">
+                          <div className="font-black text-foreground dark:text-white tracking-tight">
                             {doc.name}
                           </div>
                           <div className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">
@@ -314,11 +314,11 @@ export default function DoctorsClient() {
                     </TableCell>
                     <TableCell>
                       <div className="space-y-1">
-                        <div className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                        <div className="text-sm font-bold text-foreground/80 dark:text-slate-300 flex items-center gap-2">
                           <Phone className="h-3 w-3 opacity-30" />{" "}
                           {doc.phone || "N/A"}
                         </div>
-                        <div className="text-xs font-medium text-slate-400 flex items-center gap-2">
+                        <div className="text-xs font-medium text-muted-foreground/70 flex items-center gap-2">
                           <MapPin className="h-3 w-3 opacity-30" />{" "}
                           {doc.clinic || "Private Clinic"}
                         </div>
@@ -328,7 +328,7 @@ export default function DoctorsClient() {
                       <div className="flex flex-col items-start gap-2">
                         <Badge
                           variant="outline"
-                          className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 h-7 px-3 text-[10px] font-black uppercase tracking-tighter">
+                          className="bg-card dark:bg-slate-800 border-border dark:border-slate-700 h-7 px-3 text-[10px] font-black uppercase tracking-tighter">
                           {doc.commissionType === "PERCENTAGE" ? (
                             <Percent className="h-3 w-3 mr-1.5 text-indigo-500" />
                           ) : (
@@ -348,7 +348,7 @@ export default function DoctorsClient() {
                     </TableCell>
                     <TableCell>
                       <div className="space-y-1">
-                        <div className="font-black text-slate-900 dark:text-white tabular-nums text-sm">
+                        <div className="font-black text-foreground dark:text-white tabular-nums text-sm">
                           {doc._count?.tests || 0} Cases
                         </div>
                         <div className="text-[10px] font-bold text-emerald-600 uppercase tracking-tighter italic">
@@ -369,7 +369,7 @@ export default function DoctorsClient() {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleEdit(doc)}
-                          className="h-10 w-10 rounded-xl text-slate-300 hover:text-blue-600 hover:bg-blue-50 transition-all">
+                          className="h-10 w-10 rounded-xl text-slate-300 hover:text-primary hover:bg-primary/10 transition-all">
                           <Pencil className="h-5 w-5" />
                         </Button>
                         <Button
@@ -391,25 +391,25 @@ export default function DoctorsClient() {
 
       {/* VIEW MODAL (Ledger) */}
       <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
-        <DialogContent className="max-w-4xl p-0 bg-white dark:bg-slate-950 overflow-hidden border-none shadow-2xl rounded-[32px]">
+        <DialogContent className="max-w-4xl p-0 bg-card dark:bg-slate-950 overflow-hidden border-none shadow-2xl rounded-[32px]">
           <div className="bg-slate-900 p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div className="flex items-center gap-5">
-              <div className="h-16 w-16 bg-white/10 text-indigo-400 rounded-[22px] flex items-center justify-center shadow-inner">
+              <div className="h-16 w-16 bg-card/10 text-indigo-400 rounded-[22px] flex items-center justify-center shadow-inner">
                 <Stethoscope className="h-8 w-8" />
               </div>
               <div>
                 <DialogTitle className="text-white text-2xl font-black tracking-tight">
                   {viewingDoctor?.name}
                 </DialogTitle>
-                <DialogDescription className="text-slate-400 font-medium">
+                <DialogDescription className="text-muted-foreground/70 font-medium">
                   {viewingDoctor?.specialization} • {viewingDoctor?.clinic}
                 </DialogDescription>
               </div>
             </div>
 
             <div className="flex gap-4">
-              <div className="bg-white/5 border border-white/10 px-6 py-3 rounded-2xl backdrop-blur-md">
-                <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest mb-1">
+              <div className="bg-card/5 border border-white/10 px-6 py-3 rounded-2xl backdrop-blur-md">
+                <p className="text-[9px] text-muted-foreground/70 font-black uppercase tracking-widest mb-1">
                   Total Cases
                 </p>
                 <p className="text-xl font-black text-white tabular-nums">
@@ -430,14 +430,14 @@ export default function DoctorsClient() {
           <div className="p-8">
             <div className="flex items-center gap-3 mb-6">
               <Activity className="w-5 h-5 text-indigo-500" />
-              <h3 className="text-sm font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest">
+              <h3 className="text-sm font-black text-foreground dark:text-slate-200 uppercase tracking-widest">
                 Transaction Ledger
               </h3>
             </div>
 
-            <div className="bg-slate-50 dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 overflow-hidden max-h-[400px] overflow-y-auto custom-scrollbar shadow-inner">
+            <div className="bg-muted/30 dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 overflow-hidden max-h-[400px] overflow-y-auto custom-scrollbar shadow-inner">
               <Table>
-                <TableHeader className="sticky top-0 bg-slate-100 dark:bg-slate-800 z-10">
+                <TableHeader className="sticky top-0 bg-muted dark:bg-slate-800 z-10">
                   <TableRow className="border-none">
                     <TableHead className="text-[10px] font-black uppercase tracking-widest py-4">
                       Timestamp
@@ -461,7 +461,7 @@ export default function DoctorsClient() {
                     <TableRow>
                       <TableCell
                         colSpan={5}
-                        className="text-center py-20 text-slate-400 italic">
+                        className="text-center py-20 text-muted-foreground/70 italic">
                         No activity logs recorded.
                       </TableCell>
                     </TableRow>
@@ -469,22 +469,22 @@ export default function DoctorsClient() {
                     viewingDoctor?.commissions?.map((comm: any) => (
                       <TableRow
                         key={comm.id}
-                        className="border-slate-50 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-800/50 transition-colors">
-                        <TableCell className="text-[11px] font-bold text-slate-400 tabular-nums py-4">
+                        className="border-slate-50 dark:border-slate-800 hover:bg-card dark:hover:bg-slate-800/50 transition-colors">
+                        <TableCell className="text-[11px] font-bold text-muted-foreground/70 tabular-nums py-4">
                           {new Date(comm.test.createdAt).toLocaleDateString()}
                         </TableCell>
-                        <TableCell className="font-black text-sm text-slate-800 dark:text-slate-200">
+                        <TableCell className="font-black text-sm text-foreground dark:text-slate-200">
                           {comm.test.patient?.name || "Anonymous"}
                         </TableCell>
                         <TableCell>
-                          <div className="text-xs font-bold text-slate-700 dark:text-slate-400">
+                          <div className="text-xs font-bold text-foreground/80 dark:text-slate-400">
                             {comm.test.testName}
                           </div>
-                          <div className="text-[9px] font-mono text-slate-400 uppercase">
+                          <div className="text-[9px] font-mono text-muted-foreground/70 uppercase">
                             {comm.test.testNumber}
                           </div>
                         </TableCell>
-                        <TableCell className="text-right font-black text-slate-900 dark:text-white tabular-nums">
+                        <TableCell className="text-right font-black text-foreground dark:text-white tabular-nums">
                           ₹{comm.amount.toLocaleString()}
                         </TableCell>
                         <TableCell className="text-center">
@@ -510,9 +510,9 @@ export default function DoctorsClient() {
 
       {/* ADD / EDIT MODAL */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl p-0 bg-white dark:bg-slate-950 overflow-hidden border-none shadow-2xl rounded-[32px]">
+        <DialogContent className="max-w-2xl p-0 bg-card dark:bg-slate-950 overflow-hidden border-none shadow-2xl rounded-[32px]">
           <div className="bg-indigo-600 p-8 flex items-center gap-5">
-            <div className="h-14 w-14 bg-white/20 rounded-2xl flex items-center justify-center text-white">
+            <div className="h-14 w-14 bg-card/20 rounded-2xl flex items-center justify-center text-white">
               <UserPlus className="h-7 w-7" />
             </div>
             <div>
@@ -531,12 +531,12 @@ export default function DoctorsClient() {
                 <TabsList className="bg-transparent w-full justify-start p-0 h-auto gap-8 rounded-none">
                   <TabsTrigger
                     value="basic"
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent py-4 px-1 text-[11px] font-black uppercase tracking-widest text-slate-400 data-[state=active]:text-indigo-600">
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent py-4 px-1 text-[11px] font-black uppercase tracking-widest text-muted-foreground/70 data-[state=active]:text-indigo-600">
                     Identity & Core Rules
                   </TabsTrigger>
                   <TabsTrigger
                     value="custom"
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent py-4 px-1 text-[11px] font-black uppercase tracking-widest text-slate-400 data-[state=active]:text-indigo-600 flex items-center gap-2">
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent py-4 px-1 text-[11px] font-black uppercase tracking-widest text-muted-foreground/70 data-[state=active]:text-indigo-600 flex items-center gap-2">
                     Custom Margins{" "}
                     <Badge className="bg-indigo-100 text-indigo-700 border-none text-[10px] h-4 px-1.5">
                       {customCommissions.length}
@@ -549,7 +549,7 @@ export default function DoctorsClient() {
               <TabsContent value="basic" className="p-8 space-y-6 m-0">
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
                       Legal Name *
                     </Label>
                     <Input
@@ -559,11 +559,11 @@ export default function DoctorsClient() {
                         setFormData({ ...formData, name: e.target.value })
                       }
                       required
-                      className="h-12 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl font-bold"
+                      className="h-12 bg-muted/30 dark:bg-slate-900 border-none rounded-2xl font-bold"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
                       Specialization
                     </Label>
                     <Input
@@ -575,14 +575,14 @@ export default function DoctorsClient() {
                           specialization: e.target.value,
                         })
                       }
-                      className="h-12 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl font-bold"
+                      className="h-12 bg-muted/30 dark:bg-slate-900 border-none rounded-2xl font-bold"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
                       Primary Contact
                     </Label>
                     <Input
@@ -591,11 +591,11 @@ export default function DoctorsClient() {
                       onChange={(e) =>
                         setFormData({ ...formData, phone: e.target.value })
                       }
-                      className="h-12 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl font-bold"
+                      className="h-12 bg-muted/30 dark:bg-slate-900 border-none rounded-2xl font-bold"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
                       Clinic Entity
                     </Label>
                     <Input
@@ -604,7 +604,7 @@ export default function DoctorsClient() {
                       onChange={(e) =>
                         setFormData({ ...formData, clinic: e.target.value })
                       }
-                      className="h-12 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl font-bold"
+                      className="h-12 bg-muted/30 dark:bg-slate-900 border-none rounded-2xl font-bold"
                     />
                   </div>
                 </div>
@@ -623,7 +623,7 @@ export default function DoctorsClient() {
                         onValueChange={(v) =>
                           setFormData({ ...formData, commissionType: v })
                         }>
-                        <SelectTrigger className="h-11 bg-white/10 border-white/10 text-white rounded-xl font-bold uppercase text-[10px]">
+                        <SelectTrigger className="h-11 bg-card/10 border-white/10 text-white rounded-xl font-bold uppercase text-[10px]">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="rounded-xl border-none shadow-2xl">
@@ -655,7 +655,7 @@ export default function DoctorsClient() {
                             commissionRate: Number(e.target.value),
                           })
                         }
-                        className="h-11 bg-white/10 border-white/10 text-white rounded-xl font-black text-lg text-center"
+                        className="h-11 bg-card/10 border-white/10 text-white rounded-xl font-black text-lg text-center"
                       />
                     </div>
                   </div>
@@ -670,12 +670,12 @@ export default function DoctorsClient() {
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-300 group-focus-within:text-indigo-500 transition-colors" />
                   <Input
                     placeholder="Search investigations to set override rules..."
-                    className="h-14 pl-12 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl font-bold placeholder:text-slate-300"
+                    className="h-14 pl-12 bg-muted/30 dark:bg-slate-900 border-none rounded-2xl font-bold placeholder:text-slate-300"
                     value={testSearch}
                     onChange={(e) => setTestSearch(e.target.value)}
                   />
                   {testSearch && (
-                    <div className="absolute top-16 left-0 w-full bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-2xl max-h-56 overflow-y-auto z-50 p-2 custom-scrollbar">
+                    <div className="absolute top-16 left-0 w-full bg-card dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-2xl max-h-56 overflow-y-auto z-50 p-2 custom-scrollbar">
                       {allTests
                         ?.filter((t: any) =>
                           t.name
@@ -688,7 +688,7 @@ export default function DoctorsClient() {
                             key={t.id}
                             onClick={() => addCustomTestRate(t)}
                             className="p-4 text-sm rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-950/40 cursor-pointer flex justify-between items-center group/item transition-colors">
-                            <span className="font-bold text-slate-700 dark:text-slate-200">
+                            <span className="font-bold text-foreground/80 dark:text-slate-200">
                               {t.name}
                             </span>
                             <div className="flex items-center gap-3">
@@ -703,9 +703,9 @@ export default function DoctorsClient() {
                   )}
                 </div>
 
-                <div className="flex-1 border border-slate-100 dark:border-slate-800 rounded-[24px] bg-slate-50 dark:bg-slate-900/50 overflow-hidden shadow-inner">
+                <div className="flex-1 border border-slate-100 dark:border-slate-800 rounded-[24px] bg-muted/30 dark:bg-slate-900/50 overflow-hidden shadow-inner">
                   <Table>
-                    <TableHeader className="bg-white/50 dark:bg-slate-800/50">
+                    <TableHeader className="bg-card/50 dark:bg-slate-800/50">
                       <TableRow className="border-none">
                         <TableHead className="text-[9px] font-black uppercase tracking-widest h-10 px-6">
                           Investigation
@@ -724,7 +724,7 @@ export default function DoctorsClient() {
                         <TableRow>
                           <TableCell
                             colSpan={4}
-                            className="text-center py-20 text-[11px] font-bold text-slate-400 uppercase tracking-widest italic">
+                            className="text-center py-20 text-[11px] font-bold text-muted-foreground/70 uppercase tracking-widest italic">
                             No custom overrides active.
                           </TableCell>
                         </TableRow>
@@ -733,7 +733,7 @@ export default function DoctorsClient() {
                           <TableRow
                             key={index}
                             className="border-slate-100 dark:border-slate-800">
-                            <TableCell className="font-bold text-xs px-6 py-4 text-slate-700 dark:text-slate-300">
+                            <TableCell className="font-bold text-xs px-6 py-4 text-foreground/80 dark:text-slate-300">
                               {cc.testName}
                             </TableCell>
                             <TableCell>
@@ -742,7 +742,7 @@ export default function DoctorsClient() {
                                 onValueChange={(v) =>
                                   updateCustomRate(index, "commissionType", v)
                                 }>
-                                <SelectTrigger className="h-9 text-[10px] font-black uppercase bg-white dark:bg-slate-800 border-none rounded-lg shadow-sm">
+                                <SelectTrigger className="h-9 text-[10px] font-black uppercase bg-card dark:bg-slate-800 border-none rounded-lg shadow-sm">
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent className="rounded-xl border-none shadow-2xl">
@@ -763,7 +763,7 @@ export default function DoctorsClient() {
                               <Input
                                 type="number"
                                 step="0.01"
-                                className="h-9 text-xs font-black text-right bg-white dark:bg-slate-800 border-none rounded-lg shadow-sm tabular-nums"
+                                className="h-9 text-xs font-black text-right bg-card dark:bg-slate-800 border-none rounded-lg shadow-sm tabular-nums"
                                 value={cc.commissionRate}
                                 onChange={(e) =>
                                   updateCustomRate(

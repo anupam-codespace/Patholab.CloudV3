@@ -48,17 +48,17 @@ export const AsyncQRCode = ({
     return (
       <div
         style={{ width: size, height: size }}
-        className="bg-slate-100 animate-pulse border shadow-sm"
+        className="bg-muted animate-pulse border shadow-sm"
       />
     );
 
   return (
     <div
-      className="flex flex-col items-center bg-white p-1 border shadow-sm"
+      className="flex flex-col items-center bg-card p-1 border shadow-sm"
       style={{ width: size, height: size + (showPageNumber ? 15 : 0) }}>
       <img src={src} alt="QR" style={{ width: size - 8, height: size - 8 }} />
       {showPageNumber && (
-        <span className="text-[8px] mt-1 font-bold text-slate-500 whitespace-nowrap">
+        <span className="text-[8px] mt-1 font-bold text-muted-foreground whitespace-nowrap">
           Page 1 of 1
         </span>
       )}
@@ -136,7 +136,7 @@ export const HeaderBlock: ComponentConfig<HeaderProps> = {
         style={{ borderBottomColor: primaryColor }}>
         {mode === "image" ? (
           <div
-            className="w-full bg-slate-100 flex items-center justify-center text-slate-400 overflow-hidden"
+            className="w-full bg-muted flex items-center justify-center text-muted-foreground/70 overflow-hidden"
             style={{ height: `${height}px` }}>
             {fullImage ? (
               <img
@@ -161,7 +161,7 @@ export const HeaderBlock: ComponentConfig<HeaderProps> = {
             {logoUrl ? (
               <img src={logoUrl} className="h-16 object-contain" alt="Logo" />
             ) : (
-              <div className="h-16 w-32 bg-slate-100 border rounded flex items-center justify-center text-xs text-slate-400">
+              <div className="h-16 w-32 bg-muted border rounded flex items-center justify-center text-xs text-slate-400">
                 Logo
               </div>
             )}
@@ -541,7 +541,7 @@ export const ResultsTableBlock: ComponentConfig<ResultsTableProps> = {
     return (
       <div className="mb-6 w-full break-inside-avoid">
         {showDepartmentHeader && groupDepartmentWise && (
-          <div className="bg-slate-100 font-bold py-1.5 px-3 mb-4 text-[12px] uppercase text-center border-y border-slate-300 tracking-wider">
+          <div className="bg-muted font-bold py-1.5 px-3 mb-4 text-[12px] uppercase text-center border-y border-border tracking-wider">
             {departmentName}
           </div>
         )}
@@ -571,23 +571,23 @@ export const ResultsTableBlock: ComponentConfig<ResultsTableProps> = {
             <tr className="border-b border-slate-100">
               <td className="py-2.5 px-1 font-medium">Bilirubin (Total)</td>
               <td className="py-2.5 px-1 font-bold">0.50</td>
-              <td className="py-2.5 px-1 text-slate-500">mg/dl</td>
+              <td className="py-2.5 px-1 text-muted-foreground">mg/dl</td>
               {showBiologicalRef && (
-                <td className="py-2.5 px-1 text-slate-500">0.2 - 1.2</td>
+                <td className="py-2.5 px-1 text-muted-foreground">0.2 - 1.2</td>
               )}
             </tr>
             <tr className="border-b border-slate-100">
               <td className="py-2.5 px-1 font-medium">S. G. O. T (AST)</td>
               <td className="py-2.5 px-1 font-bold text-red-600">45.2 (H)</td>
-              <td className="py-2.5 px-1 text-slate-500">IU/L</td>
+              <td className="py-2.5 px-1 text-muted-foreground">IU/L</td>
               {showBiologicalRef && (
-                <td className="py-2.5 px-1 text-slate-500">0 - 40</td>
+                <td className="py-2.5 px-1 text-muted-foreground">0 - 40</td>
               )}
             </tr>
           </tbody>
         </table>
         {showTestTimestamps && (
-          <div className="mt-4 text-[10px] text-slate-500 italic space-y-1">
+          <div className="mt-4 text-[10px] text-muted-foreground italic space-y-1">
             <p>
               (Collected At: 12/05/2026 08:30 AM, Received At: 12/05/2026 09:15
               AM, Reported At: 12/05/2026 02:15 PM)
@@ -691,7 +691,7 @@ export const ImageBlock: ComponentConfig<ImageProps> = {
   }) => {
     if (!imageUrl)
       return (
-        <div className="text-slate-400 text-sm italic">No image provided</div>
+        <div className="text-muted-foreground/70 text-sm italic">No image provided</div>
       );
     return (
       <div
@@ -862,7 +862,7 @@ export const FooterBlock: ComponentConfig<FooterProps> = {
         style={{ borderTopColor: primaryColor }}>
         {mode === "image" ? (
           <div
-            className="w-full bg-slate-100 flex items-center justify-center text-slate-400 overflow-hidden"
+            className="w-full bg-muted flex items-center justify-center text-muted-foreground/70 overflow-hidden"
             style={{ height: `${height}px` }}>
             {fullImage ? (
               <img
@@ -905,17 +905,17 @@ export const FooterBlock: ComponentConfig<FooterProps> = {
                         </div>
                       )}
                     </div>
-                    <div className="w-full text-center border-t border-slate-300 pt-1">
-                      <p className="font-bold text-[11px] text-slate-900 leading-tight whitespace-nowrap">
+                    <div className="w-full text-center border-t border-border pt-1">
+                      <p className="font-bold text-[11px] text-foreground leading-tight whitespace-nowrap">
                         {sig.name || "Doctor Name"}
                       </p>
                       {sig.qualifications && (
-                        <p className="text-[9px] text-slate-600 leading-tight whitespace-nowrap">
+                        <p className="text-[9px] text-muted-foreground leading-tight whitespace-nowrap">
                           {sig.qualifications}
                         </p>
                       )}
                       {sig.title && (
-                        <p className="font-bold text-[9px] text-slate-800 uppercase mt-0.5 whitespace-nowrap">
+                        <p className="font-bold text-[9px] text-foreground uppercase mt-0.5 whitespace-nowrap">
                           {sig.title}
                         </p>
                       )}
@@ -935,7 +935,7 @@ export const FooterBlock: ComponentConfig<FooterProps> = {
           </div>
         )}
         <div
-          className="text-[9px] text-center mt-4 pb-2 pt-2 border-t border-slate-200"
+          className="text-[9px] text-center mt-4 pb-2 pt-2 border-t border-border"
           style={{ color: secondaryColor }}
           dangerouslySetInnerHTML={{ __html: text || "" }}
         />

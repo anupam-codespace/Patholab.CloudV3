@@ -67,7 +67,7 @@ export default async function WalletInvoicePage({
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-slate-50 p-4 md:p-8 font-sans">
+    <div className="min-h-[calc(100vh-4rem)] bg-muted/30 p-4 md:p-8 font-sans">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* ACTION BAR (Client Component) */}
         <InvoiceActions txId={tx.id} />
@@ -75,7 +75,7 @@ export default async function WalletInvoicePage({
         {/* INVOICE PAPER WRAPPER */}
         <div
           id="invoice-printable-area"
-          className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden print:shadow-none print:border-none print:m-0 print:p-0">
+          className="bg-card rounded-2xl shadow-xl border border-border overflow-hidden print:shadow-none print:border-none print:m-0 print:p-0">
           {/* Top Decorative Border */}
           <div
             className={`h-3 w-full ${isRecharge ? "bg-emerald-500" : "bg-rose-500"}`}
@@ -86,7 +86,7 @@ export default async function WalletInvoicePage({
             <div className="flex flex-col md:flex-row justify-between items-start gap-8">
               {/* BILLED TO (The Client Lab) */}
               <div className="space-y-4">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2">
+                <p className="text-xs font-bold text-muted-foreground/70 uppercase tracking-widest border-b border-slate-100 pb-2">
                   Billed To
                 </p>
                 <div className="flex items-center gap-3">
@@ -97,21 +97,21 @@ export default async function WalletInvoicePage({
                       className="h-16 w-16 object-contain rounded-xl border border-slate-100"
                     />
                   ) : (
-                    <div className="h-16 w-16 bg-slate-100 rounded-xl flex items-center justify-center border border-slate-200">
+                    <div className="h-16 w-16 bg-muted rounded-xl flex items-center justify-center border border-border">
                       <Building2 className="h-8 w-8 text-slate-400" />
                     </div>
                   )}
                   <div>
-                    <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+                    <h1 className="text-2xl font-black text-foreground tracking-tight">
                       {lab.name}
                     </h1>
-                    <p className="text-sm font-bold text-slate-500 uppercase tracking-widest mt-1">
+                    <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest mt-1">
                       Platform Partner
                     </p>
                   </div>
                 </div>
 
-                <div className="space-y-1.5 text-sm text-slate-600 font-medium">
+                <div className="space-y-1.5 text-sm text-muted-foreground font-medium">
                   {lab.address && (
                     <p className="flex items-center gap-2">
                       <MapPin className="w-4 h-4 text-slate-400" />{" "}
@@ -124,7 +124,7 @@ export default async function WalletInvoicePage({
                   <p className="flex items-center gap-2">
                     <Mail className="w-4 h-4 text-slate-400" /> {lab.email}
                   </p>
-                  <p className="mt-2 text-xs font-bold text-slate-500 uppercase">
+                  <p className="mt-2 text-xs font-bold text-muted-foreground uppercase">
                     GSTIN:{" "}
                     <span className="text-slate-800">
                       {lab.gstNumber || "UNREGISTERED"}
@@ -139,39 +139,39 @@ export default async function WalletInvoicePage({
                   Tax Invoice
                 </h2>
                 <div className="space-y-1 mt-4">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                  <p className="text-xs font-bold text-muted-foreground/70 uppercase tracking-widest">
                     Transaction ID
                   </p>
-                  <p className="text-sm font-mono text-slate-900 bg-slate-50 p-1.5 rounded-md inline-block">
+                  <p className="text-sm font-mono text-foreground bg-muted/30 p-1.5 rounded-md inline-block">
                     {tx.id.split("-")[0].toUpperCase()}-
                     {tx.id.split("-")[4].toUpperCase()}
                   </p>
                 </div>
                 <div className="space-y-1 mt-2">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                  <p className="text-xs font-bold text-muted-foreground/70 uppercase tracking-widest">
                     Date & Time
                   </p>
-                  <p className="text-sm font-bold text-slate-900">
+                  <p className="text-sm font-bold text-foreground">
                     {format(new Date(tx.createdAt), "dd MMM yyyy, hh:mm a")}
                   </p>
                 </div>
 
                 {/* ✅ EXACT REAL DETAILS UPDATED HERE ✅ */}
                 <div className="mt-2 pt-2 border-t border-slate-100">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                  <p className="text-xs font-bold text-muted-foreground/70 uppercase tracking-widest">
                     Billed By
                   </p>
-                  <p className="text-sm font-black text-slate-900 mt-1">
+                  <p className="text-sm font-black text-foreground mt-1">
                     Globizhub India Pvt Ltd.
                   </p>
-                  <p className="text-xs font-medium text-slate-500 leading-relaxed mt-1">
+                  <p className="text-xs font-medium text-muted-foreground leading-relaxed mt-1">
                     1st Floor, No 59, Nayanpur Rd,
                     <br />
                     GMC Ward Number 44, Ganeshguri,
                     <br />
                     Guwahati, Assam 781006
                   </p>
-                  <p className="text-xs font-bold text-slate-500 uppercase mt-1">
+                  <p className="text-xs font-bold text-muted-foreground uppercase mt-1">
                     GSTIN:{" "}
                     <span className="text-slate-800">18AAHCG6385Q1ZN</span>
                   </p>
@@ -188,28 +188,28 @@ export default async function WalletInvoicePage({
             </div>
 
             {/* BILLING TABLE WITH GST BREAKDOWN */}
-            <div className="rounded-2xl border border-slate-200 overflow-hidden">
+            <div className="rounded-2xl border border-border overflow-hidden">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200 text-xs font-black text-slate-500 uppercase tracking-widest">
+                  <tr className="bg-muted/30 border-b border-border text-xs font-black text-muted-foreground uppercase tracking-widest">
                     <th className="py-4 px-6 w-2/3">Description / Service</th>
                     <th className="py-4 px-6 text-right">SAC Code</th>
                     <th className="py-4 px-6 text-right">Net Amount</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  <tr className="bg-white">
+                  <tr className="bg-card">
                     <td className="py-6 px-6">
-                      <p className="font-bold text-slate-900 text-base">
+                      <p className="font-bold text-foreground text-base">
                         {tx.description || `Wallet ${tx.type}`}
                       </p>
-                      <p className="text-sm font-medium text-slate-500 mt-1">
+                      <p className="text-sm font-medium text-muted-foreground mt-1">
                         {isRecharge
                           ? "Prepaid wallet recharge for clinical software services."
                           : "Pay-as-you-go deduction for software usage."}
                       </p>
                     </td>
-                    <td className="py-6 px-6 text-right font-medium text-slate-500 text-sm">
+                    <td className="py-6 px-6 text-right font-medium text-muted-foreground text-sm">
                       998314
                     </td>
                     <td
@@ -221,7 +221,7 @@ export default async function WalletInvoicePage({
               </table>
 
               {/* TOTALS & GST BLOCK */}
-              <div className="bg-slate-50 p-6 border-t border-slate-200 flex flex-col items-end space-y-2 text-sm text-slate-600">
+              <div className="bg-muted/30 p-6 border-t border-border flex flex-col items-end space-y-2 text-sm text-muted-foreground">
                 <div className="flex justify-between w-full md:w-[60%] lg:w-1/2">
                   <span className="font-semibold">
                     Subtotal (Wallet Credit):
@@ -262,7 +262,7 @@ export default async function WalletInvoicePage({
                 </div>
 
                 {/* Closing Ledger Balance */}
-                <div className="flex justify-between w-full md:w-[60%] lg:w-1/2 text-xs font-bold text-slate-400 mt-2">
+                <div className="flex justify-between w-full md:w-[60%] lg:w-1/2 text-xs font-bold text-muted-foreground/70 mt-2">
                   <span className="uppercase tracking-widest">
                     New Wallet Balance:
                   </span>
@@ -272,14 +272,14 @@ export default async function WalletInvoicePage({
             </div>
 
             {/* FOOTER */}
-            <div className="pt-8 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left text-xs font-medium text-slate-500">
+            <div className="pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left text-xs font-medium text-muted-foreground">
               <p className="flex items-center justify-center md:justify-start gap-2">
                 <Receipt className="w-4 h-4" />
                 Computer generated tax invoice. No signature required.
               </p>
               <p>
                 Powered by{" "}
-                <span className="font-black text-slate-900">
+                <span className="font-black text-foreground">
                   Patholab.cloud
                 </span>
               </p>

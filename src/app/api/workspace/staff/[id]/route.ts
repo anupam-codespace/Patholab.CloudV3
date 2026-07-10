@@ -65,6 +65,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
           userId: admin.userId,
           action: "UPDATE_STAFF",
           entity: "STAFF",
+          entityType: "STAFF",
           entityId: staffId,
           description: `Updated profile details for staff member: ${body.name || staffRecord.user.name}`
         }
@@ -131,6 +132,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
           userId: admin.userId,
           action: "REMOVE_STAFF",
           entity: "STAFF",
+          entityType: "STAFF",
           entityId: staffId,
           description: `Removed staff member: ${staffRecord.user.name} (${staffRecord.employeeId})`
         }

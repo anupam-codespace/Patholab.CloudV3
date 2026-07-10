@@ -168,7 +168,7 @@ export default function TestsTab() {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* TOOLBAR */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="bg-card p-4 rounded-xl border border-border shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="relative w-full max-w-md">
           <Search
             className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
@@ -176,7 +176,7 @@ export default function TestsTab() {
           />
           <Input
             placeholder="Search tests by name or code..."
-            className="pl-10 focus-visible:ring-blue-500 border-slate-300 shadow-sm"
+            className="pl-10 focus-visible:ring-primary border-border shadow-sm"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -184,7 +184,7 @@ export default function TestsTab() {
 
         <Button
           onClick={handleAddNew}
-          className="bg-blue-600 hover:bg-blue-700 shadow-sm shrink-0 w-full sm:w-auto transition-all">
+          className="bg-primary hover:bg-blue-700 shadow-sm shrink-0 w-full sm:w-auto transition-all">
           <Plus className="mr-2 h-4 w-4" /> Create Custom Test
         </Button>
       </div>
@@ -197,10 +197,10 @@ export default function TestsTab() {
           if (!open) setEditingTest(null);
         }}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0 border-0">
-          <DialogHeader className="px-6 py-4 border-b bg-slate-50 sticky top-0 z-10 flex flex-row items-center gap-2">
+          <DialogHeader className="px-6 py-4 border-b bg-muted/30 sticky top-0 z-10 flex flex-row items-center gap-2">
             {/* Show a globe icon in the title if editing a master test */}
             {editingTest?.isGlobal && (
-              <Globe className="h-5 w-5 text-blue-600" />
+              <Globe className="h-5 w-5 text-primary" />
             )}
             <DialogTitle className="text-xl text-slate-800">
               {editingTest
@@ -240,30 +240,30 @@ export default function TestsTab() {
       )}
 
       {/* DATA TABLE */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
         <div className="overflow-x-auto custom-scrollbar">
           <Table className="min-w-[1000px]">
             <TableHeader>
-              <TableRow className="bg-slate-50 border-b border-slate-200 hover:bg-slate-50">
-                <TableHead className="w-[100px] font-semibold text-slate-600">
+              <TableRow className="bg-muted/30 border-b border-border hover:bg-muted/30">
+                <TableHead className="w-[100px] font-semibold text-muted-foreground">
                   Code
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600">
+                <TableHead className="font-semibold text-muted-foreground">
                   Test Details
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600">
+                <TableHead className="font-semibold text-muted-foreground">
                   Scope
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600">
+                <TableHead className="font-semibold text-muted-foreground">
                   Tube Type
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600">
+                <TableHead className="font-semibold text-muted-foreground">
                   Auto-Reagents
                 </TableHead>
-                <TableHead className="text-right font-semibold text-slate-600">
+                <TableHead className="text-right font-semibold text-muted-foreground">
                   Patient Price
                 </TableHead>
-                <TableHead className="text-right font-semibold text-slate-600">
+                <TableHead className="text-right font-semibold text-muted-foreground">
                   Actions
                 </TableHead>
               </TableRow>
@@ -273,7 +273,7 @@ export default function TestsTab() {
                 <TableRow>
                   <TableCell
                     colSpan={7}
-                    className="text-center h-32 text-slate-500 animate-pulse">
+                    className="text-center h-32 text-muted-foreground animate-pulse">
                     Loading test catalog...
                   </TableCell>
                 </TableRow>
@@ -294,7 +294,7 @@ export default function TestsTab() {
                 <TableRow>
                   <TableCell
                     colSpan={7}
-                    className="text-center h-32 text-slate-500">
+                    className="text-center h-32 text-muted-foreground">
                     No tests found matching your search.
                   </TableCell>
                 </TableRow>
@@ -321,15 +321,15 @@ export default function TestsTab() {
                   return (
                     <TableRow
                       key={t.id}
-                      className={`hover:bg-slate-50/80 transition-colors ${!t.isActive ? "opacity-60 bg-slate-50" : ""}`}>
+                      className={`hover:bg-muted/50/80 transition-colors ${!t.isActive ? "opacity-60 bg-muted/30" : ""}`}>
                       <TableCell>
-                        <span className="font-mono text-xs font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded border border-slate-200 shadow-sm">
+                        <span className="font-mono text-xs font-bold text-muted-foreground bg-muted px-2 py-1 rounded border border-border shadow-sm">
                           {t.code}
                         </span>
                       </TableCell>
 
                       <TableCell>
-                        <div className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                        <div className="font-bold text-foreground text-sm flex items-center gap-2">
                           {t.name}
                           {!t.isActive && (
                             <span className="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
@@ -338,11 +338,11 @@ export default function TestsTab() {
                           )}
                         </div>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[11px] text-slate-500 font-medium">
+                          <span className="text-[11px] text-muted-foreground font-medium">
                             {t.department?.name || "General"}
                           </span>
                           <span className="text-slate-300">•</span>
-                          <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-medium border border-slate-200">
+                          <span className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded font-medium border border-border">
                             {t._count?.parameters || 0} parameters
                           </span>
                         </div>
@@ -368,18 +368,18 @@ export default function TestsTab() {
                         {t.containerType ? (
                           <div className="flex items-center gap-2">
                             <div
-                              className="w-3 h-3 rounded-full border border-slate-300 shadow-sm"
+                              className="w-3 h-3 rounded-full border border-border shadow-sm"
                               style={{
                                 backgroundColor:
                                   t.containerType.capColor || "#ccc",
                               }}
                             />
-                            <span className="text-xs text-slate-700 font-semibold">
+                            <span className="text-xs text-foreground/80 font-semibold">
                               {t.containerType.code}
                             </span>
                           </div>
                         ) : (
-                          <span className="text-slate-400 text-xs italic">
+                          <span className="text-muted-foreground/70 text-xs italic">
                             Unassigned
                           </span>
                         )}
@@ -405,19 +405,19 @@ export default function TestsTab() {
                             ))}
                           </div>
                         ) : (
-                          <span className="text-slate-400 text-[11px] italic">
+                          <span className="text-muted-foreground/70 text-[11px] italic">
                             No auto-deduction
                           </span>
                         )}
                       </TableCell>
 
                       <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1 font-bold text-slate-900 text-sm">
+                        <div className="flex items-center justify-end gap-1 font-bold text-foreground text-sm">
                           <IndianRupee size={14} className="text-slate-400" />
                           {Number(t.effectivePrice || t.price || 0).toFixed(2)}
                         </div>
                         {t.hasOverride && (
-                          <div className="text-[10px] text-blue-600 font-semibold mt-0.5">
+                          <div className="text-[10px] text-primary font-semibold mt-0.5">
                             Custom Price
                           </div>
                         )}
@@ -431,7 +431,7 @@ export default function TestsTab() {
                               variant="ghost"
                               size="icon"
                               onClick={() => handleQuickPriceClick(t)}
-                              className="text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 h-8 w-8 transition-colors"
+                              className="text-muted-foreground/70 hover:text-emerald-600 hover:bg-emerald-50 h-8 w-8 transition-colors"
                               title="Quick Price Override">
                               <IndianRupee className="h-4 w-4" />
                             </Button>
@@ -442,7 +442,7 @@ export default function TestsTab() {
                             variant="ghost"
                             size="icon"
                             onClick={() => handleActionClick(t)}
-                            className="text-slate-400 hover:text-blue-600 hover:bg-blue-50 h-8 w-8 transition-colors"
+                            className="text-muted-foreground/70 hover:text-primary hover:bg-primary/10 h-8 w-8 transition-colors"
                             title="Full Edit">
                             <Pencil className="h-4 w-4" />
                           </Button>
@@ -457,7 +457,7 @@ export default function TestsTab() {
                               (deleteMutation.isPending &&
                                 deleteMutation.variables === t.id)
                             }
-                            className="text-slate-400 hover:text-red-600 hover:bg-red-50 h-8 w-8 transition-colors disabled:opacity-30 disabled:hover:bg-transparent"
+                            className="text-muted-foreground/70 hover:text-red-600 hover:bg-red-50 h-8 w-8 transition-colors disabled:opacity-30 disabled:hover:bg-transparent"
                             title={
                               t.isGlobal
                                 ? "Cannot delete global master tests"

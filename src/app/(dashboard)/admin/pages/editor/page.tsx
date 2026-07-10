@@ -116,8 +116,8 @@ export default function PageEditor() {
               <CardContent className="p-6 space-y-4">
                  <div className="space-y-2">
                     <Label>URL Slug</Label>
-                    <div className="flex items-center gap-1 bg-slate-100 rounded border px-2">
-                       <span className="text-slate-500 text-xs">/</span>
+                    <div className="flex items-center gap-1 bg-muted rounded border px-2">
+                       <span className="text-muted-foreground text-xs">/</span>
                        <input {...form.register('slug')} className="bg-transparent border-none text-sm w-full outline-none h-8" placeholder="about-us" />
                     </div>
                     {form.formState.errors.slug && <p className="text-red-500 text-xs">Invalid slug</p>}

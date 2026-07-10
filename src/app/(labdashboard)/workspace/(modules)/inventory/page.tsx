@@ -262,7 +262,7 @@ export default function InventoryPage() {
   if (itemsLoading) {
     return (
       <div className="flex justify-center items-center h-[60vh]">
-        <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
       </div>
     );
   }
@@ -270,12 +270,12 @@ export default function InventoryPage() {
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-300">
       {/* --- HEADER --- */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-2xl shadow-sm border border-slate-200 gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-card p-6 rounded-2xl shadow-sm border border-border gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">
             Inventory Management
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Manage catalog definitions and track physical stock batches.
           </p>
         </div>
@@ -283,12 +283,12 @@ export default function InventoryPage() {
           <Button
             onClick={openAddItemModal}
             variant="outline"
-            className="gap-2 border-slate-300 flex-1 md:flex-none">
-            <Plus className="h-4 w-4 text-slate-600" /> Add Catalog Item
+            className="gap-2 border-border flex-1 md:flex-none">
+            <Plus className="h-4 w-4 text-muted-foreground" /> Add Catalog Item
           </Button>
           <Button
             onClick={() => setIsAddStockOpen(true)}
-            className="gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-md flex-1 md:flex-none transition-all">
+            className="gap-2 bg-primary hover:bg-blue-700 text-white shadow-md flex-1 md:flex-none transition-all">
             <PackagePlus className="h-4 w-4" /> Receive Stock
           </Button>
         </div>
@@ -302,15 +302,15 @@ export default function InventoryPage() {
           placeholder="Search items by name, SKU, or category..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 transition-all shadow-sm"
+          className="w-full pl-10 pr-4 py-2.5 bg-card border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 transition-all shadow-sm"
         />
       </div>
 
       {/* --- ITEMS TABLE --- */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="text-xs text-slate-500 bg-slate-50/80 uppercase tracking-wider border-b border-slate-200">
+            <thead className="text-xs text-muted-foreground bg-slate-50/80 uppercase tracking-wider border-b border-border">
               <tr>
                 <th className="px-6 py-5 font-semibold">Item & Details</th>
                 <th className="px-6 py-5 font-semibold">Department</th>
@@ -324,8 +324,8 @@ export default function InventoryPage() {
               {items?.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-16 text-center">
-                    <div className="flex flex-col items-center justify-center text-slate-500 space-y-3">
-                      <div className="h-16 w-16 bg-slate-100 rounded-full flex items-center justify-center mb-2">
+                    <div className="flex flex-col items-center justify-center text-muted-foreground space-y-3">
+                      <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center mb-2">
                         <Box className="h-8 w-8 text-slate-400" />
                       </div>
                       <p className="text-lg font-semibold text-slate-700">
@@ -347,8 +347,8 @@ export default function InventoryPage() {
               ) : filteredItems?.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-16 text-center">
-                    <div className="flex flex-col items-center justify-center text-slate-500 space-y-3">
-                      <div className="h-16 w-16 bg-slate-50 rounded-full flex items-center justify-center mb-2">
+                    <div className="flex flex-col items-center justify-center text-muted-foreground space-y-3">
+                      <div className="h-16 w-16 bg-muted/30 rounded-full flex items-center justify-center mb-2">
                         <Search className="h-8 w-8 text-slate-300" />
                       </div>
                       <p className="text-lg font-semibold text-slate-700">
@@ -360,7 +360,7 @@ export default function InventoryPage() {
                       <Button
                         onClick={() => setSearchQuery("")}
                         variant="link"
-                        className="text-blue-600 mt-2">
+                        className="text-primary mt-2">
                         Clear search
                       </Button>
                     </div>
@@ -378,30 +378,30 @@ export default function InventoryPage() {
                   return (
                     <tr
                       key={item.id}
-                      className="hover:bg-slate-50/80 transition-colors group">
+                      className="hover:bg-muted/50/80 transition-colors group">
                       <td className="px-6 py-4">
-                        <div className="font-semibold text-slate-900">
+                        <div className="font-semibold text-foreground">
                           {item.name}
                         </div>
                         {item.sku && (
-                          <div className="text-[11px] font-medium text-slate-400 mt-1 uppercase tracking-wide">
+                          <div className="text-[11px] font-medium text-muted-foreground/70 mt-1 uppercase tracking-wide">
                             SKU: {item.sku}
                           </div>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-slate-600">
-                        <span className="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-md text-xs font-medium">
+                      <td className="px-6 py-4 text-muted-foreground">
+                        <span className="bg-muted text-muted-foreground px-2.5 py-1 rounded-md text-xs font-medium">
                           {item.category || "Uncategorized"}
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-slate-900">
+                        <div className="text-sm text-foreground">
                           {item.usageUnit}{" "}
-                          <span className="text-slate-400 text-xs">
+                          <span className="text-muted-foreground/70 text-xs">
                             (Usage)
                           </span>
                         </div>
-                        <div className="text-[11px] text-slate-500 mt-1">
+                        <div className="text-[11px] text-muted-foreground mt-1">
                           1 {item.purchaseUnit} = {item.conversionFactor}{" "}
                           {item.usageUnit}
                         </div>
@@ -424,7 +424,7 @@ export default function InventoryPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex items-center gap-2 text-slate-600 font-medium">
+                        <div className="flex items-center gap-2 text-muted-foreground font-medium">
                           <PackagePlus className="h-4 w-4 text-slate-400" />
                           {item.batches?.length || 0} Active
                         </div>
@@ -434,7 +434,7 @@ export default function InventoryPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 h-8 w-8"
+                            className="text-primary hover:text-blue-800 hover:bg-primary/10 h-8 w-8"
                             onClick={() => openManageModal(item)}
                             title="Manage Batches">
                             <History className="h-4 w-4" />
@@ -442,7 +442,7 @@ export default function InventoryPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="text-slate-500 hover:text-slate-800 hover:bg-slate-100 h-8 w-8"
+                            className="text-muted-foreground hover:text-foreground hover:bg-muted h-8 w-8"
                             onClick={() => openEditItemModal(item)}
                             title="Edit Item">
                             <Edit2 className="h-4 w-4" />
@@ -474,33 +474,33 @@ export default function InventoryPage() {
           <div
             className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"
             onClick={() => setManageItem(null)}></div>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden relative z-10 animate-in zoom-in-95 duration-200">
-            <div className="flex justify-between items-center p-5 border-b bg-slate-50">
+          <div className="bg-card rounded-2xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden relative z-10 animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center p-5 border-b bg-muted/30">
               <div>
-                <h2 className="text-lg font-bold text-slate-800 leading-tight">
+                <h2 className="text-lg font-bold text-foreground leading-tight">
                   {manageItem.name}
                 </h2>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Tracked in {manageItem.usageUnit}s
                 </p>
               </div>
               <button
                 onClick={() => setManageItem(null)}
-                className="text-slate-400 hover:text-slate-700 bg-white hover:bg-slate-100 p-1.5 rounded-full">
+                className="text-muted-foreground/70 hover:text-foreground/80 bg-card hover:bg-muted p-1.5 rounded-full">
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             {/* Tabs */}
-            <div className="flex border-b px-6 bg-white shrink-0">
+            <div className="flex border-b px-6 bg-card shrink-0">
               <button
                 onClick={() => setManageTab("BATCHES")}
-                className={`px-4 py-3 text-sm font-semibold border-b-2 transition-colors ${manageTab === "BATCHES" ? "border-blue-600 text-blue-600" : "border-transparent text-slate-500 hover:text-slate-700"}`}>
+                className={`px-4 py-3 text-sm font-semibold border-b-2 transition-colors ${manageTab === "BATCHES" ? "border-blue-600 text-primary" : "border-transparent text-muted-foreground hover:text-slate-700"}`}>
                 Active Batches
               </button>
               <button
                 onClick={() => setManageTab("LEDGER")}
-                className={`px-4 py-3 text-sm font-semibold border-b-2 transition-colors ${manageTab === "LEDGER" ? "border-blue-600 text-blue-600" : "border-transparent text-slate-500 hover:text-slate-700"}`}>
+                className={`px-4 py-3 text-sm font-semibold border-b-2 transition-colors ${manageTab === "LEDGER" ? "border-blue-600 text-primary" : "border-transparent text-muted-foreground hover:text-slate-700"}`}>
                 Ledger / History
               </button>
             </div>
@@ -510,7 +510,7 @@ export default function InventoryPage() {
               {manageTab === "BATCHES" && (
                 <div className="space-y-4">
                   {manageItem.batches?.length === 0 ? (
-                    <div className="text-center py-10 text-slate-500 text-sm">
+                    <div className="text-center py-10 text-muted-foreground text-sm">
                       No active batches for this item.
                     </div>
                   ) : (
@@ -521,19 +521,19 @@ export default function InventoryPage() {
                         <form
                           key={batch.id}
                           onSubmit={(e) => handleUpdateBatchSubmit(e, batch.id)}
-                          className="bg-white border border-blue-200 rounded-xl p-4 shadow-sm space-y-4 relative">
+                          className="bg-card border border-primary/20 rounded-xl p-4 shadow-sm space-y-4 relative">
                           <div className="flex justify-between items-center pb-2 border-b">
                             <span className="font-bold text-sm text-slate-800">
                               Editing Batch: {batch.batchNumber}
                             </span>
-                            <span className="text-xs bg-slate-100 px-2 py-1 rounded text-slate-500">
+                            <span className="text-xs bg-muted px-2 py-1 rounded text-muted-foreground">
                               Originally: {batch.initialQuantity}{" "}
                               {manageItem.usageUnit}
                             </span>
                           </div>
                           <div className="grid grid-cols-3 gap-4">
                             <div>
-                              <label className="block text-xs font-bold text-slate-600 mb-1">
+                              <label className="block text-xs font-bold text-muted-foreground mb-1">
                                 Current Stock ({manageItem.usageUnit})
                               </label>
                               <input
@@ -542,11 +542,11 @@ export default function InventoryPage() {
                                 type="number"
                                 step="0.01"
                                 defaultValue={batch.currentQuantity}
-                                className="w-full border rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                className="w-full border rounded-md p-2 text-sm focus:ring-2 focus:ring-primary outline-none"
                               />
                             </div>
                             <div>
-                              <label className="block text-xs font-bold text-slate-600 mb-1">
+                              <label className="block text-xs font-bold text-muted-foreground mb-1">
                                 Expiry Date
                               </label>
                               <input
@@ -558,18 +558,18 @@ export default function InventoryPage() {
                                     .toISOString()
                                     .split("T")[0]
                                 }
-                                className="w-full border rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                className="w-full border rounded-md p-2 text-sm focus:ring-2 focus:ring-primary outline-none"
                               />
                             </div>
                             <div>
-                              <label className="block text-xs font-bold text-slate-600 mb-1">
+                              <label className="block text-xs font-bold text-muted-foreground mb-1">
                                 Location
                               </label>
                               <input
                                 name="location"
                                 type="text"
                                 defaultValue={batch.location || ""}
-                                className="w-full border rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                className="w-full border rounded-md p-2 text-sm focus:ring-2 focus:ring-primary outline-none"
                               />
                             </div>
                           </div>
@@ -584,7 +584,7 @@ export default function InventoryPage() {
                             <Button
                               type="submit"
                               size="sm"
-                              className="bg-blue-600 text-white hover:bg-blue-700"
+                              className="bg-primary text-white hover:bg-blue-700"
                               disabled={updateBatchMutation.isPending}>
                               {updateBatchMutation.isPending ? (
                                 <Loader2 className="h-3 w-3 animate-spin mr-2" />
@@ -598,7 +598,7 @@ export default function InventoryPage() {
                       ) : (
                         <div
                           key={batch.id}
-                          className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-blue-300 transition-colors group/batch">
+                          className="bg-card border border-border rounded-xl p-4 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-blue-300 transition-colors group/batch">
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-2 w-full">
                             <div>
                               <p className="text-[10px] uppercase font-bold text-slate-400">
@@ -612,9 +612,9 @@ export default function InventoryPage() {
                               <p className="text-[10px] uppercase font-bold text-slate-400">
                                 Stock Left
                               </p>
-                              <p className="text-sm font-bold text-blue-600">
+                              <p className="text-sm font-bold text-primary">
                                 {batch.currentQuantity}{" "}
-                                <span className="text-xs font-normal text-slate-500">
+                                <span className="text-xs font-normal text-muted-foreground">
                                   {manageItem.usageUnit}
                                 </span>
                               </p>
@@ -643,14 +643,14 @@ export default function InventoryPage() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="text-slate-500 hover:text-blue-600 hover:bg-blue-50 h-8 w-8"
+                              className="text-muted-foreground hover:text-primary hover:bg-primary/10 h-8 w-8"
                               onClick={() => setEditingBatchId(batch.id)}>
                               <Edit2 className="h-4 w-4" />
                             </Button>
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="text-slate-400 hover:text-red-600 hover:bg-red-50 h-8 w-8"
+                              className="text-muted-foreground/70 hover:text-red-600 hover:bg-red-50 h-8 w-8"
                               onClick={() => handleDeleteBatch(batch.id)}>
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -664,18 +664,18 @@ export default function InventoryPage() {
 
               {/* TAB 2: LEDGER */}
               {manageTab === "LEDGER" && (
-                <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+                <div className="bg-card border border-border rounded-xl overflow-hidden">
                   {ledgerLoading ? (
                     <div className="flex justify-center p-10">
-                      <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
                     </div>
                   ) : ledger?.length === 0 ? (
-                    <div className="text-center py-10 text-slate-500 text-sm">
+                    <div className="text-center py-10 text-muted-foreground text-sm">
                       No transaction history found.
                     </div>
                   ) : (
                     <table className="w-full text-sm text-left">
-                      <thead className="text-xs text-slate-500 bg-slate-50 uppercase border-b">
+                      <thead className="text-xs text-muted-foreground bg-muted/30 uppercase border-b">
                         <tr>
                           <th className="px-4 py-3">Date</th>
                           <th className="px-4 py-3">Type</th>
@@ -686,8 +686,8 @@ export default function InventoryPage() {
                       </thead>
                       <tbody className="divide-y divide-slate-100">
                         {ledger?.map((tx: any) => (
-                          <tr key={tx.id} className="hover:bg-slate-50">
-                            <td className="px-4 py-3 whitespace-nowrap text-slate-600">
+                          <tr key={tx.id} className="hover:bg-muted/30">
+                            <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
                               {format(
                                 new Date(tx.createdAt),
                                 "dd MMM yy, hh:mm a",
@@ -701,7 +701,7 @@ export default function InventoryPage() {
                                     ? "bg-green-100 text-green-700"
                                     : tx.type === "CONSUMPTION"
                                       ? "bg-orange-100 text-orange-700"
-                                      : "bg-blue-100 text-blue-700"
+                                      : "bg-blue-100 text-primary"
                                 }`}>
                                 {tx.type}
                               </span>
@@ -721,7 +721,7 @@ export default function InventoryPage() {
                               </span>
                             </td>
                             <td
-                              className="px-4 py-3 text-xs text-slate-500 max-w-[200px] truncate"
+                              className="px-4 py-3 text-xs text-muted-foreground max-w-[200px] truncate"
                               title={tx.notes || ""}>
                               {tx.test
                                 ? `Consumed by Test: ${tx.test.testName}`
@@ -745,28 +745,28 @@ export default function InventoryPage() {
           <div
             className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
             onClick={() => setIsAddItemOpen(false)}></div>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden relative z-10 animate-in slide-in-from-bottom-4 duration-200">
+          <div className="bg-card rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden relative z-10 animate-in slide-in-from-bottom-4 duration-200">
             <div className="flex justify-between items-center p-5 border-b bg-slate-50/80">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 text-blue-700 rounded-lg shadow-inner">
+                <div className="p-2 bg-blue-100 text-primary rounded-lg shadow-inner">
                   <Box className="h-5 w-5" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-slate-800 leading-tight">
+                  <h2 className="text-lg font-bold text-foreground leading-tight">
                     {editingItem ? "Edit Catalog Item" : "Add Catalog Item"}
                   </h2>
                 </div>
               </div>
               <button
                 onClick={() => setIsAddItemOpen(false)}
-                className="text-slate-400 hover:text-slate-700 bg-white hover:bg-slate-100 p-1.5 rounded-full">
+                className="text-muted-foreground/70 hover:text-foreground/80 bg-card hover:bg-muted p-1.5 rounded-full">
                 <X className="h-5 w-5" />
               </button>
             </div>
             <form onSubmit={handleItemSubmit} className="p-6 space-y-6">
               <div className="grid grid-cols-2 gap-5">
                 <div className="col-span-2">
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                  <label className="block text-sm font-semibold text-foreground/80 mb-1.5">
                     Item Name *
                   </label>
                   <input
@@ -775,11 +775,11 @@ export default function InventoryPage() {
                     type="text"
                     defaultValue={editingItem?.name || ""}
                     placeholder="e.g. Sysmex Cellpack DCL"
-                    className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-600 outline-none"
+                    className="w-full border border-border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-600 outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                  <label className="block text-sm font-semibold text-foreground/80 mb-1.5">
                     SKU / Item Code
                   </label>
                   <input
@@ -787,11 +787,11 @@ export default function InventoryPage() {
                     type="text"
                     defaultValue={editingItem?.sku || ""}
                     placeholder="e.g. SYS-1002"
-                    className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-600 outline-none"
+                    className="w-full border border-border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-600 outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                  <label className="block text-sm font-semibold text-foreground/80 mb-1.5">
                     Department
                   </label>
                   <input
@@ -799,18 +799,18 @@ export default function InventoryPage() {
                     type="text"
                     defaultValue={editingItem?.category || ""}
                     placeholder="e.g. Hematology"
-                    className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-600 outline-none"
+                    className="w-full border border-border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-600 outline-none"
                   />
                 </div>
               </div>
 
-              <div className="p-5 bg-blue-50/50 rounded-xl border border-blue-100/60 space-y-4">
+              <div className="p-5 bg-primary/10/50 rounded-xl border border-blue-100/60 space-y-4">
                 <h3 className="text-sm font-bold text-blue-900">
                   Unit Mapping & Conversion
                 </h3>
                 <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-[11px] font-bold uppercase text-slate-500 mb-1">
+                    <label className="block text-[11px] font-bold uppercase text-muted-foreground mb-1">
                       Purchase Unit
                     </label>
                     <input
@@ -821,7 +821,7 @@ export default function InventoryPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold uppercase text-slate-500 mb-1">
+                    <label className="block text-[11px] font-bold uppercase text-muted-foreground mb-1">
                       Usage Unit *
                     </label>
                     <input
@@ -833,7 +833,7 @@ export default function InventoryPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold uppercase text-slate-500 mb-1">
+                    <label className="block text-[11px] font-bold uppercase text-muted-foreground mb-1">
                       Factor
                     </label>
                     <input
@@ -848,14 +848,14 @@ export default function InventoryPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                <label className="block text-sm font-semibold text-foreground/80 mb-1.5">
                   Min Stock Alert Level
                 </label>
                 <input
                   name="minStockLevel"
                   type="number"
                   defaultValue={editingItem?.minStockLevel || 10}
-                  className="w-32 border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-600 outline-none"
+                  className="w-32 border border-border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-600 outline-none"
                 />
               </div>
 
@@ -871,7 +871,7 @@ export default function InventoryPage() {
                   disabled={
                     addItemMutation.isPending || updateItemMutation.isPending
                   }
-                  className="bg-blue-600 text-white hover:bg-blue-700 px-8">
+                  className="bg-primary text-white hover:bg-blue-700 px-8">
                   {(addItemMutation.isPending ||
                     updateItemMutation.isPending) && (
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -890,7 +890,7 @@ export default function InventoryPage() {
           <div
             className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
             onClick={() => setIsAddStockOpen(false)}></div>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden relative z-10 animate-in slide-in-from-bottom-4 duration-200">
+          <div className="bg-card rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden relative z-10 animate-in slide-in-from-bottom-4 duration-200">
             <div className="flex justify-between items-center p-5 border-b bg-slate-50/80">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-emerald-100 text-emerald-700 rounded-lg shadow-inner">
@@ -902,19 +902,19 @@ export default function InventoryPage() {
               </div>
               <button
                 onClick={() => setIsAddStockOpen(false)}
-                className="text-slate-400 hover:text-slate-700 bg-white hover:bg-slate-100 p-1.5 rounded-full">
+                className="text-muted-foreground/70 hover:text-foreground/80 bg-card hover:bg-muted p-1.5 rounded-full">
                 <X className="h-5 w-5" />
               </button>
             </div>
             <form onSubmit={handleAddStockSubmit} className="p-6 space-y-6">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                <label className="block text-sm font-semibold text-foreground/80 mb-1.5">
                   Select Catalog Item *
                 </label>
                 <select
                   required
                   name="itemId"
-                  className="w-full border border-slate-300 rounded-lg p-2.5 text-sm outline-none">
+                  className="w-full border border-border rounded-lg p-2.5 text-sm outline-none">
                   <option value="">-- Choose an item --</option>
                   {items?.map((item: any) => (
                     <option key={item.id} value={item.id}>
@@ -925,31 +925,31 @@ export default function InventoryPage() {
               </div>
               <div className="grid grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                  <label className="block text-sm font-semibold text-foreground/80 mb-1.5">
                     Batch / Lot Number *
                   </label>
                   <input
                     required
                     name="batchNumber"
                     type="text"
-                    className="w-full border border-slate-300 rounded-lg p-2.5 text-sm outline-none"
+                    className="w-full border border-border rounded-lg p-2.5 text-sm outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                  <label className="block text-sm font-semibold text-foreground/80 mb-1.5">
                     Expiry Date *
                   </label>
                   <input
                     required
                     name="expiryDate"
                     type="date"
-                    className="w-full border border-slate-300 rounded-lg p-2.5 text-sm outline-none"
+                    className="w-full border border-border rounded-lg p-2.5 text-sm outline-none"
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-5 p-4 bg-slate-50 rounded-xl border">
+              <div className="grid grid-cols-2 gap-5 p-4 bg-muted/30 rounded-xl border">
                 <div>
-                  <label className="block text-sm font-bold text-slate-800 mb-1.5">
+                  <label className="block text-sm font-bold text-foreground mb-1.5">
                     Quantity Received *
                   </label>
                   <input
@@ -958,13 +958,13 @@ export default function InventoryPage() {
                     type="number"
                     step="0.01"
                     min="0.1"
-                    className="w-full border border-slate-300 rounded-lg p-2.5 text-sm font-semibold text-emerald-700 outline-none"
+                    className="w-full border border-border rounded-lg p-2.5 text-sm font-semibold text-emerald-700 outline-none"
                   />
                 </div>
 
                 {/* ✅ NEW: MRP Field Added */}
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                  <label className="block text-sm font-semibold text-foreground/80 mb-1.5">
                     MRP (Optional)
                   </label>
                   <input
@@ -972,12 +972,12 @@ export default function InventoryPage() {
                     type="number"
                     step="0.01"
                     placeholder="Printed Price"
-                    className="w-full border border-slate-300 rounded-lg p-2.5 text-sm outline-none"
+                    className="w-full border border-border rounded-lg p-2.5 text-sm outline-none"
                   />
                 </div>
 
                 <div className="col-span-2">
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                  <label className="block text-sm font-semibold text-foreground/80 mb-1.5">
                     Total Buying Cost (₹) *
                   </label>
                   <input
@@ -986,21 +986,21 @@ export default function InventoryPage() {
                     type="number"
                     step="0.01"
                     placeholder="What you paid"
-                    className="w-full border border-slate-300 rounded-lg p-2.5 text-sm outline-none font-bold"
+                    className="w-full border border-border rounded-lg p-2.5 text-sm outline-none font-bold"
                   />
-                  <p className="text-[10px] text-slate-500 mt-1">
+                  <p className="text-[10px] text-muted-foreground mt-1">
                     This amount will be logged as an expense.
                   </p>
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                <label className="block text-sm font-semibold text-foreground/80 mb-1.5">
                   Storage Location
                 </label>
                 <input
                   name="location"
                   type="text"
-                  className="w-full border border-slate-300 rounded-lg p-2.5 text-sm outline-none"
+                  className="w-full border border-border rounded-lg p-2.5 text-sm outline-none"
                 />
               </div>
               <div className="pt-4 flex justify-end gap-3 border-t">

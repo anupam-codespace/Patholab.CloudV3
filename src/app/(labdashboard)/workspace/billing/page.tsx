@@ -111,7 +111,7 @@ export default function BillingPage() {
         icon: AlertCircle,
       },
       CANCELLED: {
-        class: "bg-slate-100 text-slate-600 border-slate-200",
+        class: "bg-muted text-muted-foreground border-border",
         icon: XCircle,
       },
     };
@@ -139,13 +139,13 @@ export default function BillingPage() {
         {/* HEADER SECTION */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-600 shadow-sm">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-card border border-border text-muted-foreground shadow-sm">
               <FileText className="w-4 h-4 text-emerald-500" />
               <span className="text-xs font-bold uppercase tracking-widest">
                 Revenue Center
               </span>
             </div>
-            <h1 className="text-4xl md:text-5xl font-black tracking-tight text-slate-900">
+            <h1 className="text-4xl md:text-5xl font-black tracking-tight text-foreground">
               Billing{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-blue-600">
                 &
@@ -196,7 +196,7 @@ export default function BillingPage() {
           ].map((stat, i) => (
             <Card
               key={i}
-              className="border-none shadow-sm bg-white overflow-hidden group">
+              className="border-none shadow-sm bg-card overflow-hidden group">
               <CardContent className="p-0">
                 <div className="p-6 space-y-4">
                   <div className="flex justify-between items-start">
@@ -211,10 +211,10 @@ export default function BillingPage() {
                       {stat.label}
                     </p>
                     <h3
-                      className={`text-2xl font-black text-slate-900 tabular-nums`}>
+                      className={`text-2xl font-black text-foreground tabular-nums`}>
                       {formatCurrency(stat.value || 0)}
                     </h3>
-                    <p className="text-xs font-medium text-slate-500 italic">
+                    <p className="text-xs font-medium text-muted-foreground italic">
                       {stat.sub}
                     </p>
                   </div>
@@ -235,12 +235,12 @@ export default function BillingPage() {
           {/* TOOLBAR */}
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1 group">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/70 group-focus-within:text-emerald-500 transition-colors" />
               <Input
                 placeholder="Search by ID or Patient Name..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-14 pl-12 bg-white border-none shadow-sm rounded-2xl text-lg font-medium placeholder:text-slate-300 focus-visible:ring-emerald-500/20 transition-all"
+                className="h-14 pl-12 bg-card border-none shadow-sm rounded-2xl text-lg font-medium placeholder:text-slate-300 focus-visible:ring-emerald-500/20 transition-all"
               />
             </div>
             <div className="relative min-w-[200px]">
@@ -248,7 +248,7 @@ export default function BillingPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full h-14 pl-11 pr-4 bg-white border-none shadow-sm rounded-2xl text-sm font-bold appearance-none focus:ring-2 focus:ring-emerald-500/20 outline-none">
+                className="w-full h-14 pl-11 pr-4 bg-card border-none shadow-sm rounded-2xl text-sm font-bold appearance-none focus:ring-2 focus:ring-emerald-500/20 outline-none">
                 <option value="ALL">All Transactions</option>
                 <option value="PENDING">Pending</option>
                 <option value="PAID">Settled</option>
@@ -258,24 +258,24 @@ export default function BillingPage() {
           </div>
 
           {/* TABLE DATA */}
-          <Card className="border-none shadow-sm bg-white rounded-[32px] overflow-hidden">
+          <Card className="border-none shadow-sm bg-card rounded-[32px] overflow-hidden">
             <CardContent className="p-0">
               {isLoading ? (
                 <div className="flex flex-col items-center justify-center py-24 gap-4">
                   <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-                  <p className="text-xs font-black uppercase tracking-widest text-slate-400 italic">
+                  <p className="text-xs font-black uppercase tracking-widest text-muted-foreground/70 italic">
                     Syncing Ledger...
                   </p>
                 </div>
               ) : data?.invoices?.length === 0 ? (
                 <div className="text-center py-24">
-                  <div className="inline-flex p-6 rounded-full bg-slate-50 mb-4">
+                  <div className="inline-flex p-6 rounded-full bg-muted/30 mb-4">
                     <Search className="w-12 h-12 text-slate-200" />
                   </div>
-                  <h3 className="text-lg font-bold text-slate-900">
+                  <h3 className="text-lg font-bold text-foreground">
                     No records found
                   </h3>
-                  <p className="text-slate-500">
+                  <p className="text-muted-foreground">
                     Adjust your filters to see more results
                   </p>
                 </div>
@@ -308,14 +308,14 @@ export default function BillingPage() {
                       {data?.invoices?.map((invoice: any) => (
                         <tr
                           key={invoice.id}
-                          className="group hover:bg-slate-50/80 transition-colors">
+                          className="group hover:bg-muted/50/80 transition-colors">
                           <td className="px-8 py-5">
                             <span className="font-mono text-sm font-black text-emerald-600 bg-emerald-50 px-3 py-1 rounded-lg">
                               {invoice.invoiceNumber}
                             </span>
                           </td>
                           <td className="px-8 py-5">
-                            <div className="font-bold text-slate-900">
+                            <div className="font-bold text-foreground">
                               {invoice.patient?.name || "Unknown"}
                             </div>
                             <div className="text-[10px] font-black uppercase text-slate-400">
@@ -324,7 +324,7 @@ export default function BillingPage() {
                           </td>
                           <td className="px-8 py-5">
                             <div className="flex flex-col">
-                              <span className="font-black text-slate-900 tabular-nums">
+                              <span className="font-black text-foreground tabular-nums">
                                 {formatCurrency(invoice.grandTotal)}
                               </span>
                               {invoice.discount > 0 && (
@@ -334,7 +334,7 @@ export default function BillingPage() {
                               )}
                             </div>
                           </td>
-                          <td className="px-8 py-5 text-sm font-medium text-slate-500">
+                          <td className="px-8 py-5 text-sm font-medium text-muted-foreground">
                             {format(new Date(invoice.createdAt), "dd MMM yyyy")}
                           </td>
                           <td className="px-8 py-5 text-right">
@@ -346,14 +346,14 @@ export default function BillingPage() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-10 w-10 rounded-xl text-slate-400 hover:text-emerald-600 hover:bg-emerald-50">
+                                  className="h-10 w-10 rounded-xl text-muted-foreground/70 hover:text-emerald-600 hover:bg-emerald-50">
                                   <Eye className="h-5 w-5" />
                                 </Button>
                               </Link>
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-10 w-10 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-blue-50"
+                                className="h-10 w-10 rounded-xl text-muted-foreground/70 hover:text-primary hover:bg-primary/10"
                                 onClick={() => handleDownloadClick(invoice.id)}
                                 disabled={downloadingId === invoice.id}>
                                 {downloadingId === invoice.id ? (
@@ -379,14 +379,14 @@ export default function BillingPage() {
           {pdfData && (
             <div
               ref={hiddenInvoiceRef}
-              className="bg-white p-16 text-slate-900 font-sans"
+              className="bg-card p-16 text-foreground font-sans"
               style={{ width: "210mm", minHeight: "297mm" }}>
               <div className="flex justify-between items-start mb-16">
                 <div>
-                  <h1 className="text-3xl font-black uppercase tracking-tighter text-slate-900 mb-2">
+                  <h1 className="text-3xl font-black uppercase tracking-tighter text-foreground mb-2">
                     {pdfData.lab?.name || "Patholab"}
                   </h1>
-                  <div className="text-[11px] font-bold text-slate-400 uppercase leading-loose">
+                  <div className="text-[11px] font-bold text-muted-foreground/70 uppercase leading-loose">
                     <p className="flex items-center gap-2">
                       <MapPin className="h-3 w-3" /> {pdfData.lab?.address},{" "}
                       {pdfData.lab?.city}
@@ -414,13 +414,13 @@ export default function BillingPage() {
 
               <div className="grid grid-cols-2 gap-20 mb-20 py-12 border-y border-slate-100">
                 <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">
+                  <p className="text-[10px] font-black text-muted-foreground/70 uppercase tracking-[0.2em] mb-4">
                     Patient Profile
                   </p>
-                  <h3 className="text-2xl font-black text-slate-900 mb-2">
+                  <h3 className="text-2xl font-black text-foreground mb-2">
                     {pdfData.patient?.name}
                   </h3>
-                  <div className="text-xs font-bold text-slate-500 space-y-1">
+                  <div className="text-xs font-bold text-muted-foreground space-y-1">
                     <p>
                       <span className="text-slate-300 w-16 inline-block uppercase tracking-tighter">
                         PID
@@ -437,18 +437,18 @@ export default function BillingPage() {
                 </div>
                 <div className="flex justify-end gap-16">
                   <div className="text-right">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                    <p className="text-[10px] font-black text-muted-foreground/70 uppercase tracking-widest mb-2">
                       Issue Date
                     </p>
-                    <p className="text-sm font-black text-slate-900">
+                    <p className="text-sm font-black text-foreground">
                       {format(new Date(pdfData.createdAt), "dd MMM yyyy")}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                    <p className="text-[10px] font-black text-muted-foreground/70 uppercase tracking-widest mb-2">
                       Issue Time
                     </p>
-                    <p className="text-sm font-black text-slate-900">
+                    <p className="text-sm font-black text-foreground">
                       {format(new Date(pdfData.createdAt), "h:mm a")}
                     </p>
                   </div>
@@ -458,13 +458,13 @@ export default function BillingPage() {
               <table className="w-full mb-20">
                 <thead>
                   <tr className="border-b-2 border-slate-900">
-                    <th className="py-4 text-left text-[10px] font-black text-slate-900 uppercase tracking-widest">
+                    <th className="py-4 text-left text-[10px] font-black text-foreground uppercase tracking-widest">
                       Service Description
                     </th>
-                    <th className="py-4 text-right text-[10px] font-black text-slate-900 uppercase tracking-widest">
+                    <th className="py-4 text-right text-[10px] font-black text-foreground uppercase tracking-widest">
                       Unit Price
                     </th>
-                    <th className="py-4 text-right text-[10px] font-black text-slate-900 uppercase tracking-widest">
+                    <th className="py-4 text-right text-[10px] font-black text-foreground uppercase tracking-widest">
                       Amount
                     </th>
                   </tr>
@@ -475,10 +475,10 @@ export default function BillingPage() {
                       <td className="py-6 font-bold text-slate-800">
                         {item.description}
                       </td>
-                      <td className="py-6 text-right font-medium text-slate-500 tabular-nums">
+                      <td className="py-6 text-right font-medium text-muted-foreground tabular-nums">
                         ₹{item.unitPrice}
                       </td>
-                      <td className="py-6 text-right font-black text-slate-900 tabular-nums text-lg">
+                      <td className="py-6 text-right font-black text-foreground tabular-nums text-lg">
                         ₹{item.total}
                       </td>
                     </tr>
@@ -490,14 +490,14 @@ export default function BillingPage() {
                 <div className="w-80 space-y-4">
                   <div className="flex justify-between items-center text-xs font-bold uppercase tracking-widest text-slate-400">
                     <span>Subtotal</span>
-                    <span className="text-slate-900">₹{pdfData.subtotal}</span>
+                    <span className="text-foreground">₹{pdfData.subtotal}</span>
                   </div>
                   <div className="flex justify-between items-center text-xs font-bold uppercase tracking-widest text-rose-500">
                     <span>Discount Applied</span>
                     <span>- ₹{pdfData.discount}</span>
                   </div>
                   <div className="flex justify-between items-center pt-4 border-t border-slate-100">
-                    <span className="text-lg font-black uppercase tracking-[0.2em] text-slate-900">
+                    <span className="text-lg font-black uppercase tracking-[0.2em] text-foreground">
                       Total Payable
                     </span>
                     <span className="text-3xl font-black text-emerald-600 tabular-nums">

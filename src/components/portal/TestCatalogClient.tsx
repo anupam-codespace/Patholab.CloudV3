@@ -50,7 +50,7 @@ export default function TestCatalogClient({
       <div className="max-w-4xl mx-auto pt-8 pb-20 px-4">
         <button
           onClick={() => setIsCheckout(false)}
-          className="flex items-center text-blue-600 font-medium mb-6 hover:underline">
+          className="flex items-center text-primary font-medium mb-6 hover:underline">
           <ArrowLeft className="w-4 h-4 mr-2" /> Back to Catalog
         </button>
         <PublicBookingForm portalSlug={portalSlug} cartItems={cart} />
@@ -62,7 +62,7 @@ export default function TestCatalogClient({
   return (
     <div className="max-w-5xl mx-auto pb-32">
       {/* 1. Header & Lab Branding */}
-      <header className="bg-white border-b sticky top-0 z-40 px-4 py-4 flex justify-between items-center shadow-sm">
+      <header className="bg-card border-b sticky top-0 z-40 px-4 py-4 flex justify-between items-center shadow-sm">
         <div className="flex items-center gap-3">
           {lab.logo ? (
             <img
@@ -71,19 +71,19 @@ export default function TestCatalogClient({
               className="h-10 w-auto object-contain"
             />
           ) : (
-            <div className="h-10 w-10 bg-blue-600 text-white rounded-lg flex items-center justify-center font-bold text-xl">
+            <div className="h-10 w-10 bg-primary text-white rounded-lg flex items-center justify-center font-bold text-xl">
               {lab.name.charAt(0)}
             </div>
           )}
           <div>
             <h1 className="font-bold text-lg text-slate-800">{lab.name}</h1>
-            <p className="text-xs text-slate-500">{lab.city}</p>
+            <p className="text-xs text-muted-foreground">{lab.city}</p>
           </div>
         </div>
       </header>
 
       {/* 2. Search & Hero */}
-      <div className="px-4 py-8 bg-blue-600 text-white text-center">
+      <div className="px-4 py-8 bg-primary text-white text-center">
         <h2 className="text-3xl font-bold mb-2">Book Your Lab Tests Online</h2>
         <p className="text-blue-100 mb-8">
           Home collection & Lab Visit options available
@@ -96,7 +96,7 @@ export default function TestCatalogClient({
             placeholder="Search for blood tests, profiles, or conditions..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-4 rounded-xl text-slate-900 shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full pl-12 pr-4 py-4 rounded-xl text-foreground shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
       </div>
@@ -108,37 +108,35 @@ export default function TestCatalogClient({
           return (
             <div
               key={test.id}
-              className="bg-white p-5 rounded-xl border shadow-sm hover:shadow-md transition-shadow flex flex-col">
+              className="bg-card p-5 rounded-xl border shadow-sm hover:shadow-md transition-shadow flex flex-col">
               <div className="mb-2">
-                <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded uppercase">
+                <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded uppercase">
                   {test.category?.name || "General"}
                 </span>
               </div>
-              <h3 className="font-bold text-lg text-slate-800 mb-1 leading-tight">
+              <h3 className="font-bold text-lg text-foreground mb-1 leading-tight">
                 {test.name}
               </h3>
               {test.description && (
-                <p className="text-sm text-slate-500 mb-4 line-clamp-2">
+                <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
                   {test.description}
                 </p>
               )}
 
-              <div className="flex items-center gap-4 text-xs text-slate-500 mb-4">
+              <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
                 <div className="flex items-center gap-1">
                   <Clock className="w-3.5 h-3.5" />
                   {test.tatHours ? `${test.tatHours} hrs TAT` : "Standard TAT"}
                 </div>
                 {test.preRequistes && (
-                  <div
-                    className="flex items-center gap-1 text-amber-600"
-                    title={test.preRequistes}>
+                  <div className="flex items-center gap-1 text-amber-600" title={test.preRequistes}>
                     <AlertCircle className="w-3.5 h-3.5" /> Fasting
                   </div>
                 )}
               </div>
 
               <div className="mt-auto flex items-center justify-between pt-4 border-t border-slate-100">
-                <div className="text-xl font-black text-slate-900">
+                <div className="text-xl font-black text-foreground">
                   ₹{test.price}
                 </div>
                 <button
@@ -146,7 +144,7 @@ export default function TestCatalogClient({
                   className={`px-4 py-2 text-sm font-bold rounded-lg transition-colors ${
                     inCart
                       ? "bg-red-50 text-red-600 hover:bg-red-100"
-                      : "bg-blue-600 text-white hover:bg-blue-700"
+                      : "bg-primary text-white hover:bg-blue-700"
                   }`}>
                   {inCart ? "Remove" : "+ Add"}
                 </button>
@@ -156,7 +154,7 @@ export default function TestCatalogClient({
         })}
 
         {filteredTests.length === 0 && (
-          <div className="col-span-full py-20 text-center text-slate-500">
+          <div className="col-span-full py-20 text-center text-muted-foreground">
             No tests found matching "{searchQuery}"
           </div>
         )}
@@ -174,14 +172,14 @@ export default function TestCatalogClient({
                 </span>
               </div>
               <div>
-                <p className="text-sm text-slate-400 font-medium">Cart Total</p>
+                <p className="text-sm text-muted-foreground/70 font-medium">Cart Total</p>
                 <p className="text-xl font-bold">₹{cartTotal}</p>
               </div>
             </div>
 
             <button
               onClick={() => setIsCheckout(true)}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-bold flex items-center gap-2 transition-colors">
+              className="bg-primary/100 hover:bg-primary text-white px-6 py-3 rounded-lg font-bold flex items-center gap-2 transition-colors">
               Proceed to Book <ArrowRight className="w-4 h-4" />
             </button>
           </div>

@@ -128,7 +128,7 @@ export default function RechargePage() {
 
   if (isLoading) {
     return (
-      <div className="p-10 text-center text-slate-500 animate-pulse">
+      <div className="p-10 text-center text-muted-foreground animate-pulse">
         Loading secure checkout...
       </div>
     );
@@ -141,22 +141,22 @@ export default function RechargePage() {
           variant="ghost"
           size="icon"
           onClick={() => router.back()}
-          className="rounded-full hover:bg-slate-100">
+          className="rounded-full hover:bg-muted">
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900">
+          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-foreground">
             Recharge Wallet
           </h1>
-          <p className="text-slate-500 text-sm">
+          <p className="text-muted-foreground text-sm">
             Add usable credits. GST is billed separately at checkout.
           </p>
         </div>
       </div>
 
       <div className="grid md:grid-cols-5 gap-6">
-        <Card className="md:col-span-3 border-slate-200 shadow-sm rounded-2xl overflow-hidden">
-          <CardHeader className="bg-slate-50 border-b border-slate-100 pb-6">
+        <Card className="md:col-span-3 border-border shadow-sm rounded-2xl overflow-hidden">
+          <CardHeader className="bg-muted/30 border-b border-slate-100 pb-6">
             <CardTitle className="flex items-center gap-2 text-lg text-slate-800">
               <Wallet className="h-5 w-5 text-indigo-600" /> Usable Credits
               Amount
@@ -175,7 +175,7 @@ export default function RechargePage() {
                   type="number"
                   value={baseAmount}
                   onChange={(e) => setBaseAmount(e.target.value)}
-                  className="pl-10 text-3xl font-black h-16 rounded-xl border-slate-300 focus-visible:ring-indigo-600 text-slate-900"
+                  className="pl-10 text-3xl font-black h-16 rounded-xl border-border focus-visible:ring-indigo-600 text-foreground"
                   placeholder="0.00"
                 />
               </div>
@@ -187,7 +187,7 @@ export default function RechargePage() {
             </div>
 
             <div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
+              <p className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider mb-3">
                 Quick Select
               </p>
               <div className="flex flex-wrap gap-3">
@@ -198,7 +198,7 @@ export default function RechargePage() {
                     className={`px-4 py-2 rounded-lg text-sm font-bold border transition-all ${
                       numericBase === val
                         ? "bg-indigo-50 border-indigo-600 text-indigo-700 ring-1 ring-indigo-600"
-                        : "bg-white border-slate-200 text-slate-600 hover:border-indigo-300 hover:bg-slate-50"
+                        : "bg-card border-border text-muted-foreground hover:border-indigo-300 hover:bg-muted/30"
                     }`}>
                     + ₹{val}
                   </button>
@@ -262,7 +262,7 @@ export default function RechargePage() {
             </CardContent>
           </Card>
 
-          <div className="flex items-center justify-center gap-2 text-xs font-medium text-slate-400 mt-4">
+          <div className="flex items-center justify-center gap-2 text-xs font-medium text-muted-foreground/70 mt-4">
             <ShieldCheck className="h-4 w-4" /> SSL Secured by Razorpay
           </div>
         </div>
