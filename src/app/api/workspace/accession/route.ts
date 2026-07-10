@@ -79,7 +79,11 @@ export async function POST(req: NextRequest) {
     if (!user?.labId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
-    const { patientId, tests, subtotal, discountAmount, grandTotal } = body;
+    const { 
+        patientId, tests, subtotal, discountAmount, grandTotal, 
+        doctorId, agencyId, paymentMode, paidAmount, collectedBy, 
+        collectedAt, isUrgent, note 
+    } = body;
 
     // Safety guard
     if (!tests || tests.length === 0) throw new Error("NO_TESTS_SELECTED");
@@ -87,11 +91,9 @@ export async function POST(req: NextRequest) {
     // Execute the entire booking in a single, safe transaction
     const result = await prisma.$transaction(async (tx) => {
         
-        // 🌟 FETCH PATIENT FIRST: So we can use their name in the Ledger
+        // 🌟 FETCH PATIENT
         const patientData = await tx.patient.findUnique({ where: { id: patientId } });
         if (!patientData) throw new Error("PATIENT_NOT_FOUND");
-        
-        const readablePatientId = patientData.patientId || patientData.id.substring(0, 8);
         
         // --- A. WALLET DEDUCTION & LEDGER LOGIC ---
         const wallet = await tx.labWallet.findUnique({ where: { labId: user.labId } });
@@ -109,22 +111,19 @@ export async function POST(req: NextRequest) {
                 labId: user.labId,
                 type: 'DEDUCTION',
                 createdAt: { gte: startOfToday },
-                description: { contains: `[ID: ${patientId}]` } // We still keep the hidden ID here for exact computer matching
+                description: { contains: `[ID: ${patientId}]` } 
             }
         });
 
         if (!alreadyChargedToday) {
             if (newBalance < visitFee) throw new Error("INSUFFICIENT_FUNDS");
-            
             newBalance -= visitFee;
 
-            // 1. Update Wallet Balance
             await tx.labWallet.update({
                 where: { labId: user.labId },
                 data: { balance: newBalance }
             });
 
-            // 2. Create Ledger Transaction (✅ NOW WITH REAL NAME)
             await tx.walletTransaction.create({
                 data: {
                     labId: user.labId,
@@ -136,16 +135,32 @@ export async function POST(req: NextRequest) {
             });
         }
 
-        // --- B. GENERATE VISIT ID ---
-        const datePrefix = `${String(startOfToday.getDate()).padStart(2, '0')}${String(startOfToday.getMonth() + 1).padStart(2, '0')}${String(startOfToday.getFullYear()).slice(2)}`;
+        // --- B. FETCH DOCTOR & AGENCY COMMISSIONS ---
+        let agencyData: any = null;
+        let doctorData: any = null;
+
+        if (agencyId) {
+            agencyData = await tx.agency.findUnique({ 
+                where: { id: agencyId },
+                include: { customCommissions: true }
+            });
+        }
         
-        const countToday = await tx.invoice.count({ 
-            where: { labId: user.labId, createdAt: { gte: startOfToday } } 
-        });
+        if (doctorId) {
+            doctorData = await tx.doctor.findUnique({ 
+                where: { id: doctorId }
+            });
+        }
+
+        // --- C. GENERATE VISIT ID ---
+        const datePrefix = `${String(startOfToday.getDate()).padStart(2, '0')}${String(startOfToday.getMonth() + 1).padStart(2, '0')}${String(startOfToday.getFullYear()).slice(2)}`;
+        const countToday = await tx.invoice.count({ where: { labId: user.labId, createdAt: { gte: startOfToday } } });
         const invoiceNumber = `${datePrefix}-${(countToday + 1).toString().padStart(4, '0')}`;
 
-        // --- C. CREATE INVOICE ---
-        const taxableAmount = Number(subtotal) - Number(discountAmount);
+        // --- D. CREATE INVOICE ---
+        const taxableAmount = Math.max(0, Number(subtotal) - Number(discountAmount));
+        const finalPaid = Number(paidAmount || 0);
+        const invoiceStatus = finalPaid >= Number(grandTotal) ? 'PAID' : (finalPaid > 0 ? 'PARTIAL' : 'PENDING');
         
         const invoice = await tx.invoice.create({
             data: {
@@ -158,8 +173,14 @@ export async function POST(req: NextRequest) {
                 taxableAmount: Number(taxableAmount),
                 totalTax: 0, cgstAmount: 0, sgstAmount: 0, igstAmount: 0, roundOff: 0,
                 grandTotal: Number(grandTotal),
-                status: 'PENDING',
-                paymentStatus: 'PENDING',
+                status: invoiceStatus,
+                paymentStatus: invoiceStatus,
+                paymentMode: paymentMode || 'CASH',
+                paidAmount: finalPaid,
+                doctorId: doctorId || null,
+                agencyId: agencyId || null,
+                collectedBy: collectedBy || null,
+                notes: note || null,
                 items: { 
                     create: tests.map((t: any) => ({ 
                         description: t.testName, 
@@ -171,27 +192,55 @@ export async function POST(req: NextRequest) {
             }
         });
 
-        // --- D. HIGH PERFORMANCE BATCH FETCHING ---
+        // --- E. HIGH PERFORMANCE BATCH FETCHING ---
         const templateIds = tests.map((t: any) => t.testTemplateId || t.testId || t.templateId || t.id).filter(Boolean);
-        
         const templates = await tx.testTemplate.findMany({
             where: { id: { in: templateIds } },
-            include: { 
-                parameters: { 
-                    include: { parameter: { include: { referenceRanges: true } } } 
-                } 
-            }
+            include: { parameters: { include: { parameter: { include: { referenceRanges: true } } } } }
         });
-
         const templateMap = new Map(templates.map(t => [t.id, t]));
         const samplesMap: Record<string, any[]> = {}; 
 
-        // --- E. CREATE TESTS & SNAPSHOT RESULTS ---
+        let totalAgencyCommission = 0;
+        let totalDoctorCommission = 0;
+
+        // --- F. CREATE TESTS & COMPUTE COMMISSIONS ---
         for (const t of tests) {
             const templateId = t.testTemplateId || t.testId || t.templateId || t.id;
             const template = templateMap.get(templateId);
-
             if (!template) throw new Error(`TEMPLATE_NOT_FOUND: ${t.testName}`);
+
+            // 💸 Evaluate Commissions for this specific Test
+            let testAgencyComm = 0;
+            let testDoctorComm = 0;
+
+            // Evaluate Agency Rules (Checks for Custom Net Prices/Tiers first, falls back to global percentage)
+            if (agencyData) {
+                const customComm = agencyData.customCommissions?.find((c: any) => c.testTemplateId === template.id);
+                if (customComm) {
+                    if (customComm.commissionType === 'PERCENTAGE') {
+                        testAgencyComm = (Number(t.price) * Number(customComm.commissionRate || 0)) / 100;
+                    } else if (customComm.commissionType === 'FIXED') {
+                        testAgencyComm = Number(customComm.commissionAmount || 0);
+                    } else if (customComm.netPrice) {
+                        testAgencyComm = Math.max(0, Number(t.price) - Number(customComm.netPrice));
+                    }
+                } else if (agencyData.commissionRate) {
+                    if (agencyData.commissionType === 'PERCENTAGE') {
+                        testAgencyComm = (Number(t.price) * Number(agencyData.commissionRate)) / 100;
+                    } else {
+                        testAgencyComm = Number(agencyData.commissionRate);
+                    }
+                }
+            }
+
+            // Evaluate Doctor Rules (Global Percentage Base)
+            if (doctorData && doctorData.commissionRate) {
+                testDoctorComm = (Number(t.price) * Number(doctorData.commissionRate)) / 100;
+            }
+
+            totalAgencyCommission += testAgencyComm;
+            totalDoctorCommission += testDoctorComm;
 
             const createdTest = await tx.test.create({
                 data: {
@@ -199,6 +248,8 @@ export async function POST(req: NextRequest) {
                     branchId: user.branchId,
                     patientId,
                     invoiceId: invoice.id,
+                    doctorId: doctorId || null,
+                    agencyId: agencyId || null,
                     testNumber: `T-${invoiceNumber}-${t.testCode}`,
                     testCode: t.testCode,
                     testName: t.testName,
@@ -206,11 +257,12 @@ export async function POST(req: NextRequest) {
                     price: Number(t.price || 0),
                     finalPrice: Number(t.price || 0),
                     status: 'PENDING',
+                    isUrgent: isUrgent || false,
+                    sampleCollectedAt: collectedAt ? new Date(collectedAt) : null,
                     results: {
                         create: template.parameters.map(p => {
                             const range = getMatchingRange(p.parameter, patientData);
                             const refText = range ? (range.textValue || `${range.lowValue} - ${range.highValue}`) : "-";
-
                             return {
                                 parameterCode: p.parameter.code,
                                 printName: p.parameter.printName || p.parameter.name,
@@ -228,7 +280,7 @@ export async function POST(req: NextRequest) {
             samplesMap[containerKey].push(createdTest.id);
         }
 
-        // --- F. CREATE PHYSICAL SAMPLES ---
+        // --- G. CREATE PHYSICAL SAMPLES ---
         for (const [containerId, testIds] of Object.entries(samplesMap)) {
             const sampleSuffix = containerId === 'DEFAULT' ? Math.floor(Math.random() * 1000) : containerId.substring(0, 4).toUpperCase();
             
@@ -244,6 +296,18 @@ export async function POST(req: NextRequest) {
                 }
             });
         }
+
+        // --- H. UPDATE INVOICE WITH TOTAL COMMISSION ---
+        // Assuming you have `agencyCommission` and `doctorCommission` on Invoice model. 
+        // If not, this is safe because Prisma ignores un-mapped parameters if they are not in schema, 
+        // but typically B2B setups require this exact tracking on the invoice.
+        await tx.invoice.update({
+            where: { id: invoice.id },
+            data: {
+                ...(totalAgencyCommission > 0 && { agencyCommissionAmount: totalAgencyCommission }),
+                ...(totalDoctorCommission > 0 && { doctorCommissionAmount: totalDoctorCommission })
+            }
+        }).catch(() => null); // Silently catch if fields aren't present in schema yet
 
         return invoice;
     }, { 

@@ -18,6 +18,8 @@ import {
   FlaskConical,
   CreditCard,
   Plus,
+  Building2,
+  Stethoscope,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 
@@ -62,29 +64,42 @@ const accessionSchema = z.object({
   printSlip: z.boolean().default(true),
   printBarcode: z.boolean().default(true),
   isUrgent: z.boolean().default(false),
+  doctorId: z.string().optional().default("Self"),
+  agencyId: z.string().optional().default("Direct"),
 });
 
 type AccessionFormData = z.infer<typeof accessionSchema>;
 
 // --- 2. DATA FETCHER ---
 const fetchAccessionData = async (patientId: string) => {
-  const [patientRes, catalogRes, parametersRes] = await Promise.all([
-    fetch(`/api/workspace/patients/${patientId}`).then((r) =>
-      r.ok ? r.json() : null,
-    ),
-    fetch(`/api/workspace/test-catalog`).then((r) => (r.ok ? r.json() : null)),
-    fetch(`/api/workspace/parameters`).then((r) =>
-      r.ok ? r.json() : { parameters: [] },
-    ),
-  ]);
+  const [patientRes, catalogRes, parametersRes, doctorsRes, agenciesRes] =
+    await Promise.all([
+      fetch(`/api/workspace/patients/${patientId}`).then((r) =>
+        r.ok ? r.json() : null,
+      ),
+      fetch(`/api/workspace/test-catalog`).then((r) =>
+        r.ok ? r.json() : null,
+      ),
+      fetch(`/api/workspace/parameters`).then((r) =>
+        r.ok ? r.json() : { parameters: [] },
+      ),
+      fetch(`/api/workspace/doctors`).then((r) =>
+        r.ok ? r.json() : { data: [] },
+      ),
+      fetch(`/api/workspace/agencies`).then((r) =>
+        r.ok ? r.json() : { data: [] },
+      ),
+    ]);
 
   if (!patientRes) throw new Error("Failed to fetch patient data");
 
   const catalogArray = catalogRes?.tests || catalogRes?.data || [];
   const parametersArray =
     parametersRes?.parameters || parametersRes?.data || [];
-
   const patientData = patientRes?.patient || patientRes?.data || patientRes;
+
+  const doctorsArray = doctorsRes?.data || doctorsRes?.doctors || [];
+  const agenciesArray = agenciesRes?.data || agenciesRes?.agencies || [];
 
   if (!patientData || !patientData.id) {
     throw new Error("Patient profile data is missing or incomplete.");
@@ -104,6 +119,8 @@ const fetchAccessionData = async (patientId: string) => {
   return {
     patient: patientData,
     catalog: [...catalogArray, ...formattedParameters],
+    doctors: doctorsArray,
+    agencies: agenciesArray,
   };
 };
 
@@ -114,8 +131,8 @@ export default function AccessionPage() {
 
   const patientId = searchParams.get("patientId");
   const isNewVisit = searchParams.get("isNewVisit") === "true";
-  const doctorNameParam = searchParams.get("doc");
-  const agencyNameParam = searchParams.get("agency");
+  const doctorNameParam = searchParams.get("doc") || "Self";
+  const agencyNameParam = searchParams.get("agency") || "Direct";
   const collectedByParam = searchParams.get("colBy") || "";
 
   // Safely map URL payment parameters to strict Zod Enums
@@ -160,6 +177,8 @@ export default function AccessionPage() {
       printSlip: true,
       printBarcode: true,
       isUrgent: false,
+      doctorId: doctorNameParam,
+      agencyId: agencyNameParam,
     },
   });
 
@@ -170,6 +189,8 @@ export default function AccessionPage() {
     register("printSlip");
     register("printBarcode");
     register("isUrgent");
+    register("doctorId");
+    register("agencyId");
   }, [register]);
 
   const selectedTests = watch("tests");
@@ -177,6 +198,8 @@ export default function AccessionPage() {
   const paidAmount = watch("paidAmount");
   const paymentMode = watch("paymentMode");
   const isUrgent = watch("isUrgent");
+  const selectedDoctorId = watch("doctorId");
+  const selectedAgencyId = watch("agencyId");
 
   const subTotal = selectedTests.reduce(
     (acc: number, t: CatalogItem) => acc + (Number(t.price) || 0),
@@ -245,10 +268,10 @@ export default function AccessionPage() {
       subtotal: subTotal,
       discountAmount: formData.discount,
       grandTotal: netPayable,
-      doctorId: doctorNameParam === "Self" ? null : doctorNameParam,
-      agencyId: agencyNameParam === "Direct" ? null : agencyNameParam,
+      doctorId: formData.doctorId === "Self" ? null : formData.doctorId,
+      agencyId: formData.agencyId === "Direct" ? null : formData.agencyId,
       tests: formData.tests.map((t: CatalogItem) => ({
-        testTemplateId: t.id, // ✅ FIXED: Crucial parameter mapped properly
+        testTemplateId: t.id,
         testCode: t.code,
         testName: t.name,
         price: t.price,
@@ -296,6 +319,19 @@ export default function AccessionPage() {
       return matchesSearch && matchesType;
     });
   }, [data?.catalog, search, filterType]);
+
+  // Find names for the sticky header
+  const getSelectedDoctorName = () => {
+    if (selectedDoctorId === "Self") return "Self";
+    const doc = data?.doctors?.find((d: any) => d.id === selectedDoctorId);
+    return doc ? doc.name : selectedDoctorId;
+  };
+
+  const getSelectedAgencyName = () => {
+    if (selectedAgencyId === "Direct") return "Direct";
+    const agency = data?.agencies?.find((a: any) => a.id === selectedAgencyId);
+    return agency ? agency.agencyName || agency.name : selectedAgencyId;
+  };
 
   // --- SAFETY SCREENS ---
   if (!patientId) {
@@ -375,13 +411,25 @@ export default function AccessionPage() {
         </div>
 
         <div className="flex items-center gap-6">
-          {doctorNameParam && doctorNameParam !== "Self" && (
+          {selectedDoctorId !== "Self" && (
             <div className="flex flex-col items-end">
               <span className="text-[10px] lg:text-xs font-bold text-slate-400 uppercase tracking-widest">
                 Referral
               </span>
               <span className="text-sm font-bold text-slate-700 flex items-center gap-1.5 truncate max-w-[120px] sm:max-w-xs">
-                <User className="w-3.5 h-3.5 opacity-50" /> {doctorNameParam}
+                <Stethoscope className="w-3.5 h-3.5 text-indigo-500" />{" "}
+                {getSelectedDoctorName()}
+              </span>
+            </div>
+          )}
+          {selectedAgencyId !== "Direct" && (
+            <div className="hidden sm:flex flex-col items-end border-l pl-4 border-slate-200">
+              <span className="text-[10px] lg:text-xs font-bold text-slate-400 uppercase tracking-widest">
+                Agency
+              </span>
+              <span className="text-sm font-bold text-slate-700 flex items-center gap-1.5 truncate max-w-[120px] sm:max-w-xs">
+                <Building2 className="w-3.5 h-3.5 text-indigo-500" />{" "}
+                {getSelectedAgencyName()}
               </span>
             </div>
           )}
@@ -656,6 +704,55 @@ export default function AccessionPage() {
 
             {/* Logistics & Meta */}
             <div className="space-y-4 pt-4 border-t border-slate-100">
+              {/* Added: Referral Doctor & Agency */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-[10px] uppercase font-bold text-slate-500">
+                    Ref. Doctor
+                  </Label>
+                  <Select
+                    value={selectedDoctorId}
+                    onValueChange={(v) =>
+                      setValue("doctorId", v, { shouldValidate: true })
+                    }>
+                    <SelectTrigger className="h-10 text-xs font-bold border-slate-200 rounded-xl bg-slate-50">
+                      <SelectValue placeholder="Select Doctor" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl">
+                      <SelectItem value="Self">Self / None</SelectItem>
+                      {data.doctors?.map((doc: any) => (
+                        <SelectItem key={doc.id} value={doc.id}>
+                          {doc.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-[10px] uppercase font-bold text-slate-500">
+                    Ref. Agency
+                  </Label>
+                  <Select
+                    value={selectedAgencyId}
+                    onValueChange={(v) =>
+                      setValue("agencyId", v, { shouldValidate: true })
+                    }>
+                    <SelectTrigger className="h-10 text-xs font-bold border-slate-200 rounded-xl bg-slate-50">
+                      <SelectValue placeholder="Select Agency" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl">
+                      <SelectItem value="Direct">Direct / None</SelectItem>
+                      {data.agencies?.map((agency: any) => (
+                        <SelectItem key={agency.id} value={agency.id}>
+                          {agency.agencyName || agency.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
               <div className="space-y-1.5">
                 <Label className="text-[10px] uppercase font-bold text-slate-500">
                   Collector / Phleb.
