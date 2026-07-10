@@ -103,7 +103,7 @@ export default async function RootLayout({
           </style>
         )}
       </head>
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} font-sans antialiased uppercase`}>
         {/* Wrap everything in the Client-Side Provider */}
         <Providers>{children}</Providers>
 
