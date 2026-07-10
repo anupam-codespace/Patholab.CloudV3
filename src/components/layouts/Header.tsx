@@ -149,9 +149,9 @@ export function Header({ toggleSidebar, userData }: HeaderProps) {
 
   useEffect(() => {
     const hour = new Date().getHours();
-    if (hour < 12) setGreeting("Good morning");
-    else if (hour < 18) setGreeting("Good afternoon");
-    else setGreeting("Good evening");
+    if (hour < 12) setGreeting("GOOD MORNING");
+    else if (hour < 18) setGreeting("GOOD AFTERNOON");
+    else setGreeting("GOOD EVENING");
   }, []);
 
   const shortcuts = getQuickShortcuts(userData?.role);
