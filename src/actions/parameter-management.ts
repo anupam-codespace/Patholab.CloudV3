@@ -21,7 +21,7 @@ export async function getParameters() {
         { labId: labId },
         { 
           isGlobal: true,
-          forks: { none: { labId: labId } }
+         
         }
       ]
     },
@@ -29,15 +29,19 @@ export async function getParameters() {
     include: {
       referenceRanges: true,
       containerType: true,
-      reagents: { include: { inventoryItem: true } } 
+      reagents: { include: { inventoryItem: true } } ,
+      forkedFrom: { select: { name: true, code: true } }
     }
   });
 }
 
 // --- 2. CREATE PARAMETER ---
+// --- 2. CREATE PARAMETER ---
 export async function createParameter(data: {
   name: string;
   code: string;
+  price?: number;    // ✅ Fixed location
+  decimals?: number; // ✅ Fixed location
   unit?: string;
   printName?: string;
   method?: string;
@@ -63,7 +67,6 @@ export async function createParameter(data: {
   const labId = await getLabId();
   const codeUpper = data.code.toUpperCase();
 
-  // ✅ SAFELY PARSE CONTAINER ID
   const validContainerId = data.containerTypeId && data.containerTypeId !== "generic" && data.containerTypeId.trim() !== "" 
     ? data.containerTypeId 
     : null;
@@ -84,10 +87,12 @@ export async function createParameter(data: {
         name: data.name,
         code: codeUpper,
         printName: data.printName || data.name,
+        price: data.price || 0,       // ✅ Saving to database
+        decimals: data.decimals || 2, // ✅ Saving to database
         unit: data.unit || null,
         method: data.method || null,
         formula: data.formula || null,
-        containerTypeId: validContainerId, // Use sanitized ID
+        containerTypeId: validContainerId,
         isActive: true
       }
     });
@@ -126,9 +131,12 @@ export async function createParameter(data: {
 }
 
 // --- 3. UPDATE OR FORK PARAMETER ---
+// --- 3. UPDATE OR FORK PARAMETER ---
 export async function updateParameter(id: string, data: {
     name: string;
     code: string;
+    price?: number;    // ✅ Fixed location
+    decimals?: number; // ✅ Fixed location
     unit?: string;
     printName?: string;
     method?: string;
@@ -154,7 +162,6 @@ export async function updateParameter(id: string, data: {
     const labId = await getLabId(); 
     const codeUpper = data.code.toUpperCase();
 
-    // ✅ SAFELY PARSE CONTAINER ID
     const validContainerId = data.containerTypeId && data.containerTypeId !== "generic" && data.containerTypeId.trim() !== "" 
       ? data.containerTypeId 
       : null;
@@ -165,19 +172,26 @@ export async function updateParameter(id: string, data: {
 
     if (!existingParam) return { error: "Parameter not found" };
 
-    const duplicateCode = await prisma.labTestParameter.findFirst({
-      where: { 
-        labId: labId, 
-        code: codeUpper,
-        isActive: true,
-        NOT: { id: id } 
-      }
-    });
+    if (existingParam.isGlobal || existingParam.code !== codeUpper) {
+      const duplicateCode = await prisma.labTestParameter.findFirst({
+        where: { 
+          labId: labId, 
+          code: codeUpper,
+          isActive: true,
+          NOT: { 
+             OR: [
+               { id: id },
+               { id: existingParam.forkedFromId || "none" } 
+             ] 
+          }
+        }
+      });
 
-    if (duplicateCode) {
-      return { error: `A parameter with the short code '${codeUpper}' already exists in your catalog. Please use a different code.` };
+      if (duplicateCode) {
+        return { error: `A parameter with the short code '${codeUpper}' already exists. Please use a different code.` };
+      }
     }
-  
+    
     await prisma.$transaction(async (tx) => {
       
       // --- SCENARIO A: FORK ---
@@ -190,10 +204,12 @@ export async function updateParameter(id: string, data: {
             name: data.name,
             code: codeUpper,
             printName: data.printName || data.name,
+            price: data.price || 0,        // ✅ Saving to database
+            decimals: data.decimals || 2,  // ✅ Saving to database
             unit: data.unit || null,
             method: data.method || null,
             formula: data.formula || null,
-            containerTypeId: validContainerId, // Use sanitized ID
+            containerTypeId: validContainerId,
             isActive: true
           }
         });
@@ -237,10 +253,12 @@ export async function updateParameter(id: string, data: {
             name: data.name,
             code: codeUpper,
             printName: data.printName || data.name,
+            price: data.price || 0,        // ✅ Added to update block!
+            decimals: data.decimals || 2,  // ✅ Added to update block!
             unit: data.unit || null,
             method: data.method || null,
             formula: data.formula || null,
-            containerTypeId: validContainerId, // Use sanitized ID
+            containerTypeId: validContainerId,
           }
         });
     

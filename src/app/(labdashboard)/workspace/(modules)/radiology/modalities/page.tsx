@@ -225,7 +225,7 @@ export default function MachinesDashboard() {
                 No machines found. Click "Add Machine" to register one.
              </div>
           ) : filteredModalities.map((machine: any) => (
-            <div key={machine.id} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-all group">
+            <div key={machine.id} className="bg-white rounded-xl border border-slate-300 shadow-sm overflow-hidden flex flex-col hover:shadow-md hover:border-indigo-300 transition-all group">
               
               <div className="p-4 border-b border-slate-100 bg-slate-50/80 flex justify-between items-start">
                 <div className="flex gap-3">

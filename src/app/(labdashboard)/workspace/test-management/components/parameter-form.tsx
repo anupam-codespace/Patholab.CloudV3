@@ -56,11 +56,12 @@ const parameterSchema = z.object({
   inputType: z.nativeEnum(ParameterInputType),
   unit: z.string().optional(),
 
-  price: z.coerce
-    .number({ invalid_type_error: "Must be a valid number" })
-    .min(0, "Cannot be negative")
-    .catch(0),
-  decimals: z.coerce.number().min(0, "Cannot be negative").catch(2),
+  // Update the price field in your parameterSchema
+price: z.union([z.string(), z.number()])
+  .transform((val) => Number(val))
+  .pipe(z.number().min(0, "Cannot be negative")),
+    
+  //decimals: z.coerce.number().min(0, "Cannot be negative").catch(2),
 
   // Method and Formula are completely optional
   formula: z.string().optional(),
@@ -220,9 +221,9 @@ export default function ParameterForm({
         unit: initialData.unit || "",
         inputType: initialData.inputType || ParameterInputType.NUMBER,
 
-        // Safely cast Prisma Decimals to JavaScript Numbers
-        price: Number(initialData.price || 0),
-        decimals: Number(initialData.decimals || 2),
+        // ✅ SAFELY CONVERT TO NUMBER
+        price: initialData.price ? Number(initialData.price) : 0,
+        decimals: initialData.decimals ? Number(initialData.decimals) : 2,
 
         // Convert "NA" back to empty strings for a clean editing experience
         method: initialData.method === "NA" ? "" : initialData.method || "",
@@ -309,7 +310,8 @@ export default function ParameterForm({
               errors.name || errors.code || errors.price || errors.decimals
                 ? "text-red-600 font-bold bg-red-50/50"
                 : ""
-            }>
+            }
+          >
             Core{" "}
             {(errors.name || errors.code || errors.price || errors.decimals) &&
               "*"}
@@ -319,7 +321,8 @@ export default function ParameterForm({
             disabled={inputType !== "NUMBER"}
             className={
               errors.ranges ? "text-red-600 font-bold bg-red-50/50" : ""
-            }>
+            }
+          >
             Ranges {errors.ranges && "*"}
           </TabsTrigger>
           <TabsTrigger
@@ -327,14 +330,16 @@ export default function ParameterForm({
             disabled={inputType !== "NUMBER"}
             className={
               errors.formula ? "text-red-600 font-bold bg-red-50/50" : ""
-            }>
+            }
+          >
             Formula {errors.formula && "*"}
           </TabsTrigger>
           <TabsTrigger
             value="reagents"
             className={
               errors.reagents ? "text-red-600 font-bold bg-red-50/50" : ""
-            }>
+            }
+          >
             Inventory {errors.reagents && "*"}
           </TabsTrigger>
         </TabsList>
@@ -385,7 +390,8 @@ export default function ParameterForm({
                 initialData?.containerTypeId ||
                 "generic"
               }
-              key={initialData?.containerTypeId}>
+              key={initialData?.containerTypeId}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select Tube" />
               </SelectTrigger>
@@ -410,7 +416,8 @@ export default function ParameterForm({
                 onValueChange={(val) =>
                   setValue("inputType", val as ParameterInputType)
                 }
-                value={inputType}>
+                value={inputType}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
@@ -500,15 +507,18 @@ export default function ParameterForm({
               return (
                 <Card
                   key={field.id}
-                  className={`relative shadow-sm overflow-hidden ${rangeErrs ? "border-red-300 ring-1 ring-red-100" : "border-slate-200"}`}>
+                  className={`relative shadow-sm overflow-hidden ${rangeErrs ? "border-red-300 ring-1 ring-red-100" : "border-slate-200"}`}
+                >
                   <div
-                    className={`absolute top-0 left-0 w-1 h-full ${rangeErrs ? "bg-red-500" : "bg-blue-500"}`}></div>
+                    className={`absolute top-0 left-0 w-1 h-full ${rangeErrs ? "bg-red-500" : "bg-blue-500"}`}
+                  ></div>
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
                     className="absolute right-2 top-2 text-red-500 hover:bg-red-50"
-                    onClick={() => remove(index)}>
+                    onClick={() => remove(index)}
+                  >
                     <Trash2 className="h-4 w-4" />
                   </Button>
 
@@ -539,7 +549,8 @@ export default function ParameterForm({
                             if (v !== "CUSTOM")
                               setValue(`ranges.${index}.customLabel`, "");
                           }}
-                          defaultValue={field.gender}>
+                          defaultValue={field.gender}
+                        >
                           <SelectTrigger className="h-8 text-xs font-medium">
                             <SelectValue placeholder={field.gender} />
                           </SelectTrigger>
@@ -549,7 +560,8 @@ export default function ParameterForm({
                             <SelectItem value="BOTH">Both</SelectItem>
                             <SelectItem
                               value="CUSTOM"
-                              className="font-bold text-blue-600">
+                              className="font-bold text-blue-600"
+                            >
                               Custom
                             </SelectItem>
                           </SelectContent>
@@ -558,7 +570,8 @@ export default function ParameterForm({
 
                       <div className="col-span-3 space-y-1">
                         <label
-                          className={`text-xs font-medium flex items-center gap-1 ${isCustom ? "text-blue-700" : "text-slate-300"}`}>
+                          className={`text-xs font-medium flex items-center gap-1 ${isCustom ? "text-blue-700" : "text-slate-300"}`}
+                        >
                           Custom Label{" "}
                           {isCustom && <span className="text-red-500">*</span>}
                         </label>
@@ -617,7 +630,8 @@ export default function ParameterForm({
                           onValueChange={(v: any) =>
                             setValue(`ranges.${index}.ageUnit`, v)
                           }
-                          defaultValue={field.ageUnit}>
+                          defaultValue={field.ageUnit}
+                        >
                           <SelectTrigger className="h-8 text-xs">
                             <SelectValue placeholder={field.ageUnit} />
                           </SelectTrigger>
@@ -698,7 +712,8 @@ export default function ParameterForm({
               variant="outline"
               size="sm"
               className="w-full border-dashed"
-              onClick={() => append(defaultRange)}>
+              onClick={() => append(defaultRange)}
+            >
               <Plus className="mr-2 h-4 w-4" /> Add Range Condition
             </Button>
           </div>
@@ -739,7 +754,8 @@ export default function ParameterForm({
               return (
                 <div
                   key={field.id}
-                  className={`flex items-start gap-3 bg-white p-3 rounded-lg border shadow-sm relative group ${reagentErrors ? "border-red-300 bg-red-50/30" : "border-slate-200"}`}>
+                  className={`flex items-start gap-3 bg-white p-3 rounded-lg border shadow-sm relative group ${reagentErrors ? "border-red-300 bg-red-50/30" : "border-slate-200"}`}
+                >
                   <div className="flex-1 space-y-1.5">
                     <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
                       Inventory Catalog Item{" "}
@@ -749,9 +765,11 @@ export default function ParameterForm({
                       onValueChange={(v) =>
                         setValue(`reagents.${index}.inventoryItemId`, v)
                       }
-                      defaultValue={(field as any).inventoryItemId}>
+                      defaultValue={(field as any).inventoryItemId}
+                    >
                       <SelectTrigger
-                        className={`bg-slate-50 ${reagentErrors?.inventoryItemId ? "border-red-500 ring-1 ring-red-200" : ""}`}>
+                        className={`bg-slate-50 ${reagentErrors?.inventoryItemId ? "border-red-500 ring-1 ring-red-200" : ""}`}
+                      >
                         <SelectValue placeholder="Search or select an item..." />
                       </SelectTrigger>
                       <SelectContent>
@@ -801,7 +819,8 @@ export default function ParameterForm({
                     variant="ghost"
                     size="icon"
                     className="mt-6 text-slate-400 hover:text-red-500 hover:bg-red-50"
-                    onClick={() => removeReagent(index)}>
+                    onClick={() => removeReagent(index)}
+                  >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -814,7 +833,8 @@ export default function ParameterForm({
             variant="outline"
             size="sm"
             className="w-full border-dashed text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 border-emerald-200"
-            onClick={() => appendReagent({ inventoryItemId: "", quantity: 0 })}>
+            onClick={() => appendReagent({ inventoryItemId: "", quantity: 0 })}
+          >
             <Beaker className="mr-2 h-4 w-4" /> Link Inventory Item
           </Button>
         </TabsContent>
@@ -827,7 +847,8 @@ export default function ParameterForm({
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="bg-blue-600 hover:bg-blue-700">
+          className="bg-blue-600 hover:bg-blue-700"
+        >
           {isSubmitting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (

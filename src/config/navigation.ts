@@ -157,6 +157,7 @@ export const radiologyNav: NavGroup = {
     { name: "Reporting Queue", href: "/workspace/radiology/reporting", icon: Stethoscope },
     { name: "Machines", href: "/workspace/radiology/modalities", icon: Server },
     { name: "Settings", href: "/workspace/radiology/settings/macros", icon: Settings },
+    { name: "Patient Directory", href: "/workspace/radiology/directory", icon: Users },
   ],
 };
 

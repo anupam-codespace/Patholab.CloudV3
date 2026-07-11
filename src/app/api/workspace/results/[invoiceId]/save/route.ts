@@ -8,68 +8,125 @@ export async function POST(
 ) {
   try {
     const user = await getCurrentUser();
+
     if (!user || !user.labId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
     }
 
     const invoiceId = params.invoiceId;
     const body = await req.json();
+
     const { action, data } = body;
-    const { parameters, notes, impressions } = data;
 
-    // 1. Map the UI action to your database TestStatus enum
-    let targetStatus: any = "IN_PROGRESS"; // Default for SAVE_DRAFT
-    if (action === "REQUEST_APPROVAL") targetStatus = "COMPLETED";
-    if (action === "APPROVE") targetStatus = "APPROVED";
+    const parameters = data?.parameters || {};
+    const notes = data?.notes || {};
+    const impressions = data?.impressions || {};
 
-    // 2. Prepare all the parameter update promises
-    const updatePromises: any[] = [];
+    // 1. Map UI action → Test status
+    let targetStatus: any = "IN_PROGRESS";
 
-    // Update individual result parameters
-    for (const [paramId, val] of Object.entries(parameters)) {
-      const stringValue = val as string;
-      const numValue = parseFloat(stringValue);
-      
-      updatePromises.push(
-        prisma.testResultParameter.update({
-          where: { id: paramId },
+    if (action === "SAVE_DRAFT") {
+      targetStatus = "IN_PROGRESS";
+    }
+
+    if (action === "REQUEST_APPROVAL") {
+      targetStatus = "COMPLETED";
+    }
+
+    if (action === "APPROVE") {
+      targetStatus = "APPROVED";
+    }
+
+    // 2. Get ALL clinical tests from this invoice
+    const invoiceTests = await prisma.test.findMany({
+      where: {
+        invoiceId,
+        labId: user.labId,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (invoiceTests.length === 0) {
+      return NextResponse.json(
+        { error: "No tests found for this invoice" },
+        { status: 404 }
+      );
+    }
+
+    // 3. Update result parameters
+    const parameterUpdates = Object.entries(parameters).map(
+      ([paramId, val]) => {
+        const stringValue = String(val ?? "");
+        const numValue = parseFloat(stringValue);
+
+        return prisma.testResultParameter.update({
+          where: {
+            id: paramId,
+          },
           data: {
             textValue: stringValue,
-            numericValue: isNaN(numValue) ? null : numValue,
+            numericValue: isNaN(numValue)
+              ? null
+              : numValue,
           },
-        })
-      );
-    }
+        });
+      }
+    );
 
-    // 3. Update the parent Tests (Notes, Impressions, and Status)
-    // We get the unique test IDs from the notes/impressions payload
-    const testIds = new Set([
-      ...Object.keys(notes || {}),
-      ...Object.keys(impressions || {})
+    // 4. Update EVERY test belonging to invoice
+    const testUpdates = invoiceTests.map((test) =>
+      prisma.test.update({
+        where: {
+          id: test.id,
+        },
+        data: {
+          notes: notes[test.id] || null,
+
+          impression:
+            impressions[test.id] || null,
+
+          status: targetStatus,
+
+          approvedBy:
+            action === "APPROVE"
+              ? user.id
+              : undefined,
+
+          approvedAt:
+            action === "APPROVE"
+              ? new Date()
+              : undefined,
+        },
+      })
+    );
+
+    // 5. Execute safely
+    await prisma.$transaction([
+      ...parameterUpdates,
+      ...testUpdates,
     ]);
 
-    for (const testId of Array.from(testIds)) {
-      updatePromises.push(
-        prisma.test.update({
-          where: { id: testId },
-          data: {
-            notes: notes[testId] || null,
-            impression: impressions[testId] || null,
-            status: targetStatus,
-            // If approving, log who approved it and when
-            approvedBy: action === "APPROVE" ? user.id : undefined,
-            approvedAt: action === "APPROVE" ? new Date() : undefined,
-          },
-        })
-      );
-    }
-
-    // 4. Execute everything in a single, safe transaction
-    await prisma.$transaction(updatePromises);
-
-    return NextResponse.json({ message: "Results saved successfully" });
+    return NextResponse.json({
+      success: true,
+      message: "Results saved successfully",
+      status: targetStatus,
+      updatedTests: invoiceTests.length,
+    });
   } catch (error) {
     console.error("[RESULTS_SAVE_ERROR]", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+
+    return NextResponse.json(
+      {
+        error: "Internal Server Error",
+      },
+      {
+        status: 500,
+      }
+    );
   }
 }

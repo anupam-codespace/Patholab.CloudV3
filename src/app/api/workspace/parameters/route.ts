@@ -10,34 +10,96 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
   try {
     const user = await getDataFromToken(req);
-    if (!user || !user.labId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const parameters = await prisma.labTestParameter.findMany({
-      where: {
-        isActive: true, // ✅ Safely ignores soft-deleted items using schema-valid field
-        OR: [
-          { isGlobal: true },
-          { labId: user.labId }
-        ]
-      },
-      include: {
-        // ✅ Strictly lowercase to match Prisma relation definitions
-        containerType: {
-          select: { code: true, capColor: true }
-        },
-        // Include reference ranges for use in results entry
-        referenceRanges: true 
-      },
-      orderBy: [
-        { isGlobal: 'desc' }, // Group Global items at the top
-        { name: 'asc' }
+    if (!user || !user.labId) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    // 1. Read pagination values from URL
+    const { searchParams } = new URL(req.url);
+
+    const page = Math.max(
+      1,
+      parseInt(searchParams.get("page") || "1", 10)
+    );
+
+    const limit = Math.min(
+      100,
+      Math.max(
+        1,
+        parseInt(searchParams.get("limit") || "20", 10)
+      )
+    );
+
+    const skip = (page - 1) * limit;
+
+    // 2. Common filter
+    const where = {
+      isActive: true,
+      OR: [
+        { isGlobal: true },
+        { labId: user.labId }
       ]
-    });
+    };
 
-    return NextResponse.json({ parameters }, { status: 200 });
+    // 3. Fetch only current page + total count
+    const [parameters, total] = await Promise.all([
+      prisma.labTestParameter.findMany({
+        where,
+
+        include: {
+          containerType: {
+            select: {
+              code: true,
+              capColor: true
+            }
+          },
+          referenceRanges: true
+        },
+
+        orderBy: [
+          { isGlobal: "desc" },
+          { name: "asc" }
+        ],
+
+        skip,
+        take: limit
+      }),
+
+      prisma.labTestParameter.count({
+        where
+      })
+    ]);
+
+    // 4. Calculate pagination metadata
+    const totalPages = Math.ceil(total / limit);
+
+    return NextResponse.json(
+      {
+        parameters,
+
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+          hasNextPage: page < totalPages,
+          hasPreviousPage: page > 1
+        }
+      },
+      { status: 200 }
+    );
+
   } catch (error) {
     console.error("Parameters Fetch Error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }
 
