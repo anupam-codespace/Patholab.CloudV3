@@ -1,80 +1,64 @@
 // ==========================================
 // CONFIG & GENERATOR
 // ==========================================
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 // ==========================================
-// SYSTEM CONFIGURATION (Full SEO)
+// SYSTEM CONFIGURATION
 // ==========================================
-
 model SystemConfig {
-  id String @id @default(cuid())
-
-  // 1. Core Branding
-  systemName     String  @default("Patholab Cloud")
-  systemLogo     String?
-  favicon        String?
-  primaryColor   String  @default("#3b82f6")
-  secondaryColor String  @default("#8b5cf6")
-
-  // 2. Global SEO & Marketing
-  seoTitle          String? @default("Patholab Cloud - Modern LIMS")
-  seoDescription    String?
-  seoKeywords       String?
-  ogImage           String?
-  googleAnalyticsId String?
-  facebookPixelId   String?
-  socialLinks       String?
-
-  // 3. Business & Contact Info
-  systemEmail   String?
-  systemPhone   String?
-  systemAddress String?
-
-  // 4. Billing & Compliance
-  gstNumber      String?
-  panNumber      String?
-  invoicePrefix  String  @default("SAAS")
-  nextInvoiceNo  Int     @default(1)
-  currency       String  @default("INR")
-  currencySymbol String  @default("₹")
-  taxRate        Decimal @default(18.0)
-
-  // 5. Integrations & API Keys
-  enableABDM        Boolean @default(false)
-  abdmClientId      String?
-  abdmClientSecret  String?
-  razorpayKeyId     String?
-  razorpayKeySecret String?
-
-  smtpHost     String?
-  smtpPort     Int?
-  smtpUser     String?
-  smtpPassword String?
-
-  landingPage String?
-
-  // NEW: Global Portal Toggle
-  enablePatientPortal Boolean @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                  String   @id @default(uuid())
+  systemName          String   @default("Patholab Cloud")
+  systemLogo          String?
+  favicon             String?
+  primaryColor        String   @default("#3b82f6")
+  secondaryColor      String   @default("#8b5cf6")
+  seoTitle            String?  @default("Patholab Cloud - Modern LIMS")
+  seoDescription      String?  @db.Text
+  seoKeywords         String?
+  ogImage             String?
+  defaultRegFee       Decimal  @default(2.50) @db.Decimal(10, 2)
+  defaultMinRecharge  Decimal  @default(100.00) @db.Decimal(10, 2)
+  googleAnalyticsId   String?
+  facebookPixelId     String?
+  socialLinks         Json?
+  systemEmail         String?
+  systemPhone         String?
+  systemAddress       String?
+  gstNumber           String?
+  panNumber           String?
+  invoicePrefix       String   @default("SAAS")
+  nextInvoiceNo       Int      @default(1)
+  currency            String   @default("INR")
+  currencySymbol      String   @default("₹")
+  taxRate             Decimal  @default(18.0) @db.Decimal(5, 2)
+  enableABDM          Boolean  @default(false)
+  abdmClientId        String?
+  abdmClientSecret    String?
+  razorpayKeyId       String?
+  razorpayKeySecret   String?
+  smtpHost            String?
+  smtpPort            Int?
+  smtpUser            String?
+  smtpPassword        String?
+  landingPage         Json?
+  enablePatientPortal Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 }
 
 // ==========================================
 // USER MANAGEMENT & RBAC
 // ==========================================
-
 model User {
-  id               String           @id @default(cuid())
+  id               String           @id @default(uuid())
   email            String           @unique
   password         String
   name             String
@@ -84,32 +68,45 @@ model User {
   onboardingStatus OnboardingStatus @default(REGISTERED)
   isActive         Boolean          @default(false)
   avatar           String?
-
-  abhaNumber  String? @unique
-  abhaAddress String?
-
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  abhaNumber       String?          @unique
+  abhaAddress      String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  deletedAt        DateTime? // Allowed on users, not clinical data
 
   // Relations
   lab                Lab?                 @relation("LabOwner")
   staffLabs          LabStaff[]
   otp                OTP?
-  notifications      Notification[]
-  supportTickets     SupportTicket[]
   activityLogs       ActivityLog[]
   doctor             Doctor?
   agency             Agency?
-  patientProfile     Patient?             @relation("UserPatient") // Links online accounts to clinical records
+  patientProfile     Patient[]            @relation("UserPatient")
   phlebotomistTrips  HomeCollectionTrip[]
-  sentInvitations    Invitation[]
   technicianReports  Report[]             @relation("TechnicianReports")
   seniorTechReports  Report[]             @relation("SeniorTechReports")
   pathologistReports Report[]             @relation("PathologistReports")
+  SupportTicket      SupportTicket[]
 
   @@index([email])
   @@index([role])
+}
+
+model ActivityLog {
+  id          String   @id @default(uuid())
+  labId       String // Added this
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  action      String
+  entity      String
+  entityId    String
+  entityType  String // Added this
+  description String
+  details     Json? // Added this
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([labId]) // Added index for performance
 }
 
 enum OnboardingStatus {
@@ -129,11 +126,10 @@ enum Role {
   AGENCY
   PATIENT
   PHLEBOTOMIST
-  B2B_PARTNER
 }
 
 model OTP {
-  id        String   @id @default(cuid())
+  id        String   @id @default(uuid())
   userId    String   @unique
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   code      String
@@ -150,90 +146,103 @@ enum OTPType {
 }
 
 // ==========================================
-// LABORATORY CORE & ENTERPRISE MULTI-BRANCH
+// INFRASTRUCTURE: MEDIA & EVENT BUS
 // ==========================================
+model DomainEvent {
+  id            String   @id @default(uuid())
+  eventType     String
+  aggregateType String
+  aggregateId   String
+  payload       Json
+  processed     Boolean  @default(false)
+  createdAt     DateTime @default(now())
 
+  @@index([processed, eventType])
+}
+
+model MediaAsset {
+  id        String   @id @default(uuid())
+  provider  String
+  bucket    String
+  path      String
+  mimeType  String
+  size      Int
+  checksum  String?
+  createdAt DateTime @default(now())
+}
+
+// ==========================================
+// LABORATORY CORE & MULTI-BRANCH
+// ==========================================
 model Lab {
-  id String @id @default(cuid())
-
-  name           String
-  portalSlug     String? @unique // Public Booking Link (e.g. patholab.cloud/book/city-lab)
-  labCode        String? @unique
-  upiId          String?
-  address        String
-  city           String
-  state          String
-  pincode        String
-  phone          String
-  email          String
-  licenseNumber  String  @unique
-  registrationNo String?
-  taxId          String?
-
-  gstNumber  String?
-  panNumber  String?
-  entityType String?
-
-  bankName      String?
-  accountNumber String?
-  ifscCode      String?
-  accountHolder String?
-
-  logo       String?
-  letterhead String?
-  footer     String?
-  signature  String?
-  isActive   Boolean @default(true)
-
-  whatsappApiKey  String?
-  whatsappPhoneId String?
-  smsApiKey       String?
-  smsSenderId     String?
-
-  defaultDoctorCommission Decimal?       @default(10.0)
-  defaultAgencyCommission Decimal?       @default(5.0)
+  id                      String         @id @default(uuid())
+  name                    String
+  portalSlug              String?        @unique
+  labCode                 String?        @unique
+  upiId                   String?
+  address                 String?
+  city                    String?
+  state                   String?
+  pincode                 String?
+  phone                   String
+  email                   String
+  licenseNumber           String?        @unique
+  registrationNo          String?
+  gstNumber               String?
+  panNumber               String?
+  entityType              String?
+  bankName                String?
+  accountNumber           String?
+  ifscCode                String?
+  accountHolder           String?
+  logo                    String?
+  letterhead              String?
+  footer                  String?
+  signature               String?
+  isActive                Boolean        @default(true)
+  whatsappApiKey          String?
+  whatsappPhoneId         String?
+  smsApiKey               String?
+  smsSenderId             String?
+  activeModules           String[]       @default(["inventory", "b2b"])
+  defaultDoctorCommission Decimal?       @default(10.0) @db.Decimal(5, 2)
+  defaultAgencyCommission Decimal?       @default(5.0) @db.Decimal(5, 2)
   commissionType          CommissionType @default(PERCENTAGE)
+  createdAt               DateTime       @default(now())
+  updatedAt               DateTime       @updatedAt
+  deletedAt               DateTime?
 
-  // Module toggles — which features are enabled for this lab
-  activeModules String @default("inventory,b2b")
-
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-
-  ownerId String @unique
-  owner   User   @relation("LabOwner", fields: [ownerId], references: [id])
-
-  wallet                 LabWallet?
-  branches               Branch[]
-  serviceAreas           ServiceArea[]
-  subscription           Subscription?
-  staff                  LabStaff[]
-  patients               Patient[]
-  tests                  Test[]
-  invoices               Invoice[]
-  doctors                Doctor[]
-  agencies               Agency[]
-  discounts              Discount[]
-  samples                Sample[]
-  expenses               Expense[]
-  analyzers              LabAnalyzer[]
-  homeTrips              HomeCollectionTrip[]
-  testPricing            LabTestPricing[]
-  testCategories         TestCategory[]
-  testParameters         LabTestParameter[]
-  reportTemplates        ReportTemplate[]
-  unmappedCodes          UnmappedMachineCode[]
-  containerTypes         ContainerType[]
-  departments            Department[]
-  sampleTypes            SampleType[]
-  testHeadings           TestHeading[]
-  reports                Report[]
-  inventoryItems         InventoryItem[]
-  inventoryBatches       InventoryBatch[]
-  suppliers              Supplier[]
-  customFieldDefinitions CustomFieldDefinition[]
-  customTestTemplates    TestTemplate[]
+  ownerId               String                  @unique
+  owner                 User                    @relation("LabOwner", fields: [ownerId], references: [id])
+  wallet                LabWallet?
+  branches              Branch[]
+  serviceAreas          ServiceArea[]
+  staff                 LabStaff[]
+  patients              Patient[]
+  tests                 Test[]
+  invoices              Invoice[]
+  doctors               Doctor[]
+  agencies              Agency[]
+  discounts             Discount[]
+  samples               Sample[]
+  expenses              Expense[]
+  analyzers             LabAnalyzer[]
+  homeTrips             HomeCollectionTrip[]
+  testPricing           LabTestPricing[]
+  testCategories        TestCategory[]
+  testParameters        LabTestParameter[]
+  reportTemplates       ReportTemplate[]
+  unmappedCodes         UnmappedMachineCode[]
+  containerTypes        ContainerType[]
+  departments           Department[]
+  sampleTypes           SampleType[]
+  testHeadings          TestHeading[]
+  reports               Report[]
+  inventoryItems        InventoryItem[]
+  inventoryBatches      InventoryBatch[]
+  suppliers             Supplier[]
+  TestTemplate          TestTemplate[]
+  CustomFieldDefinition CustomFieldDefinition[]
 
   @@index([ownerId])
   @@index([licenseNumber])
@@ -241,35 +250,29 @@ model Lab {
 }
 
 model Branch {
-  id    String @id @default(cuid())
-  labId String
-  lab   Lab    @relation(fields: [labId], references: [id], onDelete: Cascade)
-
+  id           String    @id @default(uuid())
+  labId        String
+  lab          Lab       @relation(fields: [labId], references: [id], onDelete: Cascade)
   name         String
   code         String?
   branchCode   String?
-  isMainBranch Boolean @default(false)
+  isMainBranch Boolean   @default(false)
+  logo         String?
+  letterhead   String?
+  footer       String?
+  signature    String?
+  address      String
+  city         String
+  state        String
+  pincode      String
+  phone        String?
+  email        String?
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
 
-  // Branding Overrides
-  logo       String?
-  letterhead String?
-  footer     String?
-  signature  String?
-
-  address  String
-  city     String
-  state    String
-  pincode  String
-  phone    String?
-  email    String?
-  isActive Boolean @default(true)
-
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-
-  // Inverse Enterprise Relations
-  serviceAreas          ServiceArea[] // Pin code mappings
+  serviceAreas          ServiceArea[]
   staff                 LabStaff[]
   patients              Patient[]
   samples               Sample[]
@@ -286,8 +289,6 @@ model Branch {
   radiologyStudies      RadiologyStudy[]
   modalities            Modality[]
   testPricings          LabTestPricing[]
-  testTemplates         TestTemplate[]
-  reportTemplates       ReportTemplate[]
   reports               Report[]
   homeTrips             HomeCollectionTrip[]
   auditLogs             AuditLog[]
@@ -295,538 +296,220 @@ model Branch {
   @@index([labId])
 }
 
-// LOGISTICS: Service Areas for Home Collection Assignment
 model ServiceArea {
-  id       String @id @default(cuid())
-  labId    String
-  lab      Lab    @relation(fields: [labId], references: [id], onDelete: Cascade)
-  branchId String
-  branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
-
+  id          String   @id @default(uuid())
+  labId       String
+  lab         Lab      @relation(fields: [labId], references: [id], onDelete: Cascade)
+  branchId    String
+  branch      Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
   pincode     String
   areaName    String?
-  deliveryFee Decimal @default(0.00)
-
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
+  deliveryFee Decimal  @default(0.00) @db.Decimal(10, 2)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
 
   @@unique([labId, branchId, pincode])
 }
 
-// ==========================================
-// WALLET (Pay-As-You-Go Revenue Model)
-// ==========================================
-model LabWallet {
-  id                   String    @id @default(uuid())
-  labId                String    @unique
-  lab                  Lab       @relation(fields: [labId], references: [id], onDelete: Cascade)
-  balance              Decimal   @default(0.00)
-  perPatientFee        Decimal   @default(2.50)
-  minimumRecharge      Decimal   @default(100.00)
-  validityEndDate      DateTime?
-  isActive             Boolean   @default(true)
-  isLisIntegrationPaid Boolean   @default(false)
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
-}
-
 model LabStaff {
-  id         String  @id @default(cuid())
-  labId      String
-  lab        Lab     @relation(fields: [labId], references: [id], onDelete: Cascade)
-  userId     String
-  employeeId String? @unique
-  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  branchId String?
-  branch   Branch? @relation(fields: [branchId], references: [id])
-
-  position   String
-  department String?
-  salary     Decimal?
-  joinDate   DateTime @default(now())
-  isActive   Boolean  @default(true)
-
-  permissions String @default("")
-
-  createdAt DateTime @default(now())
+  id          String   @id @default(uuid())
+  labId       String
+  lab         Lab      @relation(fields: [labId], references: [id], onDelete: Cascade)
+  userId      String
+  employeeId  String?  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  branchId    String?
+  branch      Branch?  @relation(fields: [branchId], references: [id])
+  position    String
+  department  String?
+  salary      Decimal? @db.Decimal(10, 2)
+  joinDate    DateTime @default(now())
+  isActive    Boolean  @default(true)
+  permissions String[] @default([])
+  createdAt   DateTime @default(now())
 
   @@unique([labId, userId])
   @@index([labId])
 }
 
 // ==========================================
-// SAAS PLAN DEFINITIONS
+// NEW WALLET PAY-AS-YOU-GO REVENUE MODEL
 // ==========================================
-
-model Plan {
-  id          String  @id @default(cuid())
-  name        String  @unique
-  displayName String
-  description String?
-
-  price        Decimal
-  currency     String       @default("INR")
-  billingCycle BillingCycle @default(MONTHLY)
-  razorpayId   String?
-
-  maxTestsPerMonth Int   @default(100)
-  maxPatientsTotal Int   @default(1000)
-  maxStaff         Int   @default(2)
-  maxStorageGB     Float @default(1.0)
-  maxBranches      Int   @default(1)
-
-  // SaaS Level Module Gatekeeping Toggles
-  hasInventory    Boolean @default(false)
-  hasAnalytics    Boolean @default(false)
-  hasB2bBilling   Boolean @default(false)
-  hasEmailReports Boolean @default(true)
-  hasWhatsapp     Boolean @default(false)
-  hasAiPrediction Boolean @default(false)
-  hasApiAccess    Boolean @default(false)
-  hasWhiteLabel   Boolean @default(false)
-  hasLogistics    Boolean @default(false)
-  hasMachineIoT   Boolean @default(false)
-  hasRadiology    Boolean @default(false)
-  hasExpenses     Boolean @default(true)
-
-  isActive  Boolean @default(true)
-  isPopular Boolean @default(false)
-
-  features String @default("")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  subscriptions Subscription[]
+model LabWallet {
+  id                   String              @id @default(uuid())
+  labId                String              @unique
+  lab                  Lab                 @relation(fields: [labId], references: [id], onDelete: Cascade)
+  balance              Decimal             @default(0.00) @db.Decimal(10, 2)
+  perPatientFee        Decimal             @default(2.50) @db.Decimal(10, 2)
+  minimumRecharge      Decimal             @default(100.00) @db.Decimal(10, 2)
+  validityEndDate      DateTime?
+  isActive             Boolean             @default(true)
+  isLisIntegrationPaid Boolean             @default(false)
+  transactions         WalletTransaction[]
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
 }
 
-enum BillingCycle {
-  MONTHLY
-  QUARTERLY
-  HALF_YEARLY
-  YEARLY
-  LIFETIME
+model WalletTransaction {
+  id             String          @id @default(uuid())
+  labId          String
+  wallet         LabWallet       @relation(fields: [labId], references: [labId], onDelete: Cascade)
+  type           TransactionType
+  amount         Decimal         @db.Decimal(10, 2)
+  closingBalance Decimal         @db.Decimal(10, 2)
+  description    String?
+  createdAt      DateTime        @default(now())
+
+  @@index([labId])
+}
+
+enum TransactionType {
+  RECHARGE
+  DEDUCTION
+  REFUND
+  SETUP_FEE
 }
 
 // ==========================================
-// SAAS ADD-ONS & SUBSCRIPTIONS
+// DICTIONARIES & METADATA
 // ==========================================
-
-model AddOn {
-  id          String  @id @default(cuid())
-  name        String
-  description String?
-
-  price      Decimal
-  currency   String  @default("INR")
-  razorpayId String?
-
-  type  AddOnType
-  value Int
-
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  payments Payment[]
-}
-
-enum AddOnType {
-  TEST_LIMIT
-  STORAGE_LIMIT
-  PATIENT_LIMIT
-  STAFF_LIMIT
-  BRANCH_LIMIT
-}
-
-model Subscription {
-  id    String @id @default(cuid())
-  labId String @unique
-  lab   Lab    @relation(fields: [labId], references: [id], onDelete: Cascade)
-
-  planId String
-  plan   Plan   @relation(fields: [planId], references: [id])
-
-  unlockedFeatures String @default("")
-
-  status SubStatus @default(TRIAL)
-
-  startDate DateTime @default(now())
-  endDate   DateTime
-
-  razorpaySubId String? @unique
-
-  boosterTests    Int   @default(0)
-  boosterStorage  Float @default(0.0)
-  boosterStaff    Int   @default(0)
-  boosterPatients Int   @default(0)
-  boosterBranches Int   @default(0)
-
-  bonusTests    Int   @default(0)
-  bonusStorage  Float @default(0.0)
-  bonusBranches Int   @default(0)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  payments     Payment[]
-  usage        UsageMetric[]
-  currentUsage CurrentUsage?
-}
-
-enum SubStatus {
-  PENDING_LAB_SETUP
-  TRIAL
-  ACTIVE
-  PAST_DUE
-  CANCELLED
-  EXPIRED
-}
-
-model CurrentUsage {
-  id             String       @id @default(cuid())
-  subscriptionId String       @unique
-  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
-
-  testsUsed     Int   @default(0)
-  patientsCount Int   @default(0)
-  staffCount    Int   @default(1)
-  branchesCount Int   @default(1)
-  storageUsedGB Float @default(0.0)
-
-  lastUpdated DateTime @updatedAt
-}
-
-// ==========================================
-// SAAS BILLING & PAYMENTS
-// ==========================================
-
-model Payment {
-  id             String       @id @default(cuid())
-  subscriptionId String
-  subscription   Subscription @relation(fields: [subscriptionId], references: [id])
-
-  addOnId String?
-  addOn   AddOn?  @relation(fields: [addOnId], references: [id])
-
-  amount    Decimal
-  taxAmount Decimal?
-  currency  String        @default("INR")
-  status    PaymentStatus @default(PENDING)
-
-  razorpayOrderId   String? @unique
-  razorpayPaymentId String? @unique
-
-  invoiceNumber String?   @unique
-  invoiceDate   DateTime? @default(now())
-  invoiceUrl    String?
-
-  billingSnapshot String?
-
-  createdAt DateTime @default(now())
-}
-
-enum PaymentStatus {
-  PENDING
-  SUCCESS
-  FAILED
-  REFUNDED
-}
-
-// ==========================================
-// TEST ENGINE & STRUCTURED RESULTS 
-// ==========================================
-
 model Department {
-  id       String  @id @default(cuid())
-  labId    String?
-  lab      Lab?    @relation(fields: [labId], references: [id], onDelete: Cascade)
-  isGlobal Boolean @default(false)
-
+  id           String         @id @default(uuid())
+  labId        String?
+  lab          Lab?           @relation(fields: [labId], references: [id], onDelete: Cascade)
+  isGlobal     Boolean        @default(false)
   name         String
   code         String?
-  displayOrder Int     @default(0)
-
-  testTemplates TestTemplate[]
-  createdAt     DateTime       @default(now())
+  displayOrder Int            @default(0)
+  createdAt    DateTime       @default(now())
+  TestTemplate TestTemplate[]
 
   @@unique([labId, name])
 }
 
 model SampleType {
-  id       String  @id @default(cuid())
-  labId    String?
-  lab      Lab?    @relation(fields: [labId], references: [id], onDelete: Cascade)
-  isGlobal Boolean @default(false)
-
-  name String
-  code String?
-
-  testTemplates  TestTemplate[]
-  patientSamples Sample[]
-
-  createdAt DateTime @default(now())
+  id           String         @id @default(uuid())
+  labId        String?
+  lab          Lab?           @relation(fields: [labId], references: [id], onDelete: Cascade)
+  isGlobal     Boolean        @default(false)
+  name         String
+  code         String?
+  samples      Sample[]
+  createdAt    DateTime       @default(now())
+  TestTemplate TestTemplate[]
 
   @@unique([labId, name])
 }
 
 model ContainerType {
-  id       String  @id @default(cuid())
-  labId    String?
-  lab      Lab?    @relation(fields: [labId], references: [id])
-  isGlobal Boolean @default(false)
-
-  name     String
-  code     String
-  capColor String?
-
-  templates      TestTemplate[]
-  parameters     LabTestParameter[]
-  patientSamples Sample[]
-
-  createdAt DateTime @default(now())
+  id           String             @id @default(uuid())
+  labId        String?
+  lab          Lab?               @relation(fields: [labId], references: [id])
+  isGlobal     Boolean            @default(false)
+  name         String
+  code         String
+  capColor     String?
+  parameters   LabTestParameter[]
+  samples      Sample[]
+  createdAt    DateTime           @default(now())
+  TestTemplate TestTemplate[]
 
   @@unique([labId, name])
 }
 
 model TestCategory {
-  id       String  @id @default(cuid())
-  labId    String?
-  lab      Lab?    @relation(fields: [labId], references: [id])
-  isGlobal Boolean @default(false)
-
-  name        String
-  description String?
-  icon        String?
-  isActive    Boolean @default(true)
-
-  testTemplates TestTemplate[]
-  tests         Test[]
-
-  createdAt DateTime @default(now())
+  id           String         @id @default(uuid())
+  labId        String?
+  lab          Lab?           @relation(fields: [labId], references: [id])
+  isGlobal     Boolean        @default(false)
+  name         String
+  description  String?
+  icon         String?
+  isActive     Boolean        @default(true)
+  tests        Test[]
+  createdAt    DateTime       @default(now())
+  TestTemplate TestTemplate[]
 
   @@unique([labId, name])
 }
 
 model TestHeading {
-  id       String  @id @default(cuid())
-  labId    String?
-  lab      Lab?    @relation(fields: [labId], references: [id], onDelete: Cascade)
-  isGlobal Boolean @default(false)
-
-  name       String
-  parameters TestTemplateParameter[]
-  createdAt  DateTime                @default(now())
+  id        String   @id @default(uuid())
+  labId     String?
+  lab       Lab?     @relation(fields: [labId], references: [id], onDelete: Cascade)
+  isGlobal  Boolean  @default(false)
+  name      String
+  createdAt DateTime @default(now())
 
   @@unique([labId, name])
 }
 
 model LabTestParameter {
-  id       String  @id @default(cuid())
-  labId    String?
-  lab      Lab?    @relation(fields: [labId], references: [id])
-  isGlobal Boolean @default(false)
+  id              String             @id @default(uuid())
+  labId           String?
+  lab             Lab?               @relation(fields: [labId], references: [id])
+  isGlobal        Boolean            @default(false)
+  name            String
+  printName       String?
+  code            String
+  unit            String?
+  isDerived       Boolean            @default(false)
+  formula         String?
+  decimals        Int                @default(2)
+  method          String?
+  price           Decimal            @default(0.00) @db.Decimal(10, 2)
+  options         String[]
+  containerTypeId String?
+  containerType   ContainerType?     @relation(fields: [containerTypeId], references: [id])
+  isActive        Boolean            @default(true)
+  forkedFromId    String?
+  forkedFrom      LabTestParameter?  @relation("ParameterForks", fields: [forkedFromId], references: [id])
+  forks           LabTestParameter[] @relation("ParameterForks")
 
-  forkedFromId String?
-  forkedFrom   LabTestParameter?  @relation("ParamOverrides", fields: [forkedFromId], references: [id])
-  forks        LabTestParameter[] @relation("ParamOverrides")
-
-  name      String
-  printName String?
-  code      String
-  unit      String?
-
-  isDerived Boolean @default(false)
-  formula   String?
-
-  inputType ParameterInputType @default(NUMBER)
-  decimals  Int                @default(2)
-  method    String?
-  price     Decimal            @default(0.00)
-  options   String             @default("")
-
-  usedInTemplates TestTemplateParameter[]
   referenceRanges ParameterReferenceRange[]
   reagents        TestParameterReagent[]
 
-  containerTypeId String?
-  containerType   ContainerType? @relation(fields: [containerTypeId], references: [id])
-
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  TestTemplateParameter TestTemplateParameter[]
 
   @@unique([labId, code])
   @@index([labId])
 }
 
 model ParameterReferenceRange {
-  id          String           @id @default(cuid())
-  parameterId String
-  parameter   LabTestParameter @relation(fields: [parameterId], references: [id], onDelete: Cascade)
-
-  gender Gender
-
-  minAge  Int    @default(0)
-  maxAge  Int    @default(100)
-  ageUnit String @default("YEAR")
-
-  lowValue  Float?
-  highValue Float?
-
+  id           String           @id @default(uuid())
+  parameterId  String
+  parameter    LabTestParameter @relation(fields: [parameterId], references: [id], onDelete: Cascade)
+  gender       Gender
+  minAge       Int              @default(0)
+  maxAge       Int              @default(100)
+  ageUnit      String           @default("YEAR")
+  lowValue     Float?
+  highValue    Float?
   criticalLow  Float?
   criticalHigh Float?
-
-  textValue   String?
-  displayText String?
-
-  customLabel String?
-
-  createdAt DateTime @default(now())
+  textValue    String?
+  displayText  String?
+  customLabel  String?
+  createdAt    DateTime         @default(now())
 
   @@index([parameterId])
 }
 
-model TestTemplateParameter {
-  id String @id @default(cuid())
-
-  templateId String
-  template   TestTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
-
-  parameterId String
-  parameter   LabTestParameter @relation(fields: [parameterId], references: [id])
-
-  order     Int          @default(0)
-  headingId String?
-  heading   TestHeading? @relation(fields: [headingId], references: [id])
-
-  @@unique([templateId, parameterId])
-  @@index([templateId])
-}
-
-enum ParameterInputType {
-  NUMBER
-  TEXT
-  LONG_TEXT
-  DROPDOWN
-  HEADING
-}
-
-enum TestType {
-  SINGLE
-  BUNDLE
-  PROFILE
-}
-
-model TestTemplate {
-  id       String  @id @default(cuid())
-  labId    String?
-  lab      Lab?    @relation(fields: [labId], references: [id], onDelete: Cascade)
-  isGlobal Boolean @default(false)
-
-  // Branch Specific Overrides
-  branchId String?
-  branch   Branch? @relation(fields: [branchId], references: [id], onDelete: Cascade)
-
-  categoryId String?
-  category   TestCategory? @relation(fields: [categoryId], references: [id])
-
-  departmentId String?
-  department   Department? @relation(fields: [departmentId], references: [id])
-
-  sampleTypeId String?
-  sampleType   SampleType? @relation(fields: [sampleTypeId], references: [id])
-
-  containerTypeId String?
-  containerType   ContainerType? @relation(fields: [containerTypeId], references: [id])
-
-  name      String
-  printName String?
-  code      String
-
-  description String?
-
-  // Public Portal Visibility
-  isPublic     Boolean @default(true)
-  isPopular    Boolean @default(false)
-  preRequistes String?
-
-  price    Decimal
-  b2bPrice Decimal? @default(0.00)
-  cost     Decimal? @default(0.00)
-  tat      String? // Time Around Time in Hours
-  method   String?
-
-  volume       String?
-  duration     Int?
-  requirements String?
-
-  predefinedNotes String?
-
-  type     TestType @default(SINGLE)
-  isActive Boolean  @default(true)
-  isNabl   Boolean  @default(false)
-
-  defaultTextReport String?
-
-  parameters        TestTemplateParameter[]
-  patientTests      Test[]
-  customFields      TestTemplateField[]
-  doctorCommissions DoctorTestCommission[]
-  agencyCommissions AgencyTestCommission[]
-  labPricing        LabTestPricing[]
-
-  bundleItems   TestTemplateBundle[] @relation("BundleParent")
-  partOfBundles TestTemplateBundle[] @relation("BundleChild")
-
-  forkedFromId String?
-  forkedFrom   TestTemplate?  @relation("TemplateOverrides", fields: [forkedFromId], references: [id])
-  forks        TestTemplate[] @relation("TemplateOverrides")
-
-  referenceData String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  @@unique([labId, code, branchId])
-  @@index([departmentId])
-  @@index([labId])
-  @@index([branchId])
-}
-
-model TestTemplateBundle {
-  id String @id @default(cuid())
-
-  parentId String
-  parent   TestTemplate @relation("BundleParent", fields: [parentId], references: [id], onDelete: Cascade)
-
-  childId String
-  child   TestTemplate @relation("BundleChild", fields: [childId], references: [id], onDelete: Cascade)
-
-  order Int @default(0)
-
-  @@unique([parentId, childId])
-}
-
 model LabTestPricing {
-  id    String @id @default(cuid())
-  labId String
-  lab   Lab    @relation(fields: [labId], references: [id], onDelete: Cascade)
-
-  branchId String?
-  branch   Branch? @relation(fields: [branchId], references: [id], onDelete: Cascade)
-
+  id             String   @id @default(uuid())
+  labId          String
+  lab            Lab      @relation(fields: [labId], references: [id], onDelete: Cascade)
+  branchId       String?
+  branch         Branch?  @relation(fields: [branchId], references: [id], onDelete: Cascade)
   testTemplateId String
-  testTemplate   TestTemplate @relation(fields: [testTemplateId], references: [id], onDelete: Cascade)
+  price          Decimal  @db.Decimal(10, 2)
+  b2bPrice       Decimal? @default(0.00) @db.Decimal(10, 2)
+  cost           Decimal? @default(0.00) @db.Decimal(10, 2)
+  tat            String?
+  isActive       Boolean  @default(true)
 
-  price    Decimal
-  b2bPrice Decimal? @default(0.00)
-  cost     Decimal? @default(0.00)
-  tat      String?
-
-  isActive Boolean @default(true)
-
-  @@unique([labId, testTemplateId, branchId])
   @@index([labId])
   @@index([branchId])
 }
@@ -834,57 +517,47 @@ model LabTestPricing {
 // ==========================================
 // TEST EXECUTION & LOGISTICS
 // ==========================================
-
 model Patient {
-  id        String  @id @default(cuid())
-  labId     String
-  lab       Lab     @relation(fields: [labId], references: [id])
-  branchId  String?
-  branch    Branch? @relation(fields: [branchId], references: [id])
-  patientId String
+  id                 String    @id @default(uuid())
+  isGlobal           Boolean   @default(false)
+  labId              String
+  userId             String?
+  user               User?     @relation("UserPatient", fields: [userId], references: [id])
+  lab                Lab       @relation(fields: [labId], references: [id])
+  branchId           String?
+  branch             Branch?   @relation(fields: [branchId], references: [id])
+  patientId          String
+  name               String
+  email              String?
+  phone              String
+  dateOfBirth        DateTime?
+  age                Int?
+  ageUnit            String    @default("Years")
+  gender             Gender?
+  bloodGroup         String?
+  address            String?
+  pincode            String?
+  srfId              String?
+  passportNumber     String?
+  gstNumber          String?
+  walletBalance      Decimal   @default(0.00) @db.Decimal(10, 2)
+  loyaltyPoints      Int       @default(0)
+  membershipTier     String    @default("SILVER")
+  chronicConditions  String[]
+  doctorId           String?
+  doctor             Doctor?   @relation("PatientDefaultDoctor", fields: [doctorId], references: [id])
+  agencyId           String?
+  agency             Agency?   @relation("PatientDefaultAgency", fields: [agencyId], references: [id])
+  medicalHistory     Json?
+  allergies          String?
+  abhaNumber         String?
+  healthId           String?
+  dataConsentGranted Boolean   @default(true)
+  deletedAt          DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
-  // Online Portal Links
-  userId String? @unique
-  user   User?   @relation("UserPatient", fields: [userId], references: [id])
-
-  name        String
-  email       String?
-  phone       String
-  dateOfBirth DateTime?
-  age         Int?
-  ageUnit     String    @default("Years")
-  gender      Gender?
-  bloodGroup  String?
-  address     String?
-  pincode     String? // Route Assignment
-
-  srfId          String?
-  passportNumber String?
-
-  gstNumber         String?
-  walletBalance     Decimal @default(0.00)
-  loyaltyPoints     Int     @default(0)
-  membershipTier    String  @default("SILVER")
-  chronicConditions String  @default("")
-
-  doctorId String?
-  doctor   Doctor? @relation("PatientDefaultDoctor", fields: [doctorId], references: [id])
-
-  agencyId String?
-  agency   Agency? @relation("PatientDefaultAgency", fields: [agencyId], references: [id])
-
-  medicalHistory String?
-  allergies      String?
-
-  abhaNumber String?
-  healthId   String?
-
-  dataConsentGranted Boolean @default(true)
-
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-
+  // Immutability: NO deletedAt
   tests                 Test[]
   appointments          Appointment[]
   samples               Sample[]
@@ -907,54 +580,58 @@ enum Gender {
 }
 
 model Sample {
-  id       String  @id @default(cuid())
+  id       String  @id @default(uuid())
   labId    String
   lab      Lab     @relation(fields: [labId], references: [id])
   branchId String?
   branch   Branch? @relation(fields: [branchId], references: [id])
 
+  // This is the Clinical ID generated when a sample is accepted
   sampleId      String
   barcodeFormat String @default("CODE128")
 
-  tests     Test[]
   patientId String
   patient   Patient @relation(fields: [patientId], references: [id])
 
-  sampleTypeId String?
-  sampleType   SampleType? @relation(fields: [sampleTypeId], references: [id])
+  // ✅ CONNECTED: Direct link to the logistics visit (if home collection)
+  appointmentId String?
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
 
+  sampleTypeId    String?
+  sampleType      SampleType?    @relation(fields: [sampleTypeId], references: [id])
   containerTypeId String?
   containerType   ContainerType? @relation(fields: [containerTypeId], references: [id])
 
-  collectionMode    CollectionMode @default(LAB_VISIT)
-  collectedAt       DateTime?
-  collectedBy       String?
-  collectionLat     Float?
-  collectionLng     Float?
-  collectionAddress String?
+  collectionMode CollectionMode @default(LAB_VISIT)
 
+  // Clinical Lifecycle
+  collectedAt DateTime?
+  collectedBy String?
+  status      SampleStatus @default(COLLECTED)
+  receivedAt  DateTime? // When it physically enters the lab
+  receivedBy  String?
+
+  // Logistics metadata
+  collectionLat      Float?
+  collectionLng      Float?
+  collectionAddress  String?
   courierName        String?
   trackingNumber     String?
   transitTemperature String?
 
-  status SampleStatus @default(COLLECTED)
-
+  // Lab Processing metadata
   storageLocation String?
   temperature     String?
-
-  receivedAt DateTime?
-  receivedBy String?
-  condition  String?
-
-  machineId    String?
-  rackPosition String?
-
+  condition       String? // e.g., "Hemolysed", "Lipemic"
+  machineId       String?
+  rackPosition    String?
   rejectionReason String?
 
-  timeline  SampleLog[]
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-  deletedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tests    Test[]
+  timeline SampleLog[]
 
   @@unique([labId, sampleId])
   @@index([sampleId])
@@ -978,7 +655,7 @@ enum CollectionMode {
 }
 
 model SampleLog {
-  id        String       @id @default(cuid())
+  id        String       @id @default(uuid())
   sampleId  String
   sample    Sample       @relation(fields: [sampleId], references: [id])
   status    SampleStatus
@@ -989,22 +666,20 @@ model SampleLog {
 }
 
 model HomeCollectionTrip {
-  id             String  @id @default(cuid())
+  id             String        @id @default(uuid())
   labId          String
-  lab            Lab     @relation(fields: [labId], references: [id])
+  lab            Lab           @relation(fields: [labId], references: [id])
   branchId       String?
-  branch         Branch? @relation(fields: [branchId], references: [id])
+  branch         Branch?       @relation(fields: [branchId], references: [id])
   phlebotomistId String
-  phlebotomist   User    @relation(fields: [phlebotomistId], references: [id])
-
-  scheduledDate DateTime
-  startLocation String?
-  endLocation   String?
-  totalDistance Float?
-  status        TripStatus @default(SCHEDULED)
-
-  appointments Appointment[]
-  createdAt    DateTime      @default(now())
+  phlebotomist   User          @relation(fields: [phlebotomistId], references: [id])
+  scheduledDate  DateTime
+  startLocation  String?
+  endLocation    String?
+  totalDistance  Float?
+  status         TripStatus    @default(SCHEDULED)
+  appointments   Appointment[]
+  createdAt      DateTime      @default(now())
 }
 
 enum TripStatus {
@@ -1014,42 +689,47 @@ enum TripStatus {
   COMPLETED
 }
 
-// B2B2C Booking & Apppointment Logistics
 model Appointment {
-  id        String  @id @default(cuid())
+  id String @id @default(uuid())
+
+  // Logistics
   patientId String
   patient   Patient @relation(fields: [patientId], references: [id])
   labId     String
   branchId  String?
   branch    Branch? @relation(fields: [branchId], references: [id])
 
-  source BookingSource @default(WALK_IN)
+  // Trip & Route Scheduling
+  tripId     String?
+  trip       HomeCollectionTrip? @relation(fields: [tripId], references: [id])
+  routeOrder Int                 @default(0)
 
-  tripId String?
-  trip   HomeCollectionTrip? @relation(fields: [tripId], references: [id])
-
+  // Scheduling Details
+  source          BookingSource  @default(WALK_IN)
+  collectionMode  CollectionMode @default(LAB_VISIT)
   appointmentDate DateTime
-  timeSlot        String?
+  timeSlot        String? // e.g., "08:00 AM - 10:00 AM"
 
-  // Address overrides for collection
-  collectionMode    CollectionMode @default(LAB_VISIT)
+  // Location
   collectionAddress String?
   pincode           String?
   latitude          Float?
   longitude         Float?
-  routeOrder        Int            @default(0)
 
-  // On-Site Payment Tracking
-  paymentCollected Decimal? @default(0.00)
-  paymentMode      String? // CASH, UPI, LINK
+  // Payment Snapshot at time of booking
+  paymentCollected Decimal? @default(0.00) @db.Decimal(10, 2)
+  paymentMode      String?
+  invoiceId        String?  @unique
+  invoice          Invoice? @relation(fields: [invoiceId], references: [id])
 
-  tests     Test[]
-  invoiceId String?  @unique
-  invoice   Invoice? @relation(fields: [invoiceId], references: [id])
-
+  // Status tracking
   status    AppointmentStatus @default(SCHEDULED)
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
+
+  // Clinical Links
+  tests   Test[]
+  samples Sample[] // ✅ Link added so we can see what was collected during this visit
 }
 
 enum BookingSource {
@@ -1065,125 +745,101 @@ enum AppointmentStatus {
   ASSIGNED
   EN_ROUTE
   ARRIVED
-  SAMPLE_COLLECTED
-  HANDED_OVER
   COMPLETED
   CANCELLED
   RESCHEDULED
+  SAMPLE_COLLECTED @map("DEPRECATED_SAMPLE_COLLECTED")
+  HANDED_OVER      @map("DEPRECATED_HANDED_OVER")
 }
 
 model Test {
-  id    String @id @default(cuid())
-  labId String
-  lab   Lab    @relation(fields: [labId], references: [id])
+  id            String        @id @default(uuid())
+  labId         String
+  lab           Lab           @relation(fields: [labId], references: [id])
+  branchId      String?
+  branch        Branch?       @relation(fields: [branchId], references: [id])
+  testNumber    String
+  patientId     String
+  patient       Patient       @relation(fields: [patientId], references: [id])
+  categoryId    String?
+  category      TestCategory? @relation(fields: [categoryId], references: [id])
+  appointmentId String?
+  appointment   Appointment?  @relation(fields: [appointmentId], references: [id])
+  invoiceId     String?
+  invoice       Invoice?      @relation(fields: [invoiceId], references: [id])
+  sampleId      String?
+  sample        Sample?       @relation(fields: [sampleId], references: [id])
 
-  branchId String?
-  branch   Branch? @relation(fields: [branchId], references: [id])
-
-  testNumber String
-
-  patientId String
-  patient   Patient @relation(fields: [patientId], references: [id])
-
-  categoryId String?
-  category   TestCategory? @relation(fields: [categoryId], references: [id])
-
+  // ✅ ADDED: Link to TestTemplate (Crucial for result entry & reporting)
   testTemplateId String?
   testTemplate   TestTemplate? @relation(fields: [testTemplateId], references: [id])
-  report         Report?
 
-  appointmentId String?
-  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
-
-  invoiceId String?
-  invoice   Invoice? @relation(fields: [invoiceId], references: [id])
-
-  sampleId String?
-  sample   Sample? @relation(fields: [sampleId], references: [id])
-
-  testName String
-  testCode String
-
-  resultNotes String?
-
-  status   TestStatus   @default(PENDING)
-  priority TestPriority @default(NORMAL)
-
-  referredBy String?
-  doctorId   String?
-  doctor     Doctor? @relation("DoctorReferral", fields: [doctorId], references: [id])
-  agencyId   String?
-  agency     Agency? @relation("AgencyReferral", fields: [agencyId], references: [id])
-
+  testName            String
+  testCode            String
+  resultNotes         Json?
+  status              TestStatus   @default(PENDING)
+  priority            TestPriority @default(NORMAL)
+  referredBy          String?
+  doctorId            String?
+  doctor              Doctor?      @relation("DoctorReferral", fields: [doctorId], references: [id])
+  agencyId            String?
+  agency              Agency?      @relation("AgencyReferral", fields: [agencyId], references: [id])
   scheduledAt         DateTime?
   sampleCollectedAt   DateTime?
   processingStartedAt DateTime?
   completedAt         DateTime?
-  checkedAt           DateTime?
-  checkedBy           String?
   approvedAt          DateTime?
   approvedBy          String?
   reportGeneratedAt   DateTime?
   sampleReceivedAt    DateTime?
+  reportUrl           String?
+  notes               String?
+  impression          String?
+  price               Decimal      @db.Decimal(10, 2)
+  discount            Decimal      @default(0.00) @db.Decimal(10, 2)
+  finalPrice          Decimal      @db.Decimal(10, 2)
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
 
-  reportUrl  String?
-  notes      String?
-  impression String?
+  // Immutability: NO deletedAt
+  report      Report?
+  commissions Commission[]
+  results     TestResultParameter[]
 
-  price      Decimal
-  discount   Decimal @default(0.00)
-  finalPrice Decimal
+  // ✅ ADDED: Link to Custom Fields (If you are saving custom form data per test)
+  customResults TestResultCustomField[]
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-
-  commissions    Commission[]
-  results        TestResultParameter[]
   inventoryUsage InventoryTransaction[]
   aiPrediction   AIPrediction?
-  customResults  TestResultCustomField[]
 
   @@unique([labId, testNumber])
   @@index([patientId])
   @@index([branchId, status, createdAt])
 }
 
-enum ResultFlag {
-  NORMAL
-  LOW
-  HIGH
-  CRITICAL_LOW
-  CRITICAL_HIGH
-}
-
 model TestResultParameter {
-  id     String @id @default(cuid())
+  id     String @id @default(uuid())
   testId String
   test   Test   @relation(fields: [testId], references: [id], onDelete: Cascade)
 
-  parameterName String
-  value         String
-  numericValue  Float?
-  unit          String?
-
-  refRangeMin  Float?
-  refRangeMax  Float?
-  refRangeText String?
-
-  isAbnormal Boolean @default(false)
-  isCritical Boolean @default(false)
-
-  flag          ResultFlag @default(NORMAL)
-  isHighlighted Boolean    @default(false)
+  // Snapshotted Data for Clinical Immutability
+  parameterCode      String
+  printName          String
+  method             String?
+  referenceRangeText String?
+  numericValue       Float?
+  textValue          String?
+  flag               String?
 
   analyzerId  String?
   analyzer    LabAnalyzer? @relation(fields: [analyzerId], references: [id])
   entryMethod EntryMethod  @default(MANUAL)
-
-  order Int @default(0)
+  order       Int          @default(0)
 
   @@index([testId])
+  @@index([parameterCode])
+  @@index([flag])
+  @@index([numericValue])
 }
 
 enum EntryMethod {
@@ -1193,13 +849,12 @@ enum EntryMethod {
 }
 
 model AIPrediction {
-  id     String @id @default(cuid())
-  testId String @unique
-  test   Test   @relation(fields: [testId], references: [id])
-
+  id              String   @id @default(uuid())
+  testId          String   @unique
+  test            Test     @relation(fields: [testId], references: [id])
   summary         String
   riskScore       Float?
-  recommendations String?
+  recommendations Json?
   modelUsed       String?
   createdAt       DateTime @default(now())
 }
@@ -1224,135 +879,130 @@ enum TestPriority {
 // ==========================================
 // REFERRAL & COMMISSION
 // ==========================================
-
 model Doctor {
-  id    String @id @default(cuid())
-  labId String
-  lab   Lab    @relation(fields: [labId], references: [id])
-
-  branchId String?
-  branch   Branch? @relation(fields: [branchId], references: [id])
-
-  userId String? @unique
-  user   User?   @relation(fields: [userId], references: [id])
-
-  name           String  @default("Legacy Doctor")
-  email          String?
-  phone          String?
-  registrationNo String?
-  specialization String?
-  qualification  String?
-  clinic         String?
-
-  commissionRate        Decimal?
-  commissionType        CommissionType         @default(PERCENTAGE)
-  customTestCommissions DoctorTestCommission[]
-
-  totalReferrals  Int     @default(0)
-  totalCommission Decimal @default(0.00)
-
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                    String                   @id @default(uuid())
+  labId                 String
+  lab                   Lab                      @relation(fields: [labId], references: [id])
+  branchId              String?
+  branch                Branch?                  @relation(fields: [branchId], references: [id])
+  userId                String?                  @unique
+  user                  User?                    @relation(fields: [userId], references: [id])
+  name                  String                   @default("Legacy Doctor")
+  email                 String?
+  phone                 String?
+  registrationNo        String?
+  specialization        String?
+  qualification         String?
+  clinic                String?
+  commissionRate        Decimal?                 @db.Decimal(5, 2)
+  commissionType        CommissionType           @default(PERCENTAGE)
+  customTestCommissions DoctorCustomCommission[]
+  totalReferrals        Int                      @default(0)
+  totalCommission       Decimal                  @default(0.00) @db.Decimal(12, 2)
+  isActive              Boolean                  @default(true)
+  createdAt             DateTime                 @default(now())
+  updatedAt             DateTime                 @updatedAt
 
   tests       Test[]       @relation("DoctorReferral")
   commissions Commission[]
   patients    Patient[]    @relation("PatientDefaultDoctor")
+  deletedAt   DateTime?
 
   @@unique([labId, registrationNo])
   @@index([labId])
   @@index([branchId])
 }
 
+model DoctorCustomCommission {
+  id             String @id @default(uuid())
+  doctorId       String
+  testTemplateId String
+  commissionRate Float
+  commissionType String @default("PERCENTAGE") // PERCENTAGE or FLAT
+
+  doctor       Doctor       @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  testTemplate TestTemplate @relation(fields: [testTemplateId], references: [id], onDelete: Cascade)
+
+  @@unique([doctorId, testTemplateId]) // A doctor can only have one custom rate per test
+}
+
+// 1. Update your existing Agency model
 model Agency {
-  id    String @id @default(cuid())
-  labId String
-  lab   Lab    @relation(fields: [labId], references: [id])
-
-  branchId String?
-  branch   Branch? @relation(fields: [branchId], references: [id])
-
-  userId String? @unique
-  user   User?   @relation(fields: [userId], references: [id])
-
+  id            String  @id @default(uuid())
+  labId         String
+  lab           Lab     @relation(fields: [labId], references: [id])
+  branchId      String?
+  branch        Branch? @relation(fields: [branchId], references: [id])
+  userId        String? @unique
+  user          User?   @relation(fields: [userId], references: [id])
   agencyName    String  @default("Legacy Agency")
   contactPerson String?
   email         String?
   phone         String?
   panNumber     String?
 
-  commissionRate Decimal?
-  commissionType CommissionType @default(PERCENTAGE)
+  // -- TIER & VOLUME TRACKING (New) --
+  agencyTier    String @default("STANDARD") // e.g., STANDARD, BRONZE, SILVER, GOLD
+  monthlyVolume Int    @default(0) // Tracks how many patients they sent this month
 
-  totalReferrals  Int     @default(0)
-  totalCommission Decimal @default(0.00)
+  // -- STANDARD COMMISSION --
+  commissionRate  Decimal?       @db.Decimal(5, 2)
+  commissionType  CommissionType @default(PERCENTAGE)
+  totalReferrals  Int            @default(0)
+  totalCommission Decimal        @default(0.00) @db.Decimal(12, 2)
 
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
-  tests                 Test[]                 @relation("AgencyReferral")
-  commissions           Commission[]
-  invoices              Invoice[]
-  patients              Patient[]              @relation("PatientDefaultAgency")
-  customTestCommissions AgencyTestCommission[]
+  tests       Test[]       @relation("AgencyReferral")
+  commissions Commission[]
+  invoices    Invoice[]
+  patients    Patient[]    @relation("PatientDefaultAgency")
+
+  // ✅ ADD THIS MISSING RELATION
+  customTestCommissions AgencyCustomCommission[]
 
   @@index([labId])
   @@index([branchId])
 }
 
-model DoctorTestCommission {
-  id             String       @id @default(cuid())
-  doctorId       String
-  doctor         Doctor       @relation(fields: [doctorId], references: [id], onDelete: Cascade)
-  testTemplateId String
-  testTemplate   TestTemplate @relation(fields: [testTemplateId], references: [id], onDelete: Cascade)
-
-  commissionRate Decimal
-  commissionType CommissionType @default(PERCENTAGE)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([doctorId, testTemplateId])
-}
-
-model AgencyTestCommission {
-  id             String       @id @default(cuid())
+// 2. Add this completely new model at the bottom of your schema file
+model AgencyCustomCommission {
+  id             String @id @default(uuid())
   agencyId       String
-  agency         Agency       @relation(fields: [agencyId], references: [id], onDelete: Cascade)
   testTemplateId String
-  testTemplate   TestTemplate @relation(fields: [testTemplateId], references: [id], onDelete: Cascade)
 
-  commissionRate Decimal
+  // Use commissionRate if giving them a specific % or Flat ₹ discount
+  commissionRate Float?
   commissionType CommissionType @default(PERCENTAGE)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  // OR use netPrice if giving them a strict B2B rate (e.g., CBC for ₹150)
+  netPrice Decimal? @db.Decimal(10, 2)
 
+  agency       Agency       @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  testTemplate TestTemplate @relation(fields: [testTemplateId], references: [id], onDelete: Cascade)
+
+  // Ensures an agency only has one custom rule per test
   @@unique([agencyId, testTemplateId])
 }
 
 model Commission {
-  id     String @id @default(cuid())
-  testId String
-  test   Test   @relation(fields: [testId], references: [id])
-
-  doctorId String?
-  doctor   Doctor? @relation(fields: [doctorId], references: [id])
-
-  agencyId String?
-  agency   Agency? @relation(fields: [agencyId], references: [id])
-
-  amount Decimal
-  type   CommissionType
-  rate   Decimal
-  status CommissionStatus @default(PENDING)
-
+  id             String           @id @default(uuid())
+  testId         String
+  test           Test             @relation(fields: [testId], references: [id])
+  doctorId       String?
+  doctor         Doctor?          @relation(fields: [doctorId], references: [id])
+  agencyId       String?
+  agency         Agency?          @relation(fields: [agencyId], references: [id])
+  amount         Decimal          @db.Decimal(10, 2)
+  type           CommissionType
+  rate           Decimal          @db.Decimal(5, 2)
+  status         CommissionStatus @default(PENDING)
   paidAt         DateTime?
   transactionRef String?
-
-  createdAt DateTime @default(now())
+  createdAt      DateTime         @default(now())
 
   @@index([testId])
   @@index([status])
@@ -1361,6 +1011,7 @@ model Commission {
 enum CommissionType {
   PERCENTAGE
   FIXED
+  NET_PRICE
 }
 
 enum CommissionStatus {
@@ -1373,49 +1024,44 @@ enum CommissionStatus {
 // ==========================================
 // REPORT MANAGEMENT
 // ==========================================
-
 model Report {
-  id    String @id @default(cuid())
-  labId String
-  lab   Lab    @relation(fields: [labId], references: [id])
-
-  branchId String?
-  branch   Branch? @relation(fields: [branchId], references: [id])
-
-  testId String? @unique
-  test   Test?   @relation(fields: [testId], references: [id])
-
-  patientId String
-  patient   Patient @relation(fields: [patientId], references: [id])
-
-  technicianId String?
-  technician   User?   @relation("TechnicianReports", fields: [technicianId], references: [id])
-
-  seniorTechId String?
-  seniorTech   User?   @relation("SeniorTechReports", fields: [seniorTechId], references: [id])
-
+  id            String  @id @default(uuid())
+  labId         String
+  lab           Lab     @relation(fields: [labId], references: [id])
+  branchId      String?
+  branch        Branch? @relation(fields: [branchId], references: [id])
+  testId        String? @unique
+  test          Test?   @relation(fields: [testId], references: [id])
+  patientId     String
+  patient       Patient @relation(fields: [patientId], references: [id])
+  technicianId  String?
+  technician    User?   @relation("TechnicianReports", fields: [technicianId], references: [id])
+  seniorTechId  String?
+  seniorTech    User?   @relation("SeniorTechReports", fields: [seniorTechId], references: [id])
   pathologistId String?
   pathologist   User?   @relation("PathologistReports", fields: [pathologistId], references: [id])
 
-  reportUrl String?
+  // Snapshots & Revisions
+  reportData      Json?
+  renderedHtml    String?
+  signedHash      String?
+  versionParentId String?
 
-  pdfUrl  String?
-  version Int     @default(1)
-
-  status     ReportStatus @default(DRAFT)
-  isSigned   Boolean      @default(false)
-  signedById String?
-  signedAt   DateTime?
-
-  isAmended       Boolean @default(false)
+  reportUrl       String?
+  pdfUrl          String?
+  version         Int          @default(1)
+  status          ReportStatus @default(DRAFT)
+  isSigned        Boolean      @default(false)
+  signedById      String?
+  signedAt        DateTime?
+  isAmended       Boolean      @default(false)
   amendmentReason String?
   previousPdfUrl  String?
+  approvedAt      DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 
-  approvedAt DateTime?
-
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  // Immutability: NO deletedAt
 
   @@index([labId])
   @@index([branchId])
@@ -1433,113 +1079,82 @@ enum ReportStatus {
 }
 
 model ReportTemplate {
-  id    String @id @default(cuid())
-  labId String
-  lab   Lab    @relation(fields: [labId], references: [id], onDelete: Cascade)
-
-  branchId String?
-  branch   Branch? @relation(fields: [branchId], references: [id], onDelete: Cascade)
-
-  name     String  @default("Standard Clinical Report")
-  isActive Boolean @default(false)
-
-  pageSize    String @default("A4")
-  orientation String @default("PORTRAIT")
-
-  primaryColor String? @default("#000000")
-  accentColor  String? @default("#2563eb")
-  fontFamily   String? @default("Inter")
+  id           String   @id @default(uuid())
+  labId        String
+  lab          Lab      @relation(fields: [labId], references: [id], onDelete: Cascade)
+  name         String   @default("Standard Clinical Report")
+  isActive     Boolean  @default(false)
+  pageSize     String   @default("A4")
+  orientation  String   @default("PORTRAIT")
+  primaryColor String?  @default("#000000")
+  accentColor  String?  @default("#2563eb")
+  fontFamily   String?  @default("Inter")
   logoUrl      String?
   signatureUrl String?
   headerImage  String?
   footerImage  String?
   isoMarkUrl   String?
   watermarkUrl String?
-
-  config String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  config       Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@index([labId])
-  @@index([branchId])
 }
 
 // ==========================================
 // INVENTORY MANAGEMENT
 // ==========================================
-
 model Supplier {
-  id            String  @id @default(cuid())
+  id            String   @id @default(uuid())
   labId         String
-  lab           Lab     @relation(fields: [labId], references: [id])
+  lab           Lab      @relation(fields: [labId], references: [id])
   name          String
   contactPerson String?
   email         String?
   phone         String?
   address       String?
   gstNumber     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   inventoryItems InventoryItem[]
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
 
   @@index([labId])
 }
 
 model InventoryItem {
-  id    String @id @default(cuid())
-  labId String
-  lab   Lab    @relation(fields: [labId], references: [id])
-
-  supplierId String?
-  supplier   Supplier? @relation(fields: [supplierId], references: [id])
-
-  name        String
-  sku         String?
-  description String?
-  category    String?
-
-  purchaseUnit     String @default("Box")
-  usageUnit        String @default("ml")
-  conversionFactor Float  @default(1.0)
-  minStockLevel    Float  @default(10)
-  reorderLevel     Float?
-
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  batches InventoryBatch[]
-  recipes TestParameterReagent[]
+  id                   String                 @id @default(uuid())
+  labId                String
+  lab                  Lab                    @relation(fields: [labId], references: [id])
+  name                 String
+  supplierId           String?
+  supplier             Supplier?              @relation(fields: [supplierId], references: [id])
+  isActive             Boolean                @default(true)
+  batches              InventoryBatch[]
+  TestParameterReagent TestParameterReagent[]
 
   @@unique([labId, name])
   @@index([labId])
 }
 
 model InventoryBatch {
-  id    String @id @default(cuid())
-  labId String
-  lab   Lab    @relation(fields: [labId], references: [id])
-
-  branchId String?
-  branch   Branch? @relation(fields: [branchId], references: [id])
-
-  itemId String
-  item   InventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
-
-  batchNumber String
-  expiryDate  DateTime
-
+  id              String        @id @default(uuid())
+  labId           String
+  lab             Lab           @relation(fields: [labId], references: [id])
+  branchId        String?
+  branch          Branch?       @relation(fields: [branchId], references: [id])
+  itemId          String
+  item            InventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  batchNumber     String
+  expiryDate      DateTime
   initialQuantity Float
-  currentQuantity Float @default(0)
-
-  costPrice Decimal?
-  mrp       Decimal?
-  location  String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  currentQuantity Float         @default(0)
+  costPrice       Decimal?      @db.Decimal(10, 2)
+  mrp             Decimal?      @db.Decimal(10, 2)
+  location        String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
   transactions InventoryTransaction[]
 
@@ -1549,34 +1164,29 @@ model InventoryBatch {
 }
 
 model InventoryTransaction {
-  id      String          @id @default(cuid())
-  batchId String?
-  batch   InventoryBatch? @relation(fields: [batchId], references: [id], onDelete: Cascade)
-
-  quantity Float
-  type     StockType
-
-  testId String?
-  test   Test?   @relation(fields: [testId], references: [id])
-
+  id          String          @id @default(uuid())
+  batchId     String?
+  batch       InventoryBatch? @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  quantity    Float
+  type        StockType
+  testId      String?
+  test        Test?           @relation(fields: [testId], references: [id])
   notes       String?
   performedBy String?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime        @default(now())
 
   @@index([batchId])
   @@index([type])
 }
 
 model TestParameterReagent {
-  id              String           @id @default(cuid())
+  id              String           @id @default(uuid())
   parameterId     String
   parameter       LabTestParameter @relation(fields: [parameterId], references: [id], onDelete: Cascade)
   inventoryItemId String
-  inventoryItem   InventoryItem    @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
-
-  quantity Float
-
-  createdAt DateTime @default(now())
+  inventoryItem   InventoryItem    @relation(fields: [inventoryItemId], references: [id])
+  quantity        Float
+  createdAt       DateTime         @default(now())
 
   @@unique([parameterId, inventoryItemId])
 }
@@ -1593,75 +1203,60 @@ enum StockType {
 // ==========================================
 // INVOICES & EXPENSES
 // ==========================================
-
 model Invoice {
-  id       String  @id @default(cuid())
-  labId    String
-  lab      Lab     @relation(fields: [labId], references: [id])
-  branchId String?
-  branch   Branch? @relation(fields: [branchId], references: [id])
-
-  invoiceNumber String  @unique
-  notes         String?
-  financialYear String? @default("2024-25")
-
-  patientId String?
-  patient   Patient? @relation(fields: [patientId], references: [id])
-  agencyId  String?
-  agency    Agency?  @relation(fields: [agencyId], references: [id])
-
-  // Portal Payments Tracking
+  id             String               @id @default(uuid())
+  labId          String
+  lab            Lab                  @relation(fields: [labId], references: [id])
+  branchId       String?
+  branch         Branch?              @relation(fields: [branchId], references: [id])
+  invoiceNumber  String               
+  notes          String?
+  financialYear  String?              @default("2024-25")
+  patientId      String?
+  patient        Patient?             @relation(fields: [patientId], references: [id])
+  agencyId       String?
+  agency         Agency?              @relation(fields: [agencyId], references: [id])
   paymentStatus  InvoicePaymentStatus @default(PENDING)
-  paymentMode    String? // CASH, UPI, RAZORPAY
-  gatewayRef     String? // Razorpay Order ID for online bookings
+  paymentMode    String?
+  gatewayRef     String?
   transactionRef String?
+  subtotal       Decimal              @db.Decimal(12, 2)
+  discount       Decimal              @default(0.00) @db.Decimal(10, 2)
+  taxableAmount  Decimal              @db.Decimal(12, 2)
+  cgstAmount     Decimal              @default(0.00) @db.Decimal(10, 2)
+  sgstAmount     Decimal              @default(0.00) @db.Decimal(10, 2)
+  igstAmount     Decimal              @default(0.00) @db.Decimal(10, 2)
+  totalTax       Decimal              @db.Decimal(12, 2)
+  roundOff       Decimal              @default(0.00) @db.Decimal(5, 2)
+  grandTotal     Decimal              @db.Decimal(12, 2)
+  placeOfSupply  String?
+  isB2B          Boolean              @default(false)
+  gstinCustomer  String?
+  status         InvoiceStatus        @default(PENDING)
+  pdfUrl         String?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
 
+  // Immutability: NO deletedAt
   items       InvoiceItem[]
   tests       Test[]
   appointment Appointment?
-
-  subtotal Decimal
-  discount Decimal @default(0.00)
-
-  taxableAmount Decimal
-  cgstAmount    Decimal @default(0.00)
-  sgstAmount    Decimal @default(0.00)
-  igstAmount    Decimal @default(0.00)
-  totalTax      Decimal
-
-  roundOff   Decimal @default(0.00)
-  grandTotal Decimal
-
-  placeOfSupply String?
-  isB2B         Boolean @default(false)
-  gstinCustomer String?
-
-  status InvoiceStatus @default(PENDING)
-  pdfUrl String?
-
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
 
   @@index([labId, status, createdAt])
 }
 
 model InvoiceItem {
-  id        String  @id @default(cuid())
-  invoiceId String
-  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-
+  id          String  @id @default(uuid())
+  invoiceId   String
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
   description String
   hsnSacCode  String?
-
-  unitPrice Decimal
-  quantity  Int     @default(1)
-  discount  Decimal @default(0.00)
-
-  taxRate   Decimal
-  taxAmount Decimal
-
-  total Decimal
+  unitPrice   Decimal @db.Decimal(10, 2)
+  quantity    Int     @default(1)
+  discount    Decimal @default(0.00) @db.Decimal(10, 2)
+  taxRate     Decimal @db.Decimal(5, 2)
+  taxAmount   Decimal @db.Decimal(10, 2)
+  total       Decimal @db.Decimal(12, 2)
 }
 
 enum InvoicePaymentStatus {
@@ -1680,23 +1275,20 @@ enum InvoiceStatus {
 }
 
 model Expense {
-  id       String  @id @default(cuid())
-  labId    String
-  lab      Lab     @relation(fields: [labId], references: [id], onDelete: Cascade)
-  branchId String?
-  branch   Branch? @relation(fields: [branchId], references: [id])
-
-  title    String
-  category ExpenseCategory
-  amount   Decimal
-  date     DateTime        @default(now())
-
-  paymentMode String  @default("CASH")
+  id          String          @id @default(uuid())
+  labId       String
+  lab         Lab             @relation(fields: [labId], references: [id], onDelete: Cascade)
+  branchId    String?
+  branch      Branch?         @relation(fields: [branchId], references: [id])
+  title       String
+  category    ExpenseCategory
+  amount      Decimal         @db.Decimal(12, 2)
+  date        DateTime        @default(now())
+  paymentMode String          @default("CASH")
   referenceNo String?
   notes       String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
 
   @@index([labId])
   @@index([date])
@@ -1715,20 +1307,17 @@ enum ExpenseCategory {
 // ==========================================
 // IOT & MACHINE INTEGRATION
 // ==========================================
-
 model LabAnalyzer {
-  id       String  @id @default(cuid())
-  labId    String
-  lab      Lab     @relation(fields: [labId], references: [id])
-  branchId String?
-  branch   Branch? @relation(fields: [branchId], references: [id])
-
-  name         String
-  model        String
-  serialNumber String
-  ipAddress    String?
-  protocol     String?
-
+  id             String    @id @default(uuid())
+  labId          String
+  lab            Lab       @relation(fields: [labId], references: [id])
+  branchId       String?
+  branch         Branch?   @relation(fields: [branchId], references: [id])
+  name           String
+  model          String
+  serialNumber   String
+  ipAddress      String?
+  protocol       String?
   maintenanceDue DateTime?
   isActive       Boolean   @default(true)
 
@@ -1738,60 +1327,60 @@ model LabAnalyzer {
 }
 
 model ParameterMapping {
-  id            String @id @default(cuid())
+  id            String      @id @default(uuid())
   labAnalyzerId String
   machineCode   String
   parameterName String
-
-  analyzer LabAnalyzer @relation(fields: [labAnalyzerId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
+  analyzer      LabAnalyzer @relation(fields: [labAnalyzerId], references: [id], onDelete: Cascade)
+  createdAt     DateTime    @default(now())
 
   @@unique([labAnalyzerId, machineCode])
   @@index([labAnalyzerId])
 }
 
 model UnmappedMachineCode {
-  id            String @id @default(cuid())
+  id            String      @id @default(uuid())
   labId         String
   labAnalyzerId String
   sampleId      String
   machineCode   String
-
-  analyzer LabAnalyzer @relation(fields: [labAnalyzerId], references: [id], onDelete: Cascade)
-  lab      Lab         @relation(fields: [labId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
+  analyzer      LabAnalyzer @relation(fields: [labAnalyzerId], references: [id], onDelete: Cascade)
+  lab           Lab         @relation(fields: [labId], references: [id], onDelete: Cascade)
+  createdAt     DateTime    @default(now())
 
   @@unique([labAnalyzerId, sampleId, machineCode])
   @@index([labId])
 }
 
+// RAW PAYLOAD: Required for Enterprise Debugging
+model AnalyzerRawPayload {
+  id         String   @id @default(uuid())
+  analyzerId String
+  rawData    Json
+  processed  Boolean  @default(false)
+  receivedAt DateTime @default(now())
+}
+
 // ==========================================
 // RADIOLOGY INFORMATION SYSTEM (RIS)
 // ==========================================
-
 model Modality {
-  id       String  @id @default(uuid())
-  labId    String
-  branchId String?
-  branch   Branch? @relation(fields: [branchId], references: [id])
-
-  name String
-  type String
-
-  aeTitle   String?
-  ipAddress String?
-  port      Int?
-  location  String?
-
+  id              String    @id @default(uuid())
+  labId           String
+  branchId        String?
+  branch          Branch?   @relation(fields: [branchId], references: [id])
+  name            String
+  type            String
+  aeTitle         String?
+  ipAddress       String?
+  port            Int?
+  location        String?
   manufacturer    String?
   lastMaintenance DateTime?
   nextMaintenance DateTime?
-
-  status    String   @default("ACTIVE")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  status          String    @default("ACTIVE")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   appointments RadiologyAppointment[]
   studies      RadiologyStudy[]
@@ -1800,28 +1389,22 @@ model Modality {
 }
 
 model RadiologyAppointment {
-  id       String  @id @default(uuid())
-  labId    String
-  branchId String?
-  branch   Branch? @relation(fields: [branchId], references: [id])
-
-  patientId String
-  patient   Patient @relation(fields: [patientId], references: [id])
-
-  modalityId String
-
+  id             String    @id @default(uuid())
+  labId          String
+  branchId       String?
+  branch         Branch?   @relation(fields: [branchId], references: [id])
+  patientId      String
+  patient        Patient   @relation(fields: [patientId], references: [id])
+  modalityId     String
   scheduledStart DateTime
   scheduledEnd   DateTime
-
-  scanName String
-  priority String  @default("ROUTINE")
-  notes    String?
-
-  status String @default("SCHEDULED")
-
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  scanName       String
+  priority       String    @default("ROUTINE")
+  notes          String?
+  status         String    @default("SCHEDULED")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
 
   modality Modality        @relation(fields: [modalityId], references: [id])
   study    RadiologyStudy?
@@ -1831,39 +1414,31 @@ model RadiologyAppointment {
 }
 
 model RadiologyStudy {
-  id       String  @id @default(uuid())
-  labId    String
-  branchId String?
-  branch   Branch? @relation(fields: [branchId], references: [id])
-
-  patientId String
-  patient   Patient @relation(fields: [patientId], references: [id])
-
-  appointmentId String? @unique
-  modalityId    String
-
-  accessionNumber  String  @unique
-  studyInstanceUid String? @unique
-  dicomInstances   Int     @default(0)
+  id               String    @id @default(uuid())
+  labId            String
+  branchId         String?
+  branch           Branch?   @relation(fields: [branchId], references: [id])
+  patientId        String
+  patient          Patient   @relation(fields: [patientId], references: [id])
+  appointmentId    String?   @unique
+  modalityId       String
+  accessionNumber  String    @unique
+  studyInstanceUid String?   @unique
+  dicomInstances   Int       @default(0)
   storageSizeMb    Float?
-
-  scanName        String
-  clinicalHistory String?
-  isContrastUsed  Boolean @default(false)
-
-  safetyChecklist String?
-  mediaStatus     String?
-
-  referringDoctor String?
-  technicianId    String?
-  radiologistId   String?
-
-  status   String @default("ORDERED")
-  priority String @default("ROUTINE")
-
-  createdAt   DateTime  @default(now())
-  performedAt DateTime?
-  deletedAt   DateTime?
+  scanName         String
+  clinicalHistory  String?   @db.Text
+  isContrastUsed   Boolean   @default(false)
+  safetyChecklist  Json?
+  mediaStatus      Json?
+  referringDoctor  String?
+  technicianId     String?
+  radiologistId    String?
+  status           String    @default("ORDERED")
+  priority         String    @default("ROUTINE")
+  createdAt        DateTime  @default(now())
+  performedAt      DateTime?
+  deletedAt        DateTime?
 
   appointment RadiologyAppointment? @relation(fields: [appointmentId], references: [id])
   modality    Modality              @relation(fields: [modalityId], references: [id])
@@ -1874,118 +1449,94 @@ model RadiologyStudy {
 }
 
 model RadiologyReport {
-  id      String @id @default(uuid())
-  studyId String @unique
-
-  clinicalNotes String?
-  findings      String
-  impression    String
-  addendum      String?
-
-  aiAnalysis String?
-  keyImages  String?
-
+  id            String    @id @default(uuid())
+  studyId       String    @unique
+  clinicalNotes String?   @db.Text
+  findings      String    @db.Text
+  impression    String    @db.Text
+  addendum      String?   @db.Text
+  aiAnalysis    Json?
+  keyImages     Json?
   status        String    @default("DRAFT")
   radiologistId String
   verifiedAt    DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   study RadiologyStudy @relation(fields: [studyId], references: [id], onDelete: Cascade)
 }
 
 model RadiologyMacro {
-  id    String @id @default(uuid())
-  labId String
-
-  title        String
-  modalityType String
-  shortcode    String?
-
-  findingsText   String
-  impressionText String
-
-  isGlobal    Boolean @default(false)
-  createdById String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([labId, modalityType])
-}
-
-model DicomSettings {
-  id    String @id @default(uuid())
-  labId String @unique
-
-  localAETitle String @default("GLOBIZ_RIS")
-  localPort    Int    @default(104)
-
-  pacsAETitle   String @default("PACS_SERVER")
-  pacsIpAddress String @default("192.168.1.100")
-  pacsPort      Int    @default(4242)
-
-  enableMwl  Boolean @default(true)
-  mwlAETitle String  @default("GLOBIZ_MWL")
-  mwlPort    Int     @default(105)
-
-  viewerBaseUrl String @default("http://localhost:8042/viewer?StudyInstanceUID=")
-
-  updatedAt DateTime @updatedAt
+  id             String   @id @default(uuid())
+  labId          String
+  title          String
+  modalityType   String
+  shortcode      String?
+  findingsText   String   @db.Text
+  impressionText String   @db.Text
+  isGlobal       Boolean  @default(false)
+  createdById    String
+  updatedAt      DateTime @updatedAt
 }
 
 // ==========================================
-// SUPPORT, AUDITS, LOGS & MISC
+// SUPPORT, AUDITS & MISC
 // ==========================================
-
 model AuditLog {
-  id       String  @id @default(cuid())
-  labId    String
-  branchId String?
-  branch   Branch? @relation(fields: [branchId], references: [id])
-  userId   String // Direct String reference to prevent hard cascade issues
-
-  entity   String // e.g., "TEST_RESULT", "PATIENT", "INVENTORY"
-  entityId String
-  action   String // e.g., "CREATE", "UPDATE", "DELETE", "SIGN", "AMEND"
-
-  oldData String?
-  newData String?
-
+  id        String   @id @default(uuid())
+  labId     String
+  branchId  String?
+  branch    Branch?  @relation(fields: [branchId], references: [id])
+  userId    String
+  entity    String
+  entityId  String
+  action    String
+  oldData   Json?
+  newData   Json?
   ipAddress String?
-
   createdAt DateTime @default(now())
 
   @@index([labId, entity, entityId])
 }
 
 model SupportTicket {
-  id           String @id @default(cuid())
-  ticketNumber String @unique
+  id           String         @id @default(uuid())
+  ticketNumber String         @unique
   userId       String
-  user         User   @relation(fields: [userId], references: [id])
-
-  subject     String
-  description String
-  status      TicketStatus   @default(OPEN)
-  priority    TicketPriority @default(MEDIUM)
-  category    String         @default("GENERAL")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  user         User           @relation(fields: [userId], references: [id])
+  subject      String
+  description  String
+  status       TicketStatus   @default(OPEN)
+  priority     TicketPriority @default(MEDIUM)
+  category     String         @default("GENERAL")
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
 
   messages TicketMessage[]
 }
 
 model TicketMessage {
-  id         String        @id @default(cuid())
+  id         String        @id @default(uuid())
   ticketId   String
   ticket     SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   message    String
   isStaff    Boolean       @default(false)
   senderName String?
   createdAt  DateTime      @default(now())
+}
+
+model Discount {
+  id         String       @id @default(uuid())
+  labId      String
+  lab        Lab          @relation(fields: [labId], references: [id])
+  branchId   String?
+  branch     Branch?      @relation(fields: [branchId], references: [id])
+  code       String       @unique
+  value      Decimal      @db.Decimal(10, 2)
+  type       DiscountType
+  validUntil DateTime?
+  isActive   Boolean      @default(true)
+  createdAt  DateTime     @default(now())
 }
 
 enum TicketStatus {
@@ -1999,211 +1550,140 @@ enum TicketPriority {
   LOW
   MEDIUM
   HIGH
-}
-
-enum NotificationType {
-  TEST
-  PAYMENT
-  SYSTEM
-  LAB_UPDATE
-}
-
-model Notification {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id])
-
-  title   String
-  message String
-  type    String @default("SYSTEM")
-
-  link     String?
-  imageUrl String?
-
-  isRead    Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model ActivityLog {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  action      String
-  entity      String
-  entityId    String
-  description String
-  createdAt   DateTime @default(now())
-}
-
-model UsageMetric {
-  id             String       @id @default(cuid())
-  subscriptionId String
-  subscription   Subscription @relation(fields: [subscriptionId], references: [id])
-  month          Int
-  year           Int
-  testsCount     Int          @default(0)
-  storageUsedGB  Float        @default(0)
-
-  @@unique([subscriptionId, month, year])
-}
-
-model Discount {
-  id         String       @id @default(cuid())
-  labId      String
-  lab        Lab          @relation(fields: [labId], references: [id])
-  branchId   String?
-  branch     Branch?      @relation(fields: [branchId], references: [id])
-  code       String       @unique
-  value      Decimal
-  type       DiscountType
-  validUntil DateTime?
-  isActive   Boolean      @default(true)
-  createdAt  DateTime     @default(now())
-
-  @@index([labId])
+  URGENT
 }
 
 enum DiscountType {
   PERCENTAGE
-  FIXED
+  FLAT
 }
 
-model Invitation {
-  id        String   @id @default(cuid())
-  email     String
-  name      String
-  labName   String?
-  role      Role     @default(LAB_OWNER)
-  token     String   @unique
-  expiresAt DateTime
-
-  inviterId String
-  inviter   User   @relation(fields: [inviterId], references: [id])
-
-  status    InviteStatus @default(PENDING)
-  createdAt DateTime     @default(now())
-
-  @@index([token])
-  @@index([email])
-}
-
-enum InviteStatus {
-  PENDING
-  ACCEPTED
-  EXPIRED
-}
-
+// --- CMS / PUBLIC PAGES ---
 model Page {
-  id          String  @id @default(cuid())
+  id          String   @id @default(uuid())
+  slug        String   @unique
   title       String
-  slug        String  @unique
-  content     String
+  content     String   @db.Text
   metaTitle   String?
   metaDesc    String?
-  isPublished Boolean @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([slug])
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
-model Lead {
-  id      String     @id @default(cuid())
-  name    String
-  email   String
-  phone   String
-  labName String?
-  message String?
-  status  LeadStatus @default(NEW)
-  source  String     @default("WEBSITE_DEMO")
+// ==========================================
+// TEST CATALOG & TEMPLATES
+// ==========================================
+model TestTemplate {
+  id    String  @id @default(uuid())
+  labId String?
+  lab   Lab?    @relation(fields: [labId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  // Enterprise Forking Logic
+  isGlobal     Boolean        @default(false)
+  forkedFromId String?
+  forkedFrom   TestTemplate?  @relation("TestForks", fields: [forkedFromId], references: [id])
+  forks        TestTemplate[] @relation("TestForks")
+
+  // Core Info
+  code        String
+  name        String
+  printName   String?
+  description String? @db.Text
+  method      String?
+  type        String  @default("SINGLE") // SINGLE, PROFILE
+
+  // Relations
+  departmentId String?
+  Department   Department? @relation(fields: [departmentId], references: [id])
+
+  sampleTypeId String?
+  SampleType   SampleType? @relation(fields: [sampleTypeId], references: [id])
+
+  containerTypeId String?
+  ContainerType   ContainerType? @relation(fields: [containerTypeId], references: [id])
+
+  testCategoryId String?
+  TestCategory   TestCategory? @relation(fields: [testCategoryId], references: [id])
+
+  // Pricing & Logistics
+  price    Decimal @default(0.00) @db.Decimal(10, 2)
+  tatHours Int     @default(24)
+  isActive Boolean @default(true)
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  parameters             TestTemplateParameter[]
+  customFields           TestTemplateCustomField[] // Add this line!
+  Test                   Test[]
+  DoctorCustomCommission DoctorCustomCommission[]
+  AgencyCustomCommission AgencyCustomCommission[]
+
+  @@index([labId])
 }
 
-enum LeadStatus {
-  NEW
-  CONTACTED
-  CONVERTED
-  CLOSED
+model TestTemplateParameter {
+  id             String           @id @default(uuid())
+  testTemplateId String
+  testTemplate   TestTemplate     @relation(fields: [testTemplateId], references: [id], onDelete: Cascade)
+  parameterId    String
+  parameter      LabTestParameter @relation(fields: [parameterId], references: [id], onDelete: Cascade)
+  order          Int              @default(0)
+
+  @@unique([testTemplateId, parameterId])
 }
 
+// ==========================================
+// DYNAMIC CUSTOM FIELDS
+// ==========================================
 model CustomFieldDefinition {
-  id    String @id @default(cuid())
-  labId String
-  lab   Lab    @relation(fields: [labId], references: [id])
+  id            String   @id @default(uuid())
+  labId         String
+  lab           Lab      @relation(fields: [labId], references: [id], onDelete: Cascade)
+  name          String
+  type          String   @default("TEXT") // TEXT, NUMBER, DROPDOWN, DATE, LONG_TEXT
+  options       String[] @default([]) // Used for DROPDOWN types
+  reportLayout  String   @default("FULL") // FULL (occupies full row), HALF (occupies half row)
+  printOnReport Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  name         String
-  type         FieldType @default(TEXT)
-  options      String    @default("")
-  reportLayout String?   @default("FULL")
-
-  printOnReport Boolean @default(true)
-
-  createdAt DateTime @default(now())
-
-  usedInTests TestTemplateField[]
-  results     TestResultCustomField[]
+  // Relation to attach these fields to specific test templates
+  testTemplates TestTemplateCustomField[]
 
   @@unique([labId, name])
+  @@index([labId])
 }
 
-model TestTemplateField {
-  id         String       @id @default(cuid())
-  templateId String
-  template   TestTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+// Junction table to link Custom Fields to Test Templates
+model TestTemplateCustomField {
+  id           String                @id @default(uuid())
+  templateId   String
+  template     TestTemplate          @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  fieldId      String
+  field        CustomFieldDefinition @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  order        Int                   @default(0)
+  isRequired   Boolean               @default(false)
+  defaultValue String?
 
-  fieldDefId String
-  fieldDef   CustomFieldDefinition @relation(fields: [fieldDefId], references: [id])
-
-  order    Int     @default(0)
-  required Boolean @default(false)
-
-  @@unique([templateId, fieldDefId])
+  @@unique([templateId, fieldId])
 }
 
 model TestResultCustomField {
-  id     String @id @default(cuid())
-  testId String
-  test   Test   @relation(fields: [testId], references: [id], onDelete: Cascade)
-
+  id         String @id @default(uuid())
+  testId     String
+  test       Test   @relation(fields: [testId], references: [id], onDelete: Cascade)
   fieldDefId String
-  fieldDef   CustomFieldDefinition @relation(fields: [fieldDefId], references: [id])
-  layout     String?
+  // We use String here instead of a relation because definitions might get deleted/changed, 
+  // but historical clinical results MUST remain immutable.
+  value      String @db.Text
+  layout     Json?
 
-  value String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([testId, fieldDefId])
-}
-
-enum FieldType {
-  TEXT
-  LONG_TEXT
-  DROPDOWN
-  DATE
-  IMAGE
-  RICH_TEXT
-}
-
-model WebhookLog {
-  id           String        @id @default(cuid())
-  source       String        @default("WOOCOMMERCE")
-  event        String
-  payload      String
-  status       WebhookStatus @default(PENDING)
-  errorMessage String?
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-
-  @@index([status])
-  @@index([createdAt])
-}
-
-enum WebhookStatus {
-  PENDING
-  SUCCESS
-  FAILED
-  IGNORED
+  @@index([testId])
 }
