@@ -5,26 +5,19 @@ import { getDataFromToken } from '@/lib/auth';
 export const dynamic = 'force-dynamic';
 
 // =========================================================================
-// Helper: Match Reference Range for Snapshots (Backend Logic for Accuracy)
+// Helper: Match Reference Range for Snapshots
 // =========================================================================
 function getMatchingRange(parameter: any, patient: any) {
     if (!parameter.referenceRanges || parameter.referenceRanges.length === 0) return null;
-
-    // 1. Filter by Gender
-    const genderMatches = parameter.referenceRanges.filter((r: any) => 
+    const genderMatches = parameter.referenceRanges.filter((r: any) =>
         r.gender === 'BOTH' || r.gender === patient.gender || (patient.gender === 'CUSTOM' && r.gender === 'BOTH')
     );
-
-    // 2. Filter by Age
     let patientAgeInYears = patient.age;
     if (patient.ageUnit === 'MONTH') patientAgeInYears = patient.age / 12;
     if (patient.ageUnit === 'DAY') patientAgeInYears = patient.age / 365;
-
-    const ageMatch = genderMatches.find((r: any) => 
+    const ageMatch = genderMatches.find((r: any) =>
         patientAgeInYears >= r.minAge && patientAgeInYears <= r.maxAge
     );
-
-    // 3. Fallback
     return ageMatch || genderMatches[0] || parameter.referenceRanges[0];
 }
 
@@ -41,12 +34,9 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
 
     let where: any = { labId: user.labId };
-    
-    // Enterprise Branch Scoping: Managers only see their branch's accessions
     if (user.role !== 'LAB_OWNER' && user.role !== 'SUPER_ADMIN' && user.branchId) {
       where.OR = [{ branchId: user.branchId }, { branchId: null }];
     }
-
     if (patientId) where.patientId = patientId;
 
     const accessions = await prisma.test.findMany({
@@ -63,7 +53,6 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json({ data: accessions });
-
   } catch (error: any) {
     console.error("GET ACCESSION ERROR:", error);
     return NextResponse.json({ error: 'Fetch failed', details: error.message }, { status: 500 });
@@ -72,6 +61,10 @@ export async function GET(req: NextRequest) {
 
 // =========================================================================
 // 2. POST: Complete Accession Booking Engine
+//    - Creates invoice, tests, samples
+//    - Links doctor & agency to each test
+//    - Auto-calculates commissions per test (doctor + agency)
+//    - Creates hidden B2B agency invoice with agency net rates
 // =========================================================================
 export async function POST(req: NextRequest) {
   try {
@@ -81,19 +74,15 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { patientId, tests, subtotal, discountAmount, grandTotal, doctorId, agencyId } = body;
 
-    // Safety guard
     if (!tests || tests.length === 0) throw new Error("NO_TESTS_SELECTED");
 
-    // Execute the entire booking in a single, safe transaction
     const result = await prisma.$transaction(async (tx) => {
 
-        // 🌟 FETCH PATIENT FIRST: So we can use their name in the Ledger
+        // --- A. FETCH PATIENT ---
         const patientData = await tx.patient.findUnique({ where: { id: patientId } });
         if (!patientData) throw new Error("PATIENT_NOT_FOUND");
 
-        const readablePatientId = patientData.patientId || patientData.id.substring(0, 8);
-
-        // --- A. WALLET DEDUCTION & LEDGER LOGIC ---
+        // --- B. WALLET DEDUCTION ---
         const wallet = await tx.labWallet.findUnique({ where: { labId: user.labId } });
         if (!wallet) throw new Error("INSUFFICIENT_FUNDS");
 
@@ -102,29 +91,20 @@ export async function POST(req: NextRequest) {
 
         const startOfToday = new Date();
         startOfToday.setHours(0, 0, 0, 0);
-        
-        // SAFETY: Check if we already charged for this patient today
+
         const alreadyChargedToday = await tx.walletTransaction.findFirst({
-            where: { 
+            where: {
                 labId: user.labId,
                 type: 'DEDUCTION',
                 createdAt: { gte: startOfToday },
-                description: { contains: `[ID: ${patientId}]` } // We still keep the hidden ID here for exact computer matching
+                description: { contains: `[ID: ${patientId}]` }
             }
         });
 
         if (!alreadyChargedToday) {
             if (newBalance < visitFee) throw new Error("INSUFFICIENT_FUNDS");
-            
             newBalance -= visitFee;
-
-            // 1. Update Wallet Balance
-            await tx.labWallet.update({
-                where: { labId: user.labId },
-                data: { balance: newBalance }
-            });
-
-            // 2. Create Ledger Transaction (✅ NOW WITH REAL NAME)
+            await tx.labWallet.update({ where: { labId: user.labId }, data: { balance: newBalance } });
             await tx.walletTransaction.create({
                 data: {
                     labId: user.labId,
@@ -136,22 +116,19 @@ export async function POST(req: NextRequest) {
             });
         }
 
-        // --- B. GENERATE VISIT ID ---
+        // --- C. GENERATE INVOICE NUMBER ---
         const datePrefix = `${String(startOfToday.getDate()).padStart(2, '0')}${String(startOfToday.getMonth() + 1).padStart(2, '0')}${String(startOfToday.getFullYear()).slice(2)}`;
-        
-        const countToday = await tx.invoice.count({ 
-            where: { labId: user.labId, createdAt: { gte: startOfToday } } 
-        });
+        const countToday = await tx.invoice.count({ where: { labId: user.labId, createdAt: { gte: startOfToday } } });
         const invoiceNumber = `${datePrefix}-${(countToday + 1).toString().padStart(4, '0')}`;
 
-        // --- C. CREATE INVOICE ---
+        // --- D. CREATE MAIN INVOICE (patient-facing) ---
         const taxableAmount = Number(subtotal) - Number(discountAmount);
-        
         const invoice = await tx.invoice.create({
             data: {
                 labId: user.labId,
                 branchId: user.branchId,
                 patientId,
+                agencyId: agencyId || null,
                 invoiceNumber,
                 subtotal: Number(subtotal),
                 discount: Number(discountAmount),
@@ -160,37 +137,66 @@ export async function POST(req: NextRequest) {
                 grandTotal: Number(grandTotal),
                 status: 'PENDING',
                 paymentStatus: 'PENDING',
-                items: { 
-                    create: tests.map((t: any) => ({ 
-                        description: t.testName, 
-                        unitPrice: Number(t.price), 
-                        quantity: 1, 
-                        taxRate: 0, taxAmount: 0, total: Number(t.price) 
-                    })) 
+                items: {
+                    create: tests.map((t: any) => ({
+                        description: t.testName,
+                        unitPrice: Number(t.price),
+                        quantity: 1,
+                        taxRate: 0, taxAmount: 0, total: Number(t.price)
+                    }))
                 }
             }
         });
 
-        // --- D. HIGH PERFORMANCE BATCH FETCHING ---
+        // --- E. FETCH TEMPLATES ---
         const templateIds = tests.map((t: any) => t.testTemplateId || t.testId || t.templateId || t.id).filter(Boolean);
-        
         const templates = await tx.testTemplate.findMany({
             where: { id: { in: templateIds } },
-            include: { 
-                parameters: { 
-                    include: { parameter: { include: { referenceRanges: true } } } 
-                } 
-            }
+            include: { parameters: { include: { parameter: { include: { referenceRanges: true } } } } }
+        });
+        const templateMap = new Map(templates.map(t => [t.id, t]));
+        const samplesMap: Record<string, any[]> = {};
+
+        // --- F. FETCH DOCTOR & AGENCY DATA (for commissions) ---
+        let doctorData: any = null;
+        let agencyData: any = null;
+        let labData: any = null;
+
+        labData = await tx.lab.findUnique({
+            where: { id: user.labId },
+            select: { defaultDoctorCommission: true, defaultAgencyCommission: true, commissionType: true }
         });
 
-        const templateMap = new Map(templates.map(t => [t.id, t]));
-        const samplesMap: Record<string, any[]> = {}; 
+        if (doctorId && doctorId !== 'Self' && doctorId !== 'null') {
+            doctorData = await tx.doctor.findFirst({
+                where: { id: doctorId, labId: user.labId },
+            });
+        }
+        if (agencyId && agencyId !== 'Direct' && agencyId !== 'null') {
+            agencyData = await tx.agency.findFirst({
+                where: { id: agencyId, labId: user.labId },
+            });
+        }
 
-        // --- E. CREATE TESTS & SNAPSHOT RESULTS ---
+        // --- G. FETCH CUSTOM COMMISSIONS ---
+        const allTemplateIds = templateIds;
+        const [doctorCustoms, agencyCustoms] = await Promise.all([
+            (doctorData)
+                ? tx.doctorCustomCommission.findMany({ where: { doctorId: doctorData.id, testTemplateId: { in: allTemplateIds } } })
+                : [],
+            (agencyData)
+                ? tx.agencyCustomCommission.findMany({ where: { agencyId: agencyData.id, testTemplateId: { in: allTemplateIds } } })
+                : [],
+        ]);
+        const doctorCustomMap = new Map(doctorCustoms.map((dc: any) => [dc.testTemplateId, dc]));
+        const agencyCustomMap = new Map(agencyCustoms.map((ac: any) => [ac.testTemplateId, ac]));
+
+        // --- H. CREATE TESTS & SNAPSHOT RESULTS ---
+        const createdTestIds: string[] = [];
+
         for (const t of tests) {
             const templateId = t.testTemplateId || t.testId || t.templateId || t.id;
             const template = templateMap.get(templateId);
-
             if (!template) throw new Error(`TEMPLATE_NOT_FOUND: ${t.testName}`);
 
             const createdTest = await tx.test.create({
@@ -206,14 +212,13 @@ export async function POST(req: NextRequest) {
                     price: Number(t.price || 0),
                     finalPrice: Number(t.price || 0),
                     status: 'PENDING',
-                    // ✅ Link doctor and agency to the test for commission calculation
-                    doctorId: doctorId || null,
-                    agencyId: agencyId || null,
+                    // ✅ Link doctor and agency to the test
+                    doctorId: doctorData?.id || null,
+                    agencyId: agencyData?.id || null,
                     results: {
                         create: template.parameters.map(p => {
                             const range = getMatchingRange(p.parameter, patientData);
                             const refText = range ? (range.textValue || `${range.lowValue} - ${range.highValue}`) : "-";
-
                             return {
                                 parameterCode: p.parameter.code,
                                 printName: p.parameter.printName || p.parameter.name,
@@ -226,15 +231,16 @@ export async function POST(req: NextRequest) {
                 }
             });
 
+            createdTestIds.push(createdTest.id);
+
             const containerKey = template.containerTypeId || 'DEFAULT';
             if (!samplesMap[containerKey]) samplesMap[containerKey] = [];
             samplesMap[containerKey].push(createdTest.id);
         }
 
-        // --- F. CREATE PHYSICAL SAMPLES ---
+        // --- I. CREATE PHYSICAL SAMPLES ---
         for (const [containerId, testIds] of Object.entries(samplesMap)) {
             const sampleSuffix = containerId === 'DEFAULT' ? Math.floor(Math.random() * 1000) : containerId.substring(0, 4).toUpperCase();
-
             await tx.sample.create({
                 data: {
                     labId: user.labId,
@@ -249,77 +255,53 @@ export async function POST(req: NextRequest) {
         }
 
         // ==========================================
-        // --- G. COMMISSION CALCULATION & AGENCY INVOICE ---
+        // --- J. COMMISSION CALCULATION (per test) ---
         // ==========================================
-
-        // Fetch lab-level commission defaults
-        const lab = await tx.lab.findUnique({
-            where: { id: user.labId },
-            select: { defaultDoctorCommission: true, defaultAgencyCommission: true, commissionType: true, name: true }
-        });
 
         let totalDoctorCommission = 0;
         let totalAgencyCommission = 0;
-        let agencyInvoiceId: string | null = null;
+        const agencyInvoiceItems: any[] = [];
 
-        // --- G1. FETCH DOCTOR & AGENCY DETAILS ---
-        let doctorData: any = null;
-        let agencyData: any = null;
-
-        if (doctorId) {
-            doctorData = await tx.doctor.findFirst({
-                where: { id: doctorId, labId: user.labId },
-            });
-        }
-        if (agencyId) {
-            agencyData = await tx.agency.findFirst({
-                where: { id: agencyId, labId: user.labId },
-            });
-        }
-
-        // --- G2. FETCH CUSTOM COMMISSIONS ---
-        const allTemplateIds = tests.map((t: any) => t.testTemplateId || t.testId || t.templateId || t.id).filter(Boolean);
-
-        const [doctorCustoms, agencyCustoms] = await Promise.all([
-            doctorId
-                ? tx.doctorCustomCommission.findMany({ where: { doctorId, testTemplateId: { in: allTemplateIds } } })
-                : [],
-            agencyId
-                ? tx.agencyCustomCommission.findMany({ where: { agencyId, testTemplateId: { in: allTemplateIds } } })
-                : [],
-        ]);
-
-        const doctorCustomMap = new Map(doctorCustoms.map((dc: any) => [dc.testTemplateId, dc]));
-        const agencyCustomMap = new Map(agencyCustoms.map((ac: any) => [ac.testTemplateId, ac]));
-
-        // --- G3. FETCH CREATED TESTS (to link commissions) ---
+        // Fetch created tests with their templateId for commission lookup
         const createdTests = await tx.test.findMany({
-            where: { invoiceId: invoice.id },
+            where: { id: { in: createdTestIds } },
             select: { id: true, testTemplateId: true, testName: true, price: true }
         });
-
-        // --- G4. CALCULATE COMMISSIONS PER TEST + BUILD AGENCY INVOICE ITEMS ---
-        const agencyInvoiceItems: any[] = [];
 
         for (const ct of createdTests) {
             const baseAmount = Number(ct.price || 0);
             if (baseAmount <= 0) continue;
 
-            // DOCTOR COMMISSION
-            if (doctorId && doctorData) {
+            // ---- DOCTOR COMMISSION ----
+            if (doctorData) {
                 const custom = doctorCustomMap.get(ct.testTemplateId);
                 let commissionAmount = 0;
                 let rate = 0;
                 let type: 'PERCENTAGE' | 'FIXED' | 'NET_PRICE' = 'PERCENTAGE';
 
                 if (custom) {
-                    type = custom.commissionType;
+                    // DoctorCustomCommission uses commissionRate (Float) and commissionType (String: "PERCENTAGE" or "FLAT")
                     rate = Number(custom.commissionRate || 0);
-                    if (type === 'PERCENTAGE') commissionAmount = (baseAmount * rate) / 100;
-                    else if (type === 'FIXED') commissionAmount = rate;
-                    else if (type === 'NET_PRICE') commissionAmount = Math.max(0, baseAmount - Number(custom.netPrice || 0));
-                } else {
-                    rate = Number(lab?.defaultDoctorCommission || 0);
+                    if (custom.commissionType === 'FLAT') {
+                        type = 'FIXED';
+                        commissionAmount = rate;
+                    } else {
+                        type = 'PERCENTAGE';
+                        commissionAmount = (baseAmount * rate) / 100;
+                    }
+                } else if (doctorData.commissionRate) {
+                    // Doctor-level default
+                    rate = Number(doctorData.commissionRate);
+                    type = doctorData.commissionType || 'PERCENTAGE';
+                    if (type === 'FIXED') {
+                        commissionAmount = rate;
+                    } else {
+                        commissionAmount = (baseAmount * rate) / 100;
+                    }
+                } else if (labData?.defaultDoctorCommission) {
+                    // Lab-level default
+                    rate = Number(labData.defaultDoctorCommission);
+                    type = 'PERCENTAGE';
                     commissionAmount = (baseAmount * rate) / 100;
                 }
 
@@ -328,7 +310,7 @@ export async function POST(req: NextRequest) {
                     await tx.commission.create({
                         data: {
                             testId: ct.id,
-                            doctorId,
+                            doctorId: doctorData.id,
                             amount: commissionAmount,
                             type,
                             rate,
@@ -338,39 +320,60 @@ export async function POST(req: NextRequest) {
                 }
             }
 
-            // AGENCY COMMISSION + AGENCY INVOICE ITEM
-            if (agencyId && agencyData) {
+            // ---- AGENCY COMMISSION + B2B INVOICE ITEM ----
+            if (agencyData) {
                 const custom = agencyCustomMap.get(ct.testTemplateId);
                 let commissionAmount = 0;
                 let rate = 0;
                 let type: 'PERCENTAGE' | 'FIXED' | 'NET_PRICE' = 'PERCENTAGE';
-                let agencyNetPrice = baseAmount;
+                let agencyNetPrice = baseAmount; // what the agency pays the lab
 
                 if (custom) {
-                    type = custom.commissionType;
-                    rate = Number(custom.commissionRate || 0);
-                    if (type === 'PERCENTAGE') {
-                        commissionAmount = (baseAmount * rate) / 100;
-                        agencyNetPrice = baseAmount - commissionAmount;
-                    } else if (type === 'FIXED') {
+                    // AgencyCustomCommission can use commissionRate + commissionType OR netPrice
+                    if (custom.netPrice != null) {
+                        // NET_PRICE mode: agency pays a fixed B2B rate
+                        type = 'NET_PRICE';
+                        rate = Number(custom.netPrice);
+                        agencyNetPrice = Number(custom.netPrice);
+                        commissionAmount = Math.max(0, baseAmount - agencyNetPrice);
+                    } else if (custom.commissionRate != null) {
+                        rate = Number(custom.commissionRate);
+                        type = custom.commissionType || 'PERCENTAGE';
+                        if (type === 'FIXED') {
+                            commissionAmount = rate;
+                            agencyNetPrice = baseAmount - rate;
+                        } else {
+                            type = 'PERCENTAGE';
+                            commissionAmount = (baseAmount * rate) / 100;
+                            agencyNetPrice = baseAmount - commissionAmount;
+                        }
+                    }
+                } else if (agencyData.commissionRate) {
+                    // Agency-level default
+                    rate = Number(agencyData.commissionRate);
+                    type = agencyData.commissionType || 'PERCENTAGE';
+                    if (type === 'FIXED') {
                         commissionAmount = rate;
                         agencyNetPrice = baseAmount - rate;
-                    } else if (type === 'NET_PRICE') {
-                        agencyNetPrice = Number(custom.netPrice || 0);
-                        commissionAmount = Math.max(0, baseAmount - agencyNetPrice);
+                    } else {
+                        commissionAmount = (baseAmount * rate) / 100;
+                        agencyNetPrice = baseAmount - commissionAmount;
                     }
-                } else {
-                    rate = Number(lab?.defaultAgencyCommission || 0);
+                } else if (labData?.defaultAgencyCommission) {
+                    // Lab-level default
+                    rate = Number(labData.defaultAgencyCommission);
+                    type = 'PERCENTAGE';
                     commissionAmount = (baseAmount * rate) / 100;
                     agencyNetPrice = baseAmount - commissionAmount;
                 }
 
+                // Create commission record
                 if (commissionAmount > 0) {
                     totalAgencyCommission += commissionAmount;
                     await tx.commission.create({
                         data: {
                             testId: ct.id,
-                            agencyId,
+                            agencyId: agencyData.id,
                             amount: commissionAmount,
                             type,
                             rate,
@@ -379,7 +382,7 @@ export async function POST(req: NextRequest) {
                     });
                 }
 
-                // Agency invoice item with B2B net price
+                // Build B2B invoice item with the agency's net price
                 agencyInvoiceItems.push({
                     description: ct.testName,
                     unitPrice: agencyNetPrice,
@@ -391,8 +394,14 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        // --- G5. CREATE HIDDEN AGENCY INVOICE (B2B) ---
-        if (agencyId && agencyData && agencyInvoiceItems.length > 0) {
+        // ==========================================
+        // --- K. CREATE HIDDEN B2B AGENCY INVOICE ---
+        // ==========================================
+        // This invoice is visible only on the agency/B2B portal view.
+        // It shows the agency's B2B rates (net prices), NOT the patient prices.
+        let agencyInvoiceId: string | null = null;
+
+        if (agencyData && agencyInvoiceItems.length > 0) {
             const agencySubtotal = agencyInvoiceItems.reduce((s, i) => s + i.total, 0);
             const agencyInvoiceNumber = `B2B-${invoiceNumber}`;
 
@@ -401,7 +410,7 @@ export async function POST(req: NextRequest) {
                     labId: user.labId,
                     branchId: user.branchId,
                     patientId,
-                    agencyId,
+                    agencyId: agencyData.id,
                     invoiceNumber: agencyInvoiceNumber,
                     subtotal: agencySubtotal,
                     discount: 0,
@@ -410,25 +419,73 @@ export async function POST(req: NextRequest) {
                     grandTotal: agencySubtotal,
                     status: 'PENDING',
                     paymentStatus: 'PENDING',
-                    isB2B: true, // ✅ Hidden flag — only visible on agency view
+                    isB2B: true, // ✅ Hidden from main billing — only visible on agency view
                     items: { create: agencyInvoiceItems }
                 }
             });
             agencyInvoiceId = agencyInvoice.id;
         }
 
-        return { ...invoice, agencyInvoiceId, totalDoctorCommission, totalAgencyCommission };
-    }, { 
-        maxWait: 20000, 
-        timeout: 60000  
-    }); 
+        // ==========================================
+        // --- L. UPDATE REFERRAL COUNTERS ---
+        // ==========================================
+        if (doctorData) {
+            await tx.doctor.update({
+                where: { id: doctorData.id },
+                data: {
+                    totalReferrals: { increment: 1 },
+                    totalCommission: { increment: totalDoctorCommission },
+                }
+            });
+        }
+        if (agencyData) {
+            await tx.agency.update({
+                where: { id: agencyData.id },
+                data: {
+                    totalReferrals: { increment: 1 },
+                    totalCommission: { increment: totalAgencyCommission },
+                }
+            });
+        }
+
+        // ==========================================
+        // --- M. ACTIVITY LOG ---
+        // ==========================================
+        await tx.activityLog.create({
+            data: {
+                labId: user.labId,
+                userId: user.id || user.userId,
+                action: 'ACCESSION_CREATED',
+                entity: 'INVOICE',
+                entityType: 'INVOICE',
+                entityId: invoice.id,
+                description: `Accession created for ${patientData.name} — ${tests.length} tests, Invoice: ${invoiceNumber}` +
+                    (doctorData ? `, Doctor: ${doctorData.name}` : '') +
+                    (agencyData ? `, Agency: ${agencyData.agencyName}` : '') +
+                    (totalDoctorCommission > 0 ? `, Dr Commission: ₹${totalDoctorCommission.toFixed(2)}` : '') +
+                    (totalAgencyCommission > 0 ? `, Agency Commission: ₹${totalAgencyCommission.toFixed(2)}` : ''),
+            }
+        });
+
+        return {
+            ...invoice,
+            agencyInvoiceId,
+            totalDoctorCommission,
+            totalAgencyCommission,
+            doctorName: doctorData?.name || null,
+            agencyName: agencyData?.agencyName || null,
+        };
+    }, {
+        maxWait: 20000,
+        timeout: 60000
+    });
 
     return NextResponse.json({ success: true, data: result });
   } catch (error: any) {
     if (error.message === "PATIENT_NOT_FOUND") return NextResponse.json({ error: "Patient record not found." }, { status: 404 });
     if (error.message === "INSUFFICIENT_FUNDS") return NextResponse.json({ error: "Insufficient wallet balance to register patient." }, { status: 402 });
     if (error.message === "NO_TESTS_SELECTED") return NextResponse.json({ error: "No tests were selected for this invoice." }, { status: 400 });
-    
+
     console.error("POST ACCESSION ERROR:", error);
     return NextResponse.json({ error: "Failed to book tests.", details: error.message }, { status: 500 });
   }
@@ -451,10 +508,16 @@ export async function PATCH(req: NextRequest) {
 
     const updatedTest = await prisma.$transaction(async (tx) => {
       let updateData: any = {};
-      
+
       if (action === 'CANCEL') {
         updateData.status = 'CANCELLED';
         updateData.notes = notes || 'Cancelled by staff';
+
+        // Also cancel any pending commissions for this test
+        await tx.commission.updateMany({
+          where: { testId, status: 'PENDING' },
+          data: { status: 'CANCELLED' }
+        });
       }
 
       const test = await tx.test.update({
@@ -463,11 +526,10 @@ export async function PATCH(req: NextRequest) {
         include: { patient: { select: { name: true } } }
       });
 
-      // Audit Log for modification
       await tx.activityLog.create({
         data: {
           labId: user.labId,
-          userId: user.id,
+          userId: user.id || user.userId,
           action: 'TEST_UPDATED',
           entityType: 'TEST',
           entity: 'TEST',
@@ -485,5 +547,69 @@ export async function PATCH(req: NextRequest) {
   } catch (error: any) {
     console.error("PATCH ACCESSION ERROR:", error);
     return NextResponse.json({ error: "Update failed" }, { status: 500 });
+  }
+}
+
+// =========================================================================
+// 4. PUT: Settle Commissions for a Doctor or Agency
+//    Body: { commissionIds: string[], transactionRef?: string }
+//    Marks commissions as PAID and records the settlement.
+// =========================================================================
+export async function PUT(req: NextRequest) {
+  try {
+    const user = await getDataFromToken(req);
+    if (!user || !user.labId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const body = await req.json();
+    const { commissionIds, transactionRef } = body;
+
+    if (!commissionIds || !Array.isArray(commissionIds) || commissionIds.length === 0) {
+      return NextResponse.json({ error: 'commissionIds array is required' }, { status: 400 });
+    }
+
+    // Only allow settling commissions belonging to this lab
+    const commissions = await prisma.commission.findMany({
+      where: {
+        id: { in: commissionIds },
+        status: { in: ['PENDING', 'APPROVED'] },
+        test: { labId: user.labId }
+      },
+      include: { test: { select: { labId: true } } }
+    });
+
+    if (commissions.length === 0) {
+      return NextResponse.json({ error: 'No eligible commissions found' }, { status: 404 });
+    }
+
+    // Mark them as PAID
+    const result = await prisma.commission.updateMany({
+      where: { id: { in: commissionIds }, status: { in: ['PENDING', 'APPROVED'] } },
+      data: {
+        status: 'PAID',
+        paidAt: new Date(),
+        transactionRef: transactionRef || null,
+      }
+    });
+
+    await prisma.activityLog.create({
+      data: {
+        labId: user.labId,
+        userId: user.id || user.userId,
+        action: 'COMMISSIONS_SETTLED',
+        entity: 'COMMISSION',
+        entityType: 'COMMISSION',
+        entityId: commissionIds.join(','),
+        description: `Settled ${result.count} commission records${transactionRef ? ` (Ref: ${transactionRef})` : ''}`,
+      }
+    });
+
+    return NextResponse.json({
+      success: true,
+      settled: result.count,
+      message: `${result.count} commissions marked as PAID`
+    });
+  } catch (error: any) {
+    console.error("SETTLE COMMISSION ERROR:", error);
+    return NextResponse.json({ error: "Failed to settle commissions" }, { status: 500 });
   }
 }
