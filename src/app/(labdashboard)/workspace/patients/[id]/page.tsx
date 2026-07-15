@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PatientReferralTab } from "@/components/patients/PatientReferralTab";
 import { format } from "date-fns";
 import toast from "react-hot-toast";
 
@@ -100,9 +101,9 @@ export default function PatientDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="h-screen flex flex-col items-center justify-center bg-muted/30">
+      <div className="h-screen flex flex-col items-center justify-center bg-slate-50">
         <Loader2 className="animate-spin h-10 w-10 text-indigo-600 mb-4" />
-        <p className="text-sm font-medium text-muted-foreground animate-pulse">
+        <p className="text-sm font-medium text-slate-500 animate-pulse">
           Loading patient profile...
         </p>
       </div>
@@ -111,10 +112,10 @@ export default function PatientDetailPage() {
 
   if (!patient) {
     return (
-      <div className="h-screen flex flex-col items-center justify-center bg-muted/30">
-        <AlertCircle className="h-12 w-12 text-muted-foreground/70 mb-4" />
+      <div className="h-screen flex flex-col items-center justify-center bg-slate-50">
+        <AlertCircle className="h-12 w-12 text-slate-400 mb-4" />
         <h2 className="text-xl font-bold text-slate-800">Patient Not Found</h2>
-        <p className="text-muted-foreground mb-6">
+        <p className="text-slate-500 mb-6">
           The requested patient record does not exist or has been removed.
         </p>
         <Button onClick={() => router.back()} variant="outline">
@@ -133,19 +134,19 @@ export default function PatientDetailPage() {
     .toUpperCase();
 
   return (
-    <div className="min-h-screen bg-muted/30 flex flex-col font-sans selection:bg-indigo-100 relative pb-10">
+    <div className="min-h-screen bg-slate-50 flex flex-col font-sans selection:bg-indigo-100 relative pb-10">
       {/* Background Mesh */}
       <div className="absolute top-0 inset-x-0 h-64 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-100/50 via-slate-50 to-transparent pointer-events-none z-0" />
 
       {/* --- FLOATING HEADER --- */}
-      <header className="sticky top-0 z-30 bg-card/70 backdrop-blur-xl border-b border-slate-200/60 shadow-sm">
+      <header className="sticky top-0 z-30 bg-white/70 backdrop-blur-xl border-b border-slate-200/60 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => router.back()}
-              className="h-10 w-10 rounded-full hover:bg-muted text-muted-foreground shrink-0">
+              className="h-10 w-10 rounded-full hover:bg-slate-100 text-slate-500 shrink-0">
               <ArrowLeft className="h-5 w-5" />
             </Button>
 
@@ -154,15 +155,15 @@ export default function PatientDetailPage() {
                 {initials}
               </div>
               <div>
-                <h1 className="text-xl font-bold tracking-tight text-foreground leading-tight flex items-center gap-2">
+                <h1 className="text-xl font-bold tracking-tight text-slate-900 leading-tight flex items-center gap-2">
                   {patient.name}
                   <Badge
                     variant="outline"
-                    className={`text-[10px] uppercase font-bold tracking-wider ${patient.gender === "MALE" ? "bg-primary/10 text-primary border-primary/20" : patient.gender === "FEMALE" ? "bg-pink-50 text-pink-700 border-pink-200" : "bg-muted text-foreground/80 border-border"}`}>
+                    className={`text-[10px] uppercase font-bold tracking-wider ${patient.gender === "MALE" ? "bg-blue-50 text-blue-700 border-blue-200" : patient.gender === "FEMALE" ? "bg-pink-50 text-pink-700 border-pink-200" : "bg-slate-100 text-slate-700 border-slate-200"}`}>
                     {patient.gender}
                   </Badge>
                 </h1>
-                <p className="text-xs font-medium text-muted-foreground flex items-center gap-2 uppercase tracking-wider mt-0.5">
+                <p className="text-xs font-medium text-slate-500 flex items-center gap-2 uppercase tracking-wider mt-0.5">
                   PID:{" "}
                   <span className="font-mono text-indigo-600 font-bold">
                     {patient.patientId}
@@ -183,7 +184,7 @@ export default function PatientDetailPage() {
                     setIsEditing(false);
                     setFormData({ ...patient });
                   }}
-                  className="flex-1 sm:flex-none text-muted-foreground hover:text-foreground/80 hover:bg-muted h-11 rounded-xl">
+                  className="flex-1 sm:flex-none text-slate-500 hover:text-slate-700 hover:bg-slate-100 h-11 rounded-xl">
                   Cancel
                 </Button>
                 <Button
@@ -226,26 +227,26 @@ export default function PatientDetailPage() {
           <div className="lg:col-span-4 space-y-6">
             <Card className="border-slate-200/80 shadow-sm overflow-hidden rounded-2xl">
               <CardHeader className="pb-4 border-b border-slate-100 bg-slate-50/50 px-6 py-4">
-                <CardTitle className="text-sm font-semibold text-foreground tracking-wide uppercase flex items-center gap-2">
+                <CardTitle className="text-sm font-semibold text-slate-800 tracking-wide uppercase flex items-center gap-2">
                   <User className="h-4 w-4 text-indigo-500" /> Core Identity
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6 space-y-5">
                 {/* LOCKED FIELDS (Visual distinction for security) */}
-                <div className="p-4 bg-muted/30 rounded-xl border border-slate-100 space-y-4">
+                <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-4">
                   <div className="space-y-1.5">
-                    <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                    <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
                       <User className="h-3 w-3" /> Full Name
                     </Label>
-                    <p className="text-sm font-semibold text-foreground bg-card px-3 py-2 rounded-lg border border-border shadow-sm opacity-70 cursor-not-allowed">
+                    <p className="text-sm font-semibold text-slate-800 bg-white px-3 py-2 rounded-lg border border-slate-200 shadow-sm opacity-70 cursor-not-allowed">
                       {formData.name}
                     </p>
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                    <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
                       <Phone className="h-3 w-3" /> Verified Phone
                     </Label>
-                    <p className="text-sm font-semibold text-foreground bg-card px-3 py-2 rounded-lg border border-border shadow-sm opacity-70 cursor-not-allowed font-mono">
+                    <p className="text-sm font-semibold text-slate-800 bg-white px-3 py-2 rounded-lg border border-slate-200 shadow-sm opacity-70 cursor-not-allowed font-mono">
                       {formData.phone}
                     </p>
                   </div>
@@ -254,7 +255,7 @@ export default function PatientDetailPage() {
                 {/* EDITABLE FIELDS */}
                 <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-1.5">
-                    <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                    <Label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">
                       Age
                     </Label>
                     <Input
@@ -264,11 +265,11 @@ export default function PatientDetailPage() {
                         setFormData({ ...formData, age: e.target.value })
                       }
                       disabled={!isEditing}
-                      className={`h-11 rounded-xl transition-colors ${isEditing ? "bg-card border-indigo-200 focus:ring-indigo-500/20" : "bg-muted/30 border-transparent text-slate-700"}`}
+                      className={`h-11 rounded-xl transition-colors ${isEditing ? "bg-white border-indigo-200 focus:ring-indigo-500/20" : "bg-slate-50 border-transparent text-slate-700"}`}
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                    <Label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">
                       Unit
                     </Label>
                     <Select
@@ -278,7 +279,7 @@ export default function PatientDetailPage() {
                       }
                       disabled={!isEditing}>
                       <SelectTrigger
-                        className={`h-11 rounded-xl transition-colors ${isEditing ? "bg-card border-indigo-200 focus:ring-indigo-500/20" : "bg-muted/30 border-transparent text-slate-700"}`}>
+                        className={`h-11 rounded-xl transition-colors ${isEditing ? "bg-white border-indigo-200 focus:ring-indigo-500/20" : "bg-slate-50 border-transparent text-slate-700"}`}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -289,7 +290,7 @@ export default function PatientDetailPage() {
                     </Select>
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                    <Label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">
                       Gender
                     </Label>
                     <Select
@@ -299,7 +300,7 @@ export default function PatientDetailPage() {
                       }
                       disabled={!isEditing}>
                       <SelectTrigger
-                        className={`h-11 rounded-xl transition-colors ${isEditing ? "bg-card border-indigo-200 focus:ring-indigo-500/20" : "bg-muted/30 border-transparent text-slate-700"}`}>
+                        className={`h-11 rounded-xl transition-colors ${isEditing ? "bg-white border-indigo-200 focus:ring-indigo-500/20" : "bg-slate-50 border-transparent text-slate-700"}`}>
                         <SelectValue placeholder="Gender" />
                       </SelectTrigger>
                       <SelectContent>
@@ -313,7 +314,7 @@ export default function PatientDetailPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                  <Label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">
                     Email Address
                   </Label>
                   <div className="relative">
@@ -321,7 +322,7 @@ export default function PatientDetailPage() {
                       className={`absolute left-3 top-3.5 h-4 w-4 transition-colors ${isEditing ? "text-indigo-400" : "text-slate-400"}`}
                     />
                     <Input
-                      className={`h-11 pl-10 rounded-xl transition-colors ${isEditing ? "bg-card border-indigo-200 focus:ring-indigo-500/20" : "bg-muted/30 border-transparent text-slate-700"}`}
+                      className={`h-11 pl-10 rounded-xl transition-colors ${isEditing ? "bg-white border-indigo-200 focus:ring-indigo-500/20" : "bg-slate-50 border-transparent text-slate-700"}`}
                       value={formData.email}
                       onChange={(e) =>
                         setFormData({ ...formData, email: e.target.value })
@@ -333,7 +334,7 @@ export default function PatientDetailPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                  <Label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">
                     Home Address
                   </Label>
                   <div className="relative">
@@ -341,7 +342,7 @@ export default function PatientDetailPage() {
                       className={`absolute left-3 top-3 h-4 w-4 transition-colors ${isEditing ? "text-indigo-400" : "text-slate-400"}`}
                     />
                     <Textarea
-                      className={`pl-10 min-h-[80px] py-3 rounded-xl resize-none transition-colors ${isEditing ? "bg-card border-indigo-200 focus:ring-indigo-500/20" : "bg-muted/30 border-transparent text-slate-700"}`}
+                      className={`pl-10 min-h-[80px] py-3 rounded-xl resize-none transition-colors ${isEditing ? "bg-white border-indigo-200 focus:ring-indigo-500/20" : "bg-slate-50 border-transparent text-slate-700"}`}
                       value={formData.address}
                       onChange={(e) =>
                         setFormData({ ...formData, address: e.target.value })
@@ -352,11 +353,11 @@ export default function PatientDetailPage() {
                   </div>
                 </div>
 
-                <div className="h-px bg-muted my-4" />
+                <div className="h-px bg-slate-100 my-4" />
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                    <Label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1">
                       <Droplet className="h-3 w-3 text-red-500" /> Blood Grp
                     </Label>
                     <Select
@@ -369,7 +370,7 @@ export default function PatientDetailPage() {
                       }
                       disabled={!isEditing}>
                       <SelectTrigger
-                        className={`h-11 rounded-xl font-bold transition-colors ${isEditing ? "bg-card border-indigo-200 focus:ring-indigo-500/20" : "bg-muted/30 border-transparent text-slate-700"}`}>
+                        className={`h-11 rounded-xl font-bold transition-colors ${isEditing ? "bg-white border-indigo-200 focus:ring-indigo-500/20" : "bg-slate-50 border-transparent text-slate-700"}`}>
                         <SelectValue placeholder="-" />
                       </SelectTrigger>
                       <SelectContent>
@@ -386,11 +387,11 @@ export default function PatientDetailPage() {
                     </Select>
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                    <Label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">
                       SRF ID
                     </Label>
                     <Input
-                      className={`h-11 font-mono text-sm rounded-xl transition-colors ${isEditing ? "bg-card border-indigo-200 focus:ring-indigo-500/20" : "bg-muted/30 border-transparent text-slate-700"}`}
+                      className={`h-11 font-mono text-sm rounded-xl transition-colors ${isEditing ? "bg-white border-indigo-200 focus:ring-indigo-500/20" : "bg-slate-50 border-transparent text-slate-700"}`}
                       value={formData.srfId}
                       onChange={(e) =>
                         setFormData({ ...formData, srfId: e.target.value })
@@ -402,11 +403,11 @@ export default function PatientDetailPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                  <Label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">
                     Passport No.
                   </Label>
                   <Input
-                    className={`h-11 font-mono text-sm rounded-xl transition-colors ${isEditing ? "bg-card border-indigo-200 focus:ring-indigo-500/20" : "bg-muted/30 border-transparent text-slate-700"}`}
+                    className={`h-11 font-mono text-sm rounded-xl transition-colors ${isEditing ? "bg-white border-indigo-200 focus:ring-indigo-500/20" : "bg-slate-50 border-transparent text-slate-700"}`}
                     value={formData.passportNumber}
                     onChange={(e) =>
                       setFormData({
@@ -427,21 +428,26 @@ export default function PatientDetailPage() {
             <Tabs defaultValue="tests" className="w-full">
               {/* Premium Pill Tabs */}
               <div className="bg-slate-100/80 p-1.5 rounded-2xl inline-flex w-full sm:w-auto shadow-inner border border-slate-200/50 mb-6">
-                <TabsList className="grid w-full sm:w-[500px] grid-cols-3 bg-transparent p-0 gap-1 h-auto">
+                <TabsList className="grid w-full sm:w-[600px] grid-cols-4 bg-transparent p-0 gap-1 h-auto">
                   <TabsTrigger
                     value="tests"
-                    className="data-[state=active]:bg-card data-[state=active]:text-indigo-700 data-[state=active]:shadow-sm rounded-xl py-2.5 text-sm font-semibold transition-all text-muted-foreground">
+                    className="data-[state=active]:bg-white data-[state=active]:text-indigo-700 data-[state=active]:shadow-sm rounded-xl py-2.5 text-sm font-semibold transition-all text-slate-500">
                     <Activity className="h-4 w-4 mr-2" /> Tests
                   </TabsTrigger>
                   <TabsTrigger
                     value="billing"
-                    className="data-[state=active]:bg-card data-[state=active]:text-indigo-700 data-[state=active]:shadow-sm rounded-xl py-2.5 text-sm font-semibold transition-all text-muted-foreground">
+                    className="data-[state=active]:bg-white data-[state=active]:text-indigo-700 data-[state=active]:shadow-sm rounded-xl py-2.5 text-sm font-semibold transition-all text-slate-500">
                     <Receipt className="h-4 w-4 mr-2" /> Billing
                   </TabsTrigger>
                   <TabsTrigger
                     value="samples"
-                    className="data-[state=active]:bg-card data-[state=active]:text-indigo-700 data-[state=active]:shadow-sm rounded-xl py-2.5 text-sm font-semibold transition-all text-muted-foreground">
+                    className="data-[state=active]:bg-white data-[state=active]:text-indigo-700 data-[state=active]:shadow-sm rounded-xl py-2.5 text-sm font-semibold transition-all text-slate-500">
                     <FlaskConical className="h-4 w-4 mr-2" /> Samples
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="referral"
+                    className="data-[state=active]:bg-white data-[state=active]:text-indigo-700 data-[state=active]:shadow-sm rounded-xl py-2.5 text-sm font-semibold transition-all text-slate-500">
+                    <Stethoscope className="h-4 w-4 mr-2" /> Referral
                   </TabsTrigger>
                 </TabsList>
               </div>
@@ -451,7 +457,7 @@ export default function PatientDetailPage() {
                 value="tests"
                 className="mt-0 focus-visible:outline-none focus-visible:ring-0">
                 <Card className="border-slate-200/80 shadow-sm rounded-2xl overflow-hidden">
-                  <CardHeader className="border-b border-slate-100 bg-card px-6 py-5">
+                  <CardHeader className="border-b border-slate-100 bg-white px-6 py-5">
                     <CardTitle className="text-base font-bold text-slate-800">
                       Laboratory History
                     </CardTitle>
@@ -459,13 +465,13 @@ export default function PatientDetailPage() {
                   <CardContent className="p-0">
                     {patient.tests?.length === 0 ? (
                       <div className="flex flex-col items-center justify-center p-12 text-center">
-                        <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center mb-4">
+                        <div className="h-16 w-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
                           <History className="h-8 w-8 text-slate-300" />
                         </div>
                         <h3 className="text-sm font-bold text-slate-700">
                           No Tests Found
                         </h3>
-                        <p className="text-xs text-muted-foreground mt-1 max-w-[200px]">
+                        <p className="text-xs text-slate-500 mt-1 max-w-[200px]">
                           This patient has not been registered for any tests
                           yet.
                         </p>
@@ -475,20 +481,20 @@ export default function PatientDetailPage() {
                         {patient.tests?.map((test: any) => (
                           <div
                             key={test.id}
-                            className="flex flex-col sm:flex-row sm:items-center justify-between p-6 hover:bg-muted/50/50 transition-colors gap-4">
+                            className="flex flex-col sm:flex-row sm:items-center justify-between p-6 hover:bg-slate-50/50 transition-colors gap-4">
                             <div className="flex items-start gap-4">
                               <div
-                                className={`p-3 rounded-xl shrink-0 ${test.status === "APPROVED" ? "bg-emerald-100 text-emerald-600" : test.status === "COMPLETED" ? "bg-blue-100 text-primary" : "bg-amber-100 text-amber-600"}`}>
+                                className={`p-3 rounded-xl shrink-0 ${test.status === "APPROVED" ? "bg-emerald-100 text-emerald-600" : test.status === "COMPLETED" ? "bg-blue-100 text-blue-600" : "bg-amber-100 text-amber-600"}`}>
                                 <Activity className="h-5 w-5" />
                               </div>
                               <div>
-                                <h4 className="font-bold text-foreground leading-tight">
+                                <h4 className="font-bold text-slate-900 leading-tight">
                                   {test.testName}{" "}
-                                  <span className="text-xs font-mono font-normal text-muted-foreground/70 ml-1">
+                                  <span className="text-xs font-mono font-normal text-slate-400 ml-1">
                                     [{test.testCode}]
                                   </span>
                                 </h4>
-                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs text-muted-foreground font-medium">
+                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs text-slate-500 font-medium">
                                   <span className="flex items-center gap-1">
                                     <Calendar className="h-3 w-3" />{" "}
                                     {format(
@@ -512,7 +518,7 @@ export default function PatientDetailPage() {
                                   test.status === "APPROVED"
                                     ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none"
                                     : test.status === "COMPLETED"
-                                      ? "bg-blue-100 text-primary hover:bg-blue-100 border-none"
+                                      ? "bg-blue-100 text-blue-700 hover:bg-blue-100 border-none"
                                       : "bg-amber-100 text-amber-700 hover:bg-amber-100 border-none"
                                 }`}>
                                 {test.status}
@@ -543,7 +549,7 @@ export default function PatientDetailPage() {
                 value="billing"
                 className="mt-0 focus-visible:outline-none focus-visible:ring-0">
                 <Card className="border-slate-200/80 shadow-sm rounded-2xl overflow-hidden">
-                  <CardHeader className="border-b border-slate-100 bg-card px-6 py-5">
+                  <CardHeader className="border-b border-slate-100 bg-white px-6 py-5">
                     <CardTitle className="text-base font-bold text-slate-800">
                       Financial History
                     </CardTitle>
@@ -551,13 +557,13 @@ export default function PatientDetailPage() {
                   <CardContent className="p-0">
                     {patient.invoices?.length === 0 ? (
                       <div className="flex flex-col items-center justify-center p-12 text-center">
-                        <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center mb-4">
+                        <div className="h-16 w-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
                           <Receipt className="h-8 w-8 text-slate-300" />
                         </div>
                         <h3 className="text-sm font-bold text-slate-700">
                           No Invoices
                         </h3>
-                        <p className="text-xs text-muted-foreground mt-1 max-w-[200px]">
+                        <p className="text-xs text-slate-500 mt-1 max-w-[200px]">
                           No billing records exist for this patient.
                         </p>
                       </div>
@@ -566,16 +572,16 @@ export default function PatientDetailPage() {
                         {patient.invoices?.map((inv: any) => (
                           <div
                             key={inv.id}
-                            className="flex items-center justify-between p-6 hover:bg-muted/50/50 transition-colors">
+                            className="flex items-center justify-between p-6 hover:bg-slate-50/50 transition-colors">
                             <div className="flex items-center gap-4">
-                              <div className="bg-muted p-3 rounded-xl border border-slate-200/60">
-                                <BadgeIndianRupee className="h-5 w-5 text-muted-foreground" />
+                              <div className="bg-slate-100 p-3 rounded-xl border border-slate-200/60">
+                                <BadgeIndianRupee className="h-5 w-5 text-slate-600" />
                               </div>
                               <div>
-                                <p className="text-sm font-bold text-foreground font-mono">
+                                <p className="text-sm font-bold text-slate-900 font-mono">
                                   #{inv.invoiceNumber}
                                 </p>
-                                <p className="text-xs font-medium text-muted-foreground mt-0.5">
+                                <p className="text-xs font-medium text-slate-500 mt-0.5">
                                   {format(
                                     new Date(inv.createdAt),
                                     "dd MMM yyyy",
@@ -585,7 +591,7 @@ export default function PatientDetailPage() {
                             </div>
                             <div className="flex items-center gap-6">
                               <div className="text-right hidden sm:block">
-                                <p className="text-base font-black text-foreground">
+                                <p className="text-base font-black text-slate-900">
                                   {/* SAFELY PARSED DECIMAL */}₹
                                   {Number(inv.grandTotal || 0).toFixed(2)}
                                 </p>
@@ -597,7 +603,7 @@ export default function PatientDetailPage() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="h-9 rounded-lg border-border text-muted-foreground"
+                                className="h-9 rounded-lg border-slate-200 text-slate-600"
                                 onClick={() =>
                                   router.push(`/workspace/billing/${inv.id}`)
                                 }>
@@ -617,7 +623,7 @@ export default function PatientDetailPage() {
                 value="samples"
                 className="mt-0 focus-visible:outline-none focus-visible:ring-0">
                 <Card className="border-slate-200/80 shadow-sm rounded-2xl overflow-hidden">
-                  <CardHeader className="border-b border-slate-100 bg-card px-6 py-5">
+                  <CardHeader className="border-b border-slate-100 bg-white px-6 py-5">
                     <CardTitle className="text-base font-bold text-slate-800">
                       Specimen Tracking
                     </CardTitle>
@@ -625,7 +631,7 @@ export default function PatientDetailPage() {
                   <CardContent className="p-0">
                     {!patient.samples || patient.samples.length === 0 ? (
                       <div className="flex flex-col items-center justify-center p-12 text-center">
-                        <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center mb-4">
+                        <div className="h-16 w-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
                           <FlaskConical className="h-8 w-8 text-slate-300" />
                         </div>
                         <h3 className="text-sm font-bold text-slate-700">
@@ -637,18 +643,18 @@ export default function PatientDetailPage() {
                         {patient.samples?.map((sample: any) => (
                           <div
                             key={sample.id}
-                            className="flex items-center p-5 hover:bg-muted/50/50 transition-colors gap-4">
+                            className="flex items-center p-5 hover:bg-slate-50/50 transition-colors gap-4">
                             <div className="bg-purple-50 p-2.5 rounded-lg border border-purple-100">
                               <FlaskConical className="h-5 w-5 text-purple-600" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-bold text-foreground truncate">
+                              <p className="text-sm font-bold text-slate-900 truncate">
                                 {/* FIX: Safely parse relations to avoid object rendering crashes */}
                                 {sample.sampleType?.name ||
                                   sample.sampleType ||
                                   "Unknown"}
                               </p>
-                              <p className="text-xs font-medium text-muted-foreground mt-0.5 flex items-center gap-2">
+                              <p className="text-xs font-medium text-slate-500 mt-0.5 flex items-center gap-2">
                                 <Hash className="h-3 w-3" /> {sample.sampleId}
                                 <span className="text-slate-300">•</span>
                                 Tube:{" "}
@@ -661,12 +667,12 @@ export default function PatientDetailPage() {
                               variant="outline"
                               className={`shrink-0 uppercase tracking-wider text-[10px] font-bold ${
                                 sample.status === "COLLECTED"
-                                  ? "border-primary/20 text-primary bg-primary/10"
+                                  ? "border-blue-200 text-blue-700 bg-blue-50"
                                   : sample.status === "RECEIVED"
                                     ? "border-emerald-200 text-emerald-700 bg-emerald-50"
                                     : sample.status === "REJECTED"
                                       ? "border-red-200 text-red-700 bg-red-50"
-                                      : "border-border text-muted-foreground"
+                                      : "border-slate-200 text-slate-600"
                               }`}>
                               {sample.status}
                             </Badge>
@@ -676,6 +682,16 @@ export default function PatientDetailPage() {
                     )}
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              {/* TAB 4: REFERRAL & COMMISSION */}
+              <TabsContent
+                value="referral"
+                className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+                <PatientReferralTab
+                  patientId={patient?.id}
+                  labId={patient?.labId}
+                />
               </TabsContent>
             </Tabs>
           </div>
