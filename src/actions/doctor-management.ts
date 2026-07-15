@@ -13,7 +13,7 @@ async function getLabId() {
 
 export async function getDoctors() {
   const labId = await getLabId();
-  
+
   const doctors = await prisma.doctor.findMany({
     where: { labId },
     orderBy: { createdAt: 'desc' },
@@ -21,13 +21,11 @@ export async function getDoctors() {
       _count: {
         select: { tests: true, patients: true }
       },
-      // ✅ NEW: Fetch the custom test rates so the frontend can populate the Edit modal
       customTestCommissions: {
         include: {
           testTemplate: { select: { name: true } }
         }
       },
-      // Fetch all commissions and the related test/patient info for the ledger
       commissions: {
         include: {
           test: {
@@ -44,15 +42,26 @@ export async function getDoctors() {
     }
   });
 
-  // ✅ Dynamically calculate the total lifetime commission and format custom rates
+  // ✅ Convert ALL Decimal fields to Number for client-side use
   return doctors.map(doc => ({
     ...doc,
-    totalCommission: doc.commissions.reduce((sum, c) => sum + c.amount, 0),
-    // Map the custom commissions to exactly match what the frontend UI expects
+    // Convert Prisma Decimal to Number
+    commissionRate: Number(doc.commissionRate || 0),
+    totalReferrals: Number(doc.totalReferrals || 0),
+    totalCommission: Number(doc.totalCommission || 0),
+    // Calculate lifetime commission from commission records (all converted to Number)
+    lifetimeCommission: doc.commissions.reduce((sum, c) => sum + Number(c.amount || 0), 0),
+    // Map commissions with Number conversion
+    commissions: doc.commissions.map(c => ({
+      ...c,
+      amount: Number(c.amount || 0),
+      rate: Number(c.rate || 0),
+    })),
+    // Map custom commissions with Number conversion
     customTestCommissions: doc.customTestCommissions.map(cc => ({
       testTemplateId: cc.testTemplateId,
       testName: cc.testTemplate.name,
-      commissionRate: cc.commissionRate,
+      commissionRate: Number(cc.commissionRate || 0),
       commissionType: cc.commissionType
     }))
   }));
@@ -73,7 +82,7 @@ export async function createDoctor(data: {
   }[];
 }) {
   const labId = await getLabId();
-  
+
   await prisma.doctor.create({
     data: {
       name: data.name,
@@ -84,7 +93,6 @@ export async function createDoctor(data: {
       commissionRate: data.commissionRate,
       commissionType: data.commissionType,
       labId,
-      // ✅ NEW: Insert the custom test rates along with the doctor creation
       customTestCommissions: {
         create: data.customCommissions?.map(c => ({
           testTemplateId: c.testTemplateId,
@@ -94,7 +102,7 @@ export async function createDoctor(data: {
       }
     }
   });
-  
+
   revalidatePath('/workspace/doctors');
 }
 
@@ -113,7 +121,7 @@ export async function updateDoctor(id: string, data: {
   }[];
 }) {
   const labId = await getLabId();
-  
+
   await prisma.doctor.update({
     where: { id, labId },
     data: {
@@ -124,9 +132,8 @@ export async function updateDoctor(id: string, data: {
       clinic: data.clinic,
       commissionRate: data.commissionRate,
       commissionType: data.commissionType,
-      // ✅ NEW: Delete any existing custom rates for this doctor and insert the newly updated list
       customTestCommissions: {
-        deleteMany: {}, // Clear old ones
+        deleteMany: {},
         create: data.customCommissions?.map(c => ({
           testTemplateId: c.testTemplateId,
           commissionRate: Number(c.commissionRate),
@@ -135,13 +142,12 @@ export async function updateDoctor(id: string, data: {
       }
     }
   });
-  
+
   revalidatePath('/workspace/doctors');
 }
 
 export async function deleteDoctor(id: string) {
   const labId = await getLabId();
-  // No need to manually delete customTestCommissions because your schema has `onDelete: Cascade`
   await prisma.doctor.delete({
     where: { id, labId }
   });

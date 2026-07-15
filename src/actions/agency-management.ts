@@ -13,7 +13,7 @@ async function getLabId() {
 
 export async function getAgencies() {
   const labId = await getLabId();
-  
+
   const agencies = await prisma.agency.findMany({
     where: { labId },
     orderBy: { createdAt: 'desc' },
@@ -21,13 +21,11 @@ export async function getAgencies() {
       _count: {
         select: { tests: true, patients: true }
       },
-      // ✅ Fetch custom test rates AND net prices
       customTestCommissions: {
         include: {
           testTemplate: { select: { name: true } }
         }
       },
-      // Fetch all commissions and the related test/patient info for the ledger
       commissions: {
         include: {
           test: {
@@ -44,20 +42,30 @@ export async function getAgencies() {
     }
   });
 
-  // ✅ Dynamically calculate the total lifetime commission and format custom rates
+  // ✅ Convert ALL Decimal fields to Number for client-side use
   return agencies.map(agency => ({
     ...agency,
-    // Expose the new Tier and Volume fields to the frontend
+    // Convert Prisma Decimal to Number
+    commissionRate: Number(agency.commissionRate || 0),
+    totalReferrals: Number(agency.totalReferrals || 0),
+    totalCommission: Number(agency.totalCommission || 0),
+    // Calculate lifetime commission from commission records
+    lifetimeCommission: agency.commissions.reduce((sum, c) => sum + Number(c.amount || 0), 0),
     agencyTier: agency.agencyTier || "STANDARD",
-    monthlyVolume: agency.monthlyVolume || 0,
-    totalCommission: agency.commissions.reduce((sum, c) => sum + Number(c.amount), 0),
-    // Map the custom commissions (including netPrice) to exactly match what the UI expects
+    monthlyVolume: Number(agency.monthlyVolume || 0),
+    // Map commissions with Number conversion
+    commissions: agency.commissions.map(c => ({
+      ...c,
+      amount: Number(c.amount || 0),
+      rate: Number(c.rate || 0),
+    })),
+    // Map custom commissions with Number conversion
     customTestCommissions: agency.customTestCommissions.map(cc => ({
       testTemplateId: cc.testTemplateId,
       testName: cc.testTemplate.name,
-      commissionRate: cc.commissionRate,
+      commissionRate: cc.commissionRate ? Number(cc.commissionRate) : null,
       commissionType: cc.commissionType,
-      netPrice: cc.netPrice ? Number(cc.netPrice) : null, // Include the fixed B2B rate
+      netPrice: cc.netPrice ? Number(cc.netPrice) : null,
     }))
   }));
 }
@@ -74,11 +82,11 @@ export async function createAgency(data: {
     testTemplateId: string;
     commissionRate?: number | null;
     commissionType: CommissionType;
-    netPrice?: number | null; // Allow passing fixed B2B rates
+    netPrice?: number | null;
   }[];
 }) {
   const labId = await getLabId();
-  
+
   await prisma.agency.create({
     data: {
       agencyName: data.agencyName,
@@ -89,7 +97,6 @@ export async function createAgency(data: {
       commissionRate: data.commissionRate,
       commissionType: data.commissionType,
       labId,
-      // ✅ Insert custom commissions, mapping both commissionRate and netPrice safely
       customTestCommissions: {
         create: data.customCommissions?.map(c => ({
           testTemplateId: c.testTemplateId,
@@ -100,7 +107,7 @@ export async function createAgency(data: {
       }
     }
   });
-  
+
   revalidatePath('/workspace/agencies');
 }
 
@@ -116,11 +123,11 @@ export async function updateAgency(id: string, data: {
     testTemplateId: string;
     commissionRate?: number | null;
     commissionType: CommissionType;
-    netPrice?: number | null; // Allow passing fixed B2B rates
+    netPrice?: number | null;
   }[];
 }) {
   const labId = await getLabId();
-  
+
   await prisma.agency.update({
     where: { id, labId },
     data: {
@@ -131,9 +138,8 @@ export async function updateAgency(id: string, data: {
       panNumber: data.panNumber,
       commissionRate: data.commissionRate,
       commissionType: data.commissionType,
-      // ✅ Delete old custom rates and insert the newly updated list containing netPrice/commission adjustments
       customTestCommissions: {
-        deleteMany: {}, // Clear old ones
+        deleteMany: {},
         create: data.customCommissions?.map(c => ({
           testTemplateId: c.testTemplateId,
           commissionRate: c.commissionRate ? Number(c.commissionRate) : null,
@@ -143,7 +149,7 @@ export async function updateAgency(id: string, data: {
       }
     }
   });
-  
+
   revalidatePath('/workspace/agencies');
 }
 
