@@ -159,10 +159,10 @@ export default function CommissionsPage() {
       {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
         <div>
-          <h1 className="text-2xl font-bold text-foreground tracking-tight">
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
             Commissions Dashboard
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-sm text-slate-500 mt-1">
             Track payouts, analyze top referrers, and settle accounts.
           </p>
         </div>
@@ -170,20 +170,20 @@ export default function CommissionsPage() {
 
       {/* 1. FOUR KPI CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-card p-5 rounded-2xl shadow-sm border border-border flex items-center justify-between">
+        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
           <div>
-            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1">
+            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
               Total Generated
             </p>
-            <h2 className="text-2xl font-black text-foreground">
+            <h2 className="text-2xl font-black text-slate-900">
               ₹{stats.globalGenerated.toLocaleString()}
             </h2>
           </div>
-          <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center">
-            <TrendingUp className="h-5 w-5 text-primary" />
+          <div className="h-10 w-10 bg-blue-50 rounded-full flex items-center justify-center">
+            <TrendingUp className="h-5 w-5 text-blue-600" />
           </div>
         </div>
-        <div className="bg-card p-5 rounded-2xl shadow-sm border border-emerald-200 flex items-center justify-between relative overflow-hidden">
+        <div className="bg-white p-5 rounded-2xl shadow-sm border border-emerald-200 flex items-center justify-between relative overflow-hidden">
           <div className="absolute -right-4 -top-4 bg-emerald-50 w-20 h-20 rounded-full opacity-50"></div>
           <div className="z-10">
             <p className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider mb-1">
@@ -197,7 +197,7 @@ export default function CommissionsPage() {
             <CheckCircle2 className="h-5 w-5 text-emerald-600" />
           </div>
         </div>
-        <div className="bg-card p-5 rounded-2xl shadow-sm border border-orange-200 flex items-center justify-between relative overflow-hidden">
+        <div className="bg-white p-5 rounded-2xl shadow-sm border border-orange-200 flex items-center justify-between relative overflow-hidden">
           <div className="absolute -right-4 -top-4 bg-orange-50 w-20 h-20 rounded-full opacity-50"></div>
           <div className="z-10">
             <p className="text-[11px] font-bold text-orange-600 uppercase tracking-wider mb-1">
@@ -211,12 +211,12 @@ export default function CommissionsPage() {
             <Receipt className="h-5 w-5 text-orange-600" />
           </div>
         </div>
-        <div className="bg-card p-5 rounded-2xl shadow-sm border border-border flex items-center justify-between">
+        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
           <div>
-            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1">
+            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
               Active Partners
             </p>
-            <h2 className="text-2xl font-black text-foreground">
+            <h2 className="text-2xl font-black text-slate-900">
               {stats.activePartnersCount}
             </h2>
           </div>
@@ -229,13 +229,13 @@ export default function CommissionsPage() {
       {/* 2. CHARTS & INSIGHTS SECTION */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Top Performers Bar Chart (Custom CSS) */}
-        <div className="lg:col-span-2 bg-card rounded-2xl shadow-sm border border-border p-5">
-          <h3 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-primary" /> Top 5 Referrers
+        <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+          <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-blue-600" /> Top 5 Referrers
           </h3>
 
           {stats.topPerformers.length === 0 ? (
-            <div className="h-40 flex items-center justify-center text-muted-foreground/70 text-sm">
+            <div className="h-40 flex items-center justify-center text-slate-400 text-sm">
               No commissions generated yet.
             </div>
           ) : (
@@ -261,7 +261,7 @@ export default function CommissionsPage() {
                       </span>
                       <span>₹{partner.totalGenerated.toLocaleString()}</span>
                     </div>
-                    <div className="h-3 w-full bg-muted rounded-full overflow-hidden flex items-center">
+                    <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden flex items-center">
                       <div
                         className="h-full flex"
                         style={{ width: `${totalPercent}%` }}>
@@ -279,7 +279,7 @@ export default function CommissionsPage() {
                   </div>
                 );
               })}
-              <div className="flex items-center gap-4 text-[10px] font-bold text-muted-foreground mt-4 pt-4 border-t">
+              <div className="flex items-center gap-4 text-[10px] font-bold text-slate-500 mt-4 pt-4 border-t">
                 <span className="flex items-center gap-1">
                   <div className="w-2 h-2 rounded-full bg-emerald-500"></div>{" "}
                   Paid
@@ -294,13 +294,13 @@ export default function CommissionsPage() {
         </div>
 
         {/* Revenue Distribution Donut Chart */}
-        <div className="bg-card rounded-2xl shadow-sm border border-border p-5 flex flex-col">
-          <h3 className="text-sm font-bold text-foreground mb-6 flex items-center gap-2">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex flex-col">
+          <h3 className="text-sm font-bold text-slate-800 mb-6 flex items-center gap-2">
             <Wallet className="w-4 h-4 text-purple-600" /> Revenue Split
           </h3>
 
           {stats.globalGenerated === 0 ? (
-            <div className="flex-1 flex items-center justify-center text-muted-foreground/70 text-sm">
+            <div className="flex-1 flex items-center justify-center text-slate-400 text-sm">
               No data available
             </div>
           ) : (
@@ -311,8 +311,8 @@ export default function CommissionsPage() {
                 style={{
                   background: `conic-gradient(#6366f1 0% ${stats.docPercent}%, #14b8a6 ${stats.docPercent}% 100%)`,
                 }}>
-                <div className="absolute inset-3 bg-card rounded-full flex items-center justify-center flex-col">
-                  <span className="text-[10px] text-muted-foreground/70 font-bold uppercase tracking-wider">
+                <div className="absolute inset-3 bg-white rounded-full flex items-center justify-center flex-col">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
                     Total
                   </span>
                   <span className="text-sm font-black text-slate-800">
@@ -347,7 +347,7 @@ export default function CommissionsPage() {
       </div>
 
       {/* 3. TABS & DATA TABLE */}
-      <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         <Tabs
           defaultValue="doctors"
           onValueChange={setActiveTab}
@@ -368,7 +368,7 @@ export default function CommissionsPage() {
                 placeholder={`Search ${activeTab}...`}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-card border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
               />
             </div>
           </div>
@@ -377,19 +377,19 @@ export default function CommissionsPage() {
             <Table>
               <TableHeader className="bg-slate-50/80">
                 <TableRow>
-                  <TableHead className="font-semibold text-muted-foreground">
+                  <TableHead className="font-semibold text-slate-600">
                     Referrer Name
                   </TableHead>
-                  <TableHead className="font-semibold text-muted-foreground">
+                  <TableHead className="font-semibold text-slate-600">
                     Commission Rule
                   </TableHead>
-                  <TableHead className="font-semibold text-muted-foreground text-right">
+                  <TableHead className="font-semibold text-slate-600 text-right">
                     Pending Amount
                   </TableHead>
-                  <TableHead className="font-semibold text-muted-foreground text-right">
+                  <TableHead className="font-semibold text-slate-600 text-right">
                     Lifetime Paid
                   </TableHead>
-                  <TableHead className="font-semibold text-muted-foreground text-right">
+                  <TableHead className="font-semibold text-slate-600 text-right">
                     Action
                   </TableHead>
                 </TableRow>
@@ -399,7 +399,7 @@ export default function CommissionsPage() {
                   <TableRow>
                     <TableCell
                       colSpan={5}
-                      className="text-center py-10 text-muted-foreground">
+                      className="text-center py-10 text-slate-500">
                       Loading data...
                     </TableCell>
                   </TableRow>
@@ -407,7 +407,7 @@ export default function CommissionsPage() {
                   <TableRow>
                     <TableCell
                       colSpan={5}
-                      className="text-center py-10 text-muted-foreground">
+                      className="text-center py-10 text-slate-500">
                       No records found.
                     </TableCell>
                   </TableRow>
@@ -420,19 +420,19 @@ export default function CommissionsPage() {
                     return (
                       <TableRow
                         key={item.id}
-                        className="hover:bg-muted/50/50 group">
+                        className="hover:bg-slate-50/50 group">
                         <TableCell>
-                          <div className="font-bold text-foreground">
+                          <div className="font-bold text-slate-900">
                             {item.name}
                           </div>
-                          <div className="text-[10px] text-muted-foreground">
+                          <div className="text-[10px] text-slate-500">
                             {item.contact || "No contact info"}
                           </div>
                         </TableCell>
                         <TableCell>
                           <Badge
                             variant="outline"
-                            className="bg-muted/30 text-muted-foreground">
+                            className="bg-slate-50 text-slate-600">
                             {item.commissionRule}
                           </Badge>
                         </TableCell>
@@ -447,12 +447,12 @@ export default function CommissionsPage() {
                           )}
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className="font-medium text-foreground/80 mb-1">
+                          <div className="font-medium text-slate-700 mb-1">
                             ₹{item.totalPaid.toLocaleString()}
                           </div>
                           {totalGen > 0 && (
                             <div
-                              className="w-24 h-1.5 bg-muted rounded-full ml-auto overflow-hidden"
+                              className="w-24 h-1.5 bg-slate-100 rounded-full ml-auto overflow-hidden"
                               title={`${Math.round(progress)}% Paid`}>
                               <div
                                 className="h-full bg-emerald-500"
@@ -468,7 +468,7 @@ export default function CommissionsPage() {
                             }
                             className={
                               item.totalPending > 0
-                                ? "bg-primary hover:bg-blue-700"
+                                ? "bg-blue-600 hover:bg-blue-700"
                                 : ""
                             }
                             disabled={item.totalPending === 0}
@@ -490,7 +490,7 @@ export default function CommissionsPage() {
 
       {/* SETTLEMENT MODAL */}
       <Dialog open={isSettleModalOpen} onOpenChange={setIsSettleModalOpen}>
-        <DialogContent className="max-w-2xl bg-card">
+        <DialogContent className="max-w-2xl bg-white">
           <DialogHeader>
             <DialogTitle className="text-xl">
               Settle Commissions: {selectedEntity?.name}
@@ -511,25 +511,25 @@ export default function CommissionsPage() {
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-xs font-bold text-muted-foreground uppercase">
+                <p className="text-xs font-bold text-slate-500 uppercase">
                   Payment Ref / Note
                 </p>
                 <Input
                   placeholder="e.g. UPI-123456789"
                   value={transactionRef}
                   onChange={(e) => setTransactionRef(e.target.value)}
-                  className="mt-1 h-8 bg-card text-xs w-48"
+                  className="mt-1 h-8 bg-white text-xs w-48"
                 />
               </div>
             </div>
 
             <div>
-              <h4 className="font-bold text-sm text-foreground mb-2 flex items-center gap-2">
+              <h4 className="font-bold text-sm text-slate-800 mb-2 flex items-center gap-2">
                 <FileText className="w-4 h-4" /> Pending Ledger
               </h4>
-              <div className="border rounded-lg max-h-[250px] overflow-y-auto bg-muted/30">
+              <div className="border rounded-lg max-h-[250px] overflow-y-auto bg-slate-50">
                 <Table>
-                  <TableHeader className="sticky top-0 bg-muted z-10 shadow-sm">
+                  <TableHeader className="sticky top-0 bg-slate-100 z-10 shadow-sm">
                     <TableRow className="h-8">
                       <TableHead className="text-xs font-bold">Date</TableHead>
                       <TableHead className="text-xs font-bold">
@@ -546,20 +546,20 @@ export default function CommissionsPage() {
                       .map((comm: any) => (
                         <TableRow
                           key={comm.id}
-                          className="h-10 border-b-slate-100 bg-card">
-                          <TableCell className="text-[11px] text-muted-foreground">
+                          className="h-10 border-b-slate-100 bg-white">
+                          <TableCell className="text-[11px] text-slate-500">
                             {new Date(comm.test.createdAt).toLocaleDateString()}
                           </TableCell>
                           <TableCell>
                             <div className="text-xs font-bold text-slate-800">
                               {comm.test?.patient?.name}
                             </div>
-                            <div className="text-[10px] text-muted-foreground">
+                            <div className="text-[10px] text-slate-500">
                               {comm.test?.testName} ({comm.test?.testNumber})
                             </div>
                           </TableCell>
                           <TableCell className="text-right font-bold text-sm text-orange-600">
-                            ₹{comm.amount}
+                            ₹{Number(comm.amount).toFixed(2)}
                           </TableCell>
                         </TableRow>
                       ))}
