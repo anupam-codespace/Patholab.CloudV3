@@ -80,6 +80,8 @@ export async function PUT(req: NextRequest) {
           accountNumber: body.accountNumber,
           ifscCode: body.ifscCode,
           accountHolder: body.accountHolder,
+          upiId: body.upiId,
+          upiQrCode: body.upiQrCode,
 
           // Branding Assets
           logo: body.logo,

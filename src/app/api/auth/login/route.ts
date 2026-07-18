@@ -105,6 +105,9 @@ export async function POST(request: NextRequest) {
       case 'RECEPTIONIST':
         redirectUrl = '/receptionist';
         break;
+        case 'PHLEBOTOMIST': // 🚀 ADD THIS CASE
+        redirectUrl = '/workspace/field'; // The pickup requests page
+        break;
       case 'PATIENT':
         redirectUrl = '/portal';
         break;

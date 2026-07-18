@@ -17,6 +17,7 @@ export async function middleware(request: NextRequest) {
   // 2. Identify Request Zone
   const isPublicPath = 
     PUBLIC_PATHS.includes(pathname) || 
+    pathname.startsWith('/book/') ||
     pathname.startsWith('/api/public/') ||
     pathname.startsWith('/api/auth/') ||
     pathname.startsWith('/verify') ||
@@ -66,6 +67,7 @@ export async function middleware(request: NextRequest) {
     LAB_MANAGER: ['/workspace'],
     TECHNICIAN: ['/workspace'],
     RECEPTIONIST: ['/workspace'],
+    PHLEBOTOMIST: ['/workspace'],
     DOCTOR: ['/doctor'],
     AGENCY: ['/agency'],
     PATIENT: ['/portal']

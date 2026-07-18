@@ -68,7 +68,11 @@ export const adminNav: NavGroup[] = [
     items: [
       // ✅ Using uppercase DB-friendly tags
       { name: "Inventory & Stock", href: "/workspace/inventory", icon: Box, moduleTag: "INVENTORY" },
+      { name: "Home Collection", href: "/workspace/home-collection", icon: Truck, moduleTag: "LOGISTICS" },
+      { name: "Collection Requests", href: "/workspace/home-collection/request", icon: Truck, moduleTag: "LOGISTICS" },
+      { name: "Dispatch Queue", href: "/workspace/dispatch", icon: Truck, moduleTag: "LOGISTICS" },
       { name: "Logistics / Trips", href: "/workspace/logistics", icon: Truck, moduleTag: "LOGISTICS" },
+      { name: "Sample Received", href: "/workspace/samples/receive", icon: Truck, moduleTag: "LOGISTICS" },
     ],
   },
   {
@@ -104,7 +108,9 @@ export const receptionistNav: NavGroup[] = [
       { name: "New Registration", href: "/workspace/registration", icon: UserPlus, badge: "Start" },
       { name: "Patient Records", href: "/workspace/patients", icon: ClipboardList },
       { name: "Appointments", href: "/workspace/appointments", icon: CalendarDays },
-      { name: "Home Collection", href: "/workspace/logistics", icon: Truck, moduleTag: "LOGISTICS" },
+      { name: "Home Collection", href: "/workspace/home-collection", icon: Truck, moduleTag: "LOGISTICS" },
+      { name: "Dispatch Queue", href: "/workspace/dispatch", icon: Truck, moduleTag: "LOGISTICS" },
+      { name: "Logistics / Trips", href: "/workspace/logistics", icon: Truck, moduleTag: "LOGISTICS" },
     ],
   },
   {

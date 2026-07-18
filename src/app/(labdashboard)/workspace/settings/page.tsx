@@ -108,6 +108,8 @@ export default function ProfileSettingsPage() {
     accountNumber: "",
     ifscCode: "",
     accountHolder: "",
+    upiId: "",
+    upiQrCode: "",
     defaultDoctorCommission: 10,
     defaultAgencyCommission: 5,
     commissionType: "PERCENTAGE",
@@ -1012,6 +1014,73 @@ export default function ProfileSettingsPage() {
                           }
                           className="h-12 rounded-xl bg-white border-slate-200 focus:border-emerald-500 font-medium uppercase"
                         />
+                      </div>
+                      <div className="space-y-2 md:col-span-2">
+                        <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                          UPI ID for Patient Payments
+                        </Label>
+                        <Input
+                          value={labSettings.upiId}
+                          onChange={(e) =>
+                            setLabSettings({
+                              ...labSettings,
+                              upiId: e.target.value,
+                            })
+                          }
+                          placeholder="example@upi"
+                          className="h-12 rounded-xl bg-white border-slate-200 focus:border-emerald-500 font-medium"
+                        />
+                      </div>
+                      <div className="space-y-3 md:col-span-2">
+                        <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                          UPI QR Code
+                        </Label>
+                        <div className="flex flex-col sm:flex-row gap-4 rounded-2xl border border-slate-200 bg-white p-4">
+                          <div className="h-32 w-32 rounded-xl border border-dashed border-slate-300 bg-slate-50 flex items-center justify-center overflow-hidden">
+                            {labSettings.upiQrCode ? (
+                              <img
+                                src={labSettings.upiQrCode}
+                                alt="UPI QR Code"
+                                className="h-full w-full object-contain p-2"
+                              />
+                            ) : (
+                              <CreditCard className="h-8 w-8 text-slate-300" />
+                            )}
+                          </div>
+                          <div className="flex flex-col justify-center gap-3">
+                            <p className="text-sm font-medium text-slate-600">
+                              This QR will be shown to patients during public home collection payment.
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              <label className="inline-flex w-fit cursor-pointer rounded-xl border border-slate-200 bg-white px-5 py-2 text-xs font-bold uppercase tracking-widest text-slate-700 shadow-sm transition-colors hover:bg-slate-50">
+                                Upload QR
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={(e) =>
+                                    e.target.files?.[0] &&
+                                    handleFileUpload(e.target.files[0], "lab.upiQrCode")
+                                  }
+                                />
+                              </label>
+                              {labSettings.upiQrCode && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setLabSettings((prev) => ({
+                                      ...prev,
+                                      upiQrCode: null,
+                                    }))
+                                  }
+                                  className="inline-flex w-fit cursor-pointer rounded-xl border border-rose-200 bg-rose-50 px-5 py-2 text-xs font-bold uppercase tracking-widest text-rose-700 shadow-sm transition-colors hover:bg-rose-100"
+                                >
+                                  Remove QR
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>

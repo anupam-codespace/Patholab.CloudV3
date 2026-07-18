@@ -30,6 +30,9 @@ export async function GET(req: NextRequest) {
 // ============================================================================
 // POST: Create a New Branch (WALLET ERA - UNLIMITED BRANCHES)
 // ============================================================================
+// ============================================================================
+// POST: Create a New Branch (WALLET ERA - UNLIMITED BRANCHES)
+// ============================================================================
 export async function POST(req: NextRequest) {
   try {
     const user = await getCurrentUser();
@@ -38,32 +41,55 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
 
     // 1. Fetch Current Branch Count (Extremely fast aggregate query)
-    // We no longer check SaaS limits, but we still need the count to auto-generate the branchCode!
     const currentBranchCount = await prisma.branch.count({
       where: { labId: user.labId }
     });
 
     // 2. AUTO-GENERATE 2-DIGIT BRANCH CODE (e.g., "01", "02", "03")
-    // This is vital for the 9-digit Employee ID generation in the Staff API.
     const nextBranchNum = currentBranchCount + 1; 
     const generatedBranchCode = nextBranchNum.toString().padStart(2, '0');
 
-    // 3. Create the Branch
-    const newBranch = await prisma.branch.create({
-      data: {
-        labId: user.labId,
-        name: body.name,
-        code: body.code || null,
-        branchCode: generatedBranchCode, // ✅ Injected for Staff IDs
-        isMainBranch: body.isMainBranch || false,
-        address: body.address,
-        city: body.city,
-        state: body.state,
-        pincode: body.pincode,
-        phone: body.phone,
-        email: body.email,
-        isActive: body.isActive !== undefined ? body.isActive : true,
+    // 3. Create the Branch & Service Area together using a Transaction
+    const newBranch = await prisma.$transaction(async (tx) => {
+      // A. Create the physical Branch
+      const branch = await tx.branch.create({
+        data: {
+          labId: user.labId,
+          name: body.name,
+          code: body.code || null,
+          branchCode: generatedBranchCode, // ✅ Injected for Staff IDs
+          isMainBranch: body.isMainBranch || false,
+          address: body.address,
+          city: body.city,
+          state: body.state,
+          pincode: body.pincode,
+          phone: body.phone,
+          email: body.email,
+          isActive: body.isActive !== undefined ? body.isActive : true,
+        }
+      });
+
+      // B. Auto-Create Service Area so Home Collection Booking API works immediately
+      if (body.pincode) {
+        // We use findFirst to avoid duplicates if multiple branches share a pincode
+        const existingArea = await tx.serviceArea.findFirst({
+          where: { labId: user.labId, pincode: body.pincode }
+        });
+
+        if (!existingArea) {
+          await tx.serviceArea.create({
+            data: {
+              labId: user.labId,
+              branchId: branch.id,
+              pincode: body.pincode,
+              deliveryFee: 0, // Default to free home collection for their home base
+              isActive: true
+            }
+          });
+        }
       }
+
+      return branch;
     });
 
     // 4. If this is set as Main Branch, safely strip the flag from older branches
