@@ -27,6 +27,8 @@ import {
   Loader2,
   ArrowUpDown,
   Wallet,
+  Phone,
+  Download,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import Link from "next/link";
@@ -110,6 +112,7 @@ export default function AdminLabsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [sorting, setSorting] = useState<SortingState>([]);
   const [isOnboardOpen, setIsOnboardOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   // 1. FETCH DATA (Server-Side Pagination)
   const { data, isLoading } = useQuery({
@@ -154,7 +157,8 @@ export default function AdminLabsPage() {
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="font-bold">
+            className="font-bold"
+          >
             Laboratory
             <ArrowUpDown className="ml-2 h-4 w-4 text-slate-400" />
           </Button>
@@ -170,7 +174,8 @@ export default function AdminLabsPage() {
           <div className="flex flex-col">
             <Link
               href={`/admin/labs/${row.original.id}`}
-              className="font-bold text-sm text-slate-900 hover:text-indigo-600 transition-colors line-clamp-1">
+              className="font-bold text-sm text-slate-900 hover:text-indigo-600 transition-colors line-clamp-1"
+            >
               {row.original.name}
             </Link>
             <span className="text-xs text-slate-500 font-medium">
@@ -182,17 +187,32 @@ export default function AdminLabsPage() {
     },
     {
       accessorKey: "owner",
-      header: "Owner",
+      header: "Owner Details",
       cell: ({ row }) => (
-        <div className="flex flex-col">
+        <div className="flex flex-col gap-1">
           <span className="text-sm font-bold text-slate-700">
             {row.original.owner.name}
           </span>
-          <a
-            href={`mailto:${row.original.owner.email}`}
-            className="text-xs text-slate-500 hover:text-indigo-600 font-medium">
-            {row.original.owner.email}
-          </a>
+          <div className="flex items-center gap-1.5">
+            <Mail className="h-3 w-3 text-slate-400" />
+            <a
+              href={`mailto:${row.original.owner.email}`}
+              className="text-xs text-slate-500 hover:text-indigo-600 font-medium"
+            >
+              {row.original.owner.email}
+            </a>
+          </div>
+          {row.original.owner.phone && (
+            <div className="flex items-center gap-1.5">
+              <Phone className="h-3 w-3 text-slate-400" />
+              <a
+                href={`tel:${row.original.owner.phone}`}
+                className="text-xs text-slate-500 hover:text-indigo-600 font-medium"
+              >
+                {row.original.owner.phone}
+              </a>
+            </div>
+          )}
         </div>
       ),
     },
@@ -203,13 +223,15 @@ export default function AdminLabsPage() {
         <div className="flex items-center gap-3 text-xs font-bold text-slate-600">
           <div
             className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md"
-            title="Total Tests">
+            title="Total Tests"
+          >
             <TestTube className="h-3.5 w-3.5 text-indigo-500" />{" "}
             {row.original._count.tests}
           </div>
           <div
             className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md"
-            title="Total Patients">
+            title="Total Patients"
+          >
             <Users className="h-3.5 w-3.5 text-blue-500" />{" "}
             {row.original._count.patients}
           </div>
@@ -227,7 +249,8 @@ export default function AdminLabsPage() {
           <div className="flex flex-col gap-1 items-start">
             <Badge
               variant="outline"
-              className={`font-black tracking-wide ${isLow ? "bg-red-50 text-red-700 border-red-200" : "bg-emerald-50 text-emerald-700 border-emerald-200"}`}>
+              className={`font-black tracking-wide ${isLow ? "bg-red-50 text-red-700 border-red-200" : "bg-emerald-50 text-emerald-700 border-emerald-200"}`}
+            >
               {formatCurrency(balance)}
             </Badge>
             {isLow && (
@@ -271,22 +294,25 @@ export default function AdminLabsPage() {
                 onClick={() => {
                   navigator.clipboard.writeText(lab.id);
                   toast.success("Lab ID copied to clipboard");
-                }}>
+                }}
+              >
                 <Copy className="mr-2 h-4 w-4" /> Copy ID
               </DropdownMenuItem>
               <DropdownMenuSeparator />
 
-              <Link href={`/admin/labs/${lab.id}`}>
-                <DropdownMenuItem className="font-bold cursor-pointer">
+              {/* ✅ CORRECT */}
+              <DropdownMenuItem className="font-bold cursor-pointer" asChild>
+                <Link href={`/admin/labs/${lab.id}`}>
                   <ExternalLink className="mr-2 h-4 w-4" /> View Details
-                </DropdownMenuItem>
-              </Link>
+                </Link>
+              </DropdownMenuItem>
 
               <DropdownMenuItem
                 onClick={() =>
                   (window.location.href = `mailto:${lab.owner.email}`)
                 }
-                className="cursor-pointer">
+                className="cursor-pointer"
+              >
                 <Mail className="mr-2 h-4 w-4" /> Email Owner
               </DropdownMenuItem>
 
@@ -301,7 +327,8 @@ export default function AdminLabsPage() {
                   className="text-red-600 focus:text-red-700 focus:bg-red-50 font-bold cursor-pointer"
                   onClick={() =>
                     toggleStatusMutation.mutate({ id: lab.id, status: false })
-                  }>
+                  }
+                >
                   <ShieldAlert className="mr-2 h-4 w-4" /> Suspend Lab
                 </DropdownMenuItem>
               ) : (
@@ -309,7 +336,8 @@ export default function AdminLabsPage() {
                   className="text-emerald-600 focus:text-emerald-700 focus:bg-emerald-50 font-bold cursor-pointer"
                   onClick={() =>
                     toggleStatusMutation.mutate({ id: lab.id, status: true })
-                  }>
+                  }
+                >
                   <CheckCircle2 className="mr-2 h-4 w-4" /> Activate Lab
                 </DropdownMenuItem>
               )}
@@ -331,6 +359,41 @@ export default function AdminLabsPage() {
     state: { sorting },
   });
 
+
+  // --- EXPORT TO EXCEL (SERVER-SIDE FULL EXPORT) ---
+  const handleExportExcel = async () => {
+    setIsExporting(true);
+    const toastId = toast.loading("Generating full export...");
+    
+    try {
+      // Fetch the CSV file from our new endpoint
+      const res = await fetch("/api/admin/labs/export");
+      if (!res.ok) throw new Error("Failed to export data");
+
+      // Convert the response to a Blob (Binary Large Object)
+      const blob = await res.blob();
+      
+      // Create a temporary link element to trigger the browser download
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      // The backend sets the filename, but we set a fallback here just in case
+      link.setAttribute("download", `Full_Labs_Export_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success("Excel sheet downloaded!", { id: toastId });
+    } catch (error) {
+      toast.error("Failed to generate export", { id: toastId });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="space-y-6 p-4 sm:p-8 min-h-screen bg-slate-50/50">
       {/* HEADER */}
@@ -344,12 +407,26 @@ export default function AdminLabsPage() {
           </p>
         </div>
 
-        <OnboardLabDialog
-          open={isOnboardOpen}
-          onOpenChange={setIsOnboardOpen}
-        />
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="outline" 
+            onClick={handleExportExcel}
+            disabled={isExporting} // 👈 Prevents spam-clicking
+            className="rounded-xl h-11 font-bold border-slate-200 text-slate-700 hover:bg-slate-50"
+          >
+            {isExporting ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin text-indigo-600" />
+            ) : (
+              <Download className="w-4 h-4 mr-2" />
+            )}
+            Export All Data
+          </Button>  
+          <OnboardLabDialog
+            open={isOnboardOpen}
+            onOpenChange={setIsOnboardOpen}
+          />
+        </div>
       </div>
-
       {/* STATS CARDS */}
       {data?.stats && !search && page === 1 && (
         <div className="grid gap-4 md:grid-cols-3">
@@ -422,7 +499,8 @@ export default function AdminLabsPage() {
             onValueChange={(v) => {
               setStatusFilter(v);
               setPage(1);
-            }}>
+            }}
+          >
             <SelectTrigger className="w-full sm:w-[180px] bg-slate-50 border-slate-200 rounded-xl h-11">
               <Filter className="mr-2 h-4 w-4 text-slate-400" />
               <SelectValue placeholder="Status" />
@@ -443,11 +521,13 @@ export default function AdminLabsPage() {
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow
                 key={headerGroup.id}
-                className="border-slate-200 hover:bg-transparent">
+                className="border-slate-200 hover:bg-transparent"
+              >
                 {headerGroup.headers.map((header) => (
                   <TableHead
                     key={header.id}
-                    className="text-xs font-bold text-slate-500 uppercase tracking-wider h-11">
+                    className="text-xs font-bold text-slate-500 uppercase tracking-wider h-11"
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -464,7 +544,8 @@ export default function AdminLabsPage() {
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-32 text-center">
+                  className="h-32 text-center"
+                >
                   <div className="flex items-center justify-center gap-2">
                     <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
                     <span className="text-slate-500 font-medium">
@@ -478,7 +559,8 @@ export default function AdminLabsPage() {
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className="border-slate-100 hover:bg-slate-50/50">
+                  className="border-slate-100 hover:bg-slate-50/50"
+                >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className="py-3">
                       {flexRender(
@@ -493,7 +575,8 @@ export default function AdminLabsPage() {
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-32 text-center">
+                  className="h-32 text-center"
+                >
                   <div className="flex flex-col items-center justify-center gap-2">
                     <div className="h-12 w-12 rounded-full bg-slate-50 flex items-center justify-center mb-1">
                       <Users className="h-6 w-6 text-slate-300" />
@@ -520,7 +603,8 @@ export default function AdminLabsPage() {
             size="sm"
             className="rounded-xl font-bold border-slate-200"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1 || isLoading}>
+            disabled={page === 1 || isLoading}
+          >
             Previous
           </Button>
           <Button
@@ -528,7 +612,8 @@ export default function AdminLabsPage() {
             size="sm"
             className="rounded-xl font-bold border-slate-200"
             onClick={() => setPage((p) => p + 1)}
-            disabled={page >= (data?.meta?.totalPages || 1) || isLoading}>
+            disabled={page >= (data?.meta?.totalPages || 1) || isLoading}
+          >
             Next
           </Button>
         </div>
@@ -601,7 +686,8 @@ function OnboardLabDialog({
       <DialogTrigger asChild>
         <Button
           onClick={() => onOpenChange(true)}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl h-11 px-6 font-bold shadow-sm">
+          className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl h-11 px-6 font-bold shadow-sm"
+        >
           <Plus className="mr-2 h-4 w-4" /> Onboard New Lab
         </Button>
       </DialogTrigger>
@@ -623,7 +709,8 @@ function OnboardLabDialog({
               <div className="space-y-2">
                 <Label
                   htmlFor="labName"
-                  className="text-xs font-bold text-slate-600">
+                  className="text-xs font-bold text-slate-600"
+                >
                   Lab Name <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -637,7 +724,8 @@ function OnboardLabDialog({
               <div className="space-y-2">
                 <Label
                   htmlFor="licenseNumber"
-                  className="text-xs font-bold text-slate-600">
+                  className="text-xs font-bold text-slate-600"
+                >
                   License No. <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -653,7 +741,8 @@ function OnboardLabDialog({
             <div className="space-y-2">
               <Label
                 htmlFor="ownerName"
-                className="text-xs font-bold text-slate-600">
+                className="text-xs font-bold text-slate-600"
+              >
                 Owner Name <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -669,7 +758,8 @@ function OnboardLabDialog({
               <div className="space-y-2">
                 <Label
                   htmlFor="email"
-                  className="text-xs font-bold text-slate-600">
+                  className="text-xs font-bold text-slate-600"
+                >
                   Email <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -684,7 +774,8 @@ function OnboardLabDialog({
               <div className="space-y-2">
                 <Label
                   htmlFor="phone"
-                  className="text-xs font-bold text-slate-600">
+                  className="text-xs font-bold text-slate-600"
+                >
                   Phone <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -701,7 +792,8 @@ function OnboardLabDialog({
               <div className="space-y-2">
                 <Label
                   htmlFor="city"
-                  className="text-xs font-bold text-slate-600">
+                  className="text-xs font-bold text-slate-600"
+                >
                   City
                 </Label>
                 <Input
@@ -714,7 +806,8 @@ function OnboardLabDialog({
               <div className="space-y-2">
                 <Label
                   htmlFor="state"
-                  className="text-xs font-bold text-slate-600">
+                  className="text-xs font-bold text-slate-600"
+                >
                   State
                 </Label>
                 <Input
@@ -731,13 +824,15 @@ function OnboardLabDialog({
                 type="button"
                 variant="outline"
                 onClick={handleClose}
-                className="rounded-xl h-11">
+                className="rounded-xl h-11"
+              >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={loading}
-                className="rounded-xl h-11 bg-indigo-600 hover:bg-indigo-700">
+                className="rounded-xl h-11 bg-indigo-600 hover:bg-indigo-700"
+              >
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {loading ? "Provisioning..." : "Create Tenant"}
               </Button>
@@ -783,7 +878,8 @@ function OnboardLabDialog({
                     onClick={() => {
                       navigator.clipboard.writeText(credentials.email);
                       toast.success("Email copied");
-                    }}>
+                    }}
+                  >
                     <Copy className="h-4 w-4 text-slate-500" />
                   </Button>
                 </div>
@@ -803,7 +899,8 @@ function OnboardLabDialog({
                     onClick={() => {
                       navigator.clipboard.writeText(credentials.tempPassword);
                       toast.success("Password copied");
-                    }}>
+                    }}
+                  >
                     <Copy className="h-4 w-4 text-slate-500" />
                   </Button>
                 </div>
@@ -812,7 +909,8 @@ function OnboardLabDialog({
 
             <Button
               className="w-full rounded-xl h-11 font-bold"
-              onClick={handleClose}>
+              onClick={handleClose}
+            >
               Done & Close
             </Button>
           </div>

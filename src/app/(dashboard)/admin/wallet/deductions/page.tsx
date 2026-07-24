@@ -3,12 +3,15 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { format } from "date-fns";
+import Link from "next/link";
 import {
   Activity,
   ArrowUpRight,
   Building2,
   Clock,
   Download,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 import {
@@ -28,28 +31,45 @@ const formatCurrency = (amount: number) =>
     amount,
   );
 
-export default async function AdminDeductionsPage() {
+export default async function AdminDeductionsPage({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | string[] | undefined };
+}) {
   const user = await getCurrentUser();
   if (!user || user.role !== "SUPER_ADMIN") redirect("/login");
 
-  // Fetch all Deductions & Setup Fees across the platform
-  const transactions = await prisma.walletTransaction.findMany({
-    where: {
-      type: { in: ["DEDUCTION", "SETUP_FEE"] },
-    },
-    orderBy: { createdAt: "desc" },
-    take: 300, // Firehose view, grab latest 300
-    include: {
-      wallet: {
-        include: { lab: { select: { name: true } } },
-      },
-    },
-  });
+  // --- PAGINATION SETUP ---
+  const currentPage = Number(searchParams?.page) || 1;
+  const limit = 20; // Exact limit requested
+  const skip = (currentPage - 1) * limit;
 
-  const totalBurned = transactions.reduce(
-    (acc, tx) => acc + Number(tx.amount),
-    0,
-  );
+  const whereClause = { type: { in: ["DEDUCTION", "SETUP_FEE"] } };
+
+  // Fetch paginated transactions, total count, and all-time total burned concurrently
+  const [transactions, totalCount, aggregate] = await Promise.all([
+    prisma.walletTransaction.findMany({
+      where: whereClause,
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+      include: {
+        wallet: {
+          include: { lab: { select: { name: true } } },
+        },
+      },
+    }),
+    prisma.walletTransaction.count({
+      where: whereClause,
+    }),
+    prisma.walletTransaction.aggregate({
+      _sum: { amount: true },
+      where: whereClause,
+    }),
+  ]);
+
+  const totalPages = Math.ceil(totalCount / limit);
+  const totalBurned = Number(aggregate._sum.amount || 0);
 
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-500">
@@ -76,7 +96,7 @@ export default async function AdminDeductionsPage() {
         <CardContent className="p-6 relative z-10 flex flex-col justify-center">
           <div className="flex items-center justify-between mb-2 opacity-90">
             <p className="text-sm font-bold uppercase tracking-wider">
-              Total Burned (Latest 300)
+              Total Burned (All Time)
             </p>
             <Activity className="h-5 w-5" />
           </div>
@@ -87,7 +107,7 @@ export default async function AdminDeductionsPage() {
       </Card>
 
       {/* DEDUCTIONS TABLE */}
-      <Card className="border-slate-200 shadow-sm rounded-2xl overflow-hidden bg-white">
+      <Card className="border-slate-200 shadow-sm rounded-2xl overflow-hidden bg-white flex flex-col">
         <CardHeader className="border-b border-slate-100 bg-slate-50/50 pb-4">
           <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2">
             <Activity className="w-5 h-5 text-rose-600" /> Live Burn Firehose
@@ -96,7 +116,7 @@ export default async function AdminDeductionsPage() {
             Chronological list of all Pay-As-You-Go deductions
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-0 overflow-x-auto">
+        <CardContent className="p-0 overflow-x-auto flex-1">
           <table className="w-full text-sm text-left whitespace-nowrap">
             <thead className="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-widest">
               <tr>
@@ -165,6 +185,52 @@ export default async function AdminDeductionsPage() {
             </tbody>
           </table>
         </CardContent>
+
+        {/* PAGINATION FOOTER */}
+        {totalPages > 1 && (
+          <div className="bg-slate-50 border-t border-slate-200 p-4 flex items-center justify-between">
+            <span className="text-sm font-bold text-slate-500">
+              Showing page {currentPage} of {totalPages}
+            </span>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-xl font-bold h-9 bg-white"
+                disabled={currentPage === 1}
+                asChild={currentPage > 1}
+              >
+                {currentPage > 1 ? (
+                  <Link href={`?page=${currentPage - 1}`}>
+                    <ChevronLeft className="w-4 h-4 mr-1" /> Previous
+                  </Link>
+                ) : (
+                  <>
+                    <ChevronLeft className="w-4 h-4 mr-1" /> Previous
+                  </>
+                )}
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-xl font-bold h-9 bg-white"
+                disabled={currentPage >= totalPages}
+                asChild={currentPage < totalPages}
+              >
+                {currentPage < totalPages ? (
+                  <Link href={`?page=${currentPage + 1}`}>
+                    Next <ChevronRight className="w-4 h-4 ml-1" />
+                  </Link>
+                ) : (
+                  <>
+                    Next <ChevronRight className="w-4 h-4 ml-1" />
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
       </Card>
     </div>
   );

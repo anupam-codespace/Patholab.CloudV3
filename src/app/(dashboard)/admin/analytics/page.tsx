@@ -31,6 +31,8 @@ import {
   PieChart as PieChartIcon,
   BarChart3,
   Wallet,
+  ShieldAlert, // <-- New Icon for Disease Alerts
+  Flame,      // <-- New Icon for Spikes
 } from "lucide-react";
 
 // UI Components
@@ -117,6 +119,8 @@ export default function AdvancedAnalyticsPage() {
       return res.json();
     },
     placeholderData: (prev) => prev,
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: true,
   });
 
   // HANDLERS
@@ -199,6 +203,10 @@ export default function AdvancedAnalyticsPage() {
       popularTests: data?.charts?.popularTests || [],
       demographics: data?.charts?.demographics || { gender: [], age: [] },
       userRoles: data?.charts?.userRoles || [],
+      // NEW: Fallback for epidemiological data structure if backend is still catching up
+      diseaseTrends: data?.charts?.diseaseTrends || [
+        
+      ],
     },
     topPerformers: data?.topPerformers || [],
   };
@@ -210,6 +218,7 @@ export default function AdvancedAnalyticsPage() {
       initial="hidden"
       animate="show"
       className="space-y-6 p-4 md:p-8 min-h-screen bg-slate-50/50 text-slate-900">
+      
       {/* --- HEADER CONTROLS --- */}
       <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-4 border-b border-slate-200 pb-6">
         <div>
@@ -385,7 +394,55 @@ export default function AdvancedAnalyticsPage() {
         </div>
       </div>
 
-      {/* --- 3. MASTER REVENUE CHART --- */}
+      {/* --- 3. NEW ADDITION: EPIDEMIOLOGICAL & DISEASE TREND SURVEILLANCE --- */}
+      <motion.div variants={itemVar}>
+        <Card className="shadow-sm border-rose-200 bg-gradient-to-br from-white via-white to-rose-50/30 rounded-2xl overflow-hidden">
+          <CardHeader className="border-b border-slate-100 pb-4 bg-slate-50/50">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <CardTitle className="text-lg flex items-center gap-2 text-slate-900">
+                  <ShieldAlert className="h-5 w-5 text-rose-600" /> Epidemiological & Disease Trend Surveillance
+                </CardTitle>
+                <CardDescription>
+                  Real-time aggregated diagnostic positivity spikes tracked across all workspace laboratory nodes
+                </CardDescription>
+              </div>
+              <Badge variant="outline" className="bg-rose-50 text-rose-700 border-rose-200 font-bold w-fit">
+                <span className="w-2 h-2 rounded-full bg-rose-600 animate-ping mr-1.5" /> Public Health Feed Active
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {safeData.charts.diseaseTrends.map((disease: any, idx: number) => (
+                <div key={idx} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between relative overflow-hidden group hover:border-rose-300 transition-all">
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-rose-500" />
+                  <div>
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{disease.region}</span>
+                      <span className="inline-flex items-center text-xs font-black text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full">
+                        <Flame className="w-3 h-3 mr-1" /> {disease.spike}
+                      </span>
+                    </div>
+                    <h4 className="text-base font-extrabold text-slate-900">{disease.name}</h4>
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-end justify-between">
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase">Confirmed Positives</p>
+                      <p className="text-2xl font-black text-slate-900 mt-0.5">{disease.positives}</p>
+                    </div>
+                    <Badge variant="secondary" className="bg-slate-100 text-slate-700 text-xs font-bold">
+                      Surging
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* --- 4. MASTER REVENUE CHART --- */}
       <motion.div variants={itemVar}>
         <Card className="shadow-sm border-slate-200 rounded-2xl overflow-hidden bg-white">
           <CardHeader className="pb-4 bg-slate-50/50 border-b border-slate-100">
@@ -450,7 +507,7 @@ export default function AdvancedAnalyticsPage() {
         </Card>
       </motion.div>
 
-      {/* --- 4. SAAS SPLIT --- */}
+      {/* --- 5. SAAS SPLIT --- */}
       <div className="grid gap-6 lg:grid-cols-2">
         <motion.div variants={itemVar}>
           <Card className="shadow-sm border-slate-200 h-full rounded-2xl bg-white overflow-hidden">
@@ -541,7 +598,7 @@ export default function AdvancedAnalyticsPage() {
         </motion.div>
       </div>
 
-      {/* --- 5. MEDICAL ANALYTICS (Tests & Demographics) --- */}
+      {/* --- 6. MEDICAL ANALYTICS (Tests & Demographics) --- */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Most Popular Tests */}
         <motion.div variants={itemVar} className="lg:col-span-2">
@@ -633,7 +690,7 @@ export default function AdvancedAnalyticsPage() {
         </motion.div>
       </div>
 
-      {/* --- 6. TOP PERFORMERS TABLE --- */}
+      {/* --- 7. TOP PERFORMERS TABLE --- */}
       <motion.div variants={itemVar}>
         <Card className="shadow-sm border-slate-200 rounded-2xl bg-white overflow-hidden">
           <CardHeader className="bg-slate-50/50 border-b border-slate-100">
