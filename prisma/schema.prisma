@@ -277,6 +277,7 @@ model Branch {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   deletedAt    DateTime?
+  activeModules String[] @default([])
 
   serviceAreas          ServiceArea[]
   staff                 LabStaff[]
