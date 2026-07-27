@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
 
     if (!query) return NextResponse.json([]);
 
-    let whereClause: any = { labId: user.labId };
+    let whereClause: any = { labId: user.labId, deletedAt: null };
 
     // Search Logic
     if (type === 'PHONE') {

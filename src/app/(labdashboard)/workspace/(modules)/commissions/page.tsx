@@ -77,7 +77,9 @@ export default function CommissionsPage() {
 
   const handleSettleSubmit = () => {
     if (!selectedEntity) return;
-    const pendingIds = selectedEntity.recentCommissions
+    
+    // SAFE FALLBACK: If recentCommissions is undefined, it won't crash
+    const pendingIds = (selectedEntity.recentCommissions || [])
       .filter((c: any) => c.status === "PENDING")
       .map((c: any) => c.id);
 
@@ -90,23 +92,27 @@ export default function CommissionsPage() {
     });
   };
 
-  const displayList = activeTab === "doctors" ? data?.doctors : data?.agencies;
-  const filteredList =
-    displayList?.filter((item: any) =>
-      item.name?.toLowerCase().includes(searchTerm.toLowerCase()),
-    ) || [];
-
   // ==========================================
-  // ADVANCED STATISTICS CALCULATIONS
+  // ADVANCED STATISTICS CALCULATIONS & NORMALIZATION
   // ==========================================
-  const stats = useMemo(() => {
-    const docs = data?.doctors || [];
-    const ags = data?.agencies || [];
-    const allPartners = [...docs, ...ags].map((p) => ({
-      ...p,
-      totalGenerated: p.totalPaid + p.totalPending,
-    }));
+  const { stats, normalizedDocs, normalizedAgs } = useMemo(() => {
+    // 1. NORMALIZE FUNCTION: Forces all incoming DB Decimals/Strings into JS Numbers
+    const normalize = (p: any) => {
+      const paid = Number(p.totalPaid) || 0;
+      const pending = Number(p.totalPending) || 0;
+      return {
+        ...p,
+        totalPaid: paid,
+        totalPending: pending,
+        totalGenerated: paid + pending,
+      };
+    };
 
+    const docs = (data?.doctors || []).map(normalize);
+    const ags = (data?.agencies || []).map(normalize);
+    const allPartners = [...docs, ...ags];
+
+    // 2. SAFE MATH: Because they are normalized, this math works perfectly now
     const totalDocPending = docs.reduce((acc, d) => acc + d.totalPending, 0);
     const totalDocPaid = docs.reduce((acc, d) => acc + d.totalPaid, 0);
     const totalAgPending = ags.reduce((acc, a) => acc + a.totalPending, 0);
@@ -141,18 +147,30 @@ export default function CommissionsPage() {
         : 0;
 
     return {
-      globalPending,
-      globalPaid,
-      globalGenerated,
-      activePartnersCount,
-      topPerformers,
-      maxPerformerValue,
-      docGenerated,
-      agGenerated,
-      docPercent,
-      agPercent,
+      normalizedDocs: docs,
+      normalizedAgs: ags,
+      stats: {
+        globalPending,
+        globalPaid,
+        globalGenerated,
+        activePartnersCount,
+        topPerformers,
+        maxPerformerValue,
+        docGenerated,
+        agGenerated,
+        docPercent,
+        agPercent,
+      }
     };
   }, [data]);
+
+  // Use the safe normalized arrays for the search filters and table
+  const displayList = activeTab === "doctors" ? normalizedDocs : normalizedAgs;
+  const filteredList =
+    displayList?.filter((item: any) =>
+      item.name?.toLowerCase().includes(searchTerm.toLowerCase()),
+    ) || [];
+
 
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
@@ -413,9 +431,8 @@ export default function CommissionsPage() {
                   </TableRow>
                 ) : (
                   filteredList.map((item: any) => {
-                    const totalGen = item.totalPending + item.totalPaid;
                     const progress =
-                      totalGen > 0 ? (item.totalPaid / totalGen) * 100 : 0;
+                      item.totalGenerated > 0 ? (item.totalPaid / item.totalGenerated) * 100 : 0;
 
                     return (
                       <TableRow
@@ -450,7 +467,7 @@ export default function CommissionsPage() {
                           <div className="font-medium text-slate-700 mb-1">
                             ₹{item.totalPaid.toLocaleString()}
                           </div>
-                          {totalGen > 0 && (
+                          {item.totalGenerated > 0 && (
                             <div
                               className="w-24 h-1.5 bg-slate-100 rounded-full ml-auto overflow-hidden"
                               title={`${Math.round(progress)}% Paid`}>
@@ -507,7 +524,8 @@ export default function CommissionsPage() {
                   Amount to Pay
                 </p>
                 <p className="text-3xl font-black text-orange-700">
-                  ₹{selectedEntity?.totalPending.toLocaleString()}
+                  {/* SAFE NUMBER FORMATTING FOR MODAL */}
+                  ₹{Number(selectedEntity?.totalPending || 0).toLocaleString()}
                 </p>
               </div>
               <div className="text-right">
@@ -541,14 +559,15 @@ export default function CommissionsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {selectedEntity?.recentCommissions
+                    {(selectedEntity?.recentCommissions || [])
                       .filter((c: any) => c.status === "PENDING")
                       .map((comm: any) => (
                         <TableRow
                           key={comm.id}
                           className="h-10 border-b-slate-100 bg-white">
                           <TableCell className="text-[11px] text-slate-500">
-                            {new Date(comm.test.createdAt).toLocaleDateString()}
+                            {/* SAFE DATE PARSING */}
+                            {comm.test?.createdAt ? new Date(comm.test.createdAt).toLocaleDateString() : "-"}
                           </TableCell>
                           <TableCell>
                             <div className="text-xs font-bold text-slate-800">
@@ -559,7 +578,8 @@ export default function CommissionsPage() {
                             </div>
                           </TableCell>
                           <TableCell className="text-right font-bold text-sm text-orange-600">
-                            ₹{comm.amount}
+                            {/* SAFE AMOUNT FORMATTING */}
+                            ₹{Number(comm.amount || 0).toLocaleString()}
                           </TableCell>
                         </TableRow>
                       ))}
@@ -576,7 +596,7 @@ export default function CommissionsPage() {
             <Button
               onClick={handleSettleSubmit}
               disabled={
-                settleMutation.isPending || selectedEntity?.totalPending === 0
+                settleMutation.isPending || Number(selectedEntity?.totalPending || 0) === 0
               }
               className="bg-green-600 hover:bg-green-700 text-white shadow-md">
               {settleMutation.isPending ? "Processing..." : "Mark as Paid"}

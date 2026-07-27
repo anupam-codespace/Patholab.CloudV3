@@ -79,7 +79,58 @@ export async function POST(req: NextRequest) {
     if (!user?.labId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
-    const { patientId, tests, subtotal, discountAmount, grandTotal } = body;
+    const { patientId, tests, subtotal, discountAmount, grandTotal, doctorId, agencyId } = body;
+
+    const isDbId = (str: string) =>
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str) ||
+      /^c[a-z0-9]{20,}$/i.test(str);
+
+    let finalDoctorId = null,
+      finalReferredBy = null,
+      doctorData = null;
+
+    if (doctorId && doctorId !== "Self") {
+      if (isDbId(doctorId)) {
+        finalDoctorId = doctorId;
+        doctorData = await prisma.doctor.findUnique({
+          where: { id: doctorId },
+          include: { customTestCommissions: true },
+        });
+      } else {
+        const doc = await prisma.doctor.findFirst({
+          where: { labId: user.labId, name: { equals: doctorId, mode: "insensitive" } },
+          include: { customTestCommissions: true },
+        });
+        if (doc) {
+          finalDoctorId = doc.id;
+          doctorData = doc;
+        } else {
+          finalReferredBy = doctorId;
+        }
+      }
+    }
+
+    let finalAgencyId = null,
+      agencyData = null;
+
+    if (agencyId && agencyId !== "Direct") {
+      if (isDbId(agencyId)) {
+        finalAgencyId = agencyId;
+        agencyData = await prisma.agency.findUnique({
+          where: { id: agencyId },
+          include: { customTestCommissions: true },
+        });
+      } else {
+        const agency = await prisma.agency.findFirst({
+          where: { labId: user.labId, name: { equals: agencyId, mode: "insensitive" } },
+          include: { customTestCommissions: true },
+        });
+        if (agency) {
+          finalAgencyId = agency.id;
+          agencyData = agency;
+        }
+      }
+    }
 
     // Safety guard
     if (!tests || tests.length === 0) throw new Error("NO_TESTS_SELECTED");
@@ -153,6 +204,8 @@ export async function POST(req: NextRequest) {
                 branchId: user.branchId,
                 patientId,
                 invoiceNumber,
+                ...(finalDoctorId && { doctorId: finalDoctorId }),
+                ...(finalAgencyId && { agencyId: finalAgencyId }),
                 subtotal: Number(subtotal),
                 discount: Number(discountAmount),
                 taxableAmount: Number(taxableAmount),
@@ -193,6 +246,81 @@ export async function POST(req: NextRequest) {
 
             if (!template) throw new Error(`TEMPLATE_NOT_FOUND: ${t.testName}`);
 
+            const testPrice = Number(t.price || 0);
+            const proportionalDiscount = (testPrice / Number(subtotal || 1)) * Number(discountAmount || 0);
+            const effectiveFinalPrice = Number(Math.max(0, testPrice - proportionalDiscount).toFixed(2));
+
+            // CALCULATE COMMISSIONS
+            const commissionsToCreate: any[] = [];
+            
+            // DOCTOR COMMISSION
+            if (doctorData) {
+              let docRate = doctorData.commissionRate ? Number(doctorData.commissionRate) : 0;
+              let docType = doctorData.commissionType;
+              
+              if (doctorData.customTestCommissions) {
+                const customOverride = doctorData.customTestCommissions.find(
+                  (c: any) => c.testTemplateId === template.id
+                );
+                if (customOverride) {
+                  docRate = Number(customOverride.commissionRate) || 0;
+                  docType = customOverride.commissionType;
+                }
+              }
+              if (docRate > 0) {
+                let amt = 0;
+                if (docType === "PERCENTAGE") {
+                  amt = (effectiveFinalPrice * docRate) / 100;
+                } else if (docType === "NET_PRICE") {
+                  amt = Math.max(0, effectiveFinalPrice - docRate);
+                } else {
+                  amt = docRate;
+                }
+                
+                commissionsToCreate.push({
+                  doctorId: finalDoctorId,
+                  amount: Number(amt.toFixed(2)),
+                  type: docType,
+                  rate: docRate,
+                  status: "PENDING",
+                });
+              }
+            }
+
+            // AGENCY COMMISSION
+            if (agencyData) {
+              let agencyRate = agencyData.commissionRate ? Number(agencyData.commissionRate) : 0;
+              let agencyType = agencyData.commissionType;
+              
+              if (agencyData.customTestCommissions) {
+                const customOverride = agencyData.customTestCommissions.find(
+                  (c: any) => c.testTemplateId === template.id
+                );
+                if (customOverride) {
+                  agencyRate = Number(customOverride.commissionRate) || 0;
+                  agencyType = customOverride.commissionType;
+                }
+              }
+              if (agencyRate > 0) {
+                let amt = 0;
+                if (agencyType === "PERCENTAGE") {
+                  amt = (effectiveFinalPrice * agencyRate) / 100;
+                } else if (agencyType === "NET_PRICE") {
+                  amt = Math.max(0, effectiveFinalPrice - agencyRate);
+                } else {
+                  amt = agencyRate;
+                }
+                
+                commissionsToCreate.push({
+                  agencyId: finalAgencyId,
+                  amount: Number(amt.toFixed(2)),
+                  type: agencyType,
+                  rate: agencyRate,
+                  status: "PENDING",
+                });
+              }
+            }
+
             const createdTest = await tx.test.create({
                 data: {
                     labId: user.labId,
@@ -203,9 +331,12 @@ export async function POST(req: NextRequest) {
                     testCode: t.testCode,
                     testName: t.testName,
                     testTemplateId: template.id,
-                    price: Number(t.price || 0),
-                    finalPrice: Number(t.price || 0),
+                    price: testPrice,
+                    finalPrice: effectiveFinalPrice,
                     status: 'PENDING',
+                    doctorId: finalDoctorId,
+                    agencyId: finalAgencyId,
+                    referredBy: finalReferredBy,
                     results: {
                         create: template.parameters.map(p => {
                             const range = getMatchingRange(p.parameter, patientData);
@@ -219,7 +350,12 @@ export async function POST(req: NextRequest) {
                                 referenceRangeText: refText, 
                             };
                         })
-                    }
+                    },
+                    ...(commissionsToCreate.length > 0 && {
+                      commissions: {
+                        create: commissionsToCreate
+                      }
+                    })
                 }
             });
 

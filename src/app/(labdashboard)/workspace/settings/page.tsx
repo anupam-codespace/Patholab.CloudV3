@@ -182,7 +182,6 @@ export default function ProfileSettingsPage() {
 
         setBranches(lab.branches || []);
 
-        // ✅ CRITICAL FIX: Load saved active modules from database
         if (lab.activeModules && Array.isArray(lab.activeModules)) {
           setActiveModules(lab.activeModules);
         }
@@ -241,7 +240,6 @@ export default function ProfileSettingsPage() {
     }
   };
 
-  // ✅ CRITICAL FIX: Save the App Modules to your DB
   const handleSaveModules = async () => {
     setSaving(true);
     try {
@@ -387,17 +385,13 @@ export default function ProfileSettingsPage() {
     }
   };
 
-  // ✅ Instantly updates the state, saves to the database, and forces the Auth hook to resync
   const toggleModule = async (moduleId: string) => {
-    // 1. Calculate the new array of modules
     const newModules = activeModules.includes(moduleId)
       ? activeModules.filter((id) => id !== moduleId)
       : [...activeModules, moduleId];
 
-    // 2. Immediately update the UI state so the switch flips instantly
     setActiveModules(newModules);
 
-    // 3. Fire the save request to the backend
     try {
       const res = await fetch("/api/workspace/settings/modules", {
         method: "PUT",
@@ -407,17 +401,13 @@ export default function ProfileSettingsPage() {
 
       if (res.ok) {
         toast.success("Sidebar updated!");
-
-        // ✅ CRITICAL FIX: Forces your `useAuth` hook to dump its cache and grab the new modules
         window.location.reload();
       } else {
         toast.error("Failed to save module state.");
-        // Revert the toggle if the server fails
         setActiveModules(activeModules);
       }
     } catch (error) {
       toast.error("Network error while saving.");
-      // Revert the toggle if there is a network crash
       setActiveModules(activeModules);
     }
   };
@@ -493,9 +483,9 @@ export default function ProfileSettingsPage() {
           </p>
         </div>
 
-       <div className="flex flex-col xl:flex-row gap-8 items-start">
+        <div className="flex flex-col xl:flex-row gap-8 items-start">
           {/* === LEFT SIDEBAR NAVIGATION === */}
-         <div className="lg:w-72 xl:w-80 shrink-0">
+          <div className="lg:w-72 xl:w-80 shrink-0">
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-3 sticky top-24">
               {["Personal", "Workspace"].map((groupName) => (
                 <div key={groupName} className="mb-6 last:mb-0">
@@ -532,6 +522,7 @@ export default function ProfileSettingsPage() {
           {/* === RIGHT CONTENT AREA === */}
           <div className="flex-1 min-w-0">
             <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 min-h-[600px]">
+              
               {/* === TAB: PROFILE === */}
               {activeTab === "profile" && (
                 <div className="p-6 sm:p-10 space-y-10">
@@ -1081,7 +1072,7 @@ export default function ProfileSettingsPage() {
                                   onClick={() =>
                                     setLabSettings((prev) => ({
                                       ...prev,
-                                      upiQrCode: null,
+                                      upiQrCode: "",
                                     }))
                                   }
                                   className="inline-flex w-fit cursor-pointer rounded-xl border border-rose-200 bg-rose-50 px-5 py-2 text-xs font-bold uppercase tracking-widest text-rose-700 shadow-sm transition-colors hover:bg-rose-100"
@@ -1438,8 +1429,11 @@ export default function ProfileSettingsPage() {
                           Percentage (%) of Test Price
                         </option>
                         <option value="FIXED">Flat Fixed Amount (₹)</option>
+                        {/* ✅ FIX 1: Added NET_PRICE option */}
+                        <option value="NET_PRICE">Net Price (B2B Wholesale)</option>
                       </select>
                     </div>
+                    
                     <div className="space-y-2">
                       <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1">
                         <User className="w-3 h-3" /> Default Doctor Rate
@@ -1451,22 +1445,22 @@ export default function ProfileSettingsPage() {
                           onChange={(e) =>
                             setLabSettings({
                               ...labSettings,
-                              defaultDoctorCommission:
-                                e.target.value === ""
-                                  ? 0
-                                  : parseFloat(e.target.value),
+                              // ✅ FIX 2: Added || 0 to prevent NaN database crash
+                              defaultDoctorCommission: e.target.value === "" 
+                                ? 0 
+                                : parseFloat(e.target.value) || 0,
                             })
                           }
                           className="h-12 pl-10 rounded-xl bg-white border-slate-200 focus:bg-white focus:border-emerald-500 font-bold"
                           step="0.01"
+                          min="0"
                         />
                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">
-                          {labSettings.commissionType === "PERCENTAGE"
-                            ? "%"
-                            : "₹"}
+                          {labSettings.commissionType === "PERCENTAGE" ? "%" : "₹"}
                         </span>
                       </div>
                     </div>
+
                     <div className="space-y-2">
                       <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1">
                         <Briefcase className="w-3 h-3" /> Default Agency Rate
@@ -1478,19 +1472,18 @@ export default function ProfileSettingsPage() {
                           onChange={(e) =>
                             setLabSettings({
                               ...labSettings,
-                              defaultAgencyCommission:
-                                e.target.value === ""
-                                  ? 0
-                                  : parseFloat(e.target.value),
+                              // ✅ FIX 2: Added || 0 to prevent NaN database crash
+                              defaultAgencyCommission: e.target.value === "" 
+                                ? 0 
+                                : parseFloat(e.target.value) || 0,
                             })
                           }
                           className="h-12 pl-10 rounded-xl bg-white border-slate-200 focus:bg-white focus:border-emerald-500 font-bold"
                           step="0.01"
+                          min="0"
                         />
                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">
-                          {labSettings.commissionType === "PERCENTAGE"
-                            ? "%"
-                            : "₹"}
+                          {labSettings.commissionType === "PERCENTAGE" ? "%" : "₹"}
                         </span>
                       </div>
                     </div>
@@ -1661,7 +1654,7 @@ export default function ProfileSettingsPage() {
         >
          <div className="bg-slate-900 p-5 sm:p-6 flex items-start sm:items-center justify-between gap-4"> 
             <div>
-              <DialogTitle className="text-xl font-black">
+              <DialogTitle className="text-xl font-black text-white">
                 {editingBranch ? "Edit Location" : "Add New Location"}
               </DialogTitle>
               <p className="text-slate-400 text-sm font-medium mt-1">
@@ -1701,7 +1694,7 @@ export default function ProfileSettingsPage() {
                   onChange={(e) =>
                     setBranchForm({ ...branchForm, address: e.target.value })
                   }
-                  className="h-12 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-emerald-500"
+                  className="rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-emerald-500"
                 />
               </div>
               <div className="space-y-2">

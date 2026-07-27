@@ -43,11 +43,12 @@ export async function getCommissionDashboardData() {
       let pendingCount = 0;
 
       entity.commissions.forEach((comm: any) => {
+        const amt = Number(comm.amount) || 0;
         if (comm.status === 'PENDING') {
-          totalPending += comm.amount;
+          totalPending += amt;
           pendingCount++;
         } else if (comm.status === 'PAID') {
-          totalPaid += comm.amount;
+          totalPaid += amt;
         }
       });
 
@@ -60,7 +61,13 @@ export async function getCommissionDashboardData() {
         totalPending,
         totalPaid,
         pendingCount,
-        recentCommissions: entity.commissions.sort((a: any, b: any) => b.createdAt - a.createdAt).slice(0, 10)
+        recentCommissions: entity.commissions
+          .sort((a: any, b: any) => b.createdAt - a.createdAt)
+          .slice(0, 10)
+          .map((c: any) => ({
+            ...c,
+            amount: Number(c.amount),
+          })),
       };
     });
   };
