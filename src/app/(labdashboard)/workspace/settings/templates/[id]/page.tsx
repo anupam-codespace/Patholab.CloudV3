@@ -1294,7 +1294,7 @@ export default function UltimateTemplateBuilder() {
               ))}
             </div>
 
-            {config.footer.mode === "standard" && (
+            {(config.footer.mode === "standard" || config.footer.mode === "image") && (
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <Label className="text-xs font-bold text-slate-500 uppercase">
@@ -1959,15 +1959,65 @@ export default function UltimateTemplateBuilder() {
               </div>
             </div>
 
+            {/* SIGNATURES ZONE (For Image Footer Mode) */}
+            {config.footer.show && config.footer.mode === "image" && config.footer.signatures.some(s => s.show) && (
+              <div className="w-full flex justify-around items-end mb-4 px-10 relative z-10">
+                {config.footer.signatures.map(
+                  (sig, idx) =>
+                    sig.show && (
+                      <div
+                        key={idx}
+                        className="flex flex-col items-center"
+                        style={{ width: `${sig.width}px` }}>
+                        <div className="h-16 flex items-end justify-center mb-1">
+                          {sig.imageUrl ? (
+                            <img
+                              src={sig.imageUrl}
+                              className="h-full object-contain"
+                              alt="Sig"
+                            />
+                          ) : (
+                            !purePreviewMode && (
+                              <div className="text-[10px] text-slate-300 border border-dashed px-4 py-2 w-full text-center">
+                                Sig
+                              </div>
+                            )
+                          )}
+                        </div>
+                        <div className="w-full text-center border-t border-slate-300 pt-1">
+                          <p className="font-bold text-[11px] text-slate-900 leading-tight whitespace-nowrap">
+                            {sig.name || "Doctor Name"}
+                          </p>
+                          {sig.qualifications && (
+                            <p className="text-[9px] text-slate-600 leading-tight whitespace-nowrap">
+                              {sig.qualifications}
+                            </p>
+                          )}
+                          {sig.title && (
+                            <p className="font-bold text-[9px] text-slate-800 uppercase mt-0.5 whitespace-nowrap">
+                              {sig.title}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ),
+                )}
+              </div>
+            )}
+
             {/* FOOTER ZONE */}
             {config.footer.show && (
               <div
-                className={`mt-auto pt-4 relative ${purePreviewMode ? "" : "border border-dashed border-transparent hover:border-slate-300 p-2 -mx-2 rounded"} ${config.footer.mode === "image" ? "" : "border-t-2"}`}
-                style={{ borderTopColor: config.branding.primaryColor }}>
-                {config.footer.mode === "image" ? (
+                className={`w-full relative ${purePreviewMode ? "" : "border border-dashed border-transparent hover:border-slate-300 p-2 -mx-2 rounded"} ${config.footer.mode === "image" ? "" : "border-t-2"}`}
+                style={{
+                  borderTopColor: config.branding.primaryColor,
+                  height: config.footer.mode === "image" ? `${config.footer.height}px` : undefined,
+                  minHeight: config.footer.mode === "image" ? `${config.footer.height}px` : undefined,
+                }}>
+                {config.footer.mode === "image" && (
                   <div
-                    className="w-full bg-slate-100 flex items-center justify-center text-slate-400 overflow-hidden"
-                    style={{ height: `${config.footer.height}px` }}>
+                    className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none"
+                    style={{ zIndex: 0 }}>
                     {config.footer.fullImage ? (
                       <img
                         src={config.footer.fullImage}
@@ -1975,19 +2025,23 @@ export default function UltimateTemplateBuilder() {
                         alt="Footer"
                       />
                     ) : (
-                      "Footer Image Area"
+                      <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400">
+                        Footer Image Area
+                      </div>
                     )}
                   </div>
-                ) : config.footer.mode === "html" ? (
+                )}
+                {config.footer.mode === "html" ? (
                   <div
+                    className="relative z-10"
                     dangerouslySetInnerHTML={{
                       __html:
                         config.footer.html ||
                         "<div class='text-center py-4'>Custom HTML Footer</div>",
                     }}
                   />
-                ) : (
-                  <div className="w-full flex flex-col items-center">
+                ) : config.footer.mode === "standard" ? (
+                  <div className="w-full flex flex-col items-center relative z-10">
                     <div className="flex justify-around items-end w-full mb-4 px-10">
                       {config.footer.signatures.map(
                         (sig, idx) =>
@@ -2040,9 +2094,9 @@ export default function UltimateTemplateBuilder() {
                       </div>
                     )}
                   </div>
-                )}
+                ) : null}
                 <div
-                  className="text-[9px] text-center mt-4 pb-2 pt-2 border-t border-slate-200"
+                  className="text-[9px] text-center mt-4 pb-2 pt-2 border-t border-slate-200 relative z-10"
                   style={{ color: config.branding.secondaryColor }}
                   dangerouslySetInnerHTML={{ __html: config.footer.text || "" }}
                 />

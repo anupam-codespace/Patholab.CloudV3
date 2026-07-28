@@ -141,8 +141,11 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
   const footerHeight = footer.show ? pxToPt(footer.height || 80) : 0;
   const qrSize = pxToPt(config.qrCode?.size || 60);
 
+  const hasSignatures = footer.show && footer.signatures?.some((sig: any) => sig.show);
+  const signatureHeight = (footer.mode === "image" && hasSignatures) ? pxToPt(80) : 0;
+
   const pagePaddingTop = headerHeight + mTop + 15;
-  const pagePaddingBottom = footerHeight + mBottom + 30;
+  const pagePaddingBottom = footerHeight + signatureHeight + mBottom + 30;
 
   const styles = StyleSheet.create({
     page: {
@@ -640,15 +643,19 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
         {/* --- FOOTER --- */}
         {footer.show && (
           <View style={styles.footerZone} fixed>
-            {footer.mode === "image" && footer.fullImage ? (
+            {footer.mode === "image" && footer.fullImage && (
               <>
                 <Image
                   src={footer.fullImage}
                   style={{
+                    position: "absolute",
+                    left: 0,
+                    top: 0,
                     width: "100%",
                     height: "100%",
                     objectFit: "contain",
                     objectPosition: "center bottom",
+                    zIndex: -1,
                   }}
                 />
                 {/* Overlay QR on Image Footers */}
@@ -671,8 +678,9 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
                     </View>
                   )}
               </>
-            ) : (
-              <View style={{ paddingTop: 10, paddingHorizontal: 15 }}>
+            )}
+            {footer.mode !== "image" && (
+              <View style={{ paddingTop: 10, paddingHorizontal: 15, height: "100%", justifyContent: "flex-end" }}>
                 <View
                   style={{
                     flexDirection: "row",
@@ -760,6 +768,67 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
           </View>
         )}
 
+        {/* --- SIGNATURES ZONE (For Image Footer Mode) --- */}
+        {footer.show && footer.mode === "image" && hasSignatures && (
+          <View
+            style={{
+              position: "absolute",
+              bottom: footerHeight + mBottom + 10,
+              left: mLeft,
+              right: mRight,
+              height: signatureHeight,
+              flexDirection: "row",
+              justifyContent: "center",
+              gap: 30,
+              alignItems: "flex-end",
+            }}
+            fixed>
+            {footer.signatures?.map(
+              (sig: any, idx: number) =>
+                sig.show && (
+                  <View
+                    key={idx}
+                    style={{
+                      alignItems: "center",
+                      width: pxToPt(sig.width || 120),
+                    }}>
+                    {sig.imageUrl ? (
+                      <Image
+                        src={sig.imageUrl}
+                        style={{
+                          height: pxToPt(35),
+                          objectFit: "contain",
+                          marginBottom: 2,
+                        }}
+                      />
+                    ) : (
+                      <View style={{ height: pxToPt(35) }} />
+                    )}
+                    <Text
+                      style={{
+                        fontSize: 9,
+                        fontWeight: "bold",
+                        color: "#0f172a",
+                      }}>
+                      {sig.name}
+                    </Text>
+                    <Text style={{ fontSize: 7, color: "#64748b" }}>
+                      {sig.qualifications}
+                    </Text>
+                    <Text
+                      style={{
+                        fontSize: 7,
+                        fontWeight: "bold",
+                        marginTop: 1,
+                      }}>
+                      {sig.title}
+                    </Text>
+                  </View>
+                ),
+            )}
+          </View>
+        )}
+
         {/* --- GLOBAL BOTTOM PAGE NUMBERS (IF SELECTED) --- */}
         {config.qrCode?.showPageNumber &&
           config.qrCode.pageNumberPosition === "bottom-center" && (
@@ -803,8 +872,11 @@ const RadiologyPDFDocument = ({ payload }: { payload: any }) => {
   const footerHeight = footer.show ? pxToPt(footer.height || 80) : 0;
   const qrSize = pxToPt(config.qrCode?.size || 60);
 
+  const hasSignatures = footer.show && footer.signatures?.some((sig: any) => sig.show);
+  const signatureHeight = (footer.mode === "image" && hasSignatures) ? pxToPt(80) : 0;
+
   const pagePaddingTop = headerHeight + mTop + 15;
-  const pagePaddingBottom = footerHeight + mBottom + 30;
+  const pagePaddingBottom = footerHeight + signatureHeight + mBottom + 30;
 
   const primaryColor = branding.primaryColor || "#0f172a";
   const secondaryColor = branding.secondaryColor || "#475569";
@@ -1026,13 +1098,23 @@ const RadiologyPDFDocument = ({ payload }: { payload: any }) => {
         {/* FOOTER */}
         {footer.show && (
           <View style={styles.footerZone} fixed>
-            {footer.mode === "image" && footer.fullImage ? (
+            {footer.mode === "image" && footer.fullImage && (
               <Image
                 src={footer.fullImage}
-                style={{ width: "100%", height: "100%", objectFit: "contain", objectPosition: "center bottom" }}
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  top: 0,
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "contain",
+                  objectPosition: "center bottom",
+                  zIndex: -1,
+                }}
               />
-            ) : (
-              <View style={{ paddingTop: 10, paddingHorizontal: 15 }}>
+            )}
+            {footer.mode !== "image" && (
+              <View style={{ paddingTop: 10, paddingHorizontal: 15, height: "100%", justifyContent: "flex-end" }}>
                 <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end" }}>
                   <View style={{ width: qrSize }} />
                   <View style={{ flexDirection: "row", gap: 30, flex: 1, justifyContent: "center" }}>
@@ -1058,6 +1140,39 @@ const RadiologyPDFDocument = ({ payload }: { payload: any }) => {
                   {footer.text}
                 </Text>
               </View>
+            )}
+          </View>
+        )}
+
+        {/* --- SIGNATURES ZONE (For Image Footer Mode) --- */}
+        {footer.show && footer.mode === "image" && hasSignatures && (
+          <View
+            style={{
+              position: "absolute",
+              bottom: footerHeight + mBottom + 10,
+              left: mLeft,
+              right: mRight,
+              height: signatureHeight,
+              flexDirection: "row",
+              justifyContent: "center",
+              gap: 30,
+              alignItems: "flex-end",
+            }}
+            fixed>
+            {footer.signatures?.map(
+              (sig: any, idx: number) =>
+                sig.show && (
+                  <View key={idx} style={{ alignItems: "center", width: pxToPt(sig.width || 120) }}>
+                    {sig.imageUrl ? (
+                      <Image src={sig.imageUrl} style={{ height: pxToPt(35), objectFit: "contain", marginBottom: 2 }} />
+                    ) : (
+                      <View style={{ height: pxToPt(35) }} />
+                    )}
+                    <Text style={{ fontSize: 9, fontWeight: "bold", color: "#0f172a" }}>{sig.name}</Text>
+                    <Text style={{ fontSize: 7, color: "#64748b" }}>{sig.qualifications}</Text>
+                    <Text style={{ fontSize: 7, fontWeight: "bold", marginTop: 1 }}>{sig.title}</Text>
+                  </View>
+                ),
             )}
           </View>
         )}
@@ -1187,7 +1302,10 @@ console.log("🧪 testId:", payload.testId);
   payload.patientId;
 
       const includeQuery = {
-        lab: { include: { reportTemplates: true } },
+        lab: { include: { reportTemplates: {
+        where: { isActive: true },
+        take: 1
+      }} },
         patient: true,
         results: { orderBy: { order: "asc" as any } },
         testTemplate: { include: { Department: true } },
