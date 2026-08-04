@@ -355,7 +355,7 @@ export default function DoctorsClient() {
                           Yield: ₹{Number((doc as any).totalCommission || 0).toFixed(0)}
                         </div>
                       </div>
-                    </TableCell>
+                    </TableCell>    
                     <TableCell className="px-6 text-right">
                       <div className="flex justify-end gap-2">
                         <Button

@@ -18,6 +18,7 @@ import {
   FlaskConical,
   CreditCard,
   Plus,
+  Phone, // ✅ Imported Phone icon
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 
@@ -54,6 +55,7 @@ const accessionSchema = z.object({
   discount: z.coerce.number().min(0, "Cannot be negative").default(0),
   paidAmount: z.coerce.number().min(0, "Cannot be negative").default(0),
   paymentMode: z.enum(["CASH", "UPI", "CARD", "DUE"]),
+  phone: z.string().optional(), // ✅ Added optional phone number
   collectedBy: z.string().optional(),
   collectedAt: z
     .string()
@@ -153,6 +155,7 @@ export default function AccessionPage() {
       discount: 0,
       paidAmount: 0,
       paymentMode: safePaymentMode as any,
+      phone: "", // Initialize empty
       collectedBy: collectedByParam,
       collectedAt: "",
       note: "",
@@ -161,6 +164,13 @@ export default function AccessionPage() {
       isUrgent: false,
     },
   });
+
+  // ✅ Auto-fill the patient's existing phone number when data loads
+  useEffect(() => {
+    if (data?.patient?.phone) {
+      setValue("phone", data.patient.phone);
+    }
+  }, [data?.patient, setValue]);
 
   useEffect(() => {
     register("tests");
@@ -252,6 +262,7 @@ export default function AccessionPage() {
       })),
       paymentMode: formData.paymentMode,
       paidAmount: formData.paidAmount,
+      phone: formData.phone, // ✅ Passes the updated phone to the backend
       collectedBy: formData.collectedBy,
       collectedAt: collectedDate.toISOString(),
       isUrgent: formData.isUrgent,
@@ -563,9 +574,9 @@ export default function AccessionPage() {
 
           <div className="overflow-visible lg:overflow-y-auto lg:flex-1 p-4 space-y-5 custom-scrollbar">
             {/* Financial Ledger */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label className="text-[10px] uppercase font-bold text-slate-500">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              <div className="space-y-1 sm:space-y-1.5">
+                <Label className="text-[9px] sm:text-[10px] uppercase font-bold text-slate-500">
                   Gross Total
                 </Label>
                 <Input
@@ -575,8 +586,8 @@ export default function AccessionPage() {
                   tabIndex={-1}
                 />
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-[10px] uppercase font-bold text-slate-500">
+              <div className="space-y-1 sm:space-y-1.5">
+                <Label className="text-[9px] sm:text-[10px] uppercase font-bold text-slate-500">
                   Discount (₹)
                 </Label>
                 <Input
@@ -584,16 +595,16 @@ export default function AccessionPage() {
                   {...register("discount")}
                   className="h-10 text-rose-600 font-bold text-base sm:text-lg border-slate-200 rounded-xl px-3"
                 />
-                <div className="flex gap-2 mt-1">
+                <div className="flex gap-1.5 sm:gap-2 mt-1">
                   <Badge
                     variant="outline"
-                    className="text-[9px] px-2 h-5 cursor-pointer hover:bg-slate-100 text-slate-600"
+                    className="text-[8px] sm:text-[9px] px-1.5 sm:px-2 h-4 sm:h-5 cursor-pointer hover:bg-slate-100 text-slate-600"
                     onClick={() => applyDiscountPercent(10)}>
                     10%
                   </Badge>
                   <Badge
                     variant="outline"
-                    className="text-[9px] px-2 h-5 cursor-pointer hover:bg-slate-100 text-slate-600"
+                    className="text-[8px] sm:text-[9px] px-1.5 sm:px-2 h-4 sm:h-5 cursor-pointer hover:bg-slate-100 text-slate-600"
                     onClick={() => applyDiscountPercent(20)}>
                     20%
                   </Badge>
@@ -602,24 +613,24 @@ export default function AccessionPage() {
             </div>
 
             {/* Total Block */}
-            <div className="bg-slate-900 text-white rounded-2xl p-4 flex justify-between items-center shadow-lg relative overflow-hidden">
+            <div className="bg-slate-900 text-white rounded-xl sm:rounded-2xl p-3 sm:p-4 flex justify-between items-center shadow-lg relative overflow-hidden">
               <div className="absolute -right-2 -top-2 opacity-10">
-                <CreditCard className="w-16 h-16" />
+                <CreditCard className="w-12 h-12 sm:w-16 sm:h-16" />
               </div>
               <div className="relative z-10 flex flex-col">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-300">
+                <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-indigo-300">
                   Net Payable
                 </span>
-                <span className="font-black text-3xl mt-0.5">
+                <span className="font-black text-2xl sm:text-3xl mt-0.5">
                   ₹{netPayable}
                 </span>
               </div>
             </div>
 
             {/* Payment & Mode */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label className="text-[10px] uppercase font-bold text-slate-500">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              <div className="space-y-1 sm:space-y-1.5">
+                <Label className="text-[9px] sm:text-[10px] uppercase font-bold text-slate-500">
                   Paid Today
                 </Label>
                 <Input
@@ -628,8 +639,8 @@ export default function AccessionPage() {
                   className="h-10 border-emerald-300 bg-emerald-50 text-emerald-700 font-bold text-base sm:text-lg rounded-xl px-3"
                 />
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-[10px] uppercase font-bold text-slate-500">
+              <div className="space-y-1 sm:space-y-1.5">
+                <Label className="text-[9px] sm:text-[10px] uppercase font-bold text-slate-500">
                   Pay Mode
                 </Label>
                 <Select
@@ -650,81 +661,81 @@ export default function AccessionPage() {
               </div>
             </div>
 
-            <div className="flex justify-between items-center text-sm font-bold border-t border-slate-100 pt-4">
+            <div className="flex justify-between items-center text-xs sm:text-sm font-bold border-t border-slate-100 pt-3 sm:pt-4">
               <span className="text-slate-500">Balance Due</span>
               <span
                 className={
                   balance > 0
-                    ? "text-rose-600 text-lg font-black"
-                    : "text-emerald-600 text-lg font-black"
+                    ? "text-rose-600 text-base sm:text-lg font-black"
+                    : "text-emerald-600 text-base sm:text-lg font-black"
                 }>
                 ₹ {balance}
               </span>
             </div>
 
             {/* Logistics & Meta */}
-            <div className="space-y-4 pt-4 border-t border-slate-100">
-              <div className="space-y-1.5">
-                <Label className="text-[10px] uppercase font-bold text-slate-500">
+            <div className="space-y-3 sm:space-y-4 pt-3 sm:pt-4 border-t border-slate-100">
+              <div className="space-y-1 sm:space-y-1.5">
+                <Label className="text-[9px] sm:text-[10px] uppercase font-bold text-slate-500">
                   Collector / Phleb.
                 </Label>
                 <div className="relative">
-                  <UserCheck className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <UserCheck className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-400" />
                   <Input
                     {...register("collectedBy")}
-                    className="h-10 pl-9 text-sm border-slate-200 bg-slate-50 rounded-xl"
+                    className="h-9 sm:h-10 pl-8 sm:pl-9 text-xs sm:text-sm border-slate-200 bg-slate-50 rounded-lg sm:rounded-xl"
                     placeholder="Staff Name..."
                   />
                 </div>
               </div>
 
-              <div className="flex gap-3">
-                <div className="flex items-center space-x-2 bg-slate-50 px-3 py-2 rounded-xl border border-slate-200 flex-1">
+              <div className="flex gap-2 sm:gap-3">
+                <div className="flex items-center space-x-1.5 sm:space-x-2 bg-slate-50 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl border border-slate-200 flex-1">
                   <Checkbox
                     id="slip"
                     checked={watch("printSlip")}
                     onCheckedChange={(v) => setValue("printSlip", !!v)}
-                    className="w-4 h-4 rounded-[4px]"
+                    className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-[3px] sm:rounded-[4px]"
                   />
                   <label
                     htmlFor="slip"
-                    className="text-xs font-bold text-slate-700 cursor-pointer">
+                    className="text-[10px] sm:text-xs font-bold text-slate-700 cursor-pointer">
                     Print Slip
                   </label>
                 </div>
-                <div className="flex items-center space-x-2 bg-slate-50 px-3 py-2 rounded-xl border border-slate-200 flex-1">
+                <div className="flex items-center space-x-1.5 sm:space-x-2 bg-slate-50 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl border border-slate-200 flex-1">
                   <Checkbox
                     id="barcode"
                     checked={watch("printBarcode")}
                     onCheckedChange={(v) => setValue("printBarcode", !!v)}
-                    className="w-4 h-4 rounded-[4px]"
+                    className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-[3px] sm:rounded-[4px]"
                   />
                   <label
                     htmlFor="barcode"
-                    className="text-xs font-bold text-slate-700 cursor-pointer">
+                    className="text-[10px] sm:text-xs font-bold text-slate-700 cursor-pointer">
                     Barcodes
                   </label>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-2 bg-rose-50 p-2.5 rounded-xl border border-rose-200 w-full">
+              <div className="flex items-center space-x-2 bg-rose-50 p-2 sm:p-2.5 rounded-lg sm:rounded-xl border border-rose-200 w-full">
                 <Checkbox
                   id="urgent"
                   checked={isUrgent}
                   onCheckedChange={(v) =>
                     setValue("isUrgent", !!v, { shouldValidate: true })
                   }
-                  className="w-4 h-4 border-rose-400 data-[state=checked]:bg-rose-600"
+                  className="w-3.5 h-3.5 sm:w-4 sm:h-4 border-rose-400 data-[state=checked]:bg-rose-600"
                 />
                 <label
                   htmlFor="urgent"
-                  className="text-sm text-rose-700 font-bold cursor-pointer select-none">
+                  className="text-xs sm:text-sm text-rose-700 font-bold cursor-pointer select-none">
                   Mark Order as STAT (Urgent)
                 </label>
               </div>
 
-              <div className="space-y-1.5">
-                <Label className="text-[10px] uppercase font-bold text-slate-500">
+              <div className="space-y-1 sm:space-y-1.5">
+                <Label className="text-[9px] sm:text-[10px] uppercase font-bold text-slate-500">
                   Internal Notes
                 </Label>
                 <Textarea
