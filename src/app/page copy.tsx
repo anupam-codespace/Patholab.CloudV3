@@ -36,6 +36,7 @@ import {
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { useEffect, useState } from "react";
+import HomeVisitFinder from "@/components/public/HomeVisitFinder";
 
 export default function LandingPage() {
   const [isVisible, setIsVisible] = useState(false);
@@ -112,6 +113,7 @@ export default function LandingPage() {
             style={{ animationDelay: "1s" }}
           />
         </div>
+      
 
         <div className="container px-4">
           <div
@@ -172,6 +174,8 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+       
 
       {/* Stats Section */}
       <section className="border-y bg-muted/50 py-12">

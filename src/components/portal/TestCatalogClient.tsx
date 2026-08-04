@@ -13,7 +13,14 @@ import PublicBookingForm from "./PublicBookingForm"; // The form we built in the
 
 interface TestCatalogClientProps {
   portalSlug: string;
-  lab: { name: string; logo: string | null; city: string; phone: string };
+  lab: {
+    name: string;
+    logo: string | null;
+    city: string | null;
+    phone: string;
+    upiId: string | null;
+    upiQrCode: string | null;
+  };
   tests: any[];
 }
 
@@ -53,7 +60,7 @@ export default function TestCatalogClient({
           className="flex items-center text-blue-600 font-medium mb-6 hover:underline">
           <ArrowLeft className="w-4 h-4 mr-2" /> Back to Catalog
         </button>
-        <PublicBookingForm portalSlug={portalSlug} cartItems={cart} />
+        <PublicBookingForm portalSlug={portalSlug} cartItems={cart} lab={lab} />
       </div>
     );
   }

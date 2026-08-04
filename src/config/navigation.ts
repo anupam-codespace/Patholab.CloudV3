@@ -26,7 +26,6 @@ import {
   Send,
   History,
   Wallet,
-  HelpCircle,
 } from "lucide-react";
 
 export type NavItem = {
@@ -71,7 +70,11 @@ export const adminNav: NavGroup[] = [
     items: [
       // ✅ Using uppercase DB-friendly tags
       { name: "Inventory & Stock", href: "/workspace/inventory", icon: Box, moduleTag: "INVENTORY" },
-      { name: "Logistics / Trips", href: "/workspace/logistics", icon: Truck, moduleTag: "LOGISTICS" },
+      { name: "Home Collection", href: "/workspace/home-collection", icon:Home , moduleTag: "LOGISTICS" },
+      { name: "Collection Requests", href: "/workspace/home-collection/request", icon: ClipboardList, moduleTag: "LOGISTICS" },
+      { name: "Dispatch Queue", href: "/workspace/dispatch", icon:Inbox, moduleTag: "LOGISTICS" },
+      { name: "Logistics / Trips", href: "/workspace/logistics", icon: MapPinned, moduleTag: "LOGISTICS" },
+      { name: "Sample Received", href: "/workspace/samples/receive", icon: StopCircle, moduleTag: "LOGISTICS" },
     ],
   },
 
@@ -125,7 +128,9 @@ export const receptionistNav: NavGroup[] = [
       { name: "New Registration", href: "/workspace/registration", icon: UserPlus, badge: "Start" },
       { name: "Patient Records", href: "/workspace/patients", icon: ClipboardList },
       { name: "Appointments", href: "/workspace/appointments", icon: CalendarDays },
-      { name: "Home Collection", href: "/workspace/logistics", icon: Truck, moduleTag: "LOGISTICS" },
+      { name: "Home Collection", href: "/workspace/home-collection", icon: Truck, moduleTag: "LOGISTICS" },
+      { name: "Dispatch Queue", href: "/workspace/dispatch", icon: Truck, moduleTag: "LOGISTICS" },
+      { name: "Logistics / Trips", href: "/workspace/logistics", icon: Truck, moduleTag: "LOGISTICS" },
     ],
   },
   {
@@ -178,6 +183,7 @@ export const radiologyNav: NavGroup = {
     { name: "Reporting Queue", href: "/workspace/radiology/reporting", icon: Stethoscope },
     { name: "Machines", href: "/workspace/radiology/modalities", icon: Server },
     { name: "Settings", href: "/workspace/radiology/settings/macros", icon: Settings },
+    { name: "Patient Directory", href: "/workspace/radiology/directory", icon: Users },
   ],
 };
 

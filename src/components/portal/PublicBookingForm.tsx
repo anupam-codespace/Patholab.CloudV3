@@ -5,11 +5,18 @@ import toast from "react-hot-toast";
 interface BookingFormProps {
   portalSlug: string;
   cartItems: { id: string; name: string; price: number }[]; // Passed from your test catalog page
+  lab: {
+    name: string;
+    phone: string;
+    upiId: string | null;
+    upiQrCode: string | null;
+  };
 }
 
 export default function PublicBookingForm({
   portalSlug,
   cartItems,
+  lab,
 }: BookingFormProps) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -23,6 +30,7 @@ export default function PublicBookingForm({
     pincode: "",
     appointmentDate: "",
     timeSlot: "08:00 AM - 10:00 AM",
+    transactionId: "",
   });
 
   const totalAmount = cartItems.reduce(
@@ -32,6 +40,17 @@ export default function PublicBookingForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (formData.collectionMode === "HOME_COLLECTION" && !lab.upiQrCode) {
+      toast.error("This lab has not configured a UPI QR yet. Please contact the lab.");
+      return;
+    }
+
+    if (formData.collectionMode === "HOME_COLLECTION" && !formData.transactionId.trim()) {
+      toast.error("Please enter your UPI transaction ID / UTR.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -51,14 +70,21 @@ export default function PublicBookingForm({
       }
 
       toast.success("Appointment Booked Successfully!");
-      // TODO: Redirect to Payment Gateway (Razorpay) using data.payableAmount and data.invoiceId
-      window.location.href = `/payment?invoice=${data.invoiceId}`;
+      window.location.href = `/book/${portalSlug}/status/${data.appointmentId}?phone=${encodeURIComponent(formData.phone)}`;
     } catch (error: any) {
       toast.error(error.message);
     } finally {
       setLoading(false);
     }
   };
+
+  const whatsappPhone = lab.phone.replace(/\D/g, "");
+  const whatsappMessage = encodeURIComponent(
+    `Hello ${lab.name}, I booked a home collection and completed UPI payment.\n\nPatient: ${formData.name || "Not filled yet"}\nPhone: ${formData.phone || "Not filled yet"}\nAmount: Rs. ${totalAmount}\nTransaction ID/UTR: ${formData.transactionId || "Not filled yet"}\nDate: ${formData.appointmentDate || "Not selected"}\nTime Slot: ${formData.timeSlot}\n\nI want to share my payment receipt because I am facing an issue. Please verify my payment and booking.`,
+  );
+  const whatsappReceiptUrl = whatsappPhone
+    ? `https://wa.me/${whatsappPhone}?text=${whatsappMessage}`
+    : `https://wa.me/?text=${whatsappMessage}`;
 
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white rounded-xl shadow-md border">
@@ -106,6 +132,30 @@ export default function PublicBookingForm({
               onChange={(e) =>
                 setFormData({ ...formData, phone: e.target.value })
               }
+            />
+          </div>
+          {/* Add these inside the grid next to Name and Phone */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Gender</label>
+            <select
+              required
+              className="w-full border p-2 rounded bg-white"
+              value={formData.gender}
+              onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+            >
+              <option value="MALE">Male</option>
+              <option value="FEMALE">Female</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Age / DOB</label>
+            <input
+              required
+              type="text"
+              placeholder="e.g. 28"
+              className="w-full border p-2 rounded"
+              onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
             />
           </div>
         </div>
@@ -205,6 +255,52 @@ export default function PublicBookingForm({
             </select>
           </div>
         </div>
+
+        {formData.collectionMode === "HOME_COLLECTION" && (
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 space-y-4">
+            <div>
+              <h3 className="font-bold text-emerald-950">Pay by UPI</h3>
+              <p className="text-sm text-emerald-800">
+                Scan the QR, complete payment, then enter your transaction ID.
+              </p>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-[160px_1fr]">
+              <div className="h-40 w-40 rounded-lg bg-white border border-emerald-200 flex items-center justify-center overflow-hidden">
+                {lab.upiQrCode ? (
+                  <img src={lab.upiQrCode} alt={`${lab.name} UPI QR`} className="h-full w-full object-contain p-2" />
+                ) : (
+                  <span className="px-4 text-center text-xs font-bold text-slate-400">QR not configured</span>
+                )}
+              </div>
+              <div className="space-y-3">
+                <div className="rounded-lg bg-white border border-emerald-100 p-3">
+                  <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Amount</p>
+                  <p className="text-2xl font-black text-slate-900">Rs. {totalAmount}</p>
+                  {lab.upiId && <p className="text-sm font-medium text-slate-600 mt-1">UPI ID: {lab.upiId}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Transaction ID / UTR</label>
+                  <input
+                    required
+                    type="text"
+                    className="w-full border p-2 rounded bg-white"
+                    value={formData.transactionId}
+                    onChange={(e) => setFormData({ ...formData, transactionId: e.target.value })}
+                  />
+                </div>
+                <a
+                  href={whatsappReceiptUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex w-full items-center justify-center rounded-lg border border-emerald-200 bg-white px-4 py-2 text-sm font-bold text-emerald-700 hover:bg-emerald-100"
+                >
+                  Having payment issue? Share receipt on WhatsApp
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
 
         <button
           type="submit"

@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { notFound } from "next/navigation";
 import TestCatalogClient from "@/components/portal/TestCatalogClient";
+import { resolvePublicLabId } from "@/lib/public-lab";
 
 const prisma = new PrismaClient();
 
@@ -13,14 +14,18 @@ export default async function PublicBookingPage({
   params: { portalSlug: string };
 }) {
   // 1. Fetch Lab Details
+  const labId = await resolvePublicLabId(params.portalSlug);
+  if (!labId) notFound();
   const lab = await prisma.lab.findUnique({
-    where: { portalSlug: params.portalSlug, isActive: true },
+    where: { id: labId },
     select: {
       id: true,
       name: true,
       logo: true,
       city: true,
       phone: true,
+      upiId: true,
+      upiQrCode: true,
     },
   });
 
@@ -33,17 +38,16 @@ export default async function PublicBookingPage({
     where: {
       labId: lab.id,
       isActive: true,
-      isPublic: true, // ONLY show tests marked for the public portal
     },
     select: {
       id: true,
       name: true,
       code: true,
       price: true,
-      tat: true,
+      tatHours: true,
       description: true,
-      preRequistes: true,
-      category: { select: { name: true } },
+      
+      TestCategory: { select: { name: true } },
     },
     orderBy: { name: "asc" },
   });
@@ -52,6 +56,8 @@ export default async function PublicBookingPage({
   const serializedTests = tests.map((t) => ({
     ...t,
     price: Number(t.price),
+    tat: t.tatHours,
+    category: t.TestCategory,
   }));
 
   return (

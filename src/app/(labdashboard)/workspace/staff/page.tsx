@@ -61,7 +61,7 @@ const staffSchema = z.object({
   email: z.string().email("Invalid email").optional(),
   phone: z.string().min(10, "Invalid phone"),
   password: z.string().optional(),
-  role: z.enum(["TECHNICIAN", "RECEPTIONIST", "DOCTOR", "LAB_MANAGER"]),
+  role: z.enum(["TECHNICIAN", "RECEPTIONIST", "DOCTOR", "LAB_MANAGER","PHLEBOTOMIST"]),
   position: z.string().min(2, "Position title required"),
   department: z.string().optional(),
   salary: z.coerce.number().min(0).optional(),
@@ -526,6 +526,7 @@ function AddStaffModal({
                   <SelectItem value="RECEPTIONIST">Receptionist</SelectItem>
                   <SelectItem value="LAB_MANAGER">Lab Manager</SelectItem>
                   <SelectItem value="DOCTOR">Doctor</SelectItem>
+                  <SelectItem value="PHLEBOTOMIST">Phlebotomist</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -661,6 +662,7 @@ function EditStaffModal({
                   <SelectItem value="RECEPTIONIST">Receptionist</SelectItem>
                   <SelectItem value="LAB_MANAGER">Lab Manager</SelectItem>
                   <SelectItem value="DOCTOR">Doctor</SelectItem>
+                  <SelectItem value="PHLEBOTOMIST">Phlebotomist</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -10,7 +10,6 @@ import {
   CheckCircle2,
   AlertCircle,
   Navigation,
-  BatteryMedium,
   Thermometer,
   Search,
   Filter,
@@ -31,27 +30,49 @@ const fetchLogisticsData = async () => {
 export default function LogisticsPage() {
   const [activeTab, setActiveTab] = useState<"DISPATCH" | "MAP">("DISPATCH");
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Task & Assignment States
   const [selectedTask, setSelectedTask] = useState<any | null>(null);
+  const [selectedRiderId, setSelectedRiderId] = useState("");
+  const [isAssigning, setIsAssigning] = useState(false);
 
-  // FILTER STATES
-  const [staffFilter, setStaffFilter] = useState<"ALL" | "AVAILABLE" | "BUSY">(
-    "ALL",
-  );
+  // Filter States
+  const [staffFilter, setStaffFilter] = useState<"ALL" | "AVAILABLE" | "BUSY">("ALL");
   const [showFilterMenu, setShowFilterMenu] = useState(false);
 
-  // FETCH REAL DATA
-  const { data, isLoading, error } = useQuery({
+  // Fetch Real Data
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["logistics"],
     queryFn: fetchLogisticsData,
     refetchInterval: 30000, // Auto-refresh every 30s since dispatch is time-sensitive
   });
 
-  const handleAssignTask = (e: React.FormEvent) => {
+  // Handle Modify Assignment Submission
+  const handleAssignTask = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success(
-      "Rider Assignment logic needs a PUT mutation linked to HomeCollectionTrip.",
-    );
-    setSelectedTask(null);
+    if (!selectedRiderId) return toast.error("Please select a staff member");
+
+    setIsAssigning(true);
+    const toastId = toast.loading("Reassigning trip...");
+
+    try {
+      const res = await fetch(`/api/workspace/trips/${selectedTask.tripId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phlebotomistId: selectedRiderId }),
+      });
+
+      if (!res.ok) throw new Error("Failed to reassign trip");
+
+      toast.success("Trip reassigned successfully!", { id: toastId });
+      setSelectedTask(null);
+      setSelectedRiderId("");
+      refetch(); // Reload the table instantly
+    } catch (error) {
+      toast.error("Error reassigning trip", { id: toastId });
+    } finally {
+      setIsAssigning(false);
+    }
   };
 
   if (isLoading) {
@@ -414,6 +435,8 @@ export default function LogisticsPage() {
                 </Label>
                 <select
                   required
+                  value={selectedRiderId}
+                  onChange={(e) => setSelectedRiderId(e.target.value)}
                   className="w-full bg-white border border-zinc-200 rounded-xl p-4 text-sm font-bold text-zinc-900 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm appearance-none cursor-pointer">
                   <option value="">-- Choose staff member --</option>
                   {fleet
@@ -440,13 +463,23 @@ export default function LogisticsPage() {
                   type="button"
                   variant="ghost"
                   className="h-12 rounded-xl px-6 w-full sm:w-auto"
-                  onClick={() => setSelectedTask(null)}>
+                  onClick={() => {
+                    setSelectedTask(null);
+                    setSelectedRiderId("");
+                  }}>
                   Cancel
                 </Button>
                 <Button
                   type="submit"
+                  disabled={isAssigning}
                   className="h-12 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-10 font-black shadow-xl shadow-indigo-200 transition-all w-full sm:w-auto">
-                  Confirm Dispatch <ArrowRight className="ml-2 h-4 w-4" />
+                  {isAssigning ? (
+                    <Loader2 className="w-5 h-5 animate-spin mx-auto" />
+                  ) : (
+                    <>
+                      Confirm Dispatch <ArrowRight className="ml-2 h-4 w-4" />
+                    </>
+                  )}
                 </Button>
               </div>
             </form>

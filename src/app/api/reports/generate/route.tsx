@@ -782,22 +782,409 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
       </Page>
     </Document>
   );
-};;;;
+};
+
+// ============================================================================
+// RADIOLOGY PDF DOCUMENT COMPONENT
+// ============================================================================
+const RadiologyPDFDocument = ({ payload }: { payload: any }) => {
+  const { patient, study, report, lab, config, qrCodeDataUrl } = payload;
+  const { branding, layout, header, footer } = config;
+
+  const pt = (mm: number) => (mm || 0) * 2.8346;
+  const pxToPt = (px: number) => (px || 0) * 0.75;
+
+  const mTop = pt(layout?.margins?.top ?? 10);
+  const mBottom = pt(layout?.margins?.bottom ?? 10);
+  const mLeft = pt(layout?.margins?.left ?? 10);
+  const mRight = pt(layout?.margins?.right ?? 10);
+
+  const headerHeight = header.show ? pxToPt(header.height || 120) : 0;
+  const footerHeight = footer.show ? pxToPt(footer.height || 80) : 0;
+  const qrSize = pxToPt(config.qrCode?.size || 60);
+
+  const pagePaddingTop = headerHeight + mTop + 15;
+  const pagePaddingBottom = footerHeight + mBottom + 30;
+
+  const primaryColor = branding.primaryColor || "#0f172a";
+  const secondaryColor = branding.secondaryColor || "#475569";
+
+  const styles = StyleSheet.create({
+    page: {
+      paddingTop: pagePaddingTop,
+      paddingBottom: pagePaddingBottom,
+      paddingLeft: mLeft,
+      paddingRight: mRight,
+      fontFamily: "Helvetica",
+      fontSize: branding.globalFontSize || 10,
+      color: "#1e293b",
+    },
+    pageBorder: {
+      position: "absolute",
+      top: layout?.border?.padding || 10,
+      bottom: layout?.border?.padding || 10,
+      left: layout?.border?.padding || 10,
+      right: layout?.border?.padding || 10,
+      borderWidth: layout?.border?.show ? layout?.border?.weight || 1 : 0,
+      borderColor: layout?.border?.color || "#cbd5e1",
+    },
+    headerZone: {
+      position: "absolute",
+      top: mTop,
+      left: mLeft,
+      right: mRight,
+      height: headerHeight,
+      borderBottomWidth: header.mode === "image" ? 0 : 2,
+      borderBottomColor: primaryColor,
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    footerZone: {
+      position: "absolute",
+      bottom: mBottom,
+      left: mLeft,
+      right: mRight,
+      height: footerHeight,
+    },
+    sectionTitle: {
+      fontSize: (branding.globalFontSize || 10) + 1,
+      fontWeight: "bold",
+      color: primaryColor,
+      textTransform: "uppercase",
+      borderBottomWidth: 1,
+      borderBottomColor: primaryColor,
+      paddingBottom: 3,
+      marginBottom: 8,
+    },
+    bodyText: {
+      fontSize: branding.globalFontSize || 10,
+      color: "#1e293b",
+      lineHeight: 1.6,
+    },
+    label: { color: "#64748b" },
+    value: { fontWeight: "bold", color: "#0f172a" },
+    patientBlock: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      borderBottomWidth: 1,
+      borderBottomColor: "#cbd5e1",
+      paddingBottom: 10,
+      marginBottom: 12,
+    },
+    patientCol: { flex: 1, flexDirection: "column", gap: 3 },
+  });
+
+  const RenderQR = () => {
+    if (!config.qrCode?.show || !qrCodeDataUrl) return null;
+    return (
+      <View style={{ alignItems: "center", width: qrSize, minHeight: qrSize + 15 }}>
+        <Image src={qrCodeDataUrl} style={{ width: qrSize - 5, height: qrSize - 5 }} />
+        {config.qrCode?.showPageNumber &&
+          config.qrCode?.pageNumberPosition === "below-qr" && (
+            <Text
+              style={{ fontSize: 8, color: "#64748b", marginTop: 2, textAlign: "center" }}
+              render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`}
+            />
+          )}
+      </View>
+    );
+  };
+
+  const verifiedDate = report?.verifiedAt
+    ? format(new Date(report.verifiedAt), "dd/MM/yyyy HH:mm")
+    : "Not Verified";
+  const reportDate = report?.updatedAt
+    ? format(new Date(report.updatedAt), "dd/MM/yyyy HH:mm")
+    : "-";
+
+  return (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        {layout?.border?.show && <View style={styles.pageBorder} fixed />}
+
+        {/* HEADER */}
+        {header.show && (
+          <View style={styles.headerZone} fixed>
+            {header.mode === "image" && header.fullImage ? (
+              <Image
+                src={header.fullImage}
+                style={{ width: "100%", height: "100%", objectFit: "contain", objectPosition: "left top" }}
+              />
+            ) : (
+              <View style={{ flex: 1, flexDirection: "row", alignItems: "center" }}>
+                {config.qrCode?.mode === "preset" && config.qrCode.position === "header-left" ? (
+                  <RenderQR />
+                ) : (
+                  <View style={{ width: qrSize }} />
+                )}
+                <View style={{ flex: 1, alignItems: "center" }}>
+                  {header.logoUrl && (
+                    <Image
+                      src={header.logoUrl}
+                      style={{ maxWidth: pxToPt(150), height: headerHeight - 20, objectFit: "contain", marginBottom: 4 }}
+                    />
+                  )}
+                  <Text style={{ fontSize: 20, fontWeight: "bold", color: primaryColor, textTransform: "uppercase" }}>
+                    {header.title || lab?.name}
+                  </Text>
+                  <Text style={{ fontSize: 10, color: secondaryColor, marginTop: 2 }}>
+                    {header.subTitle}
+                  </Text>
+                </View>
+                {config.qrCode?.mode === "preset" && config.qrCode.position === "header-right" ? (
+                  <RenderQR />
+                ) : (
+                  <View style={{ width: qrSize }} />
+                )}
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* REPORT TITLE */}
+        <Text
+          style={{
+            fontSize: (branding.globalFontSize || 10) + 4,
+            fontWeight: "bold",
+            textAlign: "center",
+            color: primaryColor,
+            marginBottom: 10,
+            textTransform: "uppercase",
+            letterSpacing: 1,
+          }}
+        >
+          Radiology Report
+        </Text>
+
+        {/* PATIENT INFO BLOCK */}
+        <View style={styles.patientBlock}>
+          <View style={styles.patientCol}>
+            <Text><Text style={styles.label}>Patient Name: </Text><Text style={styles.value}>{patient?.name || "-"}</Text></Text>
+            <Text><Text style={styles.label}>Patient ID: </Text><Text style={styles.value}>{patient?.patientId || "-"}</Text></Text>
+            <Text><Text style={styles.label}>Age / Sex: </Text><Text style={styles.value}>{patient?.age ? `${patient.age} ${patient.ageUnit || "Yrs"}` : "-"} / {patient?.gender || "-"}</Text></Text>
+          </View>
+          <View style={styles.patientCol}>
+            <Text><Text style={styles.label}>Accession No: </Text><Text style={styles.value}>{study?.accessionNumber || "-"}</Text></Text>
+            <Text><Text style={styles.label}>Scan: </Text><Text style={styles.value}>{study?.scanName || "-"}</Text></Text>
+            <Text><Text style={styles.label}>Modality: </Text><Text style={styles.value}>{study?.modality?.type || "-"}</Text></Text>
+          </View>
+          <View style={styles.patientCol}>
+            <Text><Text style={styles.label}>Referring Doctor: </Text><Text style={styles.value}>{study?.referringDoctor || "Self"}</Text></Text>
+            <Text><Text style={styles.label}>Report Date: </Text><Text style={styles.value}>{reportDate}</Text></Text>
+            <Text><Text style={styles.label}>Status: </Text><Text style={styles.value}>{report?.status || "-"}</Text></Text>
+          </View>
+        </View>
+
+        {/* CLINICAL HISTORY */}
+        {study?.clinicalHistory && (
+          <View style={{ marginBottom: 12 }}>
+            <Text style={styles.sectionTitle}>Clinical History</Text>
+            <Text style={styles.bodyText}>{study.clinicalHistory}</Text>
+          </View>
+        )}
+
+        {/* FINDINGS */}
+        <View style={{ marginBottom: 12 }}>
+          <Text style={styles.sectionTitle}>Findings</Text>
+          <Text style={styles.bodyText}>{report?.findings || "No findings recorded."}</Text>
+        </View>
+
+        {/* IMPRESSION */}
+        <View style={{ marginBottom: 12 }}>
+          <Text style={styles.sectionTitle}>Impression</Text>
+          <Text style={styles.bodyText}>{report?.impression || "No impression recorded."}</Text>
+        </View>
+
+        {/* ADDENDUM (if any) */}
+        {report?.addendum && (
+          <View style={{ marginBottom: 12, padding: 8, backgroundColor: "#fffbeb", borderLeftWidth: 3, borderLeftColor: "#f59e0b" }}>
+            <Text style={{ ...styles.sectionTitle, color: "#b45309" }}>Addendum</Text>
+            <Text style={styles.bodyText}>{report.addendum}</Text>
+          </View>
+        )}
+
+        {/* VERIFICATION */}
+        <View style={{ marginTop: 8 }}>
+          <Text style={{ fontSize: 8, color: "#94a3b8", textAlign: "center" }}>
+            Report verified on: {verifiedDate} | Accession: {study?.accessionNumber}
+          </Text>
+        </View>
+
+        <Text
+          style={{
+            textAlign: "center",
+            fontSize: 8,
+            color: "#cbd5e1",
+            marginTop: 16,
+            textTransform: "uppercase",
+            letterSpacing: 2,
+          }}
+        >
+          *** End of Radiology Report ***
+        </Text>
+
+        {/* FOOTER */}
+        {footer.show && (
+          <View style={styles.footerZone} fixed>
+            {footer.mode === "image" && footer.fullImage ? (
+              <Image
+                src={footer.fullImage}
+                style={{ width: "100%", height: "100%", objectFit: "contain", objectPosition: "center bottom" }}
+              />
+            ) : (
+              <View style={{ paddingTop: 10, paddingHorizontal: 15 }}>
+                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end" }}>
+                  <View style={{ width: qrSize }} />
+                  <View style={{ flexDirection: "row", gap: 30, flex: 1, justifyContent: "center" }}>
+                    {footer.signatures?.map(
+                      (sig: any, idx: number) =>
+                        sig.show && (
+                          <View key={idx} style={{ alignItems: "center", width: pxToPt(sig.width || 120) }}>
+                            {sig.imageUrl ? (
+                              <Image src={sig.imageUrl} style={{ height: pxToPt(35), objectFit: "contain", marginBottom: 2 }} />
+                            ) : (
+                              <View style={{ height: pxToPt(35) }} />
+                            )}
+                            <Text style={{ fontSize: 9, fontWeight: "bold", color: "#0f172a" }}>{sig.name}</Text>
+                            <Text style={{ fontSize: 7, color: "#64748b" }}>{sig.qualifications}</Text>
+                            <Text style={{ fontSize: 7, fontWeight: "bold", marginTop: 1 }}>{sig.title}</Text>
+                          </View>
+                        ),
+                    )}
+                  </View>
+                  <View style={{ width: qrSize }} />
+                </View>
+                <Text style={{ fontSize: 8, textAlign: "center", color: "#94a3b8", marginTop: 10 }}>
+                  {footer.text}
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* PAGE NUMBERS */}
+        {config.qrCode?.showPageNumber &&
+          config.qrCode?.pageNumberPosition === "bottom-center" && (
+            <Text
+              fixed
+              style={{
+                position: "absolute",
+                bottom: 10,
+                left: 0,
+                right: 0,
+                textAlign: "center",
+                fontSize: 8,
+                color: "#94a3b8",
+              }}
+              render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`}
+            />
+          )}
+      </Page>
+    </Document>
+  );
+};
 
 // ============================================================================
 // MAIN API HANDLER
 // ============================================================================
 export async function POST(req: NextRequest) {
+   
   try {
     const payload = await req.json();
+    console.log("🔥 REPORT GENERATE API HIT");
+console.log("📦 FULL PAYLOAD:", JSON.stringify(payload, null, 2));
+console.log("🎯 ACTION:", payload.action);
+console.log("🆔 reportId:", payload.reportId);
+console.log("🧾 invoiceId:", payload.invoiceId);
+console.log("👤 patientId:", payload.patientId);
+console.log("🧪 testId:", payload.testId);
     let finalPayload = payload;
+
+    // -------------------------------------------------------------------------
+    // RADIOLOGY DOWNLOAD: Fetch RadiologyStudy + RadiologyReport and render PDF
+    // -------------------------------------------------------------------------
+    if (payload.action === "radiology_download") {
+      const studyId = payload.studyId;
+      if (!studyId) {
+        return NextResponse.json({ error: "studyId is required" }, { status: 400 });
+      }
+
+      const study = await prisma.radiologyStudy.findUnique({
+        where: { id: studyId },
+        include: {
+          patient: true,
+          report: true,
+          modality: true,
+        },
+      });
+
+      if (!study) {
+        return NextResponse.json(
+          { error: "Radiology study not found." },
+          { status: 404 },
+        );
+      }
+
+      if (!study.report) {
+        return NextResponse.json(
+          { error: "No report has been written for this study yet." },
+          { status: 404 },
+        );
+      }
+
+      // Fetch lab config (reportTemplates) for branding / header / footer
+      const lab = await prisma.lab.findUnique({
+        where: { id: study.labId },
+        include: { reportTemplates: true },
+      });
+
+      const qrCodeDataUrl = await QRCode.toDataURL(
+        payload.verificationUrl || "https://patholab.cloud/verify",
+        { margin: 0, color: { dark: "#0f172a", light: "#ffffff" } },
+      );
+
+      const radiologyPayload = {
+        patient: study.patient,
+        study: {
+          id: study.id,
+          accessionNumber: study.accessionNumber,
+          scanName: study.scanName,
+          clinicalHistory: study.clinicalHistory,
+          referringDoctor: study.referringDoctor,
+          modality: study.modality,
+        },
+        report: study.report,
+        lab,
+        config: getSafeConfig(lab?.reportTemplates?.[0]?.config),
+        qrCodeDataUrl,
+      };
+
+      const radiologyStream = await renderToStream(
+        <RadiologyPDFDocument payload={radiologyPayload} />,
+      );
+
+      const safePatientName = (study.patient?.name || "Patient")
+        .replace(/[^a-zA-Z0-9]/g, "_")
+        .toUpperCase();
+
+      return new NextResponse(radiologyStream as any, {
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `attachment; filename="Radiology_Report_${safePatientName}.pdf"`,
+        },
+      });
+    }
 
     // --- SECURE PUBLIC & INTERNAL DOWNLOAD INTERCEPT ---
     if (
       payload.action === "public_download" ||
       payload.action === "generate_invoice_report"
     ) {
-      const id = payload.reportId || payload.invoiceId || payload.patientId;
+      const id =
+  payload.testId ||
+  payload.reportId ||
+  payload.invoiceId ||
+  payload.patientId;
 
       const includeQuery = {
         lab: { include: { reportTemplates: true } },

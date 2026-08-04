@@ -229,9 +229,16 @@ model Lab {
   createdAt               DateTime       @default(now())
   updatedAt               DateTime       @updatedAt
   deletedAt               DateTime?
+<<<<<<< HEAD
   
     upiQrCode   String?   // URL of the uploaded QR code image
     
+=======
+
+  
+  upiQrCode   String?   // URL of the uploaded QR code image
+
+>>>>>>> Home_collection_Moduel_MS
   ownerId               String                  @unique
   owner                 User                    @relation("LabOwner", fields: [ownerId], references: [id])
   wallet                LabWallet?
@@ -291,6 +298,7 @@ model Branch {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   deletedAt    DateTime?
+  activeModules String[] @default([])
 
   serviceAreas          ServiceArea[]
   staff                 LabStaff[]
@@ -775,7 +783,11 @@ enum AppointmentStatus {
   SAMPLE_COLLECTED @map("DEPRECATED_SAMPLE_COLLECTED")
   HANDED_OVER      @map("DEPRECATED_HANDED_OVER")
 
+<<<<<<< HEAD
     // Your active pipeline statuses
+=======
+  // Your active pipeline statuses
+>>>>>>> Home_collection_Moduel_MS
   
   RECEIVED_AT_LAB
   RESULT_ENTERED

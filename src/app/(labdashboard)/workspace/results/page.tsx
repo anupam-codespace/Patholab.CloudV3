@@ -163,6 +163,50 @@ export default function ResultEntryPage() {
     });
   };
 
+  const handleDownloadReport = async () => {
+    if (!selectedInvoice) return;
+
+    try {
+      const response = await fetch("/api/reports/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action: "generate_invoice_report",
+          invoiceId: selectedInvoice.invoiceId,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+
+        throw new Error(errorData?.error || "Failed to generate report");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `Clinical_Report_${selectedInvoice.invoiceNumber}.pdf`;
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Final report downloaded successfully!");
+    } catch (error) {
+      console.error("Report download error:", error);
+
+      toast.error(
+        error instanceof Error ? error.message : "Failed to download report",
+      );
+    }
+  };
+
   // --- SMART CLINICAL EVALUATION ---
   const evaluateResult = (
     val: string,
@@ -264,7 +308,8 @@ export default function ResultEntryPage() {
                   activeTab === tab.id
                     ? "bg-white text-indigo-600 shadow-sm"
                     : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
-                }`}>
+                }`}
+              >
                 <Icon
                   className={`w-4 h-4 ${activeTab === tab.id ? "text-indigo-500" : "text-slate-400"}`}
                 />
@@ -280,7 +325,8 @@ export default function ResultEntryPage() {
         {/* LEFT PANE: WORKLIST QUEUE                                 */}
         {/* ========================================================= */}
         <Card
-          className={`w-full lg:w-[380px] shrink-0 flex flex-col border-slate-200 shadow-sm overflow-hidden bg-white ${selectedInvoice ? "hidden lg:flex" : "flex"}`}>
+          className={`w-full lg:w-[380px] shrink-0 flex flex-col border-slate-200 shadow-sm overflow-hidden bg-white ${selectedInvoice ? "hidden lg:flex" : "flex"}`}
+        >
           <div className="p-4 border-b border-slate-100 bg-slate-50/80">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
@@ -320,10 +366,12 @@ export default function ResultEntryPage() {
                     selectedInvoice?.invoiceId === inv.invoiceId
                       ? "bg-indigo-50 border-indigo-200 shadow-sm ring-1 ring-indigo-500/20"
                       : "bg-white border-slate-200 hover:border-indigo-300 hover:shadow-md"
-                  }`}>
+                  }`}
+                >
                   <div className="flex justify-between items-start mb-2">
                     <span
-                      className={`font-bold text-sm truncate pr-2 ${selectedInvoice?.invoiceId === inv.invoiceId ? "text-indigo-900" : "text-slate-900 group-hover:text-indigo-700"}`}>
+                      className={`font-bold text-sm truncate pr-2 ${selectedInvoice?.invoiceId === inv.invoiceId ? "text-indigo-900" : "text-slate-900 group-hover:text-indigo-700"}`}
+                    >
                       {inv.patient.name}
                     </span>
                     <span className="text-[10px] text-slate-500 font-bold bg-slate-100 px-2 py-1 rounded-md shrink-0 border border-slate-200">
@@ -344,7 +392,8 @@ export default function ResultEntryPage() {
                       {inv.tests.slice(0, 3).map((t, i) => (
                         <Badge
                           key={i}
-                          className="bg-slate-800 border-white text-[9px] px-1.5 py-0">
+                          className="bg-slate-800 border-white text-[9px] px-1.5 py-0"
+                        >
                           {t.testName.substring(0, 3).toUpperCase()}
                         </Badge>
                       ))}
@@ -368,7 +417,8 @@ export default function ResultEntryPage() {
         {/* RIGHT PANE: DATA ENTRY WORKSTATION                        */}
         {/* ========================================================= */}
         <Card
-          className={`w-full flex-1 flex-col border-slate-200 shadow-sm overflow-hidden bg-slate-50 ${!selectedInvoice ? "hidden lg:flex" : "flex"}`}>
+          className={`w-full flex-1 flex-col border-slate-200 shadow-sm overflow-hidden bg-slate-50 ${!selectedInvoice ? "hidden lg:flex" : "flex"}`}
+        >
           {!selectedInvoice ? (
             <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-8 bg-white/50">
               <div className="w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center mb-6 shadow-inner border border-indigo-100/50">
@@ -391,7 +441,8 @@ export default function ResultEntryPage() {
                 {/* Mobile Back Button */}
                 <button
                   onClick={() => setSelectedInvoice(null)}
-                  className="lg:hidden mb-4 flex items-center text-sm font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg w-max">
+                  className="lg:hidden mb-4 flex items-center text-sm font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg w-max"
+                >
                   <ArrowLeft className="w-4 h-4 mr-1.5" /> Back to Queue
                 </button>
 
@@ -429,7 +480,8 @@ export default function ResultEntryPage() {
                         variant="outline"
                         onClick={handleIoTSync}
                         disabled={isSyncingIoT}
-                        className="h-10 border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 font-bold rounded-xl shadow-sm transition-all">
+                        className="h-10 border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 font-bold rounded-xl shadow-sm transition-all"
+                      >
                         {isSyncingIoT ? (
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         ) : (
@@ -449,7 +501,8 @@ export default function ResultEntryPage() {
                 {selectedInvoice.tests.map((test) => (
                   <div
                     key={test.id}
-                    className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2">
+                    className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2"
+                  >
                     {/* Test Title Strip */}
                     <div className="bg-slate-900 px-5 py-3.5 flex items-center justify-between">
                       <h3 className="font-bold text-white tracking-wide text-sm md:text-base flex items-center gap-2">
@@ -458,7 +511,8 @@ export default function ResultEntryPage() {
                       </h3>
                       <Badge
                         variant="outline"
-                        className={`border-slate-700 text-[10px] uppercase font-bold tracking-widest ${test.status === "COMPLETED" ? "text-emerald-400" : "text-slate-300"}`}>
+                        className={`border-slate-700 text-[10px] uppercase font-bold tracking-widest ${test.status === "COMPLETED" ? "text-emerald-400" : "text-slate-300"}`}
+                      >
                         {test.status}
                       </Badge>
                     </div>
@@ -488,7 +542,8 @@ export default function ResultEntryPage() {
                             return (
                               <tr
                                 key={param.id}
-                                className="hover:bg-slate-50/50 transition-colors group">
+                                className="hover:bg-slate-50/50 transition-colors group"
+                              >
                                 <td className="px-5 py-4 font-bold text-slate-800 flex items-center gap-2">
                                   {param.parameterName}
                                 </td>
@@ -610,7 +665,8 @@ export default function ResultEntryPage() {
                       variant="outline"
                       onClick={() => handleAction("SAVE_DRAFT")}
                       disabled={saveResultsMutation.isPending}
-                      className="h-12 rounded-xl font-bold text-slate-700 bg-white hover:bg-slate-50 border-slate-300 shadow-sm w-full sm:w-auto">
+                      className="h-12 rounded-xl font-bold text-slate-700 bg-white hover:bg-slate-50 border-slate-300 shadow-sm w-full sm:w-auto"
+                    >
                       <Save className="w-4 h-4 mr-2" /> Save Draft
                     </Button>
 
@@ -619,13 +675,15 @@ export default function ResultEntryPage() {
                         variant="outline"
                         onClick={() => handleAction("REQUEST_APPROVAL")}
                         disabled={saveResultsMutation.isPending}
-                        className="flex-1 sm:flex-none h-12 rounded-xl font-bold border-amber-200 text-amber-700 bg-amber-50 hover:bg-amber-100 shadow-sm">
+                        className="flex-1 sm:flex-none h-12 rounded-xl font-bold border-amber-200 text-amber-700 bg-amber-50 hover:bg-amber-100 shadow-sm"
+                      >
                         Send to Pathologist
                       </Button>
                       <Button
                         onClick={() => handleAction("APPROVE")}
                         disabled={saveResultsMutation.isPending}
-                        className="flex-1 sm:flex-none h-12 rounded-xl px-8 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-black shadow-lg shadow-emerald-500/30 transition-all hover:-translate-y-0.5 border-0">
+                        className="flex-1 sm:flex-none h-12 rounded-xl px-8 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-black shadow-lg shadow-emerald-500/30 transition-all hover:-translate-y-0.5 border-0"
+                      >
                         {saveResultsMutation.isPending ? (
                           <Loader2 className="w-4 h-4 animate-spin mr-2" />
                         ) : (
@@ -637,8 +695,12 @@ export default function ResultEntryPage() {
                   </>
                 ) : (
                   <div className="flex justify-end w-full">
-                    <Button className="h-12 rounded-xl px-8 bg-indigo-600 hover:bg-indigo-700 text-white font-black shadow-md border-0">
-                      <Printer className="w-4 h-4 mr-2" /> Print Final Report
+                    <Button
+                      onClick={handleDownloadReport}
+                      className="h-12 rounded-xl px-8 bg-indigo-600 hover:bg-indigo-700 text-white font-black shadow-md border-0"
+                    >
+                      <Printer className="w-4 h-4 mr-2" />
+                      Download Final Report
                     </Button>
                   </div>
                 )}

@@ -51,6 +51,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import HomeVisitFinder from "../public/HomeVisitFinder";
 // import BookDemoModal from "./BookDemoModal"; // Assumed existing component
 
 // --- UTILS ---
@@ -256,6 +257,24 @@ export default function LandingClient() {
             </div>
           </div>
         </section>
+
+          {/* 3. INSERT THE NEW FINDER HERE */}
+          <section id="book-visit" className="py-24 bg-gradient-to-b from-slate-50 to-white border-y border-stone-200/60 relative overflow-hidden">
+            {/* Ambient background blur */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-[120px] pointer-events-none" />
+
+            <div className="max-w-5xl mx-auto px-6 relative z-10">
+              <div className="text-center max-w-2xl mx-auto mb-12">
+                <h2 className="text-3xl md:text-5xl font-black text-stone-900 tracking-tight mb-4">
+                  Diagnostic Services, at Your Doorstep
+                </h2>
+                <p className="text-stone-500 text-lg font-medium">
+                  Find local lab service providers in your area, book visits, or track your active collection requests in real time.
+                </p>
+              </div>
+              <HomeVisitFinder />
+            </div>
+          </section>
 
         <div id="tour"></div>
 

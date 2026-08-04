@@ -62,31 +62,72 @@ export interface Parameter {
   reagents?: Reagent[];
 }
 
+interface PaginationData {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+interface ParametersResponse {
+  parameters: Parameter[];
+  pagination: PaginationData;
+}
+
 // 1. Fetching Function hitting the secure API Route
-const fetchParameters = async (): Promise<Parameter[]> => {
-  const res = await fetch("/api/workspace/parameters");
-  if (!res.ok) throw new Error("Failed to fetch parameters");
-  const data = await res.json();
-  return data.parameters || [];
+const fetchParameters = async (page: number): Promise<ParametersResponse> => {
+  const res = await fetch(`/api/workspace/parameters?page=${page}&limit=20`);
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch parameters");
+  }
+
+  return res.json();
 };
 
 export default function ParametersTab() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Dialog & Edit State
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingParam, setEditingParam] = useState<Parameter | null>(null);
 
   // --- FETCH DATA ---
-  const {
-    data: parameters = [],
-    isLoading,
-    isError,
-  } = useQuery<Parameter[]>({
-    queryKey: ["parameters"], // ✅ FIX: This now perfectly matches the form's invalidation key!
-    queryFn: fetchParameters,
-  });
+  const { data, isLoading, isError, isFetching } = useQuery<ParametersResponse>(
+    {
+      queryKey: ["parameters", currentPage],
+
+      queryFn: () => fetchParameters(currentPage),
+
+      placeholderData: (previousData) => previousData,
+    },
+  );
+
+  const parameters = data?.parameters ?? [];
+
+  // Deduplicate: If a local override exists, hide the global master
+  const uniqueParameters = parameters.reduce(
+    (acc: Parameter[], curr: Parameter) => {
+      const existingIndex = acc.findIndex((p) => p.code === curr.code);
+
+      if (existingIndex !== -1) {
+        // If current is local and existing is global, replace global with local
+        if (!curr.isGlobal && acc[existingIndex].isGlobal) {
+          acc[existingIndex] = curr;
+        }
+      } else {
+        acc.push(curr);
+      }
+      return acc;
+    },
+    [],
+  );
+
+  const pagination = data?.pagination;
 
   // --- MUTATIONS ---
   const deleteMutation = useMutation({
@@ -128,7 +169,7 @@ export default function ParametersTab() {
     setIsDialogOpen(true);
   }
 
-  const filteredParams = parameters.filter(
+  const filteredParams = uniqueParameters.filter(
     (p) =>
       p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.code.toLowerCase().includes(searchTerm.toLowerCase()),
@@ -154,10 +195,12 @@ export default function ParametersTab() {
           onOpenChange={(open) => {
             setIsDialogOpen(open);
             if (!open) setEditingParam(null);
-          }}>
+          }}
+        >
           <Button
             onClick={handleAddNew}
-            className="bg-blue-600 hover:bg-blue-700 shadow-sm shrink-0 w-full sm:w-auto">
+            className="bg-blue-600 hover:bg-blue-700 shadow-sm shrink-0 w-full sm:w-auto"
+          >
             <Plus className="mr-2 h-4 w-4" /> Create Custom Parameter
           </Button>
 
@@ -224,7 +267,8 @@ export default function ParametersTab() {
                 <TableRow>
                   <TableCell
                     colSpan={8}
-                    className="text-center h-32 text-slate-500 animate-pulse">
+                    className="text-center h-32 text-slate-500 animate-pulse"
+                  >
                     Loading parameter dictionary...
                   </TableCell>
                 </TableRow>
@@ -232,7 +276,8 @@ export default function ParametersTab() {
                 <TableRow>
                   <TableCell
                     colSpan={8}
-                    className="text-center h-32 text-red-500">
+                    className="text-center h-32 text-red-500"
+                  >
                     <div className="flex flex-col items-center justify-center gap-2">
                       <AlertCircle className="h-6 w-6 text-red-400" />
                       <span className="font-medium">
@@ -245,7 +290,8 @@ export default function ParametersTab() {
                 <TableRow>
                   <TableCell
                     colSpan={8}
-                    className="text-center h-32 text-slate-500">
+                    className="text-center h-32 text-slate-500"
+                  >
                     No parameters found matching your search.
                   </TableCell>
                 </TableRow>
@@ -253,7 +299,8 @@ export default function ParametersTab() {
                 filteredParams.map((param) => (
                   <TableRow
                     key={param.id}
-                    className={`hover:bg-slate-50/80 transition-colors ${param.isGlobal ? "bg-slate-50/30" : ""}`}>
+                    className={`hover:bg-slate-50/80 transition-colors ${param.isGlobal ? "bg-slate-50/30" : ""}`}
+                  >
                     <TableCell>
                       <span className="font-mono text-xs font-semibold bg-slate-100 px-2 py-1 rounded text-slate-600 border border-slate-200">
                         {param.code}
@@ -263,27 +310,18 @@ export default function ParametersTab() {
                     <TableCell>
                       <div className="flex flex-col">
                         <span className="text-slate-900 font-medium">
-                          {param.name}
+                          {/* If it's a local fork, show the parent's name, otherwise show current name */}
+                          {param.forkedFrom
+                            ? param.forkedFrom.name
+                            : param.name}
                         </span>
                         <div className="flex items-center gap-2 mt-0.5">
-                          {param.unit ? (
-                            <span className="text-[11px] text-blue-600 font-semibold">
-                              {param.unit}
-                            </span>
-                          ) : (
-                            <span className="text-[11px] text-slate-400 italic">
-                              No Unit
+                          {/* ... unit logic ... */}
+                          {param.forkedFrom && (
+                            <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-1 rounded">
+                              Local Override
                             </span>
                           )}
-                          {param.printName &&
-                            param.printName !== param.name && (
-                              <>
-                                <span className="text-slate-300">•</span>
-                                <span className="text-[10px] text-slate-500">
-                                  Print: {param.printName}
-                                </span>
-                              </>
-                            )}
                         </div>
                       </div>
                     </TableCell>
@@ -334,11 +372,13 @@ export default function ParametersTab() {
                           {param.reagents.map((r) => (
                             <div
                               key={r.id}
-                              className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-[10px] font-medium bg-emerald-50 text-emerald-800 border border-emerald-200">
+                              className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-[10px] font-medium bg-emerald-50 text-emerald-800 border border-emerald-200"
+                            >
                               <Beaker className="w-3 h-3 text-emerald-600 shrink-0" />
                               <span
                                 className="truncate"
-                                title={r.inventoryItem?.name}>
+                                title={r.inventoryItem?.name}
+                              >
                                 {r.inventoryItem?.name}
                               </span>
                               <span className="font-bold border-l border-emerald-200 pl-1.5 ml-auto">
@@ -371,7 +411,8 @@ export default function ParametersTab() {
                           className="text-slate-400 hover:text-blue-600 hover:bg-blue-50 h-8 w-8 transition-colors"
                           title={
                             param.isGlobal ? "View Details" : "Edit Parameter"
-                          }>
+                          }
+                        >
                           <Pencil className="h-4 w-4" />
                         </Button>
 
@@ -390,7 +431,8 @@ export default function ParametersTab() {
                             param.isGlobal
                               ? "Cannot delete global master parameters"
                               : "Delete Parameter"
-                          }>
+                          }
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -401,6 +443,69 @@ export default function ParametersTab() {
             </TableBody>
           </Table>
         </div>
+
+        {pagination && pagination.total > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-slate-200 bg-slate-50/50">
+            <p className="text-sm text-slate-500">
+              Showing{" "}
+              <span className="font-medium text-slate-700">
+                {(pagination.page - 1) * pagination.limit + 1}
+              </span>
+              {" - "}
+              <span className="font-medium text-slate-700">
+                {Math.min(pagination.page * pagination.limit, pagination.total)}
+              </span>
+              {" of "}
+              <span className="font-medium text-slate-700">
+                {pagination.total}
+              </span>
+              {" parameters"}
+            </p>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!pagination.hasPreviousPage || isFetching}
+                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              >
+                Previous
+              </Button>
+
+              <div className="flex items-center gap-1">
+                {Array.from(
+                  { length: pagination.totalPages },
+                  (_, index) => index + 1,
+                ).map((pageNumber) => (
+                  <Button
+                    key={pageNumber}
+                    // Keep it outline by default, we will style the active state manually
+                    variant="outline"
+                    size="sm"
+                    className={`h-8 min-w-8 px-2 font-bold transition-all ${
+                      currentPage === pageNumber
+                        ? "bg-blue-600 text-white border-blue-600 hover:bg-blue-700 hover:text-white" // Active page colors
+                        : "text-slate-600 bg-white hover:bg-slate-50" // Inactive page colors
+                    }`}
+                    disabled={isFetching}
+                    onClick={() => setCurrentPage(pageNumber)}
+                  >
+                    {pageNumber}
+                  </Button>
+                ))}
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!pagination.hasNextPage || isFetching}
+                onClick={() => setCurrentPage((prev) => prev + 1)}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

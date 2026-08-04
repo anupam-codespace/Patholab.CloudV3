@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import {
@@ -21,6 +21,7 @@ import {
   FileText,
   ChevronLeft,
   ChevronRight,
+  Loader2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -45,6 +46,7 @@ const formatCurrency = (amount: number) =>
 
 export default function WalletDashboard() {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   // --- State ---
   const [startDate, setStartDate] = useState("");
@@ -53,8 +55,29 @@ export default function WalletDashboard() {
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTx, setSelectedTx] = useState<any | null>(null);
+  const [demoLoading, setDemoLoading] = useState(false);
   const effectiveStartDate = startDate && endDate ? startDate : "";
   const effectiveEndDate = startDate && endDate ? endDate : "";
+
+  const handleAddDemoCredits = async () => {
+    setDemoLoading(true);
+    try {
+      const res = await fetch("/api/workspace/wallet/add-demo-credits", {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(data.message);
+        void queryClient.invalidateQueries({ queryKey: ["lab-wallet-history"] });
+      } else {
+        toast.error(data.error || "Failed to add demo credits");
+      }
+    } catch (err) {
+      toast.error("Failed to add demo credits");
+    } finally {
+      setDemoLoading(false);
+    }
+  };
 
   // --- Optimized Fetch with Params ---
   const { data, isLoading } = useQuery({
@@ -132,13 +155,29 @@ export default function WalletDashboard() {
             Manage your pay-as-you-go clinical credits and invoices.
           </p>
         </div>
-        <Button
-          size="lg"
-          onClick={() => router.push("/workspace/wallet/recharge")}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200 rounded-xl"
-        >
-          <Plus className="h-5 w-5 mr-2" /> Recharge Wallet
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button
+            size="lg"
+            variant="outline"
+            onClick={handleAddDemoCredits}
+            disabled={demoLoading}
+            className="border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100/80 rounded-xl font-bold h-11 text-sm md:h-12 md:text-base"
+          >
+            {demoLoading ? (
+              <Loader2 className="h-5 w-5 animate-spin mr-2" />
+            ) : (
+              <Plus className="h-5 w-5 mr-2" />
+            )}
+            Add ₹10k Demo Credits
+          </Button>
+          <Button
+            size="lg"
+            onClick={() => router.push("/workspace/wallet/recharge")}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200 rounded-xl h-11 text-sm md:h-12 md:text-base"
+          >
+            <Plus className="h-5 w-5 mr-2" /> Recharge Wallet
+          </Button>
+        </div>
       </div>
 
       {/* KPI METRICS (Now powered by Server Math) */}
