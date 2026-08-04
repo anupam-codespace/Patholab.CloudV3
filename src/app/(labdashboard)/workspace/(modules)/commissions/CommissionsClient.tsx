@@ -58,7 +58,6 @@ export default function CommissionsClient() {
   const [selectedEntity, setSelectedEntity] = useState<any>(null);
   const [transactionRef, setTransactionRef] = useState("");
 
-  /** 🔒 RULE 1: PRESERVE ALL LOGIC */
   const { data, isLoading } = useQuery({
     queryKey: ["commissions"],
     queryFn: async () => await getCommissionDashboardData(),
@@ -84,12 +83,15 @@ export default function CommissionsClient() {
 
   const handleSettleSubmit = () => {
     if (!selectedEntity) return;
-    const pendingIds = selectedEntity.recentCommissions
+    
+    // SAFE FALLBACK: Prevent crash if recentCommissions is undefined
+    const pendingIds = (selectedEntity.recentCommissions || [])
       .filter((c: any) => c.status === "PENDING")
       .map((c: any) => c.id);
 
     if (pendingIds.length === 0)
       return toast.error("No pending commissions to settle.");
+      
     settleMutation.mutate({
       ids: pendingIds,
       ref: transactionRef || "Cash Settlement",
@@ -105,25 +107,27 @@ export default function CommissionsClient() {
   const stats = useMemo(() => {
     const docs = data?.doctors || [];
     const ags = data?.agencies || [];
+    
+    // SAFE PARSING: Prevent string concatenation (e.g., "0" + "500" = "0500")
     const allPartners = [...docs, ...ags].map((p) => ({
       ...p,
-      totalGenerated: p.totalPaid + p.totalPending,
+      totalGenerated: (Number(p.totalPaid) || 0) + (Number(p.totalPending) || 0),
     }));
 
     const totalDocPending = docs.reduce(
-      (acc: number, d: any) => acc + d.totalPending,
+      (acc: number, d: any) => acc + (Number(d.totalPending) || 0),
       0,
     );
     const totalDocPaid = docs.reduce(
-      (acc: number, d: any) => acc + d.totalPaid,
+      (acc: number, d: any) => acc + (Number(d.totalPaid) || 0),
       0,
     );
     const totalAgPending = ags.reduce(
-      (acc: number, a: any) => acc + a.totalPending,
+      (acc: number, a: any) => acc + (Number(a.totalPending) || 0),
       0,
     );
     const totalAgPaid = ags.reduce(
-      (acc: number, a: any) => acc + a.totalPaid,
+      (acc: number, a: any) => acc + (Number(a.totalPaid) || 0),
       0,
     );
 
@@ -165,7 +169,6 @@ export default function CommissionsClient() {
     };
   }, [data]);
 
-  /** 🎨 RULE 2: REIMAGINED UI */
   return (
     <div className="min-h-screen bg-[#fafafa] dark:bg-slate-950 p-4 md:p-8 lg:p-12 font-sans selection:bg-indigo-100">
       {/* HEADER SECTION */}
@@ -289,10 +292,11 @@ export default function CommissionsClient() {
               {stats.topPerformers.map((partner, idx) => {
                 const totalPercent =
                   (partner.totalGenerated / stats.maxPerformerValue) * 100;
+                // SAFE PARSING INSIDE THE CHART
                 const paidPercent =
-                  (partner.totalPaid / partner.totalGenerated) * 100;
+                  (Number(partner.totalPaid) / partner.totalGenerated) * 100;
                 const pendingPercent =
-                  (partner.totalPending / partner.totalGenerated) * 100;
+                  (Number(partner.totalPending) / partner.totalGenerated) * 100;
 
                 return (
                   <div key={idx} className="group">
@@ -323,11 +327,11 @@ export default function CommissionsClient() {
                         <div
                           style={{ width: `${paidPercent}%` }}
                           className="bg-gradient-to-r from-emerald-500 to-emerald-400 h-full rounded-full"
-                          title={`Paid: ₹${partner.totalPaid}`}></div>
+                          title={`Paid: ₹${Number(partner.totalPaid)}`}></div>
                         <div
                           style={{ width: `${pendingPercent}%` }}
                           className="bg-gradient-to-r from-amber-500 to-amber-400 h-full rounded-full"
-                          title={`Pending: ₹${partner.totalPending}`}></div>
+                          title={`Pending: ₹${Number(partner.totalPending)}`}></div>
                       </div>
                     </div>
                   </div>
@@ -487,9 +491,12 @@ export default function CommissionsClient() {
                   </TableRow>
                 ) : (
                   filteredList.map((item: any) => {
-                    const totalGen = item.totalPending + item.totalPaid;
+                    // SAFE TABLE PARSING
+                    const pending = Number(item.totalPending) || 0;
+                    const paid = Number(item.totalPaid) || 0;
+                    const totalGen = pending + paid;
                     const progress =
-                      totalGen > 0 ? (item.totalPaid / totalGen) * 100 : 0;
+                      totalGen > 0 ? (paid / totalGen) * 100 : 0;
 
                     return (
                       <TableRow
@@ -512,7 +519,7 @@ export default function CommissionsClient() {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="font-black text-amber-600 text-lg tabular-nums leading-none mb-1">
-                            ₹{item.totalPending.toLocaleString()}
+                            ₹{pending.toLocaleString()}
                           </div>
                           {item.pendingCount > 0 && (
                             <span className="text-[9px] font-black text-amber-500 bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded uppercase tracking-tighter">
@@ -522,7 +529,7 @@ export default function CommissionsClient() {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="font-bold text-slate-700 dark:text-slate-300 mb-2 tabular-nums">
-                            ₹{item.totalPaid.toLocaleString()}
+                            ₹{paid.toLocaleString()}
                           </div>
                           <div className="w-24 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full ml-auto overflow-hidden shadow-inner">
                             <div
@@ -533,9 +540,9 @@ export default function CommissionsClient() {
                         <TableCell className="text-right px-8">
                           <Button
                             onClick={() => handleOpenSettle(item)}
-                            disabled={item.totalPending === 0}
-                            className={`h-11 px-6 rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95 ${item.totalPending > 0 ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200 dark:shadow-none" : "bg-slate-50 dark:bg-slate-800 text-slate-400"}`}>
-                            {item.totalPending > 0
+                            disabled={pending === 0}
+                            className={`h-11 px-6 rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95 ${pending > 0 ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200 dark:shadow-none" : "bg-slate-50 dark:bg-slate-800 text-slate-400"}`}>
+                            {pending > 0
                               ? "Authorize Payout"
                               : "Cleared"}
                             <ChevronRight className="w-4 h-4 ml-2" />
@@ -575,7 +582,7 @@ export default function CommissionsClient() {
                   Clearable Debt
                 </p>
                 <p className="text-4xl font-black text-amber-700 dark:text-amber-500 tracking-tighter tabular-nums">
-                  ₹{selectedEntity?.totalPending.toLocaleString()}
+                  ₹{Number(selectedEntity?.totalPending || 0).toLocaleString()}
                 </p>
               </div>
 
@@ -618,14 +625,14 @@ export default function CommissionsClient() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {selectedEntity?.recentCommissions
+                    {(selectedEntity?.recentCommissions || [])
                       .filter((c: any) => c.status === "PENDING")
                       .map((comm: any) => (
                         <TableRow
                           key={comm.id}
                           className="border-slate-100 dark:border-slate-800 bg-white/40 dark:bg-transparent">
                           <TableCell className="text-[11px] font-bold text-slate-400 tabular-nums px-6">
-                            {new Date(comm.test.createdAt).toLocaleDateString()}
+                            {new Date(comm.test?.createdAt).toLocaleDateString()}
                           </TableCell>
                           <TableCell className="py-4">
                             <div className="text-xs font-black text-slate-800 dark:text-slate-200 tracking-tight">
@@ -636,7 +643,7 @@ export default function CommissionsClient() {
                             </div>
                           </TableCell>
                           <TableCell className="text-right font-black text-sm text-amber-600 px-6 tabular-nums">
-                            ₹{comm.amount}
+                            ₹{Number(comm.amount || 0)}
                           </TableCell>
                         </TableRow>
                       ))}
@@ -656,7 +663,7 @@ export default function CommissionsClient() {
             <Button
               onClick={handleSettleSubmit}
               disabled={
-                settleMutation.isPending || selectedEntity?.totalPending === 0
+                settleMutation.isPending || Number(selectedEntity?.totalPending || 0) === 0
               }
               className="h-12 px-10 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-black shadow-lg shadow-emerald-200 dark:shadow-none transition-all active:scale-95">
               {settleMutation.isPending

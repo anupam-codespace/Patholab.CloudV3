@@ -149,6 +149,21 @@ enum OTPType {
 }
 
 // ==========================================
+// LEADS & MARKETING
+// ==========================================
+model Lead {
+  id          String   @id @default(uuid())
+  name        String
+  email       String?
+  phone       String
+  labName     String?
+  message     String?  @db.Text
+  status      String   @default("NEW") // e.g., NEW, CONTACTED, CONVERTED, REJECTED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ==========================================
 // INFRASTRUCTURE: MEDIA & EVENT BUS
 // ==========================================
 model DomainEvent {
@@ -214,7 +229,9 @@ model Lab {
   createdAt               DateTime       @default(now())
   updatedAt               DateTime       @updatedAt
   deletedAt               DateTime?
-
+  
+    upiQrCode   String?   // URL of the uploaded QR code image
+    
   ownerId               String                  @unique
   owner                 User                    @relation("LabOwner", fields: [ownerId], references: [id])
   wallet                LabWallet?
@@ -733,6 +750,10 @@ model Appointment {
   // Clinical Links
   tests   Test[]
   samples Sample[] // ✅ Link added so we can see what was collected during this visit
+
+   // e.g., "UPI", "CASH"
+  transactionId String?   // User's entered UTR number
+  receiptUrl    String?   // URL of the uploaded screenshot
 }
 
 enum BookingSource {
@@ -753,6 +774,11 @@ enum AppointmentStatus {
   RESCHEDULED
   SAMPLE_COLLECTED @map("DEPRECATED_SAMPLE_COLLECTED")
   HANDED_OVER      @map("DEPRECATED_HANDED_OVER")
+
+    // Your active pipeline statuses
+  
+  RECEIVED_AT_LAB
+  RESULT_ENTERED
 }
 
 model Test {
@@ -1296,6 +1322,9 @@ model Invoice {
   appointment Appointment?
 
   @@index([labId, status, createdAt])
+
+   // The ID of the doctor
+  doctorId  String? 
 }
 
 model InvoiceItem {

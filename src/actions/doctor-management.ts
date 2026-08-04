@@ -47,12 +47,13 @@ export async function getDoctors() {
   // ✅ Dynamically calculate the total lifetime commission and format custom rates
   return doctors.map(doc => ({
     ...doc,
-    totalCommission: doc.commissions.reduce((sum, c) => sum + c.amount, 0),
+    commissionRate: doc.commissionRate ? Number(doc.commissionRate) : null,
+    totalCommission: doc.commissions.reduce((sum, c) => sum + Number(c.amount), 0),
     // Map the custom commissions to exactly match what the frontend UI expects
     customTestCommissions: doc.customTestCommissions.map(cc => ({
       testTemplateId: cc.testTemplateId,
       testName: cc.testTemplate.name,
-      commissionRate: cc.commissionRate,
+      commissionRate: Number(cc.commissionRate),
       commissionType: cc.commissionType
     }))
   }));

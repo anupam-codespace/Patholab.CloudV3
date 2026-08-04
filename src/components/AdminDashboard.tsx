@@ -34,6 +34,10 @@ async function getDashboardMetrics() {
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
+  // Previous Month Boundaries
+  const startOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const endOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+
   // We run all count queries in parallel to ensure lightning-fast dashboard loads
   const [
     // 1. Tenant & Wallet Counts
@@ -156,8 +160,8 @@ async function getDashboardMetrics() {
   };
 }
 
-// --- 2. MINI STAT COMPONENT ---
-function MiniStat({
+// --- 2. ANALYTICS CARD COMPONENT ---
+function AnalyticsCard({
   title,
   value,
   icon: Icon,
@@ -168,20 +172,33 @@ function MiniStat({
   icon: any;
   colorClass: string;
 }) {
+  // Safely extract text color from background color class
+  const textColor = colorClass.replace("bg-", "text-");
+
   return (
-    <div className="flex items-center gap-3 p-3 bg-white border border-slate-100 rounded-lg shadow-sm">
-      <div className={`p-2 rounded-md ${colorClass} bg-opacity-10`}>
-        <Icon className={`h-4 w-4 ${colorClass.replace("bg-", "text-")}`} />
-      </div>
-      <div>
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider line-clamp-1">
-          {title}
-        </p>
-        <p className="text-lg font-bold text-slate-800 leading-none mt-0.5">
-          {new Intl.NumberFormat("en-IN").format(value)}
-        </p>
-      </div>
-    </div>
+    <Card className="relative overflow-hidden border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 bg-white group">
+      {/* Top color accent bar */}
+      <div className={`absolute top-0 left-0 right-0 h-1 ${colorClass}`} />
+      
+      <CardContent className="p-4 sm:p-5 flex flex-col justify-center h-full">
+        {/* Icon and Title placed side-by-side */}
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:bg-slate-100 transition-all duration-300">
+            <Icon className={`h-5 w-5 ${textColor}`} />
+          </div>
+          <p className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider line-clamp-1">
+            {title}
+          </p>
+        </div>
+        
+        {/* Value placed below them */}
+        <div>
+          <h4 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tighter">
+            {new Intl.NumberFormat("en-IN").format(value)}
+          </h4>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -283,49 +300,50 @@ export default async function SuperAdminDashboard() {
         </Card>
       </div>
 
-      {/* --- ROW 2: PLATFORM SCALE (Hyper Dense Grid) --- */}
+      
+     {/* --- ROW 2: PLATFORM SCALE (Card Grid) --- */}
       <div>
         <h3 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
           <Activity className="h-4 w-4 text-blue-500" /> Platform Medical Volume
         </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-          <MiniStat
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-7 gap-4">
+          <AnalyticsCard
             title="Patients"
             value={m.volume.totalPatients}
             icon={Users}
             colorClass="bg-blue-500"
           />
-          <MiniStat
+          <AnalyticsCard
             title="Tests Run"
             value={m.volume.totalTests}
             icon={Microscope}
             colorClass="bg-purple-500"
           />
-          <MiniStat
+          <AnalyticsCard
             title="Samples"
             value={m.volume.totalSamples}
             icon={TestTube}
             colorClass="bg-rose-500"
           />
-          <MiniStat
+          <AnalyticsCard
             title="Reports"
             value={m.volume.totalReports}
             icon={FileText}
             colorClass="bg-emerald-500"
           />
-          <MiniStat
+          <AnalyticsCard
             title="Doctors"
             value={m.network.totalDoctors}
             icon={Stethoscope}
             colorClass="bg-cyan-500"
           />
-          <MiniStat
+          <AnalyticsCard
             title="Agencies"
             value={m.network.totalAgencies}
             icon={Briefcase}
             colorClass="bg-amber-500"
           />
-          <MiniStat
+          <AnalyticsCard
             title="Analyzers"
             value={m.network.totalIoTAnalyzers}
             icon={Cpu}
@@ -334,44 +352,43 @@ export default async function SuperAdminDashboard() {
         </div>
       </div>
 
-      {/* --- ROW 3: TEST ENGINE CONFIGURATION (Hyper Dense Grid) --- */}
+      {/* --- ROW 3: TEST ENGINE CONFIGURATION (Card Grid) --- */}
       <div>
         <h3 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
-          <Layers className="h-4 w-4 text-indigo-500" /> Catalog Engine &
-          Parameters
+          <Layers className="h-4 w-4 text-indigo-500" /> Catalog Engine & Parameters
         </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-          <MiniStat
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          <AnalyticsCard
             title="Global Tests"
             value={m.engine.globalTests}
             icon={Globe}
             colorClass="bg-blue-600"
           />
-          <MiniStat
+          <AnalyticsCard
             title="Local Tests"
             value={m.engine.privateTests}
             icon={Lock}
             colorClass="bg-slate-600"
           />
-          <MiniStat
+          <AnalyticsCard
             title="Parameters"
             value={m.engine.totalParameters}
             icon={Activity}
             colorClass="bg-indigo-500"
           />
-          <MiniStat
+          <AnalyticsCard
             title="Sample Types"
             value={m.engine.sampleTypes}
             icon={Beaker}
             colorClass="bg-pink-500"
           />
-          <MiniStat
+          <AnalyticsCard
             title="Containers"
             value={m.engine.containerTypes}
             icon={TestTube}
             colorClass="bg-orange-500"
           />
-          <MiniStat
+          <AnalyticsCard
             title="Departments"
             value={m.engine.departments}
             icon={Building2}
@@ -379,6 +396,8 @@ export default async function SuperAdminDashboard() {
           />
         </div>
       </div>
+
+     
 
       {/* --- ROW 4: BOTTOM THREE COLUMNS --- */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

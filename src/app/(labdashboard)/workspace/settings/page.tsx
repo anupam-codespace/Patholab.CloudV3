@@ -35,6 +35,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 // List of App Modules for the Sidebar Toggle Screen
 const APP_MODULES = [
@@ -108,6 +109,8 @@ export default function ProfileSettingsPage() {
     accountNumber: "",
     ifscCode: "",
     accountHolder: "",
+    upiId: "",
+    upiQrCode: "",
     defaultDoctorCommission: 10,
     defaultAgencyCommission: 5,
     commissionType: "PERCENTAGE",
@@ -179,7 +182,6 @@ export default function ProfileSettingsPage() {
 
         setBranches(lab.branches || []);
 
-        // ✅ CRITICAL FIX: Load saved active modules from database
         if (lab.activeModules && Array.isArray(lab.activeModules)) {
           setActiveModules(lab.activeModules);
         }
@@ -238,7 +240,6 @@ export default function ProfileSettingsPage() {
     }
   };
 
-  // ✅ CRITICAL FIX: Save the App Modules to your DB
   const handleSaveModules = async () => {
     setSaving(true);
     try {
@@ -384,17 +385,13 @@ export default function ProfileSettingsPage() {
     }
   };
 
-  // ✅ Instantly updates the state, saves to the database, and forces the Auth hook to resync
   const toggleModule = async (moduleId: string) => {
-    // 1. Calculate the new array of modules
     const newModules = activeModules.includes(moduleId)
       ? activeModules.filter((id) => id !== moduleId)
       : [...activeModules, moduleId];
 
-    // 2. Immediately update the UI state so the switch flips instantly
     setActiveModules(newModules);
 
-    // 3. Fire the save request to the backend
     try {
       const res = await fetch("/api/workspace/settings/modules", {
         method: "PUT",
@@ -404,17 +401,13 @@ export default function ProfileSettingsPage() {
 
       if (res.ok) {
         toast.success("Sidebar updated!");
-
-        // ✅ CRITICAL FIX: Forces your `useAuth` hook to dump its cache and grab the new modules
         window.location.reload();
       } else {
         toast.error("Failed to save module state.");
-        // Revert the toggle if the server fails
         setActiveModules(activeModules);
       }
     } catch (error) {
       toast.error("Network error while saving.");
-      // Revert the toggle if there is a network crash
       setActiveModules(activeModules);
     }
   };
@@ -490,9 +483,9 @@ export default function ProfileSettingsPage() {
           </p>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex flex-col xl:flex-row gap-8 items-start">
           {/* === LEFT SIDEBAR NAVIGATION === */}
-          <div className="lg:w-64 shrink-0">
+          <div className="lg:w-72 xl:w-80 shrink-0">
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-3 sticky top-24">
               {["Personal", "Workspace"].map((groupName) => (
                 <div key={groupName} className="mb-6 last:mb-0">
@@ -511,7 +504,8 @@ export default function ProfileSettingsPage() {
                             isActive
                               ? "bg-emerald-50 text-emerald-700 shadow-sm"
                               : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                          }`}>
+                          }`}
+                        >
                           <Icon
                             className={`w-4 h-4 ${isActive ? "text-emerald-600" : "text-slate-400"}`}
                           />
@@ -528,6 +522,7 @@ export default function ProfileSettingsPage() {
           {/* === RIGHT CONTENT AREA === */}
           <div className="flex-1 min-w-0">
             <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 min-h-[600px]">
+              
               {/* === TAB: PROFILE === */}
               {activeTab === "profile" && (
                 <div className="p-6 sm:p-10 space-y-10">
@@ -611,7 +606,8 @@ export default function ProfileSettingsPage() {
                     <Button
                       onClick={handleSaveProfile}
                       disabled={saving}
-                      className="h-12 px-8 rounded-xl bg-slate-900 hover:bg-emerald-600 text-white font-bold transition-all shadow-md">
+                      className="h-12 px-8 rounded-xl bg-slate-900 hover:bg-emerald-600 text-white font-bold transition-all shadow-md"
+                    >
                       {saving ? (
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
                       ) : (
@@ -684,7 +680,8 @@ export default function ProfileSettingsPage() {
                           onClick={handlePasswordChange}
                           disabled={saving}
                           variant="outline"
-                          className="h-12 px-8 rounded-xl font-bold border-slate-300 text-slate-700 hover:bg-slate-100">
+                          className="h-12 px-8 rounded-xl font-bold border-slate-300 text-slate-700 hover:bg-slate-100"
+                        >
                           Update Password
                         </Button>
                       </div>
@@ -836,7 +833,8 @@ export default function ProfileSettingsPage() {
                       <div>
                         <label
                           htmlFor="syncBranch"
-                          className="text-sm font-bold text-emerald-900 cursor-pointer block">
+                          className="text-sm font-bold text-emerald-900 cursor-pointer block"
+                        >
                           Sync with Main Branch
                         </label>
                         <p className="text-xs text-emerald-700 mt-0.5 font-medium">
@@ -851,7 +849,8 @@ export default function ProfileSettingsPage() {
                     <Button
                       onClick={handleSaveLabSettings}
                       disabled={saving}
-                      className="h-12 px-8 rounded-xl bg-slate-900 hover:bg-emerald-600 text-white font-bold transition-all shadow-md">
+                      className="h-12 px-8 rounded-xl bg-slate-900 hover:bg-emerald-600 text-white font-bold transition-all shadow-md"
+                    >
                       {saving ? (
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
                       ) : (
@@ -888,7 +887,8 @@ export default function ProfileSettingsPage() {
                             entityType: e.target.value,
                           })
                         }
-                        className="w-full h-12 px-4 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-emerald-500 font-medium outline-none transition-all">
+                        className="w-full h-12 px-4 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-emerald-500 font-medium outline-none transition-all"
+                      >
                         <option value="">Select Type</option>
                         <option value="Proprietorship">
                           Sole Proprietorship
@@ -1013,13 +1013,85 @@ export default function ProfileSettingsPage() {
                           className="h-12 rounded-xl bg-white border-slate-200 focus:border-emerald-500 font-medium uppercase"
                         />
                       </div>
+                      <div className="space-y-2 md:col-span-2">
+                        <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                          UPI ID for Patient Payments
+                        </Label>
+                        <Input
+                          value={labSettings.upiId}
+                          onChange={(e) =>
+                            setLabSettings({
+                              ...labSettings,
+                              upiId: e.target.value,
+                            })
+                          }
+                          placeholder="example@upi"
+                          className="h-12 rounded-xl bg-white border-slate-200 focus:border-emerald-500 font-medium"
+                        />
+                      </div>
+                      <div className="space-y-3 md:col-span-2">
+                        <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                          UPI QR Code
+                        </Label>
+                        <div className="flex flex-col sm:flex-row gap-4 rounded-2xl border border-slate-200 bg-white p-4">
+                          <div className="h-32 w-32 rounded-xl border border-dashed border-slate-300 bg-slate-50 flex items-center justify-center overflow-hidden">
+                            {labSettings.upiQrCode ? (
+                              <img
+                                src={labSettings.upiQrCode}
+                                alt="UPI QR Code"
+                                className="h-full w-full object-contain p-2"
+                              />
+                            ) : (
+                              <CreditCard className="h-8 w-8 text-slate-300" />
+                            )}
+                          </div>
+                          <div className="flex flex-col justify-center gap-3">
+                            <p className="text-sm font-medium text-slate-600">
+                              This QR will be shown to patients during public
+                              home collection payment.
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              <label className="inline-flex w-fit cursor-pointer rounded-xl border border-slate-200 bg-white px-5 py-2 text-xs font-bold uppercase tracking-widest text-slate-700 shadow-sm transition-colors hover:bg-slate-50">
+                                Upload QR
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={(e) =>
+                                    e.target.files?.[0] &&
+                                    handleFileUpload(
+                                      e.target.files[0],
+                                      "lab.upiQrCode",
+                                    )
+                                  }
+                                />
+                              </label>
+                              {labSettings.upiQrCode && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setLabSettings((prev) => ({
+                                      ...prev,
+                                      upiQrCode: "",
+                                    }))
+                                  }
+                                  className="inline-flex w-fit cursor-pointer rounded-xl border border-rose-200 bg-rose-50 px-5 py-2 text-xs font-bold uppercase tracking-widest text-rose-700 shadow-sm transition-colors hover:bg-rose-100"
+                                >
+                                  Remove QR
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <div className="flex justify-end pt-6 border-t border-slate-200">
                     <Button
                       onClick={handleSaveLabSettings}
                       disabled={saving}
-                      className="h-12 px-8 rounded-xl bg-slate-900 hover:bg-emerald-600 text-white font-bold transition-all shadow-md">
+                      className="h-12 px-8 rounded-xl bg-slate-900 hover:bg-emerald-600 text-white font-bold transition-all shadow-md"
+                    >
                       {saving ? (
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
                       ) : (
@@ -1148,7 +1220,8 @@ export default function ProfileSettingsPage() {
                     <Button
                       onClick={handleSaveLabSettings}
                       disabled={saving}
-                      className="h-12 px-8 rounded-xl bg-slate-900 hover:bg-emerald-600 text-white font-bold transition-all shadow-md">
+                      className="h-12 px-8 rounded-xl bg-slate-900 hover:bg-emerald-600 text-white font-bold transition-all shadow-md"
+                    >
                       {saving ? (
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
                       ) : (
@@ -1179,7 +1252,8 @@ export default function ProfileSettingsPage() {
                       </span>
                       <Badge
                         variant="secondary"
-                        className="bg-emerald-100 text-emerald-700 text-sm font-bold border-0">
+                        className="bg-emerald-100 text-emerald-700 text-sm font-bold border-0"
+                      >
                         Unlimited Branches
                       </Badge>
                     </div>
@@ -1189,10 +1263,12 @@ export default function ProfileSettingsPage() {
                     {branches.map((branch) => (
                       <div
                         key={branch.id}
-                        className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 hover:border-emerald-200 transition-colors shadow-sm">
+                        className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 hover:border-emerald-200 transition-colors shadow-sm"
+                      >
                         <div className="flex items-start gap-4">
                           <div
-                            className={`p-3 rounded-xl ${branch.isMainBranch ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-slate-500"}`}>
+                            className={`p-3 rounded-xl ${branch.isMainBranch ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-slate-500"}`}
+                          >
                             <MapPin className="w-6 h-6" />
                           </div>
                           <div>
@@ -1208,7 +1284,8 @@ export default function ProfileSettingsPage() {
                               {!branch.isActive && (
                                 <Badge
                                   variant="outline"
-                                  className="text-[10px] uppercase tracking-widest text-slate-400">
+                                  className="text-[10px] uppercase tracking-widest text-slate-400"
+                                >
                                   Inactive
                                 </Badge>
                               )}
@@ -1224,7 +1301,8 @@ export default function ProfileSettingsPage() {
                         <Button
                           variant="outline"
                           onClick={() => openEditBranchModal(branch)}
-                          className="rounded-xl font-bold text-slate-700 w-full md:w-auto h-10">
+                          className="rounded-xl font-bold text-slate-700 w-full md:w-auto h-10"
+                        >
                           Edit
                         </Button>
                       </div>
@@ -1235,7 +1313,8 @@ export default function ProfileSettingsPage() {
                   <div className="pt-6 border-t border-slate-200 flex flex-col items-center justify-center p-8 bg-slate-50 border-dashed rounded-2xl">
                     <Button
                       onClick={openAddBranchModal}
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl h-12 px-8 shadow-md">
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl h-12 px-8 shadow-md"
+                    >
                       <Plus className="w-5 h-5 mr-2" /> Add New Location
                     </Button>
                   </div>
@@ -1264,10 +1343,12 @@ export default function ProfileSettingsPage() {
                             isToggledOn
                               ? "border-emerald-500 bg-emerald-50/30 shadow-md"
                               : "border-slate-200 bg-white hover:border-slate-300"
-                          }`}>
+                          }`}
+                        >
                           <div className="flex items-start gap-4 mb-6">
                             <div
-                              className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-emerald-100 text-emerald-600`}>
+                              className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-emerald-100 text-emerald-600`}
+                            >
                               <module.icon className="w-6 h-6" />
                             </div>
                             <div>
@@ -1304,7 +1385,8 @@ export default function ProfileSettingsPage() {
                     <Button
                       onClick={handleSaveModules}
                       disabled={saving}
-                      className="h-12 px-8 rounded-xl bg-slate-900 hover:bg-emerald-600 text-white font-bold transition-all shadow-md">
+                      className="h-12 px-8 rounded-xl bg-slate-900 hover:bg-emerald-600 text-white font-bold transition-all shadow-md"
+                    >
                       {saving ? (
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
                       ) : (
@@ -1341,13 +1423,17 @@ export default function ProfileSettingsPage() {
                             commissionType: e.target.value,
                           })
                         }
-                        className="w-full h-12 px-4 rounded-xl bg-white border-slate-200 focus:bg-white focus:border-emerald-500 font-bold outline-none">
+                        className="w-full h-12 px-4 rounded-xl bg-white border-slate-200 focus:bg-white focus:border-emerald-500 font-bold outline-none"
+                      >
                         <option value="PERCENTAGE">
                           Percentage (%) of Test Price
                         </option>
                         <option value="FIXED">Flat Fixed Amount (₹)</option>
+                        {/* ✅ FIX 1: Added NET_PRICE option */}
+                        <option value="NET_PRICE">Net Price (B2B Wholesale)</option>
                       </select>
                     </div>
+                    
                     <div className="space-y-2">
                       <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1">
                         <User className="w-3 h-3" /> Default Doctor Rate
@@ -1359,22 +1445,22 @@ export default function ProfileSettingsPage() {
                           onChange={(e) =>
                             setLabSettings({
                               ...labSettings,
-                              defaultDoctorCommission:
-                                e.target.value === ""
-                                  ? 0
-                                  : parseFloat(e.target.value),
+                              // ✅ FIX 2: Added || 0 to prevent NaN database crash
+                              defaultDoctorCommission: e.target.value === "" 
+                                ? 0 
+                                : parseFloat(e.target.value) || 0,
                             })
                           }
                           className="h-12 pl-10 rounded-xl bg-white border-slate-200 focus:bg-white focus:border-emerald-500 font-bold"
                           step="0.01"
+                          min="0"
                         />
                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">
-                          {labSettings.commissionType === "PERCENTAGE"
-                            ? "%"
-                            : "₹"}
+                          {labSettings.commissionType === "PERCENTAGE" ? "%" : "₹"}
                         </span>
                       </div>
                     </div>
+
                     <div className="space-y-2">
                       <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1">
                         <Briefcase className="w-3 h-3" /> Default Agency Rate
@@ -1386,19 +1472,18 @@ export default function ProfileSettingsPage() {
                           onChange={(e) =>
                             setLabSettings({
                               ...labSettings,
-                              defaultAgencyCommission:
-                                e.target.value === ""
-                                  ? 0
-                                  : parseFloat(e.target.value),
+                              // ✅ FIX 2: Added || 0 to prevent NaN database crash
+                              defaultAgencyCommission: e.target.value === "" 
+                                ? 0 
+                                : parseFloat(e.target.value) || 0,
                             })
                           }
                           className="h-12 pl-10 rounded-xl bg-white border-slate-200 focus:bg-white focus:border-emerald-500 font-bold"
                           step="0.01"
+                          min="0"
                         />
                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">
-                          {labSettings.commissionType === "PERCENTAGE"
-                            ? "%"
-                            : "₹"}
+                          {labSettings.commissionType === "PERCENTAGE" ? "%" : "₹"}
                         </span>
                       </div>
                     </div>
@@ -1421,7 +1506,8 @@ export default function ProfileSettingsPage() {
                     <Button
                       onClick={handleSaveLabSettings}
                       disabled={saving}
-                      className="h-12 px-8 rounded-xl bg-slate-900 hover:bg-emerald-600 text-white font-bold transition-all shadow-md">
+                      className="h-12 px-8 rounded-xl bg-slate-900 hover:bg-emerald-600 text-white font-bold transition-all shadow-md"
+                    >
                       {saving ? (
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
                       ) : (
@@ -1537,7 +1623,8 @@ export default function ProfileSettingsPage() {
                     <Button
                       onClick={handleSaveLabSettings}
                       disabled={saving}
-                      className="h-12 px-8 rounded-xl bg-slate-900 hover:bg-emerald-600 text-white font-bold transition-all shadow-md">
+                      className="h-12 px-8 rounded-xl bg-slate-900 hover:bg-emerald-600 text-white font-bold transition-all shadow-md"
+                    >
                       {saving ? (
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
                       ) : (
@@ -1555,10 +1642,19 @@ export default function ProfileSettingsPage() {
 
       {/* === ADD / EDIT BRANCH MODAL === */}
       <Dialog open={isBranchModalOpen} onOpenChange={setIsBranchModalOpen}>
-        <DialogContent className="sm:max-w-[600px] p-0 rounded-3xl overflow-hidden border-0 shadow-2xl">
-          <div className="bg-slate-900 p-6 text-white flex justify-between items-center">
+        <DialogContent
+          className="w-[95vw]
+                     max-w-[600px]
+                     max-h-[90vh]
+                      overflow-y-auto
+                       p-0
+                        rounded-2xl
+                       border-0
+                          shadow-2xl"
+        >
+         <div className="bg-slate-900 p-5 sm:p-6 flex items-start sm:items-center justify-between gap-4"> 
             <div>
-              <DialogTitle className="text-xl font-black">
+              <DialogTitle className="text-xl font-black text-white">
                 {editingBranch ? "Edit Location" : "Add New Location"}
               </DialogTitle>
               <p className="text-slate-400 text-sm font-medium mt-1">
@@ -1567,13 +1663,14 @@ export default function ProfileSettingsPage() {
             </div>
             <button
               onClick={() => setIsBranchModalOpen(false)}
-              className="text-slate-400 hover:text-white transition-colors bg-slate-800 p-2 rounded-xl">
+              className="text-slate-400 hover:text-white transition-colors bg-slate-800 p-2 rounded-xl"
+            >
               <X className="w-5 h-5" />
             </button>
           </div>
 
           <div className="p-6 space-y-6 bg-white">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
               <div className="space-y-2 sm:col-span-2">
                 <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
                   Branch Name
@@ -1591,12 +1688,13 @@ export default function ProfileSettingsPage() {
                 <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
                   Full Address
                 </Label>
-                <Input
+                <Textarea
+                rows={3}
                   value={branchForm.address}
                   onChange={(e) =>
                     setBranchForm({ ...branchForm, address: e.target.value })
                   }
-                  className="h-12 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-emerald-500"
+                  className="rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-emerald-500"
                 />
               </div>
               <div className="space-y-2">
@@ -1661,7 +1759,8 @@ export default function ProfileSettingsPage() {
                 />
                 <label
                   htmlFor="isMainBranch"
-                  className="text-sm font-bold text-slate-700 cursor-pointer">
+                  className="text-sm font-bold text-slate-700 cursor-pointer"
+                >
                   Mark as Headquarters / Main Branch
                 </label>
               </div>
@@ -1676,7 +1775,8 @@ export default function ProfileSettingsPage() {
                 />
                 <label
                   htmlFor="isActive"
-                  className="text-sm font-bold text-slate-700 cursor-pointer">
+                  className="text-sm font-bold text-slate-700 cursor-pointer"
+                >
                   Branch is active and operational
                 </label>
               </div>
@@ -1686,13 +1786,15 @@ export default function ProfileSettingsPage() {
               <Button
                 variant="outline"
                 onClick={() => setIsBranchModalOpen(false)}
-                className="h-12 rounded-xl font-bold text-slate-600">
+                className="h-12 rounded-xl font-bold text-slate-600"
+              >
                 Cancel
               </Button>
               <Button
                 onClick={handleSaveBranch}
                 disabled={saving}
-                className="h-12 px-8 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-md">
+                className="h-12 px-8 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-md"
+              >
                 {saving ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : editingBranch ? (

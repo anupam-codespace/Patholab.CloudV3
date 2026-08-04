@@ -24,6 +24,23 @@ export async function GET(request: Request) {
     const from = new Date(fromStr);
     const to = new Date(toStr);
 
+    // A disease is counted only when an approved test has an explicitly positive
+    // result. Test names alone represent orders, not confirmed cases.
+    const confirmedPositiveResult = {
+      some: {
+        OR: [
+          { flag: { contains: 'positive', mode: 'insensitive' as const } },
+          { textValue: { contains: 'positive', mode: 'insensitive' as const } },
+          {
+            AND: [
+              { textValue: { contains: 'detected', mode: 'insensitive' as const } },
+              { NOT: { textValue: { contains: 'not detected', mode: 'insensitive' as const } } }
+            ]
+          }
+        ]
+      }
+    };
+
     // ==========================================
     // 1. MASSIVE PARALLEL DATA FETCHING
     // ==========================================
@@ -42,6 +59,11 @@ export async function GET(request: Request) {
       patientGenders,
       patientsForAge,
       userRoles,
+      // Disease Surveillance Real Data Counts
+      dengueCount,
+      malariaCount,
+      typhoidCount,
+      fluCount,
       topLabsData
     ] = await Promise.all([
       // Financials (Wallet Pivot)
@@ -58,7 +80,7 @@ export async function GET(request: Request) {
       prisma.lab.count({ where: { isActive: true, deletedAt: null } }),
       prisma.labWallet.count({ where: { balance: { lt: 500 } } }),
       
-      // Medical Volumes (Removed deletedAt from Test and Sample as they don't have it)
+      // Medical Volumes
       prisma.test.count({ where: { createdAt: { gte: from, lte: to } } }),
       prisma.patient.count({ where: { createdAt: { gte: from, lte: to }, deletedAt: null } }),
       prisma.sample.count({ where: { createdAt: { gte: from, lte: to } } }),
@@ -103,6 +125,43 @@ export async function GET(request: Request) {
         by: ['role'],
         _count: { role: true },
         where: { deletedAt: null }
+      }),
+
+     // --- Epidemiological Surveillance Real Data Queries ---
+      prisma.test.count({
+        where: {
+          approvedAt: { gte: from, lte: to },
+          status: 'APPROVED',
+          results: confirmedPositiveResult,
+          testName: { contains: "Dengue", mode: "insensitive" }
+        }
+      }),
+      prisma.test.count({
+        where: {
+          approvedAt: { gte: from, lte: to },
+          status: 'APPROVED',
+          results: confirmedPositiveResult,
+          testName: { contains: "Malaria", mode: "insensitive" }
+        }
+      }),
+      prisma.test.count({
+        where: {
+          approvedAt: { gte: from, lte: to },
+          status: 'APPROVED',
+          results: confirmedPositiveResult,
+          testName: { contains: "Typhoid", mode: "insensitive" }
+        }
+      }),
+      prisma.test.count({
+        where: {
+          approvedAt: { gte: from, lte: to },
+          status: 'APPROVED',
+          results: confirmedPositiveResult,
+          OR: [
+            { testName: { contains: "Influenza", mode: "insensitive" } },
+            { testName: { contains: "Covid", mode: "insensitive" } }
+          ]
+        }
       }),
 
       // Top Performers Matrix (Calculated by Recharges)
@@ -198,6 +257,12 @@ export async function GET(request: Request) {
         rejectionRate: rejectionRateString
       },
       charts: {
+        diseaseTrends: [
+          { name: "Dengue NS1 Antigen", positives: dengueCount, spike: "Live", region: "Global Network" },
+          { name: "Malaria Pf/Pv", positives: malariaCount, spike: "Live", region: "Global Network" },
+          { name: "Typhoid Widal Ag", positives: typhoidCount, spike: "Live", region: "Global Network" },
+          { name: "Influenza / Respiratory", positives: fluCount, spike: "Live", region: "Global Network" },
+        ],
         revenueOverTime,
         revenueByTopLabs, 
         popularTests: popularTestsData.map(t => ({ name: t.testName, value: t._count.testName })),

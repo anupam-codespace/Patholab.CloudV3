@@ -352,7 +352,7 @@ export default function DoctorsClient() {
                           {doc._count?.tests || 0} Cases
                         </div>
                         <div className="text-[10px] font-bold text-emerald-600 uppercase tracking-tighter italic">
-                          Yield: ₹{(doc as any).totalCommission?.toFixed(0)}
+                          Yield: ₹{Number((doc as any).totalCommission || 0).toFixed(0)}
                         </div>
                       </div>
                     </TableCell>

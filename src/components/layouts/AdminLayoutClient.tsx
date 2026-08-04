@@ -58,9 +58,9 @@ export default function AdminLayoutClient({
       {/* 2. Main Wrapper (Pushed Right) */}
       <div
         className={cn(
-          "flex-1 flex flex-col min-h-screen transition-all duration-300 ease-in-out w-full",
-          // Use md: prefix so mobile doesn't get pushed off-screen
-          isCollapsed ? "md:ml-20" : "md:ml-64",
+          "flex-1 flex min-w-0 flex-col min-h-screen transition-all duration-300 ease-in-out",
+          // Reserve the fixed sidebar width at every screen size.
+          isCollapsed ? "ml-20" : "ml-64",
         )}>
         {/* 3. Header (Sticky Top) */}
         <AdminHeader user={user} />

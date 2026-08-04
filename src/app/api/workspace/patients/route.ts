@@ -184,7 +184,7 @@ export async function POST(req: NextRequest) {
 
     // 1. Check Duplicates (Phone)
     const existing = await prisma.patient.findFirst({
-        where: { labId: user.labId, phone: safePhone }
+        where: { labId: user.labId, phone: safePhone, deletedAt: null }
     });
 
     if (existing) {
