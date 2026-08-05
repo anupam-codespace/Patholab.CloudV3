@@ -14,10 +14,31 @@ export function useAuth() {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
+  // The API returns { user, lab, permissions }
+  // We merge lab + permissions onto the user object for convenience
+  const rawUser = data?.user;
+  const lab = data?.lab;
+  const permissions = data?.permissions || [];
+
+  const user = rawUser
+    ? {
+        ...rawUser,
+        lab: lab || null,
+        permissions,
+        // Convenience aliases used across headers and layout
+        currentBranch: lab
+          ? { id: lab.branchId, name: lab.branchName }
+          : null,
+        currencySymbol: lab?.currencySymbol || '₹',
+        walletBalance: lab?.wallet?.balance ?? 0,
+      }
+    : undefined;
+
   return {
-    user: data?.user,
+    user,
     isLoading,
-    isAuthenticated: !!data?.user,
+    isAuthenticated: !!rawUser,
     error,
   };
 }
+

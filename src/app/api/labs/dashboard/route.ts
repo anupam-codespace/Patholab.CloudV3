@@ -34,7 +34,13 @@ export async function GET(req: NextRequest) {
     });
 
     // 3. Resolve Lab Context
-    const activeLab = dbUser?.lab || dbUser?.staffLabs[0]?.lab;
+    let activeLab = dbUser?.lab || dbUser?.staffLabs[0]?.lab;
+    if (!activeLab && dbUser?.role === "SUPER_ADMIN") {
+      activeLab = await prisma.lab.findFirst({
+        where: { isActive: true },
+        include: { wallet: true },
+      });
+    }
     if (!activeLab) return NextResponse.json({ status: "PENDING_SETUP" });
 
     const labId = activeLab.id;

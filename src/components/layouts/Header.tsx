@@ -26,10 +26,16 @@ import {
   FlaskConical,
   LifeBuoy,
   ExternalLink,
+  MoreVertical,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter, usePathname } from "next/navigation";
 import toast from "react-hot-toast";
+import * as React from "react";
+import { useTheme } from "next-themes";
+import { Capacitor } from "@capacitor/core";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -147,6 +153,19 @@ const getQuickShortcuts = (role?: string) => {
 export function Header({ toggleSidebar, userData }: HeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = React.useState(false);
+  const [isNative, setIsNative] = React.useState(() => {
+    if (typeof window !== "undefined") {
+      return window.navigator.userAgent.includes("CapacitorApp");
+    }
+    return false;
+  });
+
+  React.useEffect(() => {
+    setMounted(true);
+    setIsNative(Capacitor.isNativePlatform() || window.navigator.userAgent.includes("CapacitorApp"));
+  }, []);
 
   const shortcuts = getQuickShortcuts(userData?.role);
 
@@ -234,6 +253,20 @@ export function Header({ toggleSidebar, userData }: HeaderProps) {
 
   const currentPage = getPageTitle(pathname);
 
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      (window as any).patholabHeaderState = {
+        branchName: currentBranchName,
+        pageName: currentPage,
+        balance: rawBalance,
+        isLow: isLowBalance,
+        isZero: isZeroBalance,
+        canSwitchBranch: canSwitchBranch,
+        availableBranches: availableBranches
+      };
+    }
+  }, [currentBranchName, currentPage, rawBalance, isLowBalance, isZeroBalance, canSwitchBranch, availableBranches]);
+
   // ✅ UI UPDATE: Lab name is now big & bold, Branch name is the smaller subtitle
   const BranchDisplay = () => (
     <div
@@ -254,6 +287,10 @@ export function Header({ toggleSidebar, userData }: HeaderProps) {
       </div>
     </div>
   );
+
+  if (isNative) {
+    return null;
+  }
 
   return (
     <div className="sticky top-0 z-40 px-2 sm:px-6 py-3 pointer-events-none w-full">

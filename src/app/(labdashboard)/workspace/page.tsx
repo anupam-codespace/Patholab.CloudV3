@@ -23,6 +23,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import toast from "react-hot-toast";
 
+import { useAuth } from "@/hooks/useAuth";
+import ReceptionistDashboard from "@/components/dashboards/ReceptionistDashboard";
+import TechnicianDashboard from "@/components/dashboards/TechnicianDashboard";
+import AdminDashboard from "@/components/dashboards/AdminDashboard";
+
 // UI Components
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -71,7 +76,18 @@ const formatCurrency = (val: number) =>
     maximumFractionDigits: 0,
   }).format(val);
 
-export default function LabOwnerDashboard() {
+export default function WorkspaceDashboardPage() {
+  const { user, isLoading: authLoading } = useAuth();
+
+  if (authLoading) {
+    return <DashboardSkeleton />;
+  }
+
+  // Default: Render the main dashboard containing statistics for all roles
+  return <LabOwnerDashboard />;
+}
+
+function LabOwnerDashboard() {
   const router = useRouter();
   const [dateRange, setDateRange] = useState("30D");
   const [showSetupModal, setShowSetupModal] = useState(false);

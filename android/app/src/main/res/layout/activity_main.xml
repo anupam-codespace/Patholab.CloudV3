@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F8FAFC">
+
+    <!-- 1. Web view content container -->
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefresh"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/bottomNavigation">
+
+        <FrameLayout
+            android:id="@+id/webViewContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    <!-- 2. Reusable Skeleton Loading Container -->
+    <FrameLayout
+        android:id="@+id/skeletonContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/bottomNavigation"
+        android:background="#F8FAFC"
+        android:visibility="gone">
+        <include layout="@layout/layout_skeletons" />
+    </FrameLayout>
+
+    <!-- 3. Native "More" Settings section layout -->
+    <ScrollView
+        android:id="@+id/moreSettingsScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/bottomNavigation"
+        android:visibility="gone"
+        android:background="#F8FAFC">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Category: Overview -->
+            <TextView
+                android:id="@+id/lblOverviewHeader"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="OVERVIEW"
+                android:textColor="#4338CA"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:id="@+id/containerOverview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="20dp" />
+
+            <!-- Category: Clinical Operations -->
+            <TextView
+                android:id="@+id/lblClinicalHeader"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="CLINICAL OPERATIONS"
+                android:textColor="#4338CA"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:id="@+id/containerClinical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="20dp" />
+
+            <!-- Category: Resources & Logistics -->
+            <TextView
+                android:id="@+id/lblLogisticsHeader"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="RESOURCES &amp; LOGISTICS"
+                android:textColor="#4338CA"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:id="@+id/containerLogistics"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="20dp" />
+
+            <!-- Category: Machine & AI -->
+            <TextView
+                android:id="@+id/lblMachineHeader"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="MACHINE &amp; AI"
+                android:textColor="#4338CA"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:id="@+id/containerMachine"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="20dp" />
+
+            <!-- Category: B2B & Growth -->
+            <TextView
+                android:id="@+id/lblB2BHeader"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="B2B &amp; GROWTH"
+                android:textColor="#4338CA"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:id="@+id/containerB2B"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="20dp" />
+
+            <!-- Category: Administration -->
+            <TextView
+                android:id="@+id/lblAdminHeader"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ADMINISTRATION"
+                android:textColor="#4338CA"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:id="@+id/containerAdmin"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="20dp" />
+
+            <!-- Sign Out Button -->
+            <Button
+                android:id="@+id/btnMoreLogout"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:text="Sign Out"
+                android:textAllCaps="false"
+                android:textColor="#EF4444"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:background="@drawable/bg_logout_btn"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="32dp" />
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- 4. Offline / Error Overlay -->
+    <LinearLayout
+        android:id="@+id/offlineOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/bottomNavigation"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="#F8FAFC"
+        android:visibility="gone"
+        android:padding="32dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="No Connection"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#0F172A"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Check your internet connection and try again."
+            android:textSize="14sp"
+            android:textColor="#64748B"
+            android:gravity="center"
+            android:layout_marginBottom="24dp" />
+
+        <Button
+            android:id="@+id/btnRetry"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:text="Retry"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:paddingStart="32dp"
+            android:paddingEnd="32dp"
+            android:background="@drawable/bg_btn_primary" />
+
+    </LinearLayout>
+
+    <!-- 5. Bottom Navigation Bar -->
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNavigation"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:layout_alignParentBottom="true"
+        android:background="#FFFFFF"
+        app:elevation="8dp"
+        app:menu="@menu/bottom_nav_menu"
+        app:itemIconTint="@null"
+        app:itemTextColor="#3730A3"
+        app:labelVisibilityMode="labeled" />
+
+</RelativeLayout>

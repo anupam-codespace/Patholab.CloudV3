@@ -1,3 +1,4 @@
+@import "../components/dotmatrix-loader.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -81,4 +82,21 @@
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
+}
+
+/* Capacitor Native App Integration Styling */
+.is-capacitor aside:not(.translate-x-0),
+.is-capacitor .sticky.top-0,
+.is-capacitor header,
+.is-capacitor .mobile-app-header-web-component,
+.is-native-app .sticky.top-0,
+.is-native-app header,
+.is-native-app .mobile-app-header-web-component {
+  display: none !important;
+}
+
+.is-capacitor main,
+.is-native-app main {
+  padding-top: env(safe-area-inset-top, 16px) !important;
+  padding-bottom: calc(env(safe-area-inset-bottom, 16px) + 16px) !important;
 }

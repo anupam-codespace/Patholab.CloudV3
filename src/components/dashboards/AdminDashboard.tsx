@@ -4,11 +4,11 @@ import { Activity, Users, FileText, IndianRupee } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
 export default function AdminDashboard({
-  labId,
-  role,
+  labId = "",
+  role = "ADMIN",
 }: {
-  labId: string;
-  role: string;
+  labId?: string;
+  role?: string;
 }) {
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-500">
@@ -25,6 +25,7 @@ export default function AdminDashboard({
           {role.replace("_", " ")}
         </div>
       </div>
+      
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[

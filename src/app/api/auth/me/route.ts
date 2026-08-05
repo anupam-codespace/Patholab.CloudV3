@@ -43,11 +43,21 @@ export async function GET(req: NextRequest) {
     let activeBranch = null;
     let permissions: string[] = [];
 
-    if (user.role === "LAB_OWNER") {
+    if (user.role === "SUPER_ADMIN") {
+      activeLab = await prisma.lab.findFirst({
+        where: { isActive: true },
+        include: {
+          wallet: true,
+          branches: { where: { isMainBranch: true } },
+        },
+      });
+      activeBranch = activeLab?.branches?.[0] || null;
+      permissions = ["ALL"];
+    } else if (user.role === "LAB_OWNER") {
       activeLab = user.lab || null;
       activeBranch = user.lab?.branches?.[0] || null;
       permissions = ["ALL"]; // Owners have unrestricted access to their lab
-    } else if (user.role !== "SUPER_ADMIN" && user.role !== "PATIENT") {
+    } else if (user.role !== "PATIENT") {
       const primaryProfile = user.staffLabs[0];
       activeLab = primaryProfile?.lab || null;
       activeBranch = primaryProfile?.branch || null;

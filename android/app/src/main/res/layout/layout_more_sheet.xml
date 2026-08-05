@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/bg_bottom_sheet">
+
+    <!-- Drag Handle Indicator -->
+    <View
+        android:layout_width="40dp"
+        android:layout_height="5dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:background="#D1D5DB" />
+
+    <ScrollView
+        android:id="@+id/moreSettingsScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Category: Overview -->
+            <TextView
+                android:id="@+id/lblOverviewHeader"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="OVERVIEW"
+                android:textColor="#4338CA"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:id="@+id/containerOverview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="20dp" />
+
+            <!-- Category: Clinical Operations -->
+            <TextView
+                android:id="@+id/lblClinicalHeader"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="CLINICAL OPERATIONS"
+                android:textColor="#4338CA"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:id="@+id/containerClinical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="20dp" />
+
+            <!-- Category: Radiology (RIS) -->
+            <TextView
+                android:id="@+id/lblRadiologyHeader"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="RADIOLOGY (RIS)"
+                android:textColor="#4338CA"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:id="@+id/containerRadiology"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="20dp" />
+
+            <!-- Category: Resources & Logistics -->
+            <TextView
+                android:id="@+id/lblLogisticsHeader"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="RESOURCES &amp; LOGISTICS"
+                android:textColor="#4338CA"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:id="@+id/containerLogistics"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="20dp" />
+
+            <!-- Category: Machine & AI -->
+            <TextView
+                android:id="@+id/lblMachineHeader"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="MACHINE &amp; AI"
+                android:textColor="#4338CA"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:id="@+id/containerMachine"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="20dp" />
+
+            <!-- Category: B2B & Growth -->
+            <TextView
+                android:id="@+id/lblB2BHeader"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="B2B &amp; GROWTH"
+                android:textColor="#4338CA"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:id="@+id/containerB2B"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="20dp" />
+
+            <!-- Category: Administration -->
+            <TextView
+                android:id="@+id/lblAdminHeader"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ADMINISTRATION"
+                android:textColor="#4338CA"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:id="@+id/containerAdmin"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="20dp" />
+
+            <!-- Sign Out Button -->
+            <Button
+                android:id="@+id/btnMoreLogout"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:text="Sign Out"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:background="@drawable/bg_logout_btn"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="32dp" />
+
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

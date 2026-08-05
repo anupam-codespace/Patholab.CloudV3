@@ -105,7 +105,7 @@ export default async function RootLayout({
           </style>
         )}
       </head>
-      <body className={inter.className}>
+      <body className={`${inter.className} bg-background text-foreground antialiased`}>
         {/* Wrap everything in the Client-Side Provider */}
         <Providers>{children}</Providers>
 
