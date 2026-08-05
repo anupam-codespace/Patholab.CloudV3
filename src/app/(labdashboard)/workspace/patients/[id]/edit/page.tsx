@@ -173,7 +173,7 @@ export default function EditPatientPage() {
   if (isLoading) {
     return (
       <div className="h-screen flex flex-col items-center justify-center bg-muted/30">
-        <Loader2 className="animate-spin h-10 w-10 text-indigo-600 mb-4" />
+        <Loader2 className="animate-spin h-10 w-10 text-primary mb-4" />
         <p className="text-sm font-medium text-muted-foreground animate-pulse">
           Loading patient record...
         </p>
@@ -190,7 +190,7 @@ export default function EditPatientPage() {
       <header className="sticky top-0 z-30 bg-card/70 backdrop-blur-xl border-b border-slate-200/60 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-inner">
+            <div className="h-10 w-10 bg-gradient-to-br from-indigo-500 to-primary rounded-xl flex items-center justify-center shadow-inner">
               <User className="h-5 w-5 text-white" />
             </div>
             <div>
@@ -199,7 +199,7 @@ export default function EditPatientPage() {
               </h1>
               <p className="text-xs font-medium text-muted-foreground flex items-center gap-1 uppercase tracking-wider mt-0.5">
                 ID:{" "}
-                <span className="font-mono text-indigo-600 font-bold">
+                <span className="font-mono text-primary font-bold">
                   {patientId}
                 </span>
               </p>
@@ -241,12 +241,13 @@ export default function EditPatientPage() {
                     <Select
                       onValueChange={(v) => setValue("title", v)}
                       value={watch("title")}>
-                      <SelectTrigger className="h-11 bg-muted/30 border-border focus:ring-indigo-500/20 rounded-xl">
+                      <SelectTrigger className="h-11 bg-muted/30 border-border focus:ring-primary/20 rounded-xl">
                         <SelectValue placeholder="Title" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Mr.">Mr.</SelectItem>
                         <SelectItem value="Mrs.">Mrs.</SelectItem>
+                        <SelectItem value="Master">Master</SelectItem>
                         <SelectItem value="Ms.">Ms.</SelectItem>
                         <SelectItem value="Baby">Baby</SelectItem>
                       </SelectContent>
@@ -258,7 +259,7 @@ export default function EditPatientPage() {
                     </Label>
                     <Input
                       {...form.register("name")}
-                      className="h-11 bg-muted/30 border-border focus:ring-indigo-500/20 focus:bg-card rounded-xl transition-colors"
+                      className="h-11 bg-muted/30 border-border focus:ring-primary/20 focus:bg-card rounded-xl transition-colors"
                       placeholder="e.g. John Doe"
                     />
                     {form.formState.errors.name && (
@@ -278,7 +279,7 @@ export default function EditPatientPage() {
                       <Input
                         {...form.register("age")}
                         type="number"
-                        className="h-11 bg-muted/30 border-border focus:ring-indigo-500/20 rounded-xl text-center"
+                        className="h-11 bg-muted/30 border-border focus:ring-primary/20 rounded-xl text-center"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -288,7 +289,7 @@ export default function EditPatientPage() {
                       <Select
                         value={watch("ageUnit")}
                         onValueChange={(v) => setValue("ageUnit", v as any)}>
-                        <SelectTrigger className="h-11 bg-muted/30 border-border focus:ring-indigo-500/20 rounded-xl px-2">
+                        <SelectTrigger className="h-11 bg-muted/30 border-border focus:ring-primary/20 rounded-xl px-2">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -307,7 +308,7 @@ export default function EditPatientPage() {
                     <Select
                       value={watch("gender")}
                       onValueChange={(v) => setValue("gender", v as any)}>
-                      <SelectTrigger className="h-11 bg-muted/30 border-border focus:ring-indigo-500/20 rounded-xl">
+                      <SelectTrigger className="h-11 bg-muted/30 border-border focus:ring-primary/20 rounded-xl">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -325,7 +326,7 @@ export default function EditPatientPage() {
                     <Input
                       type="date"
                       {...form.register("dob")}
-                      className="h-11 bg-muted/30 border-border focus:ring-indigo-500/20 rounded-xl px-3"
+                      className="h-11 bg-muted/30 border-border focus:ring-primary/20 rounded-xl px-3"
                     />
                   </div>
                 </div>
@@ -351,7 +352,7 @@ export default function EditPatientPage() {
                       <Phone className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
                       <Input
                         {...form.register("phone")}
-                        className="h-11 pl-10 bg-muted/30 border-border focus:ring-indigo-500/20 rounded-xl"
+                        className="h-11 pl-10 bg-muted/30 border-border focus:ring-primary/20 rounded-xl"
                         placeholder="10-digit number"
                         maxLength={10}
                       />
@@ -371,7 +372,7 @@ export default function EditPatientPage() {
                       <Input
                         type="email"
                         {...form.register("email")}
-                        className="h-11 pl-10 bg-muted/30 border-border focus:ring-indigo-500/20 rounded-xl"
+                        className="h-11 pl-10 bg-muted/30 border-border focus:ring-primary/20 rounded-xl"
                         placeholder="patient@example.com"
                       />
                     </div>
@@ -384,7 +385,7 @@ export default function EditPatientPage() {
                   </Label>
                   <Textarea
                     {...form.register("address")}
-                    className="min-h-[80px] bg-muted/30 border-border focus:ring-indigo-500/20 rounded-xl resize-none py-3"
+                    className="min-h-[80px] bg-muted/30 border-border focus:ring-primary/20 rounded-xl resize-none py-3"
                     placeholder="Apartment, Street, City..."
                   />
                 </div>
@@ -412,7 +413,7 @@ export default function EditPatientPage() {
                     <Input
                       {...form.register("doctorId")}
                       placeholder="Self"
-                      className="h-11 pr-10 bg-muted/30 border-border focus:ring-indigo-500/20 rounded-xl transition-colors"
+                      className="h-11 pr-10 bg-muted/30 border-border focus:ring-primary/20 rounded-xl transition-colors"
                     />
                     <Search className="absolute right-3 top-3.5 h-4 w-4 text-muted-foreground/70 group-hover:text-indigo-500 transition-colors cursor-pointer" />
                   </div>
@@ -427,7 +428,7 @@ export default function EditPatientPage() {
                     <Input
                       {...form.register("agencyId")}
                       placeholder="Direct"
-                      className="h-11 pl-10 pr-10 bg-muted/30 border-border focus:ring-indigo-500/20 rounded-xl transition-colors"
+                      className="h-11 pl-10 pr-10 bg-muted/30 border-border focus:ring-primary/20 rounded-xl transition-colors"
                     />
                     <Search className="absolute right-3 top-3.5 h-4 w-4 text-muted-foreground/70 group-hover:text-indigo-500 transition-colors cursor-pointer" />
                   </div>
@@ -444,7 +445,7 @@ export default function EditPatientPage() {
                       <Input
                         type="date"
                         {...form.register("collectionDate")}
-                        className="h-11 bg-muted/30 border-border focus:ring-indigo-500/20 rounded-xl"
+                        className="h-11 bg-muted/30 border-border focus:ring-primary/20 rounded-xl"
                       />
                     </div>
                   </div>
@@ -457,7 +458,7 @@ export default function EditPatientPage() {
                       <Input
                         type="time"
                         {...form.register("collectionTime")}
-                        className="h-11 bg-muted/30 border-border focus:ring-indigo-500/20 rounded-xl pr-10"
+                        className="h-11 bg-muted/30 border-border focus:ring-primary/20 rounded-xl pr-10"
                       />
                     </div>
                   </div>
@@ -483,7 +484,7 @@ export default function EditPatientPage() {
                     <Hash className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
                     <Input
                       {...form.register("abhaNumber")}
-                      className="h-11 pl-10 bg-muted/30 border-border focus:ring-indigo-500/20 rounded-xl font-mono text-sm"
+                      className="h-11 pl-10 bg-muted/30 border-border focus:ring-primary/20 rounded-xl font-mono text-sm"
                       placeholder="XXXX-XXXX-XXXX"
                     />
                   </div>
@@ -496,7 +497,7 @@ export default function EditPatientPage() {
                     </Label>
                     <Input
                       {...form.register("passport")}
-                      className="h-11 bg-muted/30 border-border focus:ring-indigo-500/20 rounded-xl font-mono text-sm"
+                      className="h-11 bg-muted/30 border-border focus:ring-primary/20 rounded-xl font-mono text-sm"
                       placeholder="Optional"
                     />
                   </div>
@@ -506,7 +507,7 @@ export default function EditPatientPage() {
                     </Label>
                     <Input
                       {...form.register("srfId")}
-                      className="h-11 bg-muted/30 border-border focus:ring-indigo-500/20 rounded-xl font-mono text-sm"
+                      className="h-11 bg-muted/30 border-border focus:ring-primary/20 rounded-xl font-mono text-sm"
                       placeholder="Optional"
                     />
                   </div>
@@ -538,7 +539,7 @@ export default function EditPatientPage() {
             <Button
               type="submit"
               form="patient-edit-form"
-              className="flex-1 sm:w-48 h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold shadow-md shadow-indigo-500/25 transition-all duration-300 hover:-translate-y-0.5"
+              className="flex-1 sm:w-48 h-12 rounded-xl bg-gradient-to-r from-primary to-primary hover:from-indigo-700 hover:to-violet-700 text-primary-foreground font-bold shadow-md shadow-indigo-500/25 transition-all duration-300 hover:-translate-y-0.5"
               disabled={isSubmitting}>
               {isSubmitting ? (
                 <>

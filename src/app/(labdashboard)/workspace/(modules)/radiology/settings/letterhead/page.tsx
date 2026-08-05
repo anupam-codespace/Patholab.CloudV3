@@ -73,7 +73,7 @@ export default function LetterheadSettingsPage() {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -114,7 +114,7 @@ export default function LetterheadSettingsPage() {
               </div>
             )}
             <input type="file" id="header-upload" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, "header")} />
-            <label htmlFor="header-upload" className="cursor-pointer bg-card border border-border text-foreground/80 px-4 py-2 rounded-md font-bold text-sm shadow-sm hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 inline-flex items-center transition-colors">
+            <label htmlFor="header-upload" className="cursor-pointer bg-card border border-border text-foreground/80 px-4 py-2 rounded-md font-bold text-sm shadow-sm hover:bg-indigo-50 hover:text-primary hover:border-indigo-200 inline-flex items-center transition-colors">
               <Upload className="w-4 h-4 mr-2" /> {headerImage ? "Replace Header" : "Upload Header Image"}
             </label>
           </div>
@@ -148,7 +148,7 @@ export default function LetterheadSettingsPage() {
               </div>
             )}
             <input type="file" id="footer-upload" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, "footer")} />
-            <label htmlFor="footer-upload" className="cursor-pointer bg-card border border-border text-foreground/80 px-4 py-2 rounded-md font-bold text-sm shadow-sm hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 inline-flex items-center transition-colors">
+            <label htmlFor="footer-upload" className="cursor-pointer bg-card border border-border text-foreground/80 px-4 py-2 rounded-md font-bold text-sm shadow-sm hover:bg-indigo-50 hover:text-primary hover:border-indigo-200 inline-flex items-center transition-colors">
               <Upload className="w-4 h-4 mr-2" /> {footerImage ? "Replace Footer" : "Upload Footer Image"}
             </label>
           </div>
@@ -159,7 +159,7 @@ export default function LetterheadSettingsPage() {
         <Button 
           onClick={() => saveMutation.mutate({ letterheadHeader: headerImage, letterheadFooter: footerImage })} 
           disabled={saveMutation.isPending} 
-          className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-8 h-11"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-8 h-11"
         >
           {saveMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
           {saveMutation.isPending ? "Saving..." : "Save Letterhead"}

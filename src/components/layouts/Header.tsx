@@ -76,7 +76,7 @@ const getQuickShortcuts = (role?: string) => {
           label: "NEW REGISTRATION",
           href: "/workspace/registration",
           icon: UserPlus,
-          color: "text-emerald-600",
+          color: "text-primary",
           bg: "hover:bg-emerald-100",
           active: "bg-emerald-50",
         },
@@ -92,7 +92,7 @@ const getQuickShortcuts = (role?: string) => {
           label: "REPORTS",
           href: "/workspace/reports",
           icon: BarChart3,
-          color: "text-indigo-600",
+          color: "text-primary",
           bg: "hover:bg-indigo-100",
           active: "bg-indigo-50",
         },
@@ -103,7 +103,7 @@ const getQuickShortcuts = (role?: string) => {
           label: "Register Patient",
           href: "/workspace/registration",
           icon: UserPlus,
-          color: "text-emerald-600",
+          color: "text-primary",
           bg: "hover:bg-emerald-100",
           active: "bg-emerald-50",
         },
@@ -513,7 +513,7 @@ export function Header({ toggleSidebar, userData }: HeaderProps) {
 
                 <div className="p-1">
                   <Link href="/workspace/support">
-                    <Button className="w-full justify-center gap-2 bg-primary hover:bg-blue-700 text-white font-medium text-xs py-2 h-9 rounded-xl shadow-sm transition-colors">
+                    <Button className="w-full justify-center gap-2 bg-primary hover:bg-primary/90 text-white font-medium text-xs py-2 h-9 rounded-xl shadow-sm transition-colors">
                       Open Support Dashboard
                       <ExternalLink className="w-3.5 h-3.5" />
                     </Button>

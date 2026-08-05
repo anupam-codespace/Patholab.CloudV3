@@ -17,7 +17,7 @@ export default function GuideTab() {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-5xl">
       {/* Welcome Banner */}
-      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 md:p-8 text-white shadow-md">
+      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 md:p-8 text-primary-foreground shadow-md">
         <h2 className="text-2xl font-bold mb-2">
           Welcome to the Master Data Dictionary
         </h2>
@@ -33,7 +33,7 @@ export default function GuideTab() {
         {/* CONCEPT 1: Global vs Local */}
         <div className="bg-card p-6 rounded-2xl border border-border shadow-sm space-y-4">
           <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
-            <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+            <div className="p-2 bg-indigo-50 text-primary rounded-lg">
               <Globe size={24} />
             </div>
             <div>
@@ -78,7 +78,7 @@ export default function GuideTab() {
         {/* CONCEPT 2: Pricing Overrides */}
         <div className="bg-card p-6 rounded-2xl border border-border shadow-sm space-y-4">
           <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
-            <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
+            <div className="p-2 bg-emerald-50 text-primary rounded-lg">
               <IndianRupee size={24} />
             </div>
             <div>
@@ -183,7 +183,7 @@ export default function GuideTab() {
 
             {/* Step 4 */}
             <div className="border border-primary/20 rounded-xl p-4 bg-primary/10 relative overflow-hidden shadow-sm">
-              <div className="absolute top-0 right-0 bg-primary text-white font-bold text-[10px] px-2 py-1 rounded-bl-lg">
+              <div className="absolute top-0 right-0 bg-primary text-primary-foreground font-bold text-[10px] px-2 py-1 rounded-bl-lg">
                 STEP 4
               </div>
               <FileText className="text-primary mb-3" size={20} />

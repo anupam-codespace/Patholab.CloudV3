@@ -40,7 +40,7 @@ export default function PageManagement() {
           <p className="text-muted-foreground">Manage public facing pages and content</p>
         </div>
         <Link href="/admin/pages/editor">
-          <Button className="bg-primary hover:bg-blue-700"><Plus className="mr-2 h-4 w-4"/> Create Page</Button>
+          <Button className="bg-primary hover:bg-primary/90"><Plus className="mr-2 h-4 w-4"/> Create Page</Button>
         </Link>
       </div>
 

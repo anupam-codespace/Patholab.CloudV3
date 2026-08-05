@@ -179,7 +179,7 @@ export default function ExpensesClient() {
               Financial Outflow
             </span>
           </div>
-          <h1 className="text-4xl font-black text-foreground dark:text-white tracking-tight">
+          <h1 className="text-4xl font-black text-foreground dark:text-primary-foreground tracking-tight">
             Expenses <span className="text-slate-400">&</span> Ledger
           </h1>
           <p className="text-muted-foreground font-medium">
@@ -217,7 +217,7 @@ export default function ExpensesClient() {
 
           <Button
             onClick={() => setIsAddOpen(true)}
-            className="h-12 px-6 bg-slate-900 hover:bg-black dark:bg-red-600 dark:hover:bg-red-700 text-white rounded-2xl shadow-xl shadow-slate-200 dark:shadow-none transition-all active:scale-95">
+            className="h-12 px-6 bg-slate-900 hover:bg-black dark:bg-red-600 dark:hover:bg-red-700 text-primary-foreground rounded-2xl shadow-xl shadow-slate-200 dark:shadow-none transition-all active:scale-95">
             <Plus className="h-5 w-5 mr-2" />
             <span className="font-bold">Record Expense</span>
           </Button>
@@ -249,7 +249,7 @@ export default function ExpensesClient() {
             label: "Inventory",
             val: data?.totalInventory,
             icon: FlaskConical,
-            color: "text-emerald-600",
+            color: "text-primary",
             bg: "bg-emerald-50",
           },
           {
@@ -300,7 +300,7 @@ export default function ExpensesClient() {
                 <div
                   key={idx}
                   className="flex-1 flex flex-col items-center justify-end h-full group relative">
-                  <div className="opacity-0 group-hover:opacity-100 absolute -top-10 bg-slate-900 text-white text-[10px] font-bold px-2 py-1 rounded-lg pointer-events-none transition-all z-20 whitespace-nowrap shadow-xl">
+                  <div className="opacity-0 group-hover:opacity-100 absolute -top-10 bg-slate-900 text-primary-foreground text-[10px] font-bold px-2 py-1 rounded-lg pointer-events-none transition-all z-20 whitespace-nowrap shadow-xl">
                     ₹{dayData.amount.toLocaleString()}
                   </div>
                   <div
@@ -671,7 +671,7 @@ export default function ExpensesClient() {
               </Button>
               <Button
                 type="submit"
-                className="h-12 px-8 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-black shadow-lg shadow-red-200 dark:shadow-none"
+                className="h-12 px-8 bg-red-600 hover:bg-red-700 text-primary-foreground rounded-2xl font-black shadow-lg shadow-red-200 dark:shadow-none"
                 disabled={addMutation.isPending}>
                 {addMutation.isPending
                   ? "Authenticating..."

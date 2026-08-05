@@ -65,7 +65,7 @@ export default async function SampleReviewPage({
             does not exist in your lab database.
           </p>
           <Link href="/workspace/analyzers">
-            <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl font-bold mt-8 transition-all hover:-translate-y-0.5 shadow-md w-full">
+            <button className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 rounded-xl font-bold mt-8 transition-all hover:-translate-y-0.5 shadow-md w-full">
               Back to Dashboard
             </button>
           </Link>
@@ -118,12 +118,12 @@ export default async function SampleReviewPage({
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <Link
             href="/workspace/analyzer"
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors mb-3">
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:text-indigo-800 transition-colors mb-3">
             <ArrowLeft className="h-3.5 w-3.5" /> Back to Analyzer Hub
           </Link>
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="flex items-center gap-4">
-              <div className="h-12 w-12 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-inner shrink-0">
+              <div className="h-12 w-12 bg-gradient-to-br from-indigo-500 to-primary rounded-xl flex items-center justify-center shadow-inner shrink-0">
                 <Beaker className="h-6 w-6 text-white" />
               </div>
               <div className="min-w-0 flex flex-col items-start gap-1">
@@ -131,12 +131,12 @@ export default async function SampleReviewPage({
                   <h1 className="text-2xl font-black text-foreground tracking-tight leading-tight">
                     Sample
                   </h1>
-                  <span className="font-mono text-sm font-bold text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-md border border-indigo-100 shadow-sm mt-0.5">
+                  <span className="font-mono text-sm font-bold text-primary bg-indigo-50 px-2.5 py-0.5 rounded-md border border-indigo-100 shadow-sm mt-0.5">
                     {sample.sampleId}
                   </span>
                 </div>
                 {isFullyApproved ? (
-                  <span className="text-[10px] font-bold px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded uppercase tracking-wider flex items-center gap-1 shadow-sm">
+                  <span className="text-[10px] font-bold px-2 py-0.5 bg-emerald-50 text-primary border border-emerald-200 rounded uppercase tracking-wider flex items-center gap-1 shadow-sm">
                     <CheckCircle2 className="h-3 w-3" /> Verified & Approved
                   </span>
                 ) : (
@@ -225,7 +225,7 @@ export default async function SampleReviewPage({
 
                   <Link
                     href={`/workspace/workflow/results/${sample.patientId}`}
-                    className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-2.5 px-5 rounded-xl transition-all shadow-md flex items-center gap-2 border border-indigo-500 w-full sm:w-auto justify-center hover:-translate-y-0.5">
+                    className="bg-primary hover:bg-indigo-500 text-primary-foreground text-xs font-bold py-2.5 px-5 rounded-xl transition-all shadow-md flex items-center gap-2 border border-indigo-500 w-full sm:w-auto justify-center hover:-translate-y-0.5">
                     <FileText className="h-4 w-4" />
                     {isTestApproved
                       ? "View Full Record"
@@ -261,7 +261,7 @@ export default async function SampleReviewPage({
                               <span
                                 className={`font-bold px-3 py-1.5 rounded-lg text-sm border ${
                                   result.isCritical
-                                    ? "bg-rose-600 text-white border-rose-700 shadow-md shadow-rose-500/20"
+                                    ? "bg-rose-600 text-primary-foreground border-rose-700 shadow-md shadow-rose-500/20"
                                     : result.isAbnormal
                                       ? "bg-rose-50 text-rose-700 border-rose-200"
                                       : result.value
@@ -286,7 +286,7 @@ export default async function SampleReviewPage({
                           <td className="px-6 py-4 text-right">
                             {result.entryMethod === "MACHINE_INTERFACE" ? (
                               <div className="inline-flex flex-col items-end">
-                                <span className="inline-flex items-center gap-1.5 text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-200 uppercase tracking-widest shadow-sm">
+                                <span className="inline-flex items-center gap-1.5 text-[9px] font-bold text-primary bg-emerald-50 px-2 py-1 rounded-md border border-emerald-200 uppercase tracking-widest shadow-sm">
                                   <Server className="w-3 h-3" /> Auto Sync
                                 </span>
                                 {result.analyzer && (
@@ -316,7 +316,7 @@ export default async function SampleReviewPage({
                             </p>
                             <Link
                               href={`/workspace/workflow/results/${sample.patientId}`}
-                              className="text-indigo-600 font-bold hover:underline text-sm inline-flex items-center gap-1">
+                              className="text-primary font-bold hover:underline text-sm inline-flex items-center gap-1">
                               Click here to add results manually &rarr;
                             </Link>
                           </td>
@@ -336,7 +336,7 @@ export default async function SampleReviewPage({
         <div className="fixed bottom-0 left-0 right-0 bg-card/80 backdrop-blur-xl border-t border-slate-200/60 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] p-4 md:p-6 z-50 animate-in slide-in-from-bottom-10 duration-300">
           <div className="max-w-[1200px] mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-4">
-              <div className="bg-indigo-100 text-indigo-600 p-3 rounded-xl hidden sm:flex shrink-0 shadow-inner border border-indigo-200">
+              <div className="bg-indigo-100 text-primary p-3 rounded-xl hidden sm:flex shrink-0 shadow-inner border border-indigo-200">
                 <CheckCircle2 className="w-6 h-6" />
               </div>
               <div className="text-center sm:text-left">
@@ -353,7 +353,7 @@ export default async function SampleReviewPage({
             <form action={approveAllResults} className="w-full sm:w-auto">
               <button
                 type="submit"
-                className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold rounded-xl shadow-md shadow-emerald-500/25 transition-all hover:-translate-y-0.5 text-sm flex items-center justify-center gap-2">
+                className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-primary-foreground font-bold rounded-xl shadow-md shadow-emerald-500/25 transition-all hover:-translate-y-0.5 text-sm flex items-center justify-center gap-2">
                 <ShieldAlert className="w-5 h-5" />
                 Verify & Approve All Tests
               </button>

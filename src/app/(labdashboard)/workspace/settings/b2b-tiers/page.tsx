@@ -42,7 +42,7 @@ const TIERS = [
   { id: "BRONZE", label: "Bronze", color: "bg-amber-100 text-amber-800" },
   { id: "SILVER", label: "Silver", color: "bg-slate-200 text-slate-800" },
   { id: "GOLD", label: "Gold", color: "bg-yellow-100 text-yellow-700" },
-  { id: "PLATINUM", label: "Platinum", color: "bg-indigo-100 text-indigo-700" },
+  { id: "PLATINUM", label: "Platinum", color: "bg-indigo-100 text-primary" },
 ];
 
 export default function B2BTiersSettingsPage() {
@@ -192,7 +192,7 @@ export default function B2BTiersSettingsPage() {
         <Button
           onClick={handleSave}
           disabled={saveMutation.isPending}
-          className="bg-primary hover:bg-blue-700 text-white shadow-md w-full md:w-auto">
+          className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md w-full md:w-auto">
           {saveMutation.isPending ? (
             <Loader2 className="h-4 w-4 animate-spin mr-2" />
           ) : (
@@ -224,7 +224,7 @@ export default function B2BTiersSettingsPage() {
                 <TabsTrigger
                   key={tier.id}
                   value={tier.id}
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent py-3 px-1 text-sm font-bold data-[state=active]:text-primary text-muted-foreground">
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent py-3 px-1 text-sm font-bold data-[state=active]:text-primary text-muted-foreground">
                   <span
                     className={`px-2 py-0.5 rounded text-[11px] mr-2 ${tier.color}`}>
                     {tier.label}

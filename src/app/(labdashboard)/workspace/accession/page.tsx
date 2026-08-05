@@ -340,7 +340,7 @@ export default function AccessionPage() {
         </div>
         <Button
           onClick={() => router.push("/workspace/registration")}
-          className="mt-4 bg-indigo-600 hover:bg-indigo-700 shadow-md font-bold rounded-xl px-8 h-12">
+          className="mt-4 bg-primary hover:bg-primary/90 shadow-md font-bold rounded-xl px-8 h-12">
           Return to Registry
         </Button>
       </div>
@@ -350,7 +350,7 @@ export default function AccessionPage() {
   if (isLoading)
     return (
       <div className="h-[calc(100vh-60px)] flex items-center justify-center text-slate-500">
-        <Loader2 className="w-8 h-8 animate-spin mr-3 text-indigo-600" />{" "}
+        <Loader2 className="w-8 h-8 animate-spin mr-3 text-primary" />{" "}
         Preparing Workspace...
       </div>
     );
@@ -380,7 +380,7 @@ export default function AccessionPage() {
       {/* 🌟 STICKY TOP HEADER BAR */}
       <div className="flex-none h-[72px] bg-white border-b border-slate-200 px-4 lg:px-6 flex justify-between items-center shadow-sm z-30">
         <div className="flex items-center gap-3 lg:gap-4">
-          <div className="hidden sm:flex h-11 w-11 bg-indigo-100 text-indigo-700 font-bold text-base rounded-xl items-center justify-center shadow-inner shrink-0">
+          <div className="hidden sm:flex h-11 w-11 bg-indigo-100 text-primary font-bold text-base rounded-xl items-center justify-center shadow-inner shrink-0">
             {initials}
           </div>
           <div>
@@ -393,7 +393,7 @@ export default function AccessionPage() {
                 {data.patient.gender}
               </span>
               <span className="hidden sm:inline text-slate-300">|</span>
-              <span className="hidden sm:inline text-indigo-600 font-mono bg-indigo-50 px-2 rounded-md">
+              <span className="hidden sm:inline text-primary font-mono bg-indigo-50 px-2 rounded-md">
                 ID: {data.patient.patientId || data.patient.id.substring(0, 8)}
               </span>
             </div>
@@ -513,7 +513,7 @@ export default function AccessionPage() {
                     <span className="font-bold text-sm text-slate-700">
                       ₹{Number(item.price).toFixed(2)}
                     </span>
-                    <Plus className="w-4 h-4 text-indigo-400 group-hover:text-indigo-600" />
+                    <Plus className="w-4 h-4 text-indigo-400 group-hover:text-primary" />
                   </div>
                 </div>
               ))}
@@ -531,7 +531,7 @@ export default function AccessionPage() {
                 Cart ({selectedTests.length})
               </h2>
               {isUrgent && (
-                <Badge className="bg-red-500 text-white animate-pulse border-0 shadow-sm text-[10px]">
+                <Badge className="bg-red-500 text-primary-foreground animate-pulse border-0 shadow-sm text-[10px]">
                   <AlertTriangle className="w-3 h-3 mr-1" /> STAT
                 </Badge>
               )}
@@ -600,7 +600,7 @@ export default function AccessionPage() {
         {/* 💳 RIGHT: FINANCIALS & BILLING */}
         <div className="lg:col-span-4 bg-white flex flex-col h-full z-20 relative overflow-hidden">
           <div className="p-4 border-b border-slate-100 bg-slate-50 flex-none h-14 flex items-center gap-2">
-            <Receipt className="h-4 w-4 text-indigo-600" />
+            <Receipt className="h-4 w-4 text-primary" />
             <h3 className="font-bold text-slate-800 text-sm">
               Checkout & Billing
             </h3>
@@ -647,7 +647,7 @@ export default function AccessionPage() {
             </div>
 
             {/* Total Block */}
-            <div className="bg-slate-900 text-white rounded-2xl p-4 flex justify-between items-center shadow-lg relative overflow-hidden">
+            <div className="bg-slate-900 text-primary-foreground rounded-2xl p-4 flex justify-between items-center shadow-lg relative overflow-hidden">
               <div className="absolute -right-2 -top-2 opacity-10">
                 <CreditCard className="w-16 h-16" />
               </div>
@@ -670,7 +670,7 @@ export default function AccessionPage() {
                 <Input
                   type="number"
                   {...register("paidAmount")}
-                  className="h-10 border-emerald-300 bg-emerald-50 text-emerald-700 font-bold text-lg rounded-xl"
+                  className="h-10 border-emerald-300 bg-emerald-50 text-primary font-bold text-lg rounded-xl"
                 />
               </div>
               <div className="space-y-1.5">
@@ -701,7 +701,7 @@ export default function AccessionPage() {
                 className={
                   balance > 0
                     ? "text-rose-600 text-lg font-black"
-                    : "text-emerald-600 text-lg font-black"
+                    : "text-primary text-lg font-black"
                 }>
                 ₹ {balance}
               </span>
@@ -793,7 +793,7 @@ export default function AccessionPage() {
             <Button
               type="submit"
               form="accession-form"
-              className="w-2/3 h-12 font-bold text-base bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md"
+              className="w-2/3 h-12 font-bold text-base bg-primary hover:bg-primary/90 rounded-xl shadow-md"
               disabled={submitMutation.isPending || selectedTests.length === 0}>
               {submitMutation.isPending ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -811,14 +811,14 @@ export default function AccessionPage() {
           <span className="text-[10px] font-bold text-slate-500 uppercase">
             Total ({selectedTests.length})
           </span>
-          <span className="text-xl font-black text-indigo-700">
+          <span className="text-xl font-black text-primary">
             ₹{netPayable.toFixed(2)}
           </span>
         </div>
         <Button
           type="submit"
           form="accession-form"
-          className="h-12 px-6 font-bold text-sm bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md"
+          className="h-12 px-6 font-bold text-sm bg-primary hover:bg-primary/90 rounded-xl shadow-md"
           disabled={submitMutation.isPending || selectedTests.length === 0}>
           {submitMutation.isPending ? (
             <Loader2 className="w-5 h-5 animate-spin" />

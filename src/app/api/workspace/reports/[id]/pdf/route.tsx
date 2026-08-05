@@ -112,10 +112,11 @@ const styles = StyleSheet.create({
 });
 
 // --- 2. DEFINE THE PDF TEMPLATE ---
-const MedicalReportPDF = ({ report, test, lab, patient }: any) => (
+const MedicalReportPDF = ({ report, test, lab, patient, showHeader = true, extraPages = 0, onePerPage = false, nablData = {} }: any) => (
   <Document>
     <Page size="A4" style={styles.page}>
-      {/* HEADER SECTION */}
+      {/* HEADER SECTION — can be hidden with ?header=false */}
+      {showHeader && (
       <View style={styles.header}>
         <View>
           <Text style={styles.labName}>{lab.name}</Text>
@@ -131,6 +132,16 @@ const MedicalReportPDF = ({ report, test, lab, patient }: any) => (
           <Text style={styles.labText}>GSTIN: {lab.gstNumber || "N/A"}</Text>
         </View>
       </View>
+      )}
+
+      {/* ✅ NABL STANDARD TIMESTAMPS */}
+      {showHeader && nablData.collectedAt && (
+        <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 10, fontSize: 8, color: "#64748b" }}>
+          <Text>Collected: {new Date(nablData.collectedAt).toLocaleString('en-IN')}</Text>
+          <Text>Received: {nablData.receivedAt ? new Date(nablData.receivedAt).toLocaleString('en-IN') : '—'}</Text>
+          <Text>Printed: {new Date(nablData.printedAt).toLocaleString('en-IN')}</Text>
+        </View>
+      )}
 
       <Text style={styles.title}>{test.testName} Report</Text>
 
@@ -209,9 +220,13 @@ const MedicalReportPDF = ({ report, test, lab, patient }: any) => (
         <View style={styles.signatureBox}>
           <View>
             <Text style={styles.signLine}>Technician Signature</Text>
+            {nablData.checkedBy && <Text style={{ fontSize: 7, color: "#94a3b8" }}>Checked by: {nablData.checkedBy}</Text>}
+            {nablData.checkedAt && <Text style={{ fontSize: 7, color: "#94a3b8" }}>at: {new Date(nablData.checkedAt).toLocaleString('en-IN')}</Text>}
           </View>
           <View>
             <Text style={styles.signLine}>Pathologist / Lab Director</Text>
+            {nablData.approvedBy && <Text style={{ fontSize: 7, color: "#94a3b8" }}>Approved by: {nablData.approvedBy}</Text>}
+            {nablData.approvedAt && <Text style={{ fontSize: 7, color: "#94a3b8" }}>at: {new Date(nablData.approvedAt).toLocaleString('en-IN')}</Text>}
           </View>
         </View>
         <Text style={styles.footerText}>
@@ -220,6 +235,14 @@ const MedicalReportPDF = ({ report, test, lab, patient }: any) => (
         </Text>
       </View>
     </Page>
+    {/* ✅ Extra blank pages if requested via ?extraPages=N */}
+    {Array.from({ length: extraPages }).map((_, i) => (
+      <Page key={`extra-${i}`} size="A4" style={{ padding: 40 }}>
+        <Text style={{ fontSize: 8, color: "#cbd5e1", textAlign: "center", marginTop: 200 }}>
+          --- Intentionally Left Blank ---
+        </Text>
+      </Page>
+    ))}
   </Document>
 );
 
@@ -231,6 +254,12 @@ export async function GET(
   try {
     const reportId = params.id;
 
+    // ✅ Query params for print options
+    const url = new URL(req.url);
+    const showHeader = url.searchParams.get("header") !== "false"; // default true
+    const extraPages = parseInt(url.searchParams.get("extraPages") || "0");
+    const onePerPage = url.searchParams.get("onePerPage") === "true";
+
     // Fetch the deeply nested report data
     const report = await prisma.report.findUnique({
       where: { id: reportId },
@@ -241,6 +270,7 @@ export async function GET(
           include: {
             results: { orderBy: { order: "asc" } },
             doctor: true,
+            sample: { select: { collectedAt: true, receivedAt: true, sampleId: true } },
           },
         },
       },
@@ -253,6 +283,17 @@ export async function GET(
       );
     }
 
+    // ✅ NABL timestamps
+    const nablData = {
+      collectedAt: report.test.sample?.collectedAt || null,
+      receivedAt: report.test.sample?.receivedAt || null,
+      printedAt: new Date(),
+      checkedBy: report.test.checkedBy || null,
+      checkedAt: report.test.checkedAt || null,
+      approvedBy: report.test.approvedBy || null,
+      approvedAt: report.test.approvedAt || null,
+    };
+
     // Generate the PDF as a Node.js Stream
     const pdfStream = await renderToStream(
       <MedicalReportPDF
@@ -260,6 +301,10 @@ export async function GET(
         test={report.test}
         lab={report.lab}
         patient={report.patient}
+        showHeader={showHeader}
+        extraPages={extraPages}
+        onePerPage={onePerPage}
+        nablData={nablData}
       />,
     );
 
@@ -276,7 +321,6 @@ export async function GET(
     return new NextResponse(webStream, {
       headers: {
         "Content-Type": "application/pdf",
-        // Use 'inline' to view in browser, use 'attachment' to force download
         "Content-Disposition": `inline; filename="Report_${report.patient.name.replace(/\s+/g, "_")}.pdf"`,
       },
     });

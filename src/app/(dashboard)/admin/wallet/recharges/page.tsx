@@ -58,7 +58,7 @@ export default async function AdminRechargesPage() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-2">
-            <ArrowDownRight className="h-8 w-8 text-emerald-600" /> Recharge
+            <ArrowDownRight className="h-8 w-8 text-primary" /> Recharge
             History
           </h1>
           <p className="text-muted-foreground font-medium mt-1">
@@ -66,13 +66,13 @@ export default async function AdminRechargesPage() {
             platform.
           </p>
         </div>
-        <Button className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md font-bold">
+        <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-md font-bold">
           <Download className="w-4 h-4 mr-2" /> Export to CSV
         </Button>
       </div>
 
       {/* KPI METRIC */}
-      <Card className="border-0 shadow-lg bg-gradient-to-br from-emerald-600 to-emerald-800 text-white relative overflow-hidden rounded-2xl w-full md:w-1/3">
+      <Card className="border-0 shadow-lg bg-gradient-to-br from-emerald-600 to-emerald-800 text-primary-foreground relative overflow-hidden rounded-2xl w-full md:w-1/3">
         <div className="absolute top-0 right-0 p-24 bg-card opacity-5 rounded-full -mr-10 -mt-10 blur-2xl" />
         <CardContent className="p-6 relative z-10 flex flex-col justify-center">
           <div className="flex items-center justify-between mb-2 opacity-90">
@@ -91,7 +91,7 @@ export default async function AdminRechargesPage() {
       <Card className="border-border shadow-sm rounded-2xl overflow-hidden bg-card">
         <CardHeader className="border-b border-slate-100 bg-slate-50/50 pb-4">
           <CardTitle className="text-lg font-bold text-foreground flex items-center gap-2">
-            <Receipt className="w-5 h-5 text-emerald-600" /> Platform Top-Ups
+            <Receipt className="w-5 h-5 text-primary" /> Platform Top-Ups
           </CardTitle>
           <CardDescription>
             Chronological list of all successful payments
@@ -123,7 +123,7 @@ export default async function AdminRechargesPage() {
                     className="hover:bg-muted/30 transition-colors bg-card">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
+                        <div className="p-2 bg-emerald-50 text-primary rounded-lg">
                           <Building2 className="w-4 h-4" />
                         </div>
                         <div>
@@ -151,12 +151,12 @@ export default async function AdminRechargesPage() {
                       </p>
                       <Badge
                         variant="outline"
-                        className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[9px] uppercase mt-1">
+                        className="bg-emerald-50 text-primary border-emerald-200 text-[9px] uppercase mt-1">
                         {tx.type}
                       </Badge>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <span className="font-black text-lg text-emerald-600">
+                      <span className="font-black text-lg text-primary">
                         +{formatCurrency(Number(tx.amount))}
                       </span>
                       <p className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-widest mt-1">

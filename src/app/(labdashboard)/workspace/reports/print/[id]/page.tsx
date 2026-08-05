@@ -420,7 +420,7 @@ export default function ClinicalReportPage() {
       {/* ============================================================== */}
       <div className="w-[210mm] print:hidden flex flex-col md:flex-row justify-between items-center mb-6 sticky top-4 z-50 bg-card/95 backdrop-blur-md p-4 rounded-xl shadow-xl border border-primary/20 gap-4">
         <div className="flex items-center gap-4">
-          <div className="bg-primary p-3 rounded-lg text-white shadow-inner hidden md:block">
+          <div className="bg-primary p-3 rounded-lg text-primary-foreground shadow-inner hidden md:block">
             <FileCheck2 size={28} />
           </div>
           <div>
@@ -441,7 +441,7 @@ export default function ClinicalReportPage() {
           <Button
             variant="outline"
             onClick={() => setShowFlags(!showFlags)}
-            className={`h-11 rounded-lg font-bold border-2 transition-all mr-2 ${showFlags ? "bg-indigo-50 text-indigo-700 border-indigo-200" : "text-muted-foreground border-border"}`}>
+            className={`h-11 rounded-lg font-bold border-2 transition-all mr-2 ${showFlags ? "bg-indigo-50 text-primary border-indigo-200" : "text-muted-foreground border-border"}`}>
             <Activity className="w-4 h-4 md:mr-2" />
             <span className="hidden md:inline">
               {showFlags ? "Flags: ON" : "Flags: OFF"}
@@ -451,7 +451,7 @@ export default function ClinicalReportPage() {
           <Button
             variant="outline"
             onClick={() => handleWhatsAppShare(latestVisit)}
-            className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 h-11 rounded-lg">
+            className="text-primary border-emerald-200 hover:bg-emerald-50 h-11 rounded-lg">
             <MessageCircle className="w-4 h-4 md:mr-2" />
             <span className="hidden md:inline">WhatsApp</span>
           </Button>
@@ -465,7 +465,7 @@ export default function ClinicalReportPage() {
           </Button>
 
           <Button
-            className="bg-primary hover:bg-blue-700 text-white shadow-md transition-all h-11 rounded-lg font-bold"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md transition-all h-11 rounded-lg font-bold"
             onClick={() => handleDownload(latestVisit)}
             disabled={isDownloading === latestVisit.invoiceId}>
             {isDownloading === latestVisit.invoiceId ? (
@@ -502,7 +502,7 @@ export default function ClinicalReportPage() {
                 <Button
                   variant="secondary"
                   size="sm"
-                  className="bg-slate-600 hover:bg-primary text-white border-0 h-8"
+                  className="bg-slate-600 hover:bg-primary text-primary-foreground border-0 h-8"
                   onClick={() => handleDownload(visit)}
                   disabled={isDownloading === visit.invoiceId}>
                   {isDownloading === visit.invoiceId ? (
@@ -852,7 +852,7 @@ export default function ClinicalReportPage() {
                                       />
                                     );
                                   } else if (flagStatus === "NORMAL") {
-                                    valColor = "text-emerald-600";
+                                    valColor = "text-primary";
                                     icon = (
                                       <Check
                                         className="w-3.5 h-3.5 inline ml-1.5"

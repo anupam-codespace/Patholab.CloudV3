@@ -157,7 +157,7 @@ export default function CustomFieldsTab() {
           }}>
           <Button
             onClick={handleAddNew}
-            className="bg-primary hover:bg-blue-700 shadow-sm shrink-0 w-full sm:w-auto">
+            className="bg-primary hover:bg-primary/90 shadow-sm shrink-0 w-full sm:w-auto">
             <Plus className="mr-2 h-4 w-4" /> Create Custom Field
           </Button>
 

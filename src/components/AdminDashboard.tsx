@@ -220,7 +220,7 @@ export default async function SuperAdminDashboard() {
 
       {/* --- ROW 1: PRIMARY FINANCIALS (WALLET PIVOT) --- */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-none shadow-sm bg-gradient-to-br from-emerald-500 to-emerald-700 text-white">
+        <Card className="border-none shadow-sm bg-gradient-to-br from-emerald-500 to-emerald-700 text-primary-foreground">
           <CardContent className="p-5">
             <div className="flex items-center justify-between opacity-80 mb-2">
               <p className="text-xs font-bold uppercase tracking-wider">
@@ -405,11 +405,11 @@ export default async function SuperAdminDashboard() {
 
             <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100">
               <div className="bg-emerald-50 p-3 rounded-xl border border-emerald-100">
-                <ArrowDownRight className="w-5 h-5 text-emerald-600 mb-1" />
-                <p className="text-[10px] font-bold text-emerald-600/80 uppercase">
+                <ArrowDownRight className="w-5 h-5 text-primary mb-1" />
+                <p className="text-[10px] font-bold text-primary/80 uppercase">
                   Inflow (MTD)
                 </p>
-                <p className="text-sm font-black text-emerald-700">
+                <p className="text-sm font-black text-primary">
                   {formatCurrency(m.financials.rechargesMTD)}
                 </p>
               </div>

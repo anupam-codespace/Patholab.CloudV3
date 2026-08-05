@@ -65,7 +65,7 @@ export default function AdminInvoicesPage() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-black tracking-tight flex items-center gap-2">
-            <ReceiptIcon className="h-8 w-8 text-emerald-600" /> Tax Invoices
+            <ReceiptIcon className="h-8 w-8 text-primary" /> Tax Invoices
           </h1>
           <p className="text-muted-foreground font-medium mt-1">
             Manage billing, taxation, and global invoice templates for Wallet
@@ -76,7 +76,7 @@ export default function AdminInvoicesPage() {
           <Button
             variant={activeTab === "list" ? "default" : "outline"}
             className={
-              activeTab === "list" ? "bg-emerald-600 hover:bg-emerald-700" : ""
+              activeTab === "list" ? "bg-primary hover:bg-primary/90" : ""
             }
             onClick={() => setActiveTab("list")}>
             <FileText className="mr-2 h-4 w-4" /> All Invoices
@@ -85,7 +85,7 @@ export default function AdminInvoicesPage() {
             variant={activeTab === "settings" ? "default" : "outline"}
             className={
               activeTab === "settings"
-                ? "bg-emerald-600 hover:bg-emerald-700"
+                ? "bg-primary hover:bg-primary/90"
                 : ""
             }
             onClick={() => setActiveTab("settings")}>
@@ -247,7 +247,7 @@ function InvoicesList() {
                     <TableCell>
                       <Badge
                         variant="outline"
-                        className="bg-emerald-50 text-emerald-700 border-emerald-200 uppercase tracking-widest font-black text-[10px]">
+                        className="bg-emerald-50 text-primary border-emerald-200 uppercase tracking-widest font-black text-[10px]">
                         SUCCESS
                       </Badge>
                     </TableCell>
@@ -319,7 +319,7 @@ function InvoicePreviewDialog({
         <Button
           variant="ghost"
           size="icon"
-          className="hover:bg-emerald-50 hover:text-emerald-600 rounded-lg">
+          className="hover:bg-emerald-50 hover:text-primary rounded-lg">
           <Eye className="h-4 w-4" />
         </Button>
       </DialogTrigger>
@@ -335,7 +335,7 @@ function InvoicePreviewDialog({
             </Button>
             <Button
               onClick={() => window.print()}
-              className="font-bold rounded-xl h-10 bg-emerald-600 hover:bg-emerald-700 text-white">
+              className="font-bold rounded-xl h-10 bg-primary hover:bg-primary/90 text-primary-foreground">
               <Printer className="mr-2 h-4 w-4" /> Print
             </Button>
           </div>
@@ -416,7 +416,7 @@ function InvoicePreviewDialog({
                   <span className="text-xs font-bold text-muted-foreground/70 uppercase">
                     Status:
                   </span>
-                  <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 font-bold uppercase tracking-widest text-[10px] shadow-none">
+                  <Badge className="bg-emerald-50 text-primary border-emerald-200 font-bold uppercase tracking-widest text-[10px] shadow-none">
                     SUCCESS
                   </Badge>
                 </div>
@@ -476,7 +476,7 @@ function InvoicePreviewDialog({
                   <span className="text-foreground">{formatCurrency(sgst)}</span>
                 </div>
                 <Separator className="my-2 w-64 bg-slate-200" />
-                <div className="flex justify-between w-64 font-black text-xl text-emerald-600">
+                <div className="flex justify-between w-64 font-black text-xl text-primary">
                   <span className="uppercase tracking-tight text-slate-800">
                     Gross Total
                   </span>
@@ -528,7 +528,7 @@ function InvoiceBuilder() {
       <Card className="border-border shadow-sm rounded-2xl">
         <CardHeader className="bg-slate-50/50 border-b border-slate-100 pb-4">
           <CardTitle className="flex items-center gap-2">
-            <Building2 className="w-5 h-5 text-emerald-600" /> Global Biller
+            <Building2 className="w-5 h-5 text-primary" /> Global Biller
             Configuration
           </CardTitle>
           <CardDescription>
@@ -599,7 +599,7 @@ function InvoiceBuilder() {
           </div>
           <Button
             onClick={handleSave}
-            className="w-full bg-emerald-600 hover:bg-emerald-700 h-12 rounded-xl font-bold shadow-md mt-4">
+            className="w-full bg-primary hover:bg-primary/90 h-12 rounded-xl font-bold shadow-md mt-4">
             <Save className="mr-2 h-4 w-4" /> Save Configuration
           </Button>
         </CardContent>

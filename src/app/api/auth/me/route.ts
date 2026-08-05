@@ -74,7 +74,11 @@ export async function GET(req: NextRequest) {
             branchId: activeBranch?.id || null,
             branchName: activeBranch?.name || "Main Branch",
             isLisIntegrationPaid: activeLab.wallet?.isLisIntegrationPaid || false,
-            activeModules: (activeLab.activeModules as string[]) ?? [],
+            activeModules: activeLab.activeModules
+              ? (Array.isArray(activeLab.activeModules)
+                ? activeLab.activeModules
+                : String(activeLab.activeModules).split(',').filter(Boolean))
+              : [],
             // 💰 Include live wallet balance for the UI Header
             wallet: activeLab.wallet
               ? {

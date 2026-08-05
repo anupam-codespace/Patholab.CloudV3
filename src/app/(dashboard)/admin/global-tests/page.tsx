@@ -24,7 +24,7 @@ export default async function GlobalTestsListPage() {
           </p>
         </div>
         <Link href="/admin/global-tests/new">
-          <Button className="bg-primary hover:bg-blue-700">
+          <Button className="bg-primary hover:bg-primary/90">
             <Plus className="h-4 w-4 mr-2" /> Add Global Test
           </Button>
         </Link>
@@ -62,7 +62,7 @@ export default async function GlobalTestsListPage() {
                 </td>
                 <td className="px-6 py-4">
                   {test.isActive ? (
-                    <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none">
+                    <Badge className="bg-emerald-100 text-primary hover:bg-emerald-100 border-none">
                       Active
                     </Badge>
                   ) : (

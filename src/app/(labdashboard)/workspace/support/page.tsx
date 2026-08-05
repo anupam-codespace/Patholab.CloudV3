@@ -85,7 +85,7 @@ export default function LabSupportPage() {
           <h1 className="text-3xl font-bold tracking-tight">Help & Support</h1>
           <p className="text-muted-foreground">Get assistance with your lab operations.</p>
         </div>
-        <Button onClick={() => setIsCreateOpen(true)} className="shadow-lg bg-primary hover:bg-blue-700">
+        <Button onClick={() => setIsCreateOpen(true)} className="shadow-lg bg-primary hover:bg-primary/90">
           <Plus className="mr-2 h-4 w-4" /> Create New Ticket
         </Button>
       </div>
@@ -298,7 +298,7 @@ function TicketDetailSheet({ ticketId, onClose }: { ticketId: string | null, onC
             {ticket.messages?.map((msg) => (
               <div key={msg.id} className={`flex gap-3 ${!msg.isStaff ? 'flex-row-reverse' : ''}`}>
                 <Avatar className="h-8 w-8 mt-1">
-                  <AvatarFallback className={!msg.isStaff ? 'bg-primary text-white' : 'bg-slate-200'}>
+                  <AvatarFallback className={!msg.isStaff ? 'bg-primary text-primary-foreground' : 'bg-slate-200'}>
                     {msg.isStaff ? 'S' : 'U'}
                   </AvatarFallback>
                 </Avatar>
@@ -307,7 +307,7 @@ function TicketDetailSheet({ ticketId, onClose }: { ticketId: string | null, onC
                     <span className="text-xs font-medium">{msg.senderName || (msg.isStaff ? 'Support' : 'You')}</span>
                     <span className="text-[10px] text-muted-foreground">{format(new Date(msg.createdAt), 'HH:mm')}</span>
                   </div>
-                  <div className={`p-3 rounded-lg text-sm shadow-sm ${!msg.isStaff ? 'bg-primary text-white rounded-tr-none' : 'bg-card border rounded-tl-none'}`}>
+                  <div className={`p-3 rounded-lg text-sm shadow-sm ${!msg.isStaff ? 'bg-primary text-primary-foreground rounded-tr-none' : 'bg-card border rounded-tl-none'}`}>
                     {msg.message}
                   </div>
                 </div>
@@ -330,7 +330,7 @@ function TicketDetailSheet({ ticketId, onClose }: { ticketId: string | null, onC
               placeholder="Type your reply..."
               className="min-h-[80px] resize-none"
             />
-            <Button size="icon" onClick={handleSendReply} disabled={!reply.trim() || replyMutation.isPending} className="bg-primary hover:bg-blue-700">
+            <Button size="icon" onClick={handleSendReply} disabled={!reply.trim() || replyMutation.isPending} className="bg-primary hover:bg-primary/90">
               <Send className="h-4 w-4" />
             </Button>
           </div>
@@ -422,7 +422,7 @@ function CreateTicketDialog({ open, onOpenChange }: { open: boolean, onOpenChang
           </div>
           <DialogFooter className="pt-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button type="submit" disabled={createMutation.isPending} className="bg-primary hover:bg-blue-700">
+            <Button type="submit" disabled={createMutation.isPending} className="bg-primary hover:bg-primary/90">
               {createMutation.isPending ? 'Submitting...' : 'Submit Ticket'}
             </Button>
           </DialogFooter>

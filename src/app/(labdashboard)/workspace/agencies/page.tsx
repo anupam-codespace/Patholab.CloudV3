@@ -356,7 +356,7 @@ export default function AgenciesPage() {
           <Button
             variant="outline"
             onClick={exportToExcel}
-            className="text-emerald-700 border-emerald-200 hover:bg-emerald-50">
+            className="text-primary border-emerald-200 hover:bg-emerald-50">
             <FileSpreadsheet className="h-4 w-4 mr-2" /> Excel
           </Button>
           <Button
@@ -367,7 +367,7 @@ export default function AgenciesPage() {
           </Button>
           <Button
             onClick={handleAddNew}
-            className="bg-blue-600 hover:bg-blue-700 text-white shadow-md ml-2">
+            className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md ml-2">
             <Plus className="h-4 w-4 mr-2" /> Add Agency
           </Button>
         </div>
@@ -431,7 +431,7 @@ export default function AgenciesPage() {
                   <TableRow key={agency.id} className="hover:bg-slate-50/50">
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 bg-indigo-50 text-indigo-700 rounded-full flex items-center justify-center font-bold">
+                        <div className="h-10 w-10 bg-indigo-50 text-primary rounded-full flex items-center justify-center font-bold">
                           <Building2 className="h-5 w-5" />
                         </div>
                         <div>
@@ -452,13 +452,13 @@ export default function AgenciesPage() {
                           className={`
                           ${agency.agencyTier === "GOLD" ? "bg-yellow-50 text-yellow-700 border-yellow-200" : ""}
                           ${agency.agencyTier === "SILVER" ? "bg-slate-100 text-slate-600 border-slate-300" : ""}
-                          ${agency.agencyTier === "PLATINUM" ? "bg-indigo-50 text-indigo-700 border-indigo-200" : ""}
+                          ${agency.agencyTier === "PLATINUM" ? "bg-indigo-50 text-primary border-indigo-200" : ""}
                           ${!agency.agencyTier || agency.agencyTier === "STANDARD" ? "bg-gray-50 text-gray-600" : ""}
                         `}>
                           {agency.agencyTier || "STANDARD"}
                         </Badge>
                         {agency.user && (
-                          <span className="text-[10px] flex items-center text-emerald-600 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
+                          <span className="text-[10px] flex items-center text-primary font-semibold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
                             <ShieldCheck className="h-3 w-3 mr-1" /> Portal
                             Active
                           </span>
@@ -468,7 +468,7 @@ export default function AgenciesPage() {
                     <TableCell>
                       <div className="flex flex-col items-start gap-1">
                         <span
-                          className={`inline-flex items-center px-2 py-1 rounded text-xs font-bold ${agency.commissionType === "PERCENTAGE" ? "bg-purple-50 text-purple-700" : "bg-emerald-50 text-emerald-700"}`}>
+                          className={`inline-flex items-center px-2 py-1 rounded text-xs font-bold ${agency.commissionType === "PERCENTAGE" ? "bg-purple-50 text-purple-700" : "bg-emerald-50 text-primary"}`}>
                           {agency.commissionType === "PERCENTAGE" ? (
                             <Percent className="h-3 w-3 mr-1" />
                           ) : (
@@ -481,7 +481,7 @@ export default function AgenciesPage() {
                           (Default)
                         </span>
                         {agency.customTestCommissions?.length > 0 && (
-                          <span className="text-[10px] text-blue-600 font-bold bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
+                          <span className="text-[10px] text-primary font-bold bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
                             {agency.customTestCommissions.length} Custom/Net
                             Prices
                           </span>
@@ -507,14 +507,14 @@ export default function AgenciesPage() {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleView(agency)}
-                          className="text-slate-400 hover:text-indigo-600">
+                          className="text-slate-400 hover:text-primary">
                           <Eye className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => handleEdit(agency)}
-                          className="text-slate-400 hover:text-blue-600">
+                          className="text-slate-400 hover:text-primary">
                           <Pencil className="h-4 w-4" />
                         </Button>
                         <Button
@@ -549,14 +549,14 @@ export default function AgenciesPage() {
                 <TabsList className="bg-slate-50/50 w-full justify-start p-0 h-auto gap-4 rounded-none">
                   <TabsTrigger
                     value="basic"
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent py-3 px-1 text-sm font-semibold">
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent py-3 px-1 text-sm font-semibold">
                     Basic Profile & Tiers
                   </TabsTrigger>
                   <TabsTrigger
                     value="custom"
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent py-3 px-1 text-sm font-semibold flex items-center gap-2 text-indigo-600">
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent py-3 px-1 text-sm font-semibold flex items-center gap-2 text-primary">
                     B2B Net Prices & Custom Rates
-                    <Badge className="bg-indigo-100 text-indigo-700 border-none text-[10px] h-4 px-1.5">
+                    <Badge className="bg-indigo-100 text-primary border-none text-[10px] h-4 px-1.5">
                       {customCommissions.length}
                     </Badge>
                   </TabsTrigger>
@@ -671,10 +671,10 @@ export default function AgenciesPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-sm font-bold text-indigo-900 flex items-center gap-2">
-                        <Key className="w-4 h-4 text-indigo-600" /> Partner
+                        <Key className="w-4 h-4 text-primary" /> Partner
                         Portal Login
                       </h3>
-                      <p className="text-xs text-indigo-700/70 mt-1">
+                      <p className="text-xs text-primary/70 mt-1">
                         Allow this agency to log in and download their own
                         reports.
                       </p>
@@ -711,7 +711,7 @@ export default function AgenciesPage() {
                               loginEmail: e.target.value,
                             })
                           }
-                          className="bg-white border-indigo-200 focus-visible:ring-indigo-500"
+                          className="bg-white border-indigo-200 focus-visible:ring-primary"
                         />
                       </div>
                       <div className="space-y-1.5">
@@ -734,7 +734,7 @@ export default function AgenciesPage() {
                               loginPassword: e.target.value,
                             })
                           }
-                          className="bg-white border-indigo-200 focus-visible:ring-indigo-500"
+                          className="bg-white border-indigo-200 focus-visible:ring-primary"
                         />
                       </div>
                     </div>
@@ -933,7 +933,7 @@ export default function AgenciesPage() {
               </Button>
               <Button
                 type="submit"
-                className="bg-blue-600 hover:bg-blue-700 shadow-md"
+                className="bg-primary hover:bg-primary/90 shadow-md"
                 disabled={saveMutation.isPending}>
                 {saveMutation.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -953,7 +953,7 @@ export default function AgenciesPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
-                <Building2 className="h-5 w-5 text-indigo-600" />
+                <Building2 className="h-5 w-5 text-primary" />
               </div>
               <div>
                 <div className="text-lg font-bold">

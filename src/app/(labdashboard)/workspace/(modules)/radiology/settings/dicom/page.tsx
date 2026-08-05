@@ -117,7 +117,7 @@ export default function DicomSettingsPage() {
   if (isLoading) {
     return (
       <div className="flex h-[calc(100vh-4rem)] flex-col items-center justify-center bg-muted/30 font-sans">
-        <Loader2 className="h-10 w-10 animate-spin text-indigo-600 mb-4" />
+        <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
         <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest animate-pulse">
           Loading Configuration...
         </p>
@@ -134,7 +134,7 @@ export default function DicomSettingsPage() {
       <header className="sticky top-0 z-30 bg-card/70 backdrop-blur-xl border-b border-slate-200/60 shadow-sm">
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="flex items-center gap-4">
-            <div className="h-12 w-12 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-inner shrink-0">
+            <div className="h-12 w-12 bg-gradient-to-br from-indigo-500 to-primary rounded-xl flex items-center justify-center shadow-inner shrink-0">
               <Network className="h-6 w-6 text-white" />
             </div>
             <div>
@@ -150,7 +150,7 @@ export default function DicomSettingsPage() {
           <Button
             onClick={() => saveMutation.mutate(settings)}
             disabled={saveMutation.isPending}
-            className="w-full md:w-auto h-11 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white rounded-xl shadow-md shadow-indigo-500/25 font-bold transition-all duration-300 hover:-translate-y-0.5 shrink-0 px-8">
+            className="w-full md:w-auto h-11 bg-gradient-to-r from-primary to-primary hover:from-indigo-700 hover:to-violet-700 text-primary-foreground rounded-xl shadow-md shadow-indigo-500/25 font-bold transition-all duration-300 hover:-translate-y-0.5 shrink-0 px-8">
             {saveMutation.isPending ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
@@ -193,7 +193,7 @@ export default function DicomSettingsPage() {
                         localAETitle: e.target.value.toUpperCase(),
                       })
                     }
-                    className="uppercase font-mono text-sm h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-indigo-500/20"
+                    className="uppercase font-mono text-sm h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-primary/20"
                   />
                   <p className="text-[10px] font-medium text-muted-foreground/70 mt-1">
                     The Application Entity Title of this RIS software.
@@ -209,7 +209,7 @@ export default function DicomSettingsPage() {
                     onChange={(e) =>
                       setSettings({ ...settings, localPort: e.target.value })
                     }
-                    className="font-mono text-sm h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-indigo-500/20"
+                    className="font-mono text-sm h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-primary/20"
                   />
                 </div>
               </div>
@@ -226,7 +226,7 @@ export default function DicomSettingsPage() {
                 </div>
                 <Badge
                   variant="outline"
-                  className="bg-emerald-50 text-emerald-600 border-emerald-200 font-mono text-[10px] tracking-wider uppercase">
+                  className="bg-emerald-50 text-primary border-emerald-200 font-mono text-[10px] tracking-wider uppercase">
                   Storage
                 </Badge>
               </div>
@@ -245,7 +245,7 @@ export default function DicomSettingsPage() {
                           pacsAETitle: e.target.value.toUpperCase(),
                         })
                       }
-                      className="uppercase font-mono text-sm h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-indigo-500/20"
+                      className="uppercase font-mono text-sm h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-primary/20"
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -260,7 +260,7 @@ export default function DicomSettingsPage() {
                           pacsIpAddress: e.target.value,
                         })
                       }
-                      className="font-mono text-sm h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-indigo-500/20"
+                      className="font-mono text-sm h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-primary/20"
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -273,7 +273,7 @@ export default function DicomSettingsPage() {
                       onChange={(e) =>
                         setSettings({ ...settings, pacsPort: e.target.value })
                       }
-                      className="font-mono text-sm h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-indigo-500/20"
+                      className="font-mono text-sm h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-primary/20"
                     />
                   </div>
                 </div>
@@ -284,7 +284,7 @@ export default function DicomSettingsPage() {
                     <div
                       className={`h-12 w-12 rounded-xl flex items-center justify-center border shadow-sm transition-colors ${
                         pacsStatus === "CONNECTED"
-                          ? "bg-emerald-50 border-emerald-200 text-emerald-600"
+                          ? "bg-emerald-50 border-emerald-200 text-primary"
                           : pacsStatus === "FAILED"
                             ? "bg-rose-50 border-rose-200 text-rose-600"
                             : "bg-card border-border text-slate-400"
@@ -306,7 +306,7 @@ export default function DicomSettingsPage() {
                       <p
                         className={`text-xs font-bold mt-0.5 truncate ${
                           pacsStatus === "CONNECTED"
-                            ? "text-emerald-600"
+                            ? "text-primary"
                             : pacsStatus === "FAILED"
                               ? "text-rose-600"
                               : "text-muted-foreground"
@@ -326,7 +326,7 @@ export default function DicomSettingsPage() {
                     variant="outline"
                     onClick={() => pingMutation.mutate()}
                     disabled={pingMutation.isPending || !settings.pacsIpAddress}
-                    className="w-full sm:w-auto bg-card border-border text-foreground/80 font-bold hover:bg-muted/30 hover:text-indigo-600 h-10 rounded-xl transition-colors shadow-sm shrink-0">
+                    className="w-full sm:w-auto bg-card border-border text-foreground/80 font-bold hover:bg-muted/30 hover:text-primary h-10 rounded-xl transition-colors shadow-sm shrink-0">
                     {pingMutation.isPending ? (
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
                     ) : (
@@ -363,7 +363,7 @@ export default function DicomSettingsPage() {
                           viewerBaseUrl: e.target.value,
                         })
                       }
-                      className="pl-10 font-mono text-sm text-indigo-600 h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-indigo-500/20"
+                      className="pl-10 font-mono text-sm text-primary h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-primary/20"
                       placeholder="http://192.168.1.100:8042/viewer?StudyInstanceUID="
                     />
                   </div>
@@ -392,7 +392,7 @@ export default function DicomSettingsPage() {
                 </h2>
                 <div className="flex items-center gap-2">
                   <span
-                    className={`text-[10px] font-bold uppercase tracking-wider ${settings.enableMwl ? "text-emerald-600" : "text-slate-400"}`}>
+                    className={`text-[10px] font-bold uppercase tracking-wider ${settings.enableMwl ? "text-primary" : "text-slate-400"}`}>
                     {settings.enableMwl ? "Active" : "Disabled"}
                   </span>
                   <div
@@ -447,7 +447,7 @@ export default function DicomSettingsPage() {
                   className={`w-full h-11 rounded-xl font-bold transition-all ${
                     settings.enableMwl
                       ? "bg-card border-rose-200 text-rose-600 hover:bg-rose-50"
-                      : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-500/25 hover:-translate-y-0.5"
+                      : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md shadow-indigo-500/25 hover:-translate-y-0.5"
                   }`}
                   onClick={() =>
                     setSettings({ ...settings, enableMwl: !settings.enableMwl })
@@ -461,7 +461,7 @@ export default function DicomSettingsPage() {
 
             <div className="bg-indigo-50/50 border border-indigo-100 rounded-2xl p-5 shadow-sm">
               <h3 className="font-bold text-indigo-900 mb-3 flex items-center gap-2 text-sm">
-                <AlertCircle className="h-4 w-4 text-indigo-600" /> Quick
+                <AlertCircle className="h-4 w-4 text-primary" /> Quick
                 Terminology
               </h3>
               <ul className="text-xs font-medium text-indigo-800/80 space-y-3">

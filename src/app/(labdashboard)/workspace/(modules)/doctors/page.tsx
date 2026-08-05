@@ -227,7 +227,7 @@ export default function DoctorsPage() {
         </div>
         <Button
           onClick={handleAddNew}
-          className="bg-blue-600 hover:bg-blue-700 text-white shadow-md">
+          className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md">
           <Plus className="h-4 w-4 mr-2" /> Add Doctor
         </Button>
       </div>
@@ -289,7 +289,7 @@ export default function DoctorsPage() {
                   <TableRow key={doc.id} className="hover:bg-slate-50/50">
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 bg-blue-50 text-blue-700 rounded-full flex items-center justify-center font-bold">
+                        <div className="h-10 w-10 bg-blue-50 text-primary rounded-full flex items-center justify-center font-bold">
                           <Stethoscope className="h-5 w-5" />
                         </div>
                         <div>
@@ -315,7 +315,7 @@ export default function DoctorsPage() {
                     <TableCell>
                       <div className="flex flex-col items-start gap-1">
                         <span
-                          className={`inline-flex items-center px-2 py-1 rounded text-xs font-bold ${doc.commissionType === "PERCENTAGE" ? "bg-purple-50 text-purple-700" : "bg-emerald-50 text-emerald-700"}`}>
+                          className={`inline-flex items-center px-2 py-1 rounded text-xs font-bold ${doc.commissionType === "PERCENTAGE" ? "bg-purple-50 text-purple-700" : "bg-emerald-50 text-primary"}`}>
                           {doc.commissionType === "PERCENTAGE" ? (
                             <Percent className="h-3 w-3 mr-1" />
                           ) : (
@@ -327,7 +327,7 @@ export default function DoctorsPage() {
                         </span>
                         {/* ✅ SHOW BADGE IF THEY HAVE CUSTOM RATES */}
                         {doc.customTestCommissions?.length > 0 && (
-                          <span className="text-[10px] text-blue-600 font-bold bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
+                          <span className="text-[10px] text-primary font-bold bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
                             {doc.customTestCommissions.length} Custom Test Rates
                           </span>
                         )}
@@ -352,14 +352,14 @@ export default function DoctorsPage() {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleView(doc)}
-                          className="text-slate-400 hover:text-indigo-600 bg-indigo-50/0 hover:bg-indigo-50">
+                          className="text-slate-400 hover:text-primary bg-indigo-50/0 hover:bg-indigo-50">
                           <Eye className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => handleEdit(doc)}
-                          className="text-slate-400 hover:text-blue-600">
+                          className="text-slate-400 hover:text-primary">
                           <Pencil className="h-4 w-4" />
                         </Button>
                         <Button
@@ -384,7 +384,7 @@ export default function DoctorsPage() {
         <DialogContent className="max-w-4xl bg-slate-50">
           <DialogHeader className="bg-white p-4 -mx-6 -mt-6 border-b rounded-t-lg shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="h-12 w-12 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center">
+              <div className="h-12 w-12 bg-indigo-100 text-primary rounded-full flex items-center justify-center">
                 <Stethoscope className="h-6 w-6" />
               </div>
               <div>
@@ -510,14 +510,14 @@ export default function DoctorsPage() {
                 <TabsList className="bg-slate-50/50 w-full justify-start p-0 h-auto gap-4 rounded-none">
                   <TabsTrigger
                     value="basic"
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent py-3 px-1 text-sm font-semibold">
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent py-3 px-1 text-sm font-semibold">
                     Basic & Default Margins
                   </TabsTrigger>
                   <TabsTrigger
                     value="custom"
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent py-3 px-1 text-sm font-semibold flex items-center gap-2 text-indigo-600">
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent py-3 px-1 text-sm font-semibold flex items-center gap-2 text-primary">
                     Custom Test Rates{" "}
-                    <Badge className="bg-indigo-100 text-indigo-700 border-none text-[10px] h-4 px-1.5">
+                    <Badge className="bg-indigo-100 text-primary border-none text-[10px] h-4 px-1.5">
                       {customCommissions.length}
                     </Badge>
                   </TabsTrigger>
@@ -766,7 +766,7 @@ export default function DoctorsPage() {
               </Button>
               <Button
                 type="submit"
-                className="bg-blue-600 hover:bg-blue-700 shadow-md"
+                className="bg-primary hover:bg-primary/90 shadow-md"
                 disabled={saveMutation.isPending}>
                 {saveMutation.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />

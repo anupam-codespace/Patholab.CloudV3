@@ -125,7 +125,7 @@ export function CatalogDialog({
             </Button>
             <Button
               type="submit"
-              className="bg-primary hover:bg-blue-700"
+              className="bg-primary hover:bg-primary/90"
               disabled={saveMutation.isPending}>
               {saveMutation.isPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

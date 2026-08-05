@@ -82,7 +82,7 @@ export function FilterSheet({
         <Button
           variant="outline"
           size="icon"
-          className={`h-9 w-9 shrink-0 bg-card ${hasActiveFilters ? "border-blue-600 text-primary" : "border-border text-muted-foreground"}`}>
+          className={`h-9 w-9 shrink-0 bg-card ${hasActiveFilters ? "border-primary text-primary" : "border-border text-muted-foreground"}`}>
           <Filter className="h-4 w-4" />
         </Button>
       </SheetTrigger>
@@ -173,7 +173,7 @@ export function FilterSheet({
 
         <SheetFooter className="border-t pt-4 flex-col gap-2 sm:flex-col sm:space-x-0">
           <Button
-            className="w-full bg-primary hover:bg-blue-700"
+            className="w-full bg-primary hover:bg-primary/90"
             onClick={handleApply}>
             Apply Filters
           </Button>

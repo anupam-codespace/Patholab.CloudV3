@@ -76,7 +76,7 @@ export default function ContactModal({ children }: { children: React.ReactNode }
               <Label>Message</Label>
               <Textarea name="message" required placeholder="Tell us more details..." className="resize-none min-h-[100px]" />
            </div>
-           <Button type="submit" className="w-full bg-primary hover:bg-blue-700" disabled={loading}>
+           <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={loading}>
               {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2"/> : <Send className="h-4 w-4 mr-2"/>}
               Send Message
            </Button>

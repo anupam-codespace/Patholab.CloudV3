@@ -34,7 +34,7 @@ function BarcodePrintContent() {
   if (loading) {
     return (
       <div className="h-screen flex flex-col items-center justify-center bg-muted/30">
-        <Loader2 className="animate-spin h-10 w-10 text-indigo-600 mb-4" />
+        <Loader2 className="animate-spin h-10 w-10 text-primary mb-4" />
         <p className="text-sm font-medium text-muted-foreground animate-pulse">
           Generating Labels...
         </p>
@@ -114,7 +114,7 @@ function BarcodePrintContent() {
       <div className="mb-8 print:hidden flex flex-col items-center gap-6 w-full max-w-4xl z-10 relative">
         <div className="bg-card/70 backdrop-blur-md p-6 rounded-2xl border border-slate-200/60 shadow-sm text-center flex flex-col items-center w-full">
           <div className="h-12 w-12 bg-indigo-50 rounded-xl flex items-center justify-center mb-4">
-            <ScanLine className="h-6 w-6 text-indigo-600" />
+            <ScanLine className="h-6 w-6 text-primary" />
           </div>
           <h1 className="text-xl font-bold text-foreground mb-1">
             Print Sample Labels
@@ -125,7 +125,7 @@ function BarcodePrintContent() {
           </p>
           <Button
             onClick={() => window.print()}
-            className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 w-48 h-11 rounded-xl font-bold shadow-md shadow-indigo-500/25 transition-all duration-300 hover:-translate-y-0.5">
+            className="bg-gradient-to-r from-primary to-primary hover:from-indigo-700 hover:to-violet-700 w-48 h-11 rounded-xl font-bold shadow-md shadow-indigo-500/25 transition-all duration-300 hover:-translate-y-0.5">
             <Printer className="mr-2 h-4 w-4" /> Print {samples.length} Labels
           </Button>
         </div>
@@ -158,7 +158,7 @@ function BarcodePrintContent() {
               </div>
 
               {/* Tube Badge */}
-              <div className="bg-black text-white text-[8px] font-bold px-1 py-0.5 rounded-[1px] min-w-[10mm] text-center uppercase tracking-wider">
+              <div className="bg-black text-primary-foreground text-[8px] font-bold px-1 py-0.5 rounded-[1px] min-w-[10mm] text-center uppercase tracking-wider">
                 {sample.containerType
                   ? sample.containerType.substring(0, 4)
                   : "GEN"}
@@ -202,7 +202,7 @@ export default function BarcodePage() {
     <Suspense
       fallback={
         <div className="h-screen flex items-center justify-center bg-muted/30">
-          <Loader2 className="animate-spin text-indigo-600 h-8 w-8" />
+          <Loader2 className="animate-spin text-primary h-8 w-8" />
         </div>
       }>
       <BarcodePrintContent />

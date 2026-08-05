@@ -189,7 +189,7 @@ export default function AdminPaymentsAndAddons() {
 
               <button
                 onClick={() => setEditingSub(sub)}
-                className="w-full mt-5 py-2 bg-slate-900 text-white rounded-lg text-sm hover:bg-slate-800 transition">
+                className="w-full mt-5 py-2 bg-slate-900 text-primary-foreground rounded-lg text-sm hover:bg-slate-800 transition">
                 Manage Add-ons
               </button>
             </div>
@@ -324,7 +324,7 @@ export default function AdminPaymentsAndAddons() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-blue-700">
+                  className="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-lg hover:bg-primary/90">
                   Save Assignments
                 </button>
               </div>

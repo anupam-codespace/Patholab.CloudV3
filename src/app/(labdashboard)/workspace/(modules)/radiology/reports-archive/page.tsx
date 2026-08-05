@@ -68,7 +68,7 @@ export default function ReportsArchivePage() {
       <header className="sticky top-0 z-30 bg-card/70 backdrop-blur-xl border-b border-slate-200/60 shadow-sm">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="flex items-center gap-4">
-            <div className="h-12 w-12 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-inner shrink-0">
+            <div className="h-12 w-12 bg-gradient-to-br from-indigo-500 to-primary rounded-xl flex items-center justify-center shadow-inner shrink-0">
               <FileText className="h-6 w-6 text-white" />
             </div>
             <div>
@@ -90,7 +90,7 @@ export default function ReportsArchivePage() {
             <Search className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
             <Input
               placeholder="Search by Patient Name, Phone, or Accession No..."
-              className="pl-10 h-11 bg-muted/30 border-slate-100 focus:bg-card focus:border-indigo-300 focus:ring-indigo-500/20 rounded-xl text-sm transition-all"
+              className="pl-10 h-11 bg-muted/30 border-slate-100 focus:bg-card focus:border-indigo-300 focus:ring-primary/20 rounded-xl text-sm transition-all"
               value={searchQuery}
               onChange={handleSearch}
             />
@@ -114,7 +114,7 @@ export default function ReportsArchivePage() {
                   <tr>
                     <td colSpan={4} className="h-64 text-center">
                       <div className="flex flex-col items-center justify-center space-y-4">
-                        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
                         <p className="text-sm font-bold text-muted-foreground/70 uppercase tracking-widest animate-pulse">
                           Loading Archive
                         </p>
@@ -186,11 +186,11 @@ export default function ReportsArchivePage() {
                               report.modality === "MRI"
                                 ? "bg-violet-100 text-violet-700"
                                 : report.modality === "CT"
-                                  ? "bg-indigo-100 text-indigo-700"
+                                  ? "bg-indigo-100 text-primary"
                                   : report.modality === "XRAY"
                                     ? "bg-amber-100 text-amber-700"
                                     : report.modality === "USG"
-                                      ? "bg-emerald-100 text-emerald-700"
+                                      ? "bg-emerald-100 text-primary"
                                       : "bg-muted text-muted-foreground"
                             }`}>
                                 {report.modality || "UNK"}
@@ -202,7 +202,7 @@ export default function ReportsArchivePage() {
                               </span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="text-[10px] font-mono text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded font-bold border border-indigo-100 flex items-center gap-1">
+                              <span className="text-[10px] font-mono text-primary bg-indigo-50 px-1.5 py-0.5 rounded font-bold border border-indigo-100 flex items-center gap-1">
                                 <Fingerprint className="h-2.5 w-2.5" />{" "}
                                 {report.accessionNo || "N/A"}
                               </span>
@@ -215,7 +215,7 @@ export default function ReportsArchivePage() {
                           <div className="flex flex-col gap-1.5 items-start">
                             <span
                               className={`text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1.5 uppercase tracking-wider border shadow-sm
-                          ${report.status === "FINAL" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"}`}>
+                          ${report.status === "FINAL" ? "bg-emerald-50 text-primary border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"}`}>
                               {report.status === "FINAL" ? (
                                 <FileSignature className="h-3 w-3" />
                               ) : (
@@ -237,7 +237,7 @@ export default function ReportsArchivePage() {
                                 href={`/workspace/radiology/print/${report.id}`}
                                 target="_blank"
                                 className="w-full sm:w-auto">
-                                <Button className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white h-10 rounded-xl shadow-md shadow-indigo-500/25 transition-all duration-300 hover:-translate-y-0.5 font-bold w-full">
+                                <Button className="bg-gradient-to-r from-primary to-primary hover:from-indigo-700 hover:to-violet-700 text-primary-foreground h-10 rounded-xl shadow-md shadow-indigo-500/25 transition-all duration-300 hover:-translate-y-0.5 font-bold w-full">
                                   <Printer className="h-4 w-4 mr-2" /> View &
                                   Print
                                 </Button>

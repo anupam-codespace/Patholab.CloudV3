@@ -249,6 +249,7 @@ export async function POST(req: NextRequest) {
                     patientId,
                     containerTypeId: containerId === 'DEFAULT' ? null : containerId,
                     status: 'COLLECTED',
+                    collectedAt: new Date(), // ✅ Auto-set collection timestamp
                     tests: { connect: testIds.map(id => ({ id })) }
                 }
             });
@@ -269,7 +270,12 @@ export async function POST(req: NextRequest) {
         });
 
         for (const ct of createdTests) {
-            const baseAmount = Number(ct.price || 0);
+            // ✅ Commission calculated on DISCOUNTED amount (proportional discount per test)
+            const testPrice = Number(ct.price || 0);
+            const totalSubtotal = Number(subtotal || 0);
+            const totalDiscount = Number(discountAmount || 0);
+            const discountRatio = totalSubtotal > 0 ? (totalDiscount / totalSubtotal) : 0;
+            const baseAmount = testPrice * (1 - discountRatio); // discounted base amount
             if (baseAmount <= 0) continue;
 
             // ---- DOCTOR COMMISSION ----

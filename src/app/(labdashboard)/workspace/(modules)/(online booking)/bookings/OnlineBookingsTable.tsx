@@ -77,13 +77,13 @@ export default function OnlineBookingsTable() {
                 {/* Action Buttons based on status */}
                 {booking.status === "SCHEDULED" &&
                   booking.collectionMode === "HOME_COLLECTION" && (
-                    <button className="text-sm bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700">
+                    <button className="text-sm bg-primary text-primary-foreground px-3 py-1 rounded hover:bg-primary/90">
                       Assign Trip
                     </button>
                   )}
                 {booking.status === "SCHEDULED" &&
                   booking.collectionMode === "LAB_VISIT" && (
-                    <button className="text-sm bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">
+                    <button className="text-sm bg-green-600 text-primary-foreground px-3 py-1 rounded hover:bg-green-700">
                       Collect Sample
                     </button>
                   )}

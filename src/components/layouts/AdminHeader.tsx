@@ -105,7 +105,7 @@ export function AdminHeader({ user }: AdminHeaderProps) {
         {/* Environment Badge */}
         <Badge
           variant="outline"
-          className="bg-emerald-50 text-emerald-700 border-emerald-200 hidden md:flex font-mono text-[10px] font-bold tracking-widest uppercase shrink-0">
+          className="bg-emerald-50 text-primary border-emerald-200 hidden md:flex font-mono text-[10px] font-bold tracking-widest uppercase shrink-0">
           Production
         </Badge>
 
@@ -233,7 +233,7 @@ export function AdminHeader({ user }: AdminHeaderProps) {
           <DropdownMenuTrigger asChild>
             <Button
               size="sm"
-              className="bg-emerald-600 hover:bg-emerald-700 text-white hidden sm:flex items-center gap-2 rounded-lg shadow-sm">
+              className="bg-primary hover:bg-primary/90 text-primary-foreground hidden sm:flex items-center gap-2 rounded-lg shadow-sm">
               <Plus className="h-4 w-4" />
               <span className="font-bold">Quick Action</span>
             </Button>
@@ -246,7 +246,7 @@ export function AdminHeader({ user }: AdminHeaderProps) {
               <Link
                 href="/admin/wallet/credit"
                 className="cursor-pointer flex items-center gap-2 font-medium">
-                <Wallet className="h-4 w-4 text-emerald-600" /> Manual Wallet
+                <Wallet className="h-4 w-4 text-primary" /> Manual Wallet
                 Credit
               </Link>
             </DropdownMenuItem>
@@ -272,7 +272,7 @@ export function AdminHeader({ user }: AdminHeaderProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50 rounded-full h-9 w-9 hidden md:inline-flex">
+                  className="text-muted-foreground hover:text-primary hover:bg-emerald-50 rounded-full h-9 w-9 hidden md:inline-flex">
                   <HelpCircle className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
@@ -286,7 +286,7 @@ export function AdminHeader({ user }: AdminHeaderProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50 rounded-full h-9 w-9 relative">
+                  className="text-muted-foreground hover:text-primary hover:bg-emerald-50 rounded-full h-9 w-9 relative">
                   <Bell className="h-4 w-4" />
                   <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full border-2 border-white"></span>
                 </Button>
@@ -307,14 +307,14 @@ export function AdminHeader({ user }: AdminHeaderProps) {
             <Button
               variant="ghost"
               className="flex items-center gap-3 pl-2 pr-2 md:pr-3 py-1 h-auto hover:bg-muted/30 rounded-full border border-transparent hover:border-border transition-all focus-visible:ring-0 focus-visible:ring-offset-0">
-              <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-emerald-600 to-emerald-400 flex items-center justify-center text-white font-bold text-xs shadow-sm shadow-emerald-200 shrink-0">
+              <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-emerald-600 to-emerald-400 flex items-center justify-center text-primary-foreground font-bold text-xs shadow-sm shadow-emerald-200 shrink-0">
                 {user?.name ? user.name.charAt(0).toUpperCase() : "A"}
               </div>
               <div className="text-left hidden md:block">
                 <p className="text-sm font-bold text-foreground/80 leading-none truncate max-w-[120px]">
                   {user?.name || "Admin"}
                 </p>
-                <p className="text-[10px] text-emerald-600 font-bold uppercase mt-1 tracking-widest">
+                <p className="text-[10px] text-primary font-bold uppercase mt-1 tracking-widest">
                   {user?.role ? user.role.replace("_", " ") : "SUPER ADMIN"}
                 </p>
               </div>
@@ -325,7 +325,7 @@ export function AdminHeader({ user }: AdminHeaderProps) {
               <p className="text-sm font-bold text-foreground truncate">
                 {user?.name || "Admin"}
               </p>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 mt-0.5">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-primary mt-0.5">
                 Root Access Granted
               </p>
             </div>

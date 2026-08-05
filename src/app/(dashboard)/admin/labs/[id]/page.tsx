@@ -140,7 +140,7 @@ export default function LabDetailPage() {
 
           <Avatar className="h-16 w-16 border-2 border-white shadow-sm rounded-2xl">
             <AvatarImage src={lab.logo} className="rounded-2xl object-cover" />
-            <AvatarFallback className="text-xl bg-indigo-50 text-indigo-700 font-black rounded-2xl">
+            <AvatarFallback className="text-xl bg-indigo-50 text-primary font-black rounded-2xl">
               {lab.name.charAt(0)}
             </AvatarFallback>
           </Avatar>
@@ -154,7 +154,7 @@ export default function LabDetailPage() {
                 variant={lab.isActive ? "default" : "destructive"}
                 className={
                   lab.isActive
-                    ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
+                    ? "bg-emerald-100 text-primary hover:bg-emerald-100"
                     : ""
                 }>
                 {lab.isActive ? "Active" : "Suspended"}
@@ -162,7 +162,7 @@ export default function LabDetailPage() {
               {wallet && (
                 <Badge
                   variant="outline"
-                  className={`font-bold ${isLowBalance ? "border-red-200 text-red-700 bg-red-50" : "border-indigo-200 text-indigo-700 bg-indigo-50"}`}>
+                  className={`font-bold ${isLowBalance ? "border-red-200 text-red-700 bg-red-50" : "border-indigo-200 text-primary bg-indigo-50"}`}>
                   Bal: {formatCurrency(wallet.balance)}
                 </Badge>
               )}
@@ -183,7 +183,7 @@ export default function LabDetailPage() {
           <ResetPasswordDialog userId={lab.ownerId} userName={lab.owner.name} />
           <Button
             variant="outline"
-            className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 rounded-xl font-bold">
+            className="text-primary border-indigo-200 hover:bg-indigo-50 rounded-xl font-bold">
             <LogIn className="mr-2 h-4 w-4" /> Impersonate
           </Button>
         </div>
@@ -271,7 +271,7 @@ export default function LabDetailPage() {
             <Card className="rounded-2xl border-border shadow-sm">
               <CardHeader className="border-b border-slate-100 bg-slate-50/50 rounded-t-2xl">
                 <CardTitle className="flex items-center gap-2">
-                  <Wallet className="h-5 w-5 text-indigo-600" />
+                  <Wallet className="h-5 w-5 text-primary" />
                   Wallet Health
                 </CardTitle>
               </CardHeader>
@@ -283,7 +283,7 @@ export default function LabDetailPage() {
                         Current Balance
                       </p>
                       <p
-                        className={`text-3xl font-black ${isLowBalance ? "text-red-600" : "text-emerald-600"}`}>
+                        className={`text-3xl font-black ${isLowBalance ? "text-red-600" : "text-primary"}`}>
                         {formatCurrency(wallet.balance)}
                       </p>
                     </div>
@@ -307,7 +307,7 @@ export default function LabDetailPage() {
                         </p>
                         <Badge
                           variant="outline"
-                          className="bg-emerald-50 text-emerald-700 border-emerald-200">
+                          className="bg-emerald-50 text-primary border-emerald-200">
                           Active
                         </Badge>
                       </div>
@@ -395,7 +395,7 @@ export default function LabDetailPage() {
                           <div
                             className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 ${
                               txn.type === "RECHARGE"
-                                ? "bg-emerald-100 text-emerald-600"
+                                ? "bg-emerald-100 text-primary"
                                 : "bg-rose-100 text-rose-600"
                             }`}>
                             {txn.type === "RECHARGE" ? (
@@ -418,7 +418,7 @@ export default function LabDetailPage() {
                         </div>
                         <div className="text-right shrink-0 ml-4">
                           <div
-                            className={`font-black text-sm ${txn.type === "RECHARGE" ? "text-emerald-600" : "text-foreground"}`}>
+                            className={`font-black text-sm ${txn.type === "RECHARGE" ? "text-primary" : "text-foreground"}`}>
                             {txn.type === "RECHARGE" ? "+" : "-"}
                             {formatCurrency(txn.amount)}
                           </div>
@@ -453,7 +453,7 @@ export default function LabDetailPage() {
               <CardContent className="space-y-4 pt-6">
                 <div className="flex items-center gap-4">
                   <Avatar className="h-12 w-12 rounded-xl">
-                    <AvatarFallback className="bg-indigo-100 text-indigo-700 font-bold rounded-xl">
+                    <AvatarFallback className="bg-indigo-100 text-primary font-bold rounded-xl">
                       {lab.owner.name.charAt(0)}
                     </AvatarFallback>
                   </Avatar>

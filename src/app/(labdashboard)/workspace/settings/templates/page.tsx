@@ -83,9 +83,9 @@ export default function TemplateGalleryPage() {
           {templates.map((t) => (
             <Card
               key={t.id}
-              className={`relative transition-all hover:shadow-lg ${t.isActive ? "border-2 border-blue-600 ring-4 ring-blue-50" : "border-border"}`}>
+              className={`relative transition-all hover:shadow-lg ${t.isActive ? "border-2 border-primary ring-4 ring-blue-50" : "border-border"}`}>
               {t.isActive && (
-                <div className="absolute top-0 right-0 bg-primary text-white text-xs px-3 py-1 rounded-bl-lg font-bold flex items-center">
+                <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs px-3 py-1 rounded-bl-lg font-bold flex items-center">
                   <CheckCircle className="h-3 w-3 mr-1" /> ACTIVE
                 </div>
               )}

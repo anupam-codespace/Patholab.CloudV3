@@ -141,7 +141,7 @@ export default function LabOwnerDashboard() {
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
             Dashboard Overview
           </h1>
-          <p className="text-sm font-bold text-indigo-600 mt-1.5 flex items-center gap-1.5 bg-indigo-50 w-max px-2.5 py-1 rounded-md">
+          <p className="text-sm font-bold text-primary mt-1.5 flex items-center gap-1.5 bg-indigo-50 w-max px-2.5 py-1 rounded-md">
             <MapPin className="w-3.5 h-3.5" /> {branchName}
           </p>
         </div>
@@ -171,7 +171,7 @@ export default function LabOwnerDashboard() {
             className={`absolute -right-4 -top-4 w-24 h-24 rounded-full opacity-50 ${isLowBalance ? "bg-red-100" : "bg-indigo-100"}`}></div>
           <CardHeader className="pb-2">
             <CardTitle
-              className={`text-[11px] font-bold uppercase flex items-center gap-1 ${isLowBalance ? "text-red-700" : "text-indigo-700"}`}>
+              className={`text-[11px] font-bold uppercase flex items-center gap-1 ${isLowBalance ? "text-red-700" : "text-primary"}`}>
               <Wallet className="w-3 h-3" /> Wallet Balance
             </CardTitle>
           </CardHeader>
@@ -188,7 +188,7 @@ export default function LabOwnerDashboard() {
               )}
               <Button
                 size="sm"
-                className={`h-7 text-xs ${isLowBalance ? "bg-red-600 hover:bg-red-700" : "bg-indigo-600 hover:bg-indigo-700"}`}
+                className={`h-7 text-xs ${isLowBalance ? "bg-red-600 hover:bg-red-700" : "bg-primary hover:bg-primary/90"}`}
                 onClick={() => router.push("/workspace/wallet")}>
                 Recharge
               </Button>
@@ -207,7 +207,7 @@ export default function LabOwnerDashboard() {
             <div className="text-3xl font-black text-slate-900">
               {formatCurrency(kpi?.revenue || 0)}
             </div>
-            <p className="text-xs text-emerald-600 mt-1 flex items-center font-semibold">
+            <p className="text-xs text-primary mt-1 flex items-center font-semibold">
               <ArrowUpRight className="w-3 h-3 mr-1" /> Collected
             </p>
           </CardContent>
@@ -224,7 +224,7 @@ export default function LabOwnerDashboard() {
             <div className="text-3xl font-black text-slate-900">
               {kpi?.totalTests || 0}
             </div>
-            <p className="text-xs text-blue-600 mt-1 flex items-center font-semibold">
+            <p className="text-xs text-primary mt-1 flex items-center font-semibold">
               In selected period
             </p>
           </CardContent>
@@ -361,12 +361,12 @@ export default function LabOwnerDashboard() {
       <Card className="shadow-sm border-slate-200 bg-white w-full">
         <CardHeader className="pb-3 border-b border-slate-100 flex flex-row justify-between items-center bg-slate-50/50">
           <CardTitle className="text-base text-slate-800 flex items-center gap-2">
-            <Users className="h-5 w-5 text-indigo-600" /> Recent Patients
+            <Users className="h-5 w-5 text-primary" /> Recent Patients
           </CardTitle>
           <Button
             variant="ghost"
             size="sm"
-            className="text-indigo-600 hover:bg-indigo-50 font-bold"
+            className="text-primary hover:bg-indigo-50 font-bold"
             onClick={() => router.push("/workspace/patients")}>
             View All &rarr;
           </Button>
@@ -382,11 +382,11 @@ export default function LabOwnerDashboard() {
                     router.push(`/workspace/patients/${patient.id}`)
                   }>
                   <div className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10 bg-indigo-50 border border-indigo-100 text-indigo-600 font-bold shadow-sm">
+                    <Avatar className="h-10 w-10 bg-indigo-50 border border-indigo-100 text-primary font-bold shadow-sm">
                       <AvatarFallback>{patient.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="text-sm font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                      <p className="text-sm font-semibold text-slate-900 group-hover:text-primary transition-colors">
                         {patient.name}
                       </p>
                       <p className="text-[11px] font-medium text-slate-500 mt-0.5">
@@ -451,7 +451,7 @@ export default function LabOwnerDashboard() {
               <Button
                 type="submit"
                 disabled={setupForm.formState.isSubmitting}
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white">
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
                 {setupForm.formState.isSubmitting
                   ? "Saving..."
                   : "Complete Setup"}

@@ -149,7 +149,7 @@ export default function AuditLogsPage() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border pb-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <ShieldAlert className="h-8 w-8 text-indigo-600" /> System Audit
+            <ShieldAlert className="h-8 w-8 text-primary" /> System Audit
             Logs
           </h1>
           <p className="text-base text-muted-foreground mt-1 max-w-2xl">
@@ -169,7 +169,7 @@ export default function AuditLogsPage() {
           />
           <Input
             placeholder="Search by Entity ID or User ID..."
-            className="pl-10 focus-visible:ring-indigo-500 border-border w-full"
+            className="pl-10 focus-visible:ring-primary border-border w-full"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -244,7 +244,7 @@ export default function AuditLogsPage() {
                   className="text-center h-48 text-muted-foreground"
                 >
                   <div className="flex flex-col items-center justify-center">
-                    <Loader2 className="h-8 w-8 animate-spin text-indigo-600 mb-2" />
+                    <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
                     Fetching secure logs...
                   </div>
                 </TableCell>
@@ -291,7 +291,7 @@ export default function AuditLogsPage() {
                   {/* User & IP */}
                   <TableCell>
                     <div className="flex flex-col gap-0.5">
-                      <div className="flex items-center gap-1.5 text-xs font-semibold text-indigo-700">
+                      <div className="flex items-center gap-1.5 text-xs font-semibold text-primary">
                         <User className="h-3.5 w-3.5" /> {log.userId}
                       </div>
                       <div className="text-[10px] text-muted-foreground/70 ml-5 font-mono">
@@ -305,7 +305,7 @@ export default function AuditLogsPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 font-semibold text-xs"
+                      className="text-primary border-indigo-200 hover:bg-indigo-50 font-semibold text-xs"
                       onClick={() => setSelectedLog(log)}
                     >
                       <FileJson className="h-4 w-4 mr-1.5" /> Inspect Data
@@ -329,7 +329,7 @@ export default function AuditLogsPage() {
           <DialogHeader className="p-6 bg-card border-b border-border shrink-0">
             <div className="flex items-center gap-3 mb-2">
               <div className="bg-indigo-100 p-2 rounded-lg">
-                <ShieldAlert className="h-5 w-5 text-indigo-700" />
+                <ShieldAlert className="h-5 w-5 text-primary" />
               </div>
               <div>
                 <DialogTitle className="text-xl">

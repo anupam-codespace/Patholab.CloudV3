@@ -103,7 +103,7 @@ export default async function AnalyzerPage() {
       {/* HEADER SECTION */}
       <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-primary">
             <Cpu className="w-4 h-4" />
             <span className="text-xs font-bold tracking-widest uppercase">
               LIS Interface Engine
@@ -111,7 +111,7 @@ export default async function AnalyzerPage() {
           </div>
           <h1 className="text-4xl md:text-5xl font-black tracking-tight text-foreground">
             Analyzer{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary">
               Integrations
             </span>
           </h1>
@@ -122,7 +122,7 @@ export default async function AnalyzerPage() {
 
         <Link
           href="/api/agent/download"
-          className="group relative inline-flex items-center gap-3 px-8 py-4 bg-slate-900 hover:bg-black text-white rounded-2xl font-bold shadow-2xl shadow-indigo-200 transition-all active:scale-95 overflow-hidden">
+          className="group relative inline-flex items-center gap-3 px-8 py-4 bg-slate-900 hover:bg-black text-primary-foreground rounded-2xl font-bold shadow-2xl shadow-indigo-200 transition-all active:scale-95 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           <Download className="w-5 h-5 group-hover:-translate-y-1 transition-transform" />
           <span>Download Windows Agent</span>
@@ -138,7 +138,7 @@ export default async function AnalyzerPage() {
             </div>
 
             <div className="flex items-center gap-4 mb-10 border-b border-slate-50 pb-8">
-              <div className="p-4 bg-indigo-600 text-white rounded-2xl shadow-lg shadow-indigo-200">
+              <div className="p-4 bg-primary text-primary-foreground rounded-2xl shadow-lg shadow-indigo-200">
                 <Network className="w-6 h-6" />
               </div>
               <div>
@@ -164,7 +164,7 @@ export default async function AnalyzerPage() {
                   <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none border-r border-slate-100 pr-4">
                     <Zap className="h-4 w-4 text-indigo-400" />
                   </div>
-                  <code className="block w-full bg-muted/30 border border-slate-100 rounded-2xl px-16 py-6 text-sm text-indigo-600 font-mono select-all transition-all group-hover:border-indigo-200 group-hover:bg-indigo-50/30">
+                  <code className="block w-full bg-muted/30 border border-slate-100 rounded-2xl px-16 py-6 text-sm text-primary font-mono select-all transition-all group-hover:border-indigo-200 group-hover:bg-indigo-50/30">
                     {realWebhookUrl}
                   </code>
                 </div>
@@ -203,7 +203,7 @@ export default async function AnalyzerPage() {
         {/* RIGHT COLUMN: SYSTEM STATE */}
         <div className="lg:col-span-4 space-y-8">
           {/* Status Card */}
-          <div className="bg-slate-900 rounded-[32px] p-8 text-white shadow-2xl relative overflow-hidden group">
+          <div className="bg-slate-900 rounded-[32px] p-8 text-primary-foreground shadow-2xl relative overflow-hidden group">
             <div className="absolute -right-12 -bottom-12 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl group-hover:bg-indigo-500/20 transition-all duration-1000" />
 
             <div className="flex items-center justify-between mb-10">
@@ -269,7 +269,7 @@ export default async function AnalyzerPage() {
           <div className="px-10 py-8 border-b border-slate-50 flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-50/50">
             <div className="flex items-center gap-4">
               <div className="p-3 bg-indigo-100 rounded-2xl">
-                <Activity className="w-6 h-6 text-indigo-600" />
+                <Activity className="w-6 h-6 text-primary" />
               </div>
               <div>
                 <h2 className="font-black text-foreground text-lg tracking-tight uppercase">
@@ -285,7 +285,7 @@ export default async function AnalyzerPage() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
               </span>
-              <span className="text-[10px] font-black text-indigo-600 uppercase tracking-tighter">
+              <span className="text-[10px] font-black text-primary uppercase tracking-tighter">
                 {recentSyncs.length} Active Streams
               </span>
             </div>
@@ -322,7 +322,7 @@ export default async function AnalyzerPage() {
                       key={sample.id}
                       className="group hover:bg-muted/30 transition-all duration-300">
                       <td className="px-10 py-8">
-                        <span className="font-mono font-black text-sm text-indigo-600 bg-indigo-50 px-4 py-2 rounded-xl group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                        <span className="font-mono font-black text-sm text-primary bg-indigo-50 px-4 py-2 rounded-xl group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                           {sample.sampleId}
                         </span>
                       </td>
@@ -342,7 +342,7 @@ export default async function AnalyzerPage() {
                         })}
                       </td>
                       <td className="px-10 py-8">
-                        <span className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-700 border border-emerald-100">
+                        <span className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-emerald-50 text-primary border border-emerald-100">
                           <Zap className="w-3 h-3 fill-emerald-500" />
                           Validated
                         </span>
@@ -350,7 +350,7 @@ export default async function AnalyzerPage() {
                       <td className="px-10 py-8 text-right">
                         <Link
                           href={`/workspace/samples/${sample.sampleId}`}
-                          className="inline-flex items-center gap-2 text-foreground hover:text-indigo-600 font-black text-[10px] uppercase tracking-widest transition-all group/link">
+                          className="inline-flex items-center gap-2 text-foreground hover:text-primary font-black text-[10px] uppercase tracking-widest transition-all group/link">
                           Review Result Matrix
                           <ChevronRight className="w-4 h-4 transition-transform group-hover/link:translate-x-1" />
                         </Link>

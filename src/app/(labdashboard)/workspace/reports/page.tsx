@@ -219,7 +219,7 @@ export default function ReportsDispatchPage() {
         return (
           <Badge
             variant="outline"
-            className="bg-indigo-50 text-indigo-700 border-indigo-200">
+            className="bg-indigo-50 text-primary border-indigo-200">
             Approved
           </Badge>
         );
@@ -227,7 +227,7 @@ export default function ReportsDispatchPage() {
         return (
           <Badge
             variant="outline"
-            className="bg-emerald-50 text-emerald-700 border-emerald-200">
+            className="bg-emerald-50 text-primary border-emerald-200">
             <CheckCircle2 className="w-3 h-3 mr-1" /> Final
           </Badge>
         );
@@ -425,7 +425,7 @@ export default function ReportsDispatchPage() {
             <Button
               size="lg"
               variant="outline"
-              className="w-full border-2 border-blue-600 text-primary hover:bg-primary/10 text-lg h-16"
+              className="w-full border-2 border-primary text-primary hover:bg-primary/10 text-lg h-16"
               onClick={() => shareReport && handleEmailShare(shareReport)}>
               <Mail className="mr-3 h-6 w-6 text-primary" /> Send via Email
             </Button>

@@ -112,7 +112,7 @@ export default function PacsDashboard() {
             <Button variant="outline" className="bg-card border-border text-muted-foreground shadow-sm hidden sm:flex">
               <Archive className="w-4 h-4 mr-2" /> Bulk Archive
             </Button>
-            <Button className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-sm">
+            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-sm">
               <Upload className="w-4 h-4 mr-2" /> Upload DICOM
             </Button>
           </div>
@@ -121,8 +121,8 @@ export default function PacsDashboard() {
         {/* 1. KPI CARDS */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 shrink-0">
           {[
-            { label: "Total Studies", value: liveStudies.length, icon: Brain, color: "text-indigo-600" },
-            { label: "Today's Uploads", value: todaysUploads, icon: Upload, color: "text-emerald-600" },
+            { label: "Total Studies", value: liveStudies.length, icon: Brain, color: "text-primary" },
+            { label: "Today's Uploads", value: todaysUploads, icon: Upload, color: "text-primary" },
             { label: "Pending Reports", value: pendingReports, icon: Clock, color: "text-amber-600" },
             { label: "Storage Used", value: "6.4 TB", sub: "/ 10 TB", icon: HardDrive, color: "text-rose-600" },
           ].map((kpi, idx) => (
@@ -146,7 +146,7 @@ export default function PacsDashboard() {
               <button 
                 key={f} onClick={() => setActiveFilter(f)}
                 className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                  activeFilter === f ? "bg-indigo-50 text-indigo-700 border border-indigo-200" : "text-muted-foreground hover:bg-muted border border-transparent"
+                  activeFilter === f ? "bg-indigo-50 text-primary border border-indigo-200" : "text-muted-foreground hover:bg-muted border border-transparent"
                 }`}>
                 {f}
               </button>
@@ -159,8 +159,8 @@ export default function PacsDashboard() {
             </div>
             {/* 18. View Toggle */}
             <div className="flex bg-muted p-1 rounded-lg border border-border shrink-0">
-              <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded-md ${viewMode === 'grid' ? 'bg-card shadow-sm text-indigo-600' : 'text-slate-400'}`}><LayoutGrid className="w-4 h-4" /></button>
-              <button onClick={() => setViewMode('table')} className={`p-1.5 rounded-md ${viewMode === 'table' ? 'bg-card shadow-sm text-indigo-600' : 'text-slate-400'}`}><List className="w-4 h-4" /></button>
+              <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded-md ${viewMode === 'grid' ? 'bg-card shadow-sm text-primary' : 'text-slate-400'}`}><LayoutGrid className="w-4 h-4" /></button>
+              <button onClick={() => setViewMode('table')} className={`p-1.5 rounded-md ${viewMode === 'table' ? 'bg-card shadow-sm text-primary' : 'text-slate-400'}`}><List className="w-4 h-4" /></button>
             </div>
           </div>
         </div>
@@ -175,7 +175,7 @@ export default function PacsDashboard() {
               </div>
               <h3 className="text-lg font-bold text-slate-700">No studies found</h3>
               <p className="text-sm text-muted-foreground mt-1 mb-4">Drag a DICOM folder here or sync with Orthanc.</p>
-              <Button variant="outline" className="border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100">Connect PACS</Button>
+              <Button variant="outline" className="border-indigo-200 text-primary bg-indigo-50 hover:bg-indigo-100">Connect PACS</Button>
             </div>
           ) : viewMode === 'table' ? (
             <div className="overflow-x-auto custom-scrollbar">
@@ -196,7 +196,7 @@ export default function PacsDashboard() {
                         <div className="flex items-center gap-3">
                           {/* 5. Thumbnail Preview */}
                           <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 border ${
-                            study.modality === 'MRI' ? 'bg-indigo-100 border-indigo-200 text-indigo-700' :
+                            study.modality === 'MRI' ? 'bg-indigo-100 border-indigo-200 text-primary' :
                             study.modality === 'CT' ? 'bg-purple-100 border-purple-200 text-purple-700' : 'bg-blue-100 border-primary/20 text-primary'
                           }`}>
                             <Brain className="w-5 h-5" />
@@ -220,7 +220,7 @@ export default function PacsDashboard() {
                       <td className="p-4 text-right">
                         {/* 19. Actions */}
                         <div className="flex items-center justify-end gap-2">
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-indigo-600 hover:bg-indigo-100" title="Open Viewer"><Eye className="w-4 h-4"/></Button>
+                          <Button size="icon" variant="ghost" className="h-8 w-8 text-primary hover:bg-indigo-100" title="Open Viewer"><Eye className="w-4 h-4"/></Button>
                           <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground/70 hover:text-muted-foreground" title="Download"><Download className="w-4 h-4"/></Button>
                         </div>
                       </td>
@@ -232,7 +232,7 @@ export default function PacsDashboard() {
           ) : (
             <div className="p-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 overflow-y-auto">
               {filteredStudies.map(study => (
-                <div key={study.id} onClick={() => setSelectedStudy(study)} className={`p-4 rounded-xl border cursor-pointer transition-all ${selectedStudy?.id === study.id ? 'border-indigo-500 ring-1 ring-indigo-500 shadow-md bg-indigo-50/20' : 'border-border hover:border-indigo-300 hover:shadow-sm'}`}>
+                <div key={study.id} onClick={() => setSelectedStudy(study)} className={`p-4 rounded-xl border cursor-pointer transition-all ${selectedStudy?.id === study.id ? 'border-indigo-500 ring-1 ring-primary shadow-md bg-indigo-50/20' : 'border-border hover:border-indigo-300 hover:shadow-sm'}`}>
                   <div className="flex justify-between items-start mb-3">
                     <Badge variant="outline" className="bg-muted/30 font-bold">{study.modality}</Badge>
                     {getStatusChip(study.status ?? "")}
@@ -260,7 +260,7 @@ export default function PacsDashboard() {
           // MODE 1: STUDY PREVIEW DRAWER (Point 10 & 13)
           // ------------------------------------------------
           <div className="flex flex-col h-full overflow-y-auto custom-scrollbar">
-            <div className="p-4 bg-slate-900 text-white flex justify-between items-center sticky top-0 z-10">
+            <div className="p-4 bg-slate-900 text-primary-foreground flex justify-between items-center sticky top-0 z-10">
               <h2 className="font-bold text-sm flex items-center gap-2"><Eye className="w-4 h-4 text-indigo-400"/> Study Preview</h2>
               <button onClick={() => setSelectedStudy(null)} className="p-1 hover:bg-card/10 rounded-md"><X className="w-4 h-4"/></button>
             </div>
@@ -268,7 +268,7 @@ export default function PacsDashboard() {
             <div className="p-5 flex flex-col gap-6">
               <div className="text-center">
                 <div className="w-20 h-20 mx-auto bg-indigo-50 border border-indigo-100 rounded-2xl flex items-center justify-center mb-3 shadow-inner">
-                  <Brain className="w-10 h-10 text-indigo-600" />
+                  <Brain className="w-10 h-10 text-primary" />
                 </div>
                 <h3 className="font-black text-lg text-foreground">{selectedStudy.patient}</h3>
                 <p className="text-xs font-bold text-muted-foreground font-mono mt-1">{selectedStudy.uhid}</p>
@@ -276,7 +276,7 @@ export default function PacsDashboard() {
 
               {/* Action Buttons */}
               <div className="grid grid-cols-2 gap-2">
-                <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm h-9">
+                <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold shadow-sm h-9">
                   <Eye className="w-3.5 h-3.5 mr-1.5"/> Open Viewer
                 </Button>
                 <Button variant="outline" className="w-full text-xs font-bold shadow-sm h-9">
@@ -303,7 +303,7 @@ export default function PacsDashboard() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-[10px] uppercase font-bold text-slate-400">Images</span>
-                  <span className="text-xs font-bold text-indigo-600">{selectedStudy.images} ({selectedStudy.size})</span>
+                  <span className="text-xs font-bold text-primary">{selectedStudy.images} ({selectedStudy.size})</span>
                 </div>
               </div>
 
@@ -333,15 +333,15 @@ export default function PacsDashboard() {
               <div className="bg-card border border-border rounded-xl shadow-sm p-1 divide-y divide-slate-100">
                 <div className="flex justify-between items-center p-2.5">
                   <span className="text-xs font-bold text-slate-700">Orthanc Node</span>
-                  <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"/> ONLINE</span>
+                  <span className="flex items-center gap-1.5 text-[10px] font-bold text-primary bg-emerald-50 px-2 py-1 rounded-md"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"/> ONLINE</span>
                 </div>
                 <div className="flex justify-between items-center p-2.5">
                   <span className="text-xs font-bold text-slate-700">DICOM Listener</span>
-                  <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500"/> RUNNING</span>
+                  <span className="flex items-center gap-1.5 text-[10px] font-bold text-primary bg-emerald-50 px-2 py-1 rounded-md"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500"/> RUNNING</span>
                 </div>
                 <div className="flex justify-between items-center p-2.5">
                   <span className="text-xs font-bold text-slate-700">PostgreSQL DB</span>
-                  <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500"/> HEALTHY</span>
+                  <span className="flex items-center gap-1.5 text-[10px] font-bold text-primary bg-emerald-50 px-2 py-1 rounded-md"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500"/> HEALTHY</span>
                 </div>
               </div>
             </div>

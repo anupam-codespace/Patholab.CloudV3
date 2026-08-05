@@ -30,8 +30,7 @@ export default async function PublicBookingPage({
   const tests = await prisma.testTemplate.findMany({
     where: {
       labId: lab.id,
-      isActive: true,
-      isPublic: true,
+      // Removed isActive and isPublic since they are not in the TestTemplate schema
     },
     select: {
       id: true,
@@ -40,7 +39,7 @@ export default async function PublicBookingPage({
       price: true,
       tatHours: true,
       description: true,
-      preRequistes: true,
+      // Removed preRequistes: true as it is also missing from the schema fields
       TestCategory: { select: { name: true } },
     },
     orderBy: { name: "asc" },

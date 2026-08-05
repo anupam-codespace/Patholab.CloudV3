@@ -126,7 +126,7 @@ export default function CustomFieldForm({ initialData, onSuccess }: { initialDat
                 <div className="grid grid-cols-3 gap-2">
                     {/* Full Width Option */}
                     <div 
-                        className={`cursor-pointer border-2 rounded-md p-2 flex flex-col items-center gap-2 text-xs font-medium transition-all ${watchedLayout === 'FULL' ? 'border-blue-600 bg-card shadow-sm ring-1 ring-blue-600' : 'border-border bg-card/50 hover:bg-white'}`}
+                        className={`cursor-pointer border-2 rounded-md p-2 flex flex-col items-center gap-2 text-xs font-medium transition-all ${watchedLayout === 'FULL' ? 'border-primary bg-card shadow-sm ring-1 ring-blue-600' : 'border-border bg-card/50 hover:bg-white'}`}
                         onClick={() => form.setValue('reportLayout', 'FULL')}
                     >
                         <div className="w-full h-6 bg-slate-300 rounded border border-slate-400"></div>
@@ -135,7 +135,7 @@ export default function CustomFieldForm({ initialData, onSuccess }: { initialDat
 
                     {/* Half Width Option */}
                     <div 
-                        className={`cursor-pointer border-2 rounded-md p-2 flex flex-col items-center gap-2 text-xs font-medium transition-all ${watchedLayout === 'HALF' ? 'border-blue-600 bg-card shadow-sm ring-1 ring-blue-600' : 'border-border bg-card/50 hover:bg-white'}`}
+                        className={`cursor-pointer border-2 rounded-md p-2 flex flex-col items-center gap-2 text-xs font-medium transition-all ${watchedLayout === 'HALF' ? 'border-primary bg-card shadow-sm ring-1 ring-blue-600' : 'border-border bg-card/50 hover:bg-white'}`}
                         onClick={() => form.setValue('reportLayout', 'HALF')}
                     >
                         <div className="flex gap-1 w-full h-6">
@@ -147,7 +147,7 @@ export default function CustomFieldForm({ initialData, onSuccess }: { initialDat
 
                     {/* Third Width Option */}
                     <div 
-                        className={`cursor-pointer border-2 rounded-md p-2 flex flex-col items-center gap-2 text-xs font-medium transition-all ${watchedLayout === 'THIRD' ? 'border-blue-600 bg-card shadow-sm ring-1 ring-blue-600' : 'border-border bg-card/50 hover:bg-white'}`}
+                        className={`cursor-pointer border-2 rounded-md p-2 flex flex-col items-center gap-2 text-xs font-medium transition-all ${watchedLayout === 'THIRD' ? 'border-primary bg-card shadow-sm ring-1 ring-blue-600' : 'border-border bg-card/50 hover:bg-white'}`}
                         onClick={() => form.setValue('reportLayout', 'THIRD')}
                     >
                         <div className="flex gap-1 w-full h-6">
@@ -188,7 +188,7 @@ export default function CustomFieldForm({ initialData, onSuccess }: { initialDat
         )}
 
         <div className="flex justify-end gap-3 mt-6">
-          <Button type="submit" disabled={isSubmitting} className="bg-primary hover:bg-blue-700">
+          <Button type="submit" disabled={isSubmitting} className="bg-primary hover:bg-primary/90">
             {isSubmitting && <Loader2 className="animate-spin mr-2 h-4 w-4" />} Save
           </Button>
         </div>

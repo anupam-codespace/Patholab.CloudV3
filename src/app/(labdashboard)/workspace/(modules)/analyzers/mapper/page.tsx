@@ -95,21 +95,21 @@ export default async function VisualMapperPage() {
         <div className="space-y-3">
           <Link
             href="/workspace/analyzer/mappings"
-            className="group inline-flex items-center gap-2 text-muted-foreground/70 hover:text-indigo-600 transition-colors text-xs font-black uppercase tracking-widest">
+            className="group inline-flex items-center gap-2 text-muted-foreground/70 hover:text-primary transition-colors text-xs font-black uppercase tracking-widest">
             <ArrowLeft className="w-3 h-3 transition-transform group-hover:-translate-x-1" />
             Back to Dictionary
           </Link>
 
           <div className="space-y-1">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:border-indigo-800 mb-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-primary dark:bg-indigo-900/30 dark:border-indigo-800 mb-2">
               <Binary className="w-4 h-4" />
               <span className="text-[10px] font-bold tracking-widest uppercase">
                 Protocol Mapping
               </span>
             </div>
-            <h1 className="text-4xl md:text-5xl font-black tracking-tight text-foreground dark:text-white">
+            <h1 className="text-4xl md:text-5xl font-black tracking-tight text-foreground dark:text-primary-foreground">
               Visual{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary">
                 Mapper
               </span>
             </h1>
@@ -123,13 +123,13 @@ export default async function VisualMapperPage() {
         {/* System Stats Highlight */}
         <div className="hidden lg:flex items-center gap-4 bg-card dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
           <div className="p-3 bg-emerald-50 rounded-xl">
-            <Zap className="w-5 h-5 text-emerald-600" />
+            <Zap className="w-5 h-5 text-primary" />
           </div>
           <div>
             <p className="text-[10px] font-black text-muted-foreground/70 uppercase tracking-tighter">
               Queue Status
             </p>
-            <p className="text-sm font-bold text-foreground dark:text-white uppercase tabular-nums">
+            <p className="text-sm font-bold text-foreground dark:text-primary-foreground uppercase tabular-nums">
               {Object.keys(groupedQueue).length} Pending Batches
             </p>
           </div>
@@ -155,7 +155,7 @@ export default async function VisualMapperPage() {
 
         {/* RIGHT COLUMN: INSTRUCTIONAL SIDEBAR */}
         <div className="lg:col-span-4 space-y-6">
-          <div className="bg-slate-900 rounded-[32px] p-8 text-white shadow-2xl relative overflow-hidden group">
+          <div className="bg-slate-900 rounded-[32px] p-8 text-primary-foreground shadow-2xl relative overflow-hidden group">
             <div className="absolute -right-12 -top-12 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl group-hover:bg-indigo-500/20 transition-all duration-1000" />
 
             <h3 className="text-xs font-black uppercase tracking-[0.2em] text-indigo-400 flex items-center gap-2 mb-6">
@@ -233,7 +233,7 @@ export default async function VisualMapperPage() {
           </div>
 
           <div className="p-6 rounded-[24px] bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50">
-            <div className="flex items-center gap-2 mb-2 text-indigo-600 dark:text-indigo-400">
+            <div className="flex items-center gap-2 mb-2 text-primary dark:text-indigo-400">
               <Database className="w-4 h-4" />
               <span className="text-[10px] font-black uppercase tracking-widest">
                 Automation Tip

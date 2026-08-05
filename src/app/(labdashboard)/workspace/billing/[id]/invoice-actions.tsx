@@ -29,9 +29,9 @@ export default function InvoiceActions() {
           variant="ghost" 
           size="sm" 
           onClick={() => alert("Email feature coming soon")}
-          className="h-10 px-4 rounded-xl text-muted-foreground dark:text-slate-300 hover:bg-muted/30 dark:hover:bg-slate-800 hover:text-indigo-600 transition-all active:scale-95 flex items-center gap-2 group/btn"
+          className="h-10 px-4 rounded-xl text-muted-foreground dark:text-slate-300 hover:bg-muted/30 dark:hover:bg-slate-800 hover:text-primary transition-all active:scale-95 flex items-center gap-2 group/btn"
         >
-          <div className="p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 group-hover/btn:scale-110 transition-transform">
+          <div className="p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-primary group-hover/btn:scale-110 transition-transform">
             <Send className="h-3.5 w-3.5" />
           </div>
           <span className="text-[11px] font-black uppercase tracking-widest">Send Email</span>
@@ -44,9 +44,9 @@ export default function InvoiceActions() {
           variant="ghost" 
           size="sm" 
           onClick={() => window.print()}
-          className="h-10 px-4 rounded-xl text-muted-foreground dark:text-slate-300 hover:bg-muted/30 dark:hover:bg-slate-800 hover:text-emerald-600 transition-all active:scale-95 flex items-center gap-2 group/btn"
+          className="h-10 px-4 rounded-xl text-muted-foreground dark:text-slate-300 hover:bg-muted/30 dark:hover:bg-slate-800 hover:text-primary transition-all active:scale-95 flex items-center gap-2 group/btn"
         >
-          <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 group-hover/btn:scale-110 transition-transform">
+          <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 text-primary group-hover/btn:scale-110 transition-transform">
             <Printer className="h-3.5 w-3.5" />
           </div>
           <span className="text-[11px] font-black uppercase tracking-widest">Hard Copy</span>
@@ -56,7 +56,7 @@ export default function InvoiceActions() {
         <Button 
           size="sm" 
           onClick={() => alert("PDF Download coming soon")}
-          className="h-10 px-5 bg-slate-900 hover:bg-black dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white rounded-xl shadow-lg shadow-slate-200 dark:shadow-none transition-all active:scale-95 flex items-center gap-2 group/main"
+          className="h-10 px-5 bg-slate-900 hover:bg-black dark:bg-primary dark:hover:bg-primary/90 text-primary-foreground rounded-xl shadow-lg shadow-slate-200 dark:shadow-none transition-all active:scale-95 flex items-center gap-2 group/main"
         >
           <FileDown className="h-4 w-4 group-hover:-translate-y-0.5 transition-transform" />
           <span className="text-[11px] font-black uppercase tracking-widest">Download PDF</span>

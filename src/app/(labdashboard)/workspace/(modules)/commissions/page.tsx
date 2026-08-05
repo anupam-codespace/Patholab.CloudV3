@@ -180,13 +180,13 @@ export default function CommissionsPage() {
             </h2>
           </div>
           <div className="h-10 w-10 bg-blue-50 rounded-full flex items-center justify-center">
-            <TrendingUp className="h-5 w-5 text-blue-600" />
+            <TrendingUp className="h-5 w-5 text-primary" />
           </div>
         </div>
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-emerald-200 flex items-center justify-between relative overflow-hidden">
           <div className="absolute -right-4 -top-4 bg-emerald-50 w-20 h-20 rounded-full opacity-50"></div>
           <div className="z-10">
-            <p className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider mb-1">
+            <p className="text-[11px] font-bold text-primary uppercase tracking-wider mb-1">
               Settled (Paid)
             </p>
             <h2 className="text-2xl font-black text-emerald-900">
@@ -194,7 +194,7 @@ export default function CommissionsPage() {
             </h2>
           </div>
           <div className="h-10 w-10 bg-emerald-100 rounded-full flex items-center justify-center z-10">
-            <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+            <CheckCircle2 className="h-5 w-5 text-primary" />
           </div>
         </div>
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-orange-200 flex items-center justify-between relative overflow-hidden">
@@ -231,7 +231,7 @@ export default function CommissionsPage() {
         {/* Top Performers Bar Chart (Custom CSS) */}
         <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
           <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-blue-600" /> Top 5 Referrers
+            <TrendingUp className="w-4 h-4 text-primary" /> Top 5 Referrers
           </h3>
 
           {stats.topPerformers.length === 0 ? (
@@ -468,7 +468,7 @@ export default function CommissionsPage() {
                             }
                             className={
                               item.totalPending > 0
-                                ? "bg-blue-600 hover:bg-blue-700"
+                                ? "bg-primary hover:bg-primary/90"
                                 : ""
                             }
                             disabled={item.totalPending === 0}
@@ -578,7 +578,7 @@ export default function CommissionsPage() {
               disabled={
                 settleMutation.isPending || selectedEntity?.totalPending === 0
               }
-              className="bg-green-600 hover:bg-green-700 text-white shadow-md">
+              className="bg-green-600 hover:bg-green-700 text-primary-foreground shadow-md">
               {settleMutation.isPending ? "Processing..." : "Mark as Paid"}
             </Button>
           </DialogFooter>

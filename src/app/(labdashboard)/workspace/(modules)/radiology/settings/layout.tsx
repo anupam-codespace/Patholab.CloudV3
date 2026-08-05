@@ -26,7 +26,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                 href={tab.path}
                 className={`flex items-center gap-2 pb-4 pt-2 font-bold text-sm border-b-2 transition-colors ${
                   isActive 
-                    ? "border-indigo-600 text-indigo-700" 
+                    ? "border-primary text-primary" 
                     : "border-transparent text-muted-foreground hover:text-slate-800"
                 }`}
               >

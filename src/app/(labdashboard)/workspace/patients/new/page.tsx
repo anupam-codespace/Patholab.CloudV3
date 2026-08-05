@@ -305,7 +305,7 @@ export default function CreatePatientPage() {
                   <Button
                     type="button"
                     variant="secondary"
-                    className="w-full bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 font-bold"
+                    className="w-full bg-indigo-50 text-primary hover:bg-indigo-100 hover:text-indigo-800 font-bold"
                     onClick={() => {
                       onChange(inputValue);
                       setOpen(false);
@@ -326,7 +326,7 @@ export default function CreatePatientPage() {
                     className="text-sm py-2.5 cursor-pointer hover:bg-muted/30">
                     <Check
                       className={cn(
-                        "mr-2 h-4 w-4 text-indigo-600",
+                        "mr-2 h-4 w-4 text-primary",
                         value === opt.value ? "opacity-100" : "opacity-0",
                       )}
                     />
@@ -445,11 +445,11 @@ export default function CreatePatientPage() {
                         <Select
                           onValueChange={field.onChange}
                           defaultValue={field.value}>
-                          <SelectTrigger className="h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-indigo-500/20">
+                          <SelectTrigger className="h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-primary/20">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {["Mr.", "Mrs.", "Ms.", "Dr.", "Baby"].map((t) => (
+                            {["Mr.", "Mrs.", "Ms.", "Dr.","Master", "Baby"].map((t) => (
                               <SelectItem key={t} value={t}>
                                 {t}
                               </SelectItem>
@@ -465,7 +465,7 @@ export default function CreatePatientPage() {
                     </Label>
                     <Input
                       {...register("name")}
-                      className="h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-indigo-500/20 transition-all text-sm font-medium"
+                      className="h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-primary/20 transition-all text-sm font-medium"
                       placeholder="e.g. Rahul Sharma"
                     />
                     {errors.name && (
@@ -485,7 +485,7 @@ export default function CreatePatientPage() {
                       <Input
                         type="number"
                         {...register("age")}
-                        className="h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-indigo-500/20 text-center"
+                        className="h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-primary/20 text-center"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -499,7 +499,7 @@ export default function CreatePatientPage() {
                           <Select
                             onValueChange={field.onChange}
                             value={field.value}>
-                            <SelectTrigger className="h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-indigo-500/20">
+                            <SelectTrigger className="h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-primary/20">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -523,7 +523,7 @@ export default function CreatePatientPage() {
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}>
-                          <SelectTrigger className="h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-indigo-500/20">
+                          <SelectTrigger className="h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-primary/20">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -576,7 +576,7 @@ export default function CreatePatientPage() {
                       <Mail className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
                       <Input
                         {...register("email")}
-                        className="h-11 pl-10 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-indigo-500/20"
+                        className="h-11 pl-10 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-primary/20"
                         placeholder="patient@example.com"
                       />
                     </div>
@@ -589,7 +589,7 @@ export default function CreatePatientPage() {
                   </Label>
                   <Textarea
                     {...register("address")}
-                    className="min-h-[80px] rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-indigo-500/20 resize-none py-3"
+                    className="min-h-[80px] rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-primary/20 resize-none py-3"
                     placeholder="Apartment, Street, City..."
                   />
                 </div>
@@ -651,7 +651,7 @@ export default function CreatePatientPage() {
                       <Input
                         type="date"
                         {...register("collectionDate")}
-                        className="h-11 rounded-xl bg-card border-indigo-200 focus:ring-indigo-500/20"
+                        className="h-11 rounded-xl bg-card border-indigo-200 focus:ring-primary/20"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -663,7 +663,7 @@ export default function CreatePatientPage() {
                         <Input
                           type="time"
                           {...register("collectionTime")}
-                          className="h-11 rounded-xl bg-card border-indigo-200 focus:ring-indigo-500/20 pr-10"
+                          className="h-11 rounded-xl bg-card border-indigo-200 focus:ring-primary/20 pr-10"
                         />
                       </div>
                     </div>
@@ -741,7 +741,7 @@ export default function CreatePatientPage() {
                         <Select
                           onValueChange={field.onChange}
                           defaultValue={field.value}>
-                          <SelectTrigger className="h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-indigo-500/20 pl-10 relative">
+                          <SelectTrigger className="h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-primary/20 pl-10 relative">
                             <Banknote className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
                             <SelectValue />
                           </SelectTrigger>
@@ -782,7 +782,7 @@ export default function CreatePatientPage() {
               type="submit"
               form="patient-form"
               disabled={isSubmitting}
-              className="flex-1 sm:w-56 h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold shadow-md shadow-indigo-500/25 transition-all duration-300 hover:-translate-y-0.5">
+              className="flex-1 sm:w-56 h-12 rounded-xl bg-gradient-to-r from-primary to-primary hover:from-indigo-700 hover:to-violet-700 text-primary-foreground font-bold shadow-md shadow-indigo-500/25 transition-all duration-300 hover:-translate-y-0.5">
               {isSubmitting ? (
                 <>
                   <Loader2 className="animate-spin h-5 w-5 mr-2" /> Saving...

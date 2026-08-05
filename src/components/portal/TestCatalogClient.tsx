@@ -71,7 +71,7 @@ export default function TestCatalogClient({
               className="h-10 w-auto object-contain"
             />
           ) : (
-            <div className="h-10 w-10 bg-primary text-white rounded-lg flex items-center justify-center font-bold text-xl">
+            <div className="h-10 w-10 bg-primary text-primary-foreground rounded-lg flex items-center justify-center font-bold text-xl">
               {lab.name.charAt(0)}
             </div>
           )}
@@ -83,7 +83,7 @@ export default function TestCatalogClient({
       </header>
 
       {/* 2. Search & Hero */}
-      <div className="px-4 py-8 bg-primary text-white text-center">
+      <div className="px-4 py-8 bg-primary text-primary-foreground text-center">
         <h2 className="text-3xl font-bold mb-2">Book Your Lab Tests Online</h2>
         <p className="text-blue-100 mb-8">
           Home collection & Lab Visit options available
@@ -96,7 +96,7 @@ export default function TestCatalogClient({
             placeholder="Search for blood tests, profiles, or conditions..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-4 rounded-xl text-foreground shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full pl-12 pr-4 py-4 rounded-xl text-foreground shadow-lg focus:outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
       </div>
@@ -144,7 +144,7 @@ export default function TestCatalogClient({
                   className={`px-4 py-2 text-sm font-bold rounded-lg transition-colors ${
                     inCart
                       ? "bg-red-50 text-red-600 hover:bg-red-100"
-                      : "bg-primary text-white hover:bg-blue-700"
+                      : "bg-primary text-primary-foreground hover:bg-primary/90"
                   }`}>
                   {inCart ? "Remove" : "+ Add"}
                 </button>
@@ -163,11 +163,11 @@ export default function TestCatalogClient({
       {/* 4. Floating Cart Bottom Bar */}
       {cart.length > 0 && (
         <div className="fixed bottom-0 left-0 right-0 p-4 z-50">
-          <div className="max-w-5xl mx-auto bg-slate-900 text-white rounded-xl shadow-2xl p-4 flex items-center justify-between border border-slate-700 animate-in slide-in-from-bottom-10">
+          <div className="max-w-5xl mx-auto bg-slate-900 text-primary-foreground rounded-xl shadow-2xl p-4 flex items-center justify-between border border-slate-700 animate-in slide-in-from-bottom-10">
             <div className="flex items-center gap-4">
               <div className="relative bg-slate-800 p-3 rounded-lg">
                 <ShoppingCart className="w-6 h-6 text-blue-400" />
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
+                <span className="absolute -top-2 -right-2 bg-red-500 text-primary-foreground text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
                   {cart.length}
                 </span>
               </div>
@@ -179,7 +179,7 @@ export default function TestCatalogClient({
 
             <button
               onClick={() => setIsCheckout(true)}
-              className="bg-primary/100 hover:bg-primary text-white px-6 py-3 rounded-lg font-bold flex items-center gap-2 transition-colors">
+              className="bg-primary/100 hover:bg-primary text-primary-foreground px-6 py-3 rounded-lg font-bold flex items-center gap-2 transition-colors">
               Proceed to Book <ArrowRight className="w-4 h-4" />
             </button>
           </div>

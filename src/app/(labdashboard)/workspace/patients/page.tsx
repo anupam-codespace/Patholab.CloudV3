@@ -94,7 +94,7 @@ const getTAT = (date: Date) => {
   const hours = differenceInHours(now, date);
   const mins = differenceInMinutes(now, date) % 60;
 
-  let colorClass = "text-emerald-700 bg-emerald-50 border-emerald-200";
+  let colorClass = "text-primary bg-emerald-50 border-emerald-200";
   if (hours > 24) colorClass = "text-rose-700 bg-rose-50 border-rose-200";
   else if (hours > 12)
     colorClass = "text-amber-700 bg-amber-50 border-amber-200";
@@ -113,7 +113,7 @@ const getTestStatusBadge = (status: string) => {
     case "APPROVED":
     case "COMPLETED":
     case "DELIVERED":
-      return "text-emerald-700 bg-emerald-50 border-emerald-200";
+      return "text-primary bg-emerald-50 border-emerald-200";
     case "RESULT_ENTERED":
     case "IN_PROGRESS":
     case "SAMPLE_COLLECTED":
@@ -312,7 +312,7 @@ export default function PatientWorklistPage() {
         <div className="flex-none mb-4 flex flex-col gap-4 bg-card/70 backdrop-blur-xl p-4 rounded-2xl border border-slate-200/60 shadow-sm">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex items-center gap-4 w-full sm:w-auto">
-              <div className="h-10 w-10 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-inner shrink-0">
+              <div className="h-10 w-10 bg-gradient-to-br from-indigo-500 to-primary rounded-xl flex items-center justify-center shadow-inner shrink-0">
                 <FlaskConical className="h-5 w-5 text-white" />
               </div>
               <div>
@@ -320,7 +320,7 @@ export default function PatientWorklistPage() {
                   PATIENT VISIT WORKLIST
                   <Badge
                     variant="secondary"
-                    className="bg-indigo-50 text-indigo-700 font-mono font-normal text-[10px]">
+                    className="bg-indigo-50 text-primary font-mono font-normal text-[10px]">
                     {filteredVisits.length} RECORDS
                   </Badge>
                 </h1>
@@ -335,7 +335,7 @@ export default function PatientWorklistPage() {
               <Popover open={isSearchOpen} onOpenChange={setIsSearchOpen}>
                 <PopoverTrigger asChild>
                   <div className="relative w-full sm:w-72 group cursor-pointer">
-                    <div className="absolute left-3 top-2.5 text-muted-foreground/70 group-hover:text-indigo-600 transition-colors">
+                    <div className="absolute left-3 top-2.5 text-muted-foreground/70 group-hover:text-primary transition-colors">
                       <ActiveIcon className="h-4 w-4" />
                     </div>
                     <Input
@@ -382,7 +382,7 @@ export default function PatientWorklistPage() {
                             />
                             <Label
                               htmlFor={criteria.id}
-                              className="flex items-center gap-2 px-3 py-2 rounded-xl border border-transparent cursor-pointer hover:bg-muted/30 peer-data-[state=checked]:bg-indigo-50 peer-data-[state=checked]:text-indigo-700 transition-all text-[10px] font-normal uppercase">
+                              className="flex items-center gap-2 px-3 py-2 rounded-xl border border-transparent cursor-pointer hover:bg-muted/30 peer-data-[state=checked]:bg-indigo-50 peer-data-[state=checked]:text-primary transition-all text-[10px] font-normal uppercase">
                               <criteria.icon className="h-3.5 w-3.5 opacity-75" />
                               {criteria.label}
                             </Label>
@@ -396,7 +396,7 @@ export default function PatientWorklistPage() {
 
               <Button
                 onClick={() => router.push("/workspace/registration")}
-                className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white h-10 rounded-xl text-xs font-normal shadow-md shadow-indigo-500/25 transition-all hover:-translate-y-0.5 uppercase">
+                className="bg-gradient-to-r from-primary to-primary text-primary-foreground h-10 rounded-xl text-xs font-normal shadow-md shadow-indigo-500/25 transition-all hover:-translate-y-0.5 uppercase">
                 <Plus className="h-4 w-4 mr-1.5" /> NEW REGISTRATION ("N")
               </Button>
             </div>
@@ -415,7 +415,7 @@ export default function PatientWorklistPage() {
                 </TabsTrigger>
                 <TabsTrigger
                   value="COMPLETED"
-                  className="rounded-lg text-[10px] font-normal px-4 py-2 uppercase data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center gap-1.5">
+                  className="rounded-lg text-[10px] font-normal px-4 py-2 uppercase data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm flex items-center gap-1.5">
                   <CheckCircle2 className="h-3.5 w-3.5" /> PRINT READY
                 </TabsTrigger>
                 <TabsTrigger
@@ -425,7 +425,7 @@ export default function PatientWorklistPage() {
                 </TabsTrigger>
                 <TabsTrigger
                   value="NO_TESTS"
-                  className="rounded-lg text-[10px] font-normal px-4 py-2 uppercase data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center gap-1.5">
+                  className="rounded-lg text-[10px] font-normal px-4 py-2 uppercase data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm flex items-center gap-1.5">
                   <AlertCircle className="h-3.5 w-3.5" /> REG. ONLY
                 </TabsTrigger>
               </TabsList>
@@ -460,7 +460,7 @@ export default function PatientWorklistPage() {
                     <tr>
                       <td colSpan={7} className="h-64 text-center">
                         <div className="flex flex-col items-center justify-center text-muted-foreground space-y-2">
-                          <Loader2 className="animate-spin h-6 w-6 text-indigo-600" />
+                          <Loader2 className="animate-spin h-6 w-6 text-primary" />
                           <span className="text-[10px] uppercase tracking-widest font-normal animate-pulse">
                             LOADING VISITS...
                           </span>
@@ -508,7 +508,7 @@ export default function PatientWorklistPage() {
                               <div className="flex flex-col gap-1">
                                 <Badge
                                   variant="outline"
-                                  className="font-mono bg-indigo-50/50 font-normal text-indigo-700 border-indigo-100 text-[11px] px-2 py-0.5 rounded shadow-sm uppercase">
+                                  className="font-mono bg-indigo-50/50 font-normal text-primary border-indigo-100 text-[11px] px-2 py-0.5 rounded shadow-sm uppercase">
                                   {visit.visitId}
                                 </Badge>
                                 <span className="text-[9px] font-normal text-muted-foreground/70 flex items-center gap-1 pl-0.5">
@@ -541,11 +541,11 @@ export default function PatientWorklistPage() {
                                           `/workspace/patients/${visit.patient.id}`,
                                         );
                                       }}
-                                      className="text-sm font-mono font-normal text-indigo-600 bg-indigo-50/50 px-1.5 rounded cursor-pointer hover:bg-indigo-100 hover:underline transition-all">
+                                      className="text-sm font-mono font-normal text-primary bg-indigo-50/50 px-1.5 rounded cursor-pointer hover:bg-indigo-100 hover:underline transition-all">
                                       {visit.patient.patientId}
                                     </span>
                                   </TooltipTrigger>
-                                  <TooltipContent className="bg-slate-900 text-white font-normal text-[10px] uppercase">
+                                  <TooltipContent className="bg-slate-900 text-primary-foreground font-normal text-[10px] uppercase">
                                     OPEN PATIENT PROFILE
                                   </TooltipContent>
                                 </Tooltip>
@@ -565,7 +565,7 @@ export default function PatientWorklistPage() {
                               <TooltipTrigger asChild>
                                 <div>{getTAT(visit.date)}</div>
                               </TooltipTrigger>
-                              <TooltipContent className="bg-slate-900 text-white text-[10px] font-normal uppercase px-3 py-1.5 rounded-lg shadow-xl">
+                              <TooltipContent className="bg-slate-900 text-primary-foreground text-[10px] font-normal uppercase px-3 py-1.5 rounded-lg shadow-xl">
                                 REGISTERED:{" "}
                                 {format(
                                   new Date(visit.date),
@@ -662,7 +662,7 @@ export default function PatientWorklistPage() {
                                 <HoverCardTrigger asChild>
                                   <div className="w-max mx-auto">
                                     <Badge
-                                      className={`${visit.invoice.status === "PAID" ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"} border-none text-[9px] px-2 py-0.5 uppercase font-normal cursor-help`}>
+                                      className={`${visit.invoice.status === "PAID" ? "bg-emerald-100 text-primary" : "bg-rose-100 text-rose-700"} border-none text-[9px] px-2 py-0.5 uppercase font-normal cursor-help`}>
                                       {visit.invoice.status}
                                     </Badge>
                                   </div>
@@ -721,7 +721,7 @@ export default function PatientWorklistPage() {
                                       `/workspace/reports/print/${visit.patient.id}`,
                                     );
                                   }}
-                                  className="h-8 px-3 border-emerald-200 bg-emerald-50/50 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-300 rounded shadow-sm flex items-center gap-1.5 transition-all">
+                                  className="h-8 px-3 border-emerald-200 bg-emerald-50/50 text-primary hover:bg-emerald-100 hover:border-emerald-300 rounded shadow-sm flex items-center gap-1.5 transition-all">
                                   <Printer className="h-3.5 w-3.5 shrink-0" />
                                   <span className="text-[10px] font-bold tracking-wider">
                                     PRINT
@@ -735,7 +735,7 @@ export default function PatientWorklistPage() {
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    className="h-8 px-3 rounded text-muted-foreground/70 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 transition-all flex items-center gap-1.5 shadow-sm">
+                                    className="h-8 px-3 rounded text-muted-foreground/70 hover:text-primary hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 transition-all flex items-center gap-1.5 shadow-sm">
                                     <span className="text-[10px] font-bold tracking-wider">
                                       MORE
                                     </span>
@@ -765,7 +765,7 @@ export default function PatientWorklistPage() {
                                         `/workspace/accession?patientId=${visit.patient.id}&isNewVisit=true`,
                                       )
                                     }
-                                    className="cursor-pointer rounded-lg py-2.5 font-medium text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50">
+                                    className="cursor-pointer rounded-lg py-2.5 font-medium text-primary hover:text-primary hover:bg-indigo-50">
                                     <TestTube2 className="mr-2 h-4 w-4" /> ADD
                                     NEW TEST
                                   </DropdownMenuItem>

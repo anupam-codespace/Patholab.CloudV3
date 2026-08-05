@@ -103,7 +103,7 @@ export default function BillingPage() {
         icon: Clock,
       },
       PAID: {
-        class: "bg-emerald-50 text-emerald-700 border-emerald-100",
+        class: "bg-emerald-50 text-primary border-emerald-100",
         icon: CheckCircle,
       },
       OVERDUE: {
@@ -155,7 +155,7 @@ export default function BillingPage() {
           </div>
 
           <Link href="/workspace/registration">
-            <Button className="h-14 px-8 bg-slate-900 hover:bg-black text-white rounded-2xl shadow-xl shadow-slate-200 transition-all active:scale-95 group">
+            <Button className="h-14 px-8 bg-slate-900 hover:bg-black text-primary-foreground rounded-2xl shadow-xl shadow-slate-200 transition-all active:scale-95 group">
               <Plus className="mr-2 h-5 w-5 group-hover:rotate-90 transition-transform" />
               <span className="font-bold text-lg">Generate Invoice</span>
             </Button>
@@ -310,7 +310,7 @@ export default function BillingPage() {
                           key={invoice.id}
                           className="group hover:bg-muted/50/80 transition-colors">
                           <td className="px-8 py-5">
-                            <span className="font-mono text-sm font-black text-emerald-600 bg-emerald-50 px-3 py-1 rounded-lg">
+                            <span className="font-mono text-sm font-black text-primary bg-emerald-50 px-3 py-1 rounded-lg">
                               {invoice.invoiceNumber}
                             </span>
                           </td>
@@ -346,7 +346,7 @@ export default function BillingPage() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-10 w-10 rounded-xl text-muted-foreground/70 hover:text-emerald-600 hover:bg-emerald-50">
+                                  className="h-10 w-10 rounded-xl text-muted-foreground/70 hover:text-primary hover:bg-emerald-50">
                                   <Eye className="h-5 w-5" />
                                 </Button>
                               </Link>
@@ -403,10 +403,10 @@ export default function BillingPage() {
                   <h2 className="text-6xl font-black text-slate-50 tracking-tighter leading-none mb-4 select-none uppercase">
                     Invoice
                   </h2>
-                  <p className="text-xl font-black text-emerald-600 mb-2 tabular-nums">
+                  <p className="text-xl font-black text-primary mb-2 tabular-nums">
                     #{pdfData.invoiceNumber}
                   </p>
-                  <div className="inline-block bg-slate-900 text-white px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest">
+                  <div className="inline-block bg-slate-900 text-primary-foreground px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest">
                     {pdfData.status}
                   </div>
                 </div>
@@ -500,7 +500,7 @@ export default function BillingPage() {
                     <span className="text-lg font-black uppercase tracking-[0.2em] text-foreground">
                       Total Payable
                     </span>
-                    <span className="text-3xl font-black text-emerald-600 tabular-nums">
+                    <span className="text-3xl font-black text-primary tabular-nums">
                       ₹{pdfData.grandTotal}
                     </span>
                   </div>

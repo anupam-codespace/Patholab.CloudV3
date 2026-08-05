@@ -125,7 +125,7 @@ export default function MasterCatalogPage() {
         </div>
         <Button
           onClick={openCreateDialog}
-          className="bg-primary hover:bg-blue-700">
+          className="bg-primary hover:bg-primary/90">
           <Plus className="h-4 w-4 mr-2" /> Add{" "}
           {currentTabConfig.label.split(" ")[0]}
         </Button>

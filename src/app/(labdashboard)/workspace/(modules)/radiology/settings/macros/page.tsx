@@ -134,7 +134,7 @@ export default function ReportingMacrosPage() {
   if (isLoading) {
     return (
       <div className="h-[calc(100vh-4rem)] flex flex-col items-center justify-center bg-muted/30 font-sans">
-        <Loader2 className="h-10 w-10 animate-spin text-indigo-600 mb-4" />
+        <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
         <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest animate-pulse">
           Loading Macros...
         </p>
@@ -151,7 +151,7 @@ export default function ReportingMacrosPage() {
       <header className="shrink-0 z-30 px-4 sm:px-6 lg:px-8 py-4 w-full max-w-[1600px] mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card/70 backdrop-blur-xl p-4 rounded-2xl border border-slate-200/60 shadow-sm">
           <div className="flex items-center gap-4 w-full md:w-auto">
-            <div className="h-12 w-12 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-inner shrink-0">
+            <div className="h-12 w-12 bg-gradient-to-br from-indigo-500 to-primary rounded-xl flex items-center justify-center shadow-inner shrink-0">
               <LayoutTemplate className="h-6 w-6 text-white" />
             </div>
             <div className="min-w-0">
@@ -166,7 +166,7 @@ export default function ReportingMacrosPage() {
 
           <Button
             onClick={handleCreateNew}
-            className="w-full md:w-auto bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white shadow-md shadow-indigo-500/25 h-11 rounded-xl px-6 font-bold transition-all duration-300 hover:-translate-y-0.5 shrink-0">
+            className="w-full md:w-auto bg-gradient-to-r from-primary to-primary hover:from-indigo-700 hover:to-violet-700 text-primary-foreground shadow-md shadow-indigo-500/25 h-11 rounded-xl px-6 font-bold transition-all duration-300 hover:-translate-y-0.5 shrink-0">
             <Plus className="mr-1.5 h-5 w-5" /> New Macro
           </Button>
         </div>
@@ -181,7 +181,7 @@ export default function ReportingMacrosPage() {
               <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
               <Input
                 placeholder="Search macros or /shortcodes..."
-                className="pl-9 h-11 bg-card border-border focus:border-indigo-300 focus:ring-indigo-500/20 rounded-xl text-sm shadow-sm"
+                className="pl-9 h-11 bg-card border-border focus:border-indigo-300 focus:ring-primary/20 rounded-xl text-sm shadow-sm"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -194,7 +194,7 @@ export default function ReportingMacrosPage() {
                   onClick={() => setActiveFilter(mod)}
                   className={`px-4 py-1.5 text-[11px] font-bold rounded-lg whitespace-nowrap transition-all uppercase tracking-wider ${
                     activeFilter === mod
-                      ? "bg-card text-indigo-700 shadow-sm border border-slate-200/50"
+                      ? "bg-card text-primary shadow-sm border border-slate-200/50"
                       : "text-muted-foreground hover:text-foreground hover:bg-slate-200/50"
                   }`}>
                   {mod}
@@ -239,7 +239,7 @@ export default function ReportingMacrosPage() {
                     </Badge>
                   </div>
                   {macro.shortcode ? (
-                    <p className="text-xs font-mono font-bold text-indigo-600 bg-card px-2 py-0.5 rounded border border-indigo-100 w-max shadow-sm">
+                    <p className="text-xs font-mono font-bold text-primary bg-card px-2 py-0.5 rounded border border-indigo-100 w-max shadow-sm">
                       /{macro.shortcode}
                     </p>
                   ) : (
@@ -261,7 +261,7 @@ export default function ReportingMacrosPage() {
               <div className="px-5 py-4 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0">
                 <div className="min-w-0">
                   <h2 className="text-lg font-bold text-foreground flex items-center gap-2 truncate">
-                    <Wand2 className="h-5 w-5 text-indigo-600 shrink-0" />
+                    <Wand2 className="h-5 w-5 text-primary shrink-0" />
                     {isEditing
                       ? selectedMacro.id.startsWith("new")
                         ? "Create New Macro"
@@ -299,7 +299,7 @@ export default function ReportingMacrosPage() {
                       <Button
                         onClick={handleSave}
                         disabled={saveMutation.isPending}
-                        className="flex-1 sm:flex-none h-10 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-500/25 transition-all hover:-translate-y-0.5">
+                        className="flex-1 sm:flex-none h-10 rounded-xl font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-indigo-500/25 transition-all hover:-translate-y-0.5">
                         {saveMutation.isPending ? (
                           <Loader2 className="h-4 w-4 animate-spin mr-2" />
                         ) : (
@@ -330,7 +330,7 @@ export default function ReportingMacrosPage() {
                       }
                       disabled={!isEditing}
                       placeholder="e.g. Normal Chest X-Ray"
-                      className="h-11 rounded-xl bg-card border-border focus:ring-indigo-500/20 font-bold text-foreground disabled:opacity-100 disabled:bg-muted/30 shadow-sm"
+                      className="h-11 rounded-xl bg-card border-border focus:ring-primary/20 font-bold text-foreground disabled:opacity-100 disabled:bg-muted/30 shadow-sm"
                     />
                   </div>
 
@@ -339,7 +339,7 @@ export default function ReportingMacrosPage() {
                       Modality <span className="text-rose-500">*</span>
                     </Label>
                     <select
-                      className="flex h-11 w-full rounded-xl border border-border bg-card px-3 py-2 text-sm font-bold text-foreground/80 shadow-sm disabled:opacity-100 disabled:bg-muted/30 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all appearance-none"
+                      className="flex h-11 w-full rounded-xl border border-border bg-card px-3 py-2 text-sm font-bold text-foreground/80 shadow-sm disabled:opacity-100 disabled:bg-muted/30 outline-none focus:ring-2 focus:ring-primary/20 focus:border-indigo-400 transition-all appearance-none"
                       value={selectedMacro.modalityType}
                       onChange={(e) =>
                         setSelectedMacro({
@@ -376,7 +376,7 @@ export default function ReportingMacrosPage() {
                         }
                         disabled={!isEditing}
                         placeholder="N-CXR"
-                        className="pl-6 h-11 font-mono text-sm font-bold text-indigo-600 bg-card border-border focus:ring-indigo-500/20 disabled:opacity-100 disabled:bg-muted/30 shadow-sm uppercase"
+                        className="pl-6 h-11 font-mono text-sm font-bold text-primary bg-card border-border focus:ring-primary/20 disabled:opacity-100 disabled:bg-muted/30 shadow-sm uppercase"
                       />
                     </div>
                     <p className="text-[10px] font-medium text-muted-foreground mt-1 pl-1">
@@ -395,7 +395,7 @@ export default function ReportingMacrosPage() {
                         <input
                           type="checkbox"
                           disabled={!isEditing}
-                          className="h-4 w-4 text-indigo-600 rounded border-border focus:ring-indigo-600"
+                          className="h-4 w-4 text-primary rounded border-border focus:ring-indigo-600"
                           checked={selectedMacro.isGlobal}
                           onChange={(e) =>
                             setSelectedMacro({
@@ -406,7 +406,7 @@ export default function ReportingMacrosPage() {
                         />
                         <div className="flex items-center gap-2 pr-2">
                           <Globe2
-                            className={`h-4 w-4 ${selectedMacro.isGlobal ? "text-indigo-600" : "text-slate-400"}`}
+                            className={`h-4 w-4 ${selectedMacro.isGlobal ? "text-primary" : "text-slate-400"}`}
                           />
                           <p className="font-bold text-foreground text-sm">
                             Global Macro
@@ -437,7 +437,7 @@ export default function ReportingMacrosPage() {
                         })
                       }
                       disabled={!isEditing}
-                      className="flex-1 min-h-[250px] font-mono text-[13px] leading-relaxed rounded-xl border-border bg-slate-50/50 focus:bg-card focus:border-indigo-400 focus:ring-indigo-500/20 disabled:opacity-100 disabled:bg-muted/30 disabled:text-foreground/80 p-4 resize-none shadow-inner"
+                      className="flex-1 min-h-[250px] font-mono text-[13px] leading-relaxed rounded-xl border-border bg-slate-50/50 focus:bg-card focus:border-indigo-400 focus:ring-primary/20 disabled:opacity-100 disabled:bg-muted/30 disabled:text-foreground/80 p-4 resize-none shadow-inner"
                       placeholder="Enter the detailed clinical findings template here..."
                     />
                   </div>
@@ -456,7 +456,7 @@ export default function ReportingMacrosPage() {
                         })
                       }
                       disabled={!isEditing}
-                      className="min-h-[120px] font-bold text-sm leading-relaxed rounded-xl border-border bg-slate-50/50 focus:bg-card focus:border-indigo-400 focus:ring-indigo-500/20 disabled:opacity-100 disabled:bg-muted/30 disabled:text-foreground/80 p-4 shadow-inner"
+                      className="min-h-[120px] font-bold text-sm leading-relaxed rounded-xl border-border bg-slate-50/50 focus:bg-card focus:border-indigo-400 focus:ring-primary/20 disabled:opacity-100 disabled:bg-muted/30 disabled:text-foreground/80 p-4 shadow-inner"
                       placeholder="Enter the final diagnosis or conclusion here..."
                     />
                   </div>

@@ -112,7 +112,7 @@ export default function AdminWalletCreditPage() {
           Back to Wallet Management
         </Link>
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 text-primary border border-indigo-100">
             <ShieldCheck className="h-6 w-6" />
           </div>
           <div>
@@ -138,7 +138,7 @@ export default function AdminWalletCreditPage() {
             <select
               value={selectedLabId}
               onChange={(e) => setSelectedLabId(e.target.value)}
-              className="w-full h-11 rounded-xl border border-border bg-muted/30 px-4 text-sm font-medium text-foreground focus:border-indigo-500 focus:bg-card focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all appearance-none"
+              className="w-full h-11 rounded-xl border border-border bg-muted/30 px-4 text-sm font-medium text-foreground focus:border-indigo-500 focus:bg-card focus:ring-2 focus:ring-primary/20 outline-none transition-all appearance-none"
               disabled={isFetchingLabs}>
               <option value="" disabled>
                 {isFetchingLabs ? "Loading labs..." : "Select a lab..."}
@@ -170,7 +170,7 @@ export default function AdminWalletCreditPage() {
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="5000"
-                  className="w-full h-11 rounded-xl border border-border bg-muted/30 pl-8 pr-4 text-sm font-bold text-foreground focus:border-indigo-500 focus:bg-card focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
+                  className="w-full h-11 rounded-xl border border-border bg-muted/30 pl-8 pr-4 text-sm font-bold text-foreground focus:border-indigo-500 focus:bg-card focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                 />
               </div>
             </div>
@@ -184,7 +184,7 @@ export default function AdminWalletCreditPage() {
               <select
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
-                className="w-full h-11 rounded-xl border border-border bg-muted/30 px-4 text-sm font-medium text-foreground focus:border-indigo-500 focus:bg-card focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all appearance-none">
+                className="w-full h-11 rounded-xl border border-border bg-muted/30 px-4 text-sm font-medium text-foreground focus:border-indigo-500 focus:bg-card focus:ring-2 focus:ring-primary/20 outline-none transition-all appearance-none">
                 <option value="BANK_TRANSFER">Bank Transfer (NEFT/RTGS)</option>
                 <option value="UPI">UPI</option>
                 <option value="CASH">Cash</option>
@@ -204,7 +204,7 @@ export default function AdminWalletCreditPage() {
               value={reference}
               onChange={(e) => setReference(e.target.value)}
               placeholder="e.g. UTR1234567890"
-              className="w-full h-11 rounded-xl border border-border bg-muted/30 px-4 text-sm font-medium text-foreground focus:border-indigo-500 focus:bg-card focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
+              className="w-full h-11 rounded-xl border border-border bg-muted/30 px-4 text-sm font-medium text-foreground focus:border-indigo-500 focus:bg-card focus:ring-2 focus:ring-primary/20 outline-none transition-all"
             />
             <p className="text-[11px] text-muted-foreground font-medium">
               Important for auditing and matching with your bank statement.
@@ -221,7 +221,7 @@ export default function AdminWalletCreditPage() {
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Add any internal notes here..."
               rows={3}
-              className="w-full rounded-xl border border-border bg-muted/30 p-4 text-sm font-medium text-foreground focus:border-indigo-500 focus:bg-card focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all resize-none"
+              className="w-full rounded-xl border border-border bg-muted/30 p-4 text-sm font-medium text-foreground focus:border-indigo-500 focus:bg-card focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
             />
           </div>
 
@@ -237,7 +237,7 @@ export default function AdminWalletCreditPage() {
             <Button
               type="submit"
               disabled={isSubmitting || !selectedLabId}
-              className="rounded-xl h-11 px-8 bg-indigo-600 hover:bg-indigo-700 text-white font-bold">
+              className="rounded-xl h-11 px-8 bg-primary hover:bg-primary/90 text-primary-foreground font-bold">
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

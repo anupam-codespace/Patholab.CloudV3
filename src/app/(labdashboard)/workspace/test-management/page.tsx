@@ -44,7 +44,7 @@ function TestManagementContent() {
   const standardTabClass =
     "shrink-0 whitespace-nowrap flex items-center px-4 py-2.5 h-10 rounded-md transition-all font-medium text-sm border shadow-sm " +
     "bg-card text-muted-foreground border-border hover:bg-muted/30 hover:text-foreground " +
-    "data-[state=active]:bg-blue-700 data-[state=active]:text-white data-[state=active]:border-blue-700 data-[state=active]:shadow-md";
+    "data-[state=active]:bg-blue-700 data-[state=active]:text-primary-foreground data-[state=active]:border-blue-700 data-[state=active]:shadow-md";
 
   return (
     <div className="flex-1 space-y-4 md:space-y-6 p-4 md:p-6 pt-6 max-w-[1600px] mx-auto w-full">
@@ -99,8 +99,8 @@ function TestManagementContent() {
               value="guide"
               className={
                 "shrink-0 whitespace-nowrap flex items-center md:ml-auto px-4 py-2.5 h-10 rounded-md transition-all font-medium text-sm border shadow-sm " +
-                "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 hover:text-emerald-800 " +
-                "data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:border-emerald-600 data-[state=active]:shadow-md"
+                "bg-emerald-50 text-primary border-emerald-200 hover:bg-emerald-100 hover:text-emerald-800 " +
+                "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-emerald-600 data-[state=active]:shadow-md"
               }>
               <BookOpen className="mr-2 h-4 w-4" /> How to Use
             </TabsTrigger>
@@ -168,7 +168,7 @@ export default function TestManagementPage() {
     <Suspense
       fallback={
         <div className="flex flex-col items-center justify-center min-h-[400px] p-8 text-center space-y-4">
-          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
           <p className="text-sm font-medium text-muted-foreground animate-pulse">
             Loading Module Configuration...
           </p>

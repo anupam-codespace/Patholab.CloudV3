@@ -168,7 +168,7 @@ export default function StaffManagementPage() {
         {/* --- HEADER --- */}
         <div className="flex-none mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-card/70 backdrop-blur-xl p-4 rounded-2xl border border-slate-200/60 shadow-sm">
           <div className="flex items-center gap-4 w-full sm:w-auto">
-            <div className="h-10 w-10 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-inner shrink-0">
+            <div className="h-10 w-10 bg-gradient-to-br from-indigo-500 to-primary rounded-xl flex items-center justify-center shadow-inner shrink-0">
               <Users className="h-5 w-5 text-white" />
             </div>
             <div>
@@ -176,7 +176,7 @@ export default function StaffManagementPage() {
                 Staff Directory
                 <Badge
                   variant="secondary"
-                  className="bg-indigo-50 text-indigo-700 font-mono text-xs">
+                  className="bg-indigo-50 text-primary font-mono text-xs">
                   {staffList.length} Members
                 </Badge>
               </h1>
@@ -198,7 +198,7 @@ export default function StaffManagementPage() {
             </div>
             <Button
               onClick={() => setIsAddOpen(true)}
-              className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 h-10 rounded-xl text-sm font-bold shadow-md shadow-indigo-500/25 whitespace-nowrap">
+              className="bg-gradient-to-r from-primary to-primary hover:from-indigo-700 hover:to-violet-700 h-10 rounded-xl text-sm font-bold shadow-md shadow-indigo-500/25 whitespace-nowrap">
               <Plus className="h-4 w-4 mr-1.5" /> Add Staff
             </Button>
           </div>
@@ -222,7 +222,7 @@ export default function StaffManagementPage() {
                 {isLoading ? (
                   <tr>
                     <td colSpan={6} className="h-64 text-center">
-                      <Loader2 className="animate-spin h-8 w-8 mx-auto text-indigo-600 mb-3" />
+                      <Loader2 className="animate-spin h-8 w-8 mx-auto text-primary mb-3" />
                       <span className="text-xs font-medium text-muted-foreground uppercase tracking-widest animate-pulse">
                         Loading Directory...
                       </span>
@@ -245,7 +245,7 @@ export default function StaffManagementPage() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <Avatar className="h-9 w-9 border border-border">
-                            <AvatarFallback className="bg-indigo-50 text-indigo-700 font-bold text-xs">
+                            <AvatarFallback className="bg-indigo-50 text-primary font-bold text-xs">
                               {staff.user.name.charAt(0)}
                             </AvatarFallback>
                           </Avatar>
@@ -288,7 +288,7 @@ export default function StaffManagementPage() {
 
                       <td className="px-4 py-4 text-center">
                         {staff.user.isActive ? (
-                          <Badge className="bg-emerald-100 text-emerald-700 border-none px-2 text-[10px] uppercase tracking-wider font-bold shadow-sm">
+                          <Badge className="bg-emerald-100 text-primary border-none px-2 text-[10px] uppercase tracking-wider font-bold shadow-sm">
                             <CheckCircle2 className="h-3 w-3 mr-1" /> Active
                           </Badge>
                         ) : (
@@ -304,7 +304,7 @@ export default function StaffManagementPage() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 rounded-lg text-muted-foreground/70 hover:text-indigo-600 hover:bg-indigo-50 data-[state=open]:bg-indigo-50 data-[state=open]:text-indigo-600 transition-colors">
+                              className="h-8 w-8 rounded-lg text-muted-foreground/70 hover:text-primary hover:bg-indigo-50 data-[state=open]:bg-indigo-50 data-[state=open]:text-primary transition-colors">
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -560,7 +560,7 @@ function AddStaffModal({
             <Button
               type="submit"
               disabled={isLoading}
-              className="bg-indigo-600 hover:bg-indigo-700 rounded-xl px-6">
+              className="bg-primary hover:bg-primary/90 rounded-xl px-6">
               {isLoading ? (
                 <Loader2 className="animate-spin h-4 w-4 mr-2" />
               ) : (
@@ -721,7 +721,7 @@ function EditStaffModal({
             <Button
               type="submit"
               disabled={isLoading}
-              className="bg-indigo-600 hover:bg-indigo-700 rounded-xl px-6">
+              className="bg-primary hover:bg-primary/90 rounded-xl px-6">
               {isLoading ? (
                 <Loader2 className="animate-spin h-4 w-4" />
               ) : (
@@ -792,7 +792,7 @@ function ChangePasswordModal({
             <Button
               type="submit"
               disabled={isLoading || password.length < 6}
-              className="bg-slate-900 hover:bg-slate-800 text-white rounded-xl">
+              className="bg-slate-900 hover:bg-slate-800 text-primary-foreground rounded-xl">
               {isLoading ? (
                 <Loader2 className="animate-spin h-4 w-4" />
               ) : (
@@ -855,7 +855,7 @@ function ActivityLogModal({ open, staff, onClose }: any) {
                 <div
                   key={log.id}
                   className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                  <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-indigo-100 text-indigo-600 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-indigo-100 text-primary shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
                     <ActivitySquare className="h-4 w-4" />
                   </div>
                   <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-card p-4 rounded-xl shadow-sm border border-slate-100">

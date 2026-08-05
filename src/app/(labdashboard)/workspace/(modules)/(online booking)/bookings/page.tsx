@@ -76,7 +76,7 @@ export default async function BookingsDashboardPage() {
 
           <Link
             href="/workspace/bookings/settings"
-            className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm">
+            className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-primary-foreground px-4 py-2 rounded-lg font-medium transition-colors text-sm">
             <Settings className="w-4 h-4" /> Portal Settings
           </Link>
         </div>

@@ -96,8 +96,8 @@ export default function BookDemoModal({
             {/* === LEFT PANEL: VALUE PROP (Hidden on Mobile) === */}
             <div className="hidden md:flex flex-col justify-between w-2/5 bg-slate-950 p-8 relative overflow-hidden">
               {/* Decorative Gradients */}
-              <div className="absolute -top-20 -left-20 w-64 h-64 bg-indigo-600/30 rounded-full blur-[80px] pointer-events-none"></div>
-              <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-violet-600/30 rounded-full blur-[80px] pointer-events-none"></div>
+              <div className="absolute -top-20 -left-20 w-64 h-64 bg-primary/30 rounded-full blur-[80px] pointer-events-none"></div>
+              <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-primary/30 rounded-full blur-[80px] pointer-events-none"></div>
 
               <div className="relative z-10">
                 <div className="bg-card/10 backdrop-blur-md w-12 h-12 rounded-xl flex items-center justify-center border border-white/10 mb-6 shadow-lg">
@@ -149,13 +149,13 @@ export default function BookDemoModal({
                     Full Name <span className="text-red-500">*</span>
                   </Label>
                   <div className="relative group">
-                    <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/70 group-focus-within:text-indigo-600 transition-colors" />
+                    <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/70 group-focus-within:text-primary transition-colors" />
                     <Input
                       id="name"
                       name="name"
                       required
                       placeholder="Dr. John Doe"
-                      className="pl-11 h-12 rounded-xl bg-muted/30 border-border focus:bg-card focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-medium text-foreground"
+                      className="pl-11 h-12 rounded-xl bg-muted/30 border-border focus:bg-card focus:border-indigo-500 focus:ring-4 focus:ring-primary/10 transition-all font-medium text-foreground"
                     />
                   </div>
                 </div>
@@ -169,14 +169,14 @@ export default function BookDemoModal({
                       Email <span className="text-red-500">*</span>
                     </Label>
                     <div className="relative group">
-                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/70 group-focus-within:text-indigo-600 transition-colors" />
+                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/70 group-focus-within:text-primary transition-colors" />
                       <Input
                         id="email"
                         name="email"
                         type="email"
                         required
                         placeholder="john@lab.com"
-                        className="pl-11 h-12 rounded-xl bg-muted/30 border-border focus:bg-card focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-medium text-foreground"
+                        className="pl-11 h-12 rounded-xl bg-muted/30 border-border focus:bg-card focus:border-indigo-500 focus:ring-4 focus:ring-primary/10 transition-all font-medium text-foreground"
                       />
                     </div>
                   </div>
@@ -189,14 +189,14 @@ export default function BookDemoModal({
                       Phone <span className="text-red-500">*</span>
                     </Label>
                     <div className="relative group">
-                      <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/70 group-focus-within:text-indigo-600 transition-colors" />
+                      <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/70 group-focus-within:text-primary transition-colors" />
                       <Input
                         id="phone"
                         name="phone"
                         required
                         placeholder="98765 43210"
                         maxLength={10}
-                        className="pl-11 h-12 rounded-xl bg-muted/30 border-border focus:bg-card focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-medium text-foreground"
+                        className="pl-11 h-12 rounded-xl bg-muted/30 border-border focus:bg-card focus:border-indigo-500 focus:ring-4 focus:ring-primary/10 transition-all font-medium text-foreground"
                       />
                     </div>
                   </div>
@@ -210,12 +210,12 @@ export default function BookDemoModal({
                     Lab / Center Name
                   </Label>
                   <div className="relative group">
-                    <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/70 group-focus-within:text-indigo-600 transition-colors" />
+                    <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/70 group-focus-within:text-primary transition-colors" />
                     <Input
                       id="labName"
                       name="labName"
                       placeholder="e.g. Apex Diagnostics"
-                      className="pl-11 h-12 rounded-xl bg-muted/30 border-border focus:bg-card focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-medium text-foreground"
+                      className="pl-11 h-12 rounded-xl bg-muted/30 border-border focus:bg-card focus:border-indigo-500 focus:ring-4 focus:ring-primary/10 transition-all font-medium text-foreground"
                     />
                   </div>
                 </div>
@@ -228,12 +228,12 @@ export default function BookDemoModal({
                     Specific Requirements (Optional)
                   </Label>
                   <div className="relative group">
-                    <MessageSquare className="absolute left-3.5 top-3.5 h-5 w-5 text-muted-foreground/70 group-focus-within:text-indigo-600 transition-colors" />
+                    <MessageSquare className="absolute left-3.5 top-3.5 h-5 w-5 text-muted-foreground/70 group-focus-within:text-primary transition-colors" />
                     <Textarea
                       id="message"
                       name="message"
                       placeholder="E.g., I need to connect a Sysmex XN-1000..."
-                      className="pl-11 pt-3.5 min-h-[100px] resize-none rounded-xl bg-muted/30 border-border focus:bg-card focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-medium text-foreground"
+                      className="pl-11 pt-3.5 min-h-[100px] resize-none rounded-xl bg-muted/30 border-border focus:bg-card focus:border-indigo-500 focus:ring-4 focus:ring-primary/10 transition-all font-medium text-foreground"
                     />
                   </div>
                 </div>
@@ -241,7 +241,7 @@ export default function BookDemoModal({
                 <div className="pt-4">
                   <Button
                     type="submit"
-                    className="w-full h-12 rounded-xl text-base font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/25 transition-all duration-300 active:scale-[0.98]"
+                    className="w-full h-12 rounded-xl text-base font-bold bg-primary hover:bg-primary/90 text-white shadow-lg shadow-indigo-500/25 transition-all duration-300 active:scale-[0.98]"
                     disabled={loading}>
                     {loading ? (
                       <span className="flex items-center gap-2">

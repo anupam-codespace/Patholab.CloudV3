@@ -148,7 +148,7 @@ export default function TestMasterDirectoryPage() {
         {/* --- HEADER --- */}
         <div className="flex-none mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-card/70 backdrop-blur-xl p-4 rounded-2xl border border-slate-200/60 shadow-sm">
           <div className="flex items-center gap-4 w-full sm:w-auto">
-            <div className="h-10 w-10 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-inner shrink-0">
+            <div className="h-10 w-10 bg-gradient-to-br from-indigo-500 to-primary rounded-xl flex items-center justify-center shadow-inner shrink-0">
               <Microscope className="h-5 w-5 text-white" />
             </div>
             <div>
@@ -156,7 +156,7 @@ export default function TestMasterDirectoryPage() {
                 Test Directory
                 <Badge
                   variant="secondary"
-                  className="bg-indigo-50 text-indigo-700 hover:bg-indigo-50 font-mono text-xs">
+                  className="bg-indigo-50 text-primary hover:bg-indigo-50 font-mono text-xs">
                   {totalRecords} Total
                 </Badge>
               </h1>
@@ -168,7 +168,7 @@ export default function TestMasterDirectoryPage() {
 
           <Button
             onClick={() => router.push("/workspace/tests/new")}
-            className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 h-10 rounded-xl text-sm font-bold shadow-md shadow-indigo-500/25 transition-all duration-300 hover:-translate-y-0.5 whitespace-nowrap">
+            className="bg-gradient-to-r from-primary to-primary hover:from-indigo-700 hover:to-violet-700 h-10 rounded-xl text-sm font-bold shadow-md shadow-indigo-500/25 transition-all duration-300 hover:-translate-y-0.5 whitespace-nowrap">
             <Plus className="h-4 w-4 mr-1.5" /> Add New Test
           </Button>
         </div>
@@ -179,7 +179,7 @@ export default function TestMasterDirectoryPage() {
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
             <Input
               placeholder="Search by Test Name or Code..."
-              className="pl-9 h-10 bg-card border-border rounded-xl focus:border-indigo-500 focus:ring-indigo-500/20 shadow-sm text-sm"
+              className="pl-9 h-10 bg-card border-border rounded-xl focus:border-indigo-500 focus:ring-primary/20 shadow-sm text-sm"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -239,7 +239,7 @@ export default function TestMasterDirectoryPage() {
                   <tr>
                     <td colSpan={7} className="h-64 text-center">
                       <div className="flex flex-col items-center justify-center text-muted-foreground space-y-3">
-                        <Loader2 className="animate-spin h-8 w-8 text-indigo-600" />
+                        <Loader2 className="animate-spin h-8 w-8 text-primary" />
                         <span className="text-xs font-medium uppercase tracking-widest animate-pulse">
                           Loading Catalog...
                         </span>
@@ -316,7 +316,7 @@ export default function TestMasterDirectoryPage() {
 
                       <td className="px-4 py-4 text-center">
                         {test.isActive ? (
-                          <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none text-[10px] px-2 uppercase tracking-wider font-bold">
+                          <Badge className="bg-emerald-100 text-primary hover:bg-emerald-100 border-none text-[10px] px-2 uppercase tracking-wider font-bold">
                             Active
                           </Badge>
                         ) : (
@@ -334,7 +334,7 @@ export default function TestMasterDirectoryPage() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 rounded-lg text-muted-foreground/70 hover:text-indigo-600 hover:bg-indigo-50 data-[state=open]:bg-indigo-50 data-[state=open]:text-indigo-600 transition-colors">
+                              className="h-8 w-8 rounded-lg text-muted-foreground/70 hover:text-primary hover:bg-indigo-50 data-[state=open]:bg-indigo-50 data-[state=open]:text-primary transition-colors">
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>

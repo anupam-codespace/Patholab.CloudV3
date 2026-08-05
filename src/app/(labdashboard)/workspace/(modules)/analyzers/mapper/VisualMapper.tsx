@@ -147,7 +147,7 @@ export default function VisualMapper({
         <div className="w-24 h-24 bg-card dark:bg-slate-900 rounded-3xl shadow-xl flex items-center justify-center mx-auto mb-8 border border-emerald-100 dark:border-emerald-800">
           <CheckCircle2 className="w-12 h-12 text-emerald-500" />
         </div>
-        <h2 className="text-3xl font-black tracking-tight text-foreground dark:text-white uppercase">
+        <h2 className="text-3xl font-black tracking-tight text-foreground dark:text-primary-foreground uppercase">
           Sync Status: Optimal
         </h2>
         <p className="mt-4 text-muted-foreground font-medium max-w-sm mx-auto leading-relaxed">
@@ -205,11 +205,11 @@ export default function VisualMapper({
                   <tr
                     key={item.sampleId}
                     className="group hover:bg-muted/30 dark:hover:bg-slate-800/40 transition-all">
-                    <td className="px-8 py-6 font-mono font-black text-foreground dark:text-white">
+                    <td className="px-8 py-6 font-mono font-black text-foreground dark:text-primary-foreground">
                       {item.sampleId}
                     </td>
                     <td className="px-8 py-6">
-                      <span className="inline-flex items-center gap-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 px-3 py-1 rounded-lg border border-indigo-100 dark:border-indigo-800 font-black text-[10px] uppercase tracking-widest">
+                      <span className="inline-flex items-center gap-2 bg-indigo-50 dark:bg-indigo-900/30 text-primary dark:text-indigo-400 px-3 py-1 rounded-lg border border-indigo-100 dark:border-indigo-800 font-black text-[10px] uppercase tracking-widest">
                         <Cpu className="w-3.5 h-3.5" /> {item.analyzerName}
                       </span>
                     </td>
@@ -227,7 +227,7 @@ export default function VisualMapper({
                     <td className="px-8 py-6 text-right">
                       <Button
                         onClick={() => selectQueueItem(item)}
-                        className="h-10 px-6 bg-slate-900 hover:bg-black text-white rounded-xl font-bold transition-all active:scale-95 group/btn shadow-lg shadow-slate-200 dark:shadow-none">
+                        className="h-10 px-6 bg-slate-900 hover:bg-black text-primary-foreground rounded-xl font-bold transition-all active:scale-95 group/btn shadow-lg shadow-slate-200 dark:shadow-none">
                         Link Data{" "}
                         <ArrowRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
                       </Button>
@@ -276,7 +276,7 @@ export default function VisualMapper({
                     <Zap className="w-6 h-6 fill-white" />
                   </div>
                   <div>
-                    <h3 className="font-black text-foreground dark:text-white uppercase tracking-widest text-sm">
+                    <h3 className="font-black text-foreground dark:text-primary-foreground uppercase tracking-widest text-sm">
                       Source: Hardware Codes
                     </h3>
                     <p className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-tighter">
@@ -321,11 +321,11 @@ export default function VisualMapper({
               <div className="space-y-6">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-[20px] bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-600/20">
+                    <div className="w-12 h-12 rounded-[20px] bg-primary text-primary-foreground flex items-center justify-center shadow-lg shadow-indigo-600/20">
                       <Database className="w-6 h-6 fill-white" />
                     </div>
                     <div>
-                      <h3 className="font-black text-foreground dark:text-white uppercase tracking-widest text-sm">
+                      <h3 className="font-black text-foreground dark:text-primary-foreground uppercase tracking-widest text-sm">
                         Destination: LIMS Database
                       </h3>
                       <p className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-tighter">
@@ -337,7 +337,7 @@ export default function VisualMapper({
                     onClick={() => fetchParameters(activeQueue.sampleId)}
                     disabled={isLoadingParams}
                     variant="outline"
-                    className="h-10 rounded-xl border-border dark:border-slate-800 bg-card dark:bg-slate-900 hover:text-indigo-600 active:scale-95 transition-all text-[10px] font-black uppercase tracking-widest">
+                    className="h-10 rounded-xl border-border dark:border-slate-800 bg-card dark:bg-slate-900 hover:text-primary active:scale-95 transition-all text-[10px] font-black uppercase tracking-widest">
                     <RefreshCcw
                       className={`w-3.5 h-3.5 mr-2 ${isLoadingParams ? "animate-spin" : ""}`}
                     />{" "}
@@ -348,8 +348,8 @@ export default function VisualMapper({
                 <div className="bg-card dark:bg-slate-900 rounded-[32px] p-4 min-h-[340px] max-h-[500px] overflow-y-auto custom-scrollbar flex flex-col gap-4 shadow-sm border border-slate-100 dark:border-slate-800 relative">
                   {isLoadingParams && (
                     <div className="absolute inset-0 bg-card/80 dark:bg-slate-900/80 backdrop-blur-sm z-20 flex flex-col items-center justify-center gap-4 rounded-[32px]">
-                      <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
-                      <p className="text-[10px] font-black uppercase tracking-widest text-indigo-600 italic">
+                      <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                      <p className="text-[10px] font-black uppercase tracking-widest text-primary italic">
                         Accessing Dictionary...
                       </p>
                     </div>
@@ -370,7 +370,7 @@ export default function VisualMapper({
                         onClick={() => handleSelectDbParam(param)}
                         className={`group relative flex justify-between items-center w-full px-6 py-4 rounded-[22px] border-2 transition-all duration-300 text-left ${isActive ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-950/30 scale-[1.03] shadow-xl" : "border-transparent bg-muted/30 dark:bg-slate-800/50 hover:bg-indigo-50 dark:hover:bg-indigo-950/20 hover:border-indigo-200"}`}>
                         <div
-                          className={`w-5 h-5 rounded-full border-4 transition-all mr-4 ${isActive ? "bg-indigo-600 border-white dark:border-slate-900 scale-125 animate-pulse" : "bg-slate-200 dark:bg-slate-700 border-transparent"}`}
+                          className={`w-5 h-5 rounded-full border-4 transition-all mr-4 ${isActive ? "bg-primary border-white dark:border-slate-900 scale-125 animate-pulse" : "bg-slate-200 dark:bg-slate-700 border-transparent"}`}
                         />
                         <div className="flex-1 truncate">
                           <p
@@ -460,7 +460,7 @@ export default function VisualMapper({
 
                     <button
                       onClick={() => removeConnection(idx)}
-                      className="w-10 h-10 rounded-xl bg-slate-700/50 text-muted-foreground/70 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all opacity-0 group-hover:opacity-100 active:scale-90">
+                      className="w-10 h-10 rounded-xl bg-slate-700/50 text-muted-foreground/70 flex items-center justify-center hover:bg-rose-500 hover:text-primary-foreground transition-all opacity-0 group-hover:opacity-100 active:scale-90">
                       <Undo2 className="w-5 h-5" />
                     </button>
                   </div>

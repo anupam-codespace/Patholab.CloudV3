@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 
 interface BookingFormProps {
   portalSlug: string;
-  cartItems: { id: string; name: string; price: number }[]; // Passed from your test catalog page
+  cartItems: { id: string; name: string; price: number }[];
 }
 
 export default function PublicBookingForm({
@@ -15,7 +15,7 @@ export default function PublicBookingForm({
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
-    email: "",
+    email: "", // Will hold user input
     gender: "MALE",
     dateOfBirth: "",
     collectionMode: "LAB_VISIT",
@@ -34,12 +34,19 @@ export default function PublicBookingForm({
     e.preventDefault();
     setLoading(true);
 
+    // 1. Generate fallback email if the user left the email field blank
+    const finalEmail =
+      formData.email.trim() !== ""
+        ? formData.email
+        : `patient_${formData.phone || Date.now()}@no-email.com`;
+
     try {
       const response = await fetch(`/api/public/${portalSlug}/book`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
+          email: finalEmail, // 2. Override the empty state with the final email
           testTemplateIds: cartItems.map((item) => item.id),
         }),
       });
@@ -83,7 +90,7 @@ export default function PublicBookingForm({
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Patient Details */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium mb-1">Full Name</label>
             <input
@@ -105,6 +112,20 @@ export default function PublicBookingForm({
               className="w-full border p-2 rounded"
               onChange={(e) =>
                 setFormData({ ...formData, phone: e.target.value })
+              }
+            />
+          </div>
+          <div>
+            {/* 3. New Optional Email Field */}
+            <label className="block text-sm font-medium mb-1">
+              Email{" "}
+              <span className="text-gray-400 font-normal">(Optional)</span>
+            </label>
+            <input
+              type="email"
+              className="w-full border p-2 rounded"
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
               }
             />
           </div>
@@ -209,7 +230,7 @@ export default function PublicBookingForm({
         <button
           type="submit"
           disabled={loading || cartItems.length === 0}
-          className="w-full bg-primary text-white font-bold py-3 rounded-lg mt-6 hover:bg-blue-700 disabled:opacity-50">
+          className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-lg mt-6 hover:bg-primary/90 disabled:opacity-50">
           {loading ? "Processing..." : `Proceed to Pay ₹${totalAmount}`}
         </button>
       </form>

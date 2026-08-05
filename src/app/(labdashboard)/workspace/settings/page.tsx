@@ -478,7 +478,7 @@ export default function ProfileSettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30 p-4 md:p-8 selection:bg-emerald-500 selection:text-white">
+    <div className="min-h-screen bg-muted/30 p-4 md:p-8 selection:bg-emerald-500 selection:text-primary-foreground">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-black text-foreground tracking-tight mb-2">
@@ -509,11 +509,11 @@ export default function ProfileSettingsPage() {
                           onClick={() => setActiveTab(tab.id)}
                           className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 ${
                             isActive
-                              ? "bg-emerald-50 text-emerald-700 shadow-sm"
+                              ? "bg-emerald-50 text-primary shadow-sm"
                               : "text-muted-foreground hover:bg-muted/30 hover:text-foreground"
                           }`}>
                           <Icon
-                            className={`w-4 h-4 ${isActive ? "text-emerald-600" : "text-slate-400"}`}
+                            className={`w-4 h-4 ${isActive ? "text-primary" : "text-slate-400"}`}
                           />
                           {tab.name}
                         </button>
@@ -548,11 +548,11 @@ export default function ProfileSettingsPage() {
                           className="w-24 h-24 rounded-2xl object-cover shadow-md"
                         />
                       ) : (
-                        <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-white text-3xl font-black shadow-md">
+                        <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-primary-foreground text-3xl font-black shadow-md">
                           {profileData.name?.charAt(0) || "U"}
                         </div>
                       )}
-                      <label className="absolute -bottom-3 -right-3 bg-card border border-border text-foreground/80 p-2 rounded-xl cursor-pointer hover:text-emerald-600 hover:border-emerald-200 transition-all shadow-sm">
+                      <label className="absolute -bottom-3 -right-3 bg-card border border-border text-foreground/80 p-2 rounded-xl cursor-pointer hover:text-primary hover:border-emerald-200 transition-all shadow-sm">
                         <Upload className="w-4 h-4" />
                         <input
                           type="file"
@@ -611,7 +611,7 @@ export default function ProfileSettingsPage() {
                     <Button
                       onClick={handleSaveProfile}
                       disabled={saving}
-                      className="h-12 px-8 rounded-xl bg-slate-900 hover:bg-emerald-600 text-white font-bold transition-all shadow-md">
+                      className="h-12 px-8 rounded-xl bg-slate-900 hover:bg-primary text-primary-foreground font-bold transition-all shadow-md">
                       {saving ? (
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
                       ) : (
@@ -831,7 +831,7 @@ export default function ProfileSettingsPage() {
                             syncMainBranch: !!checked,
                           })
                         }
-                        className="mt-1 data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
+                        className="mt-1 data-[state=checked]:bg-primary data-[state=checked]:border-emerald-600"
                       />
                       <div>
                         <label
@@ -839,7 +839,7 @@ export default function ProfileSettingsPage() {
                           className="text-sm font-bold text-emerald-900 cursor-pointer block">
                           Sync with Main Branch
                         </label>
-                        <p className="text-xs text-emerald-700 mt-0.5 font-medium">
+                        <p className="text-xs text-primary mt-0.5 font-medium">
                           Checking this will automatically update the physical
                           address of your "Main Branch" location to match the
                           details above.
@@ -851,7 +851,7 @@ export default function ProfileSettingsPage() {
                     <Button
                       onClick={handleSaveLabSettings}
                       disabled={saving}
-                      className="h-12 px-8 rounded-xl bg-slate-900 hover:bg-emerald-600 text-white font-bold transition-all shadow-md">
+                      className="h-12 px-8 rounded-xl bg-slate-900 hover:bg-primary text-primary-foreground font-bold transition-all shadow-md">
                       {saving ? (
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
                       ) : (
@@ -1019,7 +1019,7 @@ export default function ProfileSettingsPage() {
                     <Button
                       onClick={handleSaveLabSettings}
                       disabled={saving}
-                      className="h-12 px-8 rounded-xl bg-slate-900 hover:bg-emerald-600 text-white font-bold transition-all shadow-md">
+                      className="h-12 px-8 rounded-xl bg-slate-900 hover:bg-primary text-primary-foreground font-bold transition-all shadow-md">
                       {saving ? (
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
                       ) : (
@@ -1148,7 +1148,7 @@ export default function ProfileSettingsPage() {
                     <Button
                       onClick={handleSaveLabSettings}
                       disabled={saving}
-                      className="h-12 px-8 rounded-xl bg-slate-900 hover:bg-emerald-600 text-white font-bold transition-all shadow-md">
+                      className="h-12 px-8 rounded-xl bg-slate-900 hover:bg-primary text-primary-foreground font-bold transition-all shadow-md">
                       {saving ? (
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
                       ) : (
@@ -1174,12 +1174,12 @@ export default function ProfileSettingsPage() {
                       </p>
                     </div>
                     <div className="bg-emerald-50 px-4 py-2 rounded-xl flex items-center gap-3">
-                      <span className="text-xs font-bold text-emerald-600 uppercase tracking-widest">
+                      <span className="text-xs font-bold text-primary uppercase tracking-widest">
                         Wallet Era
                       </span>
                       <Badge
                         variant="secondary"
-                        className="bg-emerald-100 text-emerald-700 text-sm font-bold border-0">
+                        className="bg-emerald-100 text-primary text-sm font-bold border-0">
                         Unlimited Branches
                       </Badge>
                     </div>
@@ -1192,7 +1192,7 @@ export default function ProfileSettingsPage() {
                         className="bg-card border border-border rounded-2xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 hover:border-emerald-200 transition-colors shadow-sm">
                         <div className="flex items-start gap-4">
                           <div
-                            className={`p-3 rounded-xl ${branch.isMainBranch ? "bg-emerald-100 text-emerald-600" : "bg-muted text-muted-foreground"}`}>
+                            className={`p-3 rounded-xl ${branch.isMainBranch ? "bg-emerald-100 text-primary" : "bg-muted text-muted-foreground"}`}>
                             <MapPin className="w-6 h-6" />
                           </div>
                           <div>
@@ -1201,7 +1201,7 @@ export default function ProfileSettingsPage() {
                                 {branch.name}
                               </h4>
                               {branch.isMainBranch && (
-                                <Badge className="bg-slate-900 text-white border-0 text-[10px] uppercase tracking-widest px-2 py-0.5">
+                                <Badge className="bg-slate-900 text-primary-foreground border-0 text-[10px] uppercase tracking-widest px-2 py-0.5">
                                   Headquarters
                                 </Badge>
                               )}
@@ -1235,7 +1235,7 @@ export default function ProfileSettingsPage() {
                   <div className="pt-6 border-t border-border flex flex-col items-center justify-center p-8 bg-muted/30 border-dashed rounded-2xl">
                     <Button
                       onClick={openAddBranchModal}
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl h-12 px-8 shadow-md">
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl h-12 px-8 shadow-md">
                       <Plus className="w-5 h-5 mr-2" /> Add New Location
                     </Button>
                   </div>
@@ -1267,7 +1267,7 @@ export default function ProfileSettingsPage() {
                           }`}>
                           <div className="flex items-start gap-4 mb-6">
                             <div
-                              className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-emerald-100 text-emerald-600`}>
+                              className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-emerald-100 text-primary`}>
                               <module.icon className="w-6 h-6" />
                             </div>
                             <div>
@@ -1304,7 +1304,7 @@ export default function ProfileSettingsPage() {
                     <Button
                       onClick={handleSaveModules}
                       disabled={saving}
-                      className="h-12 px-8 rounded-xl bg-slate-900 hover:bg-emerald-600 text-white font-bold transition-all shadow-md">
+                      className="h-12 px-8 rounded-xl bg-slate-900 hover:bg-primary text-primary-foreground font-bold transition-all shadow-md">
                       {saving ? (
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
                       ) : (
@@ -1404,7 +1404,7 @@ export default function ProfileSettingsPage() {
                     </div>
                   </div>
                   <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-5 flex items-start gap-4">
-                    <CheckCircle2 className="w-6 h-6 text-emerald-600 shrink-0" />
+                    <CheckCircle2 className="w-6 h-6 text-primary shrink-0" />
                     <div>
                       <h4 className="font-bold text-emerald-900 mb-1">
                         How the Commission Waterfall Works
@@ -1421,7 +1421,7 @@ export default function ProfileSettingsPage() {
                     <Button
                       onClick={handleSaveLabSettings}
                       disabled={saving}
-                      className="h-12 px-8 rounded-xl bg-slate-900 hover:bg-emerald-600 text-white font-bold transition-all shadow-md">
+                      className="h-12 px-8 rounded-xl bg-slate-900 hover:bg-primary text-primary-foreground font-bold transition-all shadow-md">
                       {saving ? (
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
                       ) : (
@@ -1537,7 +1537,7 @@ export default function ProfileSettingsPage() {
                     <Button
                       onClick={handleSaveLabSettings}
                       disabled={saving}
-                      className="h-12 px-8 rounded-xl bg-slate-900 hover:bg-emerald-600 text-white font-bold transition-all shadow-md">
+                      className="h-12 px-8 rounded-xl bg-slate-900 hover:bg-primary text-primary-foreground font-bold transition-all shadow-md">
                       {saving ? (
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
                       ) : (
@@ -1556,7 +1556,7 @@ export default function ProfileSettingsPage() {
       {/* === ADD / EDIT BRANCH MODAL === */}
       <Dialog open={isBranchModalOpen} onOpenChange={setIsBranchModalOpen}>
         <DialogContent className="sm:max-w-[600px] p-0 rounded-3xl overflow-hidden border-0 shadow-2xl">
-          <div className="bg-slate-900 p-6 text-white flex justify-between items-center">
+          <div className="bg-slate-900 p-6 text-primary-foreground flex justify-between items-center">
             <div>
               <DialogTitle className="text-xl font-black">
                 {editingBranch ? "Edit Location" : "Add New Location"}
@@ -1567,7 +1567,7 @@ export default function ProfileSettingsPage() {
             </div>
             <button
               onClick={() => setIsBranchModalOpen(false)}
-              className="text-muted-foreground/70 hover:text-white transition-colors bg-slate-800 p-2 rounded-xl">
+              className="text-muted-foreground/70 hover:text-primary-foreground transition-colors bg-slate-800 p-2 rounded-xl">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -1657,7 +1657,7 @@ export default function ProfileSettingsPage() {
                   onCheckedChange={(checked) =>
                     setBranchForm({ ...branchForm, isMainBranch: !!checked })
                   }
-                  className="data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
+                  className="data-[state=checked]:bg-primary data-[state=checked]:border-emerald-600"
                 />
                 <label
                   htmlFor="isMainBranch"
@@ -1672,7 +1672,7 @@ export default function ProfileSettingsPage() {
                   onCheckedChange={(checked) =>
                     setBranchForm({ ...branchForm, isActive: !!checked })
                   }
-                  className="data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
+                  className="data-[state=checked]:bg-primary data-[state=checked]:border-emerald-600"
                 />
                 <label
                   htmlFor="isActive"
@@ -1692,7 +1692,7 @@ export default function ProfileSettingsPage() {
               <Button
                 onClick={handleSaveBranch}
                 disabled={saving}
-                className="h-12 px-8 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-md">
+                className="h-12 px-8 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-md">
                 {saving ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : editingBranch ? (

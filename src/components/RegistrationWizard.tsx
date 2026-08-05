@@ -492,7 +492,7 @@ export default function RegistrationWizard() {
                       onClick={() => setIsYearly(true)}
                       className={`px-5 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-1.5 ${isYearly ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-slate-700"}`}>
                       Yearly{" "}
-                      <span className="bg-emerald-100 text-emerald-700 text-[10px] px-1.5 py-0.5 rounded">
+                      <span className="bg-emerald-100 text-primary text-[10px] px-1.5 py-0.5 rounded">
                         Save 20%
                       </span>
                     </button>
@@ -523,7 +523,7 @@ export default function RegistrationWizard() {
                             {plan.description}
                           </p>
                           <Button
-                            className={`w-full h-11 text-sm font-bold rounded-xl transition-all ${plan.isPopular ? "bg-emerald-600 hover:bg-emerald-700 text-white" : "bg-muted hover:bg-slate-200 text-foreground"}`}>
+                            className={`w-full h-11 text-sm font-bold rounded-xl transition-all ${plan.isPopular ? "bg-primary hover:bg-primary/90 text-white" : "bg-muted hover:bg-slate-200 text-foreground"}`}>
                             {plan.price === 0
                               ? "Start Free Trial"
                               : "Select Plan"}
@@ -559,7 +559,7 @@ export default function RegistrationWizard() {
                           {selectedPlan.displayName}
                           <Badge
                             variant="secondary"
-                            className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 text-[10px] uppercase border-0">
+                            className="bg-emerald-100 text-primary hover:bg-emerald-100 text-[10px] uppercase border-0">
                             {billingCycle}
                           </Badge>
                         </h3>
@@ -586,7 +586,7 @@ export default function RegistrationWizard() {
                       <Separator className="bg-muted" />
                       <div className="flex justify-between font-extrabold text-xl text-foreground items-end">
                         <span>Total Payable</span>
-                        <span className="text-emerald-600">
+                        <span className="text-primary">
                           {formatCurrency(total)}
                         </span>
                       </div>
@@ -596,7 +596,7 @@ export default function RegistrationWizard() {
                   <div className="flex flex-col gap-3">
                     <Button
                       onClick={confirmPlan}
-                      className="w-full h-12 text-base font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-sm">
+                      className="w-full h-12 text-base font-bold bg-primary hover:bg-primary/90 text-white rounded-xl shadow-sm">
                       Continue to Account{" "}
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
@@ -734,7 +734,7 @@ export default function RegistrationWizard() {
                   </Button>
                   <Button
                     type="submit"
-                    className="flex-1 h-12 rounded-xl text-base font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+                    className="flex-1 h-12 rounded-xl text-base font-bold bg-primary hover:bg-primary/90 text-white shadow-sm"
                     disabled={loading}>
                     {loading ? (
                       <Loader2 className="animate-spin h-5 w-5" />
@@ -750,7 +750,7 @@ export default function RegistrationWizard() {
           {/* STEP 3: OTP */}
           {step === 3 && (
             <div className="max-w-md mx-auto w-full animate-in fade-in slide-in-from-right-4 duration-500 text-center">
-              <div className="bg-emerald-50 border border-emerald-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto text-emerald-600 mb-6 shadow-sm">
+              <div className="bg-emerald-50 border border-emerald-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto text-primary mb-6 shadow-sm">
                 <Mail className="h-10 w-10" />
               </div>
 
@@ -764,7 +764,7 @@ export default function RegistrationWizard() {
                 </span>
                 <button
                   onClick={() => setStep(2)}
-                  className="text-muted-foreground/70 hover:text-emerald-600 transition-colors"
+                  className="text-muted-foreground/70 hover:text-primary transition-colors"
                   title="Change Email">
                   <Edit2 className="h-4 w-4" />
                 </button>
@@ -782,7 +782,7 @@ export default function RegistrationWizard() {
 
                 <Button
                   type="submit"
-                  className="w-full h-12 rounded-xl text-base font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+                  className="w-full h-12 rounded-xl text-base font-bold bg-primary hover:bg-primary/90 text-white shadow-sm"
                   disabled={loading}>
                   {loading ? (
                     <Loader2 className="animate-spin h-5 w-5" />
@@ -796,7 +796,7 @@ export default function RegistrationWizard() {
                 <button
                   onClick={onResendOtp}
                   disabled={timer > 0}
-                  className={`text-sm font-semibold flex items-center gap-2 transition-colors ${timer > 0 ? "text-slate-400" : "text-emerald-600 hover:text-emerald-700"}`}>
+                  className={`text-sm font-semibold flex items-center gap-2 transition-colors ${timer > 0 ? "text-slate-400" : "text-primary hover:text-primary"}`}>
                   <RotateCcw className="h-4 w-4" />
                   {timer > 0 ? `Resend code in ${timer}s` : "Resend Code"}
                 </button>
@@ -973,7 +973,7 @@ export default function RegistrationWizard() {
                 <div className="pt-2">
                   <Button
                     type="submit"
-                    className="w-full h-12 rounded-xl text-base font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+                    className="w-full h-12 rounded-xl text-base font-bold bg-primary hover:bg-primary/90 text-white shadow-sm"
                     disabled={loading}>
                     {loading ? (
                       <Loader2 className="animate-spin h-5 w-5" />
@@ -991,7 +991,7 @@ export default function RegistrationWizard() {
             <div className="max-w-md mx-auto w-full animate-in fade-in slide-in-from-right-4 duration-500 text-center">
               <div className="mb-8">
                 <div
-                  className={`w-24 h-24 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm border ${selectedPlan?.price === 0 ? "bg-slate-900 border-slate-800 text-emerald-400" : "bg-emerald-50 border-emerald-100 text-emerald-600"}`}>
+                  className={`w-24 h-24 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm border ${selectedPlan?.price === 0 ? "bg-slate-900 border-slate-800 text-emerald-400" : "bg-emerald-50 border-emerald-100 text-primary"}`}>
                   {selectedPlan?.price === 0 ? (
                     <Rocket className="h-12 w-12" />
                   ) : (
@@ -1012,7 +1012,7 @@ export default function RegistrationWizard() {
 
               <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden mb-8 text-left">
                 <div className="bg-muted/30 p-4 border-b border-slate-100 flex items-center gap-3">
-                  <div className="bg-emerald-100 text-emerald-600 p-2 rounded-lg">
+                  <div className="bg-emerald-100 text-primary p-2 rounded-lg">
                     <CreditCard className="w-5 h-5" />
                   </div>
                   <div>
@@ -1074,9 +1074,9 @@ export default function RegistrationWizard() {
 function PasswordCheck({ label, valid }: { label: string; valid: boolean }) {
   return (
     <div
-      className={`flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide transition-colors duration-300 ${valid ? "text-emerald-600" : "text-slate-400"}`}>
+      className={`flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide transition-colors duration-300 ${valid ? "text-primary" : "text-slate-400"}`}>
       <div
-        className={`h-4 w-4 rounded-full flex items-center justify-center border transition-all duration-300 ${valid ? "bg-emerald-100 border-emerald-200 text-emerald-600" : "border-border bg-card"}`}>
+        className={`h-4 w-4 rounded-full flex items-center justify-center border transition-all duration-300 ${valid ? "bg-emerald-100 border-emerald-200 text-primary" : "border-border bg-card"}`}>
         {valid && <Check className="h-2.5 w-2.5" />}
       </div>
       {label}

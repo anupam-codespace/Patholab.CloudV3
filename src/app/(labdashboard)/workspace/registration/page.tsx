@@ -123,7 +123,7 @@ export default function RegistrationSearchPage() {
       <div className="w-full max-w-3xl text-center space-y-8 mb-12 z-10 relative">
         <div className="space-y-3">
           <div className="inline-flex items-center justify-center p-3 bg-card rounded-2xl shadow-sm border border-slate-200/60 mb-2">
-            <UserPlus className="h-6 w-6 text-indigo-600" />
+            <UserPlus className="h-6 w-6 text-primary" />
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground">
             Patient Registration
@@ -135,7 +135,7 @@ export default function RegistrationSearchPage() {
         </div>
 
         {/* The "Omnibar" Search */}
-        <div className="bg-card/80 backdrop-blur-xl p-2 rounded-2xl shadow-xl shadow-indigo-500/10 border border-slate-200/80 flex flex-col sm:flex-row items-center gap-2 transition-all duration-300 focus-within:ring-4 focus-within:ring-indigo-500/10 focus-within:border-indigo-300 mx-auto w-full">
+        <div className="bg-card/80 backdrop-blur-xl p-2 rounded-2xl shadow-xl shadow-indigo-500/10 border border-slate-200/80 flex flex-col sm:flex-row items-center gap-2 transition-all duration-300 focus-within:ring-4 focus-within:ring-primary/10 focus-within:border-indigo-300 mx-auto w-full">
           <form
             onSubmit={handleSearch}
             className="w-full flex flex-col sm:flex-row items-center gap-2">
@@ -178,7 +178,7 @@ export default function RegistrationSearchPage() {
             <Button
               type="submit"
               size="lg"
-              className="w-full sm:w-auto h-12 bg-indigo-600 hover:bg-indigo-700 text-white px-8 rounded-xl shadow-md font-bold transition-all"
+              className="w-full sm:w-auto h-12 bg-primary hover:bg-primary/90 text-primary-foreground px-8 rounded-xl shadow-md font-bold transition-all"
               disabled={loading}>
               {loading ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -204,7 +204,7 @@ export default function RegistrationSearchPage() {
               </div>
               <div className="relative z-10">
                 <div className="h-16 w-16 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-5 border border-indigo-100">
-                  <Search className="h-8 w-8 text-indigo-600" />
+                  <Search className="h-8 w-8 text-primary" />
                 </div>
                 <h3 className="text-xl font-bold text-foreground mb-2">
                   No Patient Found
@@ -220,7 +220,7 @@ export default function RegistrationSearchPage() {
                   <Button
                     onClick={createNewPatient}
                     size="lg"
-                    className="w-full h-12 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 shadow-md shadow-indigo-500/25 rounded-xl font-bold text-base transition-all duration-300 hover:-translate-y-0.5">
+                    className="w-full h-12 bg-gradient-to-r from-primary to-primary hover:from-indigo-700 hover:to-violet-700 shadow-md shadow-indigo-500/25 rounded-xl font-bold text-base transition-all duration-300 hover:-translate-y-0.5">
                     <UserPlus className="mr-2 h-5 w-5" /> Register New Patient
                   </Button>
                   <p className="text-xs text-muted-foreground/70 font-medium flex items-center justify-center gap-1.5">
@@ -238,7 +238,7 @@ export default function RegistrationSearchPage() {
           <div className="flex flex-col sm:flex-row items-center justify-between bg-card p-5 rounded-2xl shadow-sm border border-slate-200/60 mb-6 animate-in fade-in duration-500">
             <div className="text-sm font-medium text-muted-foreground mb-4 sm:mb-0">
               Found{" "}
-              <span className="font-bold text-indigo-600">
+              <span className="font-bold text-primary">
                 {results.length}
               </span>{" "}
               record(s) matching{" "}
@@ -248,7 +248,7 @@ export default function RegistrationSearchPage() {
             <Button
               onClick={createNewPatient}
               variant="outline"
-              className="w-full sm:w-auto border-indigo-200 text-indigo-700 hover:bg-indigo-50 font-bold rounded-xl h-11 transition-all">
+              className="w-full sm:w-auto border-indigo-200 text-primary hover:bg-indigo-50 font-bold rounded-xl h-11 transition-all">
               <UserPlus className="h-4 w-4 mr-2" />
               Register New Patient
             </Button>
@@ -271,11 +271,11 @@ export default function RegistrationSearchPage() {
               <div className="grid grid-cols-1 lg:grid-cols-12">
                 {/* PATIENT INFO (Left) */}
                 <div className="col-span-12 lg:col-span-4 bg-gradient-to-br from-slate-50 to-slate-100/50 p-6 lg:p-8 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-slate-200/60 relative overflow-hidden">
-                  <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-indigo-600" />
+                  <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary" />
 
                   <div>
                     <div className="flex items-center gap-4 mb-6">
-                      <div className="h-16 w-16 bg-gradient-to-br from-indigo-500 to-violet-600 text-white font-bold text-xl rounded-full flex items-center justify-center border-4 border-white shadow-sm shrink-0">
+                      <div className="h-16 w-16 bg-gradient-to-br from-indigo-500 to-primary text-primary-foreground font-bold text-xl rounded-full flex items-center justify-center border-4 border-white shadow-sm shrink-0">
                         {initials}
                       </div>
                       <div>
@@ -295,7 +295,7 @@ export default function RegistrationSearchPage() {
                           <Fingerprint className="h-4 w-4 text-slate-400" />{" "}
                           Patient ID
                         </span>
-                        <span className="font-mono font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">
+                        <span className="font-mono font-black text-primary bg-indigo-50 px-2 py-0.5 rounded-md">
                           {patient.patientId}
                         </span>
                       </div>
@@ -314,7 +314,7 @@ export default function RegistrationSearchPage() {
                   <div className="mt-8 space-y-3">
                     <Button
                       onClick={() => proceedToAccession(patient.id)}
-                      className="w-full h-12 bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-md font-bold group-hover:shadow-lg transition-all relative overflow-hidden">
+                      className="w-full h-12 bg-slate-900 hover:bg-slate-800 text-primary-foreground rounded-xl shadow-md font-bold group-hover:shadow-lg transition-all relative overflow-hidden">
                       <span className="relative flex items-center gap-2">
                         Start New Visit <ArrowRight className="h-4 w-4" />
                       </span>
@@ -340,13 +340,13 @@ export default function RegistrationSearchPage() {
                         <TabsList className="grid w-full sm:w-[240px] grid-cols-2 bg-transparent p-0 gap-1 h-auto">
                           <TabsTrigger
                             value="tests"
-                            className="data-[state=active]:bg-card data-[state=active]:text-indigo-700 data-[state=active]:shadow-sm rounded-lg py-2 text-xs font-bold transition-all text-muted-foreground">
+                            className="data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm rounded-lg py-2 text-xs font-bold transition-all text-muted-foreground">
                             <FlaskConical className="h-3.5 w-3.5 mr-1.5" />{" "}
                             Tests
                           </TabsTrigger>
                           <TabsTrigger
                             value="billing"
-                            className="data-[state=active]:bg-card data-[state=active]:text-indigo-700 data-[state=active]:shadow-sm rounded-lg py-2 text-xs font-bold transition-all text-muted-foreground">
+                            className="data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm rounded-lg py-2 text-xs font-bold transition-all text-muted-foreground">
                             <Receipt className="h-3.5 w-3.5 mr-1.5" /> Billing
                           </TabsTrigger>
                         </TabsList>
@@ -374,7 +374,7 @@ export default function RegistrationSearchPage() {
                               className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-card border border-slate-100 rounded-xl hover:border-indigo-100 hover:shadow-md transition-all gap-3">
                               <div className="flex items-center gap-4">
                                 <div
-                                  className={`p-2.5 rounded-xl ${t.status === "APPROVED" || t.status === "COMPLETED" ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"}`}>
+                                  className={`p-2.5 rounded-xl ${t.status === "APPROVED" || t.status === "COMPLETED" ? "bg-emerald-50 text-primary" : "bg-amber-50 text-amber-600"}`}>
                                   <Activity className="h-4 w-4" />
                                 </div>
                                 <div>
@@ -392,7 +392,7 @@ export default function RegistrationSearchPage() {
                               </div>
                               <Badge
                                 variant="outline"
-                                className={`border-none px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${t.status === "APPROVED" || t.status === "COMPLETED" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
+                                className={`border-none px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${t.status === "APPROVED" || t.status === "COMPLETED" ? "bg-emerald-100 text-primary" : "bg-amber-100 text-amber-700"}`}>
                                 {t.status === "APPROVED" ||
                                 t.status === "COMPLETED" ? (
                                   <CheckCircle2 className="w-3 h-3 mr-1 inline" />
@@ -445,7 +445,7 @@ export default function RegistrationSearchPage() {
                                 </div>
                                 <Badge
                                   variant="outline"
-                                  className={`border-none px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${inv.status === "PAID" ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>
+                                  className={`border-none px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${inv.status === "PAID" ? "bg-emerald-100 text-primary" : "bg-rose-100 text-rose-700"}`}>
                                   {inv.status}
                                 </Badge>
                               </div>
