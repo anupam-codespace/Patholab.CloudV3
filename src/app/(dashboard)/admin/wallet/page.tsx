@@ -64,20 +64,20 @@ export default function AdminWalletLedgerPage() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-2">
-            <Wallet className="h-8 w-8 text-emerald-600" /> Platform Ledger
+            <Wallet className="h-8 w-8 text-primary" /> Platform Ledger
           </h1>
           <p className="text-muted-foreground font-medium mt-1">
             Global view of all tenant wallets, balances, and platform liability.
           </p>
         </div>
-        <Button className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md font-bold">
+        <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-md font-bold">
           Export Ledger (CSV)
         </Button>
       </div>
 
       {/* KPI METRICS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-emerald-600 to-emerald-800 text-white relative overflow-hidden rounded-2xl">
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-emerald-600 to-emerald-800 text-primary-foreground relative overflow-hidden rounded-2xl">
           <div className="absolute top-0 right-0 p-24 bg-card opacity-5 rounded-full -mr-10 -mt-10 blur-2xl" />
           <CardContent className="p-6 relative z-10 flex flex-col justify-center h-full">
             <div className="flex items-center justify-between mb-4 opacity-90">
@@ -194,7 +194,7 @@ export default function AdminWalletLedgerPage() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <span
-                        className={`font-black text-lg ${w.balance < 500 ? "text-rose-600" : "text-emerald-600"}`}>
+                        className={`font-black text-lg ${w.balance < 500 ? "text-rose-600" : "text-primary"}`}>
                         {formatCurrency(w.balance)}
                       </span>
                       {w.balance < 500 && (
@@ -212,7 +212,7 @@ export default function AdminWalletLedgerPage() {
                     </td>
                     <td className="px-6 py-4">
                       {w.isActive ? (
-                        <div className="flex items-center text-emerald-600 font-bold text-xs">
+                        <div className="flex items-center text-primary font-bold text-xs">
                           <CheckCircle2 className="w-4 h-4 mr-1.5" /> Active
                         </div>
                       ) : (

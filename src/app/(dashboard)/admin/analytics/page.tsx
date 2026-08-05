@@ -214,16 +214,16 @@ export default function AdvancedAnalyticsPage() {
       <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-4 border-b border-border pb-6">
         <div>
           <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-2">
-            <BarChart3 className="h-8 w-8 text-emerald-600" /> Platform
+            <BarChart3 className="h-8 w-8 text-primary" /> Platform
             Intelligence
           </h1>
           <p className="text-muted-foreground mt-1 font-medium">
             Deep-dive metrics from{" "}
-            <span className="font-bold text-emerald-600">
+            <span className="font-bold text-primary">
               {format(dateRange.from, "MMM dd")}
             </span>{" "}
             to{" "}
-            <span className="font-bold text-emerald-600">
+            <span className="font-bold text-primary">
               {format(dateRange.to, "MMM dd, yyyy")}
             </span>
           </p>
@@ -237,22 +237,22 @@ export default function AdvancedAnalyticsPage() {
             <TabsList className="bg-transparent h-9">
               <TabsTrigger
                 value="7d"
-                className="data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700 rounded-lg font-bold">
+                className="data-[state=active]:bg-emerald-50 data-[state=active]:text-primary rounded-lg font-bold">
                 7D
               </TabsTrigger>
               <TabsTrigger
                 value="30d"
-                className="data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700 rounded-lg font-bold">
+                className="data-[state=active]:bg-emerald-50 data-[state=active]:text-primary rounded-lg font-bold">
                 30D
               </TabsTrigger>
               <TabsTrigger
                 value="month"
-                className="data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700 rounded-lg font-bold">
+                className="data-[state=active]:bg-emerald-50 data-[state=active]:text-primary rounded-lg font-bold">
                 Month
               </TabsTrigger>
               <TabsTrigger
                 value="year"
-                className="data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700 rounded-lg font-bold">
+                className="data-[state=active]:bg-emerald-50 data-[state=active]:text-primary rounded-lg font-bold">
                 Year
               </TabsTrigger>
             </TabsList>
@@ -262,7 +262,7 @@ export default function AdvancedAnalyticsPage() {
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className={`bg-card shadow-sm rounded-xl font-bold border-border ${activeTab === "custom" ? "border-emerald-500 text-emerald-700 bg-emerald-50" : "text-muted-foreground"}`}>
+                className={`bg-card shadow-sm rounded-xl font-bold border-border ${activeTab === "custom" ? "border-emerald-500 text-primary bg-emerald-50" : "text-muted-foreground"}`}>
                 <CalendarIcon className="mr-2 h-4 w-4" /> Custom Range
               </Button>
             </PopoverTrigger>
@@ -283,7 +283,7 @@ export default function AdvancedAnalyticsPage() {
 
           <Button
             variant="outline"
-            className="bg-emerald-600 text-white shadow-sm hover:bg-emerald-700 transition-colors rounded-xl font-bold border-0"
+            className="bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors rounded-xl font-bold border-0"
             onClick={handleExport}>
             <FileSpreadsheet className="mr-2 h-4 w-4" />
             Export Excel
@@ -296,7 +296,7 @@ export default function AdvancedAnalyticsPage() {
             disabled={isRefetching}
             className="bg-card shadow-sm rounded-xl border-border">
             <RefreshCcw
-              className={`h-4 w-4 text-muted-foreground ${isRefetching ? "animate-spin text-emerald-600" : ""}`}
+              className={`h-4 w-4 text-muted-foreground ${isRefetching ? "animate-spin text-primary" : ""}`}
             />
           </Button>
         </div>
@@ -305,7 +305,7 @@ export default function AdvancedAnalyticsPage() {
       {/* --- 1. TIER 1: FINANCIAL & SAAS KPIs --- */}
       <div>
         <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
-          <Wallet className="h-4 w-4 text-emerald-600" /> Platform Economics &
+          <Wallet className="h-4 w-4 text-primary" /> Platform Economics &
           Health
         </h3>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -315,7 +315,7 @@ export default function AdvancedAnalyticsPage() {
             trend="Active Period"
             trendUp={true}
             icon={DollarSign}
-            color="text-emerald-600"
+            color="text-primary"
           />
           <MetricCard
             title="Platform Burn (Usage)"
@@ -331,7 +331,7 @@ export default function AdvancedAnalyticsPage() {
             trend="Total Live"
             trendUp={true}
             icon={Building2}
-            color="text-indigo-600"
+            color="text-primary"
           />
           <MetricCard
             title="Low Balance Labs"
@@ -675,7 +675,7 @@ export default function AdvancedAnalyticsPage() {
                           {lab.tests.toLocaleString()}
                         </Badge>
                       </td>
-                      <td className="px-6 py-4 text-right font-black text-emerald-600">
+                      <td className="px-6 py-4 text-right font-black text-primary">
                         {formatCurrency(lab.revenue)}
                       </td>
                     </tr>
@@ -727,7 +727,7 @@ function MetricCard({
           </div>
           <div className="flex items-center mt-2 text-xs">
             <span
-              className={`flex items-center font-bold ${trendUp ? "text-emerald-600" : "text-rose-600"}`}>
+              className={`flex items-center font-bold ${trendUp ? "text-primary" : "text-rose-600"}`}>
               {trendUp ? (
                 <TrendingUp className="h-3 w-3 mr-1" />
               ) : (

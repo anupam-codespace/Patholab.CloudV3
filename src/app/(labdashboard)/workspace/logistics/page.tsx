@@ -57,7 +57,7 @@ export default function LogisticsPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-zinc-50 flex flex-col items-center justify-center gap-4">
-        <Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
         <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs animate-pulse">
           Syncing Dispatch Control...
         </p>
@@ -112,12 +112,12 @@ export default function LogisticsPage() {
           <div className="flex bg-zinc-900 p-1 rounded-xl border border-zinc-800 w-full md:w-auto shrink-0 mt-2 md:mt-0">
             <button
               onClick={() => setActiveTab("DISPATCH")}
-              className={`flex-1 md:flex-none px-6 py-2.5 text-sm font-bold rounded-lg transition-all ${activeTab === "DISPATCH" ? "bg-zinc-800 text-white shadow-md" : "text-zinc-500 hover:text-zinc-300"}`}>
+              className={`flex-1 md:flex-none px-6 py-2.5 text-sm font-bold rounded-lg transition-all ${activeTab === "DISPATCH" ? "bg-zinc-800 text-primary-foreground shadow-md" : "text-zinc-500 hover:text-zinc-300"}`}>
               Queue & Fleet
             </button>
             <button
               onClick={() => setActiveTab("MAP")}
-              className={`flex-1 md:flex-none px-6 py-2.5 text-sm font-bold rounded-lg transition-all ${activeTab === "MAP" ? "bg-zinc-800 text-white shadow-md" : "text-zinc-500 hover:text-zinc-300"}`}>
+              className={`flex-1 md:flex-none px-6 py-2.5 text-sm font-bold rounded-lg transition-all ${activeTab === "MAP" ? "bg-zinc-800 text-primary-foreground shadow-md" : "text-zinc-500 hover:text-zinc-300"}`}>
               Live Map
             </button>
           </div>
@@ -136,7 +136,7 @@ export default function LogisticsPage() {
               <h3 className="text-3xl font-black text-zinc-900">
                 {fleet.length}
               </h3>
-              <Truck className="h-6 w-6 text-indigo-600 mb-1" />
+              <Truck className="h-6 w-6 text-primary mb-1" />
             </div>
           </div>
           <div className="bg-card p-5 rounded-2xl border border-zinc-200 shadow-sm flex flex-col">
@@ -187,7 +187,7 @@ export default function LogisticsPage() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search address or client..."
-                    className="w-full pl-9 pr-4 py-2.5 bg-card border border-zinc-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                    className="w-full pl-9 pr-4 py-2.5 bg-card border border-zinc-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary transition-all"
                   />
                 </div>
               </div>
@@ -252,7 +252,7 @@ export default function LogisticsPage() {
                       <div className="flex flex-col justify-end sm:w-40 border-t sm:border-t-0 sm:border-l border-zinc-100 pt-4 sm:pt-0 sm:pl-5 shrink-0">
                         <Button
                           onClick={() => setSelectedTask(task)}
-                          className="w-full bg-zinc-900 hover:bg-zinc-800 text-white font-bold rounded-xl h-11 shadow-md shadow-zinc-200">
+                          className="w-full bg-zinc-900 hover:bg-zinc-800 text-primary-foreground font-bold rounded-xl h-11 shadow-md shadow-zinc-200">
                           Modify Assignment
                         </Button>
                       </div>
@@ -272,11 +272,11 @@ export default function LogisticsPage() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className={`h-8 w-8 rounded-lg relative ${staffFilter !== "ALL" ? "text-indigo-600 bg-indigo-50" : "text-zinc-400 hover:text-zinc-900"}`}
+                    className={`h-8 w-8 rounded-lg relative ${staffFilter !== "ALL" ? "text-primary bg-indigo-50" : "text-zinc-400 hover:text-zinc-900"}`}
                     onClick={() => setShowFilterMenu(!showFilterMenu)}>
                     <Filter className="h-4 w-4" />
                     {staffFilter !== "ALL" && (
-                      <span className="absolute top-1 right-1 h-1.5 w-1.5 bg-indigo-600 rounded-full"></span>
+                      <span className="absolute top-1 right-1 h-1.5 w-1.5 bg-primary rounded-full"></span>
                     )}
                   </Button>
 
@@ -299,7 +299,7 @@ export default function LogisticsPage() {
                           setStaffFilter("AVAILABLE");
                           setShowFilterMenu(false);
                         }}
-                        className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${staffFilter === "AVAILABLE" ? "bg-emerald-50 font-bold text-emerald-700" : "hover:bg-zinc-50 text-zinc-600 font-medium"}`}>
+                        className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${staffFilter === "AVAILABLE" ? "bg-emerald-50 font-bold text-primary" : "hover:bg-zinc-50 text-zinc-600 font-medium"}`}>
                         Available Only
                       </button>
                       <button
@@ -307,7 +307,7 @@ export default function LogisticsPage() {
                           setStaffFilter("BUSY");
                           setShowFilterMenu(false);
                         }}
-                        className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${staffFilter === "BUSY" ? "bg-indigo-50 font-bold text-indigo-700" : "hover:bg-zinc-50 text-zinc-600 font-medium"}`}>
+                        className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${staffFilter === "BUSY" ? "bg-indigo-50 font-bold text-primary" : "hover:bg-zinc-50 text-zinc-600 font-medium"}`}>
                         Busy / On Trip
                       </button>
                     </div>
@@ -331,7 +331,7 @@ export default function LogisticsPage() {
                         <div className="flex items-center gap-4">
                           <div className="relative">
                             <div
-                              className={`h-12 w-12 rounded-2xl flex items-center justify-center text-white font-black text-lg ${rider.status === "AVAILABLE" ? "bg-emerald-500" : "bg-indigo-500"}`}>
+                              className={`h-12 w-12 rounded-2xl flex items-center justify-center text-primary-foreground font-black text-lg ${rider.status === "AVAILABLE" ? "bg-emerald-500" : "bg-indigo-500"}`}>
                               {rider.name.charAt(0)}
                             </div>
                             <span
@@ -370,7 +370,7 @@ export default function LogisticsPage() {
               To enable the Live Fleet visual map, you must configure a Google
               Maps or Mapbox API key in your environment variables.
             </p>
-            <Button className="mt-4 bg-zinc-900 text-white rounded-xl h-11 px-8 font-bold">
+            <Button className="mt-4 bg-zinc-900 text-primary-foreground rounded-xl h-11 px-8 font-bold">
               Configure API Keys
             </Button>
           </div>
@@ -388,7 +388,7 @@ export default function LogisticsPage() {
               <h2 className="text-2xl font-black text-zinc-900 tracking-tight mb-1">
                 Dispatch Assignment
               </h2>
-              <p className="text-sm font-medium text-indigo-600">
+              <p className="text-sm font-medium text-primary">
                 Assign trip {selectedTask.id} to an active staff member.
               </p>
             </div>
@@ -414,7 +414,7 @@ export default function LogisticsPage() {
                 </Label>
                 <select
                   required
-                  className="w-full bg-card border border-zinc-200 rounded-xl p-4 text-sm font-bold text-zinc-900 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm appearance-none cursor-pointer">
+                  className="w-full bg-card border border-zinc-200 rounded-xl p-4 text-sm font-bold text-zinc-900 outline-none focus:ring-2 focus:ring-primary focus:border-indigo-500 shadow-sm appearance-none cursor-pointer">
                   <option value="">-- Choose staff member --</option>
                   {fleet
                     .filter((f: any) => f.status === "AVAILABLE")
@@ -445,7 +445,7 @@ export default function LogisticsPage() {
                 </Button>
                 <Button
                   type="submit"
-                  className="h-12 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-10 font-black shadow-xl shadow-indigo-200 transition-all w-full sm:w-auto">
+                  className="h-12 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl px-10 font-black shadow-xl shadow-indigo-200 transition-all w-full sm:w-auto">
                   Confirm Dispatch <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>

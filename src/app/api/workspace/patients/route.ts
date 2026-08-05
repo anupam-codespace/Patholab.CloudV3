@@ -135,12 +135,10 @@ export async function GET(req: NextRequest) {
           agency: true,
           invoices: {
             orderBy: { createdAt: 'desc' },
-            // 🚨 FIX: Removed 'take: 1' so all invoices load
             select: { id: true, invoiceNumber: true, grandTotal: true, discount: true, status: true, subtotal: true, createdAt: true }
           },
           tests: {
             orderBy: { createdAt: 'desc' },
-            // 🚨 FIX: Removed 'take: 1' and ADDED 'invoiceId: true' so frontend can group tests by invoice
             select: {
               id: true, testCode: true, testName: true, status: true, createdAt: true, invoiceId: true,
               referredBy: true, 
@@ -178,17 +176,23 @@ export async function POST(req: NextRequest) {
     const safeName = body.name?.trim();
     const safeAge = body.age ? parseInt(body.age) : null;
 
-    if (!safePhone || !safeName) {
-      return NextResponse.json({ error: 'Name and Phone number are required.' }, { status: 400 });
+    // ✅ FIX 1: Only check for name. Phone is now truly optional.
+    if (!safeName) {
+      return NextResponse.json({ error: 'Name is required.' }, { status: 400 });
     }
 
-    // 1. Check Duplicates (Phone)
-    const existing = await prisma.patient.findFirst({
-        where: { labId: user.labId, phone: safePhone }
-    });
+    // Convert empty string to undefined so Postgres ignores it
+    const validPhone = safePhone ? safePhone : undefined;
 
-    if (existing) {
-        return NextResponse.json({ error: 'Patient with this phone number already exists.', patient: existing }, { status: 409 });
+    // 1. Check Duplicates (Phone) - ONLY if a phone was provided
+    if (validPhone) {
+        const existing = await prisma.patient.findFirst({
+            where: { labId: user.labId, phone: validPhone }
+        });
+
+        if (existing) {
+            return NextResponse.json({ error: 'Patient with this phone number already exists.', patient: existing }, { status: 409 });
+        }
     }
 
     // 2. WALLET CHECK & REGISTRATION FEE CALCULATION
@@ -258,7 +262,7 @@ export async function POST(req: NextRequest) {
 
     const isGlobal = (user.role === 'LAB_OWNER' || user.role === 'LAB_MANAGER') ? (body.isGlobal === true) : false;
 
-    // ✅ 6. TRANSACTION: CREATE PATIENT + DEDUCT WALLET + AUDIT
+    // 6. TRANSACTION: CREATE PATIENT + DEDUCT WALLET + AUDIT
     const newPatient = await prisma.$transaction(async (tx) => {
         // A. Create Patient
         const patient = await tx.patient.create({
@@ -272,7 +276,7 @@ export async function POST(req: NextRequest) {
                 ageUnit: body.ageUnit || "Years",
                 dateOfBirth: calculatedDob, 
                 gender: body.gender ? (body.gender.toUpperCase() as any) : 'OTHER', 
-                phone: safePhone,
+                phone: validPhone, // ✅ Use the sanitized validPhone variable
                 email: body.email?.trim() || null,
                 address: body.address?.trim() || null,
                 isGlobal: isGlobal,
@@ -302,6 +306,7 @@ export async function POST(req: NextRequest) {
         });
 
         // D. Detailed Activity Log
+        // ✅ FIX 2: Added JSON.stringify to details
         await tx.activityLog.create({
           data: {
             labId: user.labId,
@@ -310,12 +315,12 @@ export async function POST(req: NextRequest) {
             entityType: 'PATIENT',
             entity: 'PATIENT',           
             entityId: patient.id,
-            description: `New patient registered: ${patient.name} (${patient.phone})`, 
-            details: { 
+            description: `New patient registered: ${patient.name} ${patient.phone ? `(${patient.phone})` : ''}`, 
+            details: JSON.stringify({ 
               name: patient.name, 
-              phone: patient.phone, 
+              phone: patient.phone || "N/A", 
               feeDeducted: totalDeduction 
-            }
+            })
           }
         });
 
@@ -369,6 +374,7 @@ export async function PATCH(req: NextRequest) {
       });
 
       // 4. AUDIT LOG
+      // ✅ FIX 2: Added JSON.stringify to details
       await tx.activityLog.create({
         data: {
           labId: user.labId,
@@ -378,7 +384,7 @@ export async function PATCH(req: NextRequest) {
           entityId: primaryId,
           entity: 'PATIENT', 
           description: `Merged duplicate patient record into primary ID. Secondary record deleted.`,
-          details: { merged_from_id: secondaryId }
+          details: JSON.stringify({ merged_from_id: secondaryId })
         }
       });
     });

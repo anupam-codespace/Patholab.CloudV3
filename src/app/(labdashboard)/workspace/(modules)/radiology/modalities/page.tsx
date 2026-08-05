@@ -169,7 +169,7 @@ export default function MachinesDashboard() {
           <h1 className="text-2xl font-black text-foreground tracking-tight">Modalities & Assets</h1>
           <p className="text-sm font-medium text-muted-foreground mt-1">Manage machine health, DICOM connectivity, and maintenance schedules.</p>
         </div>
-        <Button onClick={() => openModal('add')} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-sm">
+        <Button onClick={() => openModal('add')} className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-sm">
           <Plus className="w-4 h-4 mr-2" /> Add Machine
         </Button>
       </div>
@@ -178,7 +178,7 @@ export default function MachinesDashboard() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {[
           { label: "Total Machines", value: totalMachines, icon: ActivitySquare, color: "text-muted-foreground" },
-          { label: "Active", value: activeMachines, icon: Activity, color: "text-emerald-600" },
+          { label: "Active", value: activeMachines, icon: Activity, color: "text-primary" },
           { label: "In Maintenance", value: maintenanceMachines, icon: AlertTriangle, color: "text-amber-600" },
           { label: "Offline", value: offlineMachines, icon: PowerOff, color: "text-rose-600" },
         ].map((kpi, idx) => (
@@ -200,7 +200,7 @@ export default function MachinesDashboard() {
           {["ALL", "MRI", "CT", "X-Ray", "USG", "Active", "Maintenance"].map((f) => (
             <button key={f} onClick={() => setActiveFilter(f)}
               className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                activeFilter === f ? "bg-indigo-50 text-indigo-700 border border-indigo-200" : "text-muted-foreground hover:bg-muted border border-transparent"
+                activeFilter === f ? "bg-indigo-50 text-primary border border-indigo-200" : "text-muted-foreground hover:bg-muted border border-transparent"
               }`}>
               {f}
             </button>
@@ -229,7 +229,7 @@ export default function MachinesDashboard() {
               
               <div className="p-4 border-b border-slate-100 bg-slate-50/80 flex justify-between items-start">
                 <div className="flex gap-3">
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 shadow-sm bg-card border border-border text-indigo-600">
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 shadow-sm bg-card border border-border text-primary">
                     <Server className="w-5 h-5" />
                   </div>
                   <div>
@@ -259,17 +259,17 @@ export default function MachinesDashboard() {
                   </div>
                   <div className="text-right">
                     <p className="text-[9px] uppercase font-bold text-slate-400">Next Service</p>
-                    <p className="font-bold text-indigo-600">{machine.nextMaintenance ? new Date(machine.nextMaintenance).toLocaleDateString() : "N/A"}</p>
+                    <p className="font-bold text-primary">{machine.nextMaintenance ? new Date(machine.nextMaintenance).toLocaleDateString() : "N/A"}</p>
                   </div>
                 </div>
               </div>
 
               {/* Action Bar */}
               <div className="grid grid-cols-3 border-t border-slate-100 bg-muted/30 shrink-0 divide-x divide-slate-200">
-                <button onClick={() => openModal('view', machine)} className="py-2.5 text-muted-foreground hover:text-indigo-600 hover:bg-indigo-50 transition-colors font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5">
+                <button onClick={() => openModal('view', machine)} className="py-2.5 text-muted-foreground hover:text-primary hover:bg-indigo-50 transition-colors font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5">
                   <Monitor className="w-3.5 h-3.5" /> View
                 </button>
-                <button onClick={() => openModal('edit', machine)} className="py-2.5 text-muted-foreground hover:text-indigo-600 hover:bg-indigo-50 transition-colors font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5">
+                <button onClick={() => openModal('edit', machine)} className="py-2.5 text-muted-foreground hover:text-primary hover:bg-indigo-50 transition-colors font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5">
                   <Settings className="w-3.5 h-3.5" /> Config
                 </button>
                 <button onClick={() => openModal('delete', machine)} className="py-2.5 text-muted-foreground/70 hover:text-rose-600 hover:bg-rose-50 transition-colors font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5">
@@ -363,7 +363,7 @@ export default function MachinesDashboard() {
             {/* Actions */}
             <div className="pt-4 flex justify-end gap-3 border-t">
               <Button type="button" variant="outline" onClick={() => setActiveModal(null)}>Cancel</Button>
-              <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold" disabled={addMutation.isPending || editMutation.isPending}>
+              <Button type="submit" className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold" disabled={addMutation.isPending || editMutation.isPending}>
                 {(addMutation.isPending || editMutation.isPending) ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                 {activeModal === 'add' ? "Register Machine" : "Save Changes"}
               </Button>

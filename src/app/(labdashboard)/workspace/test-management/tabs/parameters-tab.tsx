@@ -157,7 +157,7 @@ export default function ParametersTab() {
           }}>
           <Button
             onClick={handleAddNew}
-            className="bg-primary hover:bg-blue-700 shadow-sm shrink-0 w-full sm:w-auto">
+            className="bg-primary hover:bg-primary/90 shadow-sm shrink-0 w-full sm:w-auto">
             <Plus className="mr-2 h-4 w-4" /> Create Custom Parameter
           </Button>
 
@@ -290,11 +290,11 @@ export default function ParametersTab() {
 
                     <TableCell>
                       {param.isGlobal ? (
-                        <span className="inline-flex items-center gap-1.5 text-[11px] font-medium bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-md border border-indigo-100">
+                        <span className="inline-flex items-center gap-1.5 text-[11px] font-medium bg-indigo-50 text-primary px-2.5 py-1 rounded-md border border-indigo-100">
                           <Globe size={12} /> Global
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 text-[11px] font-medium bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-md border border-emerald-100">
+                        <span className="inline-flex items-center gap-1.5 text-[11px] font-medium bg-emerald-50 text-primary px-2.5 py-1 rounded-md border border-emerald-100">
                           <Building2 size={12} /> Local
                         </span>
                       )}
@@ -335,7 +335,7 @@ export default function ParametersTab() {
                             <div
                               key={r.id}
                               className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-[10px] font-medium bg-emerald-50 text-emerald-800 border border-emerald-200">
-                              <Beaker className="w-3 h-3 text-emerald-600 shrink-0" />
+                              <Beaker className="w-3 h-3 text-primary shrink-0" />
                               <span
                                 className="truncate"
                                 title={r.inventoryItem?.name}>

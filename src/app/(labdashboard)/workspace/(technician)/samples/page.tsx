@@ -108,7 +108,7 @@ export default function SampleAccessioningPage() {
         <div className="flex-none mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="md:col-span-2 bg-card/70 backdrop-blur-xl p-6 rounded-2xl border border-slate-200/60 shadow-sm flex flex-col justify-center">
             <h1 className="text-2xl font-black text-foreground tracking-tight flex items-center gap-2">
-              <ScanBarcode className="h-7 w-7 text-indigo-600" />
+              <ScanBarcode className="h-7 w-7 text-primary" />
               Sample Accessioning
             </h1>
             <p className="text-sm font-medium text-muted-foreground mt-1">
@@ -163,7 +163,7 @@ export default function SampleAccessioningPage() {
           <div className="flex-1 overflow-auto relative custom-scrollbar p-2">
             {isLoading ? (
               <div className="h-full flex flex-col items-center justify-center text-muted-foreground space-y-3">
-                <Loader2 className="animate-spin h-8 w-8 text-indigo-600" />
+                <Loader2 className="animate-spin h-8 w-8 text-primary" />
                 <span className="text-xs font-medium uppercase tracking-widest animate-pulse">
                   Loading Samples...
                 </span>
@@ -248,7 +248,7 @@ export default function SampleAccessioningPage() {
                         <XCircle className="h-4 w-4 mr-2" /> Reject
                       </Button>
                       <Button
-                        className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                        className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
                         onClick={() =>
                           updateSampleStatus.mutate({
                             id: sample.id,

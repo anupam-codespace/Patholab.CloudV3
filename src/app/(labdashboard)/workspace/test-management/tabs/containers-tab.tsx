@@ -137,7 +137,7 @@ export default function ContainersTab() {
           }}>
           <Button
             onClick={handleAddNew}
-            className="bg-primary hover:bg-blue-700 shadow-sm shrink-0 w-full sm:w-auto">
+            className="bg-primary hover:bg-primary/90 shadow-sm shrink-0 w-full sm:w-auto">
             <Plus className="mr-2 h-4 w-4" /> Create Custom Container
           </Button>
 
@@ -250,11 +250,11 @@ export default function ContainersTab() {
 
                     <TableCell>
                       {container.isGlobal ? (
-                        <span className="inline-flex items-center gap-1.5 text-[11px] font-medium bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-md border border-indigo-100">
+                        <span className="inline-flex items-center gap-1.5 text-[11px] font-medium bg-indigo-50 text-primary px-2.5 py-1 rounded-md border border-indigo-100">
                           <Globe size={12} /> Global
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 text-[11px] font-medium bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-md border border-emerald-100">
+                        <span className="inline-flex items-center gap-1.5 text-[11px] font-medium bg-emerald-50 text-primary px-2.5 py-1 rounded-md border border-emerald-100">
                           <Building2 size={12} /> Local
                         </span>
                       )}

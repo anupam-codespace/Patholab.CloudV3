@@ -153,7 +153,7 @@ export default function ScanSchedulePage() {
       <header className="sticky top-0 z-30 bg-card/70 backdrop-blur-xl border-b border-slate-200/60 shadow-sm">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex items-center gap-4">
-            <div className="h-12 w-12 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-inner shrink-0">
+            <div className="h-12 w-12 bg-gradient-to-br from-indigo-500 to-primary rounded-xl flex items-center justify-center shadow-inner shrink-0">
               <CalendarDays className="h-6 w-6 text-white" />
             </div>
             <div>
@@ -164,7 +164,7 @@ export default function ScanSchedulePage() {
           {/* THE FIXED BUTTON */}
           <Button 
             onClick={() => router.push('/workspace/radiology/dashboard/appointments')}
-            className="h-10 bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-sm w-full md:w-auto"
+            className="h-10 bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-sm w-full md:w-auto"
           >
             <Plus className="w-4 h-4 mr-2" /> Book Scan
           </Button>
@@ -195,7 +195,7 @@ export default function ScanSchedulePage() {
           </Card>
           <Card className="border-0 shadow-sm rounded-2xl bg-card overflow-hidden">
             <CardContent className="p-5 flex items-center gap-4">
-              <div className="h-12 w-12 rounded-xl bg-emerald-50 flex items-center justify-center"><CheckCircle2 className="h-5 w-5 text-emerald-600" /></div>
+              <div className="h-12 w-12 rounded-xl bg-emerald-50 flex items-center justify-center"><CheckCircle2 className="h-5 w-5 text-primary" /></div>
               <div><p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Completed Scans</p><h3 className="text-xl font-black text-foreground">{completedCount}</h3></div>
             </CardContent>
           </Card>
@@ -216,7 +216,7 @@ export default function ScanSchedulePage() {
                     key={mod}
                     onClick={() => setActiveModality(mod)}
                     className={`text-left px-3 py-2 rounded-lg text-xs font-bold transition-all ${
-                      activeModality === mod ? "bg-indigo-50 text-indigo-700 shadow-sm border border-indigo-100" : "text-muted-foreground hover:bg-muted/30 border border-transparent"
+                      activeModality === mod ? "bg-indigo-50 text-primary shadow-sm border border-indigo-100" : "text-muted-foreground hover:bg-muted/30 border border-transparent"
                     }`}>
                     {mod === "ALL" ? "All Modalities" : `${mod} Scans`}
                   </button>
@@ -279,7 +279,7 @@ export default function ScanSchedulePage() {
                             apt.status === 'SCHEDULED' ? 'bg-muted/30 text-muted-foreground border-slate-200' :
                             apt.status === 'ARRIVED' ? 'bg-amber-50 text-amber-700 border-amber-200' :
                             apt.status === 'SCANNING' ? 'bg-rose-50 text-rose-700 border-rose-200 animate-pulse' :
-                            'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            'bg-emerald-50 text-primary border-emerald-200'
                           }`}>
                             {apt.status || "UNKNOWN"}
                           </Badge>
@@ -293,7 +293,7 @@ export default function ScanSchedulePage() {
                               <Button size="sm" onClick={() => updateStatusMutation.mutate({ id: apt.id, status: "SCANNING" })} className="h-7 text-[10px] font-bold bg-rose-100 hover:bg-rose-200 text-rose-700"><PlayCircle className="h-3 w-3 mr-1"/> Start Scan</Button>
                             )}
                             {apt.status === "SCANNING" && (
-                              <Button size="sm" onClick={() => updateStatusMutation.mutate({ id: apt.id, status: "COMPLETED" })} className="h-7 text-[10px] font-bold bg-emerald-100 hover:bg-emerald-200 text-emerald-700"><CheckCircle2 className="h-3 w-3 mr-1"/> Finish</Button>
+                              <Button size="sm" onClick={() => updateStatusMutation.mutate({ id: apt.id, status: "COMPLETED" })} className="h-7 text-[10px] font-bold bg-emerald-100 hover:bg-emerald-200 text-primary"><CheckCircle2 className="h-3 w-3 mr-1"/> Finish</Button>
                             )}
                             <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground/70 hover:text-slate-700"><MoreVertical className="h-4 w-4" /></Button>
                           </div>

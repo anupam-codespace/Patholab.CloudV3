@@ -77,7 +77,7 @@ export default function InstallPWA() {
           <Button
             onClick={handleInstallClick}
             size="sm"
-            className="w-full bg-primary hover:bg-blue-700 h-8 text-xs font-bold shadow-sm">
+            className="w-full bg-primary hover:bg-primary/90 h-8 text-xs font-bold shadow-sm">
             Install Now
           </Button>
         </div>

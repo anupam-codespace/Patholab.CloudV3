@@ -163,14 +163,14 @@ export default function AdminLabsPage() {
       cell: ({ row }) => (
         <div className="flex items-center gap-3">
           <Avatar className="h-10 w-10 border rounded-xl">
-            <AvatarFallback className="bg-indigo-50 text-indigo-700 font-black rounded-xl">
+            <AvatarFallback className="bg-indigo-50 text-primary font-black rounded-xl">
               {row.original.name.charAt(0)}
             </AvatarFallback>
           </Avatar>
           <div className="flex flex-col">
             <Link
               href={`/admin/labs/${row.original.id}`}
-              className="font-bold text-sm text-foreground hover:text-indigo-600 transition-colors line-clamp-1">
+              className="font-bold text-sm text-foreground hover:text-primary transition-colors line-clamp-1">
               {row.original.name}
             </Link>
             <span className="text-xs text-muted-foreground font-medium">
@@ -190,7 +190,7 @@ export default function AdminLabsPage() {
           </span>
           <a
             href={`mailto:${row.original.owner.email}`}
-            className="text-xs text-muted-foreground hover:text-indigo-600 font-medium">
+            className="text-xs text-muted-foreground hover:text-primary font-medium">
             {row.original.owner.email}
           </a>
         </div>
@@ -227,7 +227,7 @@ export default function AdminLabsPage() {
           <div className="flex flex-col gap-1 items-start">
             <Badge
               variant="outline"
-              className={`font-black tracking-wide ${isLow ? "bg-red-50 text-red-700 border-red-200" : "bg-emerald-50 text-emerald-700 border-emerald-200"}`}>
+              className={`font-black tracking-wide ${isLow ? "bg-red-50 text-red-700 border-red-200" : "bg-emerald-50 text-primary border-emerald-200"}`}>
               {formatCurrency(balance)}
             </Badge>
             {isLow && (
@@ -244,7 +244,7 @@ export default function AdminLabsPage() {
       header: "Status",
       cell: ({ row }) =>
         row.original.isActive ? (
-          <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none shadow-none font-bold">
+          <Badge className="bg-emerald-100 text-primary hover:bg-emerald-100 border-none shadow-none font-bold">
             Active
           </Badge>
         ) : (
@@ -290,7 +290,7 @@ export default function AdminLabsPage() {
                 <Mail className="mr-2 h-4 w-4" /> Email Owner
               </DropdownMenuItem>
 
-              <DropdownMenuItem className="text-indigo-600 focus:text-indigo-700 focus:bg-indigo-50 font-bold cursor-pointer">
+              <DropdownMenuItem className="text-primary focus:text-primary focus:bg-indigo-50 font-bold cursor-pointer">
                 <LogIn className="mr-2 h-4 w-4" /> Impersonate
               </DropdownMenuItem>
 
@@ -306,7 +306,7 @@ export default function AdminLabsPage() {
                 </DropdownMenuItem>
               ) : (
                 <DropdownMenuItem
-                  className="text-emerald-600 focus:text-emerald-700 focus:bg-emerald-50 font-bold cursor-pointer"
+                  className="text-primary focus:text-primary focus:bg-emerald-50 font-bold cursor-pointer"
                   onClick={() =>
                     toggleStatusMutation.mutate({ id: lab.id, status: true })
                   }>
@@ -364,7 +364,7 @@ export default function AdminLabsPage() {
               <div className="text-2xl font-black text-foreground">
                 {data.stats.totalLabs}
               </div>
-              <p className="text-xs font-bold text-emerald-600">
+              <p className="text-xs font-bold text-primary">
                 {data.stats.activeLabs} currently active
               </p>
             </CardContent>
@@ -393,7 +393,7 @@ export default function AdminLabsPage() {
               <CheckCircle2 className="h-4 w-4 text-emerald-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-black text-emerald-600">99.9%</div>
+              <div className="text-2xl font-black text-primary">99.9%</div>
               <p className="text-xs font-bold text-slate-400">
                 Operational uptime
               </p>
@@ -466,7 +466,7 @@ export default function AdminLabsPage() {
                   colSpan={columns.length}
                   className="h-32 text-center">
                   <div className="flex items-center justify-center gap-2">
-                    <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
                     <span className="text-muted-foreground font-medium">
                       Loading laboratories...
                     </span>
@@ -601,7 +601,7 @@ function OnboardLabDialog({
       <DialogTrigger asChild>
         <Button
           onClick={() => onOpenChange(true)}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl h-11 px-6 font-bold shadow-sm">
+          className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-11 px-6 font-bold shadow-sm">
           <Plus className="mr-2 h-4 w-4" /> Onboard New Lab
         </Button>
       </DialogTrigger>
@@ -737,7 +737,7 @@ function OnboardLabDialog({
               <Button
                 type="submit"
                 disabled={loading}
-                className="rounded-xl h-11 bg-indigo-600 hover:bg-indigo-700">
+                className="rounded-xl h-11 bg-primary hover:bg-primary/90">
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {loading ? "Provisioning..." : "Create Tenant"}
               </Button>
@@ -749,7 +749,7 @@ function OnboardLabDialog({
               <div className="flex">
                 <div className="flex-shrink-0">
                   <CheckCircle2
-                    className="h-5 w-5 text-emerald-600"
+                    className="h-5 w-5 text-primary"
                     aria-hidden="true"
                   />
                 </div>
@@ -757,7 +757,7 @@ function OnboardLabDialog({
                   <h3 className="text-sm font-bold text-emerald-800">
                     Tenant Provisioned Successfully
                   </h3>
-                  <div className="mt-1 text-xs font-medium text-emerald-700">
+                  <div className="mt-1 text-xs font-medium text-primary">
                     <p>
                       Share these temporary credentials with the lab owner.
                       Their Wallet balance is currently ₹0.

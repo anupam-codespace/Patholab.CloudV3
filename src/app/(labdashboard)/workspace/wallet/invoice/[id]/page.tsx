@@ -180,7 +180,7 @@ export default async function WalletInvoicePage({
                 <div className="mt-4 pt-2">
                   <Badge
                     variant="outline"
-                    className={`${isRecharge ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-rose-50 text-rose-700 border-rose-200"} font-black px-3 py-1 text-xs uppercase tracking-widest`}>
+                    className={`${isRecharge ? "bg-emerald-50 text-primary border-emerald-200" : "bg-rose-50 text-rose-700 border-rose-200"} font-black px-3 py-1 text-xs uppercase tracking-widest`}>
                     {tx.type} • SUCCESS
                   </Badge>
                 </div>
@@ -251,7 +251,7 @@ export default async function WalletInvoicePage({
                 <div className="w-full md:w-[60%] lg:w-1/2 border-t border-slate-200/80 my-2" />
 
                 <div
-                  className={`flex justify-between w-full md:w-[60%] lg:w-1/2 text-xl font-black ${isRecharge ? "text-emerald-600" : "text-rose-600"}`}>
+                  className={`flex justify-between w-full md:w-[60%] lg:w-1/2 text-xl font-black ${isRecharge ? "text-primary" : "text-rose-600"}`}>
                   <span className="uppercase tracking-tight">
                     {isRecharge ? "Total Amount Paid:" : "Total Deducted:"}
                   </span>

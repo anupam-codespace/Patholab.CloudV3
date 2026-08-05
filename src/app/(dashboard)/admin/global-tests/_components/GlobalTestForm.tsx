@@ -89,7 +89,7 @@ export function GlobalTestForm({ initialData }: GlobalTestFormProps) {
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="bg-primary hover:bg-blue-700">
+          className="bg-primary hover:bg-primary/90">
           {isSubmitting ? (
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
           ) : (

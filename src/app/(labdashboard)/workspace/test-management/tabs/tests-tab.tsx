@@ -184,7 +184,7 @@ export default function TestsTab() {
 
         <Button
           onClick={handleAddNew}
-          className="bg-primary hover:bg-blue-700 shadow-sm shrink-0 w-full sm:w-auto transition-all">
+          className="bg-primary hover:bg-primary/90 shadow-sm shrink-0 w-full sm:w-auto transition-all">
           <Plus className="mr-2 h-4 w-4" /> Create Custom Test
         </Button>
       </div>
@@ -351,13 +351,13 @@ export default function TestsTab() {
                       <TableCell>
                         {t.isGlobal ? (
                           <span
-                            className="inline-flex items-center gap-1.5 text-[11px] font-medium bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-md border border-indigo-100"
+                            className="inline-flex items-center gap-1.5 text-[11px] font-medium bg-indigo-50 text-primary px-2.5 py-1 rounded-md border border-indigo-100"
                             title="Master Catalog Test">
                             <Globe size={12} /> Global
                           </span>
                         ) : (
                           <span
-                            className="inline-flex items-center gap-1.5 text-[11px] font-medium bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-md border border-emerald-100"
+                            className="inline-flex items-center gap-1.5 text-[11px] font-medium bg-emerald-50 text-primary px-2.5 py-1 rounded-md border border-emerald-100"
                             title="Customized for your lab">
                             <Building2 size={12} /> Local
                           </span>
@@ -391,7 +391,7 @@ export default function TestsTab() {
                             {reagentList.map((r, idx) => (
                               <div
                                 key={idx}
-                                className="inline-flex items-center justify-between gap-2 text-[10px] font-medium text-emerald-700 bg-emerald-50 px-2 py-1 rounded border border-emerald-100">
+                                className="inline-flex items-center justify-between gap-2 text-[10px] font-medium text-primary bg-emerald-50 px-2 py-1 rounded border border-emerald-100">
                                 <div className="flex items-center gap-1.5 truncate">
                                   <Beaker className="w-3 h-3 text-emerald-500 shrink-0" />
                                   <span className="truncate" title={r.name}>
@@ -431,7 +431,7 @@ export default function TestsTab() {
                               variant="ghost"
                               size="icon"
                               onClick={() => handleQuickPriceClick(t)}
-                              className="text-muted-foreground/70 hover:text-emerald-600 hover:bg-emerald-50 h-8 w-8 transition-colors"
+                              className="text-muted-foreground/70 hover:text-primary hover:bg-emerald-50 h-8 w-8 transition-colors"
                               title="Quick Price Override">
                               <IndianRupee className="h-4 w-4" />
                             </Button>

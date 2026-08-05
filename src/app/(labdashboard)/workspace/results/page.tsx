@@ -202,7 +202,7 @@ export default function ResultEntryPage() {
 
     return {
       status: "NORMAL",
-      color: "text-emerald-700",
+      color: "text-primary",
       bg: "bg-card",
       border: "border-border focus:border-emerald-500",
     };
@@ -230,7 +230,7 @@ export default function ResultEntryPage() {
         <div>
           <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
             Clinical Results Entry
-            <Badge className="bg-indigo-50 text-indigo-700 border-indigo-200 font-bold uppercase tracking-wider text-[10px]">
+            <Badge className="bg-indigo-50 text-primary border-indigo-200 font-bold uppercase tracking-wider text-[10px]">
               Live Data
             </Badge>
           </h1>
@@ -262,7 +262,7 @@ export default function ResultEntryPage() {
                 }}
                 className={`flex items-center gap-2 px-4 py-2.5 text-sm font-bold rounded-lg whitespace-nowrap transition-all duration-200 ${
                   activeTab === tab.id
-                    ? "bg-card text-indigo-600 shadow-sm"
+                    ? "bg-card text-primary shadow-sm"
                     : "text-muted-foreground hover:text-foreground/80 hover:bg-slate-200/50"
                 }`}>
                 <Icon
@@ -286,7 +286,7 @@ export default function ResultEntryPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/70 w-4 h-4" />
               <Input
                 placeholder="Search Patient or SID..."
-                className="pl-9 bg-card h-11 rounded-xl border-border focus:border-indigo-500 focus:ring-indigo-500/20 shadow-sm text-sm font-medium"
+                className="pl-9 bg-card h-11 rounded-xl border-border focus:border-indigo-500 focus:ring-primary/20 shadow-sm text-sm font-medium"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -318,12 +318,12 @@ export default function ResultEntryPage() {
                   onClick={() => handleSelectInvoice(inv)}
                   className={`w-full text-left p-4 rounded-2xl transition-all duration-200 border group ${
                     selectedInvoice?.invoiceId === inv.invoiceId
-                      ? "bg-indigo-50 border-indigo-200 shadow-sm ring-1 ring-indigo-500/20"
+                      ? "bg-indigo-50 border-indigo-200 shadow-sm ring-1 ring-primary/20"
                       : "bg-card border-border hover:border-indigo-300 hover:shadow-md"
                   }`}>
                   <div className="flex justify-between items-start mb-2">
                     <span
-                      className={`font-bold text-sm truncate pr-2 ${selectedInvoice?.invoiceId === inv.invoiceId ? "text-indigo-900" : "text-foreground group-hover:text-indigo-700"}`}>
+                      className={`font-bold text-sm truncate pr-2 ${selectedInvoice?.invoiceId === inv.invoiceId ? "text-indigo-900" : "text-foreground group-hover:text-primary"}`}>
                       {inv.patient.name}
                     </span>
                     <span className="text-[10px] text-muted-foreground font-bold bg-muted px-2 py-1 rounded-md shrink-0 border border-border">
@@ -355,7 +355,7 @@ export default function ResultEntryPage() {
                       )}
                     </div>
                     <ChevronRight
-                      className={`w-4 h-4 transition-transform ${selectedInvoice?.invoiceId === inv.invoiceId ? "text-indigo-600 translate-x-1" : "text-slate-300"}`}
+                      className={`w-4 h-4 transition-transform ${selectedInvoice?.invoiceId === inv.invoiceId ? "text-primary translate-x-1" : "text-slate-300"}`}
                     />
                   </div>
                 </button>
@@ -391,13 +391,13 @@ export default function ResultEntryPage() {
                 {/* Mobile Back Button */}
                 <button
                   onClick={() => setSelectedInvoice(null)}
-                  className="lg:hidden mb-4 flex items-center text-sm font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg w-max">
+                  className="lg:hidden mb-4 flex items-center text-sm font-bold text-primary bg-indigo-50 px-3 py-1.5 rounded-lg w-max">
                   <ArrowLeft className="w-4 h-4 mr-1.5" /> Back to Queue
                 </button>
 
                 <div className="flex flex-col xl:flex-row justify-between xl:items-center gap-4 relative z-10">
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-500/30">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary flex items-center justify-center text-primary-foreground font-black text-xl shadow-lg shadow-indigo-500/30">
                       {selectedInvoice.patient.name.charAt(0)}
                     </div>
                     <div>
@@ -429,7 +429,7 @@ export default function ResultEntryPage() {
                         variant="outline"
                         onClick={handleIoTSync}
                         disabled={isSyncingIoT}
-                        className="h-10 border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 font-bold rounded-xl shadow-sm transition-all">
+                        className="h-10 border-indigo-200 text-primary bg-indigo-50 hover:bg-indigo-100 font-bold rounded-xl shadow-sm transition-all">
                         {isSyncingIoT ? (
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         ) : (
@@ -530,7 +530,7 @@ export default function ResultEntryPage() {
                                   )}
                                   {evalResult.status === "NORMAL" &&
                                     paramValues[param.id] && (
-                                      <Badge className="bg-emerald-50 hover:bg-emerald-50 text-emerald-600 border-none font-bold px-2 py-1">
+                                      <Badge className="bg-emerald-50 hover:bg-emerald-50 text-primary border-none font-bold px-2 py-1">
                                         <Check
                                           className="w-3 h-3 mr-1"
                                           strokeWidth={3}
@@ -602,6 +602,18 @@ export default function ResultEntryPage() {
                 ))}
               </div>
 
+              {/* --- CHECKED BY / APPROVED BY INFO --- */}
+              {selectedInvoice && (
+                <div className="px-4 py-2 border-t border-border bg-muted/20 flex flex-wrap gap-4 text-xs shrink-0">
+                  {selectedInvoice.checkedBy && (
+                    <span className="text-muted-foreground">Checked by: <span className="font-bold text-foreground">{selectedInvoice.checkedBy}</span>{selectedInvoice.checkedAt && ` at ${new Date(selectedInvoice.checkedAt).toLocaleString('en-IN')}`}</span>
+                  )}
+                  {selectedInvoice.approvedBy && (
+                    <span className="text-muted-foreground">Approved by: <span className="font-bold text-foreground">{selectedInvoice.approvedBy}</span>{selectedInvoice.approvedAt && ` at ${new Date(selectedInvoice.approvedAt).toLocaleString('en-IN')}`}</span>
+                  )}
+                </div>
+              )}
+
               {/* --- ACTION FOOTER --- */}
               <div className="p-4 border-t border-border bg-card/80 backdrop-blur flex flex-wrap justify-between gap-3 items-center shrink-0 z-10 relative">
                 {activeTab !== "COMPLETED" ? (
@@ -625,7 +637,7 @@ export default function ResultEntryPage() {
                       <Button
                         onClick={() => handleAction("APPROVE")}
                         disabled={saveResultsMutation.isPending}
-                        className="flex-1 sm:flex-none h-12 rounded-xl px-8 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-black shadow-lg shadow-emerald-500/30 transition-all hover:-translate-y-0.5 border-0">
+                        className="flex-1 sm:flex-none h-12 rounded-xl px-8 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-primary-foreground font-black shadow-lg shadow-emerald-500/30 transition-all hover:-translate-y-0.5 border-0">
                         {saveResultsMutation.isPending ? (
                           <Loader2 className="w-4 h-4 animate-spin mr-2" />
                         ) : (
@@ -637,7 +649,7 @@ export default function ResultEntryPage() {
                   </>
                 ) : (
                   <div className="flex justify-end w-full">
-                    <Button className="h-12 rounded-xl px-8 bg-indigo-600 hover:bg-indigo-700 text-white font-black shadow-md border-0">
+                    <Button className="h-12 rounded-xl px-8 bg-primary hover:bg-primary/90 text-primary-foreground font-black shadow-md border-0">
                       <Printer className="w-4 h-4 mr-2" /> Print Final Report
                     </Button>
                   </div>

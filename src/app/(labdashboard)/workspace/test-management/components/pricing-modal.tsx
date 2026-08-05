@@ -152,7 +152,7 @@ export default function PricingOverrideModal({
             <button
               type="submit"
               disabled={saving}
-              className="px-5 py-2 text-sm font-medium bg-primary text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2 transition-all">
+              className="px-5 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 flex items-center gap-2 transition-all">
               {saving ? (
                 "Saving..."
               ) : (

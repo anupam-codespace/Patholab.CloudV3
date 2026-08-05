@@ -71,7 +71,7 @@ export default async function AdminDeductionsPage() {
       </div>
 
       {/* KPI METRIC */}
-      <Card className="border-0 shadow-lg bg-gradient-to-br from-rose-500 to-rose-700 text-white relative overflow-hidden rounded-2xl w-full md:w-1/3">
+      <Card className="border-0 shadow-lg bg-gradient-to-br from-rose-500 to-rose-700 text-primary-foreground relative overflow-hidden rounded-2xl w-full md:w-1/3">
         <div className="absolute top-0 right-0 p-24 bg-card opacity-5 rounded-full -mr-10 -mt-10 blur-2xl" />
         <CardContent className="p-6 relative z-10 flex flex-col justify-center">
           <div className="flex items-center justify-between mb-2 opacity-90">

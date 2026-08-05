@@ -114,7 +114,7 @@ export default function MediaDispatchPage() {
       <header className="sticky top-0 z-30 bg-card/70 backdrop-blur-xl border-b border-slate-200/60 shadow-sm">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex items-center gap-4">
-            <div className="h-12 w-12 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-inner shrink-0">
+            <div className="h-12 w-12 bg-gradient-to-br from-indigo-500 to-primary rounded-xl flex items-center justify-center shadow-inner shrink-0">
               <Disc className="h-6 w-6 text-white" />
             </div>
             <div>
@@ -168,7 +168,7 @@ export default function MediaDispatchPage() {
             <div className="absolute top-0 inset-x-0 h-1 bg-indigo-500" />
             <CardContent className="p-6 flex items-center gap-5">
               <div className="h-14 w-14 rounded-2xl flex items-center justify-center shrink-0 border bg-indigo-50 border-indigo-200/50">
-                <CheckCircle2 className="h-6 w-6 text-indigo-600" />
+                <CheckCircle2 className="h-6 w-6 text-primary" />
               </div>
               <div>
                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">
@@ -185,7 +185,7 @@ export default function MediaDispatchPage() {
             <div className="absolute top-0 inset-x-0 h-1 bg-emerald-500" />
             <CardContent className="p-6 flex items-center gap-5">
               <div className="h-14 w-14 rounded-2xl flex items-center justify-center shrink-0 border bg-emerald-50 border-emerald-200/50">
-                <Send className="h-6 w-6 text-emerald-600" />
+                <Send className="h-6 w-6 text-primary" />
               </div>
               <div>
                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">
@@ -211,7 +211,7 @@ export default function MediaDispatchPage() {
                   onClick={() => setActiveFilter(filter)}
                   className={`px-5 py-2 text-xs font-bold rounded-lg whitespace-nowrap transition-all ${
                     activeFilter === filter
-                      ? "bg-card text-indigo-700 shadow-sm border border-slate-200/50"
+                      ? "bg-card text-primary shadow-sm border border-slate-200/50"
                       : "text-muted-foreground hover:text-foreground hover:bg-slate-200/50"
                   }`}>
                   {filter}
@@ -226,7 +226,7 @@ export default function MediaDispatchPage() {
                 placeholder="Search patient or accession no..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 h-11 bg-card border-border focus:border-indigo-300 focus:ring-indigo-500/20 rounded-xl text-sm transition-all shadow-sm"
+                className="pl-9 h-11 bg-card border-border focus:border-indigo-300 focus:ring-primary/20 rounded-xl text-sm transition-all shadow-sm"
               />
             </div>
           </div>
@@ -235,7 +235,7 @@ export default function MediaDispatchPage() {
           <div className="flex-1 overflow-x-auto custom-scrollbar">
             {isLoading ? (
               <div className="flex flex-col h-[400px] items-center justify-center space-y-4">
-                <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 <p className="text-sm font-bold text-muted-foreground/70 uppercase tracking-widest animate-pulse">
                   Loading Queue
                 </p>
@@ -345,7 +345,7 @@ export default function MediaDispatchPage() {
                                   className={`h-10 w-10 rounded-xl flex items-center justify-center border shadow-sm transition-all ${
                                     mStatus.film === "PENDING"
                                       ? "border-amber-300 bg-amber-50 text-amber-600 hover:bg-amber-100 hover:scale-105 active:scale-95"
-                                      : "border-emerald-200 bg-emerald-50 text-emerald-600 cursor-default"
+                                      : "border-emerald-200 bg-emerald-50 text-primary cursor-default"
                                   }`}>
                                   {mStatus.film === "PRINTED" ? (
                                     <CheckCircle2 className="h-5 w-5" />
@@ -354,7 +354,7 @@ export default function MediaDispatchPage() {
                                   )}
                                 </button>
                                 <span
-                                  className={`text-[9px] font-bold uppercase tracking-wider ${mStatus.film === "PRINTED" ? "text-emerald-600" : "text-amber-600"}`}>
+                                  className={`text-[9px] font-bold uppercase tracking-wider ${mStatus.film === "PRINTED" ? "text-primary" : "text-amber-600"}`}>
                                   {mStatus.film || "N/A"}
                                 </span>
                               </div>
@@ -379,7 +379,7 @@ export default function MediaDispatchPage() {
                                   className={`h-10 w-10 rounded-xl flex items-center justify-center border shadow-sm transition-all ${
                                     mStatus.cd === "PENDING"
                                       ? "border-amber-300 bg-amber-50 text-amber-600 hover:bg-amber-100 hover:scale-105 active:scale-95"
-                                      : "border-emerald-200 bg-emerald-50 text-emerald-600 cursor-default"
+                                      : "border-emerald-200 bg-emerald-50 text-primary cursor-default"
                                   }`}>
                                   {mStatus.cd === "BURNED" ? (
                                     <CheckCircle2 className="h-5 w-5" />
@@ -388,7 +388,7 @@ export default function MediaDispatchPage() {
                                   )}
                                 </button>
                                 <span
-                                  className={`text-[9px] font-bold uppercase tracking-wider ${mStatus.cd === "BURNED" ? "text-emerald-600" : "text-amber-600"}`}>
+                                  className={`text-[9px] font-bold uppercase tracking-wider ${mStatus.cd === "BURNED" ? "text-primary" : "text-amber-600"}`}>
                                   {mStatus.cd || "N/A"}
                                 </span>
                               </div>
@@ -417,7 +417,7 @@ export default function MediaDispatchPage() {
                                       ? "border-border bg-muted text-muted-foreground/70 cursor-not-allowed"
                                       : mStatus.digital === "PENDING"
                                         ? "border-amber-300 bg-amber-50 text-amber-600 hover:bg-amber-100 hover:scale-105 active:scale-95"
-                                        : "border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:scale-105 active:scale-95"
+                                        : "border-emerald-200 bg-emerald-50 text-primary hover:bg-emerald-100 hover:scale-105 active:scale-95"
                                   }`}>
                                   {mStatus.digital === "SENT" ? (
                                     <CheckCircle2 className="h-5 w-5" />
@@ -430,7 +430,7 @@ export default function MediaDispatchPage() {
                                     !isReportFinal
                                       ? "text-slate-400"
                                       : mStatus.digital === "SENT"
-                                        ? "text-emerald-600"
+                                        ? "text-primary"
                                         : "text-amber-600"
                                   }`}>
                                   {mStatus.digital || "N/A"}
@@ -444,7 +444,7 @@ export default function MediaDispatchPage() {
                             <div className="flex flex-col gap-2">
                               {/* Medical Report Status */}
                               <span
-                                className={`text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${isReportFinal ? "text-emerald-600" : "text-amber-600"}`}>
+                                className={`text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${isReportFinal ? "text-primary" : "text-amber-600"}`}>
                                 {isReportFinal ? (
                                   <FileSignature className="h-3.5 w-3.5" />
                                 ) : (
@@ -460,8 +460,8 @@ export default function MediaDispatchPage() {
                                   mStatus.overallStatus === "PROCESSING"
                                     ? "bg-amber-50 text-amber-700 border-amber-200"
                                     : mStatus.overallStatus === "READY"
-                                      ? "bg-indigo-50 text-indigo-700 border-indigo-200"
-                                      : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                      ? "bg-indigo-50 text-primary border-indigo-200"
+                                      : "bg-emerald-50 text-primary border-emerald-200"
                                 }`}>
                                 {mStatus.overallStatus === "PROCESSING" && (
                                   <Clock className="h-3 w-3" />
@@ -511,7 +511,7 @@ export default function MediaDispatchPage() {
                                   className={`h-11 rounded-xl px-5 font-bold shadow-md transition-all duration-300 ${
                                     mStatus.overallStatus === "READY" &&
                                     isReportFinal
-                                      ? "bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white hover:-translate-y-0.5 shadow-indigo-500/25"
+                                      ? "bg-gradient-to-r from-primary to-primary hover:from-indigo-700 hover:to-violet-700 text-primary-foreground hover:-translate-y-0.5 shadow-indigo-500/25"
                                       : "bg-muted text-muted-foreground/70 border border-border cursor-not-allowed shadow-none"
                                   }`}>
                                   {updateMutation.isPending &&

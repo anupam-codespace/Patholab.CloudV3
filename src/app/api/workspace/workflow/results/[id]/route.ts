@@ -100,10 +100,8 @@ export async function GET(
       ...t,
       results: t.results.map(r => ({
          ...r,
-         // The frontend maps data using "parameterName" and "value"
          parameterName: r.printName || r.parameterCode,
          value: r.textValue || (r.numericValue !== null ? r.numericValue.toString() : ""),
-         // Inject the missing unit so the PDF Report displays it!
          unit: paramUnitMap.get(r.parameterCode) || "" 
       }))
     }));
@@ -118,7 +116,7 @@ export async function GET(
 }
 
 // =========================================================================
-// POST: Save Results (BATCH PROCESSING FOR ENTIRE INVOICE)
+// POST: Save Results (HANDLES BOTH BATCH & SINGLE PAYLOADS)
 // =========================================================================
 export async function POST(
   req: NextRequest, 
@@ -128,18 +126,21 @@ export async function POST(
     const user = await getDataFromToken(req);
     if (!user || !user.labId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { id: targetId } = await params; // Could be invoiceId or testId depending on the caller
+    const { id: targetId } = await params;
     const body = await req.json(); 
 
-    // --- HANDLE NEW INVOICE-LEVEL BATCH PAYLOAD ---
+    // ==========================================================
+    // BRANCH A: NEW INVOICE-LEVEL BATCH PAYLOAD
+    // ==========================================================
     if (body.data && body.data.parameters) {
         const { action, data, invoiceId } = body;
-        const { parameters, notes, impressions } = data;
+        const { parameters, notes, impressions, checkedById, approvedById } = data; // ✅ Added staff mapping
 
         let newStatus = undefined;
         if (action === 'SAVE_DRAFT') newStatus = 'IN_PROGRESS';
-        if (action === 'REQUEST_APPROVAL') newStatus = 'COMPLETED';
+        if (action === 'REQUEST_APPROVAL' || action === 'SUBMIT_FOR_REVIEW') newStatus = 'COMPLETED';
         if (action === 'APPROVE') newStatus = 'APPROVED';
+        if (action === 'UNLOCK') newStatus = 'COMPLETED'; // ✅ Revert to editable state
 
         await prisma.$transaction(async (tx) => {
             // 1. Batch Update all Parameter Results
@@ -157,26 +158,29 @@ export async function POST(
                 });
             }
 
-            // 2. Batch Update all Tests (Notes, Impressions, and Status)
+            // 2. Batch Update all Tests (Notes, Impressions, Status, and Signatures)
             const testsInInvoice = await tx.test.findMany({ 
                 where: { invoiceId: invoiceId || targetId, labId: user.labId } 
             });
 
             for (const test of testsInInvoice) {
-                const isFirstTimeCompletion = (action === 'REQUEST_APPROVAL' || action === 'APPROVE') && 
+                const isFirstTimeCompletion = (action === 'REQUEST_APPROVAL' || action === 'APPROVE' || action === 'SUBMIT_FOR_REVIEW') && 
                                               (test.status !== 'COMPLETED' && test.status !== 'APPROVED');
 
                 await tx.test.update({
                     where: { id: test.id },
                     data: {
-                        // Safely apply notes and impressions if provided for this test
                         ...(notes && notes[test.id] !== undefined ? { notes: notes[test.id] } : {}),
                         ...(impressions && impressions[test.id] !== undefined ? { impression: impressions[test.id] } : {}),
                         
+                        // ✅ Apply Staff Roles if provided in batch
+                        checkedById: checkedById || undefined,
+                        approvedById: approvedById || undefined,
+
                         ...(newStatus ? {
                             status: newStatus as any,
-                            ...(newStatus === 'COMPLETED' ? { completedAt: new Date(), checkedAt: new Date(), checkedBy: user.name } : {}),
-                            ...(newStatus === 'APPROVED' ? { approvedAt: new Date(), approvedBy: user.name } : {})
+                            ...(newStatus === 'COMPLETED' ? { completedAt: new Date() } : {}),
+                            ...(newStatus === 'APPROVED' ? { approvedAt: new Date() } : {})
                         } : {})
                     }
                 });
@@ -195,8 +199,20 @@ export async function POST(
         return NextResponse.json({ success: true, message: "Batch update successful" });
     }
 
-    // --- HANDLE OLD SINGLE-TEST PAYLOAD (Fallback for safety) ---
-    const { testId, results, action, notes, impression, sampleReceivedAt } = body; 
+    // ==========================================================
+    // BRANCH B: SINGLE-TEST PAYLOAD (From our updated frontend)
+    // ==========================================================
+    const { 
+      testId, 
+      results, 
+      customResults, 
+      action, 
+      notes, 
+      impression, 
+      sampleReceivedAt,
+      checkedById,  // ✅ Captured from frontend
+      approvedById  // ✅ Captured from frontend
+    } = body; 
     
     if (testId && results) {
         const testContext = await prisma.test.findUnique({
@@ -208,6 +224,7 @@ export async function POST(
         const isFirstTimeCompletion = (action === 'SUBMIT_FOR_REVIEW' || action === 'APPROVE') && 
                                       (testContext.status !== 'COMPLETED' && testContext.status !== 'APPROVED');
 
+        // 1. Update Core Results
         for (const res of results) {
             const parsedNumeric = parseFloat(res.value);
             const isNumeric = !isNaN(parsedNumeric) && res.value.trim() !== '';
@@ -223,28 +240,39 @@ export async function POST(
             }
         }
 
+        // 2. Determine Action Status
         let newStatus = undefined;
+        if (action === 'SAVE_DRAFT') newStatus = 'IN_PROGRESS';
         if (action === 'SUBMIT_FOR_REVIEW') newStatus = 'COMPLETED';
         if (action === 'APPROVE') newStatus = 'APPROVED';
+        if (action === 'UNLOCK') newStatus = 'COMPLETED'; // ✅ Revert status so it unlocks in UI
 
+        // 3. Update Test Record
         await prisma.test.update({
             where: { id: testId },
             data: { 
                 notes: notes !== undefined ? notes : undefined,
                 impression: impression !== undefined ? impression : undefined,
                 sampleReceivedAt: sampleReceivedAt ? new Date(sampleReceivedAt) : undefined,
+                
+                // ✅ Save the Dropdown Selections
+                checkedById: checkedById || null,
+                approvedById: approvedById || null,
+
                 ...(newStatus ? { 
                     status: newStatus as any,
-                    ...(newStatus === 'APPROVED' ? { approvedAt: new Date(), approvedBy: user.name } : {})
+                    // If approving, log the exact timestamp.
+                    ...(newStatus === 'APPROVED' ? { approvedAt: new Date() } : {})
                 } : {})
             }
         });
 
+        // 4. Fire Inventory
         if (isFirstTimeCompletion) {
             consumeReagentsForTest(testId, user.id || user.name || "SYSTEM").catch(console.error);
         }
 
-        return NextResponse.json({ success: true, message: "Single test update successful" });
+        return NextResponse.json({ success: true, message: "Test update successful" });
     }
 
     return NextResponse.json({ error: "Invalid payload format" }, { status: 400 });

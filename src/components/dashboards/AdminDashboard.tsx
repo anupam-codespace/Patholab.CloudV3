@@ -21,7 +21,7 @@ export default function AdminDashboard({
             Welcome back. Here is your lab's performance today.
           </p>
         </div>
-        <div className="text-xs font-bold bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full uppercase tracking-wider">
+        <div className="text-xs font-bold bg-indigo-100 text-primary px-3 py-1 rounded-full uppercase tracking-wider">
           {role.replace("_", " ")}
         </div>
       </div>
@@ -32,7 +32,7 @@ export default function AdminDashboard({
             label: "Today's Revenue",
             value: "₹24,500",
             icon: IndianRupee,
-            color: "text-emerald-600",
+            color: "text-primary",
             bg: "bg-emerald-50",
           },
           {
@@ -46,7 +46,7 @@ export default function AdminDashboard({
             label: "Tests Processed",
             value: "128",
             icon: Activity,
-            color: "text-indigo-600",
+            color: "text-primary",
             bg: "bg-indigo-50",
           },
           {

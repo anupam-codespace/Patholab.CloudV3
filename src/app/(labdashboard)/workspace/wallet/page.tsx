@@ -126,7 +126,7 @@ export default function WalletDashboard() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
-            <Wallet className="h-8 w-8 text-indigo-600" /> Wallet & Billing
+            <Wallet className="h-8 w-8 text-primary" /> Wallet & Billing
           </h1>
           <p className="text-muted-foreground mt-1">
             Manage your pay-as-you-go clinical credits and invoices.
@@ -135,7 +135,7 @@ export default function WalletDashboard() {
         <Button
           size="lg"
           onClick={() => router.push("/workspace/wallet/recharge")}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200 rounded-xl"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-indigo-200 rounded-xl"
         >
           <Plus className="h-5 w-5 mr-2" /> Recharge Wallet
         </Button>
@@ -144,7 +144,7 @@ export default function WalletDashboard() {
       {/* KPI METRICS (Now powered by Server Math) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Main Balance Card */}
-        <Card className="border-0 shadow-xl bg-gradient-to-br from-slate-900 via-indigo-950 to-indigo-900 text-white overflow-hidden relative rounded-2xl">
+        <Card className="border-0 shadow-xl bg-gradient-to-br from-slate-900 via-indigo-950 to-indigo-900 text-primary-foreground overflow-hidden relative rounded-2xl">
           <div className="absolute top-0 right-0 p-32 bg-card opacity-5 rounded-full -mr-20 -mt-20 blur-3xl" />
           <CardContent className="p-6 md:p-8 relative z-10 flex flex-col justify-between h-full space-y-6">
             <div className="flex justify-between items-start">
@@ -208,7 +208,7 @@ export default function WalletDashboard() {
         <Card className="border-border shadow-sm rounded-2xl bg-card">
           <CardContent className="p-6 md:p-8 flex flex-col justify-center h-full">
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 bg-emerald-100 text-emerald-600 rounded-xl">
+              <div className="p-3 bg-emerald-100 text-primary rounded-xl">
                 <ArrowDownRight className="h-6 w-6" />
               </div>
               <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
@@ -322,7 +322,7 @@ export default function WalletDashboard() {
                       {/* Left: Icon & Description */}
                       <div className="flex items-center gap-4 mb-3 md:mb-0">
                         <div
-                          className={`p-3 rounded-full shrink-0 ${tx.type === "RECHARGE" || tx.type === "REFUND" ? "bg-emerald-100 text-emerald-600" : "bg-rose-100 text-rose-600"}`}
+                          className={`p-3 rounded-full shrink-0 ${tx.type === "RECHARGE" || tx.type === "REFUND" ? "bg-emerald-100 text-primary" : "bg-rose-100 text-rose-600"}`}
                         >
                           {tx.type === "RECHARGE" || tx.type === "REFUND" ? (
                             <ArrowDownRight className="h-5 w-5" />
@@ -351,7 +351,7 @@ export default function WalletDashboard() {
                       <div className="flex items-center justify-between md:justify-end gap-6 ml-12 md:ml-0">
                         <div className="text-right">
                           <p
-                            className={`font-black ${tx.type === "RECHARGE" || tx.type === "REFUND" ? "text-emerald-600" : "text-rose-600"}`}
+                            className={`font-black ${tx.type === "RECHARGE" || tx.type === "REFUND" ? "text-primary" : "text-rose-600"}`}
                           >
                             {tx.type === "RECHARGE" || tx.type === "REFUND"
                               ? "+"
@@ -366,7 +366,7 @@ export default function WalletDashboard() {
                           <Button
                             variant="outline"
                             size="icon"
-                            className="h-8 w-8 rounded-full border-border text-muted-foreground hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 shrink-0"
+                            className="h-8 w-8 rounded-full border-border text-muted-foreground hover:text-primary hover:border-indigo-200 hover:bg-indigo-50 shrink-0"
                             onClick={(e) => handleViewInvoice(tx.id, e)}
                           >
                             <Eye className="h-4 w-4" />
@@ -421,7 +421,7 @@ export default function WalletDashboard() {
           {selectedTx && (
             <>
               <div
-                className={`p-6 text-white text-center ${selectedTx.type === "RECHARGE" || selectedTx.type === "REFUND" ? "bg-emerald-600" : "bg-rose-600"}`}
+                className={`p-6 text-primary-foreground text-center ${selectedTx.type === "RECHARGE" || selectedTx.type === "REFUND" ? "bg-primary" : "bg-rose-600"}`}
               >
                 <div className="mx-auto w-12 h-12 bg-card/20 rounded-full flex items-center justify-center mb-4">
                   {selectedTx.type === "RECHARGE" ||
@@ -486,7 +486,7 @@ export default function WalletDashboard() {
                       </span>
                       <Badge
                         variant="outline"
-                        className="ml-auto text-[10px] bg-emerald-50 text-emerald-600 border-emerald-200"
+                        className="ml-auto text-[10px] bg-emerald-50 text-primary border-emerald-200"
                       >
                         SUCCESS
                       </Badge>
@@ -497,7 +497,7 @@ export default function WalletDashboard() {
                 <div className="pt-2">
                   {selectedTx.type === "RECHARGE" ? (
                     <Button
-                      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl h-12"
+                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12"
                       onClick={(e) => handleViewInvoice(selectedTx.id, e)}
                     >
                       <FileText className="h-4 w-4 mr-2" /> View Full Invoice

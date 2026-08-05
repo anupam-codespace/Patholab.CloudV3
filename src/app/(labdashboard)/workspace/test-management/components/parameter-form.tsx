@@ -813,7 +813,7 @@ export default function ParameterForm({
             type="button"
             variant="outline"
             size="sm"
-            className="w-full border-dashed text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 border-emerald-200"
+            className="w-full border-dashed text-primary hover:text-emerald-800 hover:bg-emerald-50 border-emerald-200"
             onClick={() => appendReagent({ inventoryItemId: "", quantity: 0 })}>
             <Beaker className="mr-2 h-4 w-4" /> Link Inventory Item
           </Button>
@@ -827,7 +827,7 @@ export default function ParameterForm({
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="bg-primary hover:bg-blue-700">
+          className="bg-primary hover:bg-primary/90">
           {isSubmitting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (

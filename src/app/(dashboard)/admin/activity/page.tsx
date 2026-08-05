@@ -87,7 +87,7 @@ export default function AdminActivityLogsPage() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-2">
-            <Activity className="h-8 w-8 text-emerald-600" /> Platform Audit
+            <Activity className="h-8 w-8 text-primary" /> Platform Audit
             Logs
           </h1>
           <p className="text-muted-foreground font-medium mt-1">
@@ -103,12 +103,12 @@ export default function AdminActivityLogsPage() {
         <TabsList className="bg-slate-200/50 p-1 rounded-xl">
           <TabsTrigger
             value="TENANT"
-            className="rounded-lg font-bold data-[state=active]:bg-card data-[state=active]:text-emerald-700 data-[state=active]:shadow-sm">
+            className="rounded-lg font-bold data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">
             <Building2 className="w-4 h-4 mr-2" /> Tenant Activity
           </TabsTrigger>
           <TabsTrigger
             value="ADMIN"
-            className="rounded-lg font-bold data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-md">
+            className="rounded-lg font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md">
             <ShieldCheck className="w-4 h-4 mr-2" /> Super Admin Logs
           </TabsTrigger>
         </TabsList>
@@ -221,7 +221,7 @@ export default function AdminActivityLogsPage() {
                           <div className="flex items-center gap-3">
                             <div className="p-2 bg-muted text-muted-foreground rounded-lg">
                               {activeTab === "ADMIN" ? (
-                                <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                                <ShieldCheck className="w-4 h-4 text-primary" />
                               ) : (
                                 <UserCog className="w-4 h-4" />
                               )}
@@ -250,7 +250,7 @@ export default function AdminActivityLogsPage() {
                               className={`font-black uppercase tracking-widest text-[9px] border-0
                               ${
                                 log.action === "CREATE"
-                                  ? "bg-emerald-100 text-emerald-700"
+                                  ? "bg-emerald-100 text-primary"
                                   : log.action === "UPDATE"
                                     ? "bg-blue-100 text-primary"
                                     : log.action === "DELETE"
@@ -289,14 +289,14 @@ export default function AdminActivityLogsPage() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="text-muted-foreground/70 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg">
+                                className="text-muted-foreground/70 hover:text-primary hover:bg-emerald-50 rounded-lg">
                                 <Eye className="w-4 h-4 mr-1.5" /> View
                               </Button>
                             </DialogTrigger>
                             <DialogContent className="max-w-2xl bg-muted/30 rounded-3xl p-6 border-border shadow-2xl">
                               <DialogHeader>
                                 <DialogTitle className="flex items-center gap-2 text-xl font-black text-slate-800">
-                                  <FileJson className="w-5 h-5 text-emerald-600" />{" "}
+                                  <FileJson className="w-5 h-5 text-primary" />{" "}
                                   Log Metadata Payload
                                 </DialogTitle>
                               </DialogHeader>

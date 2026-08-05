@@ -119,12 +119,12 @@ export default async function FinancialAnalyticsPage() {
           </p>
         </div>
         <div className="bg-emerald-50 px-4 py-2 rounded-xl flex items-center gap-3 border border-emerald-100">
-          <span className="text-xs font-bold text-emerald-600 uppercase tracking-widest">
+          <span className="text-xs font-bold text-primary uppercase tracking-widest">
             Wallet Era
           </span>
           <Badge
             variant="secondary"
-            className="bg-emerald-100 text-emerald-700 text-sm font-bold border-0">
+            className="bg-emerald-100 text-primary text-sm font-bold border-0">
             Pay-As-You-Go Active
           </Badge>
         </div>
@@ -136,7 +136,7 @@ export default async function FinancialAnalyticsPage() {
           title="Total Revenue"
           value={formatINR(totalRevenue)}
           icon={IndianRupee}
-          color="text-emerald-600"
+          color="text-primary"
           bg="bg-emerald-100"
         />
         <StatCard
@@ -281,7 +281,7 @@ export default async function FinancialAnalyticsPage() {
                           <span
                             className={`px-2.5 py-1 rounded-md text-[11px] font-black uppercase tracking-wider ${
                               inv.status === "PAID"
-                                ? "bg-emerald-100 text-emerald-700"
+                                ? "bg-emerald-100 text-primary"
                                 : inv.status === "PENDING"
                                   ? "bg-amber-100 text-amber-700"
                                   : "bg-rose-100 text-rose-700"

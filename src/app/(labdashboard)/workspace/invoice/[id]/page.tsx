@@ -49,7 +49,7 @@ export default function InvoicePage() {
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-zinc-50">
-        <Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
         <p className="text-sm font-bold text-zinc-400 tracking-widest uppercase animate-pulse">
           Retrieving Document...
         </p>
@@ -73,7 +73,7 @@ export default function InvoicePage() {
             or the link is invalid.
           </p>
           <Link href="/workspace/subscription" className="w-full">
-            <Button className="w-full h-12 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl font-bold">
+            <Button className="w-full h-12 bg-zinc-900 hover:bg-zinc-800 text-primary-foreground rounded-xl font-bold">
               Return to Billing
             </Button>
           </Link>
@@ -114,7 +114,7 @@ export default function InvoicePage() {
         </Link>
         <Button
           onClick={handlePrint}
-          className="bg-indigo-600 hover:bg-indigo-500 text-white h-11 px-8 rounded-xl shadow-lg shadow-indigo-900/20 transition-all hover:-translate-y-0.5 font-bold w-full sm:w-auto">
+          className="bg-primary hover:bg-indigo-500 text-primary-foreground h-11 px-8 rounded-xl shadow-lg shadow-indigo-900/20 transition-all hover:-translate-y-0.5 font-bold w-full sm:w-auto">
           <Printer className="mr-2 h-4 w-4" /> Print Document
         </Button>
       </div>
@@ -147,7 +147,7 @@ export default function InvoicePage() {
                     className="h-12 w-auto object-contain"
                   />
                 ) : (
-                  <div className="h-12 w-12 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-black text-xl shadow-inner">
+                  <div className="h-12 w-12 bg-primary rounded-xl flex items-center justify-center text-primary-foreground font-black text-xl shadow-inner">
                     {provider.systemName ? provider.systemName[0] : "S"}
                   </div>
                 )}
@@ -198,7 +198,7 @@ export default function InvoicePage() {
                   <div
                     className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-black uppercase tracking-wider ${
                       data.status === "SUCCESS"
-                        ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                        ? "bg-emerald-50 text-primary border border-emerald-200"
                         : "bg-rose-50 text-rose-700 border border-rose-200"
                     }`}
                     style={{
@@ -287,7 +287,7 @@ export default function InvoicePage() {
                   <td className="py-6 pr-4">
                     <div className="flex items-center gap-3">
                       <div
-                        className="h-10 w-10 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-600 shrink-0"
+                        className="h-10 w-10 bg-indigo-50 rounded-lg flex items-center justify-center text-primary shrink-0"
                         style={{
                           WebkitPrintColorAdjust: "exact",
                           printColorAdjust: "exact",
@@ -346,7 +346,7 @@ export default function InvoicePage() {
                 <span className="text-[10px] font-black uppercase text-zinc-400 tracking-widest">
                   Total Amount
                 </span>
-                <span className="text-3xl font-black text-indigo-600 tracking-tight">
+                <span className="text-3xl font-black text-primary tracking-tight">
                   <span className="text-xl text-indigo-400 font-bold mr-1">
                     {provider.currencySymbol || "₹"}
                   </span>

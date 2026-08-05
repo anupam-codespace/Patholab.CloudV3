@@ -158,7 +158,7 @@ export default function RechargePage() {
         <Card className="md:col-span-3 border-border shadow-sm rounded-2xl overflow-hidden">
           <CardHeader className="bg-muted/30 border-b border-slate-100 pb-6">
             <CardTitle className="flex items-center gap-2 text-lg text-slate-800">
-              <Wallet className="h-5 w-5 text-indigo-600" /> Usable Credits
+              <Wallet className="h-5 w-5 text-primary" /> Usable Credits
               Amount
             </CardTitle>
             <CardDescription>
@@ -197,7 +197,7 @@ export default function RechargePage() {
                     onClick={() => setBaseAmount(val.toString())}
                     className={`px-4 py-2 rounded-lg text-sm font-bold border transition-all ${
                       numericBase === val
-                        ? "bg-indigo-50 border-indigo-600 text-indigo-700 ring-1 ring-indigo-600"
+                        ? "bg-indigo-50 border-primary text-primary ring-1 ring-indigo-600"
                         : "bg-card border-border text-muted-foreground hover:border-indigo-300 hover:bg-muted/30"
                     }`}>
                     + ₹{val}
@@ -210,7 +210,7 @@ export default function RechargePage() {
 
         {/* GST & Total Summary Sidebar */}
         <div className="md:col-span-2 space-y-4">
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-slate-900 to-indigo-950 text-white rounded-2xl">
+          <Card className="border-0 shadow-lg bg-gradient-to-br from-slate-900 to-indigo-950 text-primary-foreground rounded-2xl">
             <CardContent className="p-6 flex flex-col justify-between h-full space-y-6">
               <div className="space-y-4 border-b border-white/10 pb-4">
                 <div className="flex justify-between items-center text-slate-300 text-sm">
@@ -254,7 +254,7 @@ export default function RechargePage() {
               <Button
                 onClick={handleRecharge}
                 disabled={!isAmountValid || isProcessing}
-                className="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold h-12 rounded-xl text-md shadow-lg shadow-indigo-900/50">
+                className="w-full bg-indigo-500 hover:bg-primary text-primary-foreground font-bold h-12 rounded-xl text-md shadow-lg shadow-indigo-900/50">
                 {isProcessing
                   ? "Processing Securely..."
                   : `Pay ₹${totalAmount.toFixed(2)}`}

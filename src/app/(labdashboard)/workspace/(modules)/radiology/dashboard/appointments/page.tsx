@@ -165,14 +165,14 @@ export default function RadiologyAppointmentsPage() {
         };
       case "IN_PROGRESS":
         return {
-          color: "text-indigo-700",
+          color: "text-primary",
           bg: "bg-indigo-100",
           border: "border-indigo-200",
           label: "In Machine",
         };
       case "COMPLETED":
         return {
-          color: "text-emerald-700",
+          color: "text-primary",
           bg: "bg-emerald-100",
           border: "border-emerald-200",
           label: "Completed",
@@ -196,7 +196,7 @@ export default function RadiologyAppointmentsPage() {
       <header className="sticky top-0 z-30 bg-card/70 backdrop-blur-xl border-b border-slate-200/60 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex items-center gap-4">
-            <div className="h-12 w-12 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-inner shrink-0">
+            <div className="h-12 w-12 bg-gradient-to-br from-indigo-500 to-primary rounded-xl flex items-center justify-center shadow-inner shrink-0">
               <Microscope className="h-6 w-6 text-white" />
             </div>
             <div>
@@ -214,7 +214,7 @@ export default function RadiologyAppointmentsPage() {
             <div className="flex items-center bg-card border border-border rounded-xl shadow-sm overflow-hidden h-11 w-full md:w-auto">
               <button
                 onClick={() => setSelectedDate(subDays(selectedDate, 1))}
-                className="h-full px-3 text-muted-foreground/70 hover:text-indigo-600 hover:bg-indigo-50 transition-colors border-r border-slate-100 flex items-center justify-center">
+                className="h-full px-3 text-muted-foreground/70 hover:text-primary hover:bg-indigo-50 transition-colors border-r border-slate-100 flex items-center justify-center">
                 <ChevronLeft className="h-5 w-5" />
               </button>
               <div className="px-4 py-2 font-bold text-sm text-foreground min-w-[150px] text-center flex-1 flex justify-center items-center gap-2">
@@ -223,14 +223,14 @@ export default function RadiologyAppointmentsPage() {
               </div>
               <button
                 onClick={() => setSelectedDate(addDays(selectedDate, 1))}
-                className="h-full px-3 text-muted-foreground/70 hover:text-indigo-600 hover:bg-indigo-50 transition-colors border-l border-slate-100 flex items-center justify-center">
+                className="h-full px-3 text-muted-foreground/70 hover:text-primary hover:bg-indigo-50 transition-colors border-l border-slate-100 flex items-center justify-center">
                 <ChevronRight className="h-5 w-5" />
               </button>
             </div>
 
             <Button
               onClick={() => setIsModalOpen(true)}
-              className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white shrink-0 shadow-md shadow-indigo-500/25 h-11 rounded-xl px-5 font-bold transition-all duration-300 hover:-translate-y-0.5">
+              className="bg-gradient-to-r from-primary to-primary hover:from-indigo-700 hover:to-violet-700 text-primary-foreground shrink-0 shadow-md shadow-indigo-500/25 h-11 rounded-xl px-5 font-bold transition-all duration-300 hover:-translate-y-0.5">
               <Plus className="mr-1.5 h-5 w-5" /> Book Scan
             </Button>
           </div>
@@ -248,7 +248,7 @@ export default function RadiologyAppointmentsPage() {
                 onClick={() => setActiveModality(mod)}
                 className={`px-5 py-2 text-xs font-bold rounded-lg whitespace-nowrap transition-all ${
                   activeModality === mod
-                    ? "bg-card text-indigo-700 shadow-sm border border-slate-200/50"
+                    ? "bg-card text-primary shadow-sm border border-slate-200/50"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 }`}>
                 {mod}
@@ -263,7 +263,7 @@ export default function RadiologyAppointmentsPage() {
               placeholder="Search patient or Accession..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-11 bg-muted/30 border-slate-100 focus:bg-card focus:border-indigo-300 focus:ring-indigo-500/20 rounded-xl text-sm transition-all"
+              className="pl-9 h-11 bg-muted/30 border-slate-100 focus:bg-card focus:border-indigo-300 focus:ring-primary/20 rounded-xl text-sm transition-all"
             />
           </div>
         </div>
@@ -272,7 +272,7 @@ export default function RadiologyAppointmentsPage() {
         <div className="bg-card rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden min-h-[500px]">
           {isLoading ? (
             <div className="flex flex-col h-[400px] items-center justify-center space-y-4">
-              <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
               <p className="text-sm font-bold text-muted-foreground/70 uppercase tracking-widest animate-pulse">
                 Loading Schedule
               </p>
@@ -428,7 +428,7 @@ export default function RadiologyAppointmentsPage() {
                                     })
                                   }
                                   disabled={updateStatusMutation.isPending}
-                                  className="bg-indigo-600 hover:bg-indigo-700 text-white h-9 rounded-lg text-xs font-bold shadow-sm transition-all hover:-translate-y-0.5">
+                                  className="bg-primary hover:bg-primary/90 text-primary-foreground h-9 rounded-lg text-xs font-bold shadow-sm transition-all hover:-translate-y-0.5">
                                   <ScanLine className="h-3 w-3 mr-1.5" /> Start
                                   Scan
                                 </Button>
@@ -497,7 +497,7 @@ export default function RadiologyAppointmentsPage() {
                 <div className="relative">
                   <User className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground/70 pointer-events-none" />
                   <select
-                    className="flex h-11 w-full rounded-xl border border-border bg-muted/30 pl-10 pr-4 text-sm font-medium outline-none focus:bg-card focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all appearance-none cursor-pointer"
+                    className="flex h-11 w-full rounded-xl border border-border bg-muted/30 pl-10 pr-4 text-sm font-medium outline-none focus:bg-card focus:ring-2 focus:ring-primary/20 focus:border-indigo-400 transition-all appearance-none cursor-pointer"
                     value={formData.patientId}
                     onChange={(e) =>
                       setFormData({ ...formData, patientId: e.target.value })
@@ -522,7 +522,7 @@ export default function RadiologyAppointmentsPage() {
                   <div className="relative">
                     <Microscope className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground/70 pointer-events-none" />
                     <select
-                      className="flex h-11 w-full rounded-xl border border-border bg-muted/30 pl-10 pr-4 text-sm font-medium outline-none focus:bg-card focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all appearance-none cursor-pointer"
+                      className="flex h-11 w-full rounded-xl border border-border bg-muted/30 pl-10 pr-4 text-sm font-medium outline-none focus:bg-card focus:ring-2 focus:ring-primary/20 focus:border-indigo-400 transition-all appearance-none cursor-pointer"
                       value={formData.modalityId}
                       onChange={(e) =>
                         setFormData({ ...formData, modalityId: e.target.value })
@@ -549,7 +549,7 @@ export default function RadiologyAppointmentsPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, scanName: e.target.value })
                     }
-                    className="h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-indigo-500/20 text-sm font-medium"
+                    className="h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-primary/20 text-sm font-medium"
                   />
                 </div>
               </div>
@@ -567,7 +567,7 @@ export default function RadiologyAppointmentsPage() {
                       onChange={(e) =>
                         setFormData({ ...formData, timeStr: e.target.value })
                       }
-                      className="h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-indigo-500/20 text-sm font-medium pr-10"
+                      className="h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-primary/20 text-sm font-medium pr-10"
                     />
                   </div>
                 </div>
@@ -582,7 +582,7 @@ export default function RadiologyAppointmentsPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, notes: e.target.value })
                     }
-                    className="h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-indigo-500/20 text-sm font-medium"
+                    className="h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-primary/20 text-sm font-medium"
                   />
                 </div>
               </div>
@@ -607,7 +607,7 @@ export default function RadiologyAppointmentsPage() {
               <Button
                 onClick={handleBookSubmit}
                 disabled={bookMutation.isPending}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white h-11 rounded-xl font-bold shadow-md shadow-indigo-500/25 w-full sm:w-auto transition-all">
+                className="bg-primary hover:bg-primary/90 text-primary-foreground h-11 rounded-xl font-bold shadow-md shadow-indigo-500/25 w-full sm:w-auto transition-all">
                 {bookMutation.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : null}

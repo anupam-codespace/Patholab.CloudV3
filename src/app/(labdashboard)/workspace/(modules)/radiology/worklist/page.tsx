@@ -132,7 +132,7 @@ export default function TechnicianWorklistPage() {
         </div>
 
         <div className="flex items-center gap-3 w-full md:w-auto">
-          <div className="px-4 py-2 bg-emerald-50 border border-emerald-100 rounded-lg flex items-center gap-2 text-sm font-bold text-emerald-700">
+          <div className="px-4 py-2 bg-emerald-50 border border-emerald-100 rounded-lg flex items-center gap-2 text-sm font-bold text-primary">
             <Activity className="h-4 w-4 animate-pulse" /> Live MWL Sync Active
           </div>
           <Button
@@ -157,7 +157,7 @@ export default function TechnicianWorklistPage() {
         <div className="flex gap-2 bg-muted p-1 rounded-lg overflow-x-auto scrollbar-hide">
           <button
             onClick={() => setActiveModality("ALL")}
-            className={`px-6 py-1.5 text-sm font-bold rounded-md whitespace-nowrap transition-colors ${activeModality === "ALL" ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-slate-200/50"}`}>
+            className={`px-6 py-1.5 text-sm font-bold rounded-md whitespace-nowrap transition-colors ${activeModality === "ALL" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-slate-200/50"}`}>
             ALL Rooms
           </button>
           {uniqueModalityTypes.map((mod: any) => (
@@ -166,7 +166,7 @@ export default function TechnicianWorklistPage() {
               onClick={() => setActiveModality(mod)}
               className={`px-6 py-1.5 text-sm font-bold rounded-md whitespace-nowrap transition-colors ${
                 activeModality === mod
-                  ? "bg-primary text-white shadow-sm"
+                  ? "bg-primary text-primary-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground hover:bg-slate-200/50"
               }`}>
               {mod} Room
@@ -250,7 +250,7 @@ export default function TechnicianWorklistPage() {
                       <span className="text-xs font-bold px-2 py-0.5 rounded bg-muted text-muted-foreground font-mono border border-border">
                         {item.study?.accessionNumber || "NO-ACCESSION"}
                       </span>
-                      <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
+                      <span className="text-[10px] font-bold text-primary flex items-center gap-1">
                         <Server className="h-3 w-3" /> MWL Linked
                       </span>
                     </div>
@@ -306,7 +306,7 @@ export default function TechnicianWorklistPage() {
                 {item.status === "ARRIVED" && (
                   <Button
                     onClick={() => handleStartClick(item)}
-                    className="w-full bg-primary hover:bg-blue-700 text-white shadow-md h-12">
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-md h-12">
                     <ScanLine className="h-5 w-5 mr-2" /> Start Examination
                   </Button>
                 )}
@@ -319,7 +319,7 @@ export default function TechnicianWorklistPage() {
                     <Button
                       onClick={() => handleCompleteScan(item.id, item.study.id)}
                       disabled={actionMutation.isPending}
-                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 h-10">
+                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-emerald-600/20 h-10">
                       {actionMutation.isPending ? (
                         <Loader2 className="h-4 w-4 animate-spin mr-2" />
                       ) : (
@@ -454,7 +454,7 @@ export default function TechnicianWorklistPage() {
                     !checklist.consentSigned) ||
                   actionMutation.isPending
                 }
-                className="bg-primary hover:bg-blue-700 text-white font-bold px-6">
+                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-6">
                 {actionMutation.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : null}

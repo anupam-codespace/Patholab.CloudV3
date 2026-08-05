@@ -205,7 +205,7 @@ export default function AdminArchivesPage() {
                         className={`font-black uppercase tracking-widest text-[10px]
                         ${
                           item.type === "LAB"
-                            ? "bg-indigo-50 text-indigo-700 border-indigo-200"
+                            ? "bg-indigo-50 text-primary border-indigo-200"
                             : item.type === "PATIENT"
                               ? "bg-primary/10 text-primary border-primary/20"
                               : item.type === "STAFF"
@@ -265,7 +265,7 @@ export default function AdminArchivesPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg"
+                          className="text-primary hover:text-primary hover:bg-emerald-50 rounded-lg"
                           onClick={() =>
                             actionMutation.mutate({
                               id: item.id,

@@ -288,7 +288,7 @@ export default function InventoryPage() {
           </Button>
           <Button
             onClick={() => setIsAddStockOpen(true)}
-            className="gap-2 bg-primary hover:bg-blue-700 text-white shadow-md flex-1 md:flex-none transition-all">
+            className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md flex-1 md:flex-none transition-all">
             <PackagePlus className="h-4 w-4" /> Receive Stock
           </Button>
         </div>
@@ -495,12 +495,12 @@ export default function InventoryPage() {
             <div className="flex border-b px-6 bg-card shrink-0">
               <button
                 onClick={() => setManageTab("BATCHES")}
-                className={`px-4 py-3 text-sm font-semibold border-b-2 transition-colors ${manageTab === "BATCHES" ? "border-blue-600 text-primary" : "border-transparent text-muted-foreground hover:text-slate-700"}`}>
+                className={`px-4 py-3 text-sm font-semibold border-b-2 transition-colors ${manageTab === "BATCHES" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-slate-700"}`}>
                 Active Batches
               </button>
               <button
                 onClick={() => setManageTab("LEDGER")}
-                className={`px-4 py-3 text-sm font-semibold border-b-2 transition-colors ${manageTab === "LEDGER" ? "border-blue-600 text-primary" : "border-transparent text-muted-foreground hover:text-slate-700"}`}>
+                className={`px-4 py-3 text-sm font-semibold border-b-2 transition-colors ${manageTab === "LEDGER" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-slate-700"}`}>
                 Ledger / History
               </button>
             </div>
@@ -584,7 +584,7 @@ export default function InventoryPage() {
                             <Button
                               type="submit"
                               size="sm"
-                              className="bg-primary text-white hover:bg-blue-700"
+                              className="bg-primary text-primary-foreground hover:bg-primary/90"
                               disabled={updateBatchMutation.isPending}>
                               {updateBatchMutation.isPending ? (
                                 <Loader2 className="h-3 w-3 animate-spin mr-2" />
@@ -871,7 +871,7 @@ export default function InventoryPage() {
                   disabled={
                     addItemMutation.isPending || updateItemMutation.isPending
                   }
-                  className="bg-primary text-white hover:bg-blue-700 px-8">
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 px-8">
                   {(addItemMutation.isPending ||
                     updateItemMutation.isPending) && (
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -893,7 +893,7 @@ export default function InventoryPage() {
           <div className="bg-card rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden relative z-10 animate-in slide-in-from-bottom-4 duration-200">
             <div className="flex justify-between items-center p-5 border-b bg-slate-50/80">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-emerald-100 text-emerald-700 rounded-lg shadow-inner">
+                <div className="p-2 bg-emerald-100 text-primary rounded-lg shadow-inner">
                   <PackagePlus className="h-5 w-5" />
                 </div>
                 <h2 className="text-lg font-bold text-slate-800">
@@ -958,7 +958,7 @@ export default function InventoryPage() {
                     type="number"
                     step="0.01"
                     min="0.1"
-                    className="w-full border border-border rounded-lg p-2.5 text-sm font-semibold text-emerald-700 outline-none"
+                    className="w-full border border-border rounded-lg p-2.5 text-sm font-semibold text-primary outline-none"
                   />
                 </div>
 
@@ -1013,7 +1013,7 @@ export default function InventoryPage() {
                 <Button
                   type="submit"
                   disabled={addStockMutation.isPending}
-                  className="bg-emerald-600 text-white hover:bg-emerald-700 px-8">
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 px-8">
                   {addStockMutation.isPending && (
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
                   )}{" "}

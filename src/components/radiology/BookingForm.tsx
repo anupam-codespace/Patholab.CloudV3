@@ -73,7 +73,7 @@ export function BookingForm({ selectedDate, patients, modalities, onClose, onSuc
         </div>
       </div>
 
-      <Button onClick={handleBookSubmit} disabled={bookMutation.isPending} className="w-full bg-indigo-600">
+      <Button onClick={handleBookSubmit} disabled={bookMutation.isPending} className="w-full bg-primary">
         {bookMutation.isPending ? <Loader2 className="animate-spin mr-2" /> : "Confirm Booking"}
       </Button>
     </div>

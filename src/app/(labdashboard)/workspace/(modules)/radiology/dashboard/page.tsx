@@ -124,7 +124,7 @@ export default function RisDashboard() {
   if (isLoading) {
     return (
       <div className="h-[calc(100vh-4rem)] flex flex-col items-center justify-center bg-muted/30 font-sans">
-        <Loader2 className="h-10 w-10 animate-spin text-indigo-600 mb-4" />
+        <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
         <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest animate-pulse">
           Loading Dashboard...
         </p>
@@ -151,7 +151,7 @@ export default function RisDashboard() {
     { label: "Today's Scans",    value: data?.stats?.scansToday    || 0,       icon: Activity,   color: "text-primary",    bg: "bg-blue-100",    border: "border-primary/20/50"    },
     { label: "Pending Reports",  value: data?.stats?.pendingReports || 0,       icon: FileText,   color: "text-orange-600",  bg: "bg-orange-100",  border: "border-orange-200/50"  },
     { label: "Avg. Turnaround",  value: data?.stats?.avgTat        || "0h 0m",  icon: Clock,      color: "text-purple-600",  bg: "bg-purple-100",  border: "border-purple-200/50"  },
-    { label: "Revenue (Today)",  value: data?.stats?.revenueToday  || "₹0",     icon: TrendingUp, color: "text-emerald-600", bg: "bg-emerald-100", border: "border-emerald-200/50" },
+    { label: "Revenue (Today)",  value: data?.stats?.revenueToday  || "₹0",     icon: TrendingUp, color: "text-primary", bg: "bg-emerald-100", border: "border-emerald-200/50" },
   ];
 
   return (
@@ -164,7 +164,7 @@ export default function RisDashboard() {
         {/* ── HEADER ── */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-card/70 backdrop-blur-xl p-5 rounded-2xl border border-slate-200/60 shadow-sm">
           <div className="flex items-center gap-4">
-            <div className="h-12 w-12 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-inner shrink-0">
+            <div className="h-12 w-12 bg-gradient-to-br from-indigo-500 to-primary rounded-xl flex items-center justify-center shadow-inner shrink-0">
               <MonitorPlay className="h-6 w-6 text-white" />
             </div>
             <div>
@@ -190,7 +190,7 @@ export default function RisDashboard() {
             <Button
               id="new-booking-btn"
               onClick={() => setIsModalOpen(true)}
-              className="h-11 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white shadow-md shadow-indigo-500/25 w-full md:w-auto font-bold transition-all duration-300 hover:-translate-y-0.5"
+              className="h-11 rounded-xl bg-gradient-to-r from-primary to-primary hover:from-indigo-700 hover:to-violet-700 text-primary-foreground shadow-md shadow-indigo-500/25 w-full md:w-auto font-bold transition-all duration-300 hover:-translate-y-0.5"
             >
               <Plus className="w-4 h-4 mr-2" />
               New Booking
@@ -230,7 +230,7 @@ export default function RisDashboard() {
                 { label: "Waiting",   count: data?.workflow?.waiting   || 0, icon: Users,         color: "text-amber-600",   bg: "bg-amber-100"  },
                 { label: "Scanning",  count: data?.workflow?.scanning  || 0, icon: Activity,      color: "text-primary",    bg: "bg-blue-100"   },
                 { label: "Reporting", count: data?.workflow?.reporting || 0, icon: FileText,      color: "text-purple-600",  bg: "bg-purple-100" },
-                { label: "Verified",  count: data?.workflow?.verified  || 0, icon: CheckCircle2,  color: "text-emerald-600", bg: "bg-emerald-100"},
+                { label: "Verified",  count: data?.workflow?.verified  || 0, icon: CheckCircle2,  color: "text-primary", bg: "bg-emerald-100"},
               ].map((step, index, array) => (
                 <div key={step.label} className="flex items-center w-full md:w-auto">
                   <div className="flex flex-row md:flex-col items-center gap-4 md:gap-2 w-full md:w-32 p-3 md:p-0 rounded-xl hover:bg-muted/30 transition-colors">
@@ -268,7 +268,7 @@ export default function RisDashboard() {
                 <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
                   <Server className="h-5 w-5 text-indigo-500" /> Modality Fleet Status
                 </CardTitle>
-                <Link href="/workspace/radiology/modalities" className="text-xs font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors">
+                <Link href="/workspace/radiology/modalities" className="text-xs font-bold text-primary hover:text-primary bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors">
                   Manage Assets
                 </Link>
               </CardHeader>
@@ -287,7 +287,7 @@ export default function RisDashboard() {
                           <p className="font-bold text-foreground text-base">{mod.name}</p>
                           <div className="flex items-center gap-2 mt-1.5">
                             {mod.status === "ACTIVE" && (
-                              <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-none px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5">
+                              <Badge variant="outline" className="bg-emerald-50 text-primary border-none px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5">
                                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> Active
                               </Badge>
                             )}
@@ -305,7 +305,7 @@ export default function RisDashboard() {
                         </div>
                         <div className="w-full sm:w-1/3 flex flex-col justify-center">
                           <p className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider mb-0.5">Current Patient</p>
-                          <p className="font-bold text-indigo-700 truncate text-sm">
+                          <p className="font-bold text-primary truncate text-sm">
                             {mod.currentPatient && mod.currentPatient !== "-" ? mod.currentPatient : "Idle / Available"}
                           </p>
                           <p className="text-[10px] font-medium text-muted-foreground mt-1 flex items-center gap-1">
@@ -373,7 +373,7 @@ export default function RisDashboard() {
                             </p>
                           </div>
                           <div className="pl-3 flex items-center justify-center h-full shrink-0">
-                            <div className="h-8 w-8 rounded-full bg-card border border-slate-100 shadow-sm flex items-center justify-center text-purple-400 group-hover:bg-purple-600 group-hover:text-white group-hover:border-purple-600 transition-all">
+                            <div className="h-8 w-8 rounded-full bg-card border border-slate-100 shadow-sm flex items-center justify-center text-purple-400 group-hover:bg-purple-600 group-hover:text-primary-foreground group-hover:border-purple-600 transition-all">
                               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                             </div>
                           </div>
@@ -438,7 +438,7 @@ export default function RisDashboard() {
                       <User className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground/70 pointer-events-none" />
                       <select
                         id="modal-patient-select"
-                        className="flex h-11 w-full rounded-xl border border-border bg-muted/30 pl-10 pr-4 text-sm font-medium outline-none focus:bg-card focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all appearance-none cursor-pointer"
+                        className="flex h-11 w-full rounded-xl border border-border bg-muted/30 pl-10 pr-4 text-sm font-medium outline-none focus:bg-card focus:ring-2 focus:ring-primary/20 focus:border-indigo-400 transition-all appearance-none cursor-pointer"
                         value={formData.patientId}
                         onChange={(e) => setFormData({ ...formData, patientId: e.target.value })}
                       >
@@ -460,7 +460,7 @@ export default function RisDashboard() {
                         <Microscope className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground/70 pointer-events-none" />
                         <select
                           id="modal-modality-select"
-                          className="flex h-11 w-full rounded-xl border border-border bg-muted/30 pl-10 pr-4 text-sm font-medium outline-none focus:bg-card focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all appearance-none cursor-pointer"
+                          className="flex h-11 w-full rounded-xl border border-border bg-muted/30 pl-10 pr-4 text-sm font-medium outline-none focus:bg-card focus:ring-2 focus:ring-primary/20 focus:border-indigo-400 transition-all appearance-none cursor-pointer"
                           value={formData.modalityId}
                           onChange={(e) => setFormData({ ...formData, modalityId: e.target.value })}
                         >
@@ -481,7 +481,7 @@ export default function RisDashboard() {
                         placeholder="e.g. MRI Brain with Contrast"
                         value={formData.scanName}
                         onChange={(e) => setFormData({ ...formData, scanName: e.target.value })}
-                        className="h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-indigo-500/20 text-sm font-medium"
+                        className="h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-primary/20 text-sm font-medium"
                       />
                     </div>
                   </div>
@@ -499,7 +499,7 @@ export default function RisDashboard() {
                           type="time"
                           value={formData.timeStr}
                           onChange={(e) => setFormData({ ...formData, timeStr: e.target.value })}
-                          className="h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-indigo-500/20 text-sm font-medium pr-10"
+                          className="h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-primary/20 text-sm font-medium pr-10"
                         />
                       </div>
                     </div>
@@ -513,7 +513,7 @@ export default function RisDashboard() {
                         placeholder="Safety alerts, instructions..."
                         value={formData.notes}
                         onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                        className="h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-indigo-500/20 text-sm font-medium"
+                        className="h-11 rounded-xl bg-muted/30 border-border focus:bg-card focus:ring-primary/20 text-sm font-medium"
                       />
                     </div>
                   </div>
@@ -543,7 +543,7 @@ export default function RisDashboard() {
                 id="modal-confirm-booking"
                 onClick={handleBookSubmit}
                 disabled={bookMutation.isPending || formLoading}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white h-11 rounded-xl font-bold shadow-md shadow-indigo-500/25 w-full sm:w-auto transition-all"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground h-11 rounded-xl font-bold shadow-md shadow-indigo-500/25 w-full sm:w-auto transition-all"
               >
                 {bookMutation.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />

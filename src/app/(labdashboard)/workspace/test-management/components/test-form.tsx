@@ -660,7 +660,7 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
           {liveReagentList.length > 0 && (
             <div className="mt-4 p-4 bg-emerald-50 border border-emerald-100 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
-                <Beaker className="w-4 h-4 text-emerald-600" />
+                <Beaker className="w-4 h-4 text-primary" />
                 <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-800">
                   Estimated Reagent Consumption
                 </h4>
@@ -671,7 +671,7 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
                     key={idx}
                     className="bg-card border border-emerald-200 px-3 py-1.5 rounded-md text-sm font-medium text-foreground/80 shadow-sm">
                     {r.name}:{" "}
-                    <span className="font-bold text-emerald-700">
+                    <span className="font-bold text-primary">
                       {r.totalQuantity.toFixed(2)} {r.unit}
                     </span>
                   </div>
@@ -764,7 +764,7 @@ export default function TestForm({ onSuccess, initialData }: TestFormProps) {
         <Button
           type="submit"
           disabled={isSubmitting || isLoadingRefs}
-          className="bg-primary hover:bg-blue-700">
+          className="bg-primary hover:bg-primary/90">
           {isSubmitting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (

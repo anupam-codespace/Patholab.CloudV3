@@ -180,7 +180,7 @@ export default async function MachineMappingPage() {
 
                   <button
                     type="submit"
-                    className="w-full bg-slate-900 hover:bg-black text-white font-bold py-4 rounded-xl shadow-lg shadow-slate-200 transition-all active:scale-[0.98] text-sm uppercase tracking-widest">
+                    className="w-full bg-slate-900 hover:bg-black text-primary-foreground font-bold py-4 rounded-xl shadow-lg shadow-slate-200 transition-all active:scale-[0.98] text-sm uppercase tracking-widest">
                     Authorize Rule
                   </button>
                 </form>

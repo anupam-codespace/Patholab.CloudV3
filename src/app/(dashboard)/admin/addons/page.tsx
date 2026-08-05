@@ -52,7 +52,7 @@ const ADDON_CATALOG = [
     sku: "ADDON_B2B",
     name: "B2B Agency Portal",
     icon: Users,
-    color: "text-emerald-600",
+    color: "text-primary",
     bg: "bg-emerald-100",
   },
   {
@@ -426,7 +426,7 @@ export default function AdminAddonsPage() {
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="px-5 py-2 text-sm font-medium bg-primary text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                  className="px-5 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
                   {isSaving ? "Saving..." : "Save Overrides"}
                 </button>
               </div>

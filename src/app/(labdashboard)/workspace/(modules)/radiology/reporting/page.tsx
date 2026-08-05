@@ -263,7 +263,7 @@ export default function ReportingDeskPage() {
   if (isQueueLoading) {
     return (
       <div className="h-[calc(100vh-4rem)] flex flex-col items-center justify-center bg-muted/30 font-sans">
-        <Loader2 className="h-10 w-10 animate-spin text-indigo-600 mb-4" />
+        <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
         <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest animate-pulse">
           Loading Reporting Desk...
         </p>
@@ -278,7 +278,7 @@ export default function ReportingDeskPage() {
       <header className="shrink-0 z-30 px-4 sm:px-6 lg:px-8 py-4 w-full max-w-[1600px] mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card/70 backdrop-blur-xl p-4 rounded-2xl border border-slate-200/60 shadow-sm">
           <div className="flex items-center gap-4">
-            <div className="h-12 w-12 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-inner shrink-0">
+            <div className="h-12 w-12 bg-gradient-to-br from-indigo-500 to-primary rounded-xl flex items-center justify-center shadow-inner shrink-0">
               <Stethoscope className="h-6 w-6 text-white" />
             </div>
             <div>
@@ -287,7 +287,7 @@ export default function ReportingDeskPage() {
             </div>
           </div>
           <div className="flex items-center gap-2 px-4 py-2.5 bg-indigo-50 rounded-xl border border-indigo-100 shadow-sm shrink-0 w-full md:w-auto justify-center">
-            <Zap className="h-4 w-4 text-indigo-600" />
+            <Zap className="h-4 w-4 text-primary" />
             <span className="text-xs font-bold text-indigo-800 uppercase tracking-wider">{macros?.length || 0} Macros Active</span>
           </div>
         </div>
@@ -302,7 +302,7 @@ export default function ReportingDeskPage() {
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
               <Input
                 placeholder="Search patient..."
-                className="pl-9 bg-card border-border focus:border-indigo-300 focus:ring-indigo-500/20 rounded-lg h-9 text-sm shadow-sm"
+                className="pl-9 bg-card border-border focus:border-indigo-300 focus:ring-primary/20 rounded-lg h-9 text-sm shadow-sm"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -313,7 +313,7 @@ export default function ReportingDeskPage() {
                   key={filter}
                   onClick={() => setActiveFilter(filter)}
                   className={`flex-1 py-1 text-[10px] uppercase tracking-wider font-bold rounded-md transition-all ${
-                    activeFilter === filter ? "bg-card text-indigo-700 shadow-sm border border-slate-200/50" : "text-muted-foreground hover:text-slate-800"
+                    activeFilter === filter ? "bg-card text-primary shadow-sm border border-slate-200/50" : "text-muted-foreground hover:text-slate-800"
                   }`}>
                   {filter}
                 </button>
@@ -352,7 +352,7 @@ export default function ReportingDeskPage() {
             {/* COLUMN 2: CLINICAL CONTEXT */}
             <div className="w-full lg:w-[300px] xl:w-[350px] 2xl:w-[400px] flex flex-col gap-4 overflow-y-auto custom-scrollbar shrink-0 h-auto lg:h-full pb-4 lg:pb-10 pr-1 lg:pr-2">
               <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden shrink-0">
-                <div className="bg-slate-900 px-3 py-2 flex items-center gap-2 text-white">
+                <div className="bg-slate-900 px-3 py-2 flex items-center gap-2 text-primary-foreground">
                   <User className="h-4 w-4 text-indigo-400" />
                   <h3 className="font-bold text-[11px] uppercase tracking-wider">Patient Info</h3>
                 </div>
@@ -371,7 +371,7 @@ export default function ReportingDeskPage() {
                   </div>
                   <div className="flex justify-between items-center border-b border-slate-100 pb-2">
                     <span className="text-[11px] text-muted-foreground font-medium">Ref Doctor</span>
-                    <span className="text-xs font-semibold text-indigo-700 truncate max-w-[120px] text-right">{selectedStudy.referringDoctor || "N/A"}</span>
+                    <span className="text-xs font-semibold text-primary truncate max-w-[120px] text-right">{selectedStudy.referringDoctor || "N/A"}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-[11px] text-muted-foreground font-medium">Priority</span>
@@ -416,7 +416,7 @@ export default function ReportingDeskPage() {
                           variant="outline" 
                           size="sm" 
                           onClick={() => window.open(`http://localhost:8042/viewer?StudyInstanceUID=${study.uid}`, "_blank")}
-                          className="h-6 px-2 text-[9px] font-bold border-indigo-200 text-indigo-700 hover:bg-indigo-50">
+                          className="h-6 px-2 text-[9px] font-bold border-indigo-200 text-primary hover:bg-indigo-50">
                           Compare
                         </Button>
                       </div>
@@ -427,7 +427,7 @@ export default function ReportingDeskPage() {
 
               <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden shrink-0">
                 <div className="bg-indigo-50 px-3 py-2 flex items-center gap-2 border-b border-indigo-100">
-                  <TestTube className="h-4 w-4 text-indigo-600" />
+                  <TestTube className="h-4 w-4 text-primary" />
                   <h3 className="font-bold text-[11px] uppercase tracking-wider text-indigo-900">Recent Lab Results</h3>
                 </div>
                 {isContextLoading ? (
@@ -453,7 +453,7 @@ export default function ReportingDeskPage() {
             <div className="flex-1 flex flex-col bg-card rounded-xl border border-border shadow-sm overflow-hidden relative min-h-[600px] lg:min-h-0 lg:h-full w-full">
               <div className="px-3 py-2.5 border-b border-slate-100 bg-slate-50/80 shrink-0 flex flex-wrap justify-between items-center gap-2">
                 <div className="flex items-center gap-2">
-                  <Wand2 className="h-4 w-4 text-indigo-600 hidden sm:block" />
+                  <Wand2 className="h-4 w-4 text-primary hidden sm:block" />
                   <span className="text-sm font-bold text-slate-800">Editor</span>
                 </div>
                 <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -473,7 +473,7 @@ export default function ReportingDeskPage() {
                   </Select>
                   <Button
                     onClick={() => window.open(`http://localhost:8042/viewer?StudyInstanceUID=${selectedStudy.studyUid}`, "_blank")}
-                    className="h-8 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-lg shadow-sm shrink-0">
+                    className="h-8 bg-slate-900 hover:bg-slate-800 text-primary-foreground text-xs font-bold rounded-lg shadow-sm shrink-0">
                     <MonitorPlay className="h-3 w-3 sm:mr-1.5" /> <span className="hidden sm:inline">View DICOM</span>
                   </Button>
                 </div>
@@ -489,7 +489,7 @@ export default function ReportingDeskPage() {
                   </label>
                   <Textarea 
                     placeholder="Describe findings or type a /shortcut..." 
-                    className="flex-1 min-h-[250px] font-sans text-sm leading-relaxed bg-slate-50/50 border-border focus-visible:ring-indigo-500 p-4 shadow-inner resize-none"
+                    className="flex-1 min-h-[250px] font-sans text-sm leading-relaxed bg-slate-50/50 border-border focus-visible:ring-primary p-4 shadow-inner resize-none"
                     value={selectedStudy?.findings || ""}
                     onChange={(e) => handleSmartText('findings', e.target.value)}
                   />
@@ -497,12 +497,12 @@ export default function ReportingDeskPage() {
 
                 <div className="space-y-1.5 h-[150px] xl:h-[200px] flex flex-col shrink-0">
                   <label className="text-xs font-bold text-foreground/80 flex items-center gap-1.5">
-                    <AlertCircle className="h-3.5 w-3.5 text-indigo-600" />
+                    <AlertCircle className="h-3.5 w-3.5 text-primary" />
                     Impression / Conclusion
                   </label>
                   <Textarea 
                     placeholder="Final diagnosis or type a /shortcut..." 
-                    className="flex-1 font-sans text-sm font-semibold leading-relaxed bg-slate-50/50 border-border focus-visible:ring-indigo-500 p-4 shadow-inner resize-none"
+                    className="flex-1 font-sans text-sm font-semibold leading-relaxed bg-slate-50/50 border-border focus-visible:ring-primary p-4 shadow-inner resize-none"
                     value={selectedStudy?.impression || ""}
                     onChange={(e) => handleSmartText('impression', e.target.value)}
                   />
@@ -521,7 +521,7 @@ export default function ReportingDeskPage() {
                 <Button 
                   onClick={() => handleAction("FINALIZE")}
                   disabled={saveMutation.isPending}
-                  className="h-9 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm px-6">
+                  className="h-9 text-xs font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm px-6">
                   {saveMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileSignature className="h-3 w-3 mr-2" />}
                   Verify & Sign
                 </Button>

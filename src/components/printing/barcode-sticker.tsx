@@ -34,7 +34,7 @@ export const BarcodeSticker = ({
                 {ageGender} • {date}
              </span>
         </div>
-        <div className="bg-black text-white px-1 py-[1px] rounded-[1px]">
+        <div className="bg-black text-primary-foreground px-1 py-[1px] rounded-[1px]">
              <span className="text-[8px] font-bold uppercase block leading-none">
                 {containerType.substring(0, 4)}
              </span>

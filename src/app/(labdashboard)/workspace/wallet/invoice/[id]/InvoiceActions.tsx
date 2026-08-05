@@ -36,7 +36,7 @@ const router = useRouter();
 
         <Button
           onClick={handleDownloadPDF}
-          className="font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-md rounded-xl h-12 flex-1 sm:flex-none">
+          className="font-bold text-primary-foreground bg-primary hover:bg-primary/90 shadow-md rounded-xl h-12 flex-1 sm:flex-none">
           <Download className="w-4 h-4 mr-2" /> Download PDF
         </Button>
       </div>

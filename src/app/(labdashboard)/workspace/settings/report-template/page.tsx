@@ -317,7 +317,7 @@ export default function ReportTemplateBuilder() {
                                         {config.footer?.isoMarkUrls?.map((url: string, idx: number) => (
                                             <div key={idx} className="relative group border rounded p-1 bg-muted/30 h-14 flex items-center justify-center">
                                                 <img src={url} className="h-full w-auto object-contain" />
-                                                <button onClick={() => setConfig((p:any)=>({...p, footer: {...p.footer, isoMarkUrls: p.footer.isoMarkUrls.filter((_:any, i:number)=>i!==idx)}}))} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100"><X className="h-3 w-3"/></button>
+                                                <button onClick={() => setConfig((p:any)=>({...p, footer: {...p.footer, isoMarkUrls: p.footer.isoMarkUrls.filter((_:any, i:number)=>i!==idx)}}))} className="absolute -top-2 -right-2 bg-red-500 text-primary-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100"><X className="h-3 w-3"/></button>
                                             </div>
                                         ))}
                                         <label className="cursor-pointer border border-dashed rounded h-14 flex items-center justify-center hover:bg-muted/30"><Plus className="h-4 w-4 text-slate-400"/><input type="file" multiple accept="image/*" onChange={handleIsoUpload} className="hidden" /></label>

@@ -228,7 +228,7 @@ export default function AdminSidebar({
                               "flex items-center rounded-lg transition-all duration-200 group relative",
                               collapsed ? "justify-center p-3" : "px-3 py-2.5",
                               isActive
-                                ? "bg-emerald-600/10 text-emerald-400 shadow-sm border border-emerald-500/20"
+                                ? "bg-primary/10 text-emerald-400 shadow-sm border border-emerald-500/20"
                                 : "hover:bg-slate-800 hover:text-white border border-transparent",
                             )}>
                             <item.icon
