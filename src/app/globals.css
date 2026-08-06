@@ -85,7 +85,14 @@
 }
 
 @layer base {
-  * { @apply border-border; }
+  /* Global Resets & Transitions */
+  * { 
+    @apply border-border; 
+    transition-property: background-color, border-color, color, fill, stroke; 
+    transition-duration: 150ms; 
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); 
+  }
+  
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
@@ -93,24 +100,38 @@
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
   }
+  
   h1 { @apply text-2xl font-bold tracking-tight; }
   h2 { @apply text-xl font-semibold tracking-tight; }
   h3 { @apply text-lg font-semibold; }
   h4 { @apply text-base font-semibold; }
+  
   *:focus-visible { @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background; }
+  
+  /* Scrollbar Styling */
   ::-webkit-scrollbar { width: 8px; height: 8px; }
   ::-webkit-scrollbar-track { @apply bg-transparent; }
   ::-webkit-scrollbar-thumb { @apply bg-muted-foreground/30 rounded-full; }
   ::-webkit-scrollbar-thumb:hover { @apply bg-muted-foreground/50; }
+
+  /* Keyboard Tags */
+  kbd { 
+    @apply inline-flex items-center justify-center px-2 py-0.5 text-xs font-mono font-semibold bg-muted border border-border rounded shadow-sm; 
+    min-width: 1.5rem; 
+  }
 }
 
 @layer components {
+  /* Custom Global UI Classes */
   .glass-card { @apply bg-card/80 backdrop-blur-xl border border-border shadow-sm; }
+  
   .badge-success { @apply bg-success/10 text-success border border-success/20; }
   .badge-warning { @apply bg-warning/10 text-warning border border-warning/20; }
   .badge-destructive { @apply bg-destructive/10 text-destructive border border-destructive/20; }
   .badge-info { @apply bg-info/10 text-info border border-info/20; }
   .badge-overdue { @apply bg-overdue/10 text-overdue border border-overdue/20; }
+  
+  /* Standard Clinical Table Theme */
   .clinical-table { @apply w-full text-sm; }
   .clinical-table thead th { @apply bg-muted/50 font-semibold text-muted-foreground uppercase text-xs tracking-wider px-3 py-2.5 text-left border-b-2 border-border; }
   .clinical-table tbody td { @apply px-3 py-2.5 border-b border-border; }
@@ -118,12 +139,15 @@
   .clinical-table tbody tr.row-overdue { @apply bg-overdue/5; }
 }
 
+@layer utilities {
+  /* Drag & Drop Override */
+  .dragging, .dragging * { 
+    transition: none !important; 
+  }
+}
+
 @media print {
   @page { margin: 0; size: A4; }
   .print\:break-after-page { page-break-after: always; break-after: page; }
   body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
-
-* { transition-property: background-color, border-color, color, fill, stroke; transition-duration: 150ms; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
-.dragging, .dragging * { transition: none !important; }
-kbd { @apply inline-flex items-center justify-center px-2 py-0.5 text-xs font-mono font-semibold bg-muted border border-border rounded shadow-sm; min-width: 1.5rem; }
