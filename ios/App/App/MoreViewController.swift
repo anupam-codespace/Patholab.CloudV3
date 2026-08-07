@@ -38,6 +38,8 @@ class MoreViewController: UIViewController {
     // Sign Out Button
     private let btnSignOut = UIButton(type: .system)
 
+    private let lblSheetTitle = UILabel()
+
     private var allModules: [ModuleItem] = []
 
     override func viewDidLoad() {
@@ -85,6 +87,13 @@ class MoreViewController: UIViewController {
         setupCategoryStack(stack: stackAdmin, header: lblAdminHeader, title: "ADMINISTRATION")
         setupCategoryStack(stack: stackLegal, header: lblLegalHeader, title: "LEGAL & POLICIES")
 
+        // Sheet Title
+        lblSheetTitle.text = "More Settings"
+        lblSheetTitle.textColor = UIColor(red: 15/255, green: 23/255, blue: 42/255, alpha: 1)
+        lblSheetTitle.font = .systemFont(ofSize: 22, weight: .bold)
+        lblSheetTitle.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(lblSheetTitle)
+
         // Sign Out Button
         btnSignOut.setTitle("Sign Out", for: .normal)
         btnSignOut.setTitleColor(.white, for: .normal)
@@ -97,7 +106,10 @@ class MoreViewController: UIViewController {
 
         // Auto Layout Constraints for Stacks and Headers (Stacked vertically)
         NSLayoutConstraint.activate([
-            lblOverviewHeader.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 16),
+            lblSheetTitle.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 20),
+            lblSheetTitle.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+
+            lblOverviewHeader.topAnchor.constraint(equalTo: lblSheetTitle.bottomAnchor, constant: 24),
             lblOverviewHeader.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             stackOverview.topAnchor.constraint(equalTo: lblOverviewHeader.bottomAnchor, constant: 8),
             stackOverview.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
