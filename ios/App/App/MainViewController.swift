@@ -266,7 +266,7 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
     private func showMorePanel() {
         offlineView.isHidden  = true
         
-        if #available(iOS 15.0, *) {
+        if #available(iOS 16.0, *) {
             moreVC.modalPresentationStyle = .pageSheet
             if let sheet = moreVC.sheetPresentationController {
                 sheet.detents = [.custom { context in
@@ -274,6 +274,12 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
                 }]
                 sheet.prefersGrabberVisible = true
                 sheet.preferredCornerRadius = 24
+            }
+        } else if #available(iOS 15.0, *) {
+            moreVC.modalPresentationStyle = .pageSheet
+            if let sheet = moreVC.sheetPresentationController {
+                sheet.detents = [.medium(), .large()]
+                sheet.prefersGrabberVisible = true
             }
         } else {
             moreVC.modalPresentationStyle = .formSheet

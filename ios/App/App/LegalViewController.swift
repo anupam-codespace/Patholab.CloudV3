@@ -10,8 +10,9 @@ class LegalViewController: UIViewController {
         title = "Terms & Conditions"
 
         // Set up close button
+        let backImage = UIImage(systemName: "chevron.left")
         navigationItem.leftBarButtonItem = UIBarButtonItem(
-            title: "Close",
+            image: backImage,
             style: .plain,
             target: self,
             action: #selector(closeTapped)

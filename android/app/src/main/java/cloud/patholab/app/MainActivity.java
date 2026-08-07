@@ -49,6 +49,8 @@ public class MainActivity extends BridgeActivity {
     private String currentPath = null;
     private SharedPreferences prefs;
     private List<ModuleItem> allModules;
+    private com.google.android.material.bottomsheet.BottomSheetDialog moreBottomSheetDialog;
+    private int previousTab = R.id.nav_dashboard;
 
     // Polling handler for natural, responsive web view progress skeleton
     private final Handler progressHandler = new Handler(Looper.getMainLooper());
@@ -130,24 +132,7 @@ public class MainActivity extends BridgeActivity {
         skeletonContainer = findViewById(R.id.skeletonContainer);
         bottomNavigation  = findViewById(R.id.bottomNavigation);
         offlineOverlay    = findViewById(R.id.offlineOverlay);
-        moreScrollView    = findViewById(R.id.moreSettingsScrollView);
         
-        containerOverview    = findViewById(R.id.containerOverview);
-        containerClinical    = findViewById(R.id.containerClinical);
-        containerLogistics   = findViewById(R.id.containerLogistics);
-        containerMachine     = findViewById(R.id.containerMachine);
-        containerB2B         = findViewById(R.id.containerB2B);
-        containerAdmin       = findViewById(R.id.containerAdmin);
-        containerLegal       = findViewById(R.id.containerLegal);
-
-        lblOverviewHeader    = findViewById(R.id.lblOverviewHeader);
-        lblClinicalHeader    = findViewById(R.id.lblClinicalHeader);
-        lblLogisticsHeader   = findViewById(R.id.lblLogisticsHeader);
-        lblMachineHeader     = findViewById(R.id.lblMachineHeader);
-        lblB2BHeader         = findViewById(R.id.lblB2BHeader);
-        lblAdminHeader       = findViewById(R.id.lblAdminHeader);
-        lblLegalHeader       = findViewById(R.id.lblLegalHeader);
-
         // Retry button
         View btnRetry = findViewById(R.id.btnRetry);
         if (btnRetry != null) {
@@ -157,12 +142,6 @@ public class MainActivity extends BridgeActivity {
                 currentPath = null;
                 loadUrl("/workspace/analytics");
             });
-        }
-
-        // Sign-out in More
-        View btnLogout = findViewById(R.id.btnMoreLogout);
-        if (btnLogout != null) {
-            btnLogout.setOnClickListener(v -> confirmLogout());
         }
 
         // Pull-to-refresh
@@ -186,6 +165,9 @@ public class MainActivity extends BridgeActivity {
     private void setupBottomNavigation() {
         bottomNavigation.setOnItemSelectedListener(item -> {
             int id = item.getItemId();
+            if (id != R.id.nav_more) {
+                previousTab = id;
+            }
             if (id == R.id.nav_dashboard) {
                 navigate("/workspace/analytics");
                 return true;
@@ -203,24 +185,76 @@ public class MainActivity extends BridgeActivity {
         });
     }
 
-    // ── Navigation helpers ─────────────────────────────────────────────────────
-
     private void navigate(String path) {
-        moreScrollView.setVisibility(View.GONE);
         if (offlineOverlay != null) offlineOverlay.setVisibility(View.GONE);
         swipeRefresh.setVisibility(View.VISIBLE);
         loadUrl(path);
     }
 
     private void showMorePanel() {
-        swipeRefresh.setVisibility(View.GONE);
-        skeletonContainer.setVisibility(View.GONE);
-        if (offlineOverlay != null) offlineOverlay.setVisibility(View.GONE);
-        moreScrollView.setVisibility(View.VISIBLE);
-        if (lblHeaderTitle != null) {
-            lblHeaderTitle.setText("More Settings");
+        if (moreBottomSheetDialog == null) {
+            moreBottomSheetDialog = new com.google.android.material.bottomsheet.BottomSheetDialog(this);
+            View sheetView = getLayoutInflater().inflate(R.layout.layout_more_sheet, null);
+            moreBottomSheetDialog.setContentView(sheetView);
+
+            // Bind views inside sheet view
+            moreScrollView    = sheetView.findViewById(R.id.moreSettingsScrollView);
+            containerOverview    = sheetView.findViewById(R.id.containerOverview);
+            containerClinical    = sheetView.findViewById(R.id.containerClinical);
+            containerLogistics   = sheetView.findViewById(R.id.containerLogistics);
+            containerMachine     = sheetView.findViewById(R.id.containerMachine);
+            containerB2B         = sheetView.findViewById(R.id.containerB2B);
+            containerAdmin       = sheetView.findViewById(R.id.containerAdmin);
+            containerLegal       = sheetView.findViewById(R.id.containerLegal);
+
+            lblOverviewHeader    = sheetView.findViewById(R.id.lblOverviewHeader);
+            lblClinicalHeader    = sheetView.findViewById(R.id.lblClinicalHeader);
+            lblLogisticsHeader   = sheetView.findViewById(R.id.lblLogisticsHeader);
+            lblMachineHeader     = sheetView.findViewById(R.id.lblMachineHeader);
+            lblB2BHeader         = sheetView.findViewById(R.id.lblB2BHeader);
+            lblAdminHeader       = sheetView.findViewById(R.id.lblAdminHeader);
+            lblLegalHeader       = sheetView.findViewById(R.id.lblLegalHeader);
+
+            // Logout inside bottom sheet
+            View btnLogout = sheetView.findViewById(R.id.btnMoreLogout);
+            if (btnLogout != null) {
+                btnLogout.setOnClickListener(v -> {
+                    moreBottomSheetDialog.dismiss();
+                    confirmLogout();
+                });
+            }
+
+            // OnDismiss resets selection
+            moreBottomSheetDialog.setOnDismissListener(dialog -> {
+                bottomNavigation.setOnItemSelectedListener(null);
+                bottomNavigation.setSelectedItemId(previousTab);
+                setupBottomNavigation();
+            });
+
+            // Adjust height to 80% of screen height
+            moreBottomSheetDialog.setOnShowListener(dialog -> {
+                com.google.android.material.bottomsheet.BottomSheetDialog d = 
+                    (com.google.android.material.bottomsheet.BottomSheetDialog) dialog;
+                FrameLayout bottomSheet = d.findViewById(com.google.android.material.R.id.design_bottom_sheet);
+                if (bottomSheet != null) {
+                    com.google.android.material.bottomsheet.BottomSheetBehavior<FrameLayout> behavior = 
+                        com.google.android.material.bottomsheet.BottomSheetBehavior.from(bottomSheet);
+                    
+                    int screenHeight = getResources().getDisplayMetrics().heightPixels;
+                    int targetHeight = (int) (screenHeight * 0.8);
+                    
+                    android.view.ViewGroup.LayoutParams layoutParams = bottomSheet.getLayoutParams();
+                    layoutParams.height = targetHeight;
+                    bottomSheet.setLayoutParams(layoutParams);
+                    
+                    behavior.setPeekHeight(targetHeight);
+                    behavior.setState(com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED);
+                }
+            });
         }
+
         renderModules();
+        moreBottomSheetDialog.show();
     }
 
     private void loadUrl(String path) {
@@ -318,6 +352,10 @@ public class MainActivity extends BridgeActivity {
                         .putBoolean("opened_" + item.path, true)
                         .apply();
 
+                if (moreBottomSheetDialog != null) {
+                    moreBottomSheetDialog.dismiss();
+                }
+
                 if (item.path.equals("/legal")) {
                     startActivity(new Intent(MainActivity.this, LegalActivity.class));
                     return;
@@ -405,10 +443,8 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     public void onBackPressed() {
-        if (moreScrollView != null && moreScrollView.getVisibility() == View.VISIBLE) {
-            currentPath = null;
-            navigate("/workspace/analytics");
-            bottomNavigation.setSelectedItemId(R.id.nav_dashboard);
+        if (moreBottomSheetDialog != null && moreBottomSheetDialog.isShowing()) {
+            moreBottomSheetDialog.dismiss();
         } else if (webView != null && webView.canGoBack()) {
             webView.goBack();
         } else {
@@ -420,6 +456,12 @@ public class MainActivity extends BridgeActivity {
     public void onDestroy() {
         super.onDestroy();
         progressHandler.removeCallbacks(progressRunnable);
+        if (moreBottomSheetDialog != null) {
+            if (moreBottomSheetDialog.isShowing()) {
+                moreBottomSheetDialog.dismiss();
+            }
+            moreBottomSheetDialog = null;
+        }
         webView = null;
         swipeRefresh = null;
         bottomNavigation = null;

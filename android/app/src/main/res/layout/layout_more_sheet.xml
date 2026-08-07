@@ -151,6 +151,24 @@
                 android:orientation="vertical"
                 android:layout_marginBottom="20dp" />
 
+            <!-- Category: Legal & Policies -->
+            <TextView
+                android:id="@+id/lblLegalHeader"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="LEGAL &amp; POLICIES"
+                android:textColor="#4338CA"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:id="@+id/containerLegal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="20dp" />
+
             <!-- Sign Out Button -->
             <Button
                 android:id="@+id/btnMoreLogout"
