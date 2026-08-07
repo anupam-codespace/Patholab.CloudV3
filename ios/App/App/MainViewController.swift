@@ -409,4 +409,17 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         if path.contains("wallet") { return "Wallet & Billing" }
         return "Workspace"
     }
+
+    // MARK: – UIAdaptivePresentationControllerDelegate
+    func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
+        selectedTab = previousTab
+        updateNavTints()
+        if previousTab == 0 {
+            headerTitleLabel.text = getHeaderTitle(for: currentPath ?? "/workspace/analytics")
+        } else if previousTab == 1 {
+            headerTitleLabel.text = "Patients"
+        } else if previousTab == 2 {
+            headerTitleLabel.text = "Categories"
+        }
+    }
 }
