@@ -12,6 +12,7 @@
 		50379B232058CBB4000EE86E /* capacitor.config.json in Resources */ = {isa = PBXBuildFile; fileRef = 50379B222058CBB4000EE86E /* capacitor.config.json */; };
 		504EC3081FED79650016851F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC3071FED79650016851F /* AppDelegate.swift */; };
 		504EC31058184FAA /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC363A1637BAA /* MainViewController.swift */; };
+		504EC31058184FEE /* LegalViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC363A1637BEE /* LegalViewController.swift */; };
 		504EC31F89055BAA /* MoreViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC38C6E219BAA /* MoreViewController.swift */; };
 		504EC34126D49EAA /* KeychainManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC35CF2614CAA /* KeychainManager.swift */; };
 		504EC358E9F304AA /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC31E2BA52EAA /* AuthService.swift */; };
@@ -34,6 +35,7 @@
 		504EC3041FED79650016851F /* App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = App.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		504EC3071FED79650016851F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		504EC363A1637BAA /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
+		504EC363A1637BEE /* LegalViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegalViewController.swift; sourceTree = "<group>"; };
 		504EC38C6E219BAA /* MoreViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoreViewController.swift; sourceTree = "<group>"; };
 		504EC35CF2614CAA /* KeychainManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainManager.swift; sourceTree = "<group>"; };
 		504EC31E2BA52EAA /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
@@ -87,6 +89,7 @@
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
 				504EC363A1637BAA /* MainViewController.swift */,
+				504EC363A1637BEE /* LegalViewController.swift */,
 				504EC38C6E219BAA /* MoreViewController.swift */,
 				504EC35CF2614CAA /* KeychainManager.swift */,
 				504EC31E2BA52EAA /* AuthService.swift */,
@@ -190,6 +193,7 @@
 			files = (
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 				504EC31058184FAA /* MainViewController.swift in Sources */,
+				504EC31058184FEE /* LegalViewController.swift in Sources */,
 				504EC31F89055BAA /* MoreViewController.swift in Sources */,
 				504EC34126D49EAA /* KeychainManager.swift in Sources */,
 				504EC358E9F304AA /* AuthService.swift in Sources */,

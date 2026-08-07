@@ -24,6 +24,7 @@ class MoreViewController: UIViewController {
     private let stackMachine = UIStackView()
     private let stackB2B = UIStackView()
     private let stackAdmin = UIStackView()
+    private let stackLegal = UIStackView()
     
     private let lblOverviewHeader = UILabel()
     private let lblClinicalHeader = UILabel()
@@ -32,6 +33,7 @@ class MoreViewController: UIViewController {
     private let lblMachineHeader = UILabel()
     private let lblB2BHeader = UILabel()
     private let lblAdminHeader = UILabel()
+    private let lblLegalHeader = UILabel()
     
     // Sign Out Button
     private let btnSignOut = UIButton(type: .system)
@@ -81,6 +83,7 @@ class MoreViewController: UIViewController {
         setupCategoryStack(stack: stackMachine, header: lblMachineHeader, title: "MACHINE & AI")
         setupCategoryStack(stack: stackB2B, header: lblB2BHeader, title: "B2B & GROWTH")
         setupCategoryStack(stack: stackAdmin, header: lblAdminHeader, title: "ADMINISTRATION")
+        setupCategoryStack(stack: stackLegal, header: lblLegalHeader, title: "LEGAL & POLICIES")
 
         // Sign Out Button
         btnSignOut.setTitle("Sign Out", for: .normal)
@@ -136,7 +139,13 @@ class MoreViewController: UIViewController {
             stackAdmin.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             stackAdmin.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
 
-            btnSignOut.topAnchor.constraint(equalTo: stackAdmin.bottomAnchor, constant: 28),
+            lblLegalHeader.topAnchor.constraint(equalTo: stackAdmin.bottomAnchor, constant: 20),
+            lblLegalHeader.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            stackLegal.topAnchor.constraint(equalTo: lblLegalHeader.bottomAnchor, constant: 8),
+            stackLegal.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            stackLegal.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+
+            btnSignOut.topAnchor.constraint(equalTo: stackLegal.bottomAnchor, constant: 28),
             btnSignOut.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             btnSignOut.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             btnSignOut.heightAnchor.constraint(equalToConstant: 50),
@@ -203,7 +212,10 @@ class MoreViewController: UIViewController {
             ModuleItem(title: "Lab Settings", path: "/workspace/settings", category: "Admin", desc: "Update lab details & branch parameters", icon: "gearshape.fill", isNew: false),
             ModuleItem(title: "Audit Logs", path: "/workspace/audit-logs", category: "Admin", desc: "Monitor database changes & logs", icon: "clock.arrow.circlepath", isNew: false),
             ModuleItem(title: "Wallet & Billing", path: "/workspace/wallet", category: "Admin", desc: "Recharge clinical credits & print statements", icon: "creditcard.fill", isNew: false),
-            ModuleItem(title: "Help & Support", path: "/workspace/support", category: "Admin", desc: "Submit tickets & read user guides", icon: "questionmark.circle.fill", isNew: false)
+            ModuleItem(title: "Help & Support", path: "/workspace/support", category: "Admin", desc: "Submit tickets & read user guides", icon: "questionmark.circle.fill", isNew: false),
+            
+            // Legal & Policies
+            ModuleItem(title: "Terms & Conditions", path: "/legal", category: "Legal", desc: "TestFlight Agreements & Software Licenses", icon: "doc.plaintext.fill", isNew: false)
         ]
     }
 
@@ -215,6 +227,7 @@ class MoreViewController: UIViewController {
         stackMachine.arrangedSubviews.forEach { $0.removeFromSuperview() }
         stackB2B.arrangedSubviews.forEach { $0.removeFromSuperview() }
         stackAdmin.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        stackLegal.arrangedSubviews.forEach { $0.removeFromSuperview() }
 
         // Sort dynamically based on usage history (highest usage first)
         let sorted = allModules.sorted { m1, m2 in
@@ -230,6 +243,7 @@ class MoreViewController: UIViewController {
         var machineCount = 0
         var b2bCount = 0
         var adminCount = 0
+        var legalCount = 0
 
         for item in sorted {
             let row = makeSettingRow(item: item)
@@ -256,6 +270,9 @@ class MoreViewController: UIViewController {
             case "Admin":
                 stackAdmin.addArrangedSubview(row)
                 adminCount += 1
+            case "Legal":
+                stackLegal.addArrangedSubview(row)
+                legalCount += 1
             default:
                 break
             }
@@ -281,6 +298,9 @@ class MoreViewController: UIViewController {
 
         lblAdminHeader.isHidden = (adminCount == 0)
         stackAdmin.isHidden = (adminCount == 0)
+
+        lblLegalHeader.isHidden = (legalCount == 0)
+        stackLegal.isHidden = (legalCount == 0)
     }
 
     private func makeSettingRow(item: ModuleItem) -> UIView {
@@ -369,6 +389,13 @@ class MoreViewController: UIViewController {
         UserDefaults.standard.set(true, forKey: "opened_" + path)
         // Mark refresh needed so next appearance re-sorts by updated usage counts
         needsRefresh = true
+
+        if path == "/legal" {
+            let legalVC = LegalViewController()
+            let nav = UINavigationController(rootViewController: legalVC)
+            present(nav, animated: true, completion: nil)
+            return
+        }
 
         delegate?.didSelectModule(path: path)
     }

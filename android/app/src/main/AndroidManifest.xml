@@ -71,6 +71,13 @@
             android:exported="false"
         />
 
+        <activity
+            android:name=".LegalActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:screenOrientation="portrait"
+            android:exported="false"
+        />
+
 
 
         <provider

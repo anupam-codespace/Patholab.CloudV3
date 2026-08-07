@@ -8,6 +8,11 @@ import WebKit
 class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate {
 
     // MARK: – Native overlay elements
+    private let topHeaderBar    = UIView()
+    private let headerBorder    = UIView()
+    private let headerTitleLabel = UILabel()
+    private let notificationButton = UIButton(type: .custom)
+    private let supportButton      = UIButton(type: .custom)
     private let bottomNavBar    = UIView()
     private let bottomBorder    = UIView()
     private let navStack        = UIStackView()
@@ -31,11 +36,12 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate {
         
         view.backgroundColor = .white
 
+        buildTopHeaderBar()      // 0. Native top header bar
         buildBottomNavBar()      // 1. Native bottom nav pinned above safe area
         buildOfflineView()       // 2. Offline overlay (hidden by default)
         embedMoreViewController()// 3. More panel (hidden by default)
 
-        // Adjust WebView constraints so it sits perfectly above the bottom navigation bar
+        // Adjust WebView constraints so it sits perfectly above the bottom navigation bar and below the top header
         if let webView = self.webView {
             webView.translatesAutoresizingMaskIntoConstraints = false
             
@@ -48,7 +54,7 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate {
                 }
                 
                 NSLayoutConstraint.activate([
-                    webView.topAnchor.constraint(equalTo: superview.topAnchor),
+                    webView.topAnchor.constraint(equalTo: topHeaderBar.bottomAnchor),
                     webView.leadingAnchor.constraint(equalTo: superview.leadingAnchor),
                     webView.trailingAnchor.constraint(equalTo: superview.trailingAnchor),
                     webView.bottomAnchor.constraint(equalTo: bottomNavBar.topAnchor)
@@ -172,7 +178,7 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate {
         moreVC.view.isHidden = true
 
         NSLayoutConstraint.activate([
-            moreVC.view.topAnchor.constraint(equalTo: view.topAnchor),
+            moreVC.view.topAnchor.constraint(equalTo: topHeaderBar.bottomAnchor),
             moreVC.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             moreVC.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             moreVC.view.bottomAnchor.constraint(equalTo: bottomNavBar.topAnchor)
@@ -191,7 +197,7 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate {
         view.addSubview(offlineView)
 
         NSLayoutConstraint.activate([
-            offlineView.topAnchor.constraint(equalTo: view.topAnchor),
+            offlineView.topAnchor.constraint(equalTo: topHeaderBar.bottomAnchor),
             offlineView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             offlineView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             offlineView.bottomAnchor.constraint(equalTo: bottomNavBar.topAnchor)
@@ -243,11 +249,20 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate {
         updateNavTints()
 
         switch tag {
-        case 0: showWeb(path: "/workspace/analytics")
-        case 1: showWeb(path: "/workspace/patients")
-        case 2: showWeb(path: "/workspace/test-management")
-        case 3: showMorePanel()
-        default: break
+        case 0:
+            headerTitleLabel.text = "Analytics"
+            showWeb(path: "/workspace/analytics")
+        case 1:
+            headerTitleLabel.text = "Patients"
+            showWeb(path: "/workspace/patients")
+        case 2:
+            headerTitleLabel.text = "Categories"
+            showWeb(path: "/workspace/test-management")
+        case 3:
+            headerTitleLabel.text = "More Settings"
+            showMorePanel()
+        default:
+            break
         }
     }
 
@@ -264,6 +279,7 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate {
 
     private func loadUrl(path: String) {
         guard let webView = self.webView else { return }
+        headerTitleLabel.text = getHeaderTitle(for: path)
         if path == currentPath { return }
         currentPath = path
 
@@ -293,5 +309,94 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate {
     func didTapSignOut() {
         guard let app = UIApplication.shared.delegate as? AppDelegate else { return }
         app.signOut()
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // MARK: – Top Header Bar Construction
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private func buildTopHeaderBar() {
+        topHeaderBar.backgroundColor = .white
+        topHeaderBar.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(topHeaderBar)
+
+        headerBorder.backgroundColor = UIColor(white: 0.88, alpha: 1)
+        headerBorder.translatesAutoresizingMaskIntoConstraints = false
+        topHeaderBar.addSubview(headerBorder)
+
+        headerTitleLabel.text = "Analytics"
+        headerTitleLabel.font = .systemFont(ofSize: 20, weight: .bold)
+        headerTitleLabel.textColor = UIColor(red: 15/255, green: 23/255, blue: 42/255, alpha: 1)
+        headerTitleLabel.translatesAutoresizingMaskIntoConstraints = false
+        topHeaderBar.addSubview(headerTitleLabel)
+
+        // Support button
+        let supportImage = UIImage(systemName: "questionmark.circle")
+        supportButton.setImage(supportImage, for: .normal)
+        supportButton.tintColor = UIColor(red: 79/255, green: 70/255, blue: 229/255, alpha: 1)
+        supportButton.translatesAutoresizingMaskIntoConstraints = false
+        supportButton.addTarget(self, action: #selector(headerSupportTapped), for: .touchUpInside)
+        topHeaderBar.addSubview(supportButton)
+
+        // Notification button
+        let bellImage = UIImage(systemName: "bell")
+        notificationButton.setImage(bellImage, for: .normal)
+        notificationButton.tintColor = UIColor(red: 79/255, green: 70/255, blue: 229/255, alpha: 1)
+        notificationButton.translatesAutoresizingMaskIntoConstraints = false
+        notificationButton.addTarget(self, action: #selector(headerNotificationTapped), for: .touchUpInside)
+        topHeaderBar.addSubview(notificationButton)
+
+        NSLayoutConstraint.activate([
+            topHeaderBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 12),
+            topHeaderBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            topHeaderBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            topHeaderBar.heightAnchor.constraint(equalToConstant: 56),
+
+            headerBorder.leadingAnchor.constraint(equalTo: topHeaderBar.leadingAnchor),
+            headerBorder.trailingAnchor.constraint(equalTo: topHeaderBar.trailingAnchor),
+            headerBorder.bottomAnchor.constraint(equalTo: topHeaderBar.bottomAnchor),
+            headerBorder.heightAnchor.constraint(equalToConstant: 0.5),
+
+            headerTitleLabel.leadingAnchor.constraint(equalTo: topHeaderBar.leadingAnchor, constant: 16),
+            headerTitleLabel.centerYAnchor.constraint(equalTo: topHeaderBar.centerYAnchor),
+
+            supportButton.trailingAnchor.constraint(equalTo: topHeaderBar.trailingAnchor, constant: -16),
+            supportButton.centerYAnchor.constraint(equalTo: topHeaderBar.centerYAnchor),
+            supportButton.widthAnchor.constraint(equalToConstant: 32),
+            supportButton.heightAnchor.constraint(equalToConstant: 32),
+
+            notificationButton.trailingAnchor.constraint(equalTo: supportButton.leadingAnchor, constant: -12),
+            notificationButton.centerYAnchor.constraint(equalTo: topHeaderBar.centerYAnchor),
+            notificationButton.widthAnchor.constraint(equalToConstant: 32),
+            notificationButton.heightAnchor.constraint(equalToConstant: 32)
+        ])
+    }
+
+    @objc private func headerSupportTapped() {
+        showWeb(path: "/workspace/support")
+    }
+
+    @objc private func headerNotificationTapped() {
+        showWeb(path: "/workspace/support")
+    }
+
+    private func getHeaderTitle(for path: String) -> String {
+        if path.contains("analytics") { return "Analytics" }
+        if path.contains("patients") { return "Patients" }
+        if path.contains("test-management") { return "Categories" }
+        if path.contains("bookings") { return "Online Booking" }
+        if path.contains("registration") { return "Registration" }
+        if path.contains("results") { return "Worklist & Results" }
+        if path.contains("reports") { return "Report Dispatch" }
+        if path.contains("inventory") { return "Inventory & Stock" }
+        if path.contains("logistics") { return "Logistics & Trips" }
+        if path.contains("analyzers") { return "Analyzer" }
+        if path.contains("support") { return "Help & Support" }
+        if path.contains("billing") { return "Invoices & Payments" }
+        if path.contains("expenses") { return "Expenses" }
+        if path.contains("settings") { return "Lab Settings" }
+        if path.contains("audit-logs") { return "Audit Logs" }
+        if path.contains("wallet") { return "Wallet & Billing" }
+        return "Workspace"
     }
 }

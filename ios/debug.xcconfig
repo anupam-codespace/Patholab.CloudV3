@@ -1,8 +1,4 @@
 CAPACITOR_DEBUG = true
 // Ensure simulators are available for Debug builds
 SUPPORTED_PLATFORMS = iphonesimulator iphoneos
-// Allow running on Apple Silicon simulators (do not exclude arm64)
-EXCLUDED_ARCHS[sdk=iphonesimulator*] = 
-// Support both iPhone and iPad simulators
-TARGETED_DEVICE_FAMILY = 1,2
 

@@ -5,11 +5,75 @@
     android:layout_height="match_parent"
     android:background="#F8FAFC">
 
+    <!-- 0. Native top header bar -->
+    <RelativeLayout
+        android:id="@+id/topHeaderBar"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:background="#FFFFFF"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp">
+
+        <TextView
+            android:id="@+id/lblHeaderTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:text="Analytics"
+            android:textColor="#0F172A"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentEnd="true"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <!-- Notification Bell -->
+            <ImageView
+                android:id="@+id/btnHeaderNotification"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@android:drawable/ic_popup_reminder"
+                android:tint="#4F46E5"
+                android:padding="4dp"
+                android:contentDescription="Notifications"
+                android:layout_marginEnd="12dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <!-- Support Help -->
+            <ImageView
+                android:id="@+id/btnHeaderSupport"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@android:drawable/ic_menu_help"
+                android:tint="#4F46E5"
+                android:padding="4dp"
+                android:contentDescription="Support"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true" />
+
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1px"
+            android:background="#E2E8F0"
+            android:layout_alignParentBottom="true" />
+    </RelativeLayout>
+
     <!-- 1. Web view content container -->
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefresh"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_below="@id/topHeaderBar"
         android:layout_above="@id/bottomNavigation">
 
         <FrameLayout
@@ -23,6 +87,7 @@
         android:id="@+id/skeletonContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_below="@id/topHeaderBar"
         android:layout_above="@id/bottomNavigation"
         android:background="#F8FAFC"
         android:visibility="gone">
@@ -34,6 +99,7 @@
         android:id="@+id/moreSettingsScrollView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_below="@id/topHeaderBar"
         android:layout_above="@id/bottomNavigation"
         android:visibility="gone"
         android:background="#F8FAFC">
@@ -147,6 +213,24 @@
 
             <LinearLayout
                 android:id="@+id/containerAdmin"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="20dp" />
+
+            <!-- Category: Legal & Policies -->
+            <TextView
+                android:id="@+id/lblLegalHeader"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="LEGAL &amp; POLICIES"
+                android:textColor="#4338CA"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:id="@+id/containerLegal"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"

@@ -36,12 +36,13 @@ public class MainActivity extends BridgeActivity {
     private BottomNavigationView bottomNavigation;
     private View offlineOverlay;
     private ScrollView moreScrollView;
+    private TextView lblHeaderTitle;
     
     // Category containers matching web app groups
     private LinearLayout containerOverview, containerClinical, containerLogistics;
-    private LinearLayout containerMachine, containerB2B, containerAdmin;
+    private LinearLayout containerMachine, containerB2B, containerAdmin, containerLegal;
     private TextView lblOverviewHeader, lblClinicalHeader, lblLogisticsHeader;
-    private TextView lblMachineHeader, lblB2BHeader, lblAdminHeader;
+    private TextView lblMachineHeader, lblB2BHeader, lblAdminHeader, lblLegalHeader;
 
     // ── State ─────────────────────────────────────────────────────────────────
     private static final String BASE_URL = "https://app.patholab.cloud";
@@ -137,6 +138,7 @@ public class MainActivity extends BridgeActivity {
         containerMachine     = findViewById(R.id.containerMachine);
         containerB2B         = findViewById(R.id.containerB2B);
         containerAdmin       = findViewById(R.id.containerAdmin);
+        containerLegal       = findViewById(R.id.containerLegal);
 
         lblOverviewHeader    = findViewById(R.id.lblOverviewHeader);
         lblClinicalHeader    = findViewById(R.id.lblClinicalHeader);
@@ -144,6 +146,7 @@ public class MainActivity extends BridgeActivity {
         lblMachineHeader     = findViewById(R.id.lblMachineHeader);
         lblB2BHeader         = findViewById(R.id.lblB2BHeader);
         lblAdminHeader       = findViewById(R.id.lblAdminHeader);
+        lblLegalHeader       = findViewById(R.id.lblLegalHeader);
 
         // Retry button
         View btnRetry = findViewById(R.id.btnRetry);
@@ -167,6 +170,16 @@ public class MainActivity extends BridgeActivity {
             swipeRefresh.setRefreshing(false);
             if (webView != null) webView.reload();
         });
+
+        lblHeaderTitle = findViewById(R.id.lblHeaderTitle);
+        View btnNotification = findViewById(R.id.btnHeaderNotification);
+        if (btnNotification != null) {
+            btnNotification.setOnClickListener(v -> navigate("/workspace/support"));
+        }
+        View btnSupport = findViewById(R.id.btnHeaderSupport);
+        if (btnSupport != null) {
+            btnSupport.setOnClickListener(v -> navigate("/workspace/support"));
+        }
         swipeRefresh.setColorSchemeColors(0xFF3730A3);
     }
 
@@ -204,11 +217,17 @@ public class MainActivity extends BridgeActivity {
         skeletonContainer.setVisibility(View.GONE);
         if (offlineOverlay != null) offlineOverlay.setVisibility(View.GONE);
         moreScrollView.setVisibility(View.VISIBLE);
+        if (lblHeaderTitle != null) {
+            lblHeaderTitle.setText("More Settings");
+        }
         renderModules();
     }
 
     private void loadUrl(String path) {
         if (webView == null) return;
+        if (lblHeaderTitle != null) {
+            lblHeaderTitle.setText(getHeaderTitle(path));
+        }
         if (path.equals(currentPath)) return;
         currentPath = path;
         String token = AuthManager.getToken(this);
@@ -261,6 +280,7 @@ public class MainActivity extends BridgeActivity {
         allModules.add(new ModuleItem("Audit Logs",            "/workspace/audit-logs",          "Admin",      "Monitor database changes & logs",                   android.R.drawable.ic_menu_info_details, false));
         allModules.add(new ModuleItem("Wallet & Billing",      "/workspace/wallet",             "Admin",      "Recharge clinical credits & print statements",       android.R.drawable.ic_menu_gallery,      false));
         allModules.add(new ModuleItem("Help & Support",        "/workspace/support",            "Admin",      "Submit tickets & read user guides",                 android.R.drawable.ic_menu_info_details, false));
+        allModules.add(new ModuleItem("Terms & Conditions",    "/legal",                        "Legal",      "TestFlight Agreements & Software Licenses",         android.R.drawable.ic_menu_info_details, false));
     }
 
     private void renderModules() {
@@ -271,6 +291,7 @@ public class MainActivity extends BridgeActivity {
         containerMachine.removeAllViews();
         containerB2B.removeAllViews();
         containerAdmin.removeAllViews();
+        containerLegal.removeAllViews();
 
         // Sort by usage count (most used first)
         List<ModuleItem> sorted = new ArrayList<>(allModules);
@@ -279,7 +300,7 @@ public class MainActivity extends BridgeActivity {
                                 prefs.getInt("usage_" + a.path, 0)));
 
         LayoutInflater inflater = LayoutInflater.from(this);
-        int overviewCount = 0, clinicalCount = 0, logisticsCount = 0, machineCount = 0, b2bCount = 0, adminCount = 0;
+        int overviewCount = 0, clinicalCount = 0, logisticsCount = 0, machineCount = 0, b2bCount = 0, adminCount = 0, legalCount = 0;
 
         for (ModuleItem item : sorted) {
             View row = inflater.inflate(R.layout.layout_setting_item, null);
@@ -296,6 +317,12 @@ public class MainActivity extends BridgeActivity {
                         .putInt("usage_" + item.path, prefs.getInt("usage_" + item.path, 0) + 1)
                         .putBoolean("opened_" + item.path, true)
                         .apply();
+
+                if (item.path.equals("/legal")) {
+                    startActivity(new Intent(MainActivity.this, LegalActivity.class));
+                    return;
+                }
+
                 currentPath = null;  // force reload
                 navigate(item.path);
                 
@@ -330,6 +357,10 @@ public class MainActivity extends BridgeActivity {
                     containerAdmin.addView(row);
                     adminCount++;
                     break;
+                case "Legal":
+                    containerLegal.addView(row);
+                    legalCount++;
+                    break;
             }
         }
 
@@ -350,6 +381,9 @@ public class MainActivity extends BridgeActivity {
 
         lblAdminHeader.setVisibility(adminCount > 0 ? View.VISIBLE : View.GONE);
         containerAdmin.setVisibility(adminCount > 0 ? View.VISIBLE : View.GONE);
+
+        lblLegalHeader.setVisibility(legalCount > 0 ? View.VISIBLE : View.GONE);
+        containerLegal.setVisibility(legalCount > 0 ? View.VISIBLE : View.GONE);
     }
 
     // ── Logout ──────────────────────────────────────────────────────────────────
@@ -402,6 +436,8 @@ public class MainActivity extends BridgeActivity {
         lblMachineHeader = null;
         lblB2BHeader = null;
         lblAdminHeader = null;
+        lblLegalHeader = null;
+        containerLegal = null;
         offlineOverlay = null;
     }
 
@@ -414,5 +450,25 @@ public class MainActivity extends BridgeActivity {
         ModuleItem(String t, String p, String c, String d, int icon, boolean n) {
             title = t; path = p; category = c; desc = d; iconRes = icon; isNew = n;
         }
+    }
+
+    private String getHeaderTitle(String path) {
+        if (path.contains("analytics")) return "Analytics";
+        if (path.contains("patients")) return "Patients";
+        if (path.contains("test-management")) return "Categories";
+        if (path.contains("bookings")) return "Online Booking";
+        if (path.contains("registration")) return "Registration";
+        if (path.contains("results")) return "Worklist & Results";
+        if (path.contains("reports")) return "Report Dispatch";
+        if (path.contains("inventory")) return "Inventory & Stock";
+        if (path.contains("logistics")) return "Logistics & Trips";
+        if (path.contains("analyzers")) return "Analyzer";
+        if (path.contains("support")) return "Help & Support";
+        if (path.contains("billing")) return "Invoices & Payments";
+        if (path.contains("expenses")) return "Expenses";
+        if (path.contains("settings")) return "Lab Settings";
+        if (path.contains("audit-logs")) return "Audit Logs";
+        if (path.contains("wallet")) return "Wallet & Billing";
+        return "Workspace";
     }
 }
