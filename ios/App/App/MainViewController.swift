@@ -5,7 +5,7 @@ import WebKit
 // MARK: – MainViewController
 // Architecture: Subclass CAPBridgeViewController directly for maximum stability.
 // Bottom navigation, More section, and Offline overlays are added as native subviews.
-class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate {
+class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, UIAdaptivePresentationControllerDelegate {
 
     // MARK: – Native overlay elements
     private let topHeaderBar    = UIView()
@@ -26,6 +26,7 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate {
     private let baseUrl      = "https://app.patholab.cloud"
     private var currentPath: String? = nil   // dedup — skip reload if already on same path
     private var selectedTab  = 0             // 0=Dashboard 1=Patients 2=Categories 3=More
+    private var previousTab  = 0
 
     // ─────────────────────────────────────────────────────────────────────────
     // MARK: – Lifecycle
@@ -172,18 +173,6 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate {
 
     private func embedMoreViewController() {
         moreVC.delegate = self
-        addChild(moreVC)
-        view.addSubview(moreVC.view)
-        moreVC.view.translatesAutoresizingMaskIntoConstraints = false
-        moreVC.view.isHidden = true
-
-        NSLayoutConstraint.activate([
-            moreVC.view.topAnchor.constraint(equalTo: topHeaderBar.bottomAnchor),
-            moreVC.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            moreVC.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            moreVC.view.bottomAnchor.constraint(equalTo: bottomNavBar.topAnchor)
-        ])
-        moreVC.didMove(toParent: self)
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -245,6 +234,9 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate {
     }
 
     private func selectTab(_ tag: Int) {
+        if tag != 3 {
+            previousTab = tag
+        }
         selectedTab = tag
         updateNavTints()
 
@@ -267,14 +259,27 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate {
     }
 
     private func showWeb(path: String) {
-        moreVC.view.isHidden  = true
         offlineView.isHidden  = true
         loadUrl(path: path)
     }
 
     private func showMorePanel() {
         offlineView.isHidden  = true
-        moreVC.view.isHidden  = false
+        
+        if #available(iOS 15.0, *) {
+            moreVC.modalPresentationStyle = .pageSheet
+            if let sheet = moreVC.sheetPresentationController {
+                sheet.detents = [.custom { context in
+                    return context.maximumDetentValue * 0.8
+                }]
+                sheet.prefersGrabberVisible = true
+                sheet.preferredCornerRadius = 24
+            }
+        } else {
+            moreVC.modalPresentationStyle = .formSheet
+        }
+        moreVC.presentationController?.delegate = self
+        present(moreVC, animated: true, completion: nil)
     }
 
     private func loadUrl(path: String) {
@@ -300,15 +305,20 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate {
     // ─────────────────────────────────────────────────────────────────────────
 
     func didSelectModule(path: String) {
-        currentPath = nil          // force reload even if same path
-        selectedTab = 0
-        updateNavTints()
-        showWeb(path: path)
+        moreVC.dismiss(animated: true) { [weak self] in
+            guard let self = self else { return }
+            self.currentPath = nil          // force reload even if same path
+            self.selectedTab = 0
+            self.updateNavTints()
+            self.showWeb(path: path)
+        }
     }
 
     func didTapSignOut() {
-        guard let app = UIApplication.shared.delegate as? AppDelegate else { return }
-        app.signOut()
+        moreVC.dismiss(animated: true) {
+            guard let app = UIApplication.shared.delegate as? AppDelegate else { return }
+            app.signOut()
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
