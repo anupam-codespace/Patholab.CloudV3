@@ -62,7 +62,7 @@ export default function LoginPage() {
         {/* 1. TOP LOGO AREA */}
         <div className="flex items-center gap-3 mb-10 lg:mb-0">
           <img
-            src="/images/patholab-logo.png"
+            src="/images/patholab-logo.jpg"
             alt="Patholab.cloud Logo"
             className="h-10 md:h-12 w-auto object-contain"
             onError={(e) => {
