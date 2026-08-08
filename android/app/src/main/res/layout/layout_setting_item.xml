@@ -1,26 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Individual module row in the More panel — iOS-style card with generous spacing -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:padding="14dp"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:paddingTop="14dp"
+    android:paddingBottom="14dp"
     android:background="@drawable/bg_setting_item"
     android:gravity="center_vertical"
-    android:layout_marginBottom="8dp"
+    android:layout_marginBottom="6dp"
     android:clickable="true"
     android:focusable="true">
 
-    <!-- Icon Container -->
-    <ImageView
-        android:id="@+id/ivItemIcon"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
-        android:padding="4dp"
-        android:src="@android:drawable/ic_menu_agenda"
-        android:tint="#4338CA"
-        android:contentDescription="Module Icon" />
+    <!-- Icon container with subtle indigo-tinted circle -->
+    <FrameLayout
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="@drawable/bg_module_icon_circle">
 
-    <!-- Text Info -->
+        <ImageView
+            android:id="@+id/ivItemIcon"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_gravity="center"
+            android:src="@android:drawable/ic_menu_agenda"
+            android:tint="#4338CA"
+            android:contentDescription="Module Icon" />
+
+    </FrameLayout>
+
+    <!-- Text Info: title + description -->
     <LinearLayout
         android:layout_width="0dp"
         android:layout_weight="1"
@@ -28,6 +39,7 @@
         android:orientation="vertical"
         android:layout_marginStart="14dp">
 
+        <!-- Title row with optional "New" badge -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -40,41 +52,49 @@
                 android:layout_height="wrap_content"
                 android:text="Module Title"
                 android:textColor="#0F172A"
-                android:textSize="15sp"
+                android:textSize="14.5sp"
                 android:textStyle="bold" />
 
-            <!-- "New" Badge -->
+            <!-- "New" Badge — shown only for new modules -->
             <TextView
                 android:id="@+id/tvNewBadge"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="New"
                 android:textColor="#FFFFFF"
-                android:textSize="10sp"
+                android:textSize="9.5sp"
                 android:textStyle="bold"
                 android:background="@drawable/bg_new_badge"
-                android:paddingHorizontal="6dp"
-                android:paddingVertical="2dp"
+                android:paddingStart="7dp"
+                android:paddingEnd="7dp"
+                android:paddingTop="2dp"
+                android:paddingBottom="2dp"
                 android:layout_marginStart="8dp"
                 android:visibility="gone" />
+
         </LinearLayout>
 
+        <!-- Description subtitle -->
         <TextView
             android:id="@+id/tvItemDesc"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Module Description"
+            android:text="Module description goes here"
             android:textColor="#64748B"
             android:textSize="12sp"
-            android:layout_marginTop="2dp" />
+            android:layout_marginTop="3dp"
+            android:lineSpacingMultiplier="1.3" />
+
     </LinearLayout>
 
-    <!-- Arrow Indicator -->
+    <!-- Right chevron -->
     <ImageView
-        android:layout_width="16dp"
-        android:layout_height="16dp"
-        android:src="@android:drawable/ic_media_play"
-        android:tint="#94A3B8"
-        android:contentDescription="Navigate Arrow" />
+        android:id="@+id/ivChevron"
+        android:layout_width="14dp"
+        android:layout_height="14dp"
+        android:layout_marginStart="8dp"
+        android:src="@drawable/ic_chevron_right"
+        android:tint="#CBD5E1"
+        android:contentDescription="Open" />
 
 </LinearLayout>

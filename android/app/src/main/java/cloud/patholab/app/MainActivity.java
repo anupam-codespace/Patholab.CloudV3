@@ -15,6 +15,7 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import androidx.appcompat.app.AlertDialog;
@@ -32,10 +33,10 @@ public class MainActivity extends BridgeActivity {
     // ── Views ────────────────────────────────────────────────────────────────
     private WebView webView;
     private SwipeRefreshLayout swipeRefresh;
-    private FrameLayout skeletonContainer;
     private BottomNavigationView bottomNavigation;
     private View offlineOverlay;
     private ScrollView moreScrollView;
+    private View topLayoutContainer;
     
     // Header & Wallet Views
     private TextView lblHeaderTitle;
@@ -47,9 +48,10 @@ public class MainActivity extends BridgeActivity {
     // Category containers matching web app groups
     private LinearLayout containerOverview, containerClinical, containerLogistics;
     private LinearLayout containerMachine, containerB2B, containerAdmin, containerLegal;
+    private LinearLayout containerRadiology;
     private TextView lblOverviewHeader, lblClinicalHeader, lblLogisticsHeader;
     private TextView lblMachineHeader, lblB2BHeader, lblAdminHeader, lblLegalHeader;
-
+    private TextView lblRadiologyHeader;
     // ── State ─────────────────────────────────────────────────────────────────
     private static final String BASE_URL = "https://app.patholab.cloud";
     private String currentPath = null;
@@ -57,23 +59,7 @@ public class MainActivity extends BridgeActivity {
     private List<ModuleItem> allModules;
     private com.google.android.material.bottomsheet.BottomSheetDialog moreBottomSheetDialog;
     private int previousTab = R.id.nav_dashboard;
-
-    // Polling handler for natural, responsive web view progress skeleton
-    private final Handler progressHandler = new Handler(Looper.getMainLooper());
-    private final Runnable progressRunnable = new Runnable() {
-        @Override
-        public void run() {
-            if (webView != null) {
-                int progress = webView.getProgress();
-                if (progress < 100) {
-                    skeletonContainer.setVisibility(View.VISIBLE);
-                    progressHandler.postDelayed(this, 100);
-                } else {
-                    skeletonContainer.setVisibility(View.GONE);
-                }
-            }
-        }
-    };
+    private boolean isDarkMode = false;
 
     // Polling handler for wallet details
     private final Handler walletHandler = new Handler(Looper.getMainLooper());
@@ -84,6 +70,150 @@ public class MainActivity extends BridgeActivity {
             walletHandler.postDelayed(this, 15000); // poll every 15s
         }
     };
+
+    // Polling handler for auth status redirect check (safeguard for token expiry redirection)
+    private final Handler authCheckHandler = new Handler(Looper.getMainLooper());
+    private final Runnable authCheckRunnable = new Runnable() {
+        @Override
+        public void run() {
+            checkAuthRedirect();
+            if (webView != null) {
+                webView.evaluateJavascript("document.documentElement.classList.contains('dark')", value -> {
+                    boolean isDark = "true".equals(value);
+                    runOnUiThread(() -> applyNativeTheme(isDark));
+                });
+            }
+            authCheckHandler.postDelayed(this, 1000); // poll every 1s
+        }
+    };
+
+    private void checkAuthRedirect() {
+        if (webView == null) return;
+        
+        // Unconditionally hide web header elements immediately inside the WebView
+        webView.evaluateJavascript(
+            "var style = document.getElementById('native-hide-header-style');" +
+            "if(!style) {" +
+            "  style = document.createElement('style');" +
+            "  style.id = 'native-hide-header-style';" +
+            "  style.innerHTML = '.mobile-app-header-web-component, header { display: none !important; }';" +
+            "  document.head.appendChild(style);" +
+            "}", null
+        );
+
+        String url = webView.getUrl();
+        if (url == null) return;
+        
+        if (url.contains("/login") || url.contains("/register") || url.contains("/forgot-password") || url.contains("/verify") || url.contains("/reset-password")) {
+            authCheckHandler.removeCallbacks(authCheckRunnable);
+            walletHandler.removeCallbacks(walletRunnable);
+            
+            AuthManager.clearSession(this);
+            Intent intent = new Intent(this, LoginActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
+        }
+    }
+
+    private void applyNativeTheme(boolean isDark) {
+        if (isDarkMode == isDark) return;
+        isDarkMode = isDark;
+
+        // Parent root layout
+        View mainParentLayout = findViewById(R.id.mainParentLayout);
+        if (mainParentLayout != null) {
+            mainParentLayout.setBackgroundColor(isDark ? android.graphics.Color.parseColor("#0F172A") : android.graphics.Color.parseColor("#F8FAFC"));
+        }
+
+        // Header containers
+        View topLayoutContainer = findViewById(R.id.topLayoutContainer);
+        if (topLayoutContainer != null) {
+            topLayoutContainer.setBackgroundColor(isDark ? android.graphics.Color.parseColor("#1E293B") : android.graphics.Color.parseColor("#FFFFFF"));
+        }
+        View topHeaderBar = findViewById(R.id.topHeaderBar);
+        if (topHeaderBar != null) {
+            topHeaderBar.setBackgroundColor(isDark ? android.graphics.Color.parseColor("#1E293B") : android.graphics.Color.parseColor("#FFFFFF"));
+        }
+
+        // Header Dividers
+        View headerDivider = findViewById(R.id.headerDivider);
+        if (headerDivider != null) {
+            headerDivider.setBackgroundColor(isDark ? android.graphics.Color.parseColor("#334155") : android.graphics.Color.parseColor("#F1F5F9"));
+        }
+        View dividerLineTop = findViewById(R.id.dividerLineTop);
+        if (dividerLineTop != null) {
+            dividerLineTop.setBackgroundColor(isDark ? android.graphics.Color.parseColor("#334155") : android.graphics.Color.parseColor("#F1F5F9"));
+        }
+
+        // Title Texts
+        TextView lblHeaderTitle = findViewById(R.id.lblHeaderTitle);
+        if (lblHeaderTitle != null) {
+            lblHeaderTitle.setTextColor(isDark ? android.graphics.Color.parseColor("#FFFFFF") : android.graphics.Color.parseColor("#0F172A"));
+        }
+        TextView lblHeaderSubtitle = findViewById(R.id.lblHeaderSubtitle);
+        if (lblHeaderSubtitle != null) {
+            lblHeaderSubtitle.setTextColor(isDark ? android.graphics.Color.parseColor("#94A3B8") : android.graphics.Color.parseColor("#94A3B8"));
+        }
+
+        // Native Buttons Bg Tint and Text / Icon tint
+        int btnBgColor = isDark ? android.graphics.Color.parseColor("#334155") : android.graphics.Color.parseColor("#F1F5F9");
+        int btnIconColor = isDark ? android.graphics.Color.parseColor("#E2E8F0") : android.graphics.Color.parseColor("#475569");
+
+        View btnMenu = findViewById(R.id.btnHeaderMenu);
+        if (btnMenu != null) {
+            btnMenu.setBackgroundTintList(android.content.res.ColorStateList.valueOf(btnBgColor));
+            TextView txtMenu = findViewById(R.id.txtHeaderMenu);
+            if (txtMenu != null) {
+                txtMenu.setTextColor(btnIconColor);
+            }
+        }
+
+        android.view.ViewGroup btnNotification = findViewById(R.id.btnHeaderNotification);
+        if (btnNotification != null) {
+            btnNotification.setBackgroundTintList(android.content.res.ColorStateList.valueOf(btnBgColor));
+            tintImageViewsInViewGroup(btnNotification, btnIconColor);
+        }
+
+        android.view.ViewGroup btnTheme = findViewById(R.id.btnHeaderTheme);
+        if (btnTheme != null) {
+            btnTheme.setBackgroundTintList(android.content.res.ColorStateList.valueOf(btnBgColor));
+            tintImageViewsInViewGroup(btnTheme, btnIconColor);
+        }
+
+        android.view.ViewGroup btnSupport = findViewById(R.id.btnHeaderSupport);
+        if (btnSupport != null) {
+            btnSupport.setBackgroundTintList(android.content.res.ColorStateList.valueOf(btnBgColor));
+            tintImageViewsInViewGroup(btnSupport, btnIconColor);
+        }
+
+        // Bottom Navigation Bar
+        if (bottomNavigation != null) {
+            bottomNavigation.setBackgroundColor(isDark ? android.graphics.Color.parseColor("#0F172A") : android.graphics.Color.parseColor("#FFFFFF"));
+            int[][] states = new int[][] {
+                new int[] { android.R.attr.state_checked }, // checked
+                new int[] { -android.R.attr.state_checked } // unchecked
+            };
+            int[] colors = new int[] {
+                android.graphics.Color.parseColor("#4338CA"), // active
+                isDark ? android.graphics.Color.parseColor("#94A3B8") : android.graphics.Color.parseColor("#475569") // inactive
+            };
+            android.content.res.ColorStateList colorStateList = new android.content.res.ColorStateList(states, colors);
+            bottomNavigation.setItemIconTintList(colorStateList);
+            bottomNavigation.setItemTextColor(colorStateList);
+        }
+    }
+
+    private void tintImageViewsInViewGroup(android.view.ViewGroup viewGroup, int color) {
+        for (int i = 0; i < viewGroup.getChildCount(); i++) {
+            View child = viewGroup.getChildAt(i);
+            if (child instanceof ImageView) {
+                ((ImageView) child).setColorFilter(color);
+            } else if (child instanceof android.view.ViewGroup) {
+                tintImageViewsInViewGroup((android.view.ViewGroup) child, color);
+            }
+        }
+    }
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
 
@@ -132,6 +262,7 @@ public class MainActivity extends BridgeActivity {
 
         // 8. Start wallet details polling
         walletHandler.post(walletRunnable);
+        authCheckHandler.post(authCheckRunnable);
     }
 
     // ── Setup helpers ──────────────────────────────────────────────────────────
@@ -149,9 +280,28 @@ public class MainActivity extends BridgeActivity {
 
     private void bindViews() {
         swipeRefresh      = findViewById(R.id.swipeRefresh);
-        skeletonContainer = findViewById(R.id.skeletonContainer);
+
         bottomNavigation  = findViewById(R.id.bottomNavigation);
         offlineOverlay    = findViewById(R.id.offlineOverlay);
+        topLayoutContainer = findViewById(R.id.topLayoutContainer);
+
+        // Adjust top container padding dynamically for system status bar / notch height
+        if (topLayoutContainer != null) {
+            androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(topLayoutContainer, (v, insets) -> {
+                androidx.core.graphics.Insets systemBars = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars());
+                v.setPadding(0, systemBars.top, 0, 0);
+                return insets;
+            });
+        }
+
+        // Adjust bottom navigation padding dynamically for system gesture navigation bar height
+        if (bottomNavigation != null) {
+            androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(bottomNavigation, (v, insets) -> {
+                androidx.core.graphics.Insets systemBars = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars());
+                v.setPadding(0, 0, 0, systemBars.bottom);
+                return insets;
+            });
+        }
         
         // Retry button
         View btnRetry = findViewById(R.id.btnRetry);
@@ -167,7 +317,9 @@ public class MainActivity extends BridgeActivity {
         // Pull-to-refresh
         swipeRefresh.setOnRefreshListener(() -> {
             swipeRefresh.setRefreshing(false);
-            if (webView != null) webView.reload();
+            if (webView != null) {
+                webView.reload();
+            }
         });
 
         // Header view binding
@@ -179,20 +331,30 @@ public class MainActivity extends BridgeActivity {
 
         View btnNotification = findViewById(R.id.btnHeaderNotification);
         if (btnNotification != null) {
-            btnNotification.setOnClickListener(v -> navigate("/workspace/support"));
+            btnNotification.setOnClickListener(v -> showNotificationsPanel());
         }
         View btnTheme = findViewById(R.id.btnHeaderTheme);
         if (btnTheme != null) {
             btnTheme.setOnClickListener(v -> {
-                // Trigger client side web theme switch via JS
                 if (webView != null) {
-                    webView.evaluateJavascript("document.querySelector('.mobile-app-header-web-component button[aria-label=\"Toggle dark mode\"]')?.click()", null);
+                    // Try native web theme toggle, then fallback to localStorage approach
+                    webView.evaluateJavascript(
+                        "(function() {" +
+                        "  var btn = document.querySelector('[aria-label=\"Toggle dark mode\"]');" +
+                        "  if (btn) { btn.click(); return; }" +
+                        "  var html = document.documentElement;" +
+                        "  html.classList.toggle('dark');" +
+                        "  var theme = html.classList.contains('dark') ? 'dark' : 'light';" +
+                        "  localStorage.setItem('theme', theme);" +
+                        "})()", null);
                 }
             });
         }
         View btnSupport = findViewById(R.id.btnHeaderSupport);
         if (btnSupport != null) {
-            btnSupport.setOnClickListener(v -> navigate("/workspace/support"));
+            btnSupport.setOnClickListener(v -> {
+                showHelpPanel();
+            });
         }
 
         // Wallet view binding
@@ -201,6 +363,14 @@ public class MainActivity extends BridgeActivity {
         txtWalletStatus = findViewById(R.id.txtWalletStatus);
         if (walletCard != null) {
             walletCard.setOnClickListener(v -> navigate("/workspace/wallet"));
+            View pulseDot = findViewById(R.id.walletPulseDot);
+            if (pulseDot != null) {
+                android.view.animation.AlphaAnimation anim = new android.view.animation.AlphaAnimation(0.3f, 1.0f);
+                anim.setDuration(1200);
+                anim.setRepeatMode(android.view.animation.Animation.REVERSE);
+                anim.setRepeatCount(android.view.animation.Animation.INFINITE);
+                pulseDot.startAnimation(anim);
+            }
         }
 
         swipeRefresh.setColorSchemeColors(0xFF3730A3);
@@ -212,6 +382,18 @@ public class MainActivity extends BridgeActivity {
             if (id != R.id.nav_more) {
                 previousTab = id;
             }
+
+            // Subtle selection scale pop animation for premium micro-feedback
+            View itemView = bottomNavigation.findViewById(id);
+            if (itemView != null) {
+                itemView.animate()
+                    .scaleX(1.1f)
+                    .scaleY(1.1f)
+                    .setDuration(120)
+                    .withEndAction(() -> itemView.animate().scaleX(1.0f).scaleY(1.0f).setDuration(120).start())
+                    .start();
+            }
+
             if (id == R.id.nav_dashboard) {
                 navigate("/workspace/analytics");
                 return true;
@@ -236,15 +418,41 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void showMorePanel() {
+        // Always recreate the panel so new modules from web are reflected each time
+        if (moreBottomSheetDialog != null && moreBottomSheetDialog.isShowing()) {
+            moreBottomSheetDialog.dismiss();
+        }
+        moreBottomSheetDialog = null;
         if (moreBottomSheetDialog == null) {
             moreBottomSheetDialog = new com.google.android.material.bottomsheet.BottomSheetDialog(this);
             View sheetView = getLayoutInflater().inflate(R.layout.layout_more_sheet, null);
             moreBottomSheetDialog.setContentView(sheetView);
 
+            final boolean isDark = this.isDarkMode;
+            if (isDark) {
+                sheetView.setBackgroundTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#0F172A")));
+                
+                TextView txtTitle = sheetView.findViewById(R.id.txtMoreTitle);
+                if (txtTitle != null) {
+                    txtTitle.setTextColor(android.graphics.Color.parseColor("#FFFFFF"));
+                }
+                
+                TextView txtSubtitle = sheetView.findViewById(R.id.txtMoreSubtitle);
+                if (txtSubtitle != null) {
+                    txtSubtitle.setTextColor(android.graphics.Color.parseColor("#94A3B8"));
+                }
+                
+                View divider = sheetView.findViewById(R.id.moreDivider);
+                if (divider != null) {
+                    divider.setBackgroundColor(android.graphics.Color.parseColor("#334155"));
+                }
+            }
+
             // Bind views inside sheet view
             moreScrollView    = sheetView.findViewById(R.id.moreSettingsScrollView);
             containerOverview    = sheetView.findViewById(R.id.containerOverview);
             containerClinical    = sheetView.findViewById(R.id.containerClinical);
+            containerRadiology   = sheetView.findViewById(R.id.containerRadiology);
             containerLogistics   = sheetView.findViewById(R.id.containerLogistics);
             containerMachine     = sheetView.findViewById(R.id.containerMachine);
             containerB2B         = sheetView.findViewById(R.id.containerB2B);
@@ -253,6 +461,7 @@ public class MainActivity extends BridgeActivity {
 
             lblOverviewHeader    = sheetView.findViewById(R.id.lblOverviewHeader);
             lblClinicalHeader    = sheetView.findViewById(R.id.lblClinicalHeader);
+            lblRadiologyHeader   = sheetView.findViewById(R.id.lblRadiologyHeader);
             lblLogisticsHeader   = sheetView.findViewById(R.id.lblLogisticsHeader);
             lblMachineHeader     = sheetView.findViewById(R.id.lblMachineHeader);
             lblB2BHeader         = sheetView.findViewById(R.id.lblB2BHeader);
@@ -301,6 +510,269 @@ public class MainActivity extends BridgeActivity {
         moreBottomSheetDialog.show();
     }
 
+    private void showNotificationsPanel() {
+        final com.google.android.material.bottomsheet.BottomSheetDialog dialog =
+            new com.google.android.material.bottomsheet.BottomSheetDialog(this);
+        View sheetView = getLayoutInflater().inflate(R.layout.layout_notifications_sheet, null);
+        dialog.setContentView(sheetView);
+
+        final ProgressBar spinner = sheetView.findViewById(R.id.progressSpinner);
+        final View lblNoNotifications = sheetView.findViewById(R.id.lblNoNotifications);
+        final View scrollNotifications = sheetView.findViewById(R.id.scrollNotifications);
+        final LinearLayout stackNotifications = sheetView.findViewById(R.id.stackNotifications);
+        final View btnMarkAllRead = sheetView.findViewById(R.id.btnMarkAllRead);
+
+        // Theme the sheet natively based on current app theme
+        final boolean isDark = this.isDarkMode;
+        if (isDark) {
+            sheetView.setBackgroundTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#0F172A")));
+            
+            TextView txtTitle = sheetView.findViewById(R.id.txtNotificationsTitle);
+            if (txtTitle != null) {
+                txtTitle.setTextColor(android.graphics.Color.parseColor("#FFFFFF"));
+            }
+            
+            View divider = sheetView.findViewById(R.id.notificationsDivider);
+            if (divider != null) {
+                divider.setBackgroundColor(android.graphics.Color.parseColor("#334155"));
+            }
+            
+            ImageView imgEmpty = sheetView.findViewById(R.id.imgNotificationsEmpty);
+            if (imgEmpty != null) {
+                imgEmpty.setColorFilter(android.graphics.Color.parseColor("#334155"));
+            }
+            
+            TextView txtEmptyTitle = sheetView.findViewById(R.id.txtNotificationsEmptyTitle);
+            if (txtEmptyTitle != null) {
+                txtEmptyTitle.setTextColor(android.graphics.Color.parseColor("#FFFFFF"));
+            }
+            
+            TextView txtEmptySubtitle = sheetView.findViewById(R.id.txtNotificationsEmptySubtitle);
+            if (txtEmptySubtitle != null) {
+                txtEmptySubtitle.setTextColor(android.graphics.Color.parseColor("#94A3B8"));
+            }
+        }
+
+        // Cap bottom sheet at 80% screen height
+        dialog.setOnShowListener(d -> {
+            FrameLayout bottomSheet = dialog.findViewById(com.google.android.material.R.id.design_bottom_sheet);
+            if (bottomSheet != null) {
+                com.google.android.material.bottomsheet.BottomSheetBehavior<FrameLayout> behavior =
+                    com.google.android.material.bottomsheet.BottomSheetBehavior.from(bottomSheet);
+                int screenHeight = getResources().getDisplayMetrics().heightPixels;
+                int targetHeight = (int) (screenHeight * 0.8);
+                android.view.ViewGroup.LayoutParams lp = bottomSheet.getLayoutParams();
+                lp.height = targetHeight;
+                bottomSheet.setLayoutParams(lp);
+                behavior.setPeekHeight(targetHeight);
+                behavior.setState(com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED);
+            }
+        });
+
+        // Fetch REAL notifications from the server API in background
+        new Thread(() -> {
+            try {
+                java.net.URL url = new java.net.URL(BASE_URL + "/api/notifications");
+                java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("GET");
+                conn.setRequestProperty("Accept", "application/json");
+                // Forward the session cookie from the WebView cookie store
+                String cookie = android.webkit.CookieManager.getInstance().getCookie(BASE_URL);
+                if (cookie != null) conn.setRequestProperty("Cookie", cookie);
+                conn.setConnectTimeout(10000);
+                conn.setReadTimeout(10000);
+
+                int code = conn.getResponseCode();
+                StringBuilder sb = new StringBuilder();
+                java.io.InputStream stream = (code >= 200 && code < 300) ? conn.getInputStream() : conn.getErrorStream();
+                if (stream != null) {
+                    java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(stream, "UTF-8"));
+                    String line;
+                    while ((line = reader.readLine()) != null) sb.append(line);
+                    reader.close();
+                }
+                conn.disconnect();
+
+                final String responseBody = sb.toString();
+                runOnUiThread(() -> {
+                    if (spinner != null) spinner.setVisibility(View.GONE);
+                    if (stackNotifications == null) return;
+                    stackNotifications.removeAllViews();
+
+                    try {
+                        org.json.JSONObject root = new org.json.JSONObject(responseBody);
+                        org.json.JSONArray arr = root.optJSONArray("notifications");
+                        if (arr != null && arr.length() > 0) {
+                            if (scrollNotifications != null) scrollNotifications.setVisibility(View.VISIBLE);
+                            for (int i = 0; i < arr.length(); i++) {
+                                org.json.JSONObject n = arr.getJSONObject(i);
+                                String title = n.optString("title", "");
+                                String body = n.optString("body", "");
+                                boolean isRead = n.optBoolean("isRead", true);
+
+                                LinearLayout row = new LinearLayout(MainActivity.this);
+                                row.setOrientation(LinearLayout.VERTICAL);
+                                row.setPadding(48, 28, 48, 28);
+                                if (!isRead) {
+                                    row.setBackgroundColor(isDark ? android.graphics.Color.parseColor("#1E3A8A") : 0xFFEFF6FF); // Blue-50/unread highlight
+                                } else {
+                                    row.setBackgroundColor(isDark ? android.graphics.Color.parseColor("#1E293B") : android.graphics.Color.parseColor("#FFFFFF"));
+                                }
+
+                                TextView tvTitle = new TextView(MainActivity.this);
+                                tvTitle.setText(title);
+                                tvTitle.setTextColor(isDark ? (isRead ? android.graphics.Color.parseColor("#E2E8F0") : android.graphics.Color.parseColor("#93C5FD")) : (isRead ? 0xFF475569 : 0xFF1E40AF));
+                                tvTitle.setTextSize(13.5f);
+                                if (!isRead) tvTitle.setTypeface(null, android.graphics.Typeface.BOLD);
+                                row.addView(tvTitle);
+
+                                if (!body.isEmpty()) {
+                                    TextView tvBody = new TextView(MainActivity.this);
+                                    tvBody.setText(body);
+                                    tvBody.setTextColor(isDark ? android.graphics.Color.parseColor("#94A3B8") : 0xFF94A3B8);
+                                    tvBody.setTextSize(11.5f);
+                                    tvBody.setPadding(0, 4, 0, 0);
+                                    row.addView(tvBody);
+                                }
+
+                                // Separator
+                                View sep = new View(MainActivity.this);
+                                sep.setBackgroundColor(isDark ? android.graphics.Color.parseColor("#334155") : 0xFFF1F5F9);
+                                LinearLayout.LayoutParams sepLp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 1);
+                                sep.setLayoutParams(sepLp);
+
+                                stackNotifications.addView(row);
+                                stackNotifications.addView(sep);
+                            }
+                        } else {
+                            if (scrollNotifications != null) scrollNotifications.setVisibility(View.GONE);
+                            if (lblNoNotifications != null) lblNoNotifications.setVisibility(View.VISIBLE);
+                        }
+                    } catch (Exception e) {
+                        // Fallback: show no notifications
+                        if (scrollNotifications != null) scrollNotifications.setVisibility(View.GONE);
+                        if (lblNoNotifications != null) lblNoNotifications.setVisibility(View.VISIBLE);
+                    }
+                });
+            } catch (Exception e) {
+                runOnUiThread(() -> {
+                    if (spinner != null) spinner.setVisibility(View.GONE);
+                    if (scrollNotifications != null) scrollNotifications.setVisibility(View.GONE);
+                    if (lblNoNotifications != null) lblNoNotifications.setVisibility(View.VISIBLE);
+                });
+            }
+        }).start();
+
+        if (btnMarkAllRead != null) {
+            btnMarkAllRead.setOnClickListener(v -> {
+                // Mark all read on server in background
+                new Thread(() -> {
+                    try {
+                        java.net.URL url = new java.net.URL(BASE_URL + "/api/notifications/mark-read");
+                        java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+                        conn.setRequestMethod("POST");
+                        String cookie = android.webkit.CookieManager.getInstance().getCookie(BASE_URL);
+                        if (cookie != null) conn.setRequestProperty("Cookie", cookie);
+                        conn.getResponseCode();
+                        conn.disconnect();
+                    } catch (Exception ignored) {}
+                }).start();
+
+                if (stackNotifications != null) stackNotifications.removeAllViews();
+                if (scrollNotifications != null) scrollNotifications.setVisibility(View.GONE);
+                if (lblNoNotifications != null) lblNoNotifications.setVisibility(View.VISIBLE);
+            });
+        }
+
+        dialog.show();
+    }
+
+    private void showLegalBottomSheet() {
+        final com.google.android.material.bottomsheet.BottomSheetDialog dialog =
+            new com.google.android.material.bottomsheet.BottomSheetDialog(this);
+        View sheetView = getLayoutInflater().inflate(R.layout.layout_legal_sheet, null);
+        dialog.setContentView(sheetView);
+
+        TextView txtContent = sheetView.findViewById(R.id.txtLegalContentSheet);
+        if (txtContent != null) {
+            String html = buildLegalHtml();
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                txtContent.setText(android.text.Html.fromHtml(html, android.text.Html.FROM_HTML_MODE_LEGACY));
+            } else {
+                txtContent.setText(android.text.Html.fromHtml(html));
+            }
+        }
+
+        View btnClose = sheetView.findViewById(R.id.btnLegalClose);
+        if (btnClose != null) {
+            btnClose.setOnClickListener(v -> dialog.dismiss());
+        }
+
+        // Cap bottom sheet at 85% screen height
+        dialog.setOnShowListener(d -> {
+            FrameLayout bottomSheet = dialog.findViewById(com.google.android.material.R.id.design_bottom_sheet);
+            if (bottomSheet != null) {
+                com.google.android.material.bottomsheet.BottomSheetBehavior<FrameLayout> behavior =
+                    com.google.android.material.bottomsheet.BottomSheetBehavior.from(bottomSheet);
+                int screenHeight = getResources().getDisplayMetrics().heightPixels;
+                int targetHeight = (int) (screenHeight * 0.85);
+                android.view.ViewGroup.LayoutParams lp = bottomSheet.getLayoutParams();
+                lp.height = targetHeight;
+                bottomSheet.setLayoutParams(lp);
+                behavior.setPeekHeight(targetHeight);
+                behavior.setState(com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED);
+            }
+        });
+
+        dialog.show();
+    }
+
+    private String buildLegalHtml() {
+        return
+            "<b><font color=\"#4338CA\">(A) Google Play Beta Testing — Terms of Service</font></b><br/><br/>" +
+            "<b><font color=\"#1E293B\">Key Summary</font></b><br/><br/>" +
+            "• Diagnostics, usage, and crash reports related to your use of each Beta App will automatically be collected by Google and the Application Provider.<br/><br/>" +
+            "• You may submit feedback, suggestions, and feature ideas to the Application Provider of the Beta App.<br/><br/>" +
+            "• Beta Apps are pre-release software and may crash, resulting in data loss.<br/><br/>" +
+            "• If you already have the production version installed, the Beta version will replace it and may overwrite app data.<br/><br/>" +
+            "• You can opt out of Beta testing at any time by leaving the program on Google Play and reinstalling the production version.<br/><br/>" +
+            "Your use of the Google Play Beta Testing service, including downloading any pre-release or beta-stage applications for Android (\"Beta Apps\"), is governed by these terms. The standard Google Play Terms of Service for your region are incorporated by reference.<br/><br/>" +
+            "<b><font color=\"#1E293B\">Beta Tester Eligibility</font></b><br/><br/>" +
+            "You must meet the age requirements for Google Play in your country. If you are under 18, review this Agreement with your parent or guardian.<br/><br/>" +
+            "The Application Provider grants you a limited, non-exclusive, non-transferable, non-sublicensable license to access, download, and use the Beta App solely for testing and evaluation purposes.<br/><br/>" +
+            "You acknowledge that Beta Apps are pre-release, unfinished software and may contain errors. You should not use them in critical operating environments or with highly valuable data. Back up your device prior to installing any Beta App. Google and the Application Provider shall not be liable for any data loss, device damage, or service interruptions caused by your use of Beta Apps.<br/><br/>" +
+            "<b><font color=\"#1E293B\">No Warranty</font></b><br/><br/>" +
+            "YOU EXPRESSLY ACKNOWLEDGE AND AGREE THAT USE OF THE BETA APP IS AT YOUR SOLE RISK. TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE BETA APP IS PROVIDED \"AS IS\" AND \"AS AVAILABLE\", WITH ALL FAULTS AND WITHOUT WARRANTY OF ANY KIND.<br/><br/>" +
+            "<b><font color=\"#1E293B\">Termination</font></b><br/><br/>" +
+            "To terminate participation, leave the beta program in Google Play. Google and/or the Application Provider reserve the right to terminate your participation at any time.<br/><br/>" +
+            "────────────────────────────<br/><br/>" +
+            "<b><font color=\"#4338CA\">(B) Google LLC — Android Beta Program License Agreement</font></b><br/><br/>" +
+            "<b><font color=\"#1E293B\">Standard Software License</font></b><br/><br/>" +
+            "PLEASE READ THIS LICENSE AGREEMENT CAREFULLY BEFORE INSTALLING OR USING THE SOFTWARE. BY INSTALLING AND/OR USING THE PRE-RELEASE SOFTWARE, YOU AGREE TO BE BOUND BY THE TERMS OF THIS LICENSE.<br/><br/>" +
+            "<b>1. General.</b><br/><br/>" +
+            "A. The pre-release software, APIs, documentation, and assets (collectively, the \"Beta Software\") are licensed, not sold, to you by Google LLC (\"Google\") for use only under the terms of this License.<br/><br/>" +
+            "B. Google may make available updates or modifications to the Beta Software at its discretion. The terms of this License will govern any such updates unless accompanied by a separate license agreement.<br/><br/>" +
+            "<b>2. Permitted Uses and Restrictions.</b><br/><br/>" +
+            "A. License. You are granted a limited, non-transferable, non-exclusive license to install and use the Beta Software on compatible Android-branded devices you own or control solely for test and evaluation purposes.<br/><br/>" +
+            "B. Restrictions. You may not: (a) copy, decompile, reverse engineer, or disassemble the Beta Software; (b) distribute, sell, lease, or rent it; or (c) demonstrate it to unauthorized individuals without prior consent.<br/><br/>" +
+            "<b>3. Consent to Use of Data.</b><br/><br/>" +
+            "A. System Diagnostics. You agree that Google and its affiliates may collect and use diagnostic, technical, usage, and crash data to facilitate system updates and improve Android products.<br/><br/>" +
+            "B. Privacy. Google's Privacy Policy governs the collection, processing, and storage of personal data during your participation (https://policies.google.com/privacy).<br/><br/>" +
+            "<b>4. Pre-release Software.</b><br/><br/>" +
+            "Pre-release versions are time-limited and for test purposes only. They should not be relied upon to perform in the same manner as a final-release product, nor used with important data. Back up your data before installing.<br/><br/>" +
+            "<b>5. Termination.</b><br/><br/>" +
+            "This License is effective until terminated. Your rights will terminate automatically if you fail to comply with any term. Upon termination, cease all use and destroy all copies of the Beta Software.<br/><br/>" +
+            "<b>6. Disclaimer of Warranties.</b><br/><br/>" +
+            "TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE BETA SOFTWARE IS PROVIDED \"AS IS\" AND \"AS AVAILABLE\", WITH ALL FAULTS AND WITHOUT WARRANTY OF ANY KIND.<br/><br/>" +
+            "<b>7. Governing Law.</b><br/><br/>" +
+            "This License will be governed by the laws of the State of California. If any provision is found unenforceable, the remainder continues in full force and effect.";
+    }
+
+    private void showHelpPanel() {
+        // Navigate to the support page inside the WebView
+        navigate("/workspace/support");
+    }
+
     private void loadUrl(String path) {
         if (webView == null) return;
         if (lblHeaderTitle != null) {
@@ -310,11 +782,6 @@ public class MainActivity extends BridgeActivity {
         currentPath = path;
         String token = AuthManager.getToken(this);
         if (token != null) AuthManager.syncWebViewCookie(token);
-
-        // Start checking progress to display the native skeleton dynamically
-        progressHandler.removeCallbacks(progressRunnable);
-        skeletonContainer.setVisibility(View.VISIBLE);
-        progressHandler.post(progressRunnable);
 
         webView.loadUrl(BASE_URL + path);
         fetchWalletDetails();
@@ -388,55 +855,79 @@ public class MainActivity extends BridgeActivity {
             txtWalletBalance.setText(String.format("₹%.2f", balance));
         }
         if (txtWalletStatus != null) {
-            if (balance <= 0) {
-                txtWalletStatus.setText("ZERO BALANCE ( RECHARGE REQUIRED )");
+            if (balance <= 20.0) {
+                txtWalletStatus.setText("LOW BALANCE ( ADD FUNDS )");
                 walletCard.setBackgroundResource(R.drawable.bg_wallet_card_red);
-            } else if (balance < 500) {
+            } else if (balance < 75.0) {
                 txtWalletStatus.setText("LOW BALANCE ( ADD FUNDS )");
                 walletCard.setBackgroundResource(R.drawable.bg_wallet_card_orange);
             } else {
                 txtWalletStatus.setText("ACTIVE & FUNDED");
-                walletCard.setBackgroundResource(R.drawable.bg_wallet_card);
+                walletCard.setBackgroundResource(R.drawable.bg_wallet_card_green);
             }
         }
     }
 
     // ── More section ───────────────────────────────────────────────────────────
 
+    /**
+     * Initialises the full module list from the web app's navigation.ts config.
+     * This matches the adminNav groups exactly so that any web update is reflected
+     * here automatically on the next app build.
+     *
+     * Categories here mirror the group titles in navigation.ts:
+     * Overview | Clinical | Logistics | Machine | B2B | Admin | Legal
+     */
     private void initModulesData() {
         allModules = new ArrayList<>();
-        
-        // Overview
-        allModules.add(new ModuleItem("Financial Analytics",  "/workspace/analytics",          "Overview",   "View detailed revenue reports & analytical charts", android.R.drawable.ic_menu_today,       false));
-        allModules.add(new ModuleItem("Online Booking",       "/workspace/bookings",           "Overview",   "Manage home collections & online appointments",     android.R.drawable.ic_menu_today,       true));
 
-        // Clinical Operations
-        allModules.add(new ModuleItem("Patient Registration",  "/workspace/registration",       "Clinical",   "Register patients & book new lab tests",            android.R.drawable.ic_menu_add,          true));
-        allModules.add(new ModuleItem("Worklist & Results",    "/workspace/results",            "Clinical",   "Fill raw tests values & review parameters",         android.R.drawable.ic_menu_edit,         false));
-        allModules.add(new ModuleItem("Report Dispatch",       "/workspace/reports",            "Clinical",   "Sign off reports & dispatch PDF files",             android.R.drawable.ic_menu_agenda,       false));
+        // ── Radiology (RIS) (navigation.ts: Radiology Group) ─────────────────
+        allModules.add(new ModuleItem("RIS Dashboard",         "/workspace/radiology/dashboard",    "Radiology",  "Radiology Information System overview",         android.R.drawable.ic_menu_today,        false));
+        allModules.add(new ModuleItem("Scan Schedule",         "/workspace/radiology/appointments", "Radiology",  "Book & manage radiology scans",                 android.R.drawable.ic_menu_agenda,       false));
+        allModules.add(new ModuleItem("PACS Viewer",           "/workspace/radiology/pacs",         "Radiology",  "View digital imaging & PACS files",            android.R.drawable.ic_menu_preferences,  false));
+        allModules.add(new ModuleItem("Reporting Queue",       "/workspace/radiology/reporting",    "Radiology",  "Radiologist report queue & sign-off",           android.R.drawable.ic_menu_edit,         false));
+        allModules.add(new ModuleItem("Machines",              "/workspace/radiology/modalities",   "Radiology",  "Configure radiology equipment & modalities",    android.R.drawable.ic_menu_preferences,  false));
+        allModules.add(new ModuleItem("Radiology Settings",    "/workspace/radiology/settings/macros", "Radiology", "Configure macros & report templates",         android.R.drawable.ic_menu_view,         false));
 
-        // Resources & Logistics
-        allModules.add(new ModuleItem("Inventory & Stock",     "/workspace/inventory",          "Logistics",  "Track reagents, consumption & items",               android.R.drawable.ic_menu_save,         true));
-        allModules.add(new ModuleItem("Logistics / Trips",     "/workspace/logistics",          "Logistics",  "Manage field agents & pickup trips",                android.R.drawable.ic_menu_directions,   false));
+        // ── Overview (navigation.ts: "Overview") ──────────────────────────────
+        allModules.add(new ModuleItem("Financial Analytics",   "/workspace/analytics",              "Overview",   "Revenue reports & analytical charts",           android.R.drawable.ic_menu_today,        false));
+        allModules.add(new ModuleItem("Online Booking",        "/workspace/bookings",               "Overview",   "Manage home collections & appointments",        android.R.drawable.ic_menu_today,        true));
 
-        // Machine & AI
-        allModules.add(new ModuleItem("Analyzer",              "/workspace/analyzers",          "Machine",    "Connect analyzers & view output logs",              android.R.drawable.ic_menu_preferences,  false));
-        allModules.add(new ModuleItem("Visual Mapper",         "/workspace/analyzers/mapper",   "Machine",    "Map barcode codes visually to fields",              android.R.drawable.ic_menu_preferences,  false));
-        allModules.add(new ModuleItem("Mappings",              "/workspace/analyzers/mappings", "Machine",    "Configure machine integration parameters",          android.R.drawable.ic_menu_preferences,  false));
-        allModules.add(new ModuleItem("AI Analysis",           "/workspace/analyzers/ai",       "Machine",    "Leverage AI models on clinical samples",             android.R.drawable.ic_menu_preferences,  true));
+        // ── Clinical Operations (navigation.ts: "Clinical Operations") ───────
+        allModules.add(new ModuleItem("Patient Registration",  "/workspace/registration",           "Clinical",   "Register patients & book new lab tests",        android.R.drawable.ic_menu_add,          true));
+        allModules.add(new ModuleItem("Patient Directory",     "/workspace/patients",               "Clinical",   "Browse & search patient records",               android.R.drawable.ic_menu_add,          false));
+        allModules.add(new ModuleItem("Test Catalog",          "/workspace/test-management",        "Clinical",   "Manage test packages & profiles",               android.R.drawable.ic_menu_edit,         false));
+        allModules.add(new ModuleItem("Worklist & Results",    "/workspace/results",                "Clinical",   "Fill raw values & review parameters",           android.R.drawable.ic_menu_edit,         false));
+        allModules.add(new ModuleItem("Report Dispatch",       "/workspace/reports",                "Clinical",   "Sign off & dispatch PDF reports",               android.R.drawable.ic_menu_agenda,       false));
 
-        // Referral & B2B
-        allModules.add(new ModuleItem("Doctor Directory",      "/workspace/doctors",            "B2B",        "Track referring doctors & commission profiles",     android.R.drawable.ic_menu_myplaces,     false));
-        allModules.add(new ModuleItem("B2B Clients Tiers",     "/workspace/settings/b2b-tiers", "B2B",        "Manage outsourced labs & tier pricings",            android.R.drawable.ic_menu_myplaces,     true));
+        // ── Resources & Logistics (navigation.ts: "Resources & Logistics") ──
+        allModules.add(new ModuleItem("Inventory & Stock",     "/workspace/inventory",              "Logistics",  "Track reagents, consumables & items",           android.R.drawable.ic_menu_save,         false));
+        allModules.add(new ModuleItem("Logistics / Trips",     "/workspace/logistics",              "Logistics",  "Manage field agents & pickup trips",            android.R.drawable.ic_menu_directions,   false));
 
-        // Administration
-        allModules.add(new ModuleItem("Billing & Invoices",    "/workspace/billing",            "Admin",      "Track overall lab cash flow & pending bills",       android.R.drawable.ic_menu_view,         false));
-        allModules.add(new ModuleItem("Staff Directory",       "/workspace/staff",              "Admin",      "Manage team roles, access keys & logs",             android.R.drawable.ic_menu_view,         false));
-        allModules.add(new ModuleItem("Lab settings",          "/workspace/settings",           "Admin",      "Configure letterhead, templates & formats",         android.R.drawable.ic_menu_view,         false));
-        allModules.add(new ModuleItem("Audit Logs",            "/workspace/audit-logs",          "Admin",      "View security access logs & trace modifications",   android.R.drawable.ic_menu_view,         false));
+        // ── Machine & AI (navigation.ts: "Machine & AI") ─────────────────────
+        allModules.add(new ModuleItem("Analyzer",              "/workspace/analyzers",              "Machine",    "Connect analyzers & view output logs",          android.R.drawable.ic_menu_preferences,  false));
+        allModules.add(new ModuleItem("Visual Mapper",         "/workspace/analyzers/mapper",       "Machine",    "Map barcode codes visually to fields",          android.R.drawable.ic_menu_preferences,  false));
+        allModules.add(new ModuleItem("Mappings",              "/workspace/analyzers/mappings",     "Machine",    "Configure machine integration parameters",      android.R.drawable.ic_menu_preferences,  false));
+        allModules.add(new ModuleItem("AI Analysis",           "/workspace/analyzers/ai",           "Machine",    "AI models on clinical samples",                 android.R.drawable.ic_menu_preferences,  true));
 
-        // Legal & Agreements
-        allModules.add(new ModuleItem("Terms & Conditions",    "/legal",                        "Legal",      "Read Google Play Beta Testing agreements",         android.R.drawable.ic_menu_info_details, false));
+        // ── B2B & Growth (navigation.ts: "B2B & Growth") ─────────────────────
+        allModules.add(new ModuleItem("Referral Doctors",      "/workspace/doctors",                "B2B",        "Track referring doctors & commission profiles",  android.R.drawable.ic_menu_myplaces,     false));
+        allModules.add(new ModuleItem("Corporate Agencies",    "/workspace/agencies",               "B2B",        "Manage corporate agency tie-ups",               android.R.drawable.ic_menu_myplaces,     false));
+        allModules.add(new ModuleItem("Commissions Payout",    "/workspace/commissions",            "B2B",        "View payout summaries for referrals",           android.R.drawable.ic_menu_myplaces,     false));
+        allModules.add(new ModuleItem("B2B Settings",          "/workspace/settings/b2b-tiers",     "B2B",        "Manage outsourced labs & tier pricings",        android.R.drawable.ic_menu_myplaces,     false));
+
+        // ── Administration (navigation.ts: "Administration") ─────────────────
+        allModules.add(new ModuleItem("Report Templates",      "/workspace/settings/templates",     "Admin",      "Design & manage report layout templates",       android.R.drawable.ic_menu_view,         false));
+        allModules.add(new ModuleItem("Staff Management",      "/workspace/staff",                  "Admin",      "Manage team roles, access keys & logs",         android.R.drawable.ic_menu_view,         false));
+        allModules.add(new ModuleItem("Invoices & Payments",   "/workspace/billing",                "Admin",      "Track cash flow & pending invoices",            android.R.drawable.ic_menu_view,         false));
+        allModules.add(new ModuleItem("Expenses",              "/workspace/expenses",               "Admin",      "Record & categorise lab expenses",              android.R.drawable.ic_menu_view,         false));
+        allModules.add(new ModuleItem("Lab Settings",          "/workspace/settings",               "Admin",      "Configure letterhead, templates & formats",     android.R.drawable.ic_menu_view,         false));
+        allModules.add(new ModuleItem("Audit Logs",            "/workspace/audit-logs",             "Admin",      "View security access logs & trace changes",     android.R.drawable.ic_menu_view,         false));
+        allModules.add(new ModuleItem("Wallet & Billing",      "/workspace/wallet",                 "Admin",      "Top-up wallet & view billing history",          android.R.drawable.ic_menu_view,         false));
+        allModules.add(new ModuleItem("Help & Support",        "/workspace/support",                "Admin",      "Raise tickets & browse documentation",          android.R.drawable.ic_menu_info_details, false));
+
+        // ── Legal & Agreements ────────────────────────────────────────────────
+        allModules.add(new ModuleItem("Terms & Conditions",    "/legal",                            "Legal",      "Google Play Beta Testing agreements",           android.R.drawable.ic_menu_info_details, false));
     }
 
     private void renderModules() {
@@ -450,21 +941,55 @@ public class MainActivity extends BridgeActivity {
         containerAdmin.removeAllViews();
         containerLegal.removeAllViews();
 
+        final boolean isDark = this.isDarkMode;
+        int headerColor = isDark ? android.graphics.Color.parseColor("#818CF8") : android.graphics.Color.parseColor("#4338CA");
+        if (lblOverviewHeader != null) lblOverviewHeader.setTextColor(headerColor);
+        if (lblClinicalHeader != null) lblClinicalHeader.setTextColor(headerColor);
+        if (lblRadiologyHeader != null) lblRadiologyHeader.setTextColor(headerColor);
+        if (lblLogisticsHeader != null) lblLogisticsHeader.setTextColor(headerColor);
+        if (lblMachineHeader != null) lblMachineHeader.setTextColor(headerColor);
+        if (lblB2BHeader != null) lblB2BHeader.setTextColor(headerColor);
+        if (lblAdminHeader != null) lblAdminHeader.setTextColor(headerColor);
+        if (lblLegalHeader != null) lblLegalHeader.setTextColor(headerColor);
+
         int overviewCount = 0, clinicalCount = 0, logisticsCount = 0;
         int machineCount = 0, b2bCount = 0, adminCount = 0, legalCount = 0;
+        int radiologyCount = 0;
 
         for (final ModuleItem item : allModules) {
             View row = LayoutInflater.from(this).inflate(R.layout.layout_setting_item, null);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+            int margin = (int) (10 * getResources().getDisplayMetrics().density);
+            lp.setMargins(0, 0, 0, margin);
+            row.setLayoutParams(lp);
             
             TextView tvTitle = row.findViewById(R.id.tvItemTitle);
             TextView tvDesc = row.findViewById(R.id.tvItemDesc);
             ImageView ivIcon = row.findViewById(R.id.ivItemIcon);
+            ImageView ivChevron = row.findViewById(R.id.ivChevron);
             View badge = row.findViewById(R.id.tvNewBadge);
 
             tvTitle.setText(item.title);
             tvDesc.setText(item.desc);
             ivIcon.setImageResource(item.iconRes);
             
+            if (isDark) {
+                row.setBackgroundTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#1E293B")));
+                tvTitle.setTextColor(android.graphics.Color.parseColor("#FFFFFF"));
+                tvDesc.setTextColor(android.graphics.Color.parseColor("#94A3B8"));
+                if (ivChevron != null) ivChevron.setColorFilter(android.graphics.Color.parseColor("#64748B"));
+                if (ivIcon != null) ivIcon.setColorFilter(android.graphics.Color.parseColor("#818CF8")); // Indigo-400
+            } else {
+                row.setBackgroundTintList(null);
+                tvTitle.setTextColor(android.graphics.Color.parseColor("#0F172A"));
+                tvDesc.setTextColor(android.graphics.Color.parseColor("#64748B"));
+                if (ivChevron != null) ivChevron.clearColorFilter();
+                if (ivIcon != null) ivIcon.clearColorFilter();
+            }
+
             boolean hasOpened = prefs.getBoolean("opened_" + item.path, false);
             badge.setVisibility((item.isNew && !hasOpened) ? View.VISIBLE : View.GONE);
 
@@ -477,8 +1002,7 @@ public class MainActivity extends BridgeActivity {
                 }
 
                 if (item.path.equals("/legal")) {
-                    Intent intent = new Intent(MainActivity.this, LegalActivity.class);
-                    startActivity(intent);
+                    showLegalBottomSheet();
                 } else {
                     navigate(item.path);
                 }
@@ -492,6 +1016,12 @@ public class MainActivity extends BridgeActivity {
                 case "Clinical":
                     containerClinical.addView(row);
                     clinicalCount++;
+                    break;
+                case "Radiology":
+                    if (containerRadiology != null) {
+                        containerRadiology.addView(row);
+                        radiologyCount++;
+                    }
                     break;
                 case "Logistics":
                     containerLogistics.addView(row);
@@ -518,6 +1048,8 @@ public class MainActivity extends BridgeActivity {
 
         lblOverviewHeader.setVisibility(overviewCount > 0 ? View.VISIBLE : View.GONE);
         lblClinicalHeader.setVisibility(clinicalCount > 0 ? View.VISIBLE : View.GONE);
+        if (lblRadiologyHeader != null) lblRadiologyHeader.setVisibility(radiologyCount > 0 ? View.VISIBLE : View.GONE);
+        if (containerRadiology != null) containerRadiology.setVisibility(radiologyCount > 0 ? View.VISIBLE : View.GONE);
         lblLogisticsHeader.setVisibility(logisticsCount > 0 ? View.VISIBLE : View.GONE);
         lblMachineHeader.setVisibility(machineCount > 0 ? View.VISIBLE : View.GONE);
         lblB2BHeader.setVisibility(b2bCount > 0 ? View.VISIBLE : View.GONE);
@@ -530,7 +1062,7 @@ public class MainActivity extends BridgeActivity {
             .setTitle("Sign Out")
             .setMessage("Are you sure you want to sign out of your account?")
             .setPositiveButton("Sign Out", (dialog, which) -> {
-                AuthManager.clearToken(MainActivity.this);
+                AuthManager.clearSession(MainActivity.this);
                 Intent intent = new Intent(MainActivity.this, LoginActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 startActivity(intent);
@@ -552,8 +1084,8 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        progressHandler.removeCallbacks(progressRunnable);
         walletHandler.removeCallbacks(walletRunnable);
+        authCheckHandler.removeCallbacks(authCheckRunnable);
         if (moreBottomSheetDialog != null) {
             if (moreBottomSheetDialog.isShowing()) {
                 moreBottomSheetDialog.dismiss();
@@ -578,6 +1110,7 @@ public class MainActivity extends BridgeActivity {
         lblAdminHeader = null;
         lblLegalHeader = null;
         containerLegal = null;
+        containerRadiology = null;
         offlineOverlay = null;
     }
 

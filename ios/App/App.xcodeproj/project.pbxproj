@@ -14,6 +14,7 @@
 		504EC31058184FAA /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC363A1637BAA /* MainViewController.swift */; };
 		504EC31058184FEE /* LegalViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC363A1637BEE /* LegalViewController.swift */; };
 		504EC31F89055BAA /* MoreViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC38C6E219BAA /* MoreViewController.swift */; };
+		504EC331ED57C0AA /* NotificationsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC364B36E96AA /* NotificationsViewController.swift */; };
 		504EC34126D49EAA /* KeychainManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC35CF2614CAA /* KeychainManager.swift */; };
 		504EC358E9F304AA /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC31E2BA52EAA /* AuthService.swift */; };
 		504EC367E4656FAA /* AuthBaseViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC34F390DA5AA /* AuthBaseViewController.swift */; };
@@ -37,6 +38,7 @@
 		504EC363A1637BAA /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
 		504EC363A1637BEE /* LegalViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegalViewController.swift; sourceTree = "<group>"; };
 		504EC38C6E219BAA /* MoreViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoreViewController.swift; sourceTree = "<group>"; };
+		504EC364B36E96AA /* NotificationsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsViewController.swift; sourceTree = "<group>"; };
 		504EC35CF2614CAA /* KeychainManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainManager.swift; sourceTree = "<group>"; };
 		504EC31E2BA52EAA /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
 		504EC34F390DA5AA /* AuthBaseViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthBaseViewController.swift; sourceTree = "<group>"; };
@@ -91,6 +93,7 @@
 				504EC363A1637BAA /* MainViewController.swift */,
 				504EC363A1637BEE /* LegalViewController.swift */,
 				504EC38C6E219BAA /* MoreViewController.swift */,
+				504EC364B36E96AA /* NotificationsViewController.swift */,
 				504EC35CF2614CAA /* KeychainManager.swift */,
 				504EC31E2BA52EAA /* AuthService.swift */,
 				504EC34F390DA5AA /* AuthBaseViewController.swift */,
@@ -195,6 +198,7 @@
 				504EC31058184FAA /* MainViewController.swift in Sources */,
 				504EC31058184FEE /* LegalViewController.swift in Sources */,
 				504EC31F89055BAA /* MoreViewController.swift in Sources */,
+				504EC331ED57C0AA /* NotificationsViewController.swift in Sources */,
 				504EC34126D49EAA /* KeychainManager.swift in Sources */,
 				504EC358E9F304AA /* AuthService.swift in Sources */,
 				504EC367E4656FAA /* AuthBaseViewController.swift in Sources */,

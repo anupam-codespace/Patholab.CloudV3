@@ -46,6 +46,7 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
     private var currentPath: String? = nil   // dedup — skip reload if already on same path
     private var selectedTab  = 0             // 0=Dashboard 1=Patients 2=Categories 3=More
     private var previousTab  = 0
+    private var isDarkMode   = false
     private var walletTimer: Timer? = nil
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -69,6 +70,16 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
                     webView?.customUserAgent = defaultUA + " CapacitorApp"
                 }
             }
+            
+            // Unconditionally hide web header elements immediately at document start using injected CSS
+            let css = ".mobile-app-header-web-component, header { display: none !important; }"
+            let js = """
+            var style = document.createElement('style');
+            style.innerHTML = '\(css)';
+            document.head.appendChild(style);
+            """
+            let script = WKUserScript(source: js, injectionTime: .atDocumentStart, forMainFrameOnly: true)
+            webView.configuration.userContentController.addUserScript(script)
         }
 
         // Adjust WebView constraints so it sits perfectly above the bottom navigation bar and below the top header stack
@@ -93,10 +104,25 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
             
             // Enable iOS swipe-back through web history
             webView.allowsBackForwardNavigationGestures = true
+            webView.addObserver(self, forKeyPath: "URL", options: .new, context: nil)
         }
 
         // Navigate to dashboard once layout is ready
-        DispatchQueue.main.async { self.selectTab(0) }
+        DispatchQueue.main.async {
+            self.selectTab(0)
+            
+            // Polling timer to sync theme with web view class state
+            Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+                guard let self = self, let webView = self.webView else { return }
+                webView.evaluateJavaScript("document.documentElement.classList.contains('dark')") { (result, error) in
+                    if let isDark = result as? Bool {
+                        DispatchQueue.main.async {
+                            self.applyNativeTheme(isDark: isDark)
+                        }
+                    }
+                }
+            }
+        }
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -111,8 +137,9 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        // Ensure wallet card gradient fits perfectly when view resizes
-        walletGradient.frame = walletCardView.bounds
+        // Ensure wallet card gradient fits wrapper perfectly
+        let wrapperWidth = view.bounds.width - 28
+        walletGradient.frame = CGRect(x: 0, y: 0, width: wrapperWidth, height: 52)
     }
 
     override func viewSafeAreaInsetsDidChange() {
@@ -192,13 +219,13 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         walletCardView.isHidden = false
         txtWalletBalance.text = String(format: "₹%.2f", balance)
 
-        if balance <= 0 {
-            txtWalletStatus.text = "ZERO BALANCE ( RECHARGE REQUIRED )"
+        if balance <= 20.0 {
+            txtWalletStatus.text = "LOW BALANCE ( ADD FUNDS )"
             walletGradient.colors = [
                 UIColor(red: 239/255, green: 68/255, blue: 68/255, alpha: 1).cgColor, // red-500
                 UIColor(red: 225/255, green: 29/255, blue: 72/255, alpha: 1).cgColor // rose-600
             ]
-        } else if balance < 500 {
+        } else if balance < 75.0 {
             txtWalletStatus.text = "LOW BALANCE ( ADD FUNDS )"
             walletGradient.colors = [
                 UIColor(red: 245/255, green: 158/255, blue: 11/255, alpha: 1).cgColor, // amber-500
@@ -207,8 +234,8 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         } else {
             txtWalletStatus.text = "ACTIVE & FUNDED"
             walletGradient.colors = [
-                UIColor(red: 79/255, green: 70/255, blue: 229/255, alpha: 1).cgColor, // indigo-600
-                UIColor(red: 124/255, green: 58/255, blue: 237/255, alpha: 1).cgColor // violet-600
+                UIColor(red: 16/255, green: 185/255, blue: 129/255, alpha: 1).cgColor, // emerald-500
+                UIColor(red: 5/255, green: 150/255, blue: 105/255, alpha: 1).cgColor  // emerald-600
             ]
         }
         view.setNeedsLayout()
@@ -292,9 +319,12 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
     private func updateNavTints() {
         navStack.arrangedSubviews.compactMap({ $0 as? UIButton }).forEach { btn in
             let active = btn.tag == selectedTab
-            let color: UIColor = active
-                ? UIColor(red: 55/255, green: 48/255, blue: 163/255, alpha: 1)
-                : UIColor(white: 0.55, alpha: 1)
+            let color: UIColor
+            if active {
+                color = isDarkMode ? UIColor(red: 129/255, green: 140/255, blue: 248/255, alpha: 1) : UIColor(red: 55/255, green: 48/255, blue: 163/255, alpha: 1)
+            } else {
+                color = isDarkMode ? UIColor(red: 148/255, green: 163/255, blue: 184/255, alpha: 1) : UIColor(white: 0.55, alpha: 1)
+            }
             btn.tintColor = color
             btn.setTitleColor(color, for: .normal)
             if var cfg = btn.configuration {
@@ -367,6 +397,14 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
     // ─────────────────────────────────────────────────────────────────────────
 
     @objc private func navTapped(_ sender: UIButton) {
+        // Subtle selection scale pop animation for premium micro-feedback
+        UIView.animate(withDuration: 0.12, animations: {
+            sender.transform = CGAffineTransform(scaleX: 1.1, y: 1.1)
+        }) { _ in
+            UIView.animate(withDuration: 0.12) {
+                sender.transform = .identity
+            }
+        }
         selectTab(sender.tag)
     }
 
@@ -612,77 +650,82 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         ]
         walletGradient.startPoint = CGPoint(x: 0, y: 0.5)
         walletGradient.endPoint = CGPoint(x: 1, y: 0.5)
-        walletGradient.cornerRadius = 14
+        walletGradient.cornerRadius = 12
         wrapper.layer.addSublayer(walletGradient)
-        wrapper.layer.cornerRadius = 14
+        wrapper.layer.cornerRadius = 12
 
         // Add Wallet Card Tap Action
         let tap = UITapGestureRecognizer(target: self, action: #selector(walletCardTapped))
         wrapper.addGestureRecognizer(tap)
 
-        // Circle Credit Card Icon Container
+        // Circle Credit Card Icon Container (slimmed to 30dp)
         walletIconBg.backgroundColor = UIColor(white: 1.0, alpha: 0.2)
-        walletIconBg.layer.cornerRadius = 18
+        walletIconBg.layer.cornerRadius = 15
         walletIconBg.translatesAutoresizingMaskIntoConstraints = false
         wrapper.addSubview(walletIconBg)
 
         let cardImage = UIImage(systemName: "creditcard.fill")
         walletIconView.image = cardImage
-        walletIconView.tintColor = UIColor(red: 249/255, green: 115/255, blue: 22/255, alpha: 1)
+        walletIconView.tintColor = .white
         walletIconView.contentMode = .scaleAspectFit
         walletIconView.translatesAutoresizingMaskIntoConstraints = false
         walletIconBg.addSubview(walletIconView)
 
-        // Balance labels
+        // Balance labels (refined font sizes)
         txtWalletBalance.text = "₹30.00"
         txtWalletBalance.textColor = .white
-        txtWalletBalance.font = .systemFont(ofSize: 17, weight: .bold)
+        txtWalletBalance.font = .systemFont(ofSize: 16, weight: .bold)
         txtWalletBalance.translatesAutoresizingMaskIntoConstraints = false
         wrapper.addSubview(txtWalletBalance)
 
         txtWalletStatus.text = "LOW BALANCE ( ADD FUNDS )"
         txtWalletStatus.textColor = UIColor(red: 255/255, green: 227/255, blue: 227/255, alpha: 1)
-        txtWalletStatus.font = .systemFont(ofSize: 10, weight: .bold)
+        txtWalletStatus.font = .systemFont(ofSize: 9, weight: .bold)
         txtWalletStatus.translatesAutoresizingMaskIntoConstraints = false
         wrapper.addSubview(txtWalletStatus)
 
-        // Right chevron
-        let chevImage = UIImage(systemName: "chevron.right")
-        walletChevron.image = chevImage
-        walletChevron.tintColor = UIColor(white: 1.0, alpha: 0.6)
-        walletChevron.contentMode = .scaleAspectFit
+        // Right side: Pulsing status indicator dot (instead of chevron)
+        walletChevron.image = nil
+        walletChevron.backgroundColor = UIColor(white: 1.0, alpha: 0.8)
+        walletChevron.layer.cornerRadius = 4
+        walletChevron.clipsToBounds = true
         walletChevron.translatesAutoresizingMaskIntoConstraints = false
         wrapper.addSubview(walletChevron)
+
+        // Pulse animation
+        UIView.animate(withDuration: 1.2, delay: 0, options: [.repeat, .autoreverse, .allowUserInteraction], animations: {
+            self.walletChevron.alpha = 0.3
+        }, completion: nil)
 
         topLayoutContainer.addArrangedSubview(walletCardView)
 
         NSLayoutConstraint.activate([
-            wrapper.topAnchor.constraint(equalTo: walletCardView.topAnchor, constant: 10),
-            wrapper.bottomAnchor.constraint(equalTo: walletCardView.bottomAnchor, constant: -10),
+            wrapper.topAnchor.constraint(equalTo: walletCardView.topAnchor, constant: 6),
+            wrapper.bottomAnchor.constraint(equalTo: walletCardView.bottomAnchor, constant: -6),
             wrapper.leadingAnchor.constraint(equalTo: walletCardView.leadingAnchor, constant: 14),
             wrapper.trailingAnchor.constraint(equalTo: walletCardView.trailingAnchor, constant: -14),
-            wrapper.heightAnchor.constraint(equalToConstant: 68),
+            wrapper.heightAnchor.constraint(equalToConstant: 52),
 
-            walletIconBg.leadingAnchor.constraint(equalTo: wrapper.leadingAnchor, constant: 14),
+            walletIconBg.leadingAnchor.constraint(equalTo: wrapper.leadingAnchor, constant: 12),
             walletIconBg.centerYAnchor.constraint(equalTo: wrapper.centerYAnchor),
-            walletIconBg.widthAnchor.constraint(equalToConstant: 36),
-            walletIconBg.heightAnchor.constraint(equalToConstant: 36),
+            walletIconBg.widthAnchor.constraint(equalToConstant: 30),
+            walletIconBg.heightAnchor.constraint(equalToConstant: 30),
 
             walletIconView.centerXAnchor.constraint(equalTo: walletIconBg.centerXAnchor),
             walletIconView.centerYAnchor.constraint(equalTo: walletIconBg.centerYAnchor),
-            walletIconView.widthAnchor.constraint(equalToConstant: 18),
-            walletIconView.heightAnchor.constraint(equalToConstant: 18),
+            walletIconView.widthAnchor.constraint(equalToConstant: 14),
+            walletIconView.heightAnchor.constraint(equalToConstant: 14),
 
             txtWalletBalance.topAnchor.constraint(equalTo: walletIconBg.topAnchor, constant: -1),
-            txtWalletBalance.leadingAnchor.constraint(equalTo: walletIconBg.trailingAnchor, constant: 12),
+            txtWalletBalance.leadingAnchor.constraint(equalTo: walletIconBg.trailingAnchor, constant: 10),
 
             txtWalletStatus.bottomAnchor.constraint(equalTo: walletIconBg.bottomAnchor, constant: 1),
-            txtWalletStatus.leadingAnchor.constraint(equalTo: walletIconBg.trailingAnchor, constant: 12),
+            txtWalletStatus.leadingAnchor.constraint(equalTo: walletIconBg.trailingAnchor, constant: 10),
 
-            walletChevron.trailingAnchor.constraint(equalTo: wrapper.trailingAnchor, constant: -14),
+            walletChevron.trailingAnchor.constraint(equalTo: wrapper.trailingAnchor, constant: -16),
             walletChevron.centerYAnchor.constraint(equalTo: wrapper.centerYAnchor),
-            walletChevron.widthAnchor.constraint(equalToConstant: 14),
-            walletChevron.heightAnchor.constraint(equalToConstant: 14)
+            walletChevron.widthAnchor.constraint(equalToConstant: 8),
+            walletChevron.heightAnchor.constraint(equalToConstant: 8)
         ])
     }
 
@@ -706,7 +749,27 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
     }
 
     @objc private func headerNotificationTapped() {
-        showWeb(path: "/workspace/support")
+        let notifVC = NotificationsViewController()
+        notifVC.isDarkMode = self.isDarkMode
+        if #available(iOS 16.0, *) {
+            notifVC.modalPresentationStyle = .pageSheet
+            if let sheet = notifVC.sheetPresentationController {
+                sheet.detents = [.custom { context in
+                    return context.maximumDetentValue * 0.8
+                }]
+                sheet.prefersGrabberVisible = true
+                sheet.preferredCornerRadius = 24
+            }
+        } else if #available(iOS 15.0, *) {
+            notifVC.modalPresentationStyle = .pageSheet
+            if let sheet = notifVC.sheetPresentationController {
+                sheet.detents = [.medium(), .large()]
+                sheet.prefersGrabberVisible = true
+            }
+        } else {
+            notifVC.modalPresentationStyle = .formSheet
+        }
+        present(notifVC, animated: true, completion: nil)
     }
 
     private func getHeaderTitle(for path: String) -> String {
@@ -739,6 +802,83 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
             headerTitleLabel.text = "PATIENT WORKLIST"
         } else if previousTab == 2 {
             headerTitleLabel.text = "CATEGORIES"
+        }
+    }
+
+    // MARK: – WKWebView Key-Value Observing (KVO)
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+        if keyPath == "URL", let webView = object as? WKWebView, let url = webView.url {
+            checkAuthRedirect(url: url)
+        }
+    }
+
+    private func checkAuthRedirect(url: URL) {
+        let path = url.path
+        if path.contains("/login") || path.contains("/register") || path.contains("/forgot-password") || path.contains("/verify") || path.contains("/reset-password") {
+            stopWalletPolling()
+            
+            // Log out natively
+            KeychainManager.delete(forKey: KeychainManager.tokenKey)
+            AuthService.clearWebViewCookie()
+            
+            DispatchQueue.main.async {
+                if let app = UIApplication.shared.delegate as? AppDelegate {
+                    app.signOut()
+                }
+            }
+        }
+    }
+
+    private func applyNativeTheme(isDark: Bool) {
+        guard isDarkMode != isDark else { return }
+        isDarkMode = isDark
+        
+        let slate900 = UIColor(red: 15/255, green: 23/255, blue: 42/255, alpha: 1)
+        let slate800 = UIColor(red: 30/255, green: 41/255, blue: 59/255, alpha: 1)
+        let slate700 = UIColor(red: 51/255, green: 65/255, blue: 85/255, alpha: 1)
+        let slate600 = UIColor(red: 71/255, green: 85/255, blue: 105/255, alpha: 1)
+        let slate200 = UIColor(red: 226/255, green: 232/255, blue: 240/255, alpha: 1)
+        
+        // Root view background color
+        view.backgroundColor = isDark ? slate900 : .white
+        
+        // Header layouts background color
+        topLayoutContainer.backgroundColor = isDark ? slate800 : .white
+        topHeaderBar.backgroundColor = isDark ? slate800 : .white
+        
+        // Header Divider
+        bottomBorder.backgroundColor = isDark ? slate700 : UIColor(white: 0.94, alpha: 1)
+        
+        // Title text colors
+        headerTitleLabel.textColor = isDark ? .white : UIColor(red: 15/255, green: 23/255, blue: 42/255, alpha: 1)
+        headerSubtitleLabel.textColor = isDark ? UIColor(red: 148/255, green: 163/255, blue: 184/255, alpha: 1) : UIColor(red: 148/255, green: 163/255, blue: 184/255, alpha: 1)
+        
+        // Buttons background and tint
+        let btnBg = isDark ? slate700 : UIColor(red: 241/255, green: 245/255, blue: 249/255, alpha: 1)
+        let btnTint = isDark ? slate200 : slate600
+        
+        let buttons = [menuButton, themeButton, supportButton, notificationButton]
+        for button in buttons {
+            button.backgroundColor = btnBg
+            button.tintColor = btnTint
+            if button == menuButton {
+                button.setTitleColor(btnTint, for: .normal)
+            }
+        }
+        
+        // Bottom nav bar background
+        bottomNavBar.backgroundColor = isDark ? slate900 : .white
+        
+        // Update bottom nav tints
+        updateNavTints()
+        
+        // Update MoreViewController if instantiated
+        moreVC.applyTheme(isDark: isDark)
+    }
+
+    deinit {
+        if let webView = self.webView {
+            webView.removeObserver(self, forKeyPath: "URL")
         }
     }
 }

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/mainParentLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#F8FAFC">
@@ -11,18 +12,19 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="#FFFFFF">
+        android:background="#FFFFFF"
+        android:elevation="2dp">
 
         <!-- 0. Native top header bar -->
         <RelativeLayout
             android:id="@+id/topHeaderBar"
             android:layout_width="match_parent"
-            android:layout_height="64dp"
+            android:layout_height="60dp"
             android:background="#FFFFFF"
             android:paddingStart="14dp"
             android:paddingEnd="14dp">
 
-            <!-- Left: menu icon ... -->
+            <!-- Left: menu icon ••• -->
             <LinearLayout
                 android:id="@+id/btnHeaderMenu"
                 android:layout_width="38dp"
@@ -34,6 +36,7 @@
                 android:clickable="true"
                 android:focusable="true">
                 <TextView
+                    android:id="@+id/txtHeaderMenu"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="•••"
@@ -43,7 +46,7 @@
                     android:layout_gravity="center" />
             </LinearLayout>
 
-            <!-- Center/Left Title Stack -->
+            <!-- Center Title Stack -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -76,7 +79,7 @@
 
             </LinearLayout>
 
-            <!-- Right: bell dropdown, theme, support -->
+            <!-- Right: bell, theme, support -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
@@ -84,7 +87,7 @@
                 android:orientation="horizontal"
                 android:gravity="center_vertical">
 
-                <!-- Notifications Bell Dropdown -->
+                <!-- Notifications Bell -->
                 <LinearLayout
                     android:id="@+id/btnHeaderNotification"
                     android:layout_width="wrap_content"
@@ -130,7 +133,7 @@
                         android:tint="#475569" />
                 </LinearLayout>
 
-                <!-- Help Support -->
+                <!-- Help / Support -->
                 <LinearLayout
                     android:id="@+id/btnHeaderSupport"
                     android:layout_width="36dp"
@@ -150,84 +153,97 @@
 
         </RelativeLayout>
 
-        <!-- Divider line -->
+        <!-- Header / Wallet separator -->
         <View
+            android:id="@+id/headerDivider"
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:background="#F1F5F9" />
 
-        <!-- Native Wallet Card banner -->
+        <!-- ── Wallet Card ─────────────────────────────────────────────────── -->
+        <!-- Redesigned: fills full width with balance, status, and a right-side action -->
         <RelativeLayout
             android:id="@+id/walletCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="14dp"
             android:layout_marginEnd="14dp"
-            android:layout_marginTop="10dp"
-            android:layout_marginBottom="10dp"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="6dp"
             android:background="@drawable/bg_wallet_card_orange"
-            android:padding="14dp"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
             android:visibility="gone">
 
-            <!-- Card Circle Icon -->
-            <FrameLayout
-                android:id="@+id/walletIconContainer"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:layout_alignParentStart="true"
-                android:layout_centerVertical="true"
-                android:background="@drawable/bg_wallet_icon_circle">
-                <ImageView
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
-                    android:src="@drawable/ic_credit_card"
-                    android:tint="#F97316"
-                    android:layout_gravity="center" />
-            </FrameLayout>
-
-            <!-- Wallet Text -->
+            <!-- Left: icon + text stack -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_toEndOf="@id/walletIconContainer"
+                android:layout_alignParentStart="true"
                 android:layout_centerVertical="true"
-                android:layout_marginStart="12dp"
-                android:orientation="vertical">
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
-                <TextView
-                    android:id="@+id/txtWalletBalance"
+                <!-- Slim circular icon -->
+                <FrameLayout
+                    android:id="@+id/walletIconContainer"
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
+                    android:background="@drawable/bg_wallet_icon_circle">
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:src="@drawable/ic_credit_card"
+                        android:tint="#FFFFFF"
+                        android:layout_gravity="center" />
+                </FrameLayout>
+
+                <!-- Balance + status -->
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="₹0.00"
-                    android:textColor="#FFFFFF"
-                    android:textSize="17sp"
-                    android:textStyle="bold" />
+                    android:layout_marginStart="12dp"
+                    android:orientation="vertical">
 
-                <TextView
-                    android:id="@+id/txtWalletStatus"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="LOW BALANCE ( ADD FUNDS )"
-                    android:textColor="#FFE3E3"
-                    android:textSize="10sp"
-                    android:textStyle="bold"
-                    android:letterSpacing="0.04" />
+                    <TextView
+                        android:id="@+id/txtWalletBalance"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="₹0.00"
+                        android:textColor="#FFFFFF"
+                        android:textSize="17sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/txtWalletStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="1dp"
+                        android:text="LOW BALANCE — ADD FUNDS"
+                        android:textColor="#FFE3D8"
+                        android:textSize="9.5sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.04" />
+
+                </LinearLayout>
 
             </LinearLayout>
 
-            <!-- Right Chevron -->
-            <ImageView
-                android:layout_width="16dp"
-                android:layout_height="16dp"
+            <!-- Right: Pulsing status indicator dot -->
+            <View
+                android:id="@+id/walletPulseDot"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
-                android:src="@drawable/ic_chevron_right"
-                android:tint="#FFFFFF" />
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/bg_wallet_icon_circle" />
 
         </RelativeLayout>
 
-        <!-- Dynamic top spacer margin when card is hidden -->
+        <!-- Bottom rule line -->
         <View
             android:id="@+id/dividerLineTop"
             android:layout_width="match_parent"
@@ -250,17 +266,7 @@
             android:layout_height="match_parent" />
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-    <!-- 2. Reusable Skeleton Loading Container -->
-    <FrameLayout
-        android:id="@+id/skeletonContainer"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@id/topLayoutContainer"
-        android:layout_above="@id/bottomNavigation"
-        android:background="#F8FAFC"
-        android:visibility="gone">
-        <include layout="@layout/layout_skeletons" />
-    </FrameLayout>
+
 
     <!-- 3. Offline Overlay -->
     <LinearLayout
@@ -310,13 +316,17 @@
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavigation"
         android:layout_width="match_parent"
-        android:layout_height="64dp"
+        android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:background="#FFFFFF"
         app:elevation="8dp"
         app:menu="@menu/bottom_nav_menu"
-        app:itemIconTint="@null"
-        app:itemTextColor="#3730A3"
+        app:itemIconSize="20dp"
+        app:itemIconTint="@color/nav_item_tint"
+        app:itemTextColor="@color/nav_item_tint"
+        app:itemRippleColor="@null"
+        app:itemTextAppearanceActive="@style/BottomNavActive"
+        app:itemTextAppearanceInactive="@style/BottomNavInactive"
         app:labelVisibilityMode="labeled" />
 
 </RelativeLayout>

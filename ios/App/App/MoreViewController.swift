@@ -41,10 +41,26 @@ class MoreViewController: UIViewController {
     private let lblSheetTitle = UILabel()
 
     private var allModules: [ModuleItem] = []
+    
+    var isDarkMode = false
+
+    func applyTheme(isDark: Bool) {
+        isDarkMode = isDark
+        
+        view.backgroundColor = isDark ? UIColor(red: 15/255, green: 23/255, blue: 42/255, alpha: 1) : UIColor(red: 248/255, green: 250/255, blue: 252/255, alpha: 1)
+        lblSheetTitle.textColor = isDark ? .white : UIColor(red: 15/255, green: 23/255, blue: 42/255, alpha: 1)
+        
+        let headers = [lblOverviewHeader, lblClinicalHeader, lblRadiologyHeader, lblLogisticsHeader, lblMachineHeader, lblB2BHeader, lblAdminHeader, lblLegalHeader]
+        for header in headers {
+            header.textColor = isDark ? UIColor(red: 129/255, green: 140/255, blue: 248/255, alpha: 1) : UIColor(red: 67/255, green: 56/255, blue: 202/255, alpha: 1)
+        }
+        
+        renderModules()
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = UIColor(red: 248/255, green: 250/255, blue: 252/255, alpha: 1)
+        view.backgroundColor = isDarkMode ? UIColor(red: 15/255, green: 23/255, blue: 42/255, alpha: 1) : UIColor(red: 248/255, green: 250/255, blue: 252/255, alpha: 1)
         initModulesData()
         setupUI()
         renderModules()
@@ -89,7 +105,7 @@ class MoreViewController: UIViewController {
 
         // Sheet Title
         lblSheetTitle.text = "More Settings"
-        lblSheetTitle.textColor = UIColor(red: 15/255, green: 23/255, blue: 42/255, alpha: 1)
+        lblSheetTitle.textColor = isDarkMode ? .white : UIColor(red: 15/255, green: 23/255, blue: 42/255, alpha: 1)
         lblSheetTitle.font = .systemFont(ofSize: 22, weight: .bold)
         lblSheetTitle.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(lblSheetTitle)
@@ -97,7 +113,7 @@ class MoreViewController: UIViewController {
         // Sign Out Button
         btnSignOut.setTitle("Sign Out", for: .normal)
         btnSignOut.setTitleColor(.white, for: .normal)
-        btnSignOut.backgroundColor = UIColor(red: 239/255, green: 68/255, blue: 68/255, alpha: 1.0)
+        btnSignOut.backgroundColor = UIColor(red: 124/255, green: 58/255, blue: 237/255, alpha: 1.0)
         btnSignOut.layer.cornerRadius = 14
         btnSignOut.titleLabel?.font = .systemFont(ofSize: 16, weight: .bold)
         btnSignOut.translatesAutoresizingMaskIntoConstraints = false
@@ -167,7 +183,7 @@ class MoreViewController: UIViewController {
 
     private func setupCategoryStack(stack: UIStackView, header: UILabel, title: String) {
         header.text = title
-        header.textColor = UIColor(red: 67/255, green: 56/255, blue: 202/255, alpha: 1)
+        header.textColor = isDarkMode ? UIColor(red: 129/255, green: 140/255, blue: 248/255, alpha: 1) : UIColor(red: 67/255, green: 56/255, blue: 202/255, alpha: 1)
         header.font = .systemFont(ofSize: 12, weight: .bold)
         header.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(header)
@@ -317,15 +333,15 @@ class MoreViewController: UIViewController {
 
     private func makeSettingRow(item: ModuleItem) -> UIView {
         let row = UIButton(type: .system)
-        row.backgroundColor = .white
+        row.backgroundColor = isDarkMode ? UIColor(red: 30/255, green: 41/255, blue: 59/255, alpha: 1) : .white
         row.layer.cornerRadius = 12
         row.layer.borderWidth = 1
-        row.layer.borderColor = UIColor(white: 0.9, alpha: 1).cgColor
+        row.layer.borderColor = isDarkMode ? UIColor(red: 51/255, green: 65/255, blue: 85/255, alpha: 1).cgColor : UIColor(white: 0.9, alpha: 1).cgColor
         row.translatesAutoresizingMaskIntoConstraints = false
         row.heightAnchor.constraint(equalToConstant: 72).isActive = true
 
         let iconView = UIImageView(image: UIImage(systemName: item.icon))
-        iconView.tintColor = UIColor(red: 67/255, green: 56/255, blue: 202/255, alpha: 1)
+        iconView.tintColor = isDarkMode ? UIColor(red: 129/255, green: 140/255, blue: 248/255, alpha: 1) : UIColor(red: 67/255, green: 56/255, blue: 202/255, alpha: 1)
         iconView.contentMode = .scaleAspectFit
         iconView.translatesAutoresizingMaskIntoConstraints = false
         row.addSubview(iconView)
@@ -333,14 +349,14 @@ class MoreViewController: UIViewController {
         let lblTitle = UILabel()
         lblTitle.text = item.title
         lblTitle.font = .systemFont(ofSize: 15, weight: .bold)
-        lblTitle.textColor = UIColor(red: 15/255, green: 23/255, blue: 42/255, alpha: 1)
+        lblTitle.textColor = isDarkMode ? .white : UIColor(red: 15/255, green: 23/255, blue: 42/255, alpha: 1)
         lblTitle.translatesAutoresizingMaskIntoConstraints = false
         row.addSubview(lblTitle)
 
         let lblDesc = UILabel()
         lblDesc.text = item.desc
         lblDesc.font = .systemFont(ofSize: 12)
-        lblDesc.textColor = .gray
+        lblDesc.textColor = isDarkMode ? UIColor(red: 148/255, green: 163/255, blue: 184/255, alpha: 1) : .gray
         lblDesc.translatesAutoresizingMaskIntoConstraints = false
         row.addSubview(lblDesc)
 
@@ -359,7 +375,7 @@ class MoreViewController: UIViewController {
         badge.isHidden = !(item.isNew && !hasOpened)
 
         let arrow = UIImageView(image: UIImage(systemName: "chevron.right"))
-        arrow.tintColor = .lightGray
+        arrow.tintColor = isDarkMode ? UIColor(red: 100/255, green: 116/255, blue: 139/255, alpha: 1) : .lightGray
         arrow.translatesAutoresizingMaskIntoConstraints = false
         row.addSubview(arrow)
 

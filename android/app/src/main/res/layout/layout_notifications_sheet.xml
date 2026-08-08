@@ -3,60 +3,111 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@drawable/bg_bottom_sheet"
-    android:paddingBottom="16dp">
+    android:background="@drawable/bg_bottom_sheet">
 
-    <!-- Drag Handle Indicator -->
+    <!-- Drag Handle -->
     <View
-        android:layout_width="40dp"
-        android:layout_height="5dp"
+        android:layout_width="36dp"
+        android:layout_height="4dp"
         android:layout_gravity="center_horizontal"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="4dp"
         android:background="#D1D5DB" />
 
-    <!-- Header Title -->
-    <TextView
+    <!-- Sheet Header Row -->
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="NOTIFICATIONS"
-        android:textColor="#0F172A"
-        android:textSize="15sp"
-        android:textStyle="bold"
+        android:layout_height="52dp"
         android:paddingStart="20dp"
-        android:paddingEnd="20dp"
-        android:layout_marginBottom="16dp"
-        android:letterSpacing="0.01" />
+        android:paddingEnd="20dp">
 
-    <!-- Main Content Frame -->
+        <!-- Title -->
+        <TextView
+            android:id="@+id/txtNotificationsTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:text="Notifications"
+            android:textColor="#0F172A"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+
+        <!-- Bell Icon (decorative) -->
+        <ImageView
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:layout_centerVertical="true"
+            android:layout_alignParentEnd="true"
+            android:src="@drawable/ic_bell"
+            android:tint="#94A3B8" />
+
+    </RelativeLayout>
+
+    <!-- Thin separator -->
+    <View
+        android:id="@+id/notificationsDivider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#F1F5F9"
+        android:layout_marginBottom="4dp" />
+
+    <!-- Main Content Frame (fills available space) -->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp">
+        android:layout_weight="1">
 
-        <!-- Progress Spinner -->
+        <!-- Progress Spinner centred -->
         <ProgressBar
             android:id="@+id/progressSpinner"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:layout_gravity="center"
+            android:indeterminateTint="#4338CA"
             android:visibility="visible" />
 
-        <!-- No Notifications Placeholder -->
-        <TextView
+        <!-- Empty state -->
+        <LinearLayout
             android:id="@+id/lblNoNotifications"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="No new notifications"
-            android:textColor="#94A3B8"
-            android:textSize="13sp"
-            android:textStyle="bold"
-            android:visibility="gone" />
+            android:orientation="vertical"
+            android:gravity="center"
+            android:visibility="gone">
 
-        <!-- Scroll View Container -->
+            <ImageView
+                android:id="@+id/imgNotificationsEmpty"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@drawable/ic_bell"
+                android:tint="#E2E8F0"
+                android:layout_gravity="center"
+                android:layout_marginBottom="12dp" />
+
+            <TextView
+                android:id="@+id/txtNotificationsEmptyTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="All caught up!"
+                android:textColor="#0F172A"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:gravity="center" />
+
+            <TextView
+                android:id="@+id/txtNotificationsEmptySubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="No new notifications at this time."
+                android:textColor="#94A3B8"
+                android:textSize="13sp"
+                android:gravity="center" />
+
+        </LinearLayout>
+
+        <!-- Notifications scroll -->
         <ScrollView
             android:id="@+id/scrollNotifications"
             android:layout_width="match_parent"
@@ -69,23 +120,42 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:divider="?android:attr/dividerVertical"
-                android:showDividers="none" />
+                android:paddingTop="4dp"
+                android:paddingBottom="8dp" />
+
         </ScrollView>
+
     </FrameLayout>
 
-    <!-- Mark All As Read Button -->
+    <!-- Bottom action bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:orientation="horizontal"
+        android:background="#FAFAFA"
+        android:gravity="center">
+
+        <!-- Top separator -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+    <!-- Mark all as read + bottom padding -->
     <TextView
         android:id="@+id/btnMarkAllRead"
         android:layout_width="match_parent"
-        android:layout_height="36dp"
+        android:layout_height="44dp"
         android:gravity="center"
-        android:text="✓ Mark all as read"
-        android:textColor="#3B82F6"
-        android:textSize="12sp"
+        android:text="✓  Mark all as read"
+        android:textColor="#4338CA"
+        android:textSize="13sp"
         android:textStyle="bold"
         android:background="?android:attr/selectableItemBackground"
         android:clickable="true"
         android:focusable="true"
-        android:layout_marginTop="12dp" />
+        android:letterSpacing="0.01" />
+
 </LinearLayout>

@@ -6,10 +6,19 @@ class LegalViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
+        view.backgroundColor = UIColor(red: 248/255, green: 250/255, blue: 252/255, alpha: 1) // Slate-50
         title = "Terms & Conditions"
 
-        // Set up close button
+        // Navigation bar styling
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = UIColor(red: 67/255, green: 56/255, blue: 202/255, alpha: 1)
+        appearance.titleTextAttributes = [.foregroundColor: UIColor.white, .font: UIFont.boldSystemFont(ofSize: 17)]
+        navigationController?.navigationBar.standardAppearance = appearance
+        navigationController?.navigationBar.scrollEdgeAppearance = appearance
+        navigationController?.navigationBar.tintColor = .white
+
+        // Back button
         let backImage = UIImage(systemName: "chevron.left")
         navigationItem.leftBarButtonItem = UIBarButtonItem(
             image: backImage,
@@ -17,22 +26,61 @@ class LegalViewController: UIViewController {
             target: self,
             action: #selector(closeTapped)
         )
-        navigationItem.leftBarButtonItem?.tintColor = UIColor(red: 79/255, green: 70/255, blue: 229/255, alpha: 1)
 
-        setupTextView()
+        setupLayout()
         loadLegalText()
     }
 
-    private func setupTextView() {
+    private func setupLayout() {
+        // Hero banner
+        let heroBanner = UIView()
+        heroBanner.backgroundColor = UIColor(red: 67/255, green: 56/255, blue: 202/255, alpha: 1)
+        heroBanner.translatesAutoresizingMaskIntoConstraints = false
+
+        let heroTitle = UILabel()
+        heroTitle.text = "Legal Agreements"
+        heroTitle.font = .boldSystemFont(ofSize: 22)
+        heroTitle.textColor = .white
+        heroTitle.translatesAutoresizingMaskIntoConstraints = false
+
+        let heroSubtitle = UILabel()
+        heroSubtitle.text = "Please read the following terms carefully before using Patholab."
+        heroSubtitle.font = .systemFont(ofSize: 13)
+        heroSubtitle.textColor = UIColor(red: 199/255, green: 210/255, blue: 254/255, alpha: 1)
+        heroSubtitle.numberOfLines = 0
+        heroSubtitle.translatesAutoresizingMaskIntoConstraints = false
+
+        heroBanner.addSubview(heroTitle)
+        heroBanner.addSubview(heroSubtitle)
+        view.addSubview(heroBanner)
+
+        NSLayoutConstraint.activate([
+            heroBanner.topAnchor.constraint(equalTo: view.topAnchor),
+            heroBanner.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            heroBanner.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            heroTitle.topAnchor.constraint(equalTo: heroBanner.topAnchor, constant: 24),
+            heroTitle.leadingAnchor.constraint(equalTo: heroBanner.leadingAnchor, constant: 20),
+            heroTitle.trailingAnchor.constraint(equalTo: heroBanner.trailingAnchor, constant: -20),
+            heroSubtitle.topAnchor.constraint(equalTo: heroTitle.bottomAnchor, constant: 6),
+            heroSubtitle.leadingAnchor.constraint(equalTo: heroBanner.leadingAnchor, constant: 20),
+            heroSubtitle.trailingAnchor.constraint(equalTo: heroBanner.trailingAnchor, constant: -20),
+            heroSubtitle.bottomAnchor.constraint(equalTo: heroBanner.bottomAnchor, constant: -24),
+        ])
+
+        setupTextView(below: heroBanner)
+    }
+
+    private func setupTextView(below anchor: UIView) {
         textView.translatesAutoresizingMaskIntoConstraints = false
         textView.isEditable = false
         textView.isSelectable = true
-        textView.textContainerInset = UIEdgeInsets(top: 20, left: 16, bottom: 24, right: 16)
+        textView.backgroundColor = UIColor(red: 248/255, green: 250/255, blue: 252/255, alpha: 1)
+        textView.textContainerInset = UIEdgeInsets(top: 20, left: 16, bottom: 40, right: 16)
         
         view.addSubview(textView)
 
         NSLayoutConstraint.activate([
-            textView.topAnchor.constraint(equalTo: view.topAnchor),
+            textView.topAnchor.constraint(equalTo: anchor.bottomAnchor),
             textView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             textView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             textView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
