@@ -553,7 +553,7 @@ model Patient {
   walletBalance      Decimal              @default(0.00)
   loyaltyPoints      Int                  @default(0)
   membershipTier     String               @default("SILVER")
-  chronicConditions  String               @default("")
+  chronicConditions  String?               @default("")
   doctorId           String?
   doctor             Doctor?              @relation("PatientDefaultDoctor", fields: [doctorId], references: [id])
   agencyId           String?
