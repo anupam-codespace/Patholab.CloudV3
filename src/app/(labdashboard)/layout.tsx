@@ -84,17 +84,18 @@ export default function DashboardLayout({
         navigator.userAgent.includes("CapacitorApp");
       setIsCapacitor(!!isCap);
       
-      const isIOSApp = !!isCap && (
+      const isNative = !!isCap && (
         navigator.userAgent.includes("iPhone") || 
         navigator.userAgent.includes("iPad") || 
-        navigator.userAgent.includes("iPod")
+        navigator.userAgent.includes("iPod") ||
+        navigator.userAgent.includes("Android")
       );
-      setIsNativeApp(isIOSApp);
+      setIsNativeApp(isNative);
       
       if (isCap) {
         document.documentElement.classList.add("is-capacitor");
       }
-      if (isIOSApp) {
+      if (isNative) {
         document.documentElement.classList.add("is-native-app");
       }
     }

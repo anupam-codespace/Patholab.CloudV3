@@ -1,0 +1,11 @@
+- `[x]` Modify iOS MoreViewController layout to be standalone
+- `[x]` Update iOS MainViewController to present MoreViewController as an 80% sheet
+- `[x]` Style iOS LegalViewController with premium typography
+- `[x]` Extract Android More layout and update MainActivity to show BottomSheetDialog
+- `[x]` Configure Android BottomSheetDialog to 80% height with swipe dismiss handling
+- `[x]` Style Android LegalActivity layout with card view components and rich text
+- `[x]` Hide web layout headers on mobile platforms
+- `[x]` Implement premium native iOS header & orange wallet balance card
+- `[x]` Implement premium native Android header & orange wallet balance card
+- `[x]` Poll real-time wallet details via background threads
+- `[x]` Compile and verify builds on iOS & Android

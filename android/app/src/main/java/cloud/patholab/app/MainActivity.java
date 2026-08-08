@@ -36,7 +36,13 @@ public class MainActivity extends BridgeActivity {
     private BottomNavigationView bottomNavigation;
     private View offlineOverlay;
     private ScrollView moreScrollView;
+    
+    // Header & Wallet Views
     private TextView lblHeaderTitle;
+    private View btnHeaderMenu;
+    private View walletCard;
+    private TextView txtWalletBalance;
+    private TextView txtWalletStatus;
     
     // Category containers matching web app groups
     private LinearLayout containerOverview, containerClinical, containerLogistics;
@@ -66,6 +72,16 @@ public class MainActivity extends BridgeActivity {
                     skeletonContainer.setVisibility(View.GONE);
                 }
             }
+        }
+    };
+
+    // Polling handler for wallet details
+    private final Handler walletHandler = new Handler(Looper.getMainLooper());
+    private final Runnable walletRunnable = new Runnable() {
+        @Override
+        public void run() {
+            fetchWalletDetails();
+            walletHandler.postDelayed(this, 15000); // poll every 15s
         }
     };
 
@@ -113,6 +129,9 @@ public class MainActivity extends BridgeActivity {
 
         // 7. Navigate to Dashboard
         loadUrl("/workspace/analytics");
+
+        // 8. Start wallet details polling
+        walletHandler.post(walletRunnable);
     }
 
     // ── Setup helpers ──────────────────────────────────────────────────────────
@@ -125,6 +144,7 @@ public class MainActivity extends BridgeActivity {
         s.setLoadWithOverviewMode(true);
         s.setUseWideViewPort(true);
         s.setCacheMode(WebSettings.LOAD_DEFAULT);
+        s.setUserAgentString(s.getUserAgentString() + " CapacitorApp");
     }
 
     private void bindViews() {
@@ -150,15 +170,39 @@ public class MainActivity extends BridgeActivity {
             if (webView != null) webView.reload();
         });
 
+        // Header view binding
         lblHeaderTitle = findViewById(R.id.lblHeaderTitle);
+        btnHeaderMenu = findViewById(R.id.btnHeaderMenu);
+        if (btnHeaderMenu != null) {
+            btnHeaderMenu.setOnClickListener(v -> showMorePanel());
+        }
+
         View btnNotification = findViewById(R.id.btnHeaderNotification);
         if (btnNotification != null) {
             btnNotification.setOnClickListener(v -> navigate("/workspace/support"));
+        }
+        View btnTheme = findViewById(R.id.btnHeaderTheme);
+        if (btnTheme != null) {
+            btnTheme.setOnClickListener(v -> {
+                // Trigger client side web theme switch via JS
+                if (webView != null) {
+                    webView.evaluateJavascript("document.querySelector('.mobile-app-header-web-component button[aria-label=\"Toggle dark mode\"]')?.click()", null);
+                }
+            });
         }
         View btnSupport = findViewById(R.id.btnHeaderSupport);
         if (btnSupport != null) {
             btnSupport.setOnClickListener(v -> navigate("/workspace/support"));
         }
+
+        // Wallet view binding
+        walletCard = findViewById(R.id.walletCard);
+        txtWalletBalance = findViewById(R.id.txtWalletBalance);
+        txtWalletStatus = findViewById(R.id.txtWalletStatus);
+        if (walletCard != null) {
+            walletCard.setOnClickListener(v -> navigate("/workspace/wallet"));
+        }
+
         swipeRefresh.setColorSchemeColors(0xFF3730A3);
     }
 
@@ -179,7 +223,7 @@ public class MainActivity extends BridgeActivity {
                 return true;
             } else if (id == R.id.nav_more) {
                 showMorePanel();
-                return true;
+                return false;
             }
             return false;
         });
@@ -273,6 +317,88 @@ public class MainActivity extends BridgeActivity {
         progressHandler.post(progressRunnable);
 
         webView.loadUrl(BASE_URL + path);
+        fetchWalletDetails();
+    }
+
+    // ── Wallet Details Fetch ────────────────────────────────────────────────────
+
+    private void fetchWalletDetails() {
+        final String token = AuthManager.getToken(this);
+        if (token == null || token.isEmpty()) {
+            runOnUiThread(() -> {
+                if (walletCard != null) walletCard.setVisibility(View.GONE);
+            });
+            return;
+        }
+
+        new Thread(() -> {
+            try {
+                java.net.HttpURLConnection conn = null;
+                try {
+                    java.net.URL url = new java.net.URL("https://app.patholab.cloud/api/workspace/wallet/details");
+                    conn = (java.net.HttpURLConnection) url.openConnection();
+                    conn.setRequestMethod("GET");
+                    conn.setRequestProperty("Accept", "application/json");
+                    conn.setRequestProperty("Cookie", "token=" + token);
+                    conn.setConnectTimeout(8000);
+                    conn.setReadTimeout(8000);
+
+                    int code = conn.getResponseCode();
+                    if (code >= 200 && code < 300) {
+                        java.io.InputStream stream = conn.getInputStream();
+                        java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(stream, "UTF-8"));
+                        StringBuilder sb = new StringBuilder();
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            sb.append(line);
+                        }
+                        reader.close();
+
+                        org.json.JSONObject response = new org.json.JSONObject(sb.toString());
+                        org.json.JSONObject walletObj = response.optJSONObject("wallet");
+                        if (walletObj != null) {
+                            final double balance = walletObj.optDouble("balance", 0.0);
+                            final String role = response.optString("role", "");
+                            final boolean isOwner = "LAB_OWNER".equals(role) || "ADMIN".equals(role) || role.isEmpty();
+                            runOnUiThread(() -> updateWalletCard(balance, isOwner));
+                        }
+                    } else {
+                        runOnUiThread(() -> {
+                            if (walletCard != null) walletCard.setVisibility(View.GONE);
+                        });
+                    }
+                } finally {
+                    if (conn != null) conn.disconnect();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
+    private void updateWalletCard(double balance, boolean isOwner) {
+        if (walletCard == null) return;
+        if (!isOwner) {
+            walletCard.setVisibility(View.GONE);
+            return;
+        }
+
+        walletCard.setVisibility(View.VISIBLE);
+        if (txtWalletBalance != null) {
+            txtWalletBalance.setText(String.format("₹%.2f", balance));
+        }
+        if (txtWalletStatus != null) {
+            if (balance <= 0) {
+                txtWalletStatus.setText("ZERO BALANCE ( RECHARGE REQUIRED )");
+                walletCard.setBackgroundResource(R.drawable.bg_wallet_card_red);
+            } else if (balance < 500) {
+                txtWalletStatus.setText("LOW BALANCE ( ADD FUNDS )");
+                walletCard.setBackgroundResource(R.drawable.bg_wallet_card_orange);
+            } else {
+                txtWalletStatus.setText("ACTIVE & FUNDED");
+                walletCard.setBackgroundResource(R.drawable.bg_wallet_card);
+            }
+        }
     }
 
     // ── More section ───────────────────────────────────────────────────────────
@@ -299,26 +425,23 @@ public class MainActivity extends BridgeActivity {
         allModules.add(new ModuleItem("Mappings",              "/workspace/analyzers/mappings", "Machine",    "Configure machine integration parameters",          android.R.drawable.ic_menu_preferences,  false));
         allModules.add(new ModuleItem("AI Analysis",           "/workspace/analyzers/ai",       "Machine",    "Leverage AI models on clinical samples",             android.R.drawable.ic_menu_preferences,  true));
 
-        // B2B & Growth
-        allModules.add(new ModuleItem("Referral Doctors",      "/workspace/doctors",            "B2B",        "Manage referral incentives & profiles",             android.R.drawable.ic_menu_myplaces,     false));
-        allModules.add(new ModuleItem("Corporate Agencies",    "/workspace/agencies",           "B2B",        "Manage corporate accounts & discounts",             android.R.drawable.ic_menu_share,        false));
-        allModules.add(new ModuleItem("Commissions Payout",    "/workspace/commissions",        "B2B",        "Approve payouts & track growth metrics",            android.R.drawable.ic_menu_call,         false));
-        allModules.add(new ModuleItem("B2B Settings",          "/workspace/settings/b2b-tiers", "B2B",        "Configure corporate pricing tiers",                 android.R.drawable.ic_menu_preferences,  false));
+        // Referral & B2B
+        allModules.add(new ModuleItem("Doctor Directory",      "/workspace/doctors",            "B2B",        "Track referring doctors & commission profiles",     android.R.drawable.ic_menu_myplaces,     false));
+        allModules.add(new ModuleItem("B2B Clients Tiers",     "/workspace/settings/b2b-tiers", "B2B",        "Manage outsourced labs & tier pricings",            android.R.drawable.ic_menu_myplaces,     true));
 
         // Administration
-        allModules.add(new ModuleItem("Report Templates",      "/workspace/settings/templates", "Admin",      "Configure letterheads, signatures & reports",       android.R.drawable.ic_menu_gallery,      false));
-        allModules.add(new ModuleItem("Staff Management",      "/workspace/staff",              "Admin",      "Manage pathologists, technicians & logins",         android.R.drawable.ic_menu_myplaces,     false));
-        allModules.add(new ModuleItem("Invoices & Payments",   "/workspace/billing",            "Admin",      "Approve bills, invoices & receipts",                android.R.drawable.ic_menu_call,         false));
-        allModules.add(new ModuleItem("Expenses",              "/workspace/expenses",           "Admin",      "Log daily office & operation expenses",             android.R.drawable.ic_menu_agenda,       false));
-        allModules.add(new ModuleItem("Lab Settings",          "/workspace/settings",           "Admin",      "Update lab details & branch parameters",            android.R.drawable.ic_menu_preferences,  false));
-        allModules.add(new ModuleItem("Audit Logs",            "/workspace/audit-logs",          "Admin",      "Monitor database changes & logs",                   android.R.drawable.ic_menu_info_details, false));
-        allModules.add(new ModuleItem("Wallet & Billing",      "/workspace/wallet",             "Admin",      "Recharge clinical credits & print statements",       android.R.drawable.ic_menu_gallery,      false));
-        allModules.add(new ModuleItem("Help & Support",        "/workspace/support",            "Admin",      "Submit tickets & read user guides",                 android.R.drawable.ic_menu_info_details, false));
-        allModules.add(new ModuleItem("Terms & Conditions",    "/legal",                        "Legal",      "TestFlight Agreements & Software Licenses",         android.R.drawable.ic_menu_info_details, false));
+        allModules.add(new ModuleItem("Billing & Invoices",    "/workspace/billing",            "Admin",      "Track overall lab cash flow & pending bills",       android.R.drawable.ic_menu_view,         false));
+        allModules.add(new ModuleItem("Staff Directory",       "/workspace/staff",              "Admin",      "Manage team roles, access keys & logs",             android.R.drawable.ic_menu_view,         false));
+        allModules.add(new ModuleItem("Lab settings",          "/workspace/settings",           "Admin",      "Configure letterhead, templates & formats",         android.R.drawable.ic_menu_view,         false));
+        allModules.add(new ModuleItem("Audit Logs",            "/workspace/audit-logs",          "Admin",      "View security access logs & trace modifications",   android.R.drawable.ic_menu_view,         false));
+
+        // Legal & Agreements
+        allModules.add(new ModuleItem("Terms & Conditions",    "/legal",                        "Legal",      "Read Google Play Beta Testing agreements",         android.R.drawable.ic_menu_info_details, false));
     }
 
     private void renderModules() {
         if (containerOverview == null) return;
+        
         containerOverview.removeAllViews();
         containerClinical.removeAllViews();
         containerLogistics.removeAllViews();
@@ -327,47 +450,38 @@ public class MainActivity extends BridgeActivity {
         containerAdmin.removeAllViews();
         containerLegal.removeAllViews();
 
-        // Sort by usage count (most used first)
-        List<ModuleItem> sorted = new ArrayList<>(allModules);
-        Collections.sort(sorted, (a, b) ->
-                Integer.compare(prefs.getInt("usage_" + b.path, 0),
-                                prefs.getInt("usage_" + a.path, 0)));
+        int overviewCount = 0, clinicalCount = 0, logisticsCount = 0;
+        int machineCount = 0, b2bCount = 0, adminCount = 0, legalCount = 0;
 
-        LayoutInflater inflater = LayoutInflater.from(this);
-        int overviewCount = 0, clinicalCount = 0, logisticsCount = 0, machineCount = 0, b2bCount = 0, adminCount = 0, legalCount = 0;
-
-        for (ModuleItem item : sorted) {
-            View row = inflater.inflate(R.layout.layout_setting_item, null);
-            ((ImageView) row.findViewById(R.id.ivItemIcon)).setImageResource(item.iconRes);
-            ((TextView)  row.findViewById(R.id.tvItemTitle)).setText(item.title);
-            ((TextView)  row.findViewById(R.id.tvItemDesc)).setText(item.desc);
-
-            boolean opened = prefs.getBoolean("opened_" + item.path, false);
+        for (final ModuleItem item : allModules) {
+            View row = LayoutInflater.from(this).inflate(R.layout.layout_setting_item, null);
+            
+            TextView tvTitle = row.findViewById(R.id.tvItemTitle);
+            TextView tvDesc = row.findViewById(R.id.tvItemDesc);
+            ImageView ivIcon = row.findViewById(R.id.ivItemIcon);
             View badge = row.findViewById(R.id.tvNewBadge);
-            if (badge != null) badge.setVisibility(item.isNew && !opened ? View.VISIBLE : View.GONE);
+
+            tvTitle.setText(item.title);
+            tvDesc.setText(item.desc);
+            ivIcon.setImageResource(item.iconRes);
+            
+            boolean hasOpened = prefs.getBoolean("opened_" + item.path, false);
+            badge.setVisibility((item.isNew && !hasOpened) ? View.VISIBLE : View.GONE);
 
             row.setOnClickListener(v -> {
-                prefs.edit()
-                        .putInt("usage_" + item.path, prefs.getInt("usage_" + item.path, 0) + 1)
-                        .putBoolean("opened_" + item.path, true)
-                        .apply();
-
+                prefs.edit().putBoolean("opened_" + item.path, true).apply();
+                badge.setVisibility(View.GONE);
+                
                 if (moreBottomSheetDialog != null) {
                     moreBottomSheetDialog.dismiss();
                 }
 
                 if (item.path.equals("/legal")) {
-                    startActivity(new Intent(MainActivity.this, LegalActivity.class));
-                    return;
+                    Intent intent = new Intent(MainActivity.this, LegalActivity.class);
+                    startActivity(intent);
+                } else {
+                    navigate(item.path);
                 }
-
-                currentPath = null;  // force reload
-                navigate(item.path);
-                
-                // Temporarily disable listener to prevent programmatic tab switch from redirecting back to dashboard
-                bottomNavigation.setOnItemSelectedListener(null);
-                bottomNavigation.setSelectedItemId(R.id.nav_dashboard);
-                setupBottomNavigation();
             });
 
             switch (item.category) {
@@ -403,49 +517,32 @@ public class MainActivity extends BridgeActivity {
         }
 
         lblOverviewHeader.setVisibility(overviewCount > 0 ? View.VISIBLE : View.GONE);
-        containerOverview.setVisibility(overviewCount > 0 ? View.VISIBLE : View.GONE);
-
         lblClinicalHeader.setVisibility(clinicalCount > 0 ? View.VISIBLE : View.GONE);
-        containerClinical.setVisibility(clinicalCount > 0 ? View.VISIBLE : View.GONE);
-
         lblLogisticsHeader.setVisibility(logisticsCount > 0 ? View.VISIBLE : View.GONE);
-        containerLogistics.setVisibility(logisticsCount > 0 ? View.VISIBLE : View.GONE);
-
         lblMachineHeader.setVisibility(machineCount > 0 ? View.VISIBLE : View.GONE);
-        containerMachine.setVisibility(machineCount > 0 ? View.VISIBLE : View.GONE);
-
         lblB2BHeader.setVisibility(b2bCount > 0 ? View.VISIBLE : View.GONE);
-        containerB2B.setVisibility(b2bCount > 0 ? View.VISIBLE : View.GONE);
-
         lblAdminHeader.setVisibility(adminCount > 0 ? View.VISIBLE : View.GONE);
-        containerAdmin.setVisibility(adminCount > 0 ? View.VISIBLE : View.GONE);
-
         lblLegalHeader.setVisibility(legalCount > 0 ? View.VISIBLE : View.GONE);
-        containerLegal.setVisibility(legalCount > 0 ? View.VISIBLE : View.GONE);
     }
-
-    // ── Logout ──────────────────────────────────────────────────────────────────
 
     private void confirmLogout() {
         new AlertDialog.Builder(this)
-                .setTitle("Sign Out")
-                .setMessage("Are you sure you want to sign out?")
-                .setPositiveButton("Sign Out", (d, w) -> {
-                    AuthManager.clearSession(this);
-                    startActivity(new Intent(this, LoginActivity.class));
-                    finish();
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
+            .setTitle("Sign Out")
+            .setMessage("Are you sure you want to sign out of your account?")
+            .setPositiveButton("Sign Out", (dialog, which) -> {
+                AuthManager.clearToken(MainActivity.this);
+                Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+                finish();
+            })
+            .setNegativeButton("Cancel", null)
+            .show();
     }
-
-    // ── System callbacks ────────────────────────────────────────────────────────
 
     @Override
     public void onBackPressed() {
-        if (moreBottomSheetDialog != null && moreBottomSheetDialog.isShowing()) {
-            moreBottomSheetDialog.dismiss();
-        } else if (webView != null && webView.canGoBack()) {
+        if (webView != null && webView.canGoBack()) {
             webView.goBack();
         } else {
             super.onBackPressed();
@@ -456,6 +553,7 @@ public class MainActivity extends BridgeActivity {
     public void onDestroy() {
         super.onDestroy();
         progressHandler.removeCallbacks(progressRunnable);
+        walletHandler.removeCallbacks(walletRunnable);
         if (moreBottomSheetDialog != null) {
             if (moreBottomSheetDialog.isShowing()) {
                 moreBottomSheetDialog.dismiss();
@@ -495,22 +593,22 @@ public class MainActivity extends BridgeActivity {
     }
 
     private String getHeaderTitle(String path) {
-        if (path.contains("analytics")) return "Analytics";
-        if (path.contains("patients")) return "Patients";
-        if (path.contains("test-management")) return "Categories";
-        if (path.contains("bookings")) return "Online Booking";
-        if (path.contains("registration")) return "Registration";
-        if (path.contains("results")) return "Worklist & Results";
-        if (path.contains("reports")) return "Report Dispatch";
-        if (path.contains("inventory")) return "Inventory & Stock";
-        if (path.contains("logistics")) return "Logistics & Trips";
-        if (path.contains("analyzers")) return "Analyzer";
-        if (path.contains("support")) return "Help & Support";
-        if (path.contains("billing")) return "Invoices & Payments";
-        if (path.contains("expenses")) return "Expenses";
-        if (path.contains("settings")) return "Lab Settings";
-        if (path.contains("audit-logs")) return "Audit Logs";
-        if (path.contains("wallet")) return "Wallet & Billing";
-        return "Workspace";
+        if (path.contains("analytics")) return "FINANCIAL ANALYTICS";
+        if (path.contains("patients")) return "PATIENT WORKLIST";
+        if (path.contains("test-management")) return "CATEGORIES";
+        if (path.contains("bookings")) return "ONLINE BOOKINGS";
+        if (path.contains("registration")) return "REGISTRATION";
+        if (path.contains("results")) return "WORKLIST & RESULTS";
+        if (path.contains("reports")) return "REPORT DISPATCH";
+        if (path.contains("inventory")) return "INVENTORY & STOCK";
+        if (path.contains("logistics")) return "LOGISTICS & TRIPS";
+        if (path.contains("analyzers")) return "ANALYZER";
+        if (path.contains("support")) return "HELP & SUPPORT";
+        if (path.contains("billing")) return "INVOICES & PAYMENTS";
+        if (path.contains("expenses")) return "EXPENSES";
+        if (path.contains("settings")) return "LAB SETTINGS";
+        if (path.contains("audit-logs")) return "AUDIT LOGS";
+        if (path.contains("wallet")) return "WALLET & BILLING";
+        return "DASHBOARD";
     }
 }
