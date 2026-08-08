@@ -134,13 +134,15 @@ export async function POST(
     // ==========================================================
     if (body.data && body.data.parameters) {
         const { action, data, invoiceId } = body;
-        const { parameters, notes, impressions, checkedById, approvedById } = data; // ✅ Added staff mapping
+        
+        // ✅ ADDED: Extracted sampleCollectedAt and sampleReceivedAt for Batch
+        const { parameters, notes, impressions, checkedById, approvedById, sampleCollectedAt, sampleReceivedAt } = data; 
 
         let newStatus = undefined;
         if (action === 'SAVE_DRAFT') newStatus = 'IN_PROGRESS';
         if (action === 'REQUEST_APPROVAL' || action === 'SUBMIT_FOR_REVIEW') newStatus = 'COMPLETED';
         if (action === 'APPROVE') newStatus = 'APPROVED';
-        if (action === 'UNLOCK') newStatus = 'COMPLETED'; // ✅ Revert to editable state
+        if (action === 'UNLOCK') newStatus = 'COMPLETED'; 
 
         await prisma.$transaction(async (tx) => {
             // 1. Batch Update all Parameter Results
@@ -158,7 +160,7 @@ export async function POST(
                 });
             }
 
-            // 2. Batch Update all Tests (Notes, Impressions, Status, and Signatures)
+            // 2. Batch Update all Tests (Notes, Impressions, Status, Dates, and Signatures)
             const testsInInvoice = await tx.test.findMany({ 
                 where: { invoiceId: invoiceId || targetId, labId: user.labId } 
             });
@@ -173,9 +175,12 @@ export async function POST(
                         ...(notes && notes[test.id] !== undefined ? { notes: notes[test.id] } : {}),
                         ...(impressions && impressions[test.id] !== undefined ? { impression: impressions[test.id] } : {}),
                         
-                        // ✅ Apply Staff Roles if provided in batch
-                        checkedById: checkedById || undefined,
-                        approvedById: approvedById || undefined,
+                        // ✅ ADDED: Dynamic dates for Batch Processing
+                        ...(sampleCollectedAt ? { sampleCollectedAt: new Date(sampleCollectedAt) } : {}),
+                        ...(sampleReceivedAt ? { sampleReceivedAt: new Date(sampleReceivedAt) } : {}),
+
+                        checkedBy: checkedById || undefined,
+                        approvedBy: approvedById || undefined,
 
                         ...(newStatus ? {
                             status: newStatus as any,
@@ -209,9 +214,10 @@ export async function POST(
       action, 
       notes, 
       impression, 
+      sampleCollectedAt, // ✅ ADDED
       sampleReceivedAt,
-      checkedById,  // ✅ Captured from frontend
-      approvedById  // ✅ Captured from frontend
+      checkedById, 
+      approvedById 
     } = body; 
     
     if (testId && results) {
@@ -245,7 +251,7 @@ export async function POST(
         if (action === 'SAVE_DRAFT') newStatus = 'IN_PROGRESS';
         if (action === 'SUBMIT_FOR_REVIEW') newStatus = 'COMPLETED';
         if (action === 'APPROVE') newStatus = 'APPROVED';
-        if (action === 'UNLOCK') newStatus = 'COMPLETED'; // ✅ Revert status so it unlocks in UI
+        if (action === 'UNLOCK') newStatus = 'COMPLETED'; 
 
         // 3. Update Test Record
         await prisma.test.update({
@@ -253,11 +259,13 @@ export async function POST(
             data: { 
                 notes: notes !== undefined ? notes : undefined,
                 impression: impression !== undefined ? impression : undefined,
+                
+                // ✅ FIXED: Both dates are now captured and saved properly
+                sampleCollectedAt: sampleCollectedAt ? new Date(sampleCollectedAt) : undefined,
                 sampleReceivedAt: sampleReceivedAt ? new Date(sampleReceivedAt) : undefined,
                 
-                // ✅ Save the Dropdown Selections
-                checkedById: checkedById || null,
-                approvedById: approvedById || null,
+                checkedBy: checkedById || null,
+                approvedBy: approvedById || null,
 
                 ...(newStatus ? { 
                     status: newStatus as any,
