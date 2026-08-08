@@ -96,14 +96,14 @@ export default async function RootLayout({
           <style>
             {`
               :root {
-                --primary: ${config.primaryColor || "#2196F3"};
-                --secondary: ${config.secondaryColor || "#8b5cf6"};
+                --brand-primary: ${config.primaryColor || "#2196F3"};
+                --brand-secondary: ${config.secondaryColor || "#8b5cf6"};
               }
             `}
           </style>
         )}
       </head>
-      <body className={`${inter.variable} font-sans antialiased uppercase`}>
+      <body className={`${inter.variable} font-sans antialiased`}>
         {/* Wrap everything in the Client-Side Provider */}
         <Providers>{children}</Providers>
 

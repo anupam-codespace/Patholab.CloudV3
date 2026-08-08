@@ -154,7 +154,7 @@ export default function DashboardLayout({
           toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         />
 
-        <main className="flex-1 overflow-y-auto w-full relative z-0 bg-muted/30 uppercase">
+        <main className="flex-1 overflow-y-auto w-full relative z-0 bg-muted/30">
           {children}
           </main>
          

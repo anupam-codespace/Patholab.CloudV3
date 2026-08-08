@@ -49,7 +49,13 @@ module.exports = {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))'
         },
-        chart: {
+        sidebar: {
+        DEFAULT: 'hsl(var(--sidebar-bg))',
+        foreground: 'hsl(var(--sidebar-foreground))',
+        active: 'hsl(var(--sidebar-active))',
+        'active-foreground': 'hsl(var(--sidebar-active-foreground))',
+      },
+      chart: {
           '1': 'hsl(var(--chart-1))',
           '2': 'hsl(var(--chart-2))',
           '3': 'hsl(var(--chart-3))',
