@@ -28,10 +28,10 @@
             android:layout_height="wrap_content"
             android:text="Sign In"
             android:textColor="#FFFFFF"
-            android:textSize="34sp"
+            android:textSize="36sp"
             android:textStyle="bold"
-            android:letterSpacing="-0.02"
-            android:fontFamily="sans-serif-medium" />
+            android:letterSpacing="-0.03"
+            android:fontFamily="sans-serif-black" />
 
         <TextView
             android:id="@+id/tvSubtitle"

@@ -31,7 +31,6 @@
                 android:layout_height="38dp"
                 android:layout_alignParentStart="true"
                 android:layout_centerVertical="true"
-                android:background="@drawable/bg_circle_slate"
                 android:gravity="center"
                 android:clickable="true"
                 android:focusable="true">
@@ -48,39 +47,46 @@
 
             <!-- Center Title Stack -->
             <LinearLayout
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_toEndOf="@id/btnHeaderMenu"
+                android:layout_toStartOf="@+id/rightHeaderActions"
                 android:layout_centerVertical="true"
                 android:layout_marginStart="12dp"
+                android:layout_marginEnd="10dp"
                 android:orientation="vertical"
                 android:gravity="start">
 
                 <TextView
                     android:id="@+id/lblHeaderSubtitle"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="MAIN BRANCH"
+                    android:text="Main Branch"
                     android:textColor="#94A3B8"
                     android:textSize="9sp"
                     android:textStyle="bold"
-                    android:letterSpacing="0.16" />
+                    android:letterSpacing="0.16"
+                    android:singleLine="true"
+                    android:ellipsize="end" />
 
                 <TextView
                     android:id="@+id/lblHeaderTitle"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="1dp"
-                    android:text="ANALYTICS"
+                    android:text="Analytics"
                     android:textColor="#0F172A"
                     android:textSize="15sp"
                     android:textStyle="bold"
-                    android:letterSpacing="-0.01" />
+                    android:letterSpacing="-0.01"
+                    android:singleLine="true"
+                    android:ellipsize="end" />
 
             </LinearLayout>
 
             <!-- Right: bell, theme, support -->
             <LinearLayout
+                android:id="@+id/rightHeaderActions"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_alignParentEnd="true"
@@ -88,40 +94,62 @@
                 android:gravity="center_vertical">
 
                 <!-- Notifications Bell -->
-                <LinearLayout
+                <RelativeLayout
                     android:id="@+id/btnHeaderNotification"
                     android:layout_width="wrap_content"
                     android:layout_height="36dp"
-                    android:background="@drawable/bg_circle_slate"
                     android:paddingStart="10dp"
                     android:paddingEnd="10dp"
-                    android:gravity="center"
-                    android:orientation="horizontal"
                     android:layout_marginEnd="8dp"
                     android:clickable="true"
                     android:focusable="true">
 
-                    <ImageView
-                        android:layout_width="16dp"
-                        android:layout_height="16dp"
-                        android:src="@drawable/ic_bell"
-                        android:tint="#475569" />
+                    <LinearLayout
+                        android:id="@+id/bellContentLayout"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:orientation="horizontal">
 
-                    <ImageView
-                        android:layout_width="8dp"
-                        android:layout_height="8dp"
-                        android:layout_marginStart="4dp"
-                        android:src="@drawable/ic_chevron_down"
-                        android:tint="#94A3B8" />
+                        <ImageView
+                            android:id="@+id/imgHeaderBell"
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:src="@drawable/ic_bell"
+                            android:tint="#475569" />
 
-                </LinearLayout>
+                        <ImageView
+                            android:layout_width="8dp"
+                            android:layout_height="8dp"
+                            android:layout_marginStart="4dp"
+                            android:src="@drawable/ic_chevron_down"
+                            android:tint="#94A3B8" />
+
+                    </LinearLayout>
+
+                    <!-- Unread Badge -->
+                    <TextView
+                        android:id="@+id/txtNotificationBadge"
+                        android:layout_width="15dp"
+                        android:layout_height="15dp"
+                        android:background="@drawable/bg_notification_badge"
+                        android:textColor="#FFFFFF"
+                        android:textSize="9sp"
+                        android:textStyle="bold"
+                        android:gravity="center"
+                        android:visibility="gone"
+                        android:layout_alignTop="@id/bellContentLayout"
+                        android:layout_alignStart="@id/bellContentLayout"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginTop="2dp" />
+
+                </RelativeLayout>
 
                 <!-- Sun / Theme toggle -->
                 <LinearLayout
                     android:id="@+id/btnHeaderTheme"
                     android:layout_width="36dp"
                     android:layout_height="36dp"
-                    android:background="@drawable/bg_circle_slate"
                     android:gravity="center"
                     android:layout_marginEnd="8dp"
                     android:clickable="true"
@@ -138,7 +166,6 @@
                     android:id="@+id/btnHeaderSupport"
                     android:layout_width="36dp"
                     android:layout_height="36dp"
-                    android:background="@drawable/bg_circle_slate"
                     android:gravity="center"
                     android:clickable="true"
                     android:focusable="true">
@@ -179,50 +206,62 @@
 
             <!-- Left: icon + text stack -->
             <LinearLayout
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
+                android:layout_toStartOf="@+id/btnWalletTopUp"
                 android:layout_centerVertical="true"
                 android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:layout_marginEnd="12dp">
 
                 <!-- Slim circular icon -->
                 <FrameLayout
                     android:id="@+id/walletIconContainer"
                     android:layout_width="34dp"
                     android:layout_height="34dp"
-                    android:background="@drawable/bg_wallet_icon_circle">
+                    android:background="@drawable/bg_wallet_circle_white">
                     <ImageView
-                        android:layout_width="16dp"
-                        android:layout_height="16dp"
-                        android:src="@drawable/ic_credit_card"
-                        android:tint="#FFFFFF"
+                        android:layout_width="26dp"
+                        android:layout_height="26dp"
+                        android:src="@drawable/ic_wallet_logo"
                         android:layout_gravity="center" />
                 </FrameLayout>
 
                 <!-- Balance + status -->
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_weight="1"
                     android:layout_marginStart="12dp"
                     android:orientation="vertical">
 
                     <TextView
                         android:id="@+id/txtWalletBalance"
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="₹0.00"
                         android:textColor="#FFFFFF"
-                        android:textSize="17sp"
-                        android:textStyle="bold" />
+                        android:textSize="18sp"
+                        android:fontFamily="sans-serif-black"
+                        android:textFontWeight="900"
+                        android:textStyle="bold"
+                        android:singleLine="true"
+                        android:ellipsize="end"
+                        android:autoSizeTextType="uniform"
+                        android:autoSizeMinTextSize="12sp"
+                        android:autoSizeMaxTextSize="18sp"
+                        android:autoSizeStepGranularity="1sp"
+                        android:paddingEnd="8dp"
+                        android:paddingRight="8dp" />
 
                     <TextView
                         android:id="@+id/txtWalletStatus"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="1dp"
-                        android:text="LOW BALANCE — ADD FUNDS"
-                        android:textColor="#FFE3D8"
+                        android:text="ACTIVE • FUNDED"
+                        android:textColor="#94A3B8"
                         android:textSize="9.5sp"
                         android:textStyle="bold"
                         android:letterSpacing="0.04" />
@@ -231,15 +270,29 @@
 
             </LinearLayout>
 
-            <!-- Right: Pulsing status indicator dot -->
-            <View
-                android:id="@+id/walletPulseDot"
-                android:layout_width="8dp"
-                android:layout_height="8dp"
+            <!-- Right: Pill Button -->
+            <LinearLayout
+                android:id="@+id/btnWalletTopUp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
-                android:layout_marginEnd="6dp"
-                android:background="@drawable/bg_wallet_icon_circle" />
+                android:background="@drawable/bg_top_up_button"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp"
+                android:clickable="false"
+                android:focusable="false">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Top Up"
+                    android:textColor="#FFFFFF"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
         </RelativeLayout>
 
@@ -311,6 +364,18 @@
             android:background="@drawable/bg_btn_primary" />
 
     </LinearLayout>
+
+    <!-- Full-screen Skeleton Overlay (below header only) -->
+    <FrameLayout
+        android:id="@+id/skeletonContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/topLayoutContainer"
+        android:layout_above="@id/bottomNavigation"
+        android:background="#F8FAFC"
+        android:visibility="gone">
+        <include layout="@layout/layout_skeletons" />
+    </FrameLayout>
 
     <!-- 4. Bottom Navigation Bar -->
     <com.google.android.material.bottomnavigation.BottomNavigationView

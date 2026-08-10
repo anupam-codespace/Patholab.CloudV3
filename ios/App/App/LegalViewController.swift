@@ -1,6 +1,7 @@
 import UIKit
 
 class LegalViewController: UIViewController {
+    var isDarkMode = false
 
     private let textView = UITextView()
 

@@ -38,6 +38,7 @@ public class OtpVerifyActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_otp_verify);
+        AuthHelper.setupVideoBackground(this);
 
         email = getIntent().getStringExtra("email");
         if (email == null) email = "";

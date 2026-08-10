@@ -60,6 +60,30 @@ public class MainActivity extends BridgeActivity {
     private com.google.android.material.bottomsheet.BottomSheetDialog moreBottomSheetDialog;
     private int previousTab = R.id.nav_dashboard;
     private boolean isDarkMode = false;
+    private String activeSkeletonCategory = "";
+
+    private FrameLayout skeletonContainer;
+    private android.animation.ObjectAnimator pulseAnimator;
+    private final Handler progressPollHandler = new Handler(Looper.getMainLooper());
+    private final Runnable progressPollRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (webView != null) {
+                int progress = webView.getProgress();
+                if (progress < 100) {
+                    if (skeletonContainer != null && skeletonContainer.getVisibility() != View.VISIBLE) {
+                        String url = webView.getUrl();
+                        showSkeletonForPath(url);
+                    }
+                } else {
+                    if (skeletonContainer != null && skeletonContainer.getVisibility() == View.VISIBLE) {
+                        hideSkeleton();
+                    }
+                }
+            }
+            progressPollHandler.postDelayed(this, 100);
+        }
+    };
 
     // Polling handler for wallet details
     private final Handler walletHandler = new Handler(Looper.getMainLooper());
@@ -67,6 +91,7 @@ public class MainActivity extends BridgeActivity {
         @Override
         public void run() {
             fetchWalletDetails();
+            fetchNotificationCount();
             walletHandler.postDelayed(this, 15000); // poll every 15s
         }
     };
@@ -263,6 +288,7 @@ public class MainActivity extends BridgeActivity {
         // 8. Start wallet details polling
         walletHandler.post(walletRunnable);
         authCheckHandler.post(authCheckRunnable);
+        progressPollHandler.post(progressPollRunnable);
     }
 
     // ── Setup helpers ──────────────────────────────────────────────────────────
@@ -283,6 +309,7 @@ public class MainActivity extends BridgeActivity {
 
         bottomNavigation  = findViewById(R.id.bottomNavigation);
         offlineOverlay    = findViewById(R.id.offlineOverlay);
+        skeletonContainer = findViewById(R.id.skeletonContainer);
         topLayoutContainer = findViewById(R.id.topLayoutContainer);
 
         // Adjust top container padding dynamically for system status bar / notch height
@@ -363,13 +390,13 @@ public class MainActivity extends BridgeActivity {
         txtWalletStatus = findViewById(R.id.txtWalletStatus);
         if (walletCard != null) {
             walletCard.setOnClickListener(v -> navigate("/workspace/wallet"));
-            View pulseDot = findViewById(R.id.walletPulseDot);
-            if (pulseDot != null) {
-                android.view.animation.AlphaAnimation anim = new android.view.animation.AlphaAnimation(0.3f, 1.0f);
+            View topUpBtn = findViewById(R.id.btnWalletTopUp);
+            if (topUpBtn != null) {
+                android.view.animation.AlphaAnimation anim = new android.view.animation.AlphaAnimation(0.7f, 1.0f);
                 anim.setDuration(1200);
                 anim.setRepeatMode(android.view.animation.Animation.REVERSE);
                 anim.setRepeatCount(android.view.animation.Animation.INFINITE);
-                pulseDot.startAnimation(anim);
+                topUpBtn.startAnimation(anim);
             }
         }
 
@@ -469,12 +496,15 @@ public class MainActivity extends BridgeActivity {
             lblLegalHeader       = sheetView.findViewById(R.id.lblLegalHeader);
 
             // Logout inside bottom sheet
-            View btnLogout = sheetView.findViewById(R.id.btnMoreLogout);
+            android.widget.Button btnLogout = sheetView.findViewById(R.id.btnMoreLogout);
             if (btnLogout != null) {
                 btnLogout.setOnClickListener(v -> {
                     moreBottomSheetDialog.dismiss();
                     confirmLogout();
                 });
+                int redColor = isDark ? android.graphics.Color.parseColor("#EF4444") : android.graphics.Color.parseColor("#DC2626");
+                btnLogout.setBackgroundTintList(android.content.res.ColorStateList.valueOf(redColor));
+                btnLogout.setTypeface(android.graphics.Typeface.defaultFromStyle(android.graphics.Typeface.BOLD));
             }
 
             // OnDismiss resets selection
@@ -681,6 +711,11 @@ public class MainActivity extends BridgeActivity {
                 if (stackNotifications != null) stackNotifications.removeAllViews();
                 if (scrollNotifications != null) scrollNotifications.setVisibility(View.GONE);
                 if (lblNoNotifications != null) lblNoNotifications.setVisibility(View.VISIBLE);
+
+                // Instantly clear the badge and stop bell animation
+                TextView badge = findViewById(R.id.txtNotificationBadge);
+                if (badge != null) badge.setVisibility(View.GONE);
+                stopBellAnimationLoop();
             });
         }
 
@@ -693,9 +728,27 @@ public class MainActivity extends BridgeActivity {
         View sheetView = getLayoutInflater().inflate(R.layout.layout_legal_sheet, null);
         dialog.setContentView(sheetView);
 
+        final boolean isDark = this.isDarkMode;
+
+        View container = sheetView.findViewById(R.id.legalSheetContainer);
+        if (container != null) {
+            container.setBackgroundResource(isDark ? R.drawable.bg_bottom_sheet_dark : R.drawable.bg_bottom_sheet);
+        }
+
+        TextView txtTitle = sheetView.findViewById(R.id.txtLegalTitle);
+        if (txtTitle != null) {
+            txtTitle.setTextColor(isDark ? android.graphics.Color.WHITE : android.graphics.Color.parseColor("#0F172A"));
+        }
+
+        View separator = sheetView.findViewById(R.id.legalSeparator);
+        if (separator != null) {
+            separator.setBackgroundColor(isDark ? android.graphics.Color.parseColor("#334155") : android.graphics.Color.parseColor("#F1F5F9"));
+        }
+
         TextView txtContent = sheetView.findViewById(R.id.txtLegalContentSheet);
         if (txtContent != null) {
-            String html = buildLegalHtml();
+            txtContent.setTextColor(isDark ? android.graphics.Color.parseColor("#CBD5E1") : android.graphics.Color.parseColor("#334155"));
+            String html = buildLegalHtml(isDark);
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
                 txtContent.setText(android.text.Html.fromHtml(html, android.text.Html.FROM_HTML_MODE_LEGACY));
             } else {
@@ -703,8 +756,9 @@ public class MainActivity extends BridgeActivity {
             }
         }
 
-        View btnClose = sheetView.findViewById(R.id.btnLegalClose);
+        TextView btnClose = sheetView.findViewById(R.id.btnLegalClose) instanceof TextView ? (TextView) sheetView.findViewById(R.id.btnLegalClose) : null;
         if (btnClose != null) {
+            btnClose.setTextColor(isDark ? android.graphics.Color.parseColor("#818CF8") : android.graphics.Color.parseColor("#4338CA"));
             btnClose.setOnClickListener(v -> dialog.dismiss());
         }
 
@@ -727,27 +781,29 @@ public class MainActivity extends BridgeActivity {
         dialog.show();
     }
 
-    private String buildLegalHtml() {
+    private String buildLegalHtml(boolean isDark) {
+        String primaryColor = isDark ? "#818CF8" : "#4338CA";
+        String secondaryColor = isDark ? "#E2E8F0" : "#1E293B";
         return
-            "<b><font color=\"#4338CA\">(A) Google Play Beta Testing — Terms of Service</font></b><br/><br/>" +
-            "<b><font color=\"#1E293B\">Key Summary</font></b><br/><br/>" +
+            "<b><font color=\"" + primaryColor + "\">(A) Google Play Beta Testing — Terms of Service</font></b><br/><br/>" +
+            "<b><font color=\"" + secondaryColor + "\">Key Summary</font></b><br/><br/>" +
             "• Diagnostics, usage, and crash reports related to your use of each Beta App will automatically be collected by Google and the Application Provider.<br/><br/>" +
             "• You may submit feedback, suggestions, and feature ideas to the Application Provider of the Beta App.<br/><br/>" +
             "• Beta Apps are pre-release software and may crash, resulting in data loss.<br/><br/>" +
             "• If you already have the production version installed, the Beta version will replace it and may overwrite app data.<br/><br/>" +
             "• You can opt out of Beta testing at any time by leaving the program on Google Play and reinstalling the production version.<br/><br/>" +
             "Your use of the Google Play Beta Testing service, including downloading any pre-release or beta-stage applications for Android (\"Beta Apps\"), is governed by these terms. The standard Google Play Terms of Service for your region are incorporated by reference.<br/><br/>" +
-            "<b><font color=\"#1E293B\">Beta Tester Eligibility</font></b><br/><br/>" +
+            "<b><font color=\"" + secondaryColor + "\">Beta Tester Eligibility</font></b><br/><br/>" +
             "You must meet the age requirements for Google Play in your country. If you are under 18, review this Agreement with your parent or guardian.<br/><br/>" +
             "The Application Provider grants you a limited, non-exclusive, non-transferable, non-sublicensable license to access, download, and use the Beta App solely for testing and evaluation purposes.<br/><br/>" +
             "You acknowledge that Beta Apps are pre-release, unfinished software and may contain errors. You should not use them in critical operating environments or with highly valuable data. Back up your device prior to installing any Beta App. Google and the Application Provider shall not be liable for any data loss, device damage, or service interruptions caused by your use of Beta Apps.<br/><br/>" +
-            "<b><font color=\"#1E293B\">No Warranty</font></b><br/><br/>" +
+            "<b><font color=\"" + secondaryColor + "\">No Warranty</font></b><br/><br/>" +
             "YOU EXPRESSLY ACKNOWLEDGE AND AGREE THAT USE OF THE BETA APP IS AT YOUR SOLE RISK. TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE BETA APP IS PROVIDED \"AS IS\" AND \"AS AVAILABLE\", WITH ALL FAULTS AND WITHOUT WARRANTY OF ANY KIND.<br/><br/>" +
-            "<b><font color=\"#1E293B\">Termination</font></b><br/><br/>" +
+            "<b><font color=\"" + secondaryColor + "\">Termination</font></b><br/><br/>" +
             "To terminate participation, leave the beta program in Google Play. Google and/or the Application Provider reserve the right to terminate your participation at any time.<br/><br/>" +
             "────────────────────────────<br/><br/>" +
-            "<b><font color=\"#4338CA\">(B) Google LLC — Android Beta Program License Agreement</font></b><br/><br/>" +
-            "<b><font color=\"#1E293B\">Standard Software License</font></b><br/><br/>" +
+            "<b><font color=\"" + primaryColor + "\">(B) Google LLC — Android Beta Program License Agreement</font></b><br/><br/>" +
+            "<b><font color=\"" + secondaryColor + "\">Standard Software License</font></b><br/><br/>" +
             "PLEASE READ THIS LICENSE AGREEMENT CAREFULLY BEFORE INSTALLING OR USING THE SOFTWARE. BY INSTALLING AND/OR USING THE PRE-RELEASE SOFTWARE, YOU AGREE TO BE BOUND BY THE TERMS OF THIS LICENSE.<br/><br/>" +
             "<b>1. General.</b><br/><br/>" +
             "A. The pre-release software, APIs, documentation, and assets (collectively, the \"Beta Software\") are licensed, not sold, to you by Google LLC (\"Google\") for use only under the terms of this License.<br/><br/>" +
@@ -854,18 +910,31 @@ public class MainActivity extends BridgeActivity {
         if (txtWalletBalance != null) {
             txtWalletBalance.setText(String.format("₹%.2f", balance));
         }
-        if (txtWalletStatus != null) {
-            if (balance <= 20.0) {
-                txtWalletStatus.setText("LOW BALANCE ( ADD FUNDS )");
-                walletCard.setBackgroundResource(R.drawable.bg_wallet_card_red);
-            } else if (balance < 75.0) {
-                txtWalletStatus.setText("LOW BALANCE ( ADD FUNDS )");
-                walletCard.setBackgroundResource(R.drawable.bg_wallet_card_orange);
-            } else {
-                txtWalletStatus.setText("ACTIVE & FUNDED");
-                walletCard.setBackgroundResource(R.drawable.bg_wallet_card_green);
-            }
+        
+        int strokeColor = android.graphics.Color.parseColor(this.isDarkMode ? "#334155" : "#334155");
+        String statusText = "●  ACTIVE";
+        String statusColor = "#10B981"; // emerald-500
+        
+        if (balance <= 20.0) {
+            statusText = "●  LOW BALANCE • ADD FUNDS";
+            statusColor = "#EF4444";
+        } else if (balance < 75.0) {
+            statusText = "●  LOW BALANCE • ADD FUNDS";
+            statusColor = "#F97316";
         }
+        
+        if (txtWalletStatus != null) {
+            txtWalletStatus.setText(statusText);
+            txtWalletStatus.setTextColor(android.graphics.Color.parseColor(statusColor));
+        }
+        
+        android.graphics.drawable.GradientDrawable gd = new android.graphics.drawable.GradientDrawable();
+        String boxBgColor = this.isDarkMode ? "#0F172A" : "#1E293B";
+        gd.setColor(android.graphics.Color.parseColor(boxBgColor));
+        float density = getResources().getDisplayMetrics().density;
+        gd.setCornerRadius(28 * density);
+        gd.setStroke((int) (1.5 * density), strokeColor);
+        walletCard.setBackground(gd);
     }
 
     // ── More section ───────────────────────────────────────────────────────────
@@ -882,52 +951,52 @@ public class MainActivity extends BridgeActivity {
         allModules = new ArrayList<>();
 
         // ── Radiology (RIS) (navigation.ts: Radiology Group) ─────────────────
-        allModules.add(new ModuleItem("RIS Dashboard",         "/workspace/radiology/dashboard",    "Radiology",  "Radiology Information System overview",         android.R.drawable.ic_menu_today,        false));
-        allModules.add(new ModuleItem("Scan Schedule",         "/workspace/radiology/appointments", "Radiology",  "Book & manage radiology scans",                 android.R.drawable.ic_menu_agenda,       false));
-        allModules.add(new ModuleItem("PACS Viewer",           "/workspace/radiology/pacs",         "Radiology",  "View digital imaging & PACS files",            android.R.drawable.ic_menu_preferences,  false));
-        allModules.add(new ModuleItem("Reporting Queue",       "/workspace/radiology/reporting",    "Radiology",  "Radiologist report queue & sign-off",           android.R.drawable.ic_menu_edit,         false));
-        allModules.add(new ModuleItem("Machines",              "/workspace/radiology/modalities",   "Radiology",  "Configure radiology equipment & modalities",    android.R.drawable.ic_menu_preferences,  false));
-        allModules.add(new ModuleItem("Radiology Settings",    "/workspace/radiology/settings/macros", "Radiology", "Configure macros & report templates",         android.R.drawable.ic_menu_view,         false));
+        allModules.add(new ModuleItem("RIS Dashboard",         "/workspace/radiology/dashboard",    "Radiology",  "Radiology Information System overview",         R.drawable.ic_chart,        false));
+        allModules.add(new ModuleItem("Scan Schedule",         "/workspace/radiology/appointments", "Radiology",  "Book & manage radiology scans",                 R.drawable.ic_calendar,       false));
+        allModules.add(new ModuleItem("PACS Viewer",           "/workspace/radiology/pacs",         "Radiology",  "View digital imaging & PACS files",            R.drawable.ic_barcode,  false));
+        allModules.add(new ModuleItem("Reporting Queue",       "/workspace/radiology/reporting",    "Radiology",  "Radiologist report queue & sign-off",           R.drawable.ic_stethoscope,         false));
+        allModules.add(new ModuleItem("Machines",              "/workspace/radiology/modalities",   "Radiology",  "Configure radiology equipment & modalities",    R.drawable.ic_cpu,  false));
+        allModules.add(new ModuleItem("Radiology Settings",    "/workspace/radiology/settings/macros", "Radiology", "Configure macros & report templates",         R.drawable.ic_gear,         false));
 
         // ── Overview (navigation.ts: "Overview") ──────────────────────────────
-        allModules.add(new ModuleItem("Financial Analytics",   "/workspace/analytics",              "Overview",   "Revenue reports & analytical charts",           android.R.drawable.ic_menu_today,        false));
-        allModules.add(new ModuleItem("Online Booking",        "/workspace/bookings",               "Overview",   "Manage home collections & appointments",        android.R.drawable.ic_menu_today,        true));
+        allModules.add(new ModuleItem("Financial Analytics",   "/workspace/analytics",              "Overview",   "Revenue reports & analytical charts",           R.drawable.ic_chart,        false));
+        allModules.add(new ModuleItem("Online Booking",        "/workspace/bookings",               "Overview",   "Manage home collections & appointments",        R.drawable.ic_calendar,        true));
 
         // ── Clinical Operations (navigation.ts: "Clinical Operations") ───────
-        allModules.add(new ModuleItem("Patient Registration",  "/workspace/registration",           "Clinical",   "Register patients & book new lab tests",        android.R.drawable.ic_menu_add,          true));
-        allModules.add(new ModuleItem("Patient Directory",     "/workspace/patients",               "Clinical",   "Browse & search patient records",               android.R.drawable.ic_menu_add,          false));
-        allModules.add(new ModuleItem("Test Catalog",          "/workspace/test-management",        "Clinical",   "Manage test packages & profiles",               android.R.drawable.ic_menu_edit,         false));
-        allModules.add(new ModuleItem("Worklist & Results",    "/workspace/results",                "Clinical",   "Fill raw values & review parameters",           android.R.drawable.ic_menu_edit,         false));
-        allModules.add(new ModuleItem("Report Dispatch",       "/workspace/reports",                "Clinical",   "Sign off & dispatch PDF reports",               android.R.drawable.ic_menu_agenda,       false));
+        allModules.add(new ModuleItem("Patient Registration",  "/workspace/registration",           "Clinical",   "Register patients & book new lab tests",        R.drawable.ic_nav_patients,          true));
+        allModules.add(new ModuleItem("Patient Directory",     "/workspace/patients",               "Clinical",   "Browse & search patient records",               R.drawable.ic_nav_patients,          false));
+        allModules.add(new ModuleItem("Test Catalog",          "/workspace/test-management",        "Clinical",   "Manage test packages & profiles",               R.drawable.ic_flask,         false));
+        allModules.add(new ModuleItem("Worklist & Results",    "/workspace/results",                "Clinical",   "Fill raw values & review parameters",           R.drawable.ic_flask,         false));
+        allModules.add(new ModuleItem("Report Dispatch",       "/workspace/reports",                "Clinical",   "Sign off & dispatch PDF reports",               R.drawable.ic_document,       false));
 
         // ── Resources & Logistics (navigation.ts: "Resources & Logistics") ──
-        allModules.add(new ModuleItem("Inventory & Stock",     "/workspace/inventory",              "Logistics",  "Track reagents, consumables & items",           android.R.drawable.ic_menu_save,         false));
-        allModules.add(new ModuleItem("Logistics / Trips",     "/workspace/logistics",              "Logistics",  "Manage field agents & pickup trips",            android.R.drawable.ic_menu_directions,   false));
+        allModules.add(new ModuleItem("Inventory & Stock",     "/workspace/inventory",              "Logistics",  "Track reagents, consumables & items",           R.drawable.ic_box,         false));
+        allModules.add(new ModuleItem("Logistics / Trips",     "/workspace/logistics",              "Logistics",  "Manage field agents & pickup trips",            R.drawable.ic_box,   false));
 
         // ── Machine & AI (navigation.ts: "Machine & AI") ─────────────────────
-        allModules.add(new ModuleItem("Analyzer",              "/workspace/analyzers",              "Machine",    "Connect analyzers & view output logs",          android.R.drawable.ic_menu_preferences,  false));
-        allModules.add(new ModuleItem("Visual Mapper",         "/workspace/analyzers/mapper",       "Machine",    "Map barcode codes visually to fields",          android.R.drawable.ic_menu_preferences,  false));
-        allModules.add(new ModuleItem("Mappings",              "/workspace/analyzers/mappings",     "Machine",    "Configure machine integration parameters",      android.R.drawable.ic_menu_preferences,  false));
-        allModules.add(new ModuleItem("AI Analysis",           "/workspace/analyzers/ai",           "Machine",    "AI models on clinical samples",                 android.R.drawable.ic_menu_preferences,  true));
+        allModules.add(new ModuleItem("Analyzer",              "/workspace/analyzers",              "Machine",    "Connect analyzers & view output logs",          R.drawable.ic_cpu,  false));
+        allModules.add(new ModuleItem("Visual Mapper",         "/workspace/analyzers/mapper",       "Machine",    "Map barcode codes visually to fields",          R.drawable.ic_barcode,  false));
+        allModules.add(new ModuleItem("Mappings",              "/workspace/analyzers/mappings",     "Machine",    "Configure machine integration parameters",      R.drawable.ic_barcode,  false));
+        allModules.add(new ModuleItem("AI Analysis",           "/workspace/analyzers/ai",           "Machine",    "AI models on clinical samples",                 R.drawable.ic_cpu,  true));
 
         // ── B2B & Growth (navigation.ts: "B2B & Growth") ─────────────────────
-        allModules.add(new ModuleItem("Referral Doctors",      "/workspace/doctors",                "B2B",        "Track referring doctors & commission profiles",  android.R.drawable.ic_menu_myplaces,     false));
-        allModules.add(new ModuleItem("Corporate Agencies",    "/workspace/agencies",               "B2B",        "Manage corporate agency tie-ups",               android.R.drawable.ic_menu_myplaces,     false));
-        allModules.add(new ModuleItem("Commissions Payout",    "/workspace/commissions",            "B2B",        "View payout summaries for referrals",           android.R.drawable.ic_menu_myplaces,     false));
-        allModules.add(new ModuleItem("B2B Settings",          "/workspace/settings/b2b-tiers",     "B2B",        "Manage outsourced labs & tier pricings",        android.R.drawable.ic_menu_myplaces,     false));
+        allModules.add(new ModuleItem("Referral Doctors",      "/workspace/doctors",                "B2B",        "Track referring doctors & commission profiles",  R.drawable.ic_stethoscope,     false));
+        allModules.add(new ModuleItem("Corporate Agencies",    "/workspace/agencies",               "B2B",        "Manage corporate agency tie-ups",               R.drawable.ic_stethoscope,     false));
+        allModules.add(new ModuleItem("Commissions Payout",    "/workspace/commissions",            "B2B",        "View payout summaries for referrals",           R.drawable.ic_document,     false));
+        allModules.add(new ModuleItem("B2B Settings",          "/workspace/settings/b2b-tiers",     "B2B",        "Manage outsourced labs & tier pricings",        R.drawable.ic_gear,     false));
 
         // ── Administration (navigation.ts: "Administration") ─────────────────
-        allModules.add(new ModuleItem("Report Templates",      "/workspace/settings/templates",     "Admin",      "Design & manage report layout templates",       android.R.drawable.ic_menu_view,         false));
-        allModules.add(new ModuleItem("Staff Management",      "/workspace/staff",                  "Admin",      "Manage team roles, access keys & logs",         android.R.drawable.ic_menu_view,         false));
-        allModules.add(new ModuleItem("Invoices & Payments",   "/workspace/billing",                "Admin",      "Track cash flow & pending invoices",            android.R.drawable.ic_menu_view,         false));
-        allModules.add(new ModuleItem("Expenses",              "/workspace/expenses",               "Admin",      "Record & categorise lab expenses",              android.R.drawable.ic_menu_view,         false));
-        allModules.add(new ModuleItem("Lab Settings",          "/workspace/settings",               "Admin",      "Configure letterhead, templates & formats",     android.R.drawable.ic_menu_view,         false));
-        allModules.add(new ModuleItem("Audit Logs",            "/workspace/audit-logs",             "Admin",      "View security access logs & trace changes",     android.R.drawable.ic_menu_view,         false));
-        allModules.add(new ModuleItem("Wallet & Billing",      "/workspace/wallet",                 "Admin",      "Top-up wallet & view billing history",          android.R.drawable.ic_menu_view,         false));
-        allModules.add(new ModuleItem("Help & Support",        "/workspace/support",                "Admin",      "Raise tickets & browse documentation",          android.R.drawable.ic_menu_info_details, false));
+        allModules.add(new ModuleItem("Report Templates",      "/workspace/settings/templates",     "Admin",      "Design & manage report layout templates",       R.drawable.ic_document,         false));
+        allModules.add(new ModuleItem("Staff Management",      "/workspace/staff",                  "Admin",      "Manage team roles, access keys & logs",         R.drawable.ic_nav_patients,         false));
+        allModules.add(new ModuleItem("Invoices & Payments",   "/workspace/billing",                "Admin",      "Track cash flow & pending invoices",            R.drawable.ic_credit_card,         false));
+        allModules.add(new ModuleItem("Expenses",              "/workspace/expenses",               "Admin",      "Record & categorise lab expenses",              R.drawable.ic_document,         false));
+        allModules.add(new ModuleItem("Lab Settings",          "/workspace/settings",               "Admin",      "Configure letterhead, templates & formats",     R.drawable.ic_gear,         false));
+        allModules.add(new ModuleItem("Audit Logs",            "/workspace/audit-logs",             "Admin",      "View security access logs & trace changes",     R.drawable.ic_document,         false));
+        allModules.add(new ModuleItem("Wallet & Billing",      "/workspace/wallet",                 "Admin",      "Top-up wallet & view billing history",          R.drawable.ic_credit_card,         false));
+        allModules.add(new ModuleItem("Help & Support",        "/workspace/support",                "Admin",      "Raise tickets & browse documentation",          R.drawable.ic_support_lifebuoy, false));
 
         // ── Legal & Agreements ────────────────────────────────────────────────
-        allModules.add(new ModuleItem("Terms & Conditions",    "/legal",                            "Legal",      "Google Play Beta Testing agreements",           android.R.drawable.ic_menu_info_details, false));
+        allModules.add(new ModuleItem("Terms & Conditions",    "/legal",                            "Legal",      "Google Play Beta Testing agreements",           R.drawable.ic_legal, false));
     }
 
     private void renderModules() {
@@ -1085,7 +1154,11 @@ public class MainActivity extends BridgeActivity {
     public void onDestroy() {
         super.onDestroy();
         walletHandler.removeCallbacks(walletRunnable);
+        stopBellAnimationLoop();
+        bellAnimationHandler.removeCallbacks(bellAnimationRunnable);
         authCheckHandler.removeCallbacks(authCheckRunnable);
+        progressPollHandler.removeCallbacks(progressPollRunnable);
+        stopPulseAnimation();
         if (moreBottomSheetDialog != null) {
             if (moreBottomSheetDialog.isShowing()) {
                 moreBottomSheetDialog.dismiss();
@@ -1126,22 +1199,261 @@ public class MainActivity extends BridgeActivity {
     }
 
     private String getHeaderTitle(String path) {
-        if (path.contains("analytics")) return "FINANCIAL ANALYTICS";
-        if (path.contains("patients")) return "PATIENT WORKLIST";
-        if (path.contains("test-management")) return "CATEGORIES";
-        if (path.contains("bookings")) return "ONLINE BOOKINGS";
-        if (path.contains("registration")) return "REGISTRATION";
-        if (path.contains("results")) return "WORKLIST & RESULTS";
-        if (path.contains("reports")) return "REPORT DISPATCH";
-        if (path.contains("inventory")) return "INVENTORY & STOCK";
-        if (path.contains("logistics")) return "LOGISTICS & TRIPS";
-        if (path.contains("analyzers")) return "ANALYZER";
-        if (path.contains("support")) return "HELP & SUPPORT";
-        if (path.contains("billing")) return "INVOICES & PAYMENTS";
-        if (path.contains("expenses")) return "EXPENSES";
-        if (path.contains("settings")) return "LAB SETTINGS";
-        if (path.contains("audit-logs")) return "AUDIT LOGS";
-        if (path.contains("wallet")) return "WALLET & BILLING";
-        return "DASHBOARD";
+        if (path.contains("analytics")) return "Financial Analytics";
+        if (path.contains("patients")) return "Patient Worklist";
+        if (path.contains("test-management")) return "Categories";
+        if (path.contains("bookings")) return "Online Bookings";
+        if (path.contains("registration")) return "Registration";
+        if (path.contains("results")) return "Worklist & Results";
+        if (path.contains("reports")) return "Report Dispatch";
+        if (path.contains("inventory")) return "Inventory & Stock";
+        if (path.contains("logistics")) return "Logistics & Trips";
+        if (path.contains("analyzers")) return "Analyzer";
+        if (path.contains("support")) return "Help & Support";
+        if (path.contains("billing")) return "Invoices & Payments";
+        if (path.contains("expenses")) return "Expenses";
+        if (path.contains("settings")) return "Lab Settings";
+        if (path.contains("audit-logs")) return "Audit Logs";
+        if (path.contains("wallet")) return "Wallet & Billing";
+        return "Dashboard";
+    }
+
+    private void applySkeletonTheme(View view, boolean isDark) {
+        if (view == null) return;
+        if (view instanceof android.view.ViewGroup) {
+            android.view.ViewGroup group = (android.view.ViewGroup) view;
+            android.graphics.drawable.Drawable bg = group.getBackground();
+            if (bg != null) {
+                if (isDark) {
+                    bg.setColorFilter(android.graphics.Color.parseColor("#1E293B"), android.graphics.PorterDuff.Mode.SRC_IN);
+                } else {
+                    bg.clearColorFilter();
+                }
+            }
+            for (int i = 0; i < group.getChildCount(); i++) {
+                applySkeletonTheme(group.getChildAt(i), isDark);
+            }
+        } else {
+            android.graphics.drawable.Drawable bg = view.getBackground();
+            if (bg != null) {
+                if (isDark) {
+                    bg.setColorFilter(android.graphics.Color.parseColor("#334155"), android.graphics.PorterDuff.Mode.SRC_IN);
+                } else {
+                    bg.clearColorFilter();
+                }
+            }
+        }
+    }
+
+    private void showSkeletonForPath(String path) {
+        if (path == null) path = "";
+        
+        String category = "detail";
+        if (path.contains("analytics") || path.contains("dashboard")) {
+            category = "dashboard";
+        } else if (path.contains("results") || path.contains("worklist") || path.contains("patients") || path.contains("bookings")) {
+            category = "list";
+        } else if (path.contains("registration") || path.contains("settings") || path.contains("config") || path.contains("forgot-password")) {
+            category = "form";
+        } else if (path.contains("categories") || path.contains("catalog") || path.contains("inventory")) {
+            category = "grid";
+        }
+        
+        if (category.equals(activeSkeletonCategory) && skeletonContainer != null && skeletonContainer.getVisibility() == View.VISIBLE) {
+            return;
+        }
+        activeSkeletonCategory = category;
+        
+        View sDash = findViewById(R.id.skeletonDashboard);
+        View sList = findViewById(R.id.skeletonList);
+        View sForm = findViewById(R.id.skeletonForm);
+        View sGrid = findViewById(R.id.skeletonGrid);
+        View sDetail = findViewById(R.id.skeletonDetail);
+        
+        if (sDash != null) sDash.setVisibility(View.GONE);
+        if (sList != null) sList.setVisibility(View.GONE);
+        if (sForm != null) sForm.setVisibility(View.GONE);
+        if (sGrid != null) sGrid.setVisibility(View.GONE);
+        if (sDetail != null) sDetail.setVisibility(View.GONE);
+        
+        View activeSkeleton = sDetail;
+        if (path.contains("analytics") || path.contains("dashboard")) {
+            activeSkeleton = sDash;
+        } else if (path.contains("results") || path.contains("worklist") || path.contains("patients") || path.contains("bookings")) {
+            activeSkeleton = sList;
+        } else if (path.contains("registration") || path.contains("settings") || path.contains("config") || path.contains("forgot-password")) {
+            activeSkeleton = sForm;
+        } else if (path.contains("categories") || path.contains("catalog") || path.contains("inventory")) {
+            activeSkeleton = sGrid;
+        }
+        
+        if (activeSkeleton != null) {
+            activeSkeleton.setVisibility(View.VISIBLE);
+        }
+        
+        final boolean isDark = this.isDarkMode;
+        if (skeletonContainer != null) {
+            skeletonContainer.setBackgroundColor(isDark ? android.graphics.Color.parseColor("#0F172A") : android.graphics.Color.parseColor("#F8FAFC"));
+            applySkeletonTheme(skeletonContainer, isDark);
+            
+            skeletonContainer.animate().cancel();
+            skeletonContainer.setAlpha(0f);
+            skeletonContainer.setVisibility(View.VISIBLE);
+            skeletonContainer.animate()
+                .alpha(1f)
+                .setDuration(150)
+                .setListener(null)
+                .start();
+                
+            startPulseAnimation();
+        }
+    }
+
+    private void hideSkeleton() {
+        if (skeletonContainer != null && skeletonContainer.getVisibility() == View.VISIBLE) {
+            activeSkeletonCategory = "";
+            skeletonContainer.animate().cancel();
+            skeletonContainer.animate()
+                .alpha(0f)
+                .setDuration(180)
+                .setListener(new android.animation.AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(android.animation.Animator animation) {
+                        skeletonContainer.setVisibility(View.GONE);
+                        stopPulseAnimation();
+                    }
+                })
+                .start();
+        }
+    }
+
+    private void startPulseAnimation() {
+        if (pulseAnimator != null) {
+            pulseAnimator.cancel();
+        }
+        pulseAnimator = android.animation.ObjectAnimator.ofFloat(skeletonContainer, "alpha", 0.6f, 1.0f);
+        pulseAnimator.setDuration(800);
+        pulseAnimator.setRepeatMode(android.animation.ValueAnimator.REVERSE);
+        pulseAnimator.setRepeatCount(android.animation.ValueAnimator.INFINITE);
+        pulseAnimator.start();
+    }
+
+    private void stopPulseAnimation() {
+        if (pulseAnimator != null) {
+            pulseAnimator.cancel();
+            pulseAnimator = null;
+        }
+    }
+
+    private final Handler bellAnimationHandler = new Handler(Looper.getMainLooper());
+    private boolean isBellAnimationRunning = false;
+    private final Runnable bellAnimationRunnable = new Runnable() {
+        @Override
+        public void run() {
+            ImageView bellImg = findViewById(R.id.imgHeaderBell);
+            TextView badge = findViewById(R.id.txtNotificationBadge);
+            if (bellImg != null && badge != null && badge.getVisibility() == View.VISIBLE) {
+                bellImg.animate().rotation(-15f).setDuration(150).withEndAction(() -> {
+                    bellImg.animate().rotation(15f).setDuration(150).withEndAction(() -> {
+                        bellImg.animate().rotation(-12f).setDuration(150).withEndAction(() -> {
+                            bellImg.animate().rotation(12f).setDuration(150).withEndAction(() -> {
+                                bellImg.animate().rotation(-8f).setDuration(150).withEndAction(() -> {
+                                    bellImg.animate().rotation(8f).setDuration(150).withEndAction(() -> {
+                                        bellImg.animate().rotation(0f).setDuration(150).start();
+                                    }).start();
+                                }).start();
+                            }).start();
+                        }).start();
+                    }).start();
+                }).start();
+            }
+            bellAnimationHandler.postDelayed(this, 3000);
+        }
+    };
+
+    private void startBellAnimationLoop() {
+        runOnUiThread(() -> {
+            if (isBellAnimationRunning) return;
+            isBellAnimationRunning = true;
+            bellAnimationHandler.post(bellAnimationRunnable);
+        });
+    }
+
+    private void stopBellAnimationLoop() {
+        runOnUiThread(() -> {
+            isBellAnimationRunning = false;
+            bellAnimationHandler.removeCallbacks(bellAnimationRunnable);
+            ImageView bellImg = findViewById(R.id.imgHeaderBell);
+            if (bellImg != null) {
+                bellImg.animate().cancel();
+                bellImg.setRotation(0f);
+            }
+        });
+    }
+
+    private void fetchNotificationCount() {
+        final String token = AuthManager.getToken(this);
+        if (token == null || token.isEmpty()) {
+            runOnUiThread(() -> {
+                TextView badge = findViewById(R.id.txtNotificationBadge);
+                if (badge != null) badge.setVisibility(View.GONE);
+                stopBellAnimationLoop();
+            });
+            return;
+        }
+
+        new Thread(() -> {
+            try {
+                java.net.URL url = new java.net.URL(BASE_URL + "/api/notifications");
+                java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("GET");
+                conn.setRequestProperty("Accept", "application/json");
+                String cookie = android.webkit.CookieManager.getInstance().getCookie(BASE_URL);
+                if (cookie != null) conn.setRequestProperty("Cookie", cookie);
+                conn.setConnectTimeout(8000);
+                conn.setReadTimeout(8000);
+
+                int code = conn.getResponseCode();
+                if (code >= 200 && code < 300) {
+                    java.io.InputStream stream = conn.getInputStream();
+                    java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(stream, "UTF-8"));
+                    StringBuilder sb = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) sb.append(line);
+                    reader.close();
+
+                    org.json.JSONObject root = new org.json.JSONObject(sb.toString());
+                    org.json.JSONArray arr = root.optJSONArray("notifications");
+                    int unreadCount = 0;
+                    if (arr != null) {
+                        for (int i = 0; i < arr.length(); i++) {
+                            org.json.JSONObject n = arr.getJSONObject(i);
+                            if (!n.optBoolean("isRead", true)) {
+                                unreadCount++;
+                            }
+                        }
+                    }
+
+                    final int finalUnreadCount = unreadCount;
+                    runOnUiThread(() -> {
+                        TextView badge = findViewById(R.id.txtNotificationBadge);
+                        ImageView bellImg = findViewById(R.id.imgHeaderBell);
+                        if (badge != null) {
+                            if (finalUnreadCount > 0) {
+                                badge.setText(finalUnreadCount > 9 ? "9+" : String.valueOf(finalUnreadCount));
+                                badge.setVisibility(View.VISIBLE);
+                                startBellAnimationLoop();
+                            } else {
+                                badge.setVisibility(View.GONE);
+                                stopBellAnimationLoop();
+                            }
+                        }
+                    });
+                }
+                conn.disconnect();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
     }
 }

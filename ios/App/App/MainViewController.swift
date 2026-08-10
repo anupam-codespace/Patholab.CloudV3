@@ -24,7 +24,7 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
     
     // Wallet Banner Views
     private let walletCardView     = UIView()
-    private let walletGradient     = CAGradientLayer()
+    private let walletWrapper      = UIView()
     private let walletIconBg       = UIView()
     private let walletIconView     = UIImageView()
     private let txtWalletBalance   = UILabel()
@@ -36,6 +36,8 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
     private let navStack           = UIStackView()
     private let moreVC             = MoreViewController()
     private let offlineView        = UIView()
+    private let skeletonView       = UIView()
+    private let notificationBadge  = UILabel()
 
     // MARK: – Constraints updated for dynamic safe area
     private var bottomNavHeightConstraint: NSLayoutConstraint!
@@ -47,7 +49,9 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
     private var selectedTab  = 0             // 0=Dashboard 1=Patients 2=Categories 3=More
     private var previousTab  = 0
     private var isDarkMode   = false
+    private var activeSkeletonPath: String? = nil
     private var walletTimer: Timer? = nil
+    private var bellAnimationTimer: Timer? = nil
 
     // ─────────────────────────────────────────────────────────────────────────
     // MARK: – Lifecycle
@@ -61,6 +65,7 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         buildTopLayoutContainer() // 0. Stack view enclosing Header + Wallet Card
         buildBottomNavBar()       // 1. Native bottom nav pinned above safe area
         buildOfflineView()        // 2. Offline overlay (hidden by default)
+        buildSkeletonView()       // 2b. Full screen skeleton loading screen (hidden by default)
         embedMoreViewController() // 3. More panel (hidden by default)
 
         // Custom User Agent setup to inject CapacitorApp dynamically to hide web header
@@ -105,6 +110,7 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
             // Enable iOS swipe-back through web history
             webView.allowsBackForwardNavigationGestures = true
             webView.addObserver(self, forKeyPath: "URL", options: .new, context: nil)
+            webView.addObserver(self, forKeyPath: "estimatedProgress", options: .new, context: nil)
         }
 
         // Navigate to dashboard once layout is ready
@@ -137,9 +143,6 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        // Ensure wallet card gradient fits wrapper perfectly
-        let wrapperWidth = view.bounds.width - 28
-        walletGradient.frame = CGRect(x: 0, y: 0, width: wrapperWidth, height: 52)
     }
 
     override func viewSafeAreaInsetsDidChange() {
@@ -156,13 +159,16 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         stopWalletPolling()
         walletTimer = Timer.scheduledTimer(withTimeInterval: 15.0, repeats: true) { [weak self] _ in
             self?.fetchWalletDetails()
+            self?.fetchNotificationCount()
         }
         fetchWalletDetails()
+        fetchNotificationCount()
     }
 
     private func stopWalletPolling() {
         walletTimer?.invalidate()
         walletTimer = nil
+        stopBellAnimationLoop()
     }
 
     private func fetchWalletDetails() {
@@ -219,25 +225,24 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         walletCardView.isHidden = false
         txtWalletBalance.text = String(format: "₹%.2f", balance)
 
+        let statusText: String
+        let statusColor: UIColor
+        
+        let borderStroke = UIColor(red: 51/255, green: 65/255, blue: 85/255, alpha: 1)
         if balance <= 20.0 {
-            txtWalletStatus.text = "LOW BALANCE ( ADD FUNDS )"
-            walletGradient.colors = [
-                UIColor(red: 239/255, green: 68/255, blue: 68/255, alpha: 1).cgColor, // red-500
-                UIColor(red: 225/255, green: 29/255, blue: 72/255, alpha: 1).cgColor // rose-600
-            ]
+            statusText = "●  LOW BALANCE • ADD FUNDS"
+            statusColor = UIColor(red: 239/255, green: 68/255, blue: 68/255, alpha: 1) // red-500
         } else if balance < 75.0 {
-            txtWalletStatus.text = "LOW BALANCE ( ADD FUNDS )"
-            walletGradient.colors = [
-                UIColor(red: 245/255, green: 158/255, blue: 11/255, alpha: 1).cgColor, // amber-500
-                UIColor(red: 249/255, green: 115/255, blue: 22/255, alpha: 1).cgColor  // orange-500
-            ]
+            statusText = "●  LOW BALANCE • ADD FUNDS"
+            statusColor = UIColor(red: 249/255, green: 115/255, blue: 22/255, alpha: 1) // orange-500
         } else {
-            txtWalletStatus.text = "ACTIVE & FUNDED"
-            walletGradient.colors = [
-                UIColor(red: 16/255, green: 185/255, blue: 129/255, alpha: 1).cgColor, // emerald-500
-                UIColor(red: 5/255, green: 150/255, blue: 105/255, alpha: 1).cgColor  // emerald-600
-            ]
+            statusText = "●  ACTIVE"
+            statusColor = UIColor(red: 16/255, green: 185/255, blue: 129/255, alpha: 1) // emerald-500
         }
+        
+        txtWalletStatus.text = statusText
+        txtWalletStatus.textColor = statusColor
+        walletWrapper.layer.borderColor = borderStroke.cgColor
         view.setNeedsLayout()
     }
 
@@ -467,6 +472,7 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         headerTitleLabel.text = getHeaderTitle(for: path)
         if path == currentPath { return }
         currentPath = path
+        showSkeleton(for: path)
 
         if let token = KeychainManager.read(forKey: KeychainManager.tokenKey) {
             AuthService.injectCookieIntoWebView(token: token)
@@ -488,10 +494,22 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
     func didSelectModule(path: String) {
         moreVC.dismiss(animated: true) { [weak self] in
             guard let self = self else { return }
-            self.currentPath = nil          // force reload even if same path
-            self.selectedTab = 0
-            self.updateNavTints()
-            self.showWeb(path: path)
+            if path == "/legal" {
+                let legalVC = LegalViewController()
+                legalVC.isDarkMode = self.isDarkMode
+                if #available(iOS 15.0, *) {
+                    if let sheet = legalVC.sheetPresentationController {
+                        sheet.detents = [.medium(), .large()]
+                        sheet.prefersGrabberVisible = true
+                    }
+                }
+                self.present(legalVC, animated: true)
+            } else {
+                self.currentPath = nil          // force reload even if same path
+                self.selectedTab = 0
+                self.updateNavTints()
+                self.showWeb(path: path)
+            }
         }
     }
 
@@ -535,8 +553,7 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         topHeaderBar.addSubview(headerBorder)
 
         // Menu button ...
-        menuButton.backgroundColor = UIColor(red: 241/255, green: 245/255, blue: 249/255, alpha: 1)
-        menuButton.layer.cornerRadius = 19
+        menuButton.backgroundColor = .clear
         menuButton.setTitle("•••", for: .normal)
         menuButton.setTitleColor(UIColor(red: 71/255, green: 85/255, blue: 105/255, alpha: 1), for: .normal)
         menuButton.titleLabel?.font = .systemFont(ofSize: 10, weight: .bold)
@@ -545,15 +562,19 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         topHeaderBar.addSubview(menuButton)
 
         // Subtitle & Title labels
-        headerSubtitleLabel.text = "MAIN BRANCH"
+        headerSubtitleLabel.text = "Main Branch"
         headerSubtitleLabel.font = .systemFont(ofSize: 9, weight: .bold)
         headerSubtitleLabel.textColor = UIColor(red: 148/255, green: 163/255, blue: 184/255, alpha: 1)
+        headerSubtitleLabel.adjustsFontSizeToFitWidth = true
+        headerSubtitleLabel.minimumScaleFactor = 0.75
         headerSubtitleLabel.translatesAutoresizingMaskIntoConstraints = false
         topHeaderBar.addSubview(headerSubtitleLabel)
 
-        headerTitleLabel.text = "FINANCIAL ANALYTICS"
+        headerTitleLabel.text = "Financial Analytics"
         headerTitleLabel.font = .systemFont(ofSize: 15, weight: .black)
         headerTitleLabel.textColor = UIColor(red: 15/255, green: 23/255, blue: 42/255, alpha: 1)
+        headerTitleLabel.adjustsFontSizeToFitWidth = true
+        headerTitleLabel.minimumScaleFactor = 0.75
         headerTitleLabel.translatesAutoresizingMaskIntoConstraints = false
         topHeaderBar.addSubview(headerTitleLabel)
 
@@ -561,8 +582,7 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         let supportImage = UIImage(systemName: "questionmark.circle")
         supportButton.setImage(supportImage, for: .normal)
         supportButton.tintColor = UIColor(red: 71/255, green: 85/255, blue: 105/255, alpha: 1)
-        supportButton.backgroundColor = UIColor(red: 241/255, green: 245/255, blue: 249/255, alpha: 1)
-        supportButton.layer.cornerRadius = 18
+        supportButton.backgroundColor = .clear
         supportButton.translatesAutoresizingMaskIntoConstraints = false
         supportButton.addTarget(self, action: #selector(headerSupportTapped), for: .touchUpInside)
         topHeaderBar.addSubview(supportButton)
@@ -571,8 +591,7 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         let themeImage = UIImage(systemName: "sun.max")
         themeButton.setImage(themeImage, for: .normal)
         themeButton.tintColor = UIColor(red: 71/255, green: 85/255, blue: 105/255, alpha: 1)
-        themeButton.backgroundColor = UIColor(red: 241/255, green: 245/255, blue: 249/255, alpha: 1)
-        themeButton.layer.cornerRadius = 18
+        themeButton.backgroundColor = .clear
         themeButton.translatesAutoresizingMaskIntoConstraints = false
         themeButton.addTarget(self, action: #selector(headerThemeTapped), for: .touchUpInside)
         topHeaderBar.addSubview(themeButton)
@@ -582,14 +601,24 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         let chevronImage = UIImage(systemName: "chevron.down")
         notificationButton.setImage(bellImage, for: .normal)
         notificationButton.tintColor = UIColor(red: 71/255, green: 85/255, blue: 105/255, alpha: 1)
-        notificationButton.backgroundColor = UIColor(red: 241/255, green: 245/255, blue: 249/255, alpha: 1)
-        notificationButton.layer.cornerRadius = 18
+        notificationButton.backgroundColor = .clear
         
         // Add dropdown arrow internally for bell pill look
         let bellChevron = UIImageView(image: chevronImage)
         bellChevron.tintColor = UIColor(red: 148/255, green: 163/255, blue: 184/255, alpha: 1)
         bellChevron.translatesAutoresizingMaskIntoConstraints = false
         notificationButton.addSubview(bellChevron)
+        
+        // Notification Badge setup
+        notificationBadge.backgroundColor = UIColor(red: 239/255, green: 68/255, blue: 68/255, alpha: 1)
+        notificationBadge.textColor = .white
+        notificationBadge.font = .systemFont(ofSize: 8.5, weight: .bold)
+        notificationBadge.textAlignment = .center
+        notificationBadge.layer.cornerRadius = 6.5
+        notificationBadge.layer.masksToBounds = true
+        notificationBadge.isHidden = true
+        notificationBadge.translatesAutoresizingMaskIntoConstraints = false
+        notificationButton.addSubview(notificationBadge)
         
         notificationButton.translatesAutoresizingMaskIntoConstraints = false
         notificationButton.addTarget(self, action: #selector(headerNotificationTapped), for: .touchUpInside)
@@ -608,9 +637,11 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
 
             headerSubtitleLabel.topAnchor.constraint(equalTo: menuButton.topAnchor, constant: 1),
             headerSubtitleLabel.leadingAnchor.constraint(equalTo: menuButton.trailingAnchor, constant: 12),
+            headerSubtitleLabel.trailingAnchor.constraint(lessThanOrEqualTo: notificationButton.leadingAnchor, constant: -8),
 
             headerTitleLabel.bottomAnchor.constraint(equalTo: menuButton.bottomAnchor, constant: -1),
             headerTitleLabel.leadingAnchor.constraint(equalTo: menuButton.trailingAnchor, constant: 12),
+            headerTitleLabel.trailingAnchor.constraint(lessThanOrEqualTo: notificationButton.leadingAnchor, constant: -8),
 
             supportButton.trailingAnchor.constraint(equalTo: topHeaderBar.trailingAnchor, constant: -14),
             supportButton.centerYAnchor.constraint(equalTo: topHeaderBar.centerYAnchor),
@@ -630,7 +661,12 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
             bellChevron.trailingAnchor.constraint(equalTo: notificationButton.trailingAnchor, constant: -8),
             bellChevron.centerYAnchor.constraint(equalTo: notificationButton.centerYAnchor),
             bellChevron.widthAnchor.constraint(equalToConstant: 8),
-            bellChevron.heightAnchor.constraint(equalToConstant: 6)
+            bellChevron.heightAnchor.constraint(equalToConstant: 6),
+
+            notificationBadge.topAnchor.constraint(equalTo: notificationButton.topAnchor, constant: 4),
+            notificationBadge.leadingAnchor.constraint(equalTo: notificationButton.leadingAnchor, constant: 18),
+            notificationBadge.widthAnchor.constraint(equalToConstant: 13),
+            notificationBadge.heightAnchor.constraint(equalToConstant: 13)
         ])
     }
 
@@ -639,93 +675,93 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         walletCardView.translatesAutoresizingMaskIntoConstraints = false
         walletCardView.isHidden = true // Hidden by default, dynamically displayed for LAB_OWNER
         
-        let wrapper = UIView()
-        wrapper.translatesAutoresizingMaskIntoConstraints = false
-        walletCardView.addSubview(wrapper)
+        walletWrapper.translatesAutoresizingMaskIntoConstraints = false
+        walletWrapper.backgroundColor = isDarkMode ? UIColor(red: 15/255, green: 23/255, blue: 42/255, alpha: 1) : UIColor(red: 30/255, green: 41/255, blue: 59/255, alpha: 1)
+        walletWrapper.layer.cornerRadius = 26
+        walletWrapper.layer.borderWidth = 1.5
+        walletWrapper.layer.borderColor = UIColor(red: 51/255, green: 65/255, blue: 85/255, alpha: 1).cgColor
+        walletCardView.addSubview(walletWrapper)
         
-        // Gradient layer installation
-        walletGradient.colors = [
-            UIColor(red: 245/255, green: 158/255, blue: 11/255, alpha: 1).cgColor, // amber-500
-            UIColor(red: 249/255, green: 115/255, blue: 22/255, alpha: 1).cgColor  // orange-500
-        ]
-        walletGradient.startPoint = CGPoint(x: 0, y: 0.5)
-        walletGradient.endPoint = CGPoint(x: 1, y: 0.5)
-        walletGradient.cornerRadius = 12
-        wrapper.layer.addSublayer(walletGradient)
-        wrapper.layer.cornerRadius = 12
-
         // Add Wallet Card Tap Action
         let tap = UITapGestureRecognizer(target: self, action: #selector(walletCardTapped))
-        wrapper.addGestureRecognizer(tap)
-
-        // Circle Credit Card Icon Container (slimmed to 30dp)
-        walletIconBg.backgroundColor = UIColor(white: 1.0, alpha: 0.2)
+        walletWrapper.addGestureRecognizer(tap)
+        
+        // Circle Credit Card Icon Container
+        walletIconBg.backgroundColor = .white
         walletIconBg.layer.cornerRadius = 15
         walletIconBg.translatesAutoresizingMaskIntoConstraints = false
-        wrapper.addSubview(walletIconBg)
-
-        let cardImage = UIImage(systemName: "creditcard.fill")
+        walletWrapper.addSubview(walletIconBg)
+        
+        let cardImage = UIImage(named: "WalletLogo")
         walletIconView.image = cardImage
-        walletIconView.tintColor = .white
         walletIconView.contentMode = .scaleAspectFit
         walletIconView.translatesAutoresizingMaskIntoConstraints = false
         walletIconBg.addSubview(walletIconView)
-
-        // Balance labels (refined font sizes)
+        
+        // Balance labels
         txtWalletBalance.text = "₹30.00"
         txtWalletBalance.textColor = .white
-        txtWalletBalance.font = .systemFont(ofSize: 16, weight: .bold)
+        txtWalletBalance.font = .systemFont(ofSize: 18, weight: .black)
+        txtWalletBalance.adjustsFontSizeToFitWidth = true
+        txtWalletBalance.minimumScaleFactor = 0.65
+        txtWalletBalance.numberOfLines = 1
         txtWalletBalance.translatesAutoresizingMaskIntoConstraints = false
-        wrapper.addSubview(txtWalletBalance)
-
-        txtWalletStatus.text = "LOW BALANCE ( ADD FUNDS )"
-        txtWalletStatus.textColor = UIColor(red: 255/255, green: 227/255, blue: 227/255, alpha: 1)
-        txtWalletStatus.font = .systemFont(ofSize: 9, weight: .bold)
+        walletWrapper.addSubview(txtWalletBalance)
+        
+        txtWalletStatus.text = "●  ACTIVE"
+        txtWalletStatus.textColor = UIColor(red: 16/255, green: 185/255, blue: 129/255, alpha: 1) // emerald-500
+        txtWalletStatus.font = .systemFont(ofSize: 9.5, weight: .bold)
         txtWalletStatus.translatesAutoresizingMaskIntoConstraints = false
-        wrapper.addSubview(txtWalletStatus)
-
-        // Right side: Pulsing status indicator dot (instead of chevron)
-        walletChevron.image = nil
-        walletChevron.backgroundColor = UIColor(white: 1.0, alpha: 0.8)
-        walletChevron.layer.cornerRadius = 4
-        walletChevron.clipsToBounds = true
-        walletChevron.translatesAutoresizingMaskIntoConstraints = false
-        wrapper.addSubview(walletChevron)
-
-        // Pulse animation
-        UIView.animate(withDuration: 1.2, delay: 0, options: [.repeat, .autoreverse, .allowUserInteraction], animations: {
-            self.walletChevron.alpha = 0.3
-        }, completion: nil)
-
+        walletWrapper.addSubview(txtWalletStatus)
+        
+        // Right side: Pill Button
+        let btnTopUp = UIView()
+        btnTopUp.backgroundColor = UIColor(red: 30/255, green: 41/255, blue: 59/255, alpha: 1)
+        btnTopUp.layer.cornerRadius = 13
+        btnTopUp.translatesAutoresizingMaskIntoConstraints = false
+        walletWrapper.addSubview(btnTopUp)
+        
+        let lblTopUp = UILabel()
+        lblTopUp.text = "Top Up"
+        lblTopUp.textColor = .white
+        lblTopUp.font = .systemFont(ofSize: 11, weight: .bold)
+        lblTopUp.translatesAutoresizingMaskIntoConstraints = false
+        btnTopUp.addSubview(lblTopUp)
+        
         topLayoutContainer.addArrangedSubview(walletCardView)
-
+        
         NSLayoutConstraint.activate([
-            wrapper.topAnchor.constraint(equalTo: walletCardView.topAnchor, constant: 6),
-            wrapper.bottomAnchor.constraint(equalTo: walletCardView.bottomAnchor, constant: -6),
-            wrapper.leadingAnchor.constraint(equalTo: walletCardView.leadingAnchor, constant: 14),
-            wrapper.trailingAnchor.constraint(equalTo: walletCardView.trailingAnchor, constant: -14),
-            wrapper.heightAnchor.constraint(equalToConstant: 52),
-
-            walletIconBg.leadingAnchor.constraint(equalTo: wrapper.leadingAnchor, constant: 12),
-            walletIconBg.centerYAnchor.constraint(equalTo: wrapper.centerYAnchor),
+            walletWrapper.topAnchor.constraint(equalTo: walletCardView.topAnchor, constant: 6),
+            walletWrapper.bottomAnchor.constraint(equalTo: walletCardView.bottomAnchor, constant: -6),
+            walletWrapper.leadingAnchor.constraint(equalTo: walletCardView.leadingAnchor, constant: 14),
+            walletWrapper.trailingAnchor.constraint(equalTo: walletCardView.trailingAnchor, constant: -14),
+            walletWrapper.heightAnchor.constraint(equalToConstant: 52),
+            
+            walletIconBg.leadingAnchor.constraint(equalTo: walletWrapper.leadingAnchor, constant: 12),
+            walletIconBg.centerYAnchor.constraint(equalTo: walletWrapper.centerYAnchor),
             walletIconBg.widthAnchor.constraint(equalToConstant: 30),
             walletIconBg.heightAnchor.constraint(equalToConstant: 30),
-
+            
             walletIconView.centerXAnchor.constraint(equalTo: walletIconBg.centerXAnchor),
             walletIconView.centerYAnchor.constraint(equalTo: walletIconBg.centerYAnchor),
-            walletIconView.widthAnchor.constraint(equalToConstant: 14),
-            walletIconView.heightAnchor.constraint(equalToConstant: 14),
-
+            walletIconView.widthAnchor.constraint(equalToConstant: 26),
+            walletIconView.heightAnchor.constraint(equalToConstant: 26),
+            
             txtWalletBalance.topAnchor.constraint(equalTo: walletIconBg.topAnchor, constant: -1),
             txtWalletBalance.leadingAnchor.constraint(equalTo: walletIconBg.trailingAnchor, constant: 10),
-
+            txtWalletBalance.trailingAnchor.constraint(lessThanOrEqualTo: btnTopUp.leadingAnchor, constant: -8),
+            
             txtWalletStatus.bottomAnchor.constraint(equalTo: walletIconBg.bottomAnchor, constant: 1),
             txtWalletStatus.leadingAnchor.constraint(equalTo: walletIconBg.trailingAnchor, constant: 10),
-
-            walletChevron.trailingAnchor.constraint(equalTo: wrapper.trailingAnchor, constant: -16),
-            walletChevron.centerYAnchor.constraint(equalTo: wrapper.centerYAnchor),
-            walletChevron.widthAnchor.constraint(equalToConstant: 8),
-            walletChevron.heightAnchor.constraint(equalToConstant: 8)
+            txtWalletStatus.trailingAnchor.constraint(lessThanOrEqualTo: btnTopUp.leadingAnchor, constant: -8),
+            
+            btnTopUp.trailingAnchor.constraint(equalTo: walletWrapper.trailingAnchor, constant: -12),
+            btnTopUp.centerYAnchor.constraint(equalTo: walletWrapper.centerYAnchor),
+            btnTopUp.heightAnchor.constraint(equalToConstant: 26),
+            
+            lblTopUp.leadingAnchor.constraint(equalTo: btnTopUp.leadingAnchor, constant: 12),
+            lblTopUp.trailingAnchor.constraint(equalTo: btnTopUp.trailingAnchor, constant: -12),
+            lblTopUp.centerYAnchor.constraint(equalTo: btnTopUp.centerYAnchor)
         ])
     }
 
@@ -751,6 +787,14 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
     @objc private func headerNotificationTapped() {
         let notifVC = NotificationsViewController()
         notifVC.isDarkMode = self.isDarkMode
+
+        // When user taps "Mark all as read", instantly clear the badge and bell on this screen
+        notifVC.onAllRead = { [weak self] in
+            guard let self = self else { return }
+            self.notificationBadge.isHidden = true
+            self.stopBellAnimationLoop()
+        }
+
         if #available(iOS 16.0, *) {
             notifVC.modalPresentationStyle = .pageSheet
             if let sheet = notifVC.sheetPresentationController {
@@ -773,23 +817,23 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
     }
 
     private func getHeaderTitle(for path: String) -> String {
-        if path.contains("analytics") { return "FINANCIAL ANALYTICS" }
-        if path.contains("patients") { return "PATIENT WORKLIST" }
-        if path.contains("test-management") { return "CATEGORIES" }
-        if path.contains("bookings") { return "ONLINE BOOKINGS" }
-        if path.contains("registration") { return "REGISTRATION" }
-        if path.contains("results") { return "WORKLIST & RESULTS" }
-        if path.contains("reports") { return "REPORT DISPATCH" }
-        if path.contains("inventory") { return "INVENTORY & STOCK" }
-        if path.contains("logistics") { return "LOGISTICS & TRIPS" }
-        if path.contains("analyzers") { return "ANALYZER" }
-        if path.contains("support") { return "HELP & SUPPORT" }
-        if path.contains("billing") { return "INVOICES & PAYMENTS" }
-        if path.contains("expenses") { return "EXPENSES" }
-        if path.contains("settings") { return "LAB SETTINGS" }
-        if path.contains("audit-logs") { return "AUDIT LOGS" }
-        if path.contains("wallet") { return "WALLET & BILLING" }
-        return "DASHBOARD"
+        if path.contains("analytics") { return "Financial Analytics" }
+        if path.contains("patients") { return "Patient Worklist" }
+        if path.contains("test-management") { return "Categories" }
+        if path.contains("bookings") { return "Online Bookings" }
+        if path.contains("registration") { return "Registration" }
+        if path.contains("results") { return "Worklist & Results" }
+        if path.contains("reports") { return "Report Dispatch" }
+        if path.contains("inventory") { return "Inventory & Stock" }
+        if path.contains("logistics") { return "Logistics & Trips" }
+        if path.contains("analyzers") { return "Analyzer" }
+        if path.contains("support") { return "Help & Support" }
+        if path.contains("billing") { return "Invoices & Payments" }
+        if path.contains("expenses") { return "Expenses" }
+        if path.contains("settings") { return "Lab Settings" }
+        if path.contains("audit-logs") { return "Audit Logs" }
+        if path.contains("wallet") { return "Wallet & Billing" }
+        return "Dashboard"
     }
 
     // MARK: – UIAdaptivePresentationControllerDelegate
@@ -799,9 +843,9 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         if previousTab == 0 {
             headerTitleLabel.text = getHeaderTitle(for: currentPath ?? "/workspace/analytics")
         } else if previousTab == 1 {
-            headerTitleLabel.text = "PATIENT WORKLIST"
+            headerTitleLabel.text = "Patient Worklist"
         } else if previousTab == 2 {
-            headerTitleLabel.text = "CATEGORIES"
+            headerTitleLabel.text = "Categories"
         }
     }
 
@@ -809,6 +853,14 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
         if keyPath == "URL", let webView = object as? WKWebView, let url = webView.url {
             checkAuthRedirect(url: url)
+        }
+        if keyPath == "estimatedProgress", let webView = object as? WKWebView {
+            let progress = webView.estimatedProgress
+            if progress < 1.0 {
+                showSkeleton(for: webView.url?.path ?? "")
+            } else {
+                hideSkeleton()
+            }
         }
     }
 
@@ -854,7 +906,7 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         headerSubtitleLabel.textColor = isDark ? UIColor(red: 148/255, green: 163/255, blue: 184/255, alpha: 1) : UIColor(red: 148/255, green: 163/255, blue: 184/255, alpha: 1)
         
         // Buttons background and tint
-        let btnBg = isDark ? slate700 : UIColor(red: 241/255, green: 245/255, blue: 249/255, alpha: 1)
+        let btnBg = UIColor.clear
         let btnTint = isDark ? slate200 : slate600
         
         let buttons = [menuButton, themeButton, supportButton, notificationButton]
@@ -872,13 +924,523 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         // Update bottom nav tints
         updateNavTints()
         
+        // Wallet Wrapper Background Color
+        let walletBg = isDark ? UIColor(red: 15/255, green: 23/255, blue: 42/255, alpha: 1) : UIColor(red: 30/255, green: 41/255, blue: 59/255, alpha: 1)
+        walletWrapper.backgroundColor = walletBg
+        
         // Update MoreViewController if instantiated
         moreVC.applyTheme(isDark: isDark)
     }
 
+    private func buildSkeletonView() {
+        skeletonView.translatesAutoresizingMaskIntoConstraints = false
+        skeletonView.backgroundColor = UIColor(red: 248/255, green: 250/255, blue: 252/255, alpha: 1)
+        skeletonView.isHidden = true
+        view.addSubview(skeletonView)
+        
+        NSLayoutConstraint.activate([
+            skeletonView.topAnchor.constraint(equalTo: topLayoutContainer.bottomAnchor),
+            skeletonView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            skeletonView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            skeletonView.bottomAnchor.constraint(equalTo: bottomNavBar.topAnchor)
+        ])
+    }
+
+    private func createShimmerLine(width: CGFloat?, height: CGFloat, color: UIColor) -> UIView {
+        let view = UIView()
+        view.backgroundColor = color
+        view.layer.cornerRadius = height / 2.0
+        view.translatesAutoresizingMaskIntoConstraints = false
+        if let w = width {
+            view.widthAnchor.constraint(equalToConstant: w).isActive = true
+        }
+        view.heightAnchor.constraint(equalToConstant: height).isActive = true
+        return view
+    }
+    
+    private func createShimmerCircle(size: CGFloat, color: UIColor) -> UIView {
+        let view = UIView()
+        view.backgroundColor = color
+        view.layer.cornerRadius = size / 2.0
+        view.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            view.widthAnchor.constraint(equalToConstant: size),
+            view.heightAnchor.constraint(equalToConstant: size)
+        ])
+        return view
+    }
+    
+    private func createCardWrapper(color: UIColor, borderColor: CGColor) -> UIView {
+        let view = UIView()
+        view.backgroundColor = color
+        view.layer.cornerRadius = 16
+        view.layer.borderWidth = 1
+        view.layer.borderColor = borderColor
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }
+
+    private func getSkeletonCategory(for path: String) -> String {
+        if path.contains("analytics") || path.contains("dashboard") {
+            return "dashboard"
+        }
+        if path.contains("patients") || path.contains("results") || path.contains("reports") || path.contains("audit-logs") || path.contains("bookings") || path.contains("staff") {
+            return "list"
+        }
+        if path.contains("test-management") || path.contains("analyzers") {
+            return "grid"
+        }
+        if path.contains("support") || path.contains("wallet") || path.contains("settings") || path.contains("expenses") || path.contains("commissions") || path.contains("doctors") || path.contains("agencies") || path.contains("profile") {
+            return "detail"
+        }
+        if path.contains("registration") || path.contains("edit") || path.contains("create") || path.contains("new") {
+            return "form"
+        }
+        return "dashboard"
+    }
+
+    private func showSkeleton(for path: String) {
+        let category = getSkeletonCategory(for: path)
+        if let currentPath = activeSkeletonPath, getSkeletonCategory(for: currentPath) == category && !skeletonView.isHidden {
+            return
+        }
+        activeSkeletonPath = path
+        
+        let isDark = self.isDarkMode
+        skeletonView.backgroundColor = isDark ? UIColor(red: 15/255, green: 23/255, blue: 42/255, alpha: 1) : UIColor(red: 248/255, green: 250/255, blue: 252/255, alpha: 1)
+        
+        // Remove existing subviews in skeletonView
+        skeletonView.subviews.forEach { $0.removeFromSuperview() }
+        
+        let bgCard = isDark ? UIColor(red: 30/255, green: 41/255, blue: 59/255, alpha: 1) : .white
+        let bgBlock = isDark ? UIColor(red: 71/255, green: 85/255, blue: 105/255, alpha: 1) : UIColor(red: 226/255, green: 232/255, blue: 240/255, alpha: 1)
+        let borderColor = isDark ? UIColor(red: 51/255, green: 65/255, blue: 85/255, alpha: 1).cgColor : UIColor(white: 0.9, alpha: 1).cgColor
+        
+        // Main container StackView
+        let mainStack = UIStackView()
+        mainStack.axis = .vertical
+        mainStack.spacing = 16
+        mainStack.translatesAutoresizingMaskIntoConstraints = false
+        skeletonView.addSubview(mainStack)
+        
+        // Padding constraints
+        NSLayoutConstraint.activate([
+            mainStack.topAnchor.constraint(equalTo: skeletonView.safeAreaLayoutGuide.topAnchor, constant: 16),
+            mainStack.leadingAnchor.constraint(equalTo: skeletonView.leadingAnchor, constant: 16),
+            mainStack.trailingAnchor.constraint(equalTo: skeletonView.trailingAnchor, constant: -16)
+        ])
+        
+        if path.contains("analytics") || path.contains("dashboard") {
+            // 1. DASHBOARD
+            let welcome = createCardWrapper(color: bgCard, borderColor: borderColor)
+            let wStack = UIStackView(arrangedSubviews: [
+                createShimmerLine(width: 200, height: 22, color: bgBlock),
+                createShimmerLine(width: 120, height: 14, color: bgBlock)
+            ])
+            wStack.axis = .vertical
+            wStack.spacing = 8
+            wStack.translatesAutoresizingMaskIntoConstraints = false
+            welcome.addSubview(wStack)
+            NSLayoutConstraint.activate([
+                wStack.topAnchor.constraint(equalTo: welcome.topAnchor, constant: 18),
+                wStack.bottomAnchor.constraint(equalTo: welcome.bottomAnchor, constant: -18),
+                wStack.leadingAnchor.constraint(equalTo: welcome.leadingAnchor, constant: 18),
+                wStack.trailingAnchor.constraint(equalTo: welcome.trailingAnchor, constant: -18)
+            ])
+            mainStack.addArrangedSubview(welcome)
+            
+            let gridH1 = UIStackView()
+            gridH1.axis = .horizontal
+            gridH1.spacing = 12
+            gridH1.distribution = .fillEqually
+            
+            for _ in 0..<2 {
+                let card = createCardWrapper(color: bgCard, borderColor: borderColor)
+                let cStack = UIStackView(arrangedSubviews: [
+                    createShimmerCircle(size: 32, color: bgBlock),
+                    createShimmerLine(width: 80, height: 16, color: bgBlock)
+                ])
+                cStack.axis = .vertical
+                cStack.spacing = 12
+                cStack.translatesAutoresizingMaskIntoConstraints = false
+                card.addSubview(cStack)
+                NSLayoutConstraint.activate([
+                    cStack.topAnchor.constraint(equalTo: card.topAnchor, constant: 16),
+                    cStack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -16),
+                    cStack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 16),
+                    cStack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -16),
+                    card.heightAnchor.constraint(equalToConstant: 100)
+                ])
+                gridH1.addArrangedSubview(card)
+            }
+            mainStack.addArrangedSubview(gridH1)
+            
+            let gridH2 = UIStackView()
+            gridH2.axis = .horizontal
+            gridH2.spacing = 12
+            gridH2.distribution = .fillEqually
+            
+            for _ in 0..<2 {
+                let card = createCardWrapper(color: bgCard, borderColor: borderColor)
+                let cStack = UIStackView(arrangedSubviews: [
+                    createShimmerCircle(size: 32, color: bgBlock),
+                    createShimmerLine(width: 70, height: 16, color: bgBlock)
+                ])
+                cStack.axis = .vertical
+                cStack.spacing = 12
+                cStack.translatesAutoresizingMaskIntoConstraints = false
+                card.addSubview(cStack)
+                NSLayoutConstraint.activate([
+                    cStack.topAnchor.constraint(equalTo: card.topAnchor, constant: 16),
+                    cStack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -16),
+                    cStack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 16),
+                    cStack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -16),
+                    card.heightAnchor.constraint(equalToConstant: 100)
+                ])
+                gridH2.addArrangedSubview(card)
+            }
+            mainStack.addArrangedSubview(gridH2)
+            
+            let chartCard = createCardWrapper(color: bgCard, borderColor: borderColor)
+            let chartHeader = createShimmerLine(width: 140, height: 18, color: bgBlock)
+            chartCard.addSubview(chartHeader)
+            
+            let barStack = UIStackView()
+            barStack.axis = .horizontal
+            barStack.spacing = 8
+            barStack.alignment = .bottom
+            barStack.distribution = .fillEqually
+            barStack.translatesAutoresizingMaskIntoConstraints = false
+            chartCard.addSubview(barStack)
+            
+            let heights: [CGFloat] = [80, 120, 60, 140, 100, 160]
+            for h in heights {
+                let bar = UIView()
+                bar.backgroundColor = bgBlock
+                bar.layer.cornerRadius = 4
+                bar.translatesAutoresizingMaskIntoConstraints = false
+                bar.heightAnchor.constraint(equalToConstant: h).isActive = true
+                barStack.addArrangedSubview(bar)
+            }
+            
+            NSLayoutConstraint.activate([
+                chartHeader.topAnchor.constraint(equalTo: chartCard.topAnchor, constant: 16),
+                chartHeader.leadingAnchor.constraint(equalTo: chartCard.leadingAnchor, constant: 16),
+                
+                barStack.topAnchor.constraint(equalTo: chartHeader.bottomAnchor, constant: 16),
+                barStack.leadingAnchor.constraint(equalTo: chartCard.leadingAnchor, constant: 16),
+                barStack.trailingAnchor.constraint(equalTo: chartCard.trailingAnchor, constant: -16),
+                barStack.bottomAnchor.constraint(equalTo: chartCard.bottomAnchor, constant: -16),
+                chartCard.heightAnchor.constraint(equalToConstant: 240)
+            ])
+            mainStack.addArrangedSubview(chartCard)
+            
+        } else if path.contains("results") || path.contains("worklist") || path.contains("patients") || path.contains("bookings") {
+            // 2. LIST
+            let filterStack = UIStackView()
+            filterStack.axis = .horizontal
+            filterStack.spacing = 12
+            
+            let searchField = createCardWrapper(color: bgCard, borderColor: borderColor)
+            searchField.heightAnchor.constraint(equalToConstant: 44).isActive = true
+            filterStack.addArrangedSubview(searchField)
+            
+            let filterButton = createCardWrapper(color: bgCard, borderColor: borderColor)
+            NSLayoutConstraint.activate([
+                filterButton.widthAnchor.constraint(equalToConstant: 44),
+                filterButton.heightAnchor.constraint(equalToConstant: 44)
+            ])
+            filterStack.addArrangedSubview(filterButton)
+            mainStack.addArrangedSubview(filterStack)
+            
+            let listCard = createCardWrapper(color: bgCard, borderColor: borderColor)
+            let listStack = UIStackView()
+            listStack.axis = .vertical
+            listStack.spacing = 18
+            listStack.translatesAutoresizingMaskIntoConstraints = false
+            listCard.addSubview(listStack)
+            
+            NSLayoutConstraint.activate([
+                listStack.topAnchor.constraint(equalTo: listCard.topAnchor, constant: 16),
+                listStack.bottomAnchor.constraint(equalTo: listCard.bottomAnchor, constant: -16),
+                listStack.leadingAnchor.constraint(equalTo: listCard.leadingAnchor, constant: 16),
+                listStack.trailingAnchor.constraint(equalTo: listCard.trailingAnchor, constant: -16)
+            ])
+            
+            let widths: [[CGFloat]] = [[140, 90], [180, 110], [120, 70], [160, 100], [110, 80], [150, 95]]
+            for w in widths {
+                let rowStack = UIStackView()
+                rowStack.axis = .horizontal
+                rowStack.spacing = 12
+                rowStack.alignment = .center
+                
+                let circle = createShimmerCircle(size: 40, color: bgBlock)
+                rowStack.addArrangedSubview(circle)
+                
+                let textStack = UIStackView(arrangedSubviews: [
+                    createShimmerLine(width: w[0], height: 14, color: bgBlock),
+                    createShimmerLine(width: w[1], height: 10, color: bgBlock)
+                ])
+                textStack.axis = .vertical
+                textStack.spacing = 6
+                rowStack.addArrangedSubview(textStack)
+                
+                let actionBlock = createShimmerLine(width: 60, height: 20, color: bgBlock)
+                rowStack.addArrangedSubview(actionBlock)
+                
+                listStack.addArrangedSubview(rowStack)
+            }
+            mainStack.addArrangedSubview(listCard)
+            
+        } else if path.contains("registration") || path.contains("settings") || path.contains("config") || path.contains("forgot-password") {
+            // 3. FORM
+            let formCard = createCardWrapper(color: bgCard, borderColor: borderColor)
+            let formStack = UIStackView()
+            formStack.axis = .vertical
+            formStack.spacing = 16
+            formStack.translatesAutoresizingMaskIntoConstraints = false
+            formCard.addSubview(formStack)
+            
+            NSLayoutConstraint.activate([
+                formStack.topAnchor.constraint(equalTo: formCard.topAnchor, constant: 20),
+                formStack.bottomAnchor.constraint(equalTo: formCard.bottomAnchor, constant: -20),
+                formStack.leadingAnchor.constraint(equalTo: formCard.leadingAnchor, constant: 20),
+                formStack.trailingAnchor.constraint(equalTo: formCard.trailingAnchor, constant: -20)
+            ])
+            
+            formStack.addArrangedSubview(createShimmerLine(width: 160, height: 20, color: bgBlock))
+            formStack.setCustomSpacing(24, after: formStack.arrangedSubviews.last!)
+            
+            let labelWidths: [CGFloat] = [100, 80, 120]
+            for lw in labelWidths {
+                let lbl = createShimmerLine(width: lw, height: 12, color: bgBlock)
+                formStack.addArrangedSubview(lbl)
+                
+                let box = createShimmerLine(width: nil, height: 44, color: bgBlock)
+                formStack.addArrangedSubview(box)
+                formStack.setCustomSpacing(16, after: box)
+            }
+            
+            let actionsStack = UIStackView(arrangedSubviews: [
+                createShimmerLine(width: 90, height: 38, color: bgBlock),
+                createShimmerLine(width: 120, height: 38, color: bgBlock)
+            ])
+            actionsStack.axis = .horizontal
+            actionsStack.spacing = 12
+            actionsStack.alignment = .trailing
+            formStack.addArrangedSubview(actionsStack)
+            
+            mainStack.addArrangedSubview(formCard)
+            
+        } else if path.contains("categories") || path.contains("catalog") || path.contains("inventory") {
+            // 4. GRID
+            mainStack.addArrangedSubview(createShimmerLine(width: 160, height: 22, color: bgBlock))
+            
+            let gridV = UIStackView()
+            gridV.axis = .vertical
+            gridV.spacing = 12
+            
+            for _ in 0..<2 {
+                let gridH = UIStackView()
+                gridH.axis = .horizontal
+                gridH.spacing = 12
+                gridH.distribution = .fillEqually
+                
+                for w in [80, 90] {
+                    let card = createCardWrapper(color: bgCard, borderColor: borderColor)
+                    let cStack = UIStackView(arrangedSubviews: [
+                        createShimmerCircle(size: 40, color: bgBlock),
+                        createShimmerLine(width: CGFloat(w), height: 16, color: bgBlock),
+                        createShimmerLine(width: CGFloat(w - 30), height: 12, color: bgBlock)
+                    ])
+                    cStack.axis = .vertical
+                    cStack.spacing = 12
+                    cStack.translatesAutoresizingMaskIntoConstraints = false
+                    card.addSubview(cStack)
+                    NSLayoutConstraint.activate([
+                        cStack.topAnchor.constraint(equalTo: card.topAnchor, constant: 16),
+                        cStack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -16),
+                        cStack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 16),
+                        cStack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -16),
+                        card.heightAnchor.constraint(equalToConstant: 140)
+                    ])
+                    gridH.addArrangedSubview(card)
+                }
+                gridV.addArrangedSubview(gridH)
+            }
+            mainStack.addArrangedSubview(gridV)
+            
+        } else {
+            // 5. DETAIL
+            let profCard = createCardWrapper(color: bgCard, borderColor: borderColor)
+            let pStack = UIStackView()
+            pStack.axis = .horizontal
+            pStack.spacing = 16
+            pStack.alignment = .center
+            pStack.translatesAutoresizingMaskIntoConstraints = false
+            profCard.addSubview(pStack)
+            
+            NSLayoutConstraint.activate([
+                pStack.topAnchor.constraint(equalTo: profCard.topAnchor, constant: 20),
+                pStack.bottomAnchor.constraint(equalTo: profCard.bottomAnchor, constant: -20),
+                pStack.leadingAnchor.constraint(equalTo: profCard.leadingAnchor, constant: 20),
+                pStack.trailingAnchor.constraint(equalTo: profCard.trailingAnchor, constant: -20)
+            ])
+            
+            pStack.addArrangedSubview(createShimmerCircle(size: 60, color: bgBlock))
+            let pText = UIStackView(arrangedSubviews: [
+                createShimmerLine(width: 140, height: 18, color: bgBlock),
+                createShimmerLine(width: 90, height: 12, color: bgBlock)
+            ])
+            pText.axis = .vertical
+            pText.spacing = 8
+            pStack.addArrangedSubview(pText)
+            mainStack.addArrangedSubview(profCard)
+            
+            let detailsCard = createCardWrapper(color: bgCard, borderColor: borderColor)
+            let dStack = UIStackView()
+            dStack.axis = .vertical
+            dStack.spacing = 16
+            dStack.translatesAutoresizingMaskIntoConstraints = false
+            detailsCard.addSubview(dStack)
+            
+            NSLayoutConstraint.activate([
+                dStack.topAnchor.constraint(equalTo: detailsCard.topAnchor, constant: 16),
+                dStack.bottomAnchor.constraint(equalTo: detailsCard.bottomAnchor, constant: -16),
+                dStack.leadingAnchor.constraint(equalTo: detailsCard.leadingAnchor, constant: 16),
+                dStack.trailingAnchor.constraint(equalTo: detailsCard.trailingAnchor, constant: -16)
+            ])
+            
+            dStack.addArrangedSubview(createShimmerLine(width: 120, height: 16, color: bgBlock))
+            dStack.setCustomSpacing(20, after: dStack.arrangedSubviews.last!)
+            
+            let dWidths: [CGFloat] = [80, 100, 60]
+            for dw in dWidths {
+                let rowStack = UIStackView(arrangedSubviews: [
+                    createShimmerLine(width: dw, height: 12, color: bgBlock),
+                    createShimmerLine(width: nil, height: 16, color: bgBlock)
+                ])
+                rowStack.axis = .vertical
+                rowStack.spacing = 6
+                dStack.addArrangedSubview(rowStack)
+            }
+            mainStack.addArrangedSubview(detailsCard)
+        }
+        
+        // Fast Fade in transition
+        skeletonView.layer.removeAllAnimations()
+        skeletonView.alpha = 0.0
+        skeletonView.isHidden = false
+        
+        UIView.animate(withDuration: 0.15, animations: {
+            self.skeletonView.alpha = 1.0
+        }) { _ in
+            self.startPulseAnimation()
+        }
+    }
+    
+    private func hideSkeleton() {
+        guard !skeletonView.isHidden else { return }
+        activeSkeletonPath = nil
+        skeletonView.layer.removeAllAnimations()
+        
+        UIView.animate(withDuration: 0.18, animations: {
+            self.skeletonView.alpha = 0.0
+        }) { _ in
+            self.skeletonView.isHidden = true
+        }
+    }
+    
+    private func startPulseAnimation() {
+        skeletonView.alpha = 1.0
+        UIView.animate(withDuration: 0.8, delay: 0.0, options: [.repeat, .autoreverse, .allowUserInteraction], animations: {
+            self.skeletonView.alpha = 0.6
+        }, completion: nil)
+    }
+    
+    private func stopPulseAnimation() {
+        skeletonView.layer.removeAllAnimations()
+    }
+    
+    private func startBellAnimationLoop() {
+        guard bellAnimationTimer == nil else { return }
+        bellAnimationTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { [weak self] _ in
+            self?.triggerSingleBellRing()
+        }
+        triggerSingleBellRing()
+    }
+
+    private func stopBellAnimationLoop() {
+        bellAnimationTimer?.invalidate()
+        bellAnimationTimer = nil
+        notificationButton.imageView?.layer.removeAnimation(forKey: "ringing")
+        notificationButton.imageView?.transform = .identity
+    }
+
+    private func triggerSingleBellRing() {
+        guard let bellView = notificationButton.imageView, !notificationBadge.isHidden else { return }
+        
+        let animation = CAKeyframeAnimation(keyPath: "transform.rotation")
+        animation.values = [0, -0.25, 0.25, -0.20, 0.20, -0.10, 0.10, 0]
+        animation.keyTimes = [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1.0]
+        animation.duration = 1.2
+        animation.repeatCount = 1
+        bellView.layer.add(animation, forKey: "ringing")
+    }
+
+    private func fetchNotificationCount() {
+        guard let token = KeychainManager.read(forKey: KeychainManager.tokenKey) else {
+            DispatchQueue.main.async {
+                self.notificationBadge.isHidden = true
+                self.stopBellAnimationLoop()
+            }
+            return
+        }
+
+        guard let url = URL(string: baseUrl + "/api/notifications") else { return }
+        var request = URLRequest(url: url)
+        request.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.httpMethod = "GET"
+        request.timeoutInterval = 8.0
+
+        URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+            guard let self = self, let data = data, error == nil else { return }
+            do {
+                if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
+                   let arr = json["notifications"] as? [[String: Any]] {
+                    
+                    var unread = 0
+                    for n in arr {
+                        let isRead = n["isRead"] as? Bool ?? true
+                        if !isRead {
+                            unread += 1
+                        }
+                    }
+                    
+                    DispatchQueue.main.async {
+                        if unread > 0 {
+                            self.notificationBadge.text = unread > 9 ? "9+" : "\(unread)"
+                            self.notificationBadge.isHidden = false
+                            self.startBellAnimationLoop()
+                        } else {
+                            self.notificationBadge.isHidden = true
+                            self.stopBellAnimationLoop()
+                        }
+                    }
+                }
+            } catch {
+                print("Error parsing notifications: \(error)")
+            }
+        }.resume()
+    }
+
     deinit {
+        bellAnimationTimer?.invalidate()
+        bellAnimationTimer = nil
         if let webView = self.webView {
             webView.removeObserver(self, forKeyPath: "URL")
+            webView.removeObserver(self, forKeyPath: "estimatedProgress")
         }
     }
 }

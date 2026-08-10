@@ -39,6 +39,7 @@ public class ResetPasswordActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_reset_password);
+        AuthHelper.setupVideoBackground(this);
 
         email = getIntent().getStringExtra("email");
         if (email == null) email = "";

@@ -63,7 +63,7 @@ class MoreViewController: UIViewController {
         view.backgroundColor = isDarkMode ? UIColor(red: 15/255, green: 23/255, blue: 42/255, alpha: 1) : UIColor(red: 248/255, green: 250/255, blue: 252/255, alpha: 1)
         initModulesData()
         setupUI()
-        renderModules()
+        applyTheme(isDark: isDarkMode)
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -119,6 +119,7 @@ class MoreViewController: UIViewController {
         btnSignOut.translatesAutoresizingMaskIntoConstraints = false
         btnSignOut.addTarget(self, action: #selector(logoutTapped), for: .touchUpInside)
         contentView.addSubview(btnSignOut)
+
 
         // Auto Layout Constraints for Stacks and Headers (Stacked vertically)
         NSLayoutConstraint.activate([
@@ -338,7 +339,7 @@ class MoreViewController: UIViewController {
         row.layer.borderWidth = 1
         row.layer.borderColor = isDarkMode ? UIColor(red: 51/255, green: 65/255, blue: 85/255, alpha: 1).cgColor : UIColor(white: 0.9, alpha: 1).cgColor
         row.translatesAutoresizingMaskIntoConstraints = false
-        row.heightAnchor.constraint(equalToConstant: 72).isActive = true
+        row.heightAnchor.constraint(equalToConstant: 54).isActive = true
 
         let iconView = UIImageView(image: UIImage(systemName: item.icon))
         iconView.tintColor = isDarkMode ? UIColor(red: 129/255, green: 140/255, blue: 248/255, alpha: 1) : UIColor(red: 67/255, green: 56/255, blue: 202/255, alpha: 1)
@@ -352,13 +353,6 @@ class MoreViewController: UIViewController {
         lblTitle.textColor = isDarkMode ? .white : UIColor(red: 15/255, green: 23/255, blue: 42/255, alpha: 1)
         lblTitle.translatesAutoresizingMaskIntoConstraints = false
         row.addSubview(lblTitle)
-
-        let lblDesc = UILabel()
-        lblDesc.text = item.desc
-        lblDesc.font = .systemFont(ofSize: 12)
-        lblDesc.textColor = isDarkMode ? UIColor(red: 148/255, green: 163/255, blue: 184/255, alpha: 1) : .gray
-        lblDesc.translatesAutoresizingMaskIntoConstraints = false
-        row.addSubview(lblDesc)
 
         let badge = UILabel()
         badge.text = "New"
@@ -385,17 +379,13 @@ class MoreViewController: UIViewController {
             iconView.widthAnchor.constraint(equalToConstant: 26),
             iconView.heightAnchor.constraint(equalToConstant: 26),
 
-            lblTitle.topAnchor.constraint(equalTo: row.topAnchor, constant: 14),
+            lblTitle.centerYAnchor.constraint(equalTo: row.centerYAnchor),
             lblTitle.leadingAnchor.constraint(equalTo: iconView.trailingAnchor, constant: 14),
 
             badge.leadingAnchor.constraint(equalTo: lblTitle.trailingAnchor, constant: 8),
             badge.centerYAnchor.constraint(equalTo: lblTitle.centerYAnchor),
             badge.widthAnchor.constraint(equalToConstant: 38),
             badge.heightAnchor.constraint(equalToConstant: 18),
-
-            lblDesc.topAnchor.constraint(equalTo: lblTitle.bottomAnchor, constant: 4),
-            lblDesc.leadingAnchor.constraint(equalTo: iconView.trailingAnchor, constant: 14),
-            lblDesc.trailingAnchor.constraint(equalTo: arrow.leadingAnchor, constant: -8),
 
             arrow.trailingAnchor.constraint(equalTo: row.trailingAnchor, constant: -14),
             arrow.centerYAnchor.constraint(equalTo: row.centerYAnchor),

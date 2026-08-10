@@ -25,7 +25,7 @@ class ForgotPasswordViewController: AuthBaseViewController {
         headerStack.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(headerStack)
 
-        let titleLabel = makeLabel("Forgot Password", size: 30, weight: .heavy, color: .white)
+        let titleLabel = makeLabel("Forgot Password", size: 38, weight: .black, color: .white)
         let subtitleLabel = makeLabel("Enter your email to get a reset code.", size: 14, weight: .regular, color: UIColor(red: 199/255, green: 210/255, blue: 254/255, alpha: 1))
         headerStack.addArrangedSubview(titleLabel)
         headerStack.addArrangedSubview(subtitleLabel)

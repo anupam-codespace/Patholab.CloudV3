@@ -11,6 +11,8 @@ class NotificationsViewController: UIViewController {
     private let btnMarkAllRead = UIButton(type: .system)
     
     var isDarkMode = false
+    /// Called when the user marks all notifications as read, so the caller can instantly clear the badge/animation.
+    var onAllRead: (() -> Void)?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -191,6 +193,39 @@ class NotificationsViewController: UIViewController {
             titleLabel.translatesAutoresizingMaskIntoConstraints = false
             row.addSubview(titleLabel)
 
+            // Timestamp parsing
+            let createdAt = n["createdAt"] as? String ?? n["date"] as? String ?? n["timestamp"] as? String ?? ""
+            var displayTime = ""
+            if !createdAt.isEmpty {
+                let isoFormatter = ISO8601DateFormatter()
+                isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+                if let date = isoFormatter.date(from: createdAt) {
+                    let prettyFormatter = DateFormatter()
+                    prettyFormatter.dateFormat = "dd MMM yyyy, hh:mm a"
+                    prettyFormatter.locale = Locale(identifier: "en_US")
+                    displayTime = prettyFormatter.string(from: date)
+                } else {
+                    let isoFormatter2 = ISO8601DateFormatter()
+                    if let date = isoFormatter2.date(from: createdAt) {
+                        let prettyFormatter = DateFormatter()
+                        prettyFormatter.dateFormat = "dd MMM yyyy, hh:mm a"
+                        prettyFormatter.locale = Locale(identifier: "en_US")
+                        displayTime = prettyFormatter.string(from: date)
+                    } else {
+                        displayTime = createdAt
+                    }
+                }
+            }
+
+            let timeLabel = UILabel()
+            timeLabel.text = displayTime
+            timeLabel.font = .systemFont(ofSize: 10.5)
+            timeLabel.textColor = isDarkMode
+                ? UIColor(red: 100/255, green: 116/255, blue: 139/255, alpha: 1) // slate-500
+                : UIColor(red: 148/255, green: 163/255, blue: 184/255, alpha: 1) // slate-400
+            timeLabel.translatesAutoresizingMaskIntoConstraints = false
+            row.addSubview(timeLabel)
+
             let constraints: [NSLayoutConstraint]
             if !body.isEmpty {
                 let bodyLabel = UILabel()
@@ -207,17 +242,26 @@ class NotificationsViewController: UIViewController {
                     titleLabel.topAnchor.constraint(equalTo: row.topAnchor, constant: 16),
                     titleLabel.leadingAnchor.constraint(equalTo: row.leadingAnchor, constant: 20),
                     titleLabel.trailingAnchor.constraint(equalTo: row.trailingAnchor, constant: -20),
+                    
                     bodyLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 4),
                     bodyLabel.leadingAnchor.constraint(equalTo: row.leadingAnchor, constant: 20),
                     bodyLabel.trailingAnchor.constraint(equalTo: row.trailingAnchor, constant: -20),
-                    bodyLabel.bottomAnchor.constraint(equalTo: row.bottomAnchor, constant: -16),
+                    
+                    timeLabel.topAnchor.constraint(equalTo: bodyLabel.bottomAnchor, constant: 6),
+                    timeLabel.leadingAnchor.constraint(equalTo: row.leadingAnchor, constant: 20),
+                    timeLabel.trailingAnchor.constraint(equalTo: row.trailingAnchor, constant: -20),
+                    timeLabel.bottomAnchor.constraint(equalTo: row.bottomAnchor, constant: -16)
                 ]
             } else {
                 constraints = [
                     titleLabel.topAnchor.constraint(equalTo: row.topAnchor, constant: 16),
                     titleLabel.leadingAnchor.constraint(equalTo: row.leadingAnchor, constant: 20),
                     titleLabel.trailingAnchor.constraint(equalTo: row.trailingAnchor, constant: -20),
-                    titleLabel.bottomAnchor.constraint(equalTo: row.bottomAnchor, constant: -16),
+                    
+                    timeLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 6),
+                    timeLabel.leadingAnchor.constraint(equalTo: row.leadingAnchor, constant: 20),
+                    timeLabel.trailingAnchor.constraint(equalTo: row.trailingAnchor, constant: -20),
+                    timeLabel.bottomAnchor.constraint(equalTo: row.bottomAnchor, constant: -16)
                 ]
             }
             NSLayoutConstraint.activate(constraints)
@@ -258,5 +302,8 @@ class NotificationsViewController: UIViewController {
         stackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
         scrollView.isHidden = true
         noNotificationsLabel.isHidden = false
+
+        // Notify the parent immediately so badge and bell animation clear right away
+        onAllRead?()
     }
 }

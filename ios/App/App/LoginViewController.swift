@@ -30,7 +30,7 @@ class LoginViewController: AuthBaseViewController {
         headerStack.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(headerStack)
 
-        let titleLabel    = makeLabel("Sign In",             size: 34, weight: .heavy, color: .white)
+        let titleLabel    = makeLabel("Sign In",             size: 38, weight: .black, color: .white)
         let subtitleLabel = makeLabel("Welcome back! Please sign in.", size: 15, weight: .regular,
                                       color: UIColor(red: 199/255, green: 210/255, blue: 254/255, alpha: 1))
         headerStack.addArrangedSubview(titleLabel)

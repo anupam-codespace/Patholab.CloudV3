@@ -1,4 +1,5 @@
 import UIKit
+import AVFoundation
 
 /// Shared base class for all auth screens.
 /// Provides the common indigo header + white rounded-top card layout,
@@ -29,11 +30,39 @@ class AuthBaseViewController: UIViewController {
     var errorBanner = UIView()
     var errorLabel = UILabel()
 
+    // MARK: – Background video player
+    private var videoPlayer: AVQueuePlayer?
+    private var videoPlayerLayer: AVPlayerLayer?
+    private var videoLooper: AVPlayerLooper?
+
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = AuthBaseViewController.indigoPrimary
         setupStatusBar()
+        setupVideoBackground()
         setupHeaderBackground()
+    }
+
+    private func setupVideoBackground() {
+        guard let url = Bundle.main.url(forResource: "auth_bg", withExtension: "mp4") else { return }
+        let item = AVPlayerItem(url: url)
+        let player = AVQueuePlayer(playerItem: item)
+        videoLooper = AVPlayerLooper(player: player, templateItem: item)
+        videoPlayer = player
+
+        let layer = AVPlayerLayer(player: player)
+        layer.videoGravity = .resizeAspectFill
+        layer.opacity = 0.10
+        view.layer.insertSublayer(layer, at: 0)
+        videoPlayerLayer = layer
+
+        player.isMuted = true
+        player.play()
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        videoPlayerLayer?.frame = view.bounds
     }
 
     private func setupStatusBar() {
