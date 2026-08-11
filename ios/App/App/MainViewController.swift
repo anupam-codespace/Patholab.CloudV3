@@ -77,7 +77,7 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
             }
             
             // Unconditionally hide web header elements immediately at document start using injected CSS
-            let css = ".mobile-app-header-web-component, header { display: none !important; }"
+            let css = ".mobile-app-header-web-component, header { display: none !important; } main, .is-native-app main, .is-capacitor main { padding-top: 0px !important; }"
             let js = """
             var style = document.createElement('style');
             style.innerHTML = '\(css)';

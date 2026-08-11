@@ -120,13 +120,12 @@ public class MainActivity extends BridgeActivity {
     private void checkAuthRedirect() {
         if (webView == null) return;
         
-        // Unconditionally hide web header elements immediately inside the WebView
         webView.evaluateJavascript(
             "var style = document.getElementById('native-hide-header-style');" +
             "if(!style) {" +
             "  style = document.createElement('style');" +
             "  style.id = 'native-hide-header-style';" +
-            "  style.innerHTML = '.mobile-app-header-web-component, header { display: none !important; }';" +
+            "  style.innerHTML = '.mobile-app-header-web-component, header { display: none !important; } main, .is-native-app main, .is-capacitor main { padding-top: 0px !important; }';" +
             "  document.head.appendChild(style);" +
             "}", null
         );
@@ -918,30 +917,15 @@ public class MainActivity extends BridgeActivity {
         }
     }
 
-    /**
-     * Injects CSS into the WebView to fix scrolling issues and expand patient card rows.
-     * Runs ~1.5s after page load to ensure the DOM is ready.
-     */
     private void injectPatientScrollFixes() {
         if (webView == null) return;
         String css =
-            // Fix the outer container clipping
             "var s=document.getElementById('ptl-native-scroll-fix');" +
             "if(!s){" +
             "  s=document.createElement('style');" +
             "  s.id='ptl-native-scroll-fix';" +
-            "  s.textContent=" +
-            // Remove overflow-hidden that clips the list
-            "    '.overflow-hidden{overflow:visible!important}'" +
-            // Make the table wrapper scrollable with momentum
-            "    +'.custom-scrollbar{overflow-y:auto!important;-webkit-overflow-scrolling:touch!important}'" +
-            // Expand table rows for better readability on small screens
-            "    +'tbody tr td{padding-top:14px!important;padding-bottom:14px!important}'" +
-            // Make test badge pills wrap instead of overflow
-            "    +'.whitespace-nowrap{white-space:normal!important}'" +
-            // Ensure the card container fills height
-            "    +'[class*=\"flex-1\"]{min-height:0!important}'" +
-            "  ;document.head.appendChild(s)" +
+            "  s.textContent='tbody tr td{padding-top:22px!important;padding-bottom:22px!important}';" +
+            "  document.head.appendChild(s);" +
             "}";
         webView.evaluateJavascript(css, null);
     }
