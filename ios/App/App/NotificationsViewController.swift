@@ -11,6 +11,7 @@ class NotificationsViewController: UIViewController {
     private let btnMarkAllRead = UIButton(type: .system)
     
     var isDarkMode = false
+    var lastSeenTime: Double = 0.0
     /// Called when the user marks all notifications as read, so the caller can instantly clear the badge/animation.
     var onAllRead: (() -> Void)?
 
@@ -165,7 +166,14 @@ class NotificationsViewController: UIViewController {
         for n in notifications {
             let title = n["title"] as? String ?? ""
             let body = n["body"] as? String ?? ""
-            let isRead = n["isRead"] as? Bool ?? true
+            let createdAt = n["createdAt"] as? String ?? n["date"] as? String ?? n["timestamp"] as? String ?? ""
+            var isRead = n["isRead"] as? Bool ?? true
+            if !createdAt.isEmpty {
+                let createdTime = parseIsoDateTime(createdAt)
+                if createdTime > lastSeenTime {
+                    isRead = false
+                }
+            }
 
             let row = UIView()
             row.translatesAutoresizingMaskIntoConstraints = false
@@ -194,7 +202,6 @@ class NotificationsViewController: UIViewController {
             row.addSubview(titleLabel)
 
             // Timestamp parsing
-            let createdAt = n["createdAt"] as? String ?? n["date"] as? String ?? n["timestamp"] as? String ?? ""
             var displayTime = ""
             if !createdAt.isEmpty {
                 let isoFormatter = ISO8601DateFormatter()
@@ -305,5 +312,20 @@ class NotificationsViewController: UIViewController {
 
         // Notify the parent immediately so badge and bell animation clear right away
         onAllRead?()
+    }
+
+    private func parseIsoDateTime(_ isoString: String) -> Double {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = formatter.date(from: isoString) {
+            return date.timeIntervalSince1970
+        }
+        
+        let formatter2 = ISO8601DateFormatter()
+        formatter2.formatOptions = [.withInternetDateTime]
+        if let date = formatter2.date(from: isoString) {
+            return date.timeIntervalSince1970
+        }
+        return 0
     }
 }

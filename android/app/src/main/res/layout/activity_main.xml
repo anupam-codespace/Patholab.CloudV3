@@ -377,6 +377,25 @@
         <include layout="@layout/layout_skeletons" />
     </FrameLayout>
 
+    <!-- 5. Floating Action Button — New Registration (shown on /patients page) -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabNewRegistration"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginBottom="80dp"
+        android:layout_marginEnd="20dp"
+        android:backgroundTint="#4F46E5"
+        android:src="@android:drawable/ic_input_add"
+        android:contentDescription="New Registration"
+        android:visibility="gone"
+        android:elevation="8dp"
+        app:fabSize="normal"
+        app:maxImageSize="28dp"
+        app:rippleColor="#7C3AED"
+        app:tint="@android:color/white" />
+
     <!-- 4. Bottom Navigation Bar -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavigation"

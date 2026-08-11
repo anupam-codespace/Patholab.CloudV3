@@ -788,11 +788,21 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         let notifVC = NotificationsViewController()
         notifVC.isDarkMode = self.isDarkMode
 
+        let lastSeen = UserDefaults.standard.double(forKey: "last_seen_notification_time")
+        notifVC.lastSeenTime = lastSeen
+        UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: "last_seen_notification_time")
+
+        // Instantly clear the badge/bell when opening notifications
+        self.notificationBadge.isHidden = true
+        self.stopBellAnimationLoop()
+
         // When user taps "Mark all as read", instantly clear the badge and bell on this screen
         notifVC.onAllRead = { [weak self] in
             guard let self = self else { return }
             self.notificationBadge.isHidden = true
             self.stopBellAnimationLoop()
+            // Mark all read also sets the last seen time
+            UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: "last_seen_notification_time")
         }
 
         if #available(iOS 16.0, *) {
@@ -1410,11 +1420,14 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
                 if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
                    let arr = json["notifications"] as? [[String: Any]] {
                     
+                    let lastSeen = UserDefaults.standard.double(forKey: "last_seen_notification_time")
                     var unread = 0
                     for n in arr {
-                        let isRead = n["isRead"] as? Bool ?? true
-                        if !isRead {
-                            unread += 1
+                        if let createdStr = n["createdAt"] as? String {
+                            let createdTime = self.parseIsoDateTime(createdStr)
+                            if createdTime > lastSeen {
+                                unread += 1
+                            }
                         }
                     }
                     
@@ -1433,6 +1446,21 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
                 print("Error parsing notifications: \(error)")
             }
         }.resume()
+    }
+
+    private func parseIsoDateTime(_ isoString: String) -> Double {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = formatter.date(from: isoString) {
+            return date.timeIntervalSince1970
+        }
+        
+        let formatter2 = ISO8601DateFormatter()
+        formatter2.formatOptions = [.withInternetDateTime]
+        if let date = formatter2.date(from: isoString) {
+            return date.timeIntervalSince1970
+        }
+        return 0
     }
 
     deinit {

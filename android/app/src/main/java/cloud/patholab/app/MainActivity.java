@@ -7,6 +7,9 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.print.PrintAttributes;
+import android.print.PrintDocumentAdapter;
+import android.print.PrintManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.webkit.WebSettings;
@@ -21,6 +24,7 @@ import android.widget.TextView;
 import androidx.appcompat.app.AlertDialog;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -37,6 +41,7 @@ public class MainActivity extends BridgeActivity {
     private View offlineOverlay;
     private ScrollView moreScrollView;
     private View topLayoutContainer;
+    private FloatingActionButton fabNewRegistration;
     
     // Header & Wallet Views
     private TextView lblHeaderTitle;
@@ -341,6 +346,19 @@ public class MainActivity extends BridgeActivity {
             });
         }
 
+        // FAB — New Registration (visible only on /patients page)
+        fabNewRegistration = findViewById(R.id.fabNewRegistration);
+        if (fabNewRegistration != null) {
+            fabNewRegistration.setOnClickListener(v -> {
+                currentPath = null; // force navigation even if already on sub-path
+                loadUrl("/workspace/registration");
+                // Update bottom nav to Patients tab
+                if (bottomNavigation != null) {
+                    bottomNavigation.setSelectedItemId(R.id.nav_patients);
+                }
+            });
+        }
+
         // Pull-to-refresh
         swipeRefresh.setOnRefreshListener(() -> {
             swipeRefresh.setRefreshing(false);
@@ -599,6 +617,17 @@ public class MainActivity extends BridgeActivity {
             }
         });
 
+        // Save the last seen time immediately (but keep previous value to check which ones are new)
+        final long lastSeenTime = prefs != null ? prefs.getLong("last_seen_notification_time", 0L) : 0L;
+        if (prefs != null) {
+            prefs.edit().putLong("last_seen_notification_time", System.currentTimeMillis()).apply();
+        }
+        runOnUiThread(() -> {
+            TextView badge = findViewById(R.id.txtNotificationBadge);
+            if (badge != null) badge.setVisibility(View.GONE);
+            stopBellAnimationLoop();
+        });
+
         // Fetch REAL notifications from the server API in background
         new Thread(() -> {
             try {
@@ -638,7 +667,14 @@ public class MainActivity extends BridgeActivity {
                                 org.json.JSONObject n = arr.getJSONObject(i);
                                 String title = n.optString("title", "");
                                 String body = n.optString("body", "");
-                                boolean isRead = n.optBoolean("isRead", true);
+                                String createdStr = n.optString("createdAt", "");
+                                boolean isRead = true;
+                                if (!createdStr.isEmpty()) {
+                                    long createdTime = parseIsoDateTime(createdStr);
+                                    if (createdTime > lastSeenTime) {
+                                        isRead = false;
+                                    }
+                                }
 
                                 LinearLayout row = new LinearLayout(MainActivity.this);
                                 row.setOrientation(LinearLayout.VERTICAL);
@@ -839,8 +875,75 @@ public class MainActivity extends BridgeActivity {
         String token = AuthManager.getToken(this);
         if (token != null) AuthManager.syncWebViewCookie(token);
 
+        // ── FAB visibility: show only on the Patients worklist ──
+        boolean isPatientsList = path.equals("/workspace/patients");
+        if (fabNewRegistration != null) {
+            runOnUiThread(() -> {
+                if (isPatientsList) {
+                    fabNewRegistration.show();
+                } else {
+                    fabNewRegistration.hide();
+                }
+            });
+        }
+
+        // ── Native Print: detect print report page & trigger Android PrintManager ──
+        if (path.startsWith("/workspace/reports/print/")) {
+            // Load the page so it renders, then offer native print after a short delay
+            webView.loadUrl(BASE_URL + path);
+            fetchWalletDetails();
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                if (webView != null) {
+                    PrintManager printManager = (PrintManager) getSystemService(Context.PRINT_SERVICE);
+                    if (printManager != null) {
+                        PrintDocumentAdapter adapter = webView.createPrintDocumentAdapter("PatholabReport");
+                        printManager.print("PatholabReport", adapter,
+                            new PrintAttributes.Builder()
+                                .setMediaSize(PrintAttributes.MediaSize.ISO_A4)
+                                .setResolution(new PrintAttributes.Resolution("pdf", "pdf", 600, 600))
+                                .setMinMargins(PrintAttributes.Margins.NO_MARGINS)
+                                .build());
+                    }
+                }
+            }, 2500);
+            return;
+        }
+
         webView.loadUrl(BASE_URL + path);
         fetchWalletDetails();
+
+        // ── CSS injection: smooth scroll + expanded patient cards ──
+        if (isPatientsList) {
+            new Handler(Looper.getMainLooper()).postDelayed(() -> injectPatientScrollFixes(), 1500);
+        }
+    }
+
+    /**
+     * Injects CSS into the WebView to fix scrolling issues and expand patient card rows.
+     * Runs ~1.5s after page load to ensure the DOM is ready.
+     */
+    private void injectPatientScrollFixes() {
+        if (webView == null) return;
+        String css =
+            // Fix the outer container clipping
+            "var s=document.getElementById('ptl-native-scroll-fix');" +
+            "if(!s){" +
+            "  s=document.createElement('style');" +
+            "  s.id='ptl-native-scroll-fix';" +
+            "  s.textContent=" +
+            // Remove overflow-hidden that clips the list
+            "    '.overflow-hidden{overflow:visible!important}'" +
+            // Make the table wrapper scrollable with momentum
+            "    +'.custom-scrollbar{overflow-y:auto!important;-webkit-overflow-scrolling:touch!important}'" +
+            // Expand table rows for better readability on small screens
+            "    +'tbody tr td{padding-top:14px!important;padding-bottom:14px!important}'" +
+            // Make test badge pills wrap instead of overflow
+            "    +'.whitespace-nowrap{white-space:normal!important}'" +
+            // Ensure the card container fills height
+            "    +'[class*=\"flex-1\"]{min-height:0!important}'" +
+            "  ;document.head.appendChild(s)" +
+            "}";
+        webView.evaluateJavascript(css, null);
     }
 
     // ── Wallet Details Fetch ────────────────────────────────────────────────────
@@ -1424,12 +1527,18 @@ public class MainActivity extends BridgeActivity {
 
                     org.json.JSONObject root = new org.json.JSONObject(sb.toString());
                     org.json.JSONArray arr = root.optJSONArray("notifications");
+                    
+                    long lastSeenTime = prefs != null ? prefs.getLong("last_seen_notification_time", 0L) : 0L;
                     int unreadCount = 0;
                     if (arr != null) {
                         for (int i = 0; i < arr.length(); i++) {
                             org.json.JSONObject n = arr.getJSONObject(i);
-                            if (!n.optBoolean("isRead", true)) {
-                                unreadCount++;
+                            String createdStr = n.optString("createdAt", "");
+                            if (!createdStr.isEmpty()) {
+                                long createdTime = parseIsoDateTime(createdStr);
+                                if (createdTime > lastSeenTime) {
+                                    unreadCount++;
+                                }
                             }
                         }
                     }
@@ -1437,7 +1546,6 @@ public class MainActivity extends BridgeActivity {
                     final int finalUnreadCount = unreadCount;
                     runOnUiThread(() -> {
                         TextView badge = findViewById(R.id.txtNotificationBadge);
-                        ImageView bellImg = findViewById(R.id.imgHeaderBell);
                         if (badge != null) {
                             if (finalUnreadCount > 0) {
                                 badge.setText(finalUnreadCount > 9 ? "9+" : String.valueOf(finalUnreadCount));
@@ -1455,5 +1563,21 @@ public class MainActivity extends BridgeActivity {
                 e.printStackTrace();
             }
         }).start();
+    }
+
+    private long parseIsoDateTime(String isoString) {
+        try {
+            String clean = isoString.replaceAll("Z$", "+0000");
+            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", java.util.Locale.US);
+            return sdf.parse(clean).getTime();
+        } catch (Exception e) {
+            try {
+                String clean = isoString.replaceAll("Z$", "+0000");
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", java.util.Locale.US);
+                return sdf.parse(clean).getTime();
+            } catch (Exception ex) {
+                return 0L;
+            }
+        }
     }
 }
