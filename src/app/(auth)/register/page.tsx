@@ -84,8 +84,9 @@ export default function RegisterPage() {
     if (!formData.name.trim()) errors.name = "Full name is required";
     if (!formData.email.trim() || !/\S+@\S+\.\S+/.test(formData.email))
       errors.email = "Valid email is required";
-    if (formData.phone.trim() && !/^[6-9]\d{9}$/.test(formData.phone.trim()))
-      errors.phone = "Enter a valid 10-digit mobile number";
+    // Made phone number mandatory and validated
+    if (!formData.phone.trim() || !/^[6-9]\d{9}$/.test(formData.phone.trim()))
+      errors.phone = "Valid 10-digit mobile number is required";
 
     if (formData.password.length < 8) {
       errors.password = "Password must be at least 8 characters";
@@ -232,11 +233,9 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-1.5">
+                {/* Made phone field mandatory in UI */}
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                  Phone{" "}
-                  <span className="text-slate-400 font-normal lowercase">
-                    (optional)
-                  </span>
+                  Phone Number <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
