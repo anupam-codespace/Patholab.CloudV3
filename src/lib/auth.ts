@@ -53,7 +53,7 @@ export async function generateToken(payload: JWTPayload): Promise<string> {
   return new SignJWT(payload as Record<string, unknown>)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime('7d')
+    .setExpirationTime('8h') // ✅ Changed from '7d' to '8h'
     .sign(JWT_SECRET);
 }
 
@@ -90,12 +90,13 @@ export function generateOTP(): string {
 // Cookie Utilities
 // =====================
 export async function setAuthCookie(token: string) {
+  // Use await for cookies() if you are migrating to Next.js 15, otherwise keeping it as is works for Next.js 14
   const cookieStore = cookies();
   cookieStore.set('token', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 60 * 60 * 24 * 7, // 7 days
+    maxAge: 28800, // ✅ Changed to 8 hours (8 * 60 * 60)
     path: '/',
   });
 }
