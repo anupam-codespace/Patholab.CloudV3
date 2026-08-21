@@ -1,6 +1,7 @@
 package cloud.patholab.app.auth;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.view.View;
@@ -67,8 +68,50 @@ public class AuthHelper {
                     videoView.start();
                 }
             });
+
+            setupLegalLinks(activity);
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    public static void setupLegalLinks(final Activity activity) {
+        if (activity == null) return;
+        View tvTerms = activity.findViewById(R.id.tvTerms);
+        View tvPrivacy = activity.findViewById(R.id.tvPrivacy);
+        View tvRefunds = activity.findViewById(R.id.tvRefunds);
+
+        if (tvTerms != null) {
+            tvTerms.setOnClickListener(v -> {
+                try {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://patholab.cloud/terms-conditions?tab=terms"));
+                    activity.startActivity(intent);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+
+        if (tvPrivacy != null) {
+            tvPrivacy.setOnClickListener(v -> {
+                try {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://patholab.cloud/terms-conditions?tab=privacy"));
+                    activity.startActivity(intent);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+
+        if (tvRefunds != null) {
+            tvRefunds.setOnClickListener(v -> {
+                try {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://patholab.cloud/terms-conditions?tab=refunds"));
+                    activity.startActivity(intent);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
         }
     }
 }

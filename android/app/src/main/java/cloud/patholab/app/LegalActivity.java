@@ -1,36 +1,77 @@
 package cloud.patholab.app;
 
+import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.text.Editable;
 import android.text.Html;
+import android.text.TextWatcher;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import java.util.ArrayList;
+import java.util.List;
 
 public class LegalActivity extends AppCompatActivity {
+
+    public static class LegalClause {
+        public String id;
+        public String title;
+        public String badge;
+        public String summary;
+        public String content;
+        public boolean isKeyHighlight;
+
+        public LegalClause(String id, String title, String badge, String summary, String content, boolean isKeyHighlight) {
+            this.id = id;
+            this.title = title;
+            this.badge = badge;
+            this.summary = summary;
+            this.content = content;
+            this.isKeyHighlight = isKeyHighlight;
+        }
+    }
+
+    public static class LegalCategory {
+        public String title;
+        public String lastUpdated;
+        public List<LegalClause> clauses;
+
+        public LegalCategory(String title, String lastUpdated, List<LegalClause> clauses) {
+            this.title = title;
+            this.lastUpdated = lastUpdated;
+            this.clauses = clauses;
+        }
+    }
+
+    private List<LegalCategory> allCategories = new ArrayList<>();
+    private int currentCategoryIndex = 0;
+    private String searchQuery = "";
+
+    private TextView tabTerms, tabPrivacy, tabRefund, tabStore;
+    private TextView txtCategoryTitle, txtCategorySubtitle, txtClausesCount;
+    private LinearLayout clausesContainer;
+    private EditText editSearch;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_legal);
 
-        // Edge-to-edge: draw behind status bar
-        getWindow().setStatusBarColor(0xFF4338CA); // Match indigo hero banner
+        // Edge-to-edge status bar
+        getWindow().setStatusBarColor(0xFF4338CA);
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-            // Dark icons on light background — but our hero is dark so use light icons
             getWindow().getDecorView().setSystemUiVisibility(0);
         }
 
-        // Back button
-        LinearLayout btnBack = findViewById(R.id.btnLegalBack);
-        if (btnBack != null) {
-            btnBack.setOnClickListener(v -> finish());
-        }
-
-        // Apply window insets for status bar/notch on the header bar
+        // Apply insets to header
         View legalHeader = findViewById(R.id.legalHeader);
         if (legalHeader != null) {
             ViewCompat.setOnApplyWindowInsetsListener(legalHeader, (v, insets) -> {
@@ -40,125 +81,371 @@ public class LegalActivity extends AppCompatActivity {
             });
         }
 
-        // Populate legal content
-        TextView txtContent = findViewById(R.id.txtLegalContent);
-        if (txtContent != null) {
-            String html = buildLegalHtml();
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-                txtContent.setText(Html.fromHtml(html, Html.FROM_HTML_MODE_LEGACY));
-            } else {
-                txtContent.setText(Html.fromHtml(html));
+        // Back button
+        LinearLayout btnBack = findViewById(R.id.btnLegalBack);
+        if (btnBack != null) {
+            btnBack.setOnClickListener(v -> finish());
+        }
+
+        // Share button
+        LinearLayout btnShare = findViewById(R.id.btnLegalShare);
+        if (btnShare != null) {
+            btnShare.setOnClickListener(v -> shareLegalText());
+        }
+
+        // Bind Views
+        tabTerms = findViewById(R.id.tabTerms);
+        tabPrivacy = findViewById(R.id.tabPrivacy);
+        tabRefund = findViewById(R.id.tabRefund);
+        tabStore = findViewById(R.id.tabStore);
+
+        txtCategoryTitle = findViewById(R.id.txtCategoryTitle);
+        txtCategorySubtitle = findViewById(R.id.txtCategorySubtitle);
+        txtClausesCount = findViewById(R.id.txtClausesCount);
+        clausesContainer = findViewById(R.id.clausesContainer);
+        editSearch = findViewById(R.id.editSearchClauses);
+
+        setupLegalDataset();
+
+        int targetTab = getIntent().getIntExtra("target_tab", 0);
+        if (targetTab >= 0 && targetTab < allCategories.size()) {
+            currentCategoryIndex = targetTab;
+        }
+
+        setupTabListeners();
+        setupSearchListener();
+        updateTabStyles();
+
+        renderCurrentCategory();
+    }
+
+    private void setupTabListeners() {
+        if (tabTerms != null) tabTerms.setOnClickListener(v -> switchTab(0));
+        if (tabPrivacy != null) tabPrivacy.setOnClickListener(v -> switchTab(1));
+        if (tabRefund != null) tabRefund.setOnClickListener(v -> switchTab(2));
+        if (tabStore != null) tabStore.setOnClickListener(v -> switchTab(3));
+    }
+
+    private void switchTab(int index) {
+        currentCategoryIndex = index;
+        updateTabStyles();
+        renderCurrentCategory();
+    }
+
+    private void updateTabStyles() {
+        TextView[] tabs = { tabTerms, tabPrivacy, tabRefund, tabStore };
+        for (int i = 0; i < tabs.length; i++) {
+            if (tabs[i] != null) {
+                if (i == currentCategoryIndex) {
+                    tabs[i].setBackgroundResource(R.drawable.bg_chip_active);
+                    tabs[i].setTextColor(Color.WHITE);
+                } else {
+                    tabs[i].setBackgroundResource(R.drawable.bg_chip_inactive);
+                    tabs[i].setTextColor(Color.parseColor("#475569"));
+                }
             }
         }
     }
 
-    private String buildLegalHtml() {
-        return
-            "<b><font color=\"#4338CA\">(A) TERMS OF SERVICE</font></b><br/><br/>" +
-            "BY CLICKING ON THE \"I AGREE\" (\"SIGN UP\" OR THE 'I ACCEPT' OR ANY SIMILAR BUTTON) OR USING OR ALLOWING YOUR EMPLOYEES AND CONSULTANTS TO USE OUR SERVICES, YOU INDICATE YOUR ASSENT TO THE FOLLOWING TERMS OF THESE TERMS OF SERVICE.<br/><br/>" +
-            "Globizhub India Private Limited, a company registered as per the laws of India (CIN: U74999KA2019PTC120377) and having its registered office at No. 594/4/2, First Floor, Opposite to BDS Nagar, RK Nagar 2, Kothanur Main Road, Bangalore, Karnataka - 560077, and Product/Development Office at 1st Floor, No 59, Nayanpur Rd, GMC Ward Number 44, Ganeshguri, Guwahati, Assam 781006 (\"Globizhub\", \"Licensor\") is the exclusive owner of the mobile application and the web application (the URLs and web application together referred to as \"Platform\"). These terms of service (\"Terms\") specific to laboratories and medical care providers form a legally binding agreement between Licensor and you (\"You\", \"Your\", or \"Customer\"; \"Licensee\"), as a user of Our Platform and Services. \"You\" and \"We\" are hereinafter collectively referred to as the \"Parties\" and individually referred to as \"Party\".<br/><br/>" +
-            "<b><font color=\"#1E293B\">DEFINITIONS</font></b><br/><br/>" +
-            "• <b>\"Account(s)\"</b> means an account generated for Licensee to use the Platform for the Term. For the avoidance of doubt, an Account is specific to Licensee and under no circumstance may an Account be shared with other entities. However, Licensee may permit its Permitted Users to use the Platform.<br/><br/>" +
-            "• <b>\"Fees\"</b> shall mean the fees payable by Licensee to Licensor for availing the Subscription to use the Platform, as set forth in the applicable Order.<br/><br/>" +
-            "• <b>\"Order\"</b> means a written order that the Parties may enter into from time to time under these Terms to place an order for the license to access the Platform and avail the Subscription, setting forth the details of the Platform to be provided by Licensor, the Subscription Term start date, the Subscription Term end date, any configuration, training or other services to be provided by Licensor, the applicable Fees, and such other terms as the Parties may agree related to the transactions contemplated by these Terms.<br/><br/>" +
-            "• <b>\"Permitted User(s)\"</b> shall mean an employee of Licensee who may access the Platform and use the Subscription pursuant to the license granted herein.<br/><br/>" +
-            "• <b>\"Services\"</b> shall mean the internet accessible service offered by Licensor through a Subscription under which access to the Platform hosted by Licensor on a cloud is made available to Licensee.<br/><br/>" +
-            "• <b>\"Subscription\"</b> means the limited license to access and use the Platform and its related Services in accordance with the Order executed between the Parties.<br/><br/>" +
-            "<b><font color=\"#1E293B\">1. GRANT OF LICENSE AND RESTRICTIONS</font></b><br/><br/>" +
-            "Subject to its compliance with the terms of these Terms and in consideration of the Fees for the Subscription, during the Subscription Term, Licensor hereby grants Licensee a fixed-term, non-exclusive, non-transferable, revocable, non-sublicensable and a limited license to use the Platform and the Services through the Subscription provided under the applicable Order of these Terms, provided, Licensee shall cause each Permitted User to abide by the terms and conditions of these Terms.<br/><br/>" +
-            "Licensee shall not, directly or indirectly, i) copy, modify, adapt, translate, reverse engineer, decompile, disassemble, alter, reproduce or otherwise make any changes to the Platform, ii) use the Subscription in any manner to provide time-sharing, benchmarking or other computer services to third parties, except as expressly provided herein, or allow any third party to access or benefit from the functionality of the Platform, iii) use the Subscription or portion thereof in violation of any applicable export control laws or regulations, iv) use the Subscription for any purpose other than the Purpose, v) allow use of the Subscription by anyone other than the Permitted Users, vi) use the Subscription to develop any competing or similar product, vii) use any of the Platform’s components, add-ons, files, modules, externals, contents including associated license material separately from the Platform or viii) use the Platform with any unsupported software or hardware. All rights not specifically and unequivocally granted to Licensee are reserved by Licensor.<br/><br/>" +
-            "<b><font color=\"#1E293B\">2. LICENSEE’S RESPONSIBILITIES</font></b><br/><br/>" +
-            "<b>Account Management:</b><br/>" +
-            "Licensee shall be responsible for managing its Account and updating the same from time to time. As a condition for using the Subscription, the Permitted Users may be required to register with Licensor and enter his/her email address and/or phone number on the Platform. This account management will be facilitated through an admin appointed by Licensee. Licensee shall ensure that the Permitted Users provide accurate, complete, and updated registration information. The Permitted User shall be responsible for maintaining the confidentiality of the Permitted User's account and password.<br/><br/>" +
-            "<b>Compliance with Laws:</b><br/>" +
-            "Licensee shall comply with all applicable laws in connection with its use of the Subscription, including those laws related to data privacy and the transmission of technical or personal data. Licensee acknowledges that Licensor exercises no control over the content of the information transmitted by Licensee or the Permitted Users through the Platform. Licensee shall not upload, post, reproduce or distribute any information, Platform or other material protected by copyright, privacy rights, or any other intellectual property right without first obtaining the permission of the owner of such rights.<br/><br/>" +
-            "<b>Unauthorized Use; False Information:</b><br/>" +
-            "Licensee shall: (i) notify Licensor immediately of any unauthorized use of any password or user id or any other known or suspected breach of security, (ii) report to Licensor immediately and use reasonable efforts to stop any unauthorized use of the Subscription that is known or suspected by Licensee or any Permitted Users, and (iii) not provide false identity information to gain access to the Platform or use the Subscription.<br/><br/>" +
-            "<b>Access:</b><br/>" +
-            "To access the Subscription to the Platform along with providing the login credentials by the Permitted Users, Licensee shall ensure that the Permitted Users abide by the terms of these Terms at all times while accessing the Platform and using the Services. Licensee shall be solely responsible for the acts and omissions of its Permitted Users. Licensor shall not be liable for any loss of data or functionality caused directly or indirectly by the Permitted Users.<br/><br/>" +
-            "<b><font color=\"#1E293B\">3. FEES</font></b><br/><br/>" +
-            "In consideration of the Subscription to access the Platform and Licensor’s provision of the Services contemplated by these Terms, Licensee shall pay the Fees as set forth in the applicable Order. All Fees and charges under these Terms shall be exclusive of taxes and shall be borne by Licensee. Licensee agrees that Fees charged under an Order are non-refundable. Thereafter, the Fees shall be subject to revision on each Renewal Term. The Subscription shall begin only upon the payment of the Fees and automatically terminate on the expiry of the Subscription Term.<br/><br/>" +
-            "<b><font color=\"#1E293B\">4. DISCLAIMER OF WARRANTY</font></b><br/><br/>" +
-            "LICENSEE ACKNOWLEDGES THAT THE PLATFORM AND ITS SUBSCRIPTION ARE PROVIDED \"AS IS\" WITHOUT ANY REPRESENTATIONS, CONDITIONS, WARRANTIES OR COVENANTS WHATSOEVER, INCLUDING WITHOUT LIMITATION, ANY EXPRESS, STATUTORY OR IMPLIED REPRESENTATIONS, WARRANTIES OR CONDITIONS OF MERCHANTABILITY, MERCHANTABLE QUALITY, SATISFACTORY QUALITY OR FITNESS FOR A PARTICULAR PURPOSE, OR ARISING OTHERWISE IN LAW OR EQUITY OR FROM A COURSE OF DEALING OR USAGE OF TRADE, ALL OF WHICH ARE EXPRESSLY DISCLAIMED AND EXCLUDED. THE PLATFORM AND ITS SUBSCRIPTION MAY CONTAIN DEFECTS, BUGS OR ERRORS. LICENSOR DOES NOT WARRANT THAT THE FUNCTIONS CONTAINED IN ANY OF THE PLATFORM AND ITS SUBSCRIPTION WILL MEET LICENSEE’S REQUIREMENTS, THAT THE OPERATION OF THE SUBSCRIPTION WILL BE UNINTERRUPTED OR ERROR-FREE OR THAT DEFECTS IN THE SUBSCRIPTION WILL BE CORRECTED. LICENSEE ACKNOWLEDGES THAT LICENSOR DOES NOT CONTROL THE ACCURACY, TRANSFER OF DATA OVER COMMUNICATIONS FACILITIES, INCLUDING THE INTERNET, AND THAT THE SUBSCRIPTION MAY BE SUBJECT TO LIMITATIONS, DELAYS, AND OTHER PROBLEMS INHERENT IN THE USE OF SUCH COMMUNICATIONS FACILITIES.<br/><br/>" +
-            "LICENSOR IS NOT RESPONSIBLE FOR THE ACTIONS, CONTENT, INFORMATION, OR DATA OF THIRD PARTIES, AND LICENSEE OR ITS PERMITTED USER RELEASE THROUGH USE OF PLATFORM FROM ANY CLAIMS AND DAMAGES, KNOWN AND UNKNOWN, ARISING OUT OF OR IN ANY WAY CONNECTED WITH ANY CLAIM PLATFORM HAVE AGAINST ANY THIRD PARTIES.<br/><br/>" +
-            "LICENSOR DOES NOT PROVIDE ANY ADVICE, EITHER LEGAL, COMPLIANCE OR OTHERWISE. LICENSEE IS SOLELY RESPONSIBLE FOR DETERMINING AND COMPLYING WITH ITS OBLIGATIONS UNDER ALL APPLICABLE LAWS, RULES AND REGULATIONS. LICENSEE SHOULD CONSULT WITH QUALIFIED LEGAL COUNSEL OR CONSULTANTS, AS NEEDED, TO ENSURE THAT THEIR USE OF PLATFORM COMPLIES WITH ALL APPLICABLE LAWS, RULES, AND REGULATIONS. THE INFORMATION REPORT GENERATED BY USE OF THE PLATFORM IS AS PER THE DATA UPLOADED BY THE LICENSEE ON THE PLATFORM AND THE LICENSEE IS RESPONSIBLE TO REVIEW, EVALUATE, AND ASSESS THE SAME PRIOR TO UPLOADING.<br/><br/>" +
-            "<b><font color=\"#1E293B\">5. INTELLECTUAL PROPERTY RIGHTS</font></b><br/><br/>" +
-            "Any and all rights to the Subscription, Platform, and branding thereof, including title, ownership rights and intellectual property rights such as copyrights, trademarks, service marks and patents therein are the sole and exclusive property of Licensor. These Terms do not grant Licensee any rights, title and interest in and to the Platform, its contents and branding thereof including Licensor’s intellectual property rights except where expressly and unequivocally licensed herein. Any and all the medical documents, medical reports, medical certificates generated by the Licensee and uploaded on the Platform shall be owned by the Licensee and the Licensor shall have no right in respect of the same.<br/><br/>" +
-            "From time to time, Licensee may provide feedback, suggestions, requirements or recommendations (\"Feedback\") regarding the Platform or the Subscription. Licensee hereby assigns to Licensor all right, title and interest in such Feedback and an exclusive right to create any developments based on such Feedback.<br/><br/>" +
-            "<b><font color=\"#1E293B\">6. CONFIDENTIALITY</font></b><br/><br/>" +
-            "\"Confidential Information\" shall mean information disclosed by one Party to the other and which includes, without limitation, Platform, financial, business, technical and marketing information, business plans, methods, processes, inventions, techniques, designs, data, know-how, ideas, concepts, strategies, trade secrets, software products and services and such other information. Confidential Information does not include information which: a) is in the public domain; (b) was known to the Party of such disclosure or becomes known to the Party without breach of any confidentiality agreement; (c) is independently developed by either Party without violating any confidentiality obligations stated herein; (d) is disclosed pursuant judicial order or requirement of the governmental agency or by operation of law.<br/><br/>" +
-            "The receiving Party shall keep Confidential Information and proprietary information and data received from the disclosing Party in strict confidence and shall not disclose it to any third parties except to a limited group of the receiving Party’s directors, officers, agents, authorized representatives on a need-to-know basis. Each Party will use the same degree of care and discretion (but in any event no less than a reasonable degree of care and discretion) to avoid unauthorized disclosure or use of the other Party’s Confidential Information as that receiving Party uses to protect its own information of a similar nature from unauthorized disclosure or use.<br/><br/>" +
-            "Upon request by the disclosing Party, the receiving Party shall immediately return to the disclosing Party all Confidential Information disclosed by the disclosing Party and all copies thereof. All such information shall be and shall remain the sole property of the disclosing Party.<br/><br/>" +
-            "The confidentiality obligations stated herein shall survive for a period of five (5) years from the date of termination or expiration of these Terms.<br/><br/>" +
-            "The receiving Party agrees that any violation of the confidentiality obligations will cause irreparable injury to the disclosing Party, entitling the disclosing Party to obtain injunctive relief in addition to all legal remedies.<br/><br/>" +
-            "<b><font color=\"#1E293B\">7. INDEMNITY</font></b><br/><br/>" +
-            "Licensee shall indemnify, hold harmless and defend Licensor against any costs or damages arising out of or in connection with any claim relating to (i) Licensee’s breach of or violation of applicable laws and regulations or (ii) Licensee’s use of the Platform or the Subscription other than as permitted under these Terms, (iii) the acts or omissions of the Permitted Users, (iv) a third party claim made against Licensor for infringement or misappropriation based upon following conduct of Licensee: (a) Licensee’s combination or use of the Subscription with software, services, or products developed by Licensee or third parties; (b) Licensee Content infringes any patent, copyright or trademark, or misappropriates any trade secret or (v) misuse of the Platform by the Permitted Users, non-compliance or breach of terms of these Terms by the Permitted Users.<br/><br/>" +
-            "<b><font color=\"#1E293B\">8. LIMITATION OF LIABILITY</font></b><br/><br/>" +
-            "NEITHER PARTY SHALL BE LIABLE TO THE OTHER FOR ANY INDIRECT, CONSEQUENTIAL, INCIDENTAL, EXEMPLARY OR SPECIAL DAMAGES, LOSS OF PROFIT, BUSINESS HOWSOEVER CAUSED IN CONNECTION WITH THESE TERMS EVEN IF THE OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. THE MAXIMUM LIABILITY OF LICENSOR SHALL BE LIMITED TO THE FEES RECEIVED BY LICENSOR FROM LICENSEE FOR THE SUBSCRIPTION IN THE THREE (03) MONTHS PERIOD IMMEDIATELY PRECEDING EVENT GIVING RISE TO SUCH CLAIM. THE FOREGOING LIMITATIONS OF LIABILITY SHALL APPLY NOTWITHSTANDING THE FAILURE OF ESSENTIAL PURPOSE OF ANY LIMITED WARRANTY OR REMEDY HEREIN.<br/><br/>" +
-            "<b><font color=\"#1E293B\">9. TERM AND TERMINATION</font></b><br/><br/>" +
-            "<b>Term:</b> The Subscription to use, and access the Platform and Services is granted to Licensee for a subscription period opted by Licensee under the Order (\"Initial Subscription Term\") and unless Licensee’s Subscription is terminated in accordance with these Terms, Licensee’s Subscription shall automatically be renewed for a period of similar duration as that of the Initial Subscription Period (each \"Renewal Term\"). The Initial Subscription Term and /or each Renewal Term shall be collectively referred to as the (\"Subscription Term\"). The Subscription Term shall be effective from the actual date of Licensee’s Subscription to the Platform.<br/><br/>" +
-            "<b>Termination for Convenience:</b> Either Party may terminate these Terms without cause, by giving a prior written notice of thirty (30) days to the other Party. However, Licensee shall not be entitled to any refund of the Fees for the remainder of the Subscription Term.<br/><br/>" +
-            "<b>Termination for Cause:</b><br/>" +
-            "• Either Party may terminate these Terms or the applicable Order in the event that the other Party is in default of any of its material obligations hereunder and such default is not remedied within sixty (60) days of receipt of prior written notice thereof.<br/><br/>" +
-            "• Either Party may terminate these Terms and applicable Order immediately with a written notice to the other Party if the other Party is adjudicated bankrupt or becomes insolvent, makes any assignment for the benefit of creditors, proceedings are instituted by the other Party seeking relief, reorganization or rearrangement under any laws relating to insolvency, bankruptcy or similar laws of any jurisdiction, a receiver, liquidator or trustee is appointed in respect of any property or assets of the other Party or an order is made for the liquidation, dissolution or winding up of the other Party.<br/><br/>" +
-            "<b>Consequences of Termination:</b><br/>" +
-            "• Upon the expiry or any termination of the Agreement, Licensee’s right to use the Subscription shall immediately cease, and at Licensor’s discretion, Licensee will return/ delete/ destroy any materials provided by Licensor to Licensee.<br/><br/>" +
-            "• Any Fees due for the Subscription prior to the expiration or termination date will become due and payable immediately but no later than seven (7) days from the receipt of the invoices thereof, and Licensor shall cease to render any further Services.<br/><br/>" +
-            "• If these Terms or any Order is terminated by Licensee on account of any of the termination events set out above, Licensee shall be entitled to a refund of the Fees (if any) for any unutilized part of the Subscription for the remainder of the Subscription Term, on a pro-rata basis.<br/><br/>" +
-            "<b><font color=\"#1E293B\">10. USE OF NAME AND LOGO</font></b><br/><br/>" +
-            "Licensee hereby grants Licensor permission to use Licensee’s name and logo in Licensor’s marketing materials, website, case studies, etc. for promotional purposes or otherwise publicly announce or comment on these Terms without prior written consent from Licensee.<br/><br/>" +
-            "<b><font color=\"#1E293B\">11. FORCE MAJEURE</font></b><br/><br/>" +
-            "Nonperformance of either party under these Terms shall be excused to the extent and during the period that performance is rendered impossible by strike, fire, flood, earthquakes, governmental acts or orders or restrictions, or any other reason where failure to perform is beyond the reasonable control and not caused by the negligence of the non-performing party.<br/><br/>" +
-            "<b><font color=\"#1E293B\">12. SEVERABILITY</font></b><br/><br/>" +
-            "If any provision of these Terms is determined to be invalid, illegal or unenforceable, the remaining provisions of these Terms shall remain in full force.<br/><br/>" +
-            "<b><font color=\"#1E293B\">13. RELATIONSHIP OF THE PARTIES</font></b><br/><br/>" +
-            "The Parties are independent contractors. These Terms do not create a partnership, franchise, joint venture, agency, fiduciary or employment relationship between the parties.<br/><br/>" +
-            "<b><font color=\"#1E293B\">14. ASSIGNMENT AND DELEGATION</font></b><br/><br/>" +
-            "Licensee may not assign these Terms. Licensor may assign these Terms in conjunction with the sale of substantial assets, divestiture, merger or amalgamation, or to its affiliate, and may delegate or subcontract its duties. Any unauthorized assignment of these Terms is void.<br/><br/>" +
-            "<b><font color=\"#1E293B\">15. WAIVER</font></b><br/><br/>" +
-            "Failure to exercise, or any delay in exercising, any right or remedy provided under these Terms shall not constitute a waiver of that or any other right or remedy, nor shall it preclude or restrict any further exercise of that or any other right or remedy.<br/><br/>" +
-            "<b><font color=\"#1E293B\">16. GOVERNING LAWS</font></b><br/><br/>" +
-            "These Terms and all rights and obligations under these Terms shall in all respects be governed by and construed and enforced in accordance with the laws of India and the courts in Bangalore, Karnataka shall have exclusive jurisdiction to adjudicate any subject matter under these Terms.<br/><br/>" +
-            "<b><font color=\"#1E293B\">17. ORDER OF PRECEDENCE</font></b><br/><br/>" +
-            "If there is any conflict between an Order and the terms and conditions of the main body of these Terms, then the terms and conditions of the main body of these Terms will govern, except to the extent that the Order expressly states that it modifies any specified provisions in the main body of these Terms, in which case such modified provisions will control with respect to such Order.<br/><br/>" +
-            "<b><font color=\"#1E293B\">18. ENTIRE AGREEMENT</font></b><br/><br/>" +
-            "These Terms constitute the entire agreement between the Parties and supersede any prior understanding or representation of any kind preceding the date of these Terms, and may not be amended, supplemented, varied or otherwise changed except in writing through mutual agreement of the Parties.<br/><br/>" +
-            "────────────────────────────<br/><br/>" +
-            "<b><font color=\"#4338CA\">(B) TERMS AND CONDITIONS (WEBSITE POLICY)</font></b><br/><br/>" +
-            "We reserve the right to modify these terms and conditions at any time, so please review them frequently.<br/><br/>" +
-            "Globizhub India Private Limited (CIN: U74999KA2019PTC120377), headquartered at No. 594/4/2, First Floor, Opposite to BDS Nagar, RK Nagar 2, Kothanur Main Road, Bangalore, Karnataka - 560077, and Product/Development Office at 1st Floor, No 59, Nayanpur Rd, GMC Ward Number 44, Ganeshguri, Guwahati, Assam 781006 (“Company,” “we” or “us”), operates the website(s) located at patholab.cloud (the “Website”). By using the Website, you agree to comply with all the terms, conditions and notices contained or referenced herein (the “Policy”). In addition, when subscribing to or otherwise utilizing certain services from the Website, you will be subject to additional rules applicable to such services.<br/><br/>" +
-            "BY USING THE WEBSITE, YOU ACCEPT THE POLICY AND AGREE TO BE BOUND BY IT. YOUR REMEDY FOR DISSATISFACTION WITH THE WEBSITE OR ITS CONTENTS IS TO CEASE USING THE WEBSITE.<br/><br/>" +
-            "<b><font color=\"#1E293B\">1. ACCESSING THE WEBSITE</font></b><br/><br/>" +
-            "You are responsible for any steps necessary for you to have access to the Website. We reserve the right to shut down or change the Website, and any service or material that we provide on the Website, in our sole discretion and without notice to you. We will not be liable if, for any reason, all or any part of the Website is unavailable at any time or for any period.<br/><br/>" +
-            "<b><font color=\"#1E293B\">2. INTELLECTUAL PROPERTY RIGHTS</font></b><br/><br/>" +
-            "(a) The Website and its entire contents, features and functionality (including but not limited to all information, software, text, displays, images, video and audio, and the design, selection and arrangement thereof) are owned by the Company, its licensors or other providers of such material, and are protected by international copyright, trademark, patent, trade secret and other intellectual property or proprietary rights laws. No right, title or interest in or to the Website or any content on the Website is transferred to you, and all rights not expressly granted are reserved by the Company. This Policy permits you to use the Website for your noncommercial use only.<br/><br/>" +
-            "(b) You must not reproduce, distribute, modify, create derivative works of, publicly display, publicly perform, republish, download, store or transmit any of the material on the Website.<br/><br/>" +
-            "(c) You may not: (i) use any illustrations, photographs, video or audio sequences or any graphics separately from the accompanying text; or (ii) delete or alter any copyright, trademark or other proprietary rights notices from copies of materials from the Website; or (iii) access or use for any commercial purposes any part of the Website or any services or materials available through the Website.<br/><br/>" +
-            "(d) The Company name, the Company logo, and all related names, logos, product and service names, designs and slogans, are trademarks of the Company or its affiliates or licensors. You may not use such marks without the prior written permission of the Company. All other names, logos, product and service names, designs and slogans on the Website are the trademarks of their respective owners.<br/><br/>" +
-            "<b><font color=\"#1E293B\">3. MONITORING; TERMINATION OF ACCESS</font></b><br/><br/>" +
-            "We have the right to (a) monitor your use of the Website, (b) take appropriate legal action, including without limitation, referral to law enforcement, for any illegal or unauthorized use of the Website, and (c) terminate or suspend your access to all or part of the Website.<br/><br/>" +
-            "<b><font color=\"#1E293B\">4. YOUR REPRESENTATIONS AND OBLIGATIONS</font></b><br/><br/>" +
-            "(a) You may use the Website only for lawful purposes and in accordance with this Policy.<br/><br/>" +
-            "(b) You promise that: (i) you are of legal age in your jurisdiction to contract with the Company; (ii) you will not use the Website in any way that violates any applicable federal, state, local or international law or regulation; (iii) you will not send, knowingly receive, upload, download, use or re-use any material which does not comply with the Content Standards; (iv) you will not impersonate or attempt to impersonate the Company, a Company employee, another user or any other person or entity; (v) you will not do anything that could disable, overburden, damage, or impair the operation of the Website or interfere with any person’s use of the Website; (vi) you will not use any robot, spider or other automatic program, device, process or means to access the Website for any unlawful purpose or in violation of this Policy; (vii) you will not introduce any malware, including but not limited to viruses, trojan horses, worms, logic bombs, rootkits or other material which is malicious or technologically harmful; (viii) you will not access or attempt to access data or files on the Website that you are not expressly authorized to access, and (ix) you will not co-brand or frame the Website or hyper-link to it without the express prior written permission of an authorized representative of the Company.<br/><br/>" +
-            "<b><font color=\"#1E293B\">5. COPYRIGHT INFRINGEMENT</font></b><br/><br/>" +
-            "We take claims of copyright infringement seriously. We will respond to notices of alleged copyright infringement where appropriate. If you believe any materials accessible on or from the Website infringe your copyright, you may request removal of those materials (or access thereto) from the Website by submitting written notification to our Copyright Agent via email at support@globhizhub.com.<br/><br/>" +
-            "<b><font color=\"#1E293B\">6. RELIANCE ON INFORMATION</font></b><br/><br/>" +
-            "The information presented on or through the Website is made available solely for general information purposes. The Company makes no representations or warranties whatsoever regarding the quality of the information. We do not make any statements regarding the accuracy, completeness, or usefulness of this information. Any reliance you place on such information is strictly at your own risk. The Company is not engaged in rendering professional services. If professional advice or other expert assistance is sought, the services of a competent professional should be obtained.<br/><br/>" +
-            "<b><font color=\"#1E293B\">7. PRIVACY</font></b><br/><br/>" +
-            "All information we collect on the Website is subject to our Privacy Policy. By using the Website, you consent to all actions taken by us with respect to your information in compliance with the Privacy Policy.<br/><br/>" +
-            "<b><font color=\"#1E293B\">8. SUBSCRIPTIONS AND OTHER TERMS</font></b><br/><br/>" +
-            "In addition to this Policy and the Privacy Policy, all subscriptions to the Company’s products and services are governed by any applicable terms of service or other conditions, depending on the type of product/service/subscription you are using.<br/><br/>" +
-            "<b><font color=\"#1E293B\">9. LINKS TO THIRD PARTY SITES</font></b><br/><br/>" +
-            "If the Website contains links to other sites and resources provided by third parties, these links are provided for your convenience only. We have no control over the contents of such sites or resources, and accept no responsibility for them or for any loss or damage that may arise from your use of them. If you decide to access any third-party websites linked to the Website, you do so entirely at your own risk.<br/><br/>" +
-            "<b><font color=\"#1E293B\">10. DISCLAIMERS</font></b><br/><br/>" +
-            "YOUR USE OF THE WEBSITE, OR ITEMS OR INFORMATION OBTAINED THROUGH THE WEBSITE, IS AT YOUR OWN RISK. THE WEBSITE IS PROVIDED ON AN “AS IS” AND “AS AVAILABLE” BASIS, WITHOUT ANY PROMISES OF ANY KIND, EITHER EXPRESS OR IMPLIED. THE COMPANY HEREBY DISCLAIMS ALL WARRANTIES OF ANY KIND, WHETHER EXPRESS OR IMPLIED, STATUTORY OR OTHERWISE, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF MERCHANTABILITY, NON-INFRINGEMENT AND FITNESS FOR PARTICULAR PURPOSE.<br/><br/>" +
-            "<b><font color=\"#1E293B\">11. LIMITATION OF LIABILITY</font></b><br/><br/>" +
-            "TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO EVENT SHALL THE COMPANY, ITS MANAGERS, MEMBERS, LICENSORS, EMPLOYEES, AGENTS, OFFICERS OR DIRECTORS BE LIABLE TO YOU OR ANY THIRD-PARTY FOR ANY SPECIAL, PUNITIVE, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND, OR ANY DAMAGES WHATSOEVER arising out of or in connection with the use of the Website.<br/><br/>" +
-            "<b><font color=\"#1E293B\">12. GEOGRAPHIC RESTRICTIONS</font></b><br/><br/>" +
-            "Although the Website may be accessible worldwide, we make no representation that the content on the Website is appropriate or available for use in locations outside India. Accessing the Website or its content from territories where such content is illegal is prohibited. Those who choose to access the Website from other locations do so at their own initiative and are responsible for compliance with local laws.<br/><br/>" +
-            "<b><font color=\"#1E293B\">13. COMPLETE UNDERSTANDING</font></b><br/><br/>" +
-            "This Policy, together with the documents expressly referred to herein, constitutes the sole and entire agreement between you and the Company with respect to the Website.<br/><br/>" +
-            "<b><font color=\"#1E293B\">14. YOUR COMMENTS AND CONCERNS</font></b><br/><br/>" +
-            "The Website is operated by Globizhub India Private Limited, No. 594/4/2, First Floor, Opposite to BDS Nagar, RK Nagar 2, Kothanur Main Road, Bangalore, Karnataka - 560077, with its Product/Development Office at 1st Floor, No 59, Nayanpur Rd, GMC Ward Number 44, Ganeshguri, Guwahati, Assam 781006. If you have any questions, please contact us via email at support@globhizhub.com or mail us at the above address.";
+    private void setupSearchListener() {
+        if (editSearch != null) {
+            editSearch.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    searchQuery = s.toString().trim().toLowerCase();
+                    renderCurrentCategory();
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {}
+            });
+        }
+    }
+
+    private void renderCurrentCategory() {
+        if (currentCategoryIndex < 0 || currentCategoryIndex >= allCategories.size()) return;
+        LegalCategory cat = allCategories.get(currentCategoryIndex);
+
+        if (txtCategoryTitle != null) txtCategoryTitle.setText(cat.title);
+        if (txtCategorySubtitle != null) txtCategorySubtitle.setText("Effective: " + cat.lastUpdated + " • Official Policy");
+
+        List<LegalClause> filtered = new ArrayList<>();
+        for (LegalClause clause : cat.clauses) {
+            if (searchQuery.isEmpty() ||
+                clause.title.toLowerCase().contains(searchQuery) ||
+                clause.content.toLowerCase().contains(searchQuery) ||
+                (clause.summary != null && clause.summary.toLowerCase().contains(searchQuery)) ||
+                clause.badge.toLowerCase().contains(searchQuery)) {
+                filtered.add(clause);
+            }
+        }
+
+        if (txtClausesCount != null) {
+            txtClausesCount.setText(filtered.size() + " clauses");
+        }
+
+        if (clausesContainer != null) {
+            clausesContainer.removeAllViews();
+
+            for (LegalClause clause : filtered) {
+                View card = createClauseCard(clause);
+                clausesContainer.addView(card);
+            }
+        }
+    }
+
+    private View createClauseCard(LegalClause clause) {
+        LinearLayout card = new LinearLayout(this);
+        card.setOrientation(LinearLayout.VERTICAL);
+        card.setBackgroundColor(Color.WHITE);
+        card.setElevation(dpToPx(1));
+        
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        params.setMargins(0, 0, 0, dpToPx(12));
+        card.setLayoutParams(params);
+        card.setPadding(dpToPx(16), dpToPx(16), dpToPx(16), dpToPx(16));
+
+        // Badge pill
+        TextView badge = new TextView(this);
+        badge.setText(clause.badge);
+        badge.setTextSize(11f);
+        badge.setTypeface(null, android.graphics.Typeface.BOLD);
+        badge.setPadding(dpToPx(8), dpToPx(3), dpToPx(8), dpToPx(3));
+        if (clause.isKeyHighlight) {
+            badge.setBackgroundColor(Color.parseColor("#FEF3C7"));
+            badge.setTextColor(Color.parseColor("#B45309"));
+        } else {
+            badge.setBackgroundColor(Color.parseColor("#EEF2FF"));
+            badge.setTextColor(Color.parseColor("#4338CA"));
+        }
+        LinearLayout.LayoutParams badgeParams = new LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        badgeParams.setMargins(0, 0, 0, dpToPx(8));
+        badge.setLayoutParams(badgeParams);
+        card.addView(badge);
+
+        // Title
+        TextView title = new TextView(this);
+        title.setText(clause.title);
+        title.setTextColor(Color.parseColor("#0F172A"));
+        title.setTextSize(15f);
+        title.setTypeface(null, android.graphics.Typeface.BOLD);
+        LinearLayout.LayoutParams titleParams = new LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        titleParams.setMargins(0, 0, 0, dpToPx(8));
+        title.setLayoutParams(titleParams);
+        card.addView(title);
+
+        // Key takeaway banner if available
+        if (clause.summary != null) {
+            LinearLayout callout = new LinearLayout(this);
+            callout.setOrientation(LinearLayout.VERTICAL);
+            callout.setBackgroundResource(R.drawable.bg_callout_yellow);
+            callout.setPadding(dpToPx(10), dpToPx(8), dpToPx(10), dpToPx(8));
+            LinearLayout.LayoutParams calloutParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+            calloutParams.setMargins(0, 0, 0, dpToPx(10));
+            callout.setLayoutParams(calloutParams);
+
+            TextView txtTakeaway = new TextView(this);
+            txtTakeaway.setText("💡 Key Takeaway: " + clause.summary);
+            txtTakeaway.setTextColor(Color.parseColor("#92400E"));
+            txtTakeaway.setTextSize(12f);
+            txtTakeaway.setTypeface(null, android.graphics.Typeface.BOLD);
+            callout.addView(txtTakeaway);
+            card.addView(callout);
+        }
+
+        // Content
+        TextView content = new TextView(this);
+        content.setText(clause.content);
+        content.setTextColor(Color.parseColor("#334155"));
+        content.setTextSize(13.5f);
+        content.setLineSpacing(0, 1.4f);
+        card.addView(content);
+
+        return card;
+    }
+
+    private int dpToPx(int dp) {
+        float density = getResources().getDisplayMetrics().density;
+        return Math.round((float) dp * density);
+    }
+
+    private void shareLegalText() {
+        if (currentCategoryIndex < 0 || currentCategoryIndex >= allCategories.size()) return;
+        LegalCategory cat = allCategories.get(currentCategoryIndex);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("Patholab Cloud – ").append(cat.title).append("\n");
+        sb.append("Globizhub India Pvt. Ltd. (CIN: U74999KA2019PTC120377)\n");
+        sb.append("Last Updated: ").append(cat.lastUpdated).append("\n\n");
+
+        for (LegalClause clause : cat.clauses) {
+            sb.append("[").append(clause.badge).append("] ").append(clause.title).append("\n");
+            sb.append(clause.content).append("\n\n");
+        }
+        sb.append("Official Website: https://patholab.cloud | Support: legal@patholab.cloud");
+
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("text/plain");
+        shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Patholab Cloud – " + cat.title);
+        shareIntent.putExtra(Intent.EXTRA_TEXT, sb.toString());
+        startActivity(Intent.createChooser(shareIntent, "Share Legal Text"));
+    }
+
+    private void setupLegalDataset() {
+        // 1. Terms of Service
+        List<LegalClause> termsClauses = new ArrayList<>();
+        termsClauses.add(new LegalClause(
+            "tos-1",
+            "1. Grant of License & Usage Scope",
+            "License",
+            "Grants authorized laboratory staff and pathologists a non-exclusive license to use the cloud platform.",
+            "Globizhub India Private Limited (\"Globizhub\", \"Licensor\") grants you (\"Licensee\", \"Customer\") a fixed-term, non-exclusive, non-transferable, revocable, and limited license to access and use the Patholab Cloud platform strictly for clinical laboratory operations, sample management, diagnostic reporting, and administrative workflows in accordance with the registered subscription order.",
+            false
+        ));
+        termsClauses.add(new LegalClause(
+            "tos-2",
+            "2. Customer Data & Report Ownership",
+            "Data Ownership",
+            "You retain 100% full ownership over all patient records, medical reports, test results, and laboratory documents.",
+            "All medical reports, patient demographics, clinical notes, doctor signatures, and billing invoices generated by or uploaded by the Licensee remain the sole and exclusive intellectual property of the Licensee. Licensor claims no ownership rights over clinical data and processes data exclusively to provide the platform functionality.",
+            true
+        ));
+        termsClauses.add(new LegalClause(
+            "tos-3",
+            "3. Account Security & User Credentials",
+            "Security",
+            "Laboratories are responsible for managing staff logins, role access, and keeping credentials safe.",
+            "The laboratory administrator is responsible for issuing, configuring, and revoking user credentials for phlebotomists, lab technicians, receptionists, and reporting doctors. The Licensee shall immediately report any unauthorized access or suspected credential compromise to security@patholab.cloud.",
+            false
+        ));
+        termsClauses.add(new LegalClause(
+            "tos-4",
+            "4. Service Level & Uptime Commitments",
+            "Uptime SLA",
+            "Designed for high-availability 99.9% uptime with automated redundant cloud backups.",
+            "Patholab Cloud is hosted on high-availability cloud infrastructure with continuous database replication, automated daily backups, and SSL/TLS 256-bit encryption for all data in transit and at rest. Scheduled maintenance is communicated in advance.",
+            false
+        ));
+        termsClauses.add(new LegalClause(
+            "tos-5",
+            "5. Intellectual Property Rights",
+            "IP Rights",
+            "The platform architecture, UI, algorithms, and mobile applications are proprietary to Globizhub.",
+            "All rights, title, trademarks, service marks, codebases, and interface designs of Patholab Cloud are the sole property of Globizhub India Private Limited. Licensee shall not reverse-engineer, decompile, duplicate, or white-label the software without prior written authorization.",
+            false
+        ));
+        termsClauses.add(new LegalClause(
+            "tos-6",
+            "6. Limitation of Liability",
+            "Liability",
+            "Total liability is limited to fees paid during the preceding 3 months.",
+            "Neither party shall be liable for indirect, incidental, special, or consequential damages. The maximum aggregate liability of Licensor under this agreement shall be limited to the subscription fees actually paid by the Licensee in the three (3) months preceding the event giving rise to the claim.",
+            false
+        ));
+        termsClauses.add(new LegalClause(
+            "tos-7",
+            "7. Governing Law & Dispute Resolution",
+            "Jurisdiction",
+            "Governed by the laws of India with exclusive jurisdiction in Bangalore, Karnataka.",
+            "These Terms and any dispute arising out of or in connection with the Platform shall be governed by and construed in accordance with the laws of India. The competent courts in Bangalore, Karnataka shall have exclusive jurisdiction.",
+            false
+        ));
+
+        // 2. Privacy & Health Data
+        List<LegalClause> privacyClauses = new ArrayList<>();
+        privacyClauses.add(new LegalClause(
+            "priv-1",
+            "1. Health Data Protection & DISHA / HIPAA Standards",
+            "Health Privacy",
+            "Strict medical confidentiality adhering to international and Indian digital health standards.",
+            "Patholab Cloud enforces strict data protection safeguards compliant with the Digital Information Security in Healthcare Act (DISHA) and international privacy frameworks. Sensitive Personal Data or Information (SPDI), including patient diagnostic results, is stored encrypted with strict role-based access control.",
+            true
+        ));
+        privacyClauses.add(new LegalClause(
+            "priv-2",
+            "2. Information We Collect",
+            "Collection",
+            "Laboratory account profile, staff contact details, and audit telemetry.",
+            "We collect account registration data (Lab name, address, contact numbers, email), billing information for subscription management, and anonymized diagnostic crash logs to improve mobile application reliability.",
+            false
+        ));
+        privacyClauses.add(new LegalClause(
+            "priv-3",
+            "3. Patient Data Confidentiality & Non-Disclosure",
+            "Confidentiality",
+            "We NEVER sell, rent, monetize, or disclose patient medical records to third parties.",
+            "Licensor enforces strict non-disclosure obligations. Patient records and diagnostic findings processed through your workspace are never sold, rented, shared for marketing, or monetized. Licensor staff cannot access clinical data except upon explicit written support requests by the lab admin.",
+            true
+        ));
+        privacyClauses.add(new LegalClause(
+            "priv-4",
+            "4. Data Retention & Account Deletion",
+            "Data Rights",
+            "Export complete lab data in standard formats at any time or request full data purging.",
+            "Laboratories retain full rights to export patient history, test catalogs, and financial summaries as Excel/PDF at any time. Upon account termination, data is retained for 30 days for recovery, after which permanent cryptographically secure purging is executed upon request.",
+            false
+        ));
+
+        // 3. Refund & Cancellation
+        List<LegalClause> refundClauses = new ArrayList<>();
+        refundClauses.add(new LegalClause(
+            "ref-1",
+            "1. Subscription Billing & Renewals",
+            "Billing",
+            "Transparent upfront pricing with flexible monthly and annual billing cycles.",
+            "Patholab Cloud subscriptions are billed in advance on a recurring monthly or annual basis as specified in your selected tier. Invoices are generated automatically and sent to the registered laboratory billing email.",
+            false
+        ));
+        refundClauses.add(new LegalClause(
+            "ref-2",
+            "2. Cancellation for Convenience",
+            "Cancellation",
+            "Cancel your subscription at any time without lock-in penalties.",
+            "You may cancel your recurring subscription at any time directly from the Lab Admin Dashboard or by contacting billing@patholab.cloud. Upon cancellation, your workspace remains fully operational until the end of your current paid billing period.",
+            true
+        ));
+        refundClauses.add(new LegalClause(
+            "ref-3",
+            "3. Refund Policy & Pro-Rata Settlements",
+            "Refunds",
+            "Full 7-day money-back guarantee for new labs; pro-rata refunds for verified service outages.",
+            "New laboratory signups enjoy an unconditional 7-day money-back satisfaction guarantee. For ongoing subscriptions, if a verified service outage exceeding SLA commitments occurs, a pro-rata credit or refund for the unutilized period will be promptly credited to the original payment method within 5-7 business days.",
+            true
+        ));
+
+        // 4. Store & Beta Terms
+        List<LegalClause> storeClauses = new ArrayList<>();
+        storeClauses.add(new LegalClause(
+            "store-1",
+            "1. Google Play Beta & Android Distribution",
+            "Google Play",
+            "Adherence to Google Play Developer Distribution Agreement.",
+            "Android releases distributed via Google Play Store adhere to Google Play Developer policies, safety guidelines, and Android permissions frameworks regarding camera (barcode scanning) and storage (PDF lab report saving).",
+            false
+        ));
+        storeClauses.add(new LegalClause(
+            "store-2",
+            "2. Device Permissions & Camera Access",
+            "Permissions",
+            "Camera access is used exclusively for barcode/QR scanning; photo library for report attachments.",
+            "Patholab Cloud requests camera permissions strictly to scan sample barcode vials and QR codes on requisition slips. Photo library write permissions are used only to save generated PDF diagnostic reports locally to your device storage.",
+            true
+        ));
+
+        allCategories.add(new LegalCategory("Terms of Service", "June 2024", termsClauses));
+        allCategories.add(new LegalCategory("Privacy & Health Data", "June 2024", privacyClauses));
+        allCategories.add(new LegalCategory("Refund & Cancellation", "June 2024", refundClauses));
+        allCategories.add(new LegalCategory("App Store & Beta Testing", "August 2024", storeClauses));
     }
 }

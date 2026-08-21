@@ -2,6 +2,7 @@ package cloud.patholab.app.auth;
 
 import android.content.Intent;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
@@ -178,6 +179,95 @@ public class RegisterActivity extends AppCompatActivity {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {}
         });
+
+        AuthHelper.setupLegalLinks(this);
+        setupConsentBox();
+    }
+
+    private void setupConsentBox() {
+        TextView tvConsent = findViewById(R.id.tvLegalConsent);
+        if (tvConsent == null) return;
+
+        String fullText = "By creating an account, you agree to our Terms & Conditions, Privacy Policy, and Refund Policy.";
+        android.text.SpannableString spannable = new android.text.SpannableString(fullText);
+
+        final int indigoColor = Color.parseColor("#4F46E5");
+
+        // Terms & Conditions
+        int termsStart = fullText.indexOf("Terms & Conditions");
+        if (termsStart >= 0) {
+            int termsEnd = termsStart + "Terms & Conditions".length();
+            spannable.setSpan(new android.text.style.ForegroundColorSpan(indigoColor), termsStart, termsEnd, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            spannable.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD), termsStart, termsEnd, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            spannable.setSpan(new android.text.style.ClickableSpan() {
+                @Override
+                public void onClick(View widget) {
+                    try {
+                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://patholab.cloud/terms-conditions?tab=terms")));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+                @Override
+                public void updateDrawState(android.text.TextPaint ds) {
+                    super.updateDrawState(ds);
+                    ds.setUnderlineText(false);
+                    ds.setColor(indigoColor);
+                }
+            }, termsStart, termsEnd, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+
+        // Privacy Policy
+        int privacyStart = fullText.indexOf("Privacy Policy");
+        if (privacyStart >= 0) {
+            int privacyEnd = privacyStart + "Privacy Policy".length();
+            spannable.setSpan(new android.text.style.ForegroundColorSpan(indigoColor), privacyStart, privacyEnd, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            spannable.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD), privacyStart, privacyEnd, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            spannable.setSpan(new android.text.style.ClickableSpan() {
+                @Override
+                public void onClick(View widget) {
+                    try {
+                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://patholab.cloud/terms-conditions?tab=privacy")));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+                @Override
+                public void updateDrawState(android.text.TextPaint ds) {
+                    super.updateDrawState(ds);
+                    ds.setUnderlineText(false);
+                    ds.setColor(indigoColor);
+                }
+            }, privacyStart, privacyEnd, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+
+        // Refund Policy
+        int refundStart = fullText.indexOf("Refund Policy");
+        if (refundStart >= 0) {
+            int refundEnd = refundStart + "Refund Policy".length();
+            spannable.setSpan(new android.text.style.ForegroundColorSpan(indigoColor), refundStart, refundEnd, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            spannable.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD), refundStart, refundEnd, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            spannable.setSpan(new android.text.style.ClickableSpan() {
+                @Override
+                public void onClick(View widget) {
+                    try {
+                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://patholab.cloud/terms-conditions?tab=refunds")));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+                @Override
+                public void updateDrawState(android.text.TextPaint ds) {
+                    super.updateDrawState(ds);
+                    ds.setUnderlineText(false);
+                    ds.setColor(indigoColor);
+                }
+            }, refundStart, refundEnd, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+
+        tvConsent.setText(spannable);
+        tvConsent.setMovementMethod(android.text.method.LinkMovementMethod.getInstance());
+        tvConsent.setHighlightColor(Color.TRANSPARENT);
     }
 
     private void updatePasswordStrength(String pwd) {

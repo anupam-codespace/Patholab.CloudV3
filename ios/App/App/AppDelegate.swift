@@ -24,6 +24,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return true
     }
 
+    private func getWindow() -> UIWindow? {
+        if let win = self.window {
+            return win
+        }
+        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        let activeScene = scenes.first(where: { $0.activationState == .foregroundActive || $0.activationState == .foregroundInactive }) ?? scenes.first
+        return activeScene?.windows.first(where: { $0.isKeyWindow }) ?? activeScene?.windows.first
+    }
+
     // MARK: - Navigation
 
     func presentMainApp() {
@@ -37,15 +46,35 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             mainVC = MainViewController()
         }
         
+        guard let win = self.getWindow() else { return }
+        self.window = win
+        
         // Premium slide-up transition from splash to main app
         let transition = CATransition()
         transition.duration = 0.42
         transition.type = .moveIn
         transition.subtype = .fromTop
         transition.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-        window?.layer.add(transition, forKey: kCATransition)
-        window?.rootViewController = mainVC
-        window?.makeKeyAndVisible()
+        win.layer.add(transition, forKey: kCATransition)
+        win.rootViewController = mainVC
+        win.makeKeyAndVisible()
+    }
+
+    func presentOnboarding() {
+        NSLog("DEBUG: AppDelegate presentOnboarding")
+        let onboardingVC = OnboardingViewController()
+        onboardingVC.onCompletion = { [weak self] in
+            self?.presentNativeLogin()
+        }
+        
+        guard let win = self.getWindow() else {
+            NSLog("DEBUG: AppDelegate presentOnboarding - no window found")
+            return
+        }
+        self.window = win
+        win.rootViewController = onboardingVC
+        UIView.transition(with: win, duration: 0.35, options: .transitionCrossDissolve, animations: nil, completion: nil)
+        win.makeKeyAndVisible()
     }
 
     func presentNativeLogin() {
@@ -55,15 +84,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             self?.presentMainApp()
         }
         
-        // Smooth cross-dissolve transition for login screen
-        UIView.transition(
-            with: window!,
-            duration: 0.35,
-            options: [.transitionCrossDissolve],
-            animations: { self.window?.rootViewController = loginVC },
-            completion: nil
-        )
-        window?.makeKeyAndVisible()
+        guard let win = self.getWindow() else {
+            NSLog("DEBUG: AppDelegate presentNativeLogin - no window found")
+            return
+        }
+        self.window = win
+        win.rootViewController = loginVC
+        UIView.transition(with: win, duration: 0.35, options: .transitionCrossDissolve, animations: nil, completion: nil)
+        win.makeKeyAndVisible()
     }
 
     /// Safe sign-out: clears credentials and navigates to Login without

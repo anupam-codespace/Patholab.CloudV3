@@ -5,9 +5,13 @@ class LoginViewController: AuthBaseViewController {
     // MARK: – UI
     private let emailField    = UITextField()
     private let passwordField = UITextField()
-    private let loginButton   = UIButton()
+    private var submitButton: UIButton?
     private let spinner       = UIActivityIndicatorView(style: .medium)
     private var eyeButton: UIButton!
+
+    // Thread-safe flag to prevent double-firing of login completion/timeout
+    private var loginFinished = false
+    private let loginQueue = DispatchQueue(label: "com.patholab.login", qos: .userInitiated)
 
     var onLoginSuccess: (() -> Void)?
 
@@ -87,8 +91,11 @@ class LoginViewController: AuthBaseViewController {
         // Password
         let pwdRow = UIView()
         pwdRow.translatesAutoresizingMaskIntoConstraints = false
-        let pwdLabel    = sectionLabel("Password")
-        let forgotLabel = makeLinkLabel("Forgot password?")
+        let pwdLabel = sectionLabel("Password")
+        let forgotLabel = UILabel()
+        forgotLabel.text = "Forgot password"
+        forgotLabel.font = .systemFont(ofSize: 13, weight: .medium)
+        forgotLabel.textColor = AuthBaseViewController.textSecondary
         forgotLabel.tag = 101
         forgotLabel.isUserInteractionEnabled = true
         forgotLabel.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(forgotTapped)))
@@ -113,6 +120,7 @@ class LoginViewController: AuthBaseViewController {
         // Login button
         let btn = makePrimaryButton(title: "Log In")
         btn.addTarget(self, action: #selector(loginTapped), for: .touchUpInside)
+        self.submitButton = btn
         content.addArrangedSubview(btn)
 
         // Spinner
@@ -125,10 +133,15 @@ class LoginViewController: AuthBaseViewController {
         // Sign up link
         let signUpRow = makeFooterLink(text: "Have an account? ", linkText: "Sign up", action: #selector(signUpTapped))
         content.addArrangedSubview(signUpRow)
-        content.setCustomSpacing(32, after: signUpRow)
+        content.setCustomSpacing(24, after: signUpRow)
+
+        // Legal links
+        let legalFooter = makeLegalFooter()
+        content.addArrangedSubview(legalFooter)
+        content.setCustomSpacing(6, after: legalFooter)
 
         // Copyright
-        let copyright = makeLabel("© 2026 Globiz Patholab · All rights reserved", size: 12, weight: .regular, color: AuthBaseViewController.textHint)
+        let copyright = makeLabel("© 2026 Globizhub India Pvt. Ltd. · All rights reserved", size: 11, weight: .regular, color: AuthBaseViewController.textHint)
         copyright.textAlignment = .center
         content.addArrangedSubview(copyright)
     }
@@ -241,13 +254,43 @@ class LoginViewController: AuthBaseViewController {
 
         hideError()
         setLoading(true)
+        loginFinished = false
 
-        AuthService.login(email: email, password: password) { success, error, _ in
+        // Safety timeout: fires BEFORE the 15s network timeout so UI never stays stuck.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 12.0) { [weak self] in
+            guard let self = self else { return }
+            self.loginQueue.sync {
+                guard !self.loginFinished else { return }
+                self.loginFinished = true
+            }
+            DispatchQueue.main.async {
+                self.setLoading(false)
+                self.showError("Connection timed out. Please check your internet connection and try again.")
+            }
+        }
+
+        AuthService.login(email: email, password: password) { [weak self] success, error, _ in
+            guard let self = self else { return }
+
+            // Atomically check-and-set the finished flag.
+            var shouldProceed = false
+            self.loginQueue.sync {
+                if !self.loginFinished {
+                    self.loginFinished = true
+                    shouldProceed = true
+                }
+            }
+            guard shouldProceed else { return }
+
             DispatchQueue.main.async {
                 self.setLoading(false)
                 if success {
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                    self.onLoginSuccess?()
+                    if let onLoginSuccess = self.onLoginSuccess {
+                        onLoginSuccess()
+                    } else if let app = UIApplication.shared.delegate as? AppDelegate {
+                        app.presentMainApp()
+                    }
                 } else {
                     self.showError(error ?? "Login failed. Please try again.")
                 }
@@ -276,8 +319,17 @@ class LoginViewController: AuthBaseViewController {
     }
 
     private func setLoading(_ loading: Bool) {
-        if loading { spinner.startAnimating() } else { spinner.stopAnimating() }
-        view.subviews.compactMap { $0 as? UIButton }.forEach { $0.isEnabled = !loading }
+        if loading {
+            spinner.startAnimating()
+            submitButton?.isEnabled = false
+            submitButton?.alpha = 0.75
+            submitButton?.setTitle("Logging in...", for: .normal)
+        } else {
+            spinner.stopAnimating()
+            submitButton?.isEnabled = true
+            submitButton?.alpha = 1.0
+            submitButton?.setTitle("Log In", for: .normal)
+        }
     }
 
     // MARK: – Helpers

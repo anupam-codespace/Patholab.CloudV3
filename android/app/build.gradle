@@ -4,7 +4,7 @@ android {
     namespace = "cloud.patholab.app"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "cloud.patholab.app"
+        applicationId "com.patholab.cloud"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
@@ -16,8 +16,17 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            storeFile file('patholab-release-key.jks')
+            storePassword 'Patholab@2026Release'
+            keyAlias 'patholab-key'
+            keyPassword 'Patholab@2026Release'
+        }
+    }
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

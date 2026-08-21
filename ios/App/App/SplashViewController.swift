@@ -1,8 +1,9 @@
 import UIKit
+import WebKit
 
 class SplashViewController: UIViewController {
 
-    private let MIN_SPLASH_TIME: TimeInterval = 1.5
+    private let MIN_SPLASH_TIME: TimeInterval = 2.5
     private var startTime: Date?
     
     private var isApiFinished = false
@@ -45,28 +46,35 @@ class SplashViewController: UIViewController {
         NSLayoutConstraint.activate([
             logoImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             logoImageView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            logoImageView.widthAnchor.constraint(equalToConstant: 280),
-            logoImageView.heightAnchor.constraint(equalToConstant: 120) // Safe default aspect bound
+            logoImageView.widthAnchor.constraint(equalToConstant: 320),
+            logoImageView.heightAnchor.constraint(equalToConstant: 570)
         ])
     }
     
     private func checkSession() {
-        let token = KeychainManager.read(forKey: KeychainManager.tokenKey)
-        
-        guard let token = token, !token.isEmpty else {
+        // Safety timeout in case network check hangs
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) { [weak self] in
+            guard let self = self, !self.isApiFinished else { return }
             self.completeApiCheck(success: false, token: nil)
-            return
         }
-        
-        // Validate token in background
-        AuthService.getMe(token: token) { [weak self] valid in
-            DispatchQueue.main.async {
-                self?.completeApiCheck(success: valid, token: token)
+
+        if let token = KeychainManager.read(forKey: KeychainManager.tokenKey), !token.isEmpty {
+            // Validate token in background
+            AuthService.getMe(token: token) { [weak self] valid in
+                DispatchQueue.main.async {
+                    self?.completeApiCheck(success: valid, token: token)
+                }
+            }
+        } else {
+            // No token saved, complete API check immediately
+            DispatchQueue.main.async { [weak self] in
+                self?.completeApiCheck(success: false, token: nil)
             }
         }
     }
     
     private func completeApiCheck(success: Bool, token: String?) {
+        guard !isApiFinished else { return }
         isApiFinished = true
         isApiSuccess = success
         tokenToUse = token
@@ -84,20 +92,26 @@ class SplashViewController: UIViewController {
     }
     
     private func routeToApp() {
-        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else { return }
-        
-        if isApiSuccess, let token = tokenToUse {
-            NSLog("DEBUG: SplashViewController routing to MainApp")
-            AuthService.injectCookieIntoWebView(token: token) {
-                DispatchQueue.main.async {
-                    appDelegate.presentMainApp()
-                }
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
+                NSLog("DEBUG: SplashViewController could not find AppDelegate")
+                return
             }
-        } else {
-            NSLog("DEBUG: SplashViewController routing to Login")
-            KeychainManager.delete(forKey: KeychainManager.tokenKey)
-            AuthService.clearWebViewCookie()
-            appDelegate.presentNativeLogin()
+            
+            if self.isApiSuccess, let token = self.tokenToUse {
+                NSLog("DEBUG: SplashViewController routing to MainApp")
+                AuthService.injectCookieIntoWebView(token: token) {
+                    DispatchQueue.main.async {
+                        appDelegate.presentMainApp()
+                    }
+                }
+            } else {
+                KeychainManager.delete(forKey: KeychainManager.tokenKey)
+                AuthService.clearWebViewCookie()
+                NSLog("DEBUG: SplashViewController routing to Onboarding")
+                appDelegate.presentOnboarding()
+            }
         }
     }
 }

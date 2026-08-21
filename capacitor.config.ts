@@ -2,7 +2,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'cloud.patholab.app',
+  appId: 'com.patholab.cloud',
   appName: 'Patholab Cloud',
   webDir: 'public',
   server: {
@@ -24,8 +24,8 @@ const config: CapacitorConfig = {
       resizeOnFullScreen: true,
     },
     SplashScreen: {
-      launchShowDuration: 2200,
-      backgroundColor: '#3730a3',
+      launchShowDuration: 0,
+      backgroundColor: '#FFFFFF',
       androidSplashResourceName: 'splash',
       showSpinner: false,
       splashFullScreen: true,

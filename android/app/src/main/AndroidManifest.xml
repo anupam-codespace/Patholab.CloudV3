@@ -19,6 +19,14 @@
             </intent-filter>
         </activity>
 
+        <!-- ── Onboarding screen (pure white background) ─────────────── -->
+        <activity
+            android:name=".auth.OnboardingActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:screenOrientation="portrait"
+            android:exported="false"
+        />
+
         <!-- ── Auth screens (all portrait, indigo theme) ────────────────── -->
         <activity
             android:name=".auth.LoginActivity"

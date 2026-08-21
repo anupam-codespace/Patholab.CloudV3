@@ -53,5 +53,7 @@
 	<string>Patholab Cloud requires photo library access to upload lab reports and patient attachments.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Patholab Cloud requires photo library write access to save generated PDF lab reports.</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>

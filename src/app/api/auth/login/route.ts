@@ -113,6 +113,7 @@ export async function POST(request: NextRequest) {
     // 7. Return response with Wallet Info for the Dashboard UI
     return NextResponse.json({
       message: 'Login successful',
+      token: token,
       redirect: redirectUrl, 
       user: {
         id: user.id,

@@ -118,10 +118,15 @@ class RegisterViewController: AuthBaseViewController {
         content.addArrangedSubview(confirmContainer)
         setupErrorLabel(confirmErrorLabel, to: content)
 
+        // Legal Consent Box
+        let consentBox = makeLegalConsentBox()
+        content.setCustomSpacing(16, after: content.arrangedSubviews.last!)
+        content.addArrangedSubview(consentBox)
+
         // Register Button
         let btn = makePrimaryButton(title: "Create Account")
         btn.addTarget(self, action: #selector(registerTapped), for: .touchUpInside)
-        content.setCustomSpacing(20, after: content.arrangedSubviews.last!)
+        content.setCustomSpacing(16, after: consentBox)
         content.addArrangedSubview(btn)
 
         spinner.translatesAutoresizingMaskIntoConstraints = false
@@ -133,9 +138,14 @@ class RegisterViewController: AuthBaseViewController {
         // Footer
         let loginRow = makeFooterLink(text: "Already have an account? ", linkText: "Log in", action: #selector(backTapped))
         content.addArrangedSubview(loginRow)
-        content.setCustomSpacing(24, after: loginRow)
+        content.setCustomSpacing(20, after: loginRow)
 
-        let copyright = makeLabel("© 2026 Globiz Patholab · All rights reserved", size: 12, weight: .regular, color: AuthBaseViewController.textHint)
+        // Legal links
+        let legalFooter = makeLegalFooter()
+        content.addArrangedSubview(legalFooter)
+        content.setCustomSpacing(6, after: legalFooter)
+
+        let copyright = makeLabel("© 2026 Globizhub India Pvt. Ltd. · All rights reserved", size: 11, weight: .regular, color: AuthBaseViewController.textHint)
         copyright.textAlignment = .center
         content.addArrangedSubview(copyright)
     }

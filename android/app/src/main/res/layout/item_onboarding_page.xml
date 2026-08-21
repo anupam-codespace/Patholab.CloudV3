@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:background="#FFFFFF"
+    android:paddingStart="20dp"
+    android:paddingEnd="20dp">
+
+    <!-- Hero Illustration -->
+    <ImageView
+        android:id="@+id/ivHero"
+        android:layout_width="260dp"
+        android:layout_height="260dp"
+        android:contentDescription="Onboarding Illustration"
+        android:scaleType="fitCenter"
+        android:adjustViewBounds="true" />
+
+    <!-- Title / Headline -->
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:gravity="center"
+        android:textColor="#0F172A"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:fontFamily="sans-serif-medium"
+        android:letterSpacing="-0.01"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp" />
+
+    <!-- Subtitle / Concise Description -->
+    <TextView
+        android:id="@+id/tvDescription"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:gravity="center"
+        android:textColor="#64748B"
+        android:textSize="14.5sp"
+        android:lineSpacingExtra="3dp"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp" />
+
+</LinearLayout>

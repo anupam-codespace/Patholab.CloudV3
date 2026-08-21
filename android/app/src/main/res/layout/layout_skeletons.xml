@@ -5,478 +5,828 @@
     android:background="#F8FAFC"
     android:scrollbars="none">
 
-    <FrameLayout
+    <cloud.patholab.app.ui.ShimmerLayout
+        android:id="@+id/shimmerLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="16dp">
 
-        <!-- 1. DASHBOARD SKELETON (default) -->
-        <LinearLayout
-            android:id="@+id/skeletonDashboard"
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:visibility="visible">
+            android:layout_height="wrap_content">
 
-            <!-- Top Welcome Header Card -->
+            <!-- ══════════════════════════════════════════════════════════════════ -->
+            <!-- 1. DASHBOARD / ANALYTICS SKELETON                                 -->
+            <!-- ══════════════════════════════════════════════════════════════════ -->
             <LinearLayout
+                android:id="@+id/skeletonDashboard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="18dp"
-                android:layout_marginBottom="16dp"
-                android:background="@drawable/bg_skeleton_card">
-                
-                <View
-                    android:layout_width="200dp"
-                    android:layout_height="22dp"
-                    android:layout_marginBottom="8dp"
-                    android:background="@drawable/bg_skeleton_line" />
-                
-                <View
-                    android:layout_width="120dp"
-                    android:layout_height="14dp"
-                    android:background="@drawable/bg_skeleton_line" />
-            </LinearLayout>
+                android:visibility="visible">
 
-            <!-- KPI Grid -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="12dp">
-                
+                <!-- Welcome Hero Greeting Banner -->
                 <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="100dp"
-                    android:orientation="vertical"
-                    android:padding="16dp"
-                    android:layout_marginEnd="6dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="18dp"
+                    android:layout_marginBottom="16dp"
+                    android:gravity="center_vertical"
                     android:background="@drawable/bg_skeleton_card">
+                    
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+                        <View
+                            android:layout_width="180dp"
+                            android:layout_height="22dp"
+                            android:layout_marginBottom="8dp"
+                            android:background="@drawable/bg_skeleton_line" />
+                        <View
+                            android:layout_width="120dp"
+                            android:layout_height="14dp"
+                            android:background="@drawable/bg_skeleton_line" />
+                    </LinearLayout>
+
                     <View
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_marginBottom="12dp"
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
                         android:background="@drawable/bg_skeleton_circle" />
-                    <View
-                        android:layout_width="80dp"
-                        android:layout_height="16dp"
-                        android:background="@drawable/bg_skeleton_line" />
                 </LinearLayout>
 
+                <!-- Bento KPI Metric Grid (Row 1) -->
                 <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="100dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="12dp">
+                    
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="115dp"
+                        android:orientation="vertical"
+                        android:padding="16dp"
+                        android:layout_marginEnd="6dp"
+                        android:background="@drawable/bg_skeleton_card">
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="12dp">
+                            <View android:layout_width="36dp" android:layout_height="36dp" android:background="@drawable/bg_skeleton_circle" />
+                            <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="1dp" />
+                            <View android:layout_width="48dp" android:layout_height="18dp" android:background="@drawable/bg_skeleton_pill" />
+                        </LinearLayout>
+                        <View android:layout_width="85dp" android:layout_height="18dp" android:layout_marginBottom="6dp" android:background="@drawable/bg_skeleton_line" />
+                        <View android:layout_width="55dp" android:layout_height="12dp" android:background="@drawable/bg_skeleton_line" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="115dp"
+                        android:orientation="vertical"
+                        android:padding="16dp"
+                        android:layout_marginStart="6dp"
+                        android:background="@drawable/bg_skeleton_card">
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="12dp">
+                            <View android:layout_width="36dp" android:layout_height="36dp" android:background="@drawable/bg_skeleton_circle" />
+                            <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="1dp" />
+                            <View android:layout_width="48dp" android:layout_height="18dp" android:background="@drawable/bg_skeleton_pill" />
+                        </LinearLayout>
+                        <View android:layout_width="75dp" android:layout_height="18dp" android:layout_marginBottom="6dp" android:background="@drawable/bg_skeleton_line" />
+                        <View android:layout_width="60dp" android:layout_height="12dp" android:background="@drawable/bg_skeleton_line" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Bento KPI Metric Grid (Row 2) -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="16dp">
+                    
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="115dp"
+                        android:orientation="vertical"
+                        android:padding="16dp"
+                        android:layout_marginEnd="6dp"
+                        android:background="@drawable/bg_skeleton_card">
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="12dp">
+                            <View android:layout_width="36dp" android:layout_height="36dp" android:background="@drawable/bg_skeleton_circle" />
+                            <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="1dp" />
+                            <View android:layout_width="48dp" android:layout_height="18dp" android:background="@drawable/bg_skeleton_pill" />
+                        </LinearLayout>
+                        <View android:layout_width="95dp" android:layout_height="18dp" android:layout_marginBottom="6dp" android:background="@drawable/bg_skeleton_line" />
+                        <View android:layout_width="50dp" android:layout_height="12dp" android:background="@drawable/bg_skeleton_line" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="115dp"
+                        android:orientation="vertical"
+                        android:padding="16dp"
+                        android:layout_marginStart="6dp"
+                        android:background="@drawable/bg_skeleton_card">
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="12dp">
+                            <View android:layout_width="36dp" android:layout_height="36dp" android:background="@drawable/bg_skeleton_circle" />
+                            <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="1dp" />
+                            <View android:layout_width="48dp" android:layout_height="18dp" android:background="@drawable/bg_skeleton_pill" />
+                        </LinearLayout>
+                        <View android:layout_width="65dp" android:layout_height="18dp" android:layout_marginBottom="6dp" android:background="@drawable/bg_skeleton_line" />
+                        <View android:layout_width="70dp" android:layout_height="12dp" android:background="@drawable/bg_skeleton_line" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Modern Analytics Bar Chart Card -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="220dp"
                     android:orientation="vertical"
-                    android:padding="16dp"
-                    android:layout_marginStart="6dp"
+                    android:padding="18dp"
+                    android:layout_marginBottom="16dp"
                     android:background="@drawable/bg_skeleton_card">
+                    
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="20dp">
+                        <View android:layout_width="140dp" android:layout_height="18dp" android:background="@drawable/bg_skeleton_line" />
+                        <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="1dp" />
+                        <View android:layout_width="80dp" android:layout_height="22dp" android:background="@drawable/bg_skeleton_pill" />
+                    </LinearLayout>
+
+                    <!-- Chart Bars Column Visualization -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal"
+                        android:gravity="bottom"
+                        android:paddingBottom="4dp">
+                        <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="80dp" android:layout_margin="5dp" android:background="@drawable/bg_skeleton_meter" />
+                        <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="130dp" android:layout_margin="5dp" android:background="@drawable/bg_skeleton_meter" />
+                        <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="95dp" android:layout_margin="5dp" android:background="@drawable/bg_skeleton_meter" />
+                        <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="150dp" android:layout_margin="5dp" android:background="@drawable/bg_skeleton_meter" />
+                        <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="110dp" android:layout_margin="5dp" android:background="@drawable/bg_skeleton_meter" />
+                        <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="165dp" android:layout_margin="5dp" android:background="@drawable/bg_skeleton_meter" />
+                        <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="125dp" android:layout_margin="5dp" android:background="@drawable/bg_skeleton_meter" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Recent Activities Preview Card -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_skeleton_card"
+                    android:padding="16dp">
+                    
+                    <View android:layout_width="130dp" android:layout_height="16dp" android:layout_marginBottom="16dp" android:background="@drawable/bg_skeleton_line" />
+
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="14dp">
+                        <View android:layout_width="38dp" android:layout_height="38dp" android:background="@drawable/bg_skeleton_circle" />
+                        <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginStart="12dp">
+                            <View android:layout_width="140dp" android:layout_height="14dp" android:layout_marginBottom="6dp" android:background="@drawable/bg_skeleton_line" />
+                            <View android:layout_width="85dp" android:layout_height="10dp" android:background="@drawable/bg_skeleton_line" />
+                        </LinearLayout>
+                        <View android:layout_width="65dp" android:layout_height="20dp" android:background="@drawable/bg_skeleton_pill" />
+                    </LinearLayout>
+
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                        <View android:layout_width="38dp" android:layout_height="38dp" android:background="@drawable/bg_skeleton_circle" />
+                        <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginStart="12dp">
+                            <View android:layout_width="160dp" android:layout_height="14dp" android:layout_marginBottom="6dp" android:background="@drawable/bg_skeleton_line" />
+                            <View android:layout_width="95dp" android:layout_height="10dp" android:background="@drawable/bg_skeleton_line" />
+                        </LinearLayout>
+                        <View android:layout_width="65dp" android:layout_height="20dp" android:background="@drawable/bg_skeleton_pill" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- ══════════════════════════════════════════════════════════════════ -->
+            <!-- 2. PATIENTS & WORKLIST SKELETON (Rich Patient Cards)               -->
+            <!-- ══════════════════════════════════════════════════════════════════ -->
+            <LinearLayout
+                android:id="@+id/skeletonPatients"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <!-- Search Bar + Filter Action Row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="12dp"
+                    android:gravity="center_vertical">
+                    
                     <View
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_marginBottom="12dp"
-                        android:background="@drawable/bg_skeleton_circle" />
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="46dp"
+                        android:layout_marginEnd="10dp"
+                        android:background="@drawable/bg_skeleton_card" />
+                    
+                    <View
+                        android:layout_width="46dp"
+                        android:layout_height="46dp"
+                        android:background="@drawable/bg_skeleton_card" />
+                </LinearLayout>
+
+                <!-- Quick Filter Chips Row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="16dp">
+                    <View android:layout_width="65dp" android:layout_height="28dp" android:layout_marginEnd="8dp" android:background="@drawable/bg_skeleton_pill" />
+                    <View android:layout_width="85dp" android:layout_height="28dp" android:layout_marginEnd="8dp" android:background="@drawable/bg_skeleton_pill" />
+                    <View android:layout_width="75dp" android:layout_height="28dp" android:layout_marginEnd="8dp" android:background="@drawable/bg_skeleton_pill" />
+                    <View android:layout_width="80dp" android:layout_height="28dp" android:background="@drawable/bg_skeleton_pill" />
+                </LinearLayout>
+
+                <!-- Patient Card 1 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_skeleton_card"
+                    android:padding="16dp"
+                    android:layout_marginBottom="12dp">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="10dp">
+                        <View android:layout_width="44dp" android:layout_height="44dp" android:background="@drawable/bg_skeleton_circle" />
+                        <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginStart="12dp">
+                            <View android:layout_width="160dp" android:layout_height="16dp" android:layout_marginBottom="6dp" android:background="@drawable/bg_skeleton_line" />
+                            <View android:layout_width="100dp" android:layout_height="11dp" android:background="@drawable/bg_skeleton_line" />
+                        </LinearLayout>
+                        <View android:layout_width="70dp" android:layout_height="22dp" android:background="@drawable/bg_skeleton_pill" />
+                    </LinearLayout>
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginVertical="8dp" android:background="@drawable/bg_skeleton_line" />
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                        <View android:layout_width="90dp" android:layout_height="12dp" android:background="@drawable/bg_skeleton_line" />
+                        <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="1dp" />
+                        <View android:layout_width="120dp" android:layout_height="14dp" android:background="@drawable/bg_skeleton_line" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Patient Card 2 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_skeleton_card"
+                    android:padding="16dp"
+                    android:layout_marginBottom="12dp">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="10dp">
+                        <View android:layout_width="44dp" android:layout_height="44dp" android:background="@drawable/bg_skeleton_circle" />
+                        <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginStart="12dp">
+                            <View android:layout_width="180dp" android:layout_height="16dp" android:layout_marginBottom="6dp" android:background="@drawable/bg_skeleton_line" />
+                            <View android:layout_width="115dp" android:layout_height="11dp" android:background="@drawable/bg_skeleton_line" />
+                        </LinearLayout>
+                        <View android:layout_width="70dp" android:layout_height="22dp" android:background="@drawable/bg_skeleton_pill" />
+                    </LinearLayout>
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginVertical="8dp" android:background="@drawable/bg_skeleton_line" />
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                        <View android:layout_width="80dp" android:layout_height="12dp" android:background="@drawable/bg_skeleton_line" />
+                        <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="1dp" />
+                        <View android:layout_width="140dp" android:layout_height="14dp" android:background="@drawable/bg_skeleton_line" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Patient Card 3 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_skeleton_card"
+                    android:padding="16dp"
+                    android:layout_marginBottom="12dp">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="10dp">
+                        <View android:layout_width="44dp" android:layout_height="44dp" android:background="@drawable/bg_skeleton_circle" />
+                        <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginStart="12dp">
+                            <View android:layout_width="150dp" android:layout_height="16dp" android:layout_marginBottom="6dp" android:background="@drawable/bg_skeleton_line" />
+                            <View android:layout_width="90dp" android:layout_height="11dp" android:background="@drawable/bg_skeleton_line" />
+                        </LinearLayout>
+                        <View android:layout_width="70dp" android:layout_height="22dp" android:background="@drawable/bg_skeleton_pill" />
+                    </LinearLayout>
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginVertical="8dp" android:background="@drawable/bg_skeleton_line" />
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                        <View android:layout_width="110dp" android:layout_height="12dp" android:background="@drawable/bg_skeleton_line" />
+                        <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="1dp" />
+                        <View android:layout_width="100dp" android:layout_height="14dp" android:background="@drawable/bg_skeleton_line" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Patient Card 4 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_skeleton_card"
+                    android:padding="16dp">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="10dp">
+                        <View android:layout_width="44dp" android:layout_height="44dp" android:background="@drawable/bg_skeleton_circle" />
+                        <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginStart="12dp">
+                            <View android:layout_width="170dp" android:layout_height="16dp" android:layout_marginBottom="6dp" android:background="@drawable/bg_skeleton_line" />
+                            <View android:layout_width="105dp" android:layout_height="11dp" android:background="@drawable/bg_skeleton_line" />
+                        </LinearLayout>
+                        <View android:layout_width="70dp" android:layout_height="22dp" android:background="@drawable/bg_skeleton_pill" />
+                    </LinearLayout>
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginVertical="8dp" android:background="@drawable/bg_skeleton_line" />
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                        <View android:layout_width="95dp" android:layout_height="12dp" android:background="@drawable/bg_skeleton_line" />
+                        <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="1dp" />
+                        <View android:layout_width="130dp" android:layout_height="14dp" android:background="@drawable/bg_skeleton_line" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- ══════════════════════════════════════════════════════════════════ -->
+            <!-- 3. REPORTS & TEST CATALOGUE SKELETON (Diagnostic Table)           -->
+            <!-- ══════════════════════════════════════════════════════════════════ -->
+            <LinearLayout
+                android:id="@+id/skeletonReports"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <!-- Report Summary / QR Header Card -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="18dp"
+                    android:layout_marginBottom="16dp"
+                    android:background="@drawable/bg_skeleton_card"
+                    android:gravity="center_vertical">
+                    
                     <View
                         android:layout_width="60dp"
-                        android:layout_height="16dp"
-                        android:background="@drawable/bg_skeleton_line" />
-                </LinearLayout>
-            </LinearLayout>
+                        android:layout_height="60dp"
+                        android:background="@drawable/bg_skeleton_card" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="16dp">
-                
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="100dp"
-                    android:orientation="vertical"
-                    android:padding="16dp"
-                    android:layout_marginEnd="6dp"
-                    android:background="@drawable/bg_skeleton_card">
-                    <View
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_marginBottom="12dp"
-                        android:background="@drawable/bg_skeleton_circle" />
-                    <View
-                        android:layout_width="70dp"
-                        android:layout_height="16dp"
-                        android:background="@drawable/bg_skeleton_line" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="100dp"
-                    android:orientation="vertical"
-                    android:padding="16dp"
-                    android:layout_marginStart="6dp"
-                    android:background="@drawable/bg_skeleton_card">
-                    <View
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_marginBottom="12dp"
-                        android:background="@drawable/bg_skeleton_circle" />
-                    <View
-                        android:layout_width="90dp"
-                        android:layout_height="16dp"
-                        android:background="@drawable/bg_skeleton_line" />
-                </LinearLayout>
-            </LinearLayout>
-
-            <!-- Chart Card -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="220dp"
-                android:orientation="vertical"
-                android:padding="16dp"
-                android:layout_marginBottom="16dp"
-                android:background="@drawable/bg_skeleton_card">
-                <View
-                    android:layout_width="140dp"
-                    android:layout_height="18dp"
-                    android:layout_marginBottom="16dp"
-                    android:background="@drawable/bg_skeleton_line" />
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="horizontal"
-                    android:gravity="bottom"
-                    android:paddingBottom="8dp">
-                    <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="80dp" android:layout_margin="4dp" android:background="@drawable/bg_skeleton_line" />
-                    <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="120dp" android:layout_margin="4dp" android:background="@drawable/bg_skeleton_line" />
-                    <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="60dp" android:layout_margin="4dp" android:background="@drawable/bg_skeleton_line" />
-                    <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="140dp" android:layout_margin="4dp" android:background="@drawable/bg_skeleton_line" />
-                    <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="100dp" android:layout_margin="4dp" android:background="@drawable/bg_skeleton_line" />
-                    <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="160dp" android:layout_margin="4dp" android:background="@drawable/bg_skeleton_line" />
-                </LinearLayout>
-            </LinearLayout>
-        </LinearLayout>
-
-        <!-- 2. LIST/TABLE SKELETON (Patients, Categories, Billing, Reports) -->
-        <LinearLayout
-            android:id="@+id/skeletonList"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:visibility="gone">
-
-            <!-- Filter / Search Row Placeholder -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="16dp"
-                android:gravity="center_vertical">
-                <View
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="44dp"
-                    android:layout_marginEnd="12dp"
-                    android:background="@drawable/bg_skeleton_card" />
-                <View
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:background="@drawable/bg_skeleton_card" />
-            </LinearLayout>
-
-            <!-- Table Rows -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:background="@drawable/bg_skeleton_card"
-                android:padding="16dp">
-                
-                <!-- Repeat list row 6 times -->
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="18dp">
-                    <View android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/bg_skeleton_circle" />
-                    <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginStart="12dp" android:layout_gravity="center_vertical">
-                        <View android:layout_width="140dp" android:layout_height="14dp" android:layout_marginBottom="6dp" android:background="@drawable/bg_skeleton_line" />
-                        <View android:layout_width="90dp" android:layout_height="10dp" android:background="@drawable/bg_skeleton_line" />
-                    </LinearLayout>
-                    <View android:layout_width="60dp" android:layout_height="20dp" android:layout_gravity="center_vertical" android:background="@drawable/bg_skeleton_line" />
-                </LinearLayout>
-
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="18dp">
-                    <View android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/bg_skeleton_circle" />
-                    <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginStart="12dp" android:layout_gravity="center_vertical">
-                        <View android:layout_width="180dp" android:layout_height="14dp" android:layout_marginBottom="6dp" android:background="@drawable/bg_skeleton_line" />
-                        <View android:layout_width="110dp" android:layout_height="10dp" android:background="@drawable/bg_skeleton_line" />
-                    </LinearLayout>
-                    <View android:layout_width="60dp" android:layout_height="20dp" android:layout_gravity="center_vertical" android:background="@drawable/bg_skeleton_line" />
-                </LinearLayout>
-
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="18dp">
-                    <View android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/bg_skeleton_circle" />
-                    <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginStart="12dp" android:layout_gravity="center_vertical">
-                        <View android:layout_width="120dp" android:layout_height="14dp" android:layout_marginBottom="6dp" android:background="@drawable/bg_skeleton_line" />
-                        <View android:layout_width="70dp" android:layout_height="10dp" android:background="@drawable/bg_skeleton_line" />
-                    </LinearLayout>
-                    <View android:layout_width="60dp" android:layout_height="20dp" android:layout_gravity="center_vertical" android:background="@drawable/bg_skeleton_line" />
-                </LinearLayout>
-
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="18dp">
-                    <View android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/bg_skeleton_circle" />
-                    <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginStart="12dp" android:layout_gravity="center_vertical">
-                        <View android:layout_width="160dp" android:layout_height="14dp" android:layout_marginBottom="6dp" android:background="@drawable/bg_skeleton_line" />
-                        <View android:layout_width="100dp" android:layout_height="10dp" android:background="@drawable/bg_skeleton_line" />
-                    </LinearLayout>
-                    <View android:layout_width="60dp" android:layout_height="20dp" android:layout_gravity="center_vertical" android:background="@drawable/bg_skeleton_line" />
-                </LinearLayout>
-
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="18dp">
-                    <View android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/bg_skeleton_circle" />
-                    <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginStart="12dp" android:layout_gravity="center_vertical">
-                        <View android:layout_width="110dp" android:layout_height="14dp" android:layout_marginBottom="6dp" android:background="@drawable/bg_skeleton_line" />
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginStart="14dp">
+                        <View android:layout_width="160dp" android:layout_height="18dp" android:layout_marginBottom="8dp" android:background="@drawable/bg_skeleton_line" />
+                        <View android:layout_width="110dp" android:layout_height="12dp" android:layout_marginBottom="6dp" android:background="@drawable/bg_skeleton_line" />
                         <View android:layout_width="80dp" android:layout_height="10dp" android:background="@drawable/bg_skeleton_line" />
                     </LinearLayout>
-                    <View android:layout_width="60dp" android:layout_height="20dp" android:layout_gravity="center_vertical" android:background="@drawable/bg_skeleton_line" />
+
+                    <View
+                        android:layout_width="75dp"
+                        android:layout_height="26dp"
+                        android:background="@drawable/bg_skeleton_pill" />
                 </LinearLayout>
 
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
-                    <View android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/bg_skeleton_circle" />
-                    <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginStart="12dp" android:layout_gravity="center_vertical">
-                        <View android:layout_width="150dp" android:layout_height="14dp" android:layout_marginBottom="6dp" android:background="@drawable/bg_skeleton_line" />
-                        <View android:layout_width="95dp" android:layout_height="10dp" android:background="@drawable/bg_skeleton_line" />
+                <!-- Diagnostic Parameter Breakdown Table Card -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_skeleton_card"
+                    android:padding="16dp"
+                    android:layout_marginBottom="16dp">
+                    
+                    <!-- Table Header -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="16dp">
+                        <View android:layout_width="110dp" android:layout_height="14dp" android:background="@drawable/bg_skeleton_line" />
+                        <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="1dp" />
+                        <View android:layout_width="60dp" android:layout_height="14dp" android:layout_marginEnd="16dp" android:background="@drawable/bg_skeleton_line" />
+                        <View android:layout_width="70dp" android:layout_height="14dp" android:background="@drawable/bg_skeleton_line" />
                     </LinearLayout>
-                    <View android:layout_width="60dp" android:layout_height="20dp" android:layout_gravity="center_vertical" android:background="@drawable/bg_skeleton_line" />
+
+                    <!-- Parameter Row 1 -->
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginBottom="14dp">
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="6dp">
+                            <View android:layout_width="140dp" android:layout_height="15dp" android:background="@drawable/bg_skeleton_line" />
+                            <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="1dp" />
+                            <View android:layout_width="55dp" android:layout_height="15dp" android:layout_marginEnd="12dp" android:background="@drawable/bg_skeleton_line" />
+                            <View android:layout_width="50dp" android:layout_height="18dp" android:background="@drawable/bg_skeleton_pill" />
+                        </LinearLayout>
+                        <View android:layout_width="match_parent" android:layout_height="6dp" android:background="@drawable/bg_skeleton_meter" />
+                    </LinearLayout>
+
+                    <!-- Parameter Row 2 -->
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginBottom="14dp">
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="6dp">
+                            <View android:layout_width="160dp" android:layout_height="15dp" android:background="@drawable/bg_skeleton_line" />
+                            <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="1dp" />
+                            <View android:layout_width="65dp" android:layout_height="15dp" android:layout_marginEnd="12dp" android:background="@drawable/bg_skeleton_line" />
+                            <View android:layout_width="50dp" android:layout_height="18dp" android:background="@drawable/bg_skeleton_pill" />
+                        </LinearLayout>
+                        <View android:layout_width="match_parent" android:layout_height="6dp" android:background="@drawable/bg_skeleton_meter" />
+                    </LinearLayout>
+
+                    <!-- Parameter Row 3 -->
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginBottom="14dp">
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="6dp">
+                            <View android:layout_width="120dp" android:layout_height="15dp" android:background="@drawable/bg_skeleton_line" />
+                            <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="1dp" />
+                            <View android:layout_width="50dp" android:layout_height="15dp" android:layout_marginEnd="12dp" android:background="@drawable/bg_skeleton_line" />
+                            <View android:layout_width="50dp" android:layout_height="18dp" android:background="@drawable/bg_skeleton_pill" />
+                        </LinearLayout>
+                        <View android:layout_width="match_parent" android:layout_height="6dp" android:background="@drawable/bg_skeleton_meter" />
+                    </LinearLayout>
+
+                    <!-- Parameter Row 4 -->
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="6dp">
+                            <View android:layout_width="150dp" android:layout_height="15dp" android:background="@drawable/bg_skeleton_line" />
+                            <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="1dp" />
+                            <View android:layout_width="70dp" android:layout_height="15dp" android:layout_marginEnd="12dp" android:background="@drawable/bg_skeleton_line" />
+                            <View android:layout_width="50dp" android:layout_height="18dp" android:background="@drawable/bg_skeleton_pill" />
+                        </LinearLayout>
+                        <View android:layout_width="match_parent" android:layout_height="6dp" android:background="@drawable/bg_skeleton_meter" />
+                    </LinearLayout>
                 </LinearLayout>
-            </LinearLayout>
-        </LinearLayout>
 
-        <!-- 3. FORM SKELETON (New Registration, Settings editing) -->
-        <LinearLayout
-            android:id="@+id/skeletonForm"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:visibility="gone">
-
-            <!-- Card wrapper -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:background="@drawable/bg_skeleton_card"
-                android:padding="20dp">
-
-                <View
-                    android:layout_width="160dp"
-                    android:layout_height="20dp"
-                    android:layout_marginBottom="24dp"
-                    android:background="@drawable/bg_skeleton_line" />
-
-                <!-- Input group 1 -->
-                <View
-                    android:layout_width="100dp"
-                    android:layout_height="12dp"
-                    android:layout_marginBottom="8dp"
-                    android:background="@drawable/bg_skeleton_line" />
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="44dp"
-                    android:layout_marginBottom="16dp"
-                    android:background="@drawable/bg_skeleton_line" />
-
-                <!-- Input group 2 -->
-                <View
-                    android:layout_width="80dp"
-                    android:layout_height="12dp"
-                    android:layout_marginBottom="8dp"
-                    android:background="@drawable/bg_skeleton_line" />
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="44dp"
-                    android:layout_marginBottom="16dp"
-                    android:background="@drawable/bg_skeleton_line" />
-
-                <!-- Input group 3 -->
-                <View
-                    android:layout_width="120dp"
-                    android:layout_height="12dp"
-                    android:layout_marginBottom="8dp"
-                    android:background="@drawable/bg_skeleton_line" />
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="44dp"
-                    android:layout_marginBottom="24dp"
-                    android:background="@drawable/bg_skeleton_line" />
-
-                <!-- Form Action Buttons -->
+                <!-- Pathologist Digital Seal Verification Card -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:gravity="end">
-                    <View
-                        android:layout_width="90dp"
-                        android:layout_height="38dp"
-                        android:layout_marginEnd="12dp"
-                        android:background="@drawable/bg_skeleton_line" />
-                    <View
-                        android:layout_width="120dp"
-                        android:layout_height="38dp"
-                        android:background="@drawable/bg_skeleton_line" />
-                </LinearLayout>
-            </LinearLayout>
-        </LinearLayout>
-
-        <!-- 4. GRID SKELETON (Alternative Dashboard/Analytics) -->
-        <LinearLayout
-            android:id="@+id/skeletonGrid"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:visibility="gone">
-
-            <View
-                android:layout_width="160dp"
-                android:layout_height="22dp"
-                android:layout_marginBottom="16dp"
-                android:background="@drawable/bg_skeleton_line" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="12dp">
-                
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="140dp"
-                    android:orientation="vertical"
                     android:padding="16dp"
-                    android:layout_marginEnd="6dp"
-                    android:background="@drawable/bg_skeleton_card">
-                    <View android:layout_width="40dp" android:layout_height="40dp" android:layout_marginBottom="16dp" android:background="@drawable/bg_skeleton_circle" />
-                    <View android:layout_width="80dp" android:layout_height="16dp" android:layout_marginBottom="8dp" android:background="@drawable/bg_skeleton_line" />
-                    <View android:layout_width="50dp" android:layout_height="12dp" android:background="@drawable/bg_skeleton_line" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="140dp"
-                    android:orientation="vertical"
-                    android:padding="16dp"
-                    android:layout_marginStart="6dp"
-                    android:background="@drawable/bg_skeleton_card">
-                    <View android:layout_width="40dp" android:layout_height="40dp" android:layout_marginBottom="16dp" android:background="@drawable/bg_skeleton_circle" />
-                    <View android:layout_width="90dp" android:layout_height="16dp" android:layout_marginBottom="8dp" android:background="@drawable/bg_skeleton_line" />
-                    <View android:layout_width="60dp" android:layout_height="12dp" android:background="@drawable/bg_skeleton_line" />
+                    android:background="@drawable/bg_skeleton_card"
+                    android:gravity="center_vertical">
+                    <View android:layout_width="48dp" android:layout_height="48dp" android:background="@drawable/bg_skeleton_circle" />
+                    <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginStart="14dp">
+                        <View android:layout_width="130dp" android:layout_height="14dp" android:layout_marginBottom="6dp" android:background="@drawable/bg_skeleton_line" />
+                        <View android:layout_width="90dp" android:layout_height="11dp" android:background="@drawable/bg_skeleton_line" />
+                    </LinearLayout>
+                    <View android:layout_width="70dp" android:layout_height="32dp" android:background="@drawable/bg_skeleton_pill" />
                 </LinearLayout>
             </LinearLayout>
 
+            <!-- ══════════════════════════════════════════════════════════════════ -->
+            <!-- 4. BILLING, INVOICES & FINANCE SKELETON                           -->
+            <!-- ══════════════════════════════════════════════════════════════════ -->
             <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="16dp">
-                
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="140dp"
-                    android:orientation="vertical"
-                    android:padding="16dp"
-                    android:layout_marginEnd="6dp"
-                    android:background="@drawable/bg_skeleton_card">
-                    <View android:layout_width="40dp" android:layout_height="40dp" android:layout_marginBottom="16dp" android:background="@drawable/bg_skeleton_circle" />
-                    <View android:layout_width="70dp" android:layout_height="16dp" android:layout_marginBottom="8dp" android:background="@drawable/bg_skeleton_line" />
-                    <View android:layout_width="40dp" android:layout_height="12dp" android:background="@drawable/bg_skeleton_line" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="140dp"
-                    android:orientation="vertical"
-                    android:padding="16dp"
-                    android:layout_marginStart="6dp"
-                    android:background="@drawable/bg_skeleton_card">
-                    <View android:layout_width="40dp" android:layout_height="40dp" android:layout_marginBottom="16dp" android:background="@drawable/bg_skeleton_circle" />
-                    <View android:layout_width="85dp" android:layout_height="16dp" android:layout_marginBottom="8dp" android:background="@drawable/bg_skeleton_line" />
-                    <View android:layout_width="55dp" android:layout_height="12dp" android:background="@drawable/bg_skeleton_line" />
-                </LinearLayout>
-            </LinearLayout>
-        </LinearLayout>
-
-        <!-- 5. DETAIL SKELETON (Alternative Profile/Details view) -->
-        <LinearLayout
-            android:id="@+id/skeletonDetail"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:visibility="gone">
-
-            <!-- Large Top Profile Card -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:padding="20dp"
-                android:layout_marginBottom="16dp"
-                android:gravity="center_vertical"
-                android:background="@drawable/bg_skeleton_card">
-                
-                <View
-                    android:layout_width="60dp"
-                    android:layout_height="60dp"
-                    android:background="@drawable/bg_skeleton_circle" />
-                
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginStart="16dp">
-                    <View
-                        android:layout_width="140dp"
-                        android:layout_height="18dp"
-                        android:layout_marginBottom="8dp"
-                        android:background="@drawable/bg_skeleton_line" />
-                    <View
-                        android:layout_width="90dp"
-                        android:layout_height="12dp"
-                        android:background="@drawable/bg_skeleton_line" />
-                </LinearLayout>
-            </LinearLayout>
-
-            <!-- Detailed List rows -->
-            <LinearLayout
+                android:id="@+id/skeletonBilling"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:background="@drawable/bg_skeleton_card"
-                android:padding="16dp">
-                
-                <View android:layout_width="120dp" android:layout_height="16dp" android:layout_marginBottom="16dp" android:background="@drawable/bg_skeleton_line" />
+                android:visibility="gone">
 
-                <!-- Details Rows -->
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginBottom="16dp">
-                    <View android:layout_width="80dp" android:layout_height="12dp" android:layout_marginBottom="6dp" android:background="@drawable/bg_skeleton_line" />
-                    <View android:layout_width="match_parent" android:layout_height="16dp" android:background="@drawable/bg_skeleton_line" />
+                <!-- Financial Hero Summary Card -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp"
+                    android:layout_marginBottom="16dp"
+                    android:background="@drawable/bg_skeleton_card">
+                    
+                    <View android:layout_width="120dp" android:layout_height="13dp" android:layout_marginBottom="8dp" android:background="@drawable/bg_skeleton_line" />
+                    <View android:layout_width="190dp" android:layout_height="28dp" android:layout_marginBottom="16dp" android:background="@drawable/bg_skeleton_line" />
+
+                    <!-- Mini Split KPI row -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+                        <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:orientation="vertical">
+                            <View android:layout_width="60dp" android:layout_height="11dp" android:layout_marginBottom="4dp" android:background="@drawable/bg_skeleton_line" />
+                            <View android:layout_width="80dp" android:layout_height="15dp" android:background="@drawable/bg_skeleton_line" />
+                        </LinearLayout>
+                        <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:orientation="vertical">
+                            <View android:layout_width="60dp" android:layout_height="11dp" android:layout_marginBottom="4dp" android:background="@drawable/bg_skeleton_line" />
+                            <View android:layout_width="80dp" android:layout_height="15dp" android:background="@drawable/bg_skeleton_line" />
+                        </LinearLayout>
+                        <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:orientation="vertical">
+                            <View android:layout_width="60dp" android:layout_height="11dp" android:layout_marginBottom="4dp" android:background="@drawable/bg_skeleton_line" />
+                            <View android:layout_width="80dp" android:layout_height="15dp" android:background="@drawable/bg_skeleton_line" />
+                        </LinearLayout>
+                    </LinearLayout>
                 </LinearLayout>
 
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginBottom="16dp">
-                    <View android:layout_width="100dp" android:layout_height="12dp" android:layout_marginBottom="6dp" android:background="@drawable/bg_skeleton_line" />
-                    <View android:layout_width="match_parent" android:layout_height="16dp" android:background="@drawable/bg_skeleton_line" />
+                <!-- Search / Filter Bar -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="14dp"
+                    android:gravity="center_vertical">
+                    <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="42dp" android:layout_marginEnd="10dp" android:background="@drawable/bg_skeleton_card" />
+                    <View android:layout_width="90dp" android:layout_height="42dp" android:background="@drawable/bg_skeleton_card" />
                 </LinearLayout>
 
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
-                    <View android:layout_width="60dp" android:layout_height="12dp" android:layout_marginBottom="6dp" android:background="@drawable/bg_skeleton_line" />
-                    <View android:layout_width="match_parent" android:layout_height="16dp" android:background="@drawable/bg_skeleton_line" />
+                <!-- Invoice Transaction Item 1 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_skeleton_card"
+                    android:padding="16dp"
+                    android:layout_marginBottom="12dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="8dp">
+                        <View android:layout_width="90dp" android:layout_height="18dp" android:background="@drawable/bg_skeleton_pill" />
+                        <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="1dp" />
+                        <View android:layout_width="75dp" android:layout_height="18dp" android:background="@drawable/bg_skeleton_line" />
+                    </LinearLayout>
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                        <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:orientation="vertical">
+                            <View android:layout_width="140dp" android:layout_height="14dp" android:layout_marginBottom="4dp" android:background="@drawable/bg_skeleton_line" />
+                            <View android:layout_width="85dp" android:layout_height="10dp" android:background="@drawable/bg_skeleton_line" />
+                        </LinearLayout>
+                        <View android:layout_width="60dp" android:layout_height="22dp" android:background="@drawable/bg_skeleton_pill" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Invoice Transaction Item 2 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_skeleton_card"
+                    android:padding="16dp"
+                    android:layout_marginBottom="12dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="8dp">
+                        <View android:layout_width="90dp" android:layout_height="18dp" android:background="@drawable/bg_skeleton_pill" />
+                        <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="1dp" />
+                        <View android:layout_width="75dp" android:layout_height="18dp" android:background="@drawable/bg_skeleton_line" />
+                    </LinearLayout>
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                        <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:orientation="vertical">
+                            <View android:layout_width="160dp" android:layout_height="14dp" android:layout_marginBottom="4dp" android:background="@drawable/bg_skeleton_line" />
+                            <View android:layout_width="95dp" android:layout_height="10dp" android:background="@drawable/bg_skeleton_line" />
+                        </LinearLayout>
+                        <View android:layout_width="60dp" android:layout_height="22dp" android:background="@drawable/bg_skeleton_pill" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Invoice Transaction Item 3 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_skeleton_card"
+                    android:padding="16dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="8dp">
+                        <View android:layout_width="90dp" android:layout_height="18dp" android:background="@drawable/bg_skeleton_pill" />
+                        <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="1dp" />
+                        <View android:layout_width="75dp" android:layout_height="18dp" android:background="@drawable/bg_skeleton_line" />
+                    </LinearLayout>
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                        <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:orientation="vertical">
+                            <View android:layout_width="130dp" android:layout_height="14dp" android:layout_marginBottom="4dp" android:background="@drawable/bg_skeleton_line" />
+                            <View android:layout_width="75dp" android:layout_height="10dp" android:background="@drawable/bg_skeleton_line" />
+                        </LinearLayout>
+                        <View android:layout_width="60dp" android:layout_height="22dp" android:background="@drawable/bg_skeleton_pill" />
+                    </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
-        </LinearLayout>
 
-    </FrameLayout>
+            <!-- ══════════════════════════════════════════════════════════════════ -->
+            <!-- 5. SETTINGS, LAB PROFILE & WALLET SKELETON                        -->
+            <!-- ══════════════════════════════════════════════════════════════════ -->
+            <LinearLayout
+                android:id="@+id/skeletonSettings"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <!-- Lab Verified Profile Banner -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="18dp"
+                    android:layout_marginBottom="16dp"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/bg_skeleton_card">
+                    
+                    <View
+                        android:layout_width="56dp"
+                        android:layout_height="56dp"
+                        android:background="@drawable/bg_skeleton_circle" />
+                    
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginStart="14dp">
+                        <View
+                            android:layout_width="150dp"
+                            android:layout_height="16dp"
+                            android:layout_marginBottom="6dp"
+                            android:background="@drawable/bg_skeleton_line" />
+                        <View
+                            android:layout_width="95dp"
+                            android:layout_height="12dp"
+                            android:background="@drawable/bg_skeleton_line" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="70dp"
+                        android:layout_height="24dp"
+                        android:background="@drawable/bg_skeleton_pill" />
+                </LinearLayout>
+
+                <!-- Cloud Wallet Card -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_skeleton_card"
+                    android:padding="18dp"
+                    android:layout_marginBottom="16dp">
+                    
+                    <View android:layout_width="120dp" android:layout_height="12dp" android:layout_marginBottom="6dp" android:background="@drawable/bg_skeleton_line" />
+                    <View android:layout_width="170dp" android:layout_height="26dp" android:layout_marginBottom="14dp" android:background="@drawable/bg_skeleton_line" />
+
+                    <!-- Quick Top-Up action pills -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+                        <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="36dp" android:layout_marginEnd="6dp" android:background="@drawable/bg_skeleton_pill" />
+                        <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="36dp" android:layout_marginHorizontal="6dp" android:background="@drawable/bg_skeleton_pill" />
+                        <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="36dp" android:layout_marginStart="6dp" android:background="@drawable/bg_skeleton_pill" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Categorized Settings Group 1 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_skeleton_card"
+                    android:padding="16dp"
+                    android:layout_marginBottom="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="14dp">
+                        <View android:layout_width="34dp" android:layout_height="34dp" android:background="@drawable/bg_skeleton_circle" />
+                        <View android:layout_width="120dp" android:layout_height="14dp" android:layout_marginStart="12dp" android:background="@drawable/bg_skeleton_line" />
+                        <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="1dp" />
+                        <View android:layout_width="14dp" android:layout_height="14dp" android:background="@drawable/bg_skeleton_circle" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="14dp">
+                        <View android:layout_width="34dp" android:layout_height="34dp" android:background="@drawable/bg_skeleton_circle" />
+                        <View android:layout_width="140dp" android:layout_height="14dp" android:layout_marginStart="12dp" android:background="@drawable/bg_skeleton_line" />
+                        <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="1dp" />
+                        <View android:layout_width="14dp" android:layout_height="14dp" android:background="@drawable/bg_skeleton_circle" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+                        <View android:layout_width="34dp" android:layout_height="34dp" android:background="@drawable/bg_skeleton_circle" />
+                        <View android:layout_width="105dp" android:layout_height="14dp" android:layout_marginStart="12dp" android:background="@drawable/bg_skeleton_line" />
+                        <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="1dp" />
+                        <View android:layout_width="14dp" android:layout_height="14dp" android:background="@drawable/bg_skeleton_circle" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Categorized Settings Group 2 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_skeleton_card"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="14dp">
+                        <View android:layout_width="34dp" android:layout_height="34dp" android:background="@drawable/bg_skeleton_circle" />
+                        <View android:layout_width="130dp" android:layout_height="14dp" android:layout_marginStart="12dp" android:background="@drawable/bg_skeleton_line" />
+                        <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="1dp" />
+                        <View android:layout_width="14dp" android:layout_height="14dp" android:background="@drawable/bg_skeleton_circle" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+                        <View android:layout_width="34dp" android:layout_height="34dp" android:background="@drawable/bg_skeleton_circle" />
+                        <View android:layout_width="115dp" android:layout_height="14dp" android:layout_marginStart="12dp" android:background="@drawable/bg_skeleton_line" />
+                        <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="1dp" />
+                        <View android:layout_width="14dp" android:layout_height="14dp" android:background="@drawable/bg_skeleton_circle" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- ══════════════════════════════════════════════════════════════════ -->
+            <!-- 6. FORM / NEW REGISTRATION SKELETON                               -->
+            <!-- ══════════════════════════════════════════════════════════════════ -->
+            <LinearLayout
+                android:id="@+id/skeletonForm"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_skeleton_card"
+                    android:padding="20dp">
+
+                    <View
+                        android:layout_width="170dp"
+                        android:layout_height="22dp"
+                        android:layout_marginBottom="24dp"
+                        android:background="@drawable/bg_skeleton_line" />
+
+                    <!-- Input 1 -->
+                    <View android:layout_width="100dp" android:layout_height="12dp" android:layout_marginBottom="8dp" android:background="@drawable/bg_skeleton_line" />
+                    <View android:layout_width="match_parent" android:layout_height="44dp" android:layout_marginBottom="16dp" android:background="@drawable/bg_skeleton_line" />
+
+                    <!-- Input 2 -->
+                    <View android:layout_width="85dp" android:layout_height="12dp" android:layout_marginBottom="8dp" android:background="@drawable/bg_skeleton_line" />
+                    <View android:layout_width="match_parent" android:layout_height="44dp" android:layout_marginBottom="16dp" android:background="@drawable/bg_skeleton_line" />
+
+                    <!-- Input 3 -->
+                    <View android:layout_width="120dp" android:layout_height="12dp" android:layout_marginBottom="8dp" android:background="@drawable/bg_skeleton_line" />
+                    <View android:layout_width="match_parent" android:layout_height="44dp" android:layout_marginBottom="24dp" android:background="@drawable/bg_skeleton_line" />
+
+                    <!-- Form Action Buttons -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="end">
+                        <View android:layout_width="90dp" android:layout_height="38dp" android:layout_marginEnd="12dp" android:background="@drawable/bg_skeleton_pill" />
+                        <View android:layout_width="130dp" android:layout_height="38dp" android:background="@drawable/bg_skeleton_pill" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+        </FrameLayout>
+    </cloud.patholab.app.ui.ShimmerLayout>
 </ScrollView>

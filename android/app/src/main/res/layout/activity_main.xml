@@ -6,29 +6,51 @@
     android:layout_height="match_parent"
     android:background="#F8FAFC">
 
+    <!-- 1. Web view content container (Full screen behind header & wallet card) -->
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefresh"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentTop="true"
+        android:layout_above="@id/bottomNavigation">
+
+        <FrameLayout
+            android:id="@+id/webViewContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    <!-- 0. Subtle Blurred Gradient Backdrop for Header & Wallet (extends halfway over wallet box) -->
+    <View
+        android:id="@+id/headerBlurGradientView"
+        android:layout_width="match_parent"
+        android:layout_height="115dp"
+        android:layout_alignParentTop="true" />
+
     <!-- Vertical container for Header + Wallet Card -->
     <LinearLayout
         android:id="@+id/topLayoutContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
         android:orientation="vertical"
-        android:background="#FFFFFF"
-        android:elevation="2dp">
+        android:background="@android:color/transparent"
+        android:elevation="0dp">
 
         <!-- 0. Native top header bar -->
         <RelativeLayout
             android:id="@+id/topHeaderBar"
             android:layout_width="match_parent"
             android:layout_height="60dp"
-            android:background="#FFFFFF"
+            android:background="@android:color/transparent"
             android:paddingStart="14dp"
             android:paddingEnd="14dp">
 
             <!-- Left: menu icon ••• -->
             <LinearLayout
                 android:id="@+id/btnHeaderMenu"
-                android:layout_width="38dp"
-                android:layout_height="38dp"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
                 android:layout_alignParentStart="true"
                 android:layout_centerVertical="true"
                 android:gravity="center"
@@ -40,7 +62,7 @@
                     android:layout_height="wrap_content"
                     android:text="•••"
                     android:textColor="#475569"
-                    android:textSize="12sp"
+                    android:textSize="14sp"
                     android:textStyle="bold"
                     android:layout_gravity="center" />
             </LinearLayout>
@@ -52,8 +74,8 @@
                 android:layout_toEndOf="@id/btnHeaderMenu"
                 android:layout_toStartOf="@+id/rightHeaderActions"
                 android:layout_centerVertical="true"
-                android:layout_marginStart="12dp"
-                android:layout_marginEnd="10dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="8dp"
                 android:orientation="vertical"
                 android:gravity="start">
 
@@ -63,9 +85,9 @@
                     android:layout_height="wrap_content"
                     android:text="Main Branch"
                     android:textColor="#94A3B8"
-                    android:textSize="9sp"
+                    android:textSize="9.5sp"
                     android:textStyle="bold"
-                    android:letterSpacing="0.16"
+                    android:letterSpacing="0.12"
                     android:singleLine="true"
                     android:ellipsize="end" />
 
@@ -76,7 +98,7 @@
                     android:layout_marginTop="1dp"
                     android:text="Analytics"
                     android:textColor="#0F172A"
-                    android:textSize="15sp"
+                    android:textSize="15.5sp"
                     android:textStyle="bold"
                     android:letterSpacing="-0.01"
                     android:singleLine="true"
@@ -96,36 +118,19 @@
                 <!-- Notifications Bell -->
                 <RelativeLayout
                     android:id="@+id/btnHeaderNotification"
-                    android:layout_width="wrap_content"
-                    android:layout_height="36dp"
-                    android:paddingStart="10dp"
-                    android:paddingEnd="10dp"
-                    android:layout_marginEnd="8dp"
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
+                    android:layout_marginEnd="4dp"
                     android:clickable="true"
                     android:focusable="true">
 
-                    <LinearLayout
-                        android:id="@+id/bellContentLayout"
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:gravity="center"
-                        android:orientation="horizontal">
-
-                        <ImageView
-                            android:id="@+id/imgHeaderBell"
-                            android:layout_width="16dp"
-                            android:layout_height="16dp"
-                            android:src="@drawable/ic_bell"
-                            android:tint="#475569" />
-
-                        <ImageView
-                            android:layout_width="8dp"
-                            android:layout_height="8dp"
-                            android:layout_marginStart="4dp"
-                            android:src="@drawable/ic_chevron_down"
-                            android:tint="#94A3B8" />
-
-                    </LinearLayout>
+                    <ImageView
+                        android:id="@+id/imgHeaderBell"
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_centerInParent="true"
+                        android:src="@drawable/ic_bell"
+                        android:tint="#475569" />
 
                     <!-- Unread Badge -->
                     <TextView
@@ -134,38 +139,39 @@
                         android:layout_height="15dp"
                         android:background="@drawable/bg_notification_badge"
                         android:textColor="#FFFFFF"
-                        android:textSize="9sp"
+                        android:textSize="8.5sp"
                         android:textStyle="bold"
                         android:gravity="center"
                         android:visibility="gone"
-                        android:layout_alignTop="@id/bellContentLayout"
-                        android:layout_alignStart="@id/bellContentLayout"
-                        android:layout_marginStart="8dp"
-                        android:layout_marginTop="2dp" />
+                        android:layout_alignParentTop="true"
+                        android:layout_alignParentEnd="true"
+                        android:layout_marginTop="1dp"
+                        android:layout_marginEnd="1dp" />
 
                 </RelativeLayout>
 
                 <!-- Sun / Theme toggle -->
                 <LinearLayout
                     android:id="@+id/btnHeaderTheme"
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
                     android:gravity="center"
-                    android:layout_marginEnd="8dp"
+                    android:layout_marginEnd="4dp"
                     android:clickable="true"
                     android:focusable="true">
                     <ImageView
+                        android:id="@+id/imgHeaderTheme"
                         android:layout_width="18dp"
                         android:layout_height="18dp"
                         android:src="@drawable/ic_sun"
                         android:tint="#475569" />
                 </LinearLayout>
 
-                <!-- Help / Support -->
+                <!-- Support Help -->
                 <LinearLayout
                     android:id="@+id/btnHeaderSupport"
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
                     android:gravity="center"
                     android:clickable="true"
                     android:focusable="true">
@@ -184,113 +190,112 @@
         <View
             android:id="@+id/headerDivider"
             android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="#F1F5F9" />
+            android:layout_height="0.5dp"
+            android:background="#0A000000" />
 
         <!-- ── Wallet Card ─────────────────────────────────────────────────── -->
-        <!-- Redesigned: fills full width with balance, status, and a right-side action -->
+        <!-- Proportions, sizing (54dp height, 27dp radius), spacing match iOS exactly -->
         <RelativeLayout
             android:id="@+id/walletCard"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="54dp"
             android:layout_marginStart="14dp"
             android:layout_marginEnd="14dp"
-            android:layout_marginTop="6dp"
-            android:layout_marginBottom="6dp"
-            android:background="@drawable/bg_wallet_card_orange"
-            android:paddingStart="14dp"
-            android:paddingEnd="14dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
+            android:layout_marginTop="1dp"
+            android:layout_marginBottom="3dp"
+            android:paddingStart="10dp"
+            android:paddingEnd="12dp"
             android:visibility="gone">
 
-            <!-- Left: icon + text stack -->
+            <!-- Left: Slim circular icon (36dp x 36dp with 26dp icon) -->
+            <FrameLayout
+                android:id="@+id/walletIconContainer"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:background="@drawable/bg_wallet_circle_white">
+                <ImageView
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
+                    android:src="@drawable/ic_wallet_logo"
+                    android:layout_gravity="center" />
+            </FrameLayout>
+
+            <!-- Center: Balance + status stack -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
+                android:layout_toEndOf="@id/walletIconContainer"
                 android:layout_toStartOf="@+id/btnWalletTopUp"
                 android:layout_centerVertical="true"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginEnd="12dp">
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="8dp"
+                android:orientation="vertical">
 
-                <!-- Slim circular icon -->
-                <FrameLayout
-                    android:id="@+id/walletIconContainer"
-                    android:layout_width="34dp"
-                    android:layout_height="34dp"
-                    android:background="@drawable/bg_wallet_circle_white">
-                    <ImageView
-                        android:layout_width="26dp"
-                        android:layout_height="26dp"
-                        android:src="@drawable/ic_wallet_logo"
-                        android:layout_gravity="center" />
-                </FrameLayout>
-
-                <!-- Balance + status -->
-                <LinearLayout
-                    android:layout_width="0dp"
+                <TextView
+                    android:id="@+id/txtWalletBalance"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="12dp"
-                    android:orientation="vertical">
+                    android:text="₹0.00"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18.5sp"
+                    android:fontFamily="sans-serif-black"
+                    android:textFontWeight="900"
+                    android:textStyle="bold"
+                    android:singleLine="true"
+                    android:ellipsize="end"
+                    android:autoSizeTextType="uniform"
+                    android:autoSizeMinTextSize="12sp"
+                    android:autoSizeMaxTextSize="18.5sp"
+                    android:autoSizeStepGranularity="0.5sp" />
 
-                    <TextView
-                        android:id="@+id/txtWalletBalance"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="₹0.00"
-                        android:textColor="#FFFFFF"
-                        android:textSize="18sp"
-                        android:fontFamily="sans-serif-black"
-                        android:textFontWeight="900"
-                        android:textStyle="bold"
-                        android:singleLine="true"
-                        android:ellipsize="end"
-                        android:autoSizeTextType="uniform"
-                        android:autoSizeMinTextSize="12sp"
-                        android:autoSizeMaxTextSize="18sp"
-                        android:autoSizeStepGranularity="1sp"
-                        android:paddingEnd="8dp"
-                        android:paddingRight="8dp" />
-
-                    <TextView
-                        android:id="@+id/txtWalletStatus"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="1dp"
-                        android:text="ACTIVE • FUNDED"
-                        android:textColor="#94A3B8"
-                        android:textSize="9.5sp"
-                        android:textStyle="bold"
-                        android:letterSpacing="0.04" />
-
-                </LinearLayout>
+                <TextView
+                    android:id="@+id/txtWalletStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="1dp"
+                    android:text="●  ACTIVE • FUNDED"
+                    android:textColor="#94A3B8"
+                    android:textSize="9.5sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.04" />
 
             </LinearLayout>
 
-            <!-- Right: Pill Button -->
+            <!-- Right: Subtle Chevron Icon (Shown when balance >= 49) -->
+            <ImageView
+                android:id="@+id/walletChevron"
+                android:layout_width="12dp"
+                android:layout_height="16dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:layout_marginEnd="2dp"
+                android:src="@drawable/ic_chevron_right"
+                app:tint="#94A3B8"
+                android:visibility="gone" />
+
+            <!-- Right: Pill Top Up Button (28dp height, shown when balance < 49) -->
             <LinearLayout
                 android:id="@+id/btnWalletTopUp"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="28dp"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
                 android:background="@drawable/bg_top_up_button"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
-                android:paddingTop="6dp"
-                android:paddingBottom="6dp"
+                android:paddingStart="13dp"
+                android:paddingEnd="13dp"
+                android:gravity="center"
                 android:clickable="false"
-                android:focusable="false">
+                android:focusable="false"
+                android:visibility="gone">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Top Up"
                     android:textColor="#FFFFFF"
-                    android:textSize="11sp"
+                    android:textSize="12.5sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
@@ -301,23 +306,10 @@
             android:id="@+id/dividerLineTop"
             android:layout_width="match_parent"
             android:layout_height="0.5dp"
-            android:background="#E2E8F0" />
+            android:background="#0A000000" />
 
     </LinearLayout>
 
-    <!-- 1. Web view content container -->
-    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-        android:id="@+id/swipeRefresh"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@id/topLayoutContainer"
-        android:layout_above="@id/bottomNavigation">
-
-        <FrameLayout
-            android:id="@+id/webViewContainer"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
 
 

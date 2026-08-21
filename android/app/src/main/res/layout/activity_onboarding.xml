@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#FFFFFF">
+
+    <!-- Top Bar with Skip Button -->
+    <RelativeLayout
+        android:id="@+id/topBar"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp">
+
+        <TextView
+            android:id="@+id/btnSkip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:text="Skip"
+            android:textColor="#64748B"
+            android:textSize="14.5sp"
+            android:fontFamily="sans-serif-medium"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true" />
+
+    </RelativeLayout>
+
+    <!-- Main Swiping ViewPager2 -->
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/viewPager"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <!-- Bottom Controls Area -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="28dp">
+
+        <!-- 4-Dot Animated Pagination Indicator -->
+        <LinearLayout
+            android:id="@+id/layoutDots"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginBottom="24dp">
+
+            <View
+                android:id="@+id/dot0"
+                android:layout_width="24dp"
+                android:layout_height="8dp"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/bg_dot_active" />
+
+            <View
+                android:id="@+id/dot1"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/bg_dot_inactive" />
+
+            <View
+                android:id="@+id/dot2"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/bg_dot_inactive" />
+
+            <View
+                android:id="@+id/dot3"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:background="@drawable/bg_dot_inactive" />
+
+        </LinearLayout>
+
+        <!-- Bottom Action Button -->
+        <Button
+            android:id="@+id/btnAction"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:background="@drawable/bg_onboarding_btn"
+            android:backgroundTint="@null"
+            app:backgroundTint="@null"
+            android:text="Next"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textAllCaps="false"
+            android:fontFamily="sans-serif-medium"
+            android:letterSpacing="0.01"
+            android:stateListAnimator="@null" />
+
+    </LinearLayout>
+
+</LinearLayout>

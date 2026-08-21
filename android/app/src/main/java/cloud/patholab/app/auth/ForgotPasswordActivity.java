@@ -93,6 +93,8 @@ public class ForgotPasswordActivity extends AppCompatActivity {
                 sendResetCode();
             }
         });
+
+        AuthHelper.setupLegalLinks(this);
     }
 
     private void sendResetCode() {

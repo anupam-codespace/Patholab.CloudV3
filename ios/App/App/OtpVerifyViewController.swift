@@ -151,6 +151,16 @@ class OtpVerifyViewController: AuthBaseViewController {
         resendRow.addArrangedSubview(textLabel)
         resendRow.addArrangedSubview(resendButton)
         content.addArrangedSubview(resendRow)
+        content.setCustomSpacing(20, after: resendRow)
+
+        // Legal links
+        let legalFooter = makeLegalFooter()
+        content.addArrangedSubview(legalFooter)
+        content.setCustomSpacing(6, after: legalFooter)
+
+        let copyright = makeLabel("© 2026 Globizhub India Pvt. Ltd. · All rights reserved", size: 11, weight: .regular, color: AuthBaseViewController.textHint)
+        copyright.textAlignment = .center
+        content.addArrangedSubview(copyright)
     }
 
     @objc private func backTapped() {

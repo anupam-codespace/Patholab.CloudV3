@@ -1,0 +1,98 @@
+{
+  "name": "Patholab Cloud LIMS",
+  "short_name": "Patholab",
+  "description": "Modern, cloud-based Laboratory Information Management System for efficient sample tracking and report dispatch.",
+  "start_url": "/dashboard",
+  "id": "/?source=pwa",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f8fafc",
+  "theme_color": "#3b82f6",
+  "categories": [
+    "medical",
+    "productivity",
+    "business"
+  ],
+  "icons": [
+    {
+      "src": "../icons/icon-48.webp",
+      "type": "image/png",
+      "sizes": "48x48",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "../icons/icon-72.webp",
+      "type": "image/png",
+      "sizes": "72x72",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "../icons/icon-96.webp",
+      "type": "image/png",
+      "sizes": "96x96",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "../icons/icon-128.webp",
+      "type": "image/png",
+      "sizes": "128x128",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "../icons/icon-192.webp",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "../icons/icon-256.webp",
+      "type": "image/png",
+      "sizes": "256x256",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "../icons/icon-512.webp",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Pending Worklist",
+      "short_name": "Worklist",
+      "description": "Enter and approve pending lab results",
+      "url": "/workspace/results",
+      "icons": [
+        {
+          "src": "/icons/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "New Registration",
+      "short_name": "Register",
+      "description": "Register a new patient",
+      "url": "/workspace/registration",
+      "icons": [
+        {
+          "src": "/icons/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Report Dispatch",
+      "short_name": "Dispatch",
+      "description": "Share reports via WhatsApp or Email",
+      "url": "/workspace/reports",
+      "icons": [
+        {
+          "src": "/icons/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}

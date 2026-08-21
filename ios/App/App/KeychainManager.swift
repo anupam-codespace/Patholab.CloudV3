@@ -5,7 +5,7 @@ import Security
 /// Tokens are stored with kSecAttrAccessibleWhenUnlockedThisDeviceOnly for maximum security.
 struct KeychainManager {
 
-    private static let service = "cloud.patholab.app"
+    private static let service = "com.patholab.cloud"
 
     // MARK: – Save
 

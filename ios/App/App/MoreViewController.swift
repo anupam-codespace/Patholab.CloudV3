@@ -104,7 +104,7 @@ class MoreViewController: UIViewController {
         setupCategoryStack(stack: stackLegal, header: lblLegalHeader, title: "LEGAL & POLICIES")
 
         // Sheet Title
-        lblSheetTitle.text = "More Settings"
+        lblSheetTitle.text = "More Modules"
         lblSheetTitle.textColor = isDarkMode ? .white : UIColor(red: 15/255, green: 23/255, blue: 42/255, alpha: 1)
         lblSheetTitle.font = .systemFont(ofSize: 22, weight: .bold)
         lblSheetTitle.translatesAutoresizingMaskIntoConstraints = false
@@ -244,7 +244,9 @@ class MoreViewController: UIViewController {
             ModuleItem(title: "Help & Support", path: "/workspace/support", category: "Admin", desc: "Submit tickets & read user guides", icon: "questionmark.circle.fill", isNew: false),
             
             // Legal & Policies
-            ModuleItem(title: "Terms & Conditions", path: "/legal", category: "Legal", desc: "TestFlight Agreements & Software Licenses", icon: "doc.plaintext.fill", isNew: false)
+            ModuleItem(title: "Terms & Conditions", path: "/terms-conditions?tab=terms", category: "Legal", desc: "Platform license, SLA & customer rights", icon: "doc.plaintext.fill", isNew: false),
+            ModuleItem(title: "Privacy & Health Data", path: "/terms-conditions?tab=privacy", category: "Legal", desc: "Patient confidentiality, HIPAA & DISHA standards", icon: "lock.shield.fill", isNew: false),
+            ModuleItem(title: "Refund & Cancellation", path: "/terms-conditions?tab=refunds", category: "Legal", desc: "Subscription terms & pro-rata refund policies", icon: "arrow.uturn.backward.circle.fill", isNew: false)
         ]
     }
 

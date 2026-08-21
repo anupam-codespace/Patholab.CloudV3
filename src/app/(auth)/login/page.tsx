@@ -111,8 +111,8 @@ export default function LoginPage() {
                 </label>
                 <Link
                   href="/forgot-password"
-                  className="text-sm font-medium text-blue-600 hover:text-blue-500">
-                  Forgot password?
+                  className="text-xs font-medium text-slate-500 hover:text-slate-700 transition-colors">
+                  Forgot password
                 </Link>
               </div>
               <div className="relative">
@@ -166,6 +166,17 @@ export default function LoginPage() {
                 Create one for free
               </Link>
             </p>
+          </div>
+
+          <div className="mt-6 pt-5 border-t border-gray-100 text-center text-xs text-gray-400 space-y-2">
+            <div className="flex items-center justify-center gap-3 font-medium">
+              <Link href="/terms-conditions?tab=terms" className="text-gray-500 hover:text-blue-600">Terms & Conditions</Link>
+              <span>•</span>
+              <Link href="/terms-conditions?tab=privacy" className="text-gray-500 hover:text-blue-600">Privacy Policy</Link>
+              <span>•</span>
+              <Link href="/terms-conditions?tab=refunds" className="text-gray-500 hover:text-blue-600">Refund Policy</Link>
+            </div>
+            <p>© {new Date().getFullYear()} Globizhub India Pvt. Ltd. · All rights reserved</p>
           </div>
         </div>
       </div>

@@ -57,6 +57,20 @@ public class AuthManager {
         return getPrefs(context).getString(KEY_USER_EMAIL, null);
     }
 
+    private static final String KEY_ONBOARDING_COMPLETED = "onboarding_completed";
+
+    public static boolean isOnboardingCompleted(Context context) {
+        return context.getSharedPreferences("patholab_general_prefs", Context.MODE_PRIVATE)
+                .getBoolean(KEY_ONBOARDING_COMPLETED, false);
+    }
+
+    public static void setOnboardingCompleted(Context context, boolean completed) {
+        context.getSharedPreferences("patholab_general_prefs", Context.MODE_PRIVATE)
+                .edit()
+                .putBoolean(KEY_ONBOARDING_COMPLETED, completed)
+                .apply();
+    }
+
     public static void clearSession(Context context) {
         getPrefs(context).edit().clear().apply();
         try {

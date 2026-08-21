@@ -19,7 +19,7 @@
         android:id="@+id/txtMoreTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="All Modules"
+        android:text="More Modules"
         android:textColor="#0F172A"
         android:textSize="18sp"
         android:textStyle="bold"

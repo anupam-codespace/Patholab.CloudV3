@@ -24,7 +24,13 @@ import android.widget.TextView;
 import androidx.appcompat.app.AlertDialog;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.net.Uri;
+import android.widget.Toast;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -44,11 +50,15 @@ public class MainActivity extends BridgeActivity {
     private FloatingActionButton fabNewRegistration;
     
     // Header & Wallet Views
+    private View headerBlurGradientView;
+    private View topHeaderBar;
     private TextView lblHeaderTitle;
     private View btnHeaderMenu;
     private View walletCard;
     private TextView txtWalletBalance;
     private TextView txtWalletStatus;
+    private View btnWalletTopUp;
+    private View walletChevron;
     
     // Category containers matching web app groups
     private LinearLayout containerOverview, containerClinical, containerLogistics;
@@ -69,48 +79,175 @@ public class MainActivity extends BridgeActivity {
 
     private FrameLayout skeletonContainer;
     private android.animation.ObjectAnimator pulseAnimator;
+    private boolean isBottomNavHidden = false;
+
+    private int getNativeTopPadding() {
+        if (topLayoutContainer != null && topLayoutContainer.getHeight() > 0) {
+            float density = getResources().getDisplayMetrics().density;
+            int measuredDp = (int) (topLayoutContainer.getHeight() / density);
+            if (measuredDp > 0) return measuredDp;
+        }
+        return (walletCard != null && walletCard.getVisibility() == View.VISIBLE) ? 118 : 60;
+    }
+
+    private void syncWebLayoutPadding() {
+        if (webView == null) return;
+        int topPaddingPx = getNativeTopPadding();
+        boolean isDark = this.isDarkMode;
+        String theme = isDark ? "dark" : "light";
+        webView.evaluateJavascript(
+            "(function() {" +
+            "  var styleId = 'native-hide-header-style';" +
+            "  var style = document.getElementById(styleId);" +
+            "  if(!style) {" +
+            "    style = document.createElement('style');" +
+            "    style.id = styleId;" +
+            "    document.head.appendChild(style);" +
+            "  }" +
+            "  style.innerHTML = 'html, body { padding-top: 0 !important; margin-top: 0 !important; } .mobile-app-header-web-component, header, .sticky.top-0 { display: none !important; } main, .is-native-app main, .is-capacitor main { padding-top: " + topPaddingPx + "px !important; margin-top: 0px !important; padding-bottom: 84px !important; }';" +
+            "  document.documentElement.style.setProperty('--native-top-padding', '" + topPaddingPx + "px');" +
+            "  var isDark = " + isDark + ";" +
+            "  var theme = '" + theme + "';" +
+            "  if (isDark && !document.documentElement.classList.contains('dark')) {" +
+            "    document.documentElement.classList.add('dark');" +
+            "  } else if (!isDark && document.documentElement.classList.contains('dark')) {" +
+            "    document.documentElement.classList.remove('dark');" +
+            "  }" +
+            "  if (localStorage.getItem('theme') !== theme) {" +
+            "    localStorage.setItem('theme', theme);" +
+            "  }" +
+            "  if (window.patholabSetTheme) {" +
+            "    window.patholabSetTheme(theme);" +
+            "  }" +
+            "})()", null
+        );
+    }
+
+    private void setBottomNav(boolean visible, boolean animated) {
+        final boolean shouldHide = !visible;
+        if (isBottomNavHidden == shouldHide || bottomNavigation == null) return;
+        isBottomNavHidden = shouldHide;
+
+        if (animated) {
+            if (!shouldHide) {
+                bottomNavigation.setVisibility(View.VISIBLE);
+                bottomNavigation.animate()
+                    .translationY(0)
+                    .alpha(1.0f)
+                    .setDuration(220)
+                    .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                    .setListener(null)
+                    .start();
+            } else {
+                bottomNavigation.animate()
+                    .translationY(bottomNavigation.getHeight() > 0 ? bottomNavigation.getHeight() + 40 : 200)
+                    .alpha(0.0f)
+                    .setDuration(220)
+                    .setInterpolator(new android.view.animation.AccelerateInterpolator())
+                    .setListener(new android.animation.AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationEnd(android.animation.Animator animation) {
+                            if (isBottomNavHidden && bottomNavigation != null) {
+                                bottomNavigation.setVisibility(View.GONE);
+                            }
+                        }
+                    })
+                    .start();
+            }
+        } else {
+            if (shouldHide) {
+                bottomNavigation.setVisibility(View.GONE);
+                bottomNavigation.setAlpha(0.0f);
+            } else {
+                bottomNavigation.setVisibility(View.VISIBLE);
+                bottomNavigation.setAlpha(1.0f);
+                bottomNavigation.setTranslationY(0);
+            }
+        }
+    }
+
+    private void checkRechargeAndPaymentState() {
+        if (webView == null) return;
+        
+        String url = webView.getUrl();
+        final boolean urlIsRecharge = url != null && (
+            url.contains("/wallet/recharge") ||
+            url.contains("/recharge") ||
+            url.contains("action=recharge") ||
+            url.contains("action=topup") ||
+            url.contains("recharge=true") ||
+            url.contains("cashfree") ||
+            url.contains("razorpay")
+        );
+
+        if (urlIsRecharge) {
+            runOnUiThread(() -> {
+                setBottomNav(false, true);
+                if (swipeRefresh != null && swipeRefresh.isEnabled()) {
+                    swipeRefresh.setEnabled(false);
+                }
+                if (walletCard != null && walletCard.getVisibility() == View.VISIBLE) {
+                    walletCard.setVisibility(View.GONE);
+                    updateHeaderBlurHeight();
+                    syncWebLayoutPadding();
+                }
+            });
+            return;
+        }
+
+        // Check DOM state for active payment modals, cashfree SDK iframe, payment processing headers
+        webView.evaluateJavascript(
+            "(function() {" +
+            "  var path = window.location.pathname || '';" +
+            "  var search = window.location.search || '';" +
+            "  if (path.includes('/recharge') || path.includes('/wallet/recharge') || search.includes('action=recharge') || search.includes('action=topup')) return true;" +
+            "  var hasPaymentModal = document.querySelector('iframe[src*=\"cashfree\"], iframe[src*=\"razorpay\"], .cashfree-modal, [class*=\"payment-modal\"], [class*=\"cashfree\"], [data-payment-overlay=\"true\"], [id*=\"cashfree\"], [id*=\"razorpay\"]') !== null;" +
+            "  if (hasPaymentModal) return true;" +
+            "  var headings = document.querySelectorAll('h1, h2, h3, div');" +
+            "  for (var i = 0; i < Math.min(headings.length, 30); i++) {" +
+            "    if (headings[i].textContent && (headings[i].textContent.includes('Processing your payment') || headings[i].textContent.includes('Payment Options') || headings[i].textContent.includes('Recharge Wallet'))) return true;" +
+            "  }" +
+            "  return false;" +
+            "})()",
+            value -> {
+                boolean isRecharging = "true".equals(value);
+                runOnUiThread(() -> {
+                    if (isRecharging) {
+                        setBottomNav(false, true);
+                        if (swipeRefresh != null && swipeRefresh.isEnabled()) {
+                            swipeRefresh.setEnabled(false);
+                        }
+                        if (walletCard != null && walletCard.getVisibility() == View.VISIBLE) {
+                            walletCard.setVisibility(View.GONE);
+                            updateHeaderBlurHeight();
+                            syncWebLayoutPadding();
+                        }
+                    } else {
+                        setBottomNav(true, true);
+                        if (swipeRefresh != null && !swipeRefresh.isEnabled()) {
+                            swipeRefresh.setEnabled(true);
+                        }
+                    }
+                });
+            }
+        );
+    }
+
     private final Handler progressPollHandler = new Handler(Looper.getMainLooper());
     private final Runnable progressPollRunnable = new Runnable() {
         @Override
         public void run() {
             if (webView != null) {
                 int progress = webView.getProgress();
-                if (progress < 100) {
-                    if (skeletonContainer != null && skeletonContainer.getVisibility() != View.VISIBLE) {
-                        String url = webView.getUrl();
-                        showSkeletonForPath(url);
+                syncWebLayoutPadding();
+                checkRechargeAndPaymentState();
+                if (progress >= 75) {
+                    if (skeletonContainer != null && skeletonContainer.getVisibility() == View.VISIBLE) {
+                        hideSkeleton();
                     }
-                } else {
-                    // Inject JS helper to verify page-level React-Query / Next.js data fetching state
-                    webView.evaluateJavascript(
-                        "(function() {" +
-                        "  if (document.readyState !== 'complete') return true;" +
-                        "  var spinners = document.querySelectorAll('.animate-spin');" +
-                        "  for (var i = 0; i < spinners.length; i++) {" +
-                        "    var r = spinners[i].getBoundingClientRect();" +
-                        "    if (r.width >= 28 && r.height >= 28 && r.top > 0) return true;" +
-                        "  }" +
-                        "  return false;" +
-                        "})()",
-                        value -> {
-                            boolean isWebLoading = "true".equals(value);
-                            runOnUiThread(() -> {
-                                if (isWebLoading) {
-                                    if (skeletonContainer != null && skeletonContainer.getVisibility() != View.VISIBLE) {
-                                        String url = webView.getUrl();
-                                        showSkeletonForPath(url);
-                                    }
-                                } else {
-                                    if (skeletonContainer != null && skeletonContainer.getVisibility() == View.VISIBLE) {
-                                        hideSkeleton();
-                                    }
-                                }
-                            });
-                        }
-                    );
                 }
             }
-            progressPollHandler.postDelayed(this, 100);
+            progressPollHandler.postDelayed(this, 150);
         }
     };
 
@@ -144,15 +281,8 @@ public class MainActivity extends BridgeActivity {
     private void checkAuthRedirect() {
         if (webView == null) return;
         
-        webView.evaluateJavascript(
-            "var style = document.getElementById('native-hide-header-style');" +
-            "if(!style) {" +
-            "  style = document.createElement('style');" +
-            "  style.id = 'native-hide-header-style';" +
-            "  style.innerHTML = '.mobile-app-header-web-component, header { display: none !important; } main, .is-native-app main, .is-capacitor main { padding-top: 0px !important; }';" +
-            "  document.head.appendChild(style);" +
-            "}", null
-        );
+        syncWebLayoutPadding();
+        checkRechargeAndPaymentState();
 
         String url = webView.getUrl();
         if (url == null) return;
@@ -170,8 +300,44 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void applyNativeTheme(boolean isDark) {
-        if (isDarkMode == isDark) return;
+        if (isDarkMode == isDark && prefs != null && prefs.contains("is_dark_mode")) return;
         isDarkMode = isDark;
+
+        if (prefs != null) {
+            prefs.edit().putBoolean("is_dark_mode", isDark).apply();
+        }
+
+        // Status bar and Navigation Bar icons & colors
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            android.view.WindowInsetsController controller = getWindow().getInsetsController();
+            if (controller != null) {
+                if (isDark) {
+                    controller.setSystemBarsAppearance(0, android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS | android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS);
+                } else {
+                    controller.setSystemBarsAppearance(
+                        android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS | android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
+                        android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS | android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
+                    );
+                }
+            }
+        } else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            View decor = getWindow().getDecorView();
+            int flags = decor.getSystemUiVisibility();
+            if (isDark) {
+                flags &= ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    flags &= ~View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+                }
+            } else {
+                flags |= View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    flags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+                }
+            }
+            decor.setSystemUiVisibility(flags);
+        }
+        getWindow().setStatusBarColor(isDark ? android.graphics.Color.parseColor("#0F172A") : android.graphics.Color.parseColor("#FFFFFF"));
+        getWindow().setNavigationBarColor(isDark ? android.graphics.Color.parseColor("#0F172A") : android.graphics.Color.parseColor("#FFFFFF"));
 
         // Parent root layout
         View mainParentLayout = findViewById(R.id.mainParentLayout);
@@ -179,25 +345,26 @@ public class MainActivity extends BridgeActivity {
             mainParentLayout.setBackgroundColor(isDark ? android.graphics.Color.parseColor("#0F172A") : android.graphics.Color.parseColor("#F8FAFC"));
         }
 
-        // Header containers
-        View topLayoutContainer = findViewById(R.id.topLayoutContainer);
+        // Header containers (Transparent to allow blurred gradient backdrop to show through)
         if (topLayoutContainer != null) {
-            topLayoutContainer.setBackgroundColor(isDark ? android.graphics.Color.parseColor("#1E293B") : android.graphics.Color.parseColor("#FFFFFF"));
+            topLayoutContainer.setBackgroundColor(android.graphics.Color.TRANSPARENT);
         }
-        View topHeaderBar = findViewById(R.id.topHeaderBar);
         if (topHeaderBar != null) {
-            topHeaderBar.setBackgroundColor(isDark ? android.graphics.Color.parseColor("#1E293B") : android.graphics.Color.parseColor("#FFFFFF"));
+            topHeaderBar.setBackgroundColor(android.graphics.Color.TRANSPARENT);
         }
 
-        // Header Dividers
+        // Header Dividers (Subtle translucent hairlines)
         View headerDivider = findViewById(R.id.headerDivider);
         if (headerDivider != null) {
-            headerDivider.setBackgroundColor(isDark ? android.graphics.Color.parseColor("#334155") : android.graphics.Color.parseColor("#F1F5F9"));
+            headerDivider.setBackgroundColor(isDark ? android.graphics.Color.parseColor("#14FFFFFF") : android.graphics.Color.parseColor("#0A000000"));
         }
         View dividerLineTop = findViewById(R.id.dividerLineTop);
         if (dividerLineTop != null) {
-            dividerLineTop.setBackgroundColor(isDark ? android.graphics.Color.parseColor("#334155") : android.graphics.Color.parseColor("#F1F5F9"));
+            dividerLineTop.setBackgroundColor(isDark ? android.graphics.Color.parseColor("#14FFFFFF") : android.graphics.Color.parseColor("#0A000000"));
         }
+
+        updateHeaderGradientBackground();
+        updateHeaderBlurHeight();
 
         // Title Texts
         TextView lblHeaderTitle = findViewById(R.id.lblHeaderTitle);
@@ -234,6 +401,12 @@ public class MainActivity extends BridgeActivity {
             tintImageViewsInViewGroup(btnTheme, btnIconColor);
         }
 
+        ImageView imgTheme = findViewById(R.id.imgHeaderTheme);
+        if (imgTheme != null) {
+            imgTheme.setImageResource(isDark ? R.drawable.ic_moon : R.drawable.ic_sun);
+            imgTheme.setColorFilter(btnIconColor);
+        }
+
         android.view.ViewGroup btnSupport = findViewById(R.id.btnHeaderSupport);
         if (btnSupport != null) {
             btnSupport.setBackgroundTintList(android.content.res.ColorStateList.valueOf(btnBgColor));
@@ -248,12 +421,30 @@ public class MainActivity extends BridgeActivity {
                 new int[] { -android.R.attr.state_checked } // unchecked
             };
             int[] colors = new int[] {
-                android.graphics.Color.parseColor("#4338CA"), // active
+                isDark ? android.graphics.Color.parseColor("#818CF8") : android.graphics.Color.parseColor("#4338CA"), // active
                 isDark ? android.graphics.Color.parseColor("#94A3B8") : android.graphics.Color.parseColor("#475569") // inactive
             };
             android.content.res.ColorStateList colorStateList = new android.content.res.ColorStateList(states, colors);
             bottomNavigation.setItemIconTintList(colorStateList);
             bottomNavigation.setItemTextColor(colorStateList);
+        }
+
+        if (skeletonContainer != null && skeletonContainer.getVisibility() == View.VISIBLE) {
+            applySkeletonTheme(skeletonContainer, isDark);
+        }
+
+        if (webView != null) {
+            String script = "(function() {" +
+                "  var isDark = " + isDark + ";" +
+                "  if (isDark) {" +
+                "    document.documentElement.classList.add('dark');" +
+                "    localStorage.setItem('theme', 'dark');" +
+                "  } else {" +
+                "    document.documentElement.classList.remove('dark');" +
+                "    localStorage.setItem('theme', 'light');" +
+                "  }" +
+                "})();";
+            webView.evaluateJavascript(script, null);
         }
     }
 
@@ -306,6 +497,10 @@ public class MainActivity extends BridgeActivity {
 
         // 6. Wire the rest of the UI
         prefs = getSharedPreferences("PatholabPrefs", Context.MODE_PRIVATE);
+        boolean savedDark = prefs.getBoolean("is_dark_mode", false);
+        if (savedDark) {
+            applyNativeTheme(true);
+        }
         bindViews();
         initModulesData();
         setupBottomNavigation();
@@ -330,10 +525,28 @@ public class MainActivity extends BridgeActivity {
         s.setUseWideViewPort(true);
         s.setCacheMode(WebSettings.LOAD_DEFAULT);
         s.setUserAgentString(s.getUserAgentString() + " CapacitorApp");
+
+        // Native-like smooth scrolling enhancements
+        webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
+        webView.setVerticalScrollBarEnabled(false);
+        webView.setHorizontalScrollBarEnabled(false);
+        webView.setNestedScrollingEnabled(true);
+        webView.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
+        webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
     }
 
     private void bindViews() {
         swipeRefresh      = findViewById(R.id.swipeRefresh);
+
+        // Fix: SwipeRefreshLayout must check WebView scroll position so it NEVER traps scrolling down or stuck at bottom
+        if (swipeRefresh != null) {
+            swipeRefresh.setOnChildScrollUpCallback((parent, child) -> {
+                if (webView != null) {
+                    return webView.canScrollVertically(-1) || webView.getScrollY() > 0;
+                }
+                return false;
+            });
+        }
 
         bottomNavigation  = findViewById(R.id.bottomNavigation);
         offlineOverlay    = findViewById(R.id.offlineOverlay);
@@ -345,6 +558,7 @@ public class MainActivity extends BridgeActivity {
             androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(topLayoutContainer, (v, insets) -> {
                 androidx.core.graphics.Insets systemBars = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars());
                 v.setPadding(0, systemBars.top, 0, 0);
+                updateHeaderBlurHeight();
                 return insets;
             });
         }
@@ -391,6 +605,11 @@ public class MainActivity extends BridgeActivity {
         });
 
         // Header view binding
+        topLayoutContainer = findViewById(R.id.topLayoutContainer);
+        topHeaderBar = findViewById(R.id.topHeaderBar);
+        headerBlurGradientView = findViewById(R.id.headerBlurGradientView);
+        setupHeaderBlurAndGradient();
+
         lblHeaderTitle = findViewById(R.id.lblHeaderTitle);
         btnHeaderMenu = findViewById(R.id.btnHeaderMenu);
         if (btnHeaderMenu != null) {
@@ -404,16 +623,37 @@ public class MainActivity extends BridgeActivity {
         View btnTheme = findViewById(R.id.btnHeaderTheme);
         if (btnTheme != null) {
             btnTheme.setOnClickListener(v -> {
+                v.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP);
+
+                boolean newDark = !isDarkMode;
+
+                // Animated rotation and spring scale matching iOS
+                btnTheme.animate()
+                    .rotationBy(90f)
+                    .scaleX(0.82f)
+                    .scaleY(0.82f)
+                    .setDuration(160)
+                    .withEndAction(() -> {
+                        btnTheme.animate()
+                            .scaleX(1.0f)
+                            .scaleY(1.0f)
+                            .setDuration(220)
+                            .setInterpolator(new android.view.animation.OvershootInterpolator(1.8f))
+                            .start();
+                    })
+                    .start();
+
+                applyNativeTheme(newDark);
+
                 if (webView != null) {
-                    // Try native web theme toggle, then fallback to localStorage approach
                     webView.evaluateJavascript(
                         "(function() {" +
-                        "  var btn = document.querySelector('[aria-label=\"Toggle dark mode\"]');" +
+                        "  var btn = document.querySelector('.mobile-app-header-web-component button[aria-label=\"Toggle dark mode\"]') || document.querySelector('[aria-label=\"Toggle dark mode\"]');" +
                         "  if (btn) { btn.click(); return; }" +
                         "  var html = document.documentElement;" +
-                        "  html.classList.toggle('dark');" +
-                        "  var theme = html.classList.contains('dark') ? 'dark' : 'light';" +
-                        "  localStorage.setItem('theme', theme);" +
+                        "  var isDark = " + newDark + ";" +
+                        "  if (isDark) { html.classList.add('dark'); } else { html.classList.remove('dark'); }" +
+                        "  localStorage.setItem('theme', isDark ? 'dark' : 'light');" +
                         "})()", null);
                 }
             });
@@ -429,16 +669,13 @@ public class MainActivity extends BridgeActivity {
         walletCard = findViewById(R.id.walletCard);
         txtWalletBalance = findViewById(R.id.txtWalletBalance);
         txtWalletStatus = findViewById(R.id.txtWalletStatus);
+        btnWalletTopUp = findViewById(R.id.btnWalletTopUp);
+        walletChevron = findViewById(R.id.walletChevron);
         if (walletCard != null) {
             walletCard.setOnClickListener(v -> navigate("/workspace/wallet"));
-            View topUpBtn = findViewById(R.id.btnWalletTopUp);
-            if (topUpBtn != null) {
-                android.view.animation.AlphaAnimation anim = new android.view.animation.AlphaAnimation(0.7f, 1.0f);
-                anim.setDuration(1200);
-                anim.setRepeatMode(android.view.animation.Animation.REVERSE);
-                anim.setRepeatCount(android.view.animation.Animation.INFINITE);
-                topUpBtn.startAnimation(anim);
-            }
+        }
+        if (btnWalletTopUp != null) {
+            btnWalletTopUp.setOnClickListener(v -> navigate("/workspace/wallet?action=topup"));
         }
 
         swipeRefresh.setColorSchemeColors(0xFF3730A3);
@@ -884,8 +1121,146 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void showHelpPanel() {
-        // Navigate to the support page inside the WebView
-        navigate("/workspace/support");
+        final BottomSheetDialog dialog = new BottomSheetDialog(this);
+        View sheetView = getLayoutInflater().inflate(R.layout.layout_help_sheet, null);
+        dialog.setContentView(sheetView);
+
+        final boolean isDark = this.isDarkMode;
+        LinearLayout root = sheetView.findViewById(R.id.helpSheetRoot);
+        TextView txtTitle = sheetView.findViewById(R.id.txtHelpTitle);
+        TextView txtSubtitle = sheetView.findViewById(R.id.txtHelpSubtitle);
+        View divider = sheetView.findViewById(R.id.helpDivider);
+        ImageView btnClose = sheetView.findViewById(R.id.btnHelpClose);
+
+        View rowCall = sheetView.findViewById(R.id.btnHelpCall);
+        View rowWhatsApp = sheetView.findViewById(R.id.btnHelpWhatsApp);
+        View rowEmail = sheetView.findViewById(R.id.btnHelpEmail);
+        View rowBug = sheetView.findViewById(R.id.btnHelpBug);
+
+        TextView lblCallTitle = sheetView.findViewById(R.id.lblCallTitle);
+        TextView lblWhatsAppTitle = sheetView.findViewById(R.id.lblWhatsAppTitle);
+        TextView lblEmailTitle = sheetView.findViewById(R.id.lblEmailTitle);
+        TextView lblBugTitle = sheetView.findViewById(R.id.lblBugTitle);
+
+        TextView lblCallSubtitle = sheetView.findViewById(R.id.lblCallSubtitle);
+        TextView lblWhatsAppSubtitle = sheetView.findViewById(R.id.lblWhatsAppSubtitle);
+        TextView lblEmailSubtitle = sheetView.findViewById(R.id.lblEmailSubtitle);
+        TextView lblBugSubtitle = sheetView.findViewById(R.id.lblBugSubtitle);
+
+        if (isDark) {
+            if (root != null) root.setBackgroundResource(R.drawable.bg_bottom_sheet_dark);
+            if (txtTitle != null) txtTitle.setTextColor(0xFFFFFFFF);
+            if (txtSubtitle != null) txtSubtitle.setTextColor(0xFF94A3B8);
+            if (divider != null) divider.setBackgroundColor(0xFF334155);
+
+            int cardBg = R.drawable.bg_help_row_dark;
+            if (rowCall != null) rowCall.setBackgroundResource(cardBg);
+            if (rowWhatsApp != null) rowWhatsApp.setBackgroundResource(cardBg);
+            if (rowEmail != null) rowEmail.setBackgroundResource(cardBg);
+            if (rowBug != null) rowBug.setBackgroundResource(cardBg);
+
+            if (lblCallTitle != null) lblCallTitle.setTextColor(0xFFFFFFFF);
+            if (lblWhatsAppTitle != null) lblWhatsAppTitle.setTextColor(0xFFFFFFFF);
+            if (lblEmailTitle != null) lblEmailTitle.setTextColor(0xFFFFFFFF);
+            if (lblBugTitle != null) lblBugTitle.setTextColor(0xFFFFFFFF);
+
+            if (lblCallSubtitle != null) lblCallSubtitle.setTextColor(0xFF94A3B8);
+            if (lblWhatsAppSubtitle != null) lblWhatsAppSubtitle.setTextColor(0xFF94A3B8);
+            if (lblEmailSubtitle != null) lblEmailSubtitle.setTextColor(0xFF94A3B8);
+            if (lblBugSubtitle != null) lblBugSubtitle.setTextColor(0xFF94A3B8);
+        } else {
+            if (root != null) root.setBackgroundResource(R.drawable.bg_bottom_sheet);
+            if (txtTitle != null) txtTitle.setTextColor(0xFF0F172A);
+            if (txtSubtitle != null) txtSubtitle.setTextColor(0xFF64748B);
+            if (divider != null) divider.setBackgroundColor(0xFFE2E8F0);
+
+            int cardBg = R.drawable.bg_help_row_light;
+            if (rowCall != null) rowCall.setBackgroundResource(cardBg);
+            if (rowWhatsApp != null) rowWhatsApp.setBackgroundResource(cardBg);
+            if (rowEmail != null) rowEmail.setBackgroundResource(cardBg);
+            if (rowBug != null) rowBug.setBackgroundResource(cardBg);
+
+            if (lblCallTitle != null) lblCallTitle.setTextColor(0xFF0F172A);
+            if (lblWhatsAppTitle != null) lblWhatsAppTitle.setTextColor(0xFF0F172A);
+            if (lblEmailTitle != null) lblEmailTitle.setTextColor(0xFF0F172A);
+            if (lblBugTitle != null) lblBugTitle.setTextColor(0xFF0F172A);
+
+            if (lblCallSubtitle != null) lblCallSubtitle.setTextColor(0xFF64748B);
+            if (lblWhatsAppSubtitle != null) lblWhatsAppSubtitle.setTextColor(0xFF64748B);
+            if (lblEmailSubtitle != null) lblEmailSubtitle.setTextColor(0xFF64748B);
+            if (lblBugSubtitle != null) lblBugSubtitle.setTextColor(0xFF64748B);
+        }
+
+        // Close button
+        if (btnClose != null) {
+            btnClose.setOnClickListener(v -> dialog.dismiss());
+        }
+
+        // 1. Call Support
+        if (rowCall != null) {
+            rowCall.setOnClickListener(v -> {
+                dialog.dismiss();
+                try {
+                    Intent dialIntent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:+918402010207"));
+                    startActivity(dialIntent);
+                } catch (Exception e) {
+                    ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                    if (clipboard != null) {
+                        clipboard.setPrimaryClip(ClipData.newPlainText("Support Phone", "+918402010207"));
+                        Toast.makeText(MainActivity.this, "Copied +91 8402010207 to clipboard", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+        }
+
+        // 2. WhatsApp Support
+        if (rowWhatsApp != null) {
+            rowWhatsApp.setOnClickListener(v -> {
+                dialog.dismiss();
+                try {
+                    String msg = "Hello Patholab Cloud Support, I am using the Patholab Cloud app and need assistance with my account and lab operations.";
+                    String url = "https://wa.me/918402010207?text=" + URLEncoder.encode(msg, "UTF-8");
+                    Intent waIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                    startActivity(waIntent);
+                } catch (Exception e) {
+                    Toast.makeText(MainActivity.this, "Could not open WhatsApp", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
+        // 3. Email Support
+        if (rowEmail != null) {
+            rowEmail.setOnClickListener(v -> {
+                dialog.dismiss();
+                String email = "support@patholab.cloud";
+                String subject = "Patholab Cloud Support Request";
+                String body = "Hello Support Team,\n\nI need assistance with my Patholab Cloud account.\n\nIssue Details:\n- Topic / Issue: \n- Lab Name: \n- Contact Number: \n\nPlease assist me at your earliest convenience.\n\nThank you,\nPatholab Cloud User";
+                Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
+                emailIntent.setData(Uri.parse("mailto:" + email));
+                emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{email});
+                emailIntent.putExtra(Intent.EXTRA_SUBJECT, subject);
+                emailIntent.putExtra(Intent.EXTRA_TEXT, body);
+                try {
+                    startActivity(Intent.createChooser(emailIntent, "Email Support"));
+                } catch (Exception e) {
+                    ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                    if (clipboard != null) {
+                        clipboard.setPrimaryClip(ClipData.newPlainText("Support Email", email));
+                        Toast.makeText(MainActivity.this, "Copied support@patholab.cloud to clipboard", Toast.LENGTH_LONG).show();
+                    }
+                }
+            });
+        }
+
+        // 4. Report a Bug
+        if (rowBug != null) {
+            rowBug.setOnClickListener(v -> {
+                dialog.dismiss();
+                navigate("/workspace/support?action=new-ticket&category=TECHNICAL");
+            });
+        }
+
+        dialog.show();
     }
 
     private void loadUrl(String path) {
@@ -932,8 +1307,23 @@ public class MainActivity extends BridgeActivity {
             return;
         }
 
+        if (path.contains("/recharge") || path.contains("action=recharge") || path.contains("action=topup") || path.contains("recharge=true")) {
+            setBottomNav(false, true);
+            if (swipeRefresh != null) swipeRefresh.setEnabled(false);
+            if (walletCard != null && walletCard.getVisibility() == View.VISIBLE) {
+                walletCard.setVisibility(View.GONE);
+                updateHeaderBlurHeight();
+                syncWebLayoutPadding();
+            }
+        } else {
+            setBottomNav(true, true);
+            if (swipeRefresh != null) swipeRefresh.setEnabled(true);
+        }
+
         webView.loadUrl(BASE_URL + path);
         fetchWalletDetails();
+        syncWebLayoutPadding();
+        checkRechargeAndPaymentState();
 
         // ── CSS injection: smooth scroll + expanded patient cards ──
         if (isPatientsList) {
@@ -1012,12 +1402,24 @@ public class MainActivity extends BridgeActivity {
 
     private void updateWalletCard(double balance, boolean isOwner) {
         if (walletCard == null) return;
+        View dividerLineTop = findViewById(R.id.dividerLineTop);
         if (!isOwner) {
             walletCard.setVisibility(View.GONE);
+            if (dividerLineTop != null) {
+                dividerLineTop.setVisibility(View.VISIBLE);
+            }
+            updateHeaderBlurHeight();
+            checkAuthRedirect();
             return;
         }
 
         walletCard.setVisibility(View.VISIBLE);
+        if (dividerLineTop != null) {
+            dividerLineTop.setVisibility(View.GONE);
+        }
+        updateHeaderBlurHeight();
+        checkAuthRedirect();
+
         if (txtWalletBalance != null) {
             txtWalletBalance.setText(String.format("₹%.2f", balance));
         }
@@ -1039,13 +1441,116 @@ public class MainActivity extends BridgeActivity {
             txtWalletStatus.setTextColor(android.graphics.Color.parseColor(statusColor));
         }
         
+        // Top Up button only appears when wallet balance is less than 49 rupees
+        final boolean showTopUp = balance < 49.0;
+        if (btnWalletTopUp != null) {
+            btnWalletTopUp.setVisibility(showTopUp ? View.VISIBLE : View.GONE);
+            if (showTopUp) {
+                if (btnWalletTopUp.getAnimation() == null) {
+                    android.view.animation.AlphaAnimation anim = new android.view.animation.AlphaAnimation(0.7f, 1.0f);
+                    anim.setDuration(1200);
+                    anim.setRepeatMode(android.view.animation.Animation.REVERSE);
+                    anim.setRepeatCount(android.view.animation.Animation.INFINITE);
+                    btnWalletTopUp.startAnimation(anim);
+                }
+            } else {
+                btnWalletTopUp.clearAnimation();
+            }
+        }
+        if (walletChevron != null) {
+            walletChevron.setVisibility(showTopUp ? View.GONE : View.VISIBLE);
+        }
+        
         android.graphics.drawable.GradientDrawable gd = new android.graphics.drawable.GradientDrawable();
-        String boxBgColor = this.isDarkMode ? "#0F172A" : "#1E293B";
+        String boxBgColor = this.isDarkMode ? "#0F172A" : "#111827";
         gd.setColor(android.graphics.Color.parseColor(boxBgColor));
         float density = getResources().getDisplayMetrics().density;
-        gd.setCornerRadius(28 * density);
+        gd.setCornerRadius(27 * density);
         gd.setStroke((int) (1.5 * density), strokeColor);
         walletCard.setBackground(gd);
+        
+        updateHeaderBlurHeight();
+        checkAuthRedirect();
+    }
+
+    private void setupHeaderBlurAndGradient() {
+        if (headerBlurGradientView == null) return;
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            try {
+                headerBlurGradientView.setRenderEffect(
+                    android.graphics.RenderEffect.createBlurEffect(35f, 35f, android.graphics.Shader.TileMode.CLAMP)
+                );
+            } catch (Exception ignored) {
+            }
+        }
+
+        updateHeaderGradientBackground();
+        updateHeaderBlurHeight();
+    }
+
+    private void updateHeaderGradientBackground() {
+        if (headerBlurGradientView == null) return;
+
+        int[] colors;
+        if (isDarkMode) {
+            colors = new int[] {
+                android.graphics.Color.argb(248, 15, 23, 42),  // 97% opacity #0F172A (status bar top)
+                android.graphics.Color.argb(235, 15, 23, 42),  // 92% opacity across header bar
+                android.graphics.Color.argb(160, 15, 23, 42),  // 63% opacity entering wallet box
+                android.graphics.Color.argb(70, 15, 23, 42),   // 27% opacity approaching center
+                android.graphics.Color.argb(0, 15, 23, 42)     // 0% transparent at exact wallet halfway point
+            };
+        } else {
+            colors = new int[] {
+                android.graphics.Color.argb(248, 255, 255, 255), // 97% opacity white (status bar top)
+                android.graphics.Color.argb(235, 255, 255, 255), // 92% opacity across header bar
+                android.graphics.Color.argb(160, 255, 255, 255), // 63% opacity entering wallet box
+                android.graphics.Color.argb(70, 255, 255, 255),  // 27% opacity approaching center
+                android.graphics.Color.argb(0, 255, 255, 255)    // 0% transparent at exact wallet halfway point
+            };
+        }
+
+        android.graphics.drawable.GradientDrawable gradient = new android.graphics.drawable.GradientDrawable(
+            android.graphics.drawable.GradientDrawable.Orientation.TOP_BOTTOM,
+            colors
+        );
+        headerBlurGradientView.setBackground(gradient);
+    }
+
+    private void updateHeaderBlurHeight() {
+        if (headerBlurGradientView == null || topLayoutContainer == null) return;
+
+        topLayoutContainer.post(() -> {
+            float density = getResources().getDisplayMetrics().density;
+            int totalHeight;
+            int topPadding = topLayoutContainer.getPaddingTop();
+
+            if (walletCard != null && walletCard.getVisibility() == View.VISIBLE) {
+                int walletHeight = (walletCard.getHeight() > 0)
+                    ? walletCard.getHeight()
+                    : (int) (54 * density);
+                int walletTop = walletCard.getTop();
+                if (walletTop <= 0) {
+                    int headerHeight = (topHeaderBar != null && topHeaderBar.getHeight() > 0)
+                        ? topHeaderBar.getHeight()
+                        : (int) (60 * density);
+                    walletTop = headerHeight + (int) (1 * density);
+                }
+                totalHeight = topPadding + walletTop + (walletHeight / 2);
+            } else {
+                int headerHeight = (topHeaderBar != null && topHeaderBar.getHeight() > 0)
+                    ? topHeaderBar.getHeight()
+                    : (int) (60 * density);
+                totalHeight = topPadding + headerHeight;
+            }
+
+            android.view.ViewGroup.LayoutParams params = headerBlurGradientView.getLayoutParams();
+            if (params != null && params.height != totalHeight) {
+                params.height = totalHeight;
+                headerBlurGradientView.setLayoutParams(params);
+            }
+        });
     }
 
     // ── More section ───────────────────────────────────────────────────────────
@@ -1107,7 +1612,9 @@ public class MainActivity extends BridgeActivity {
         allModules.add(new ModuleItem("Help & Support",        "/workspace/support",                "Admin",      "Raise tickets & browse documentation",          R.drawable.ic_support_lifebuoy, false));
 
         // ── Legal & Agreements ────────────────────────────────────────────────
-        allModules.add(new ModuleItem("Terms & Conditions",    "/legal",                            "Legal",      "Google Play Beta Testing agreements",           R.drawable.ic_legal, false));
+        allModules.add(new ModuleItem("Terms & Conditions",    "/terms-conditions?tab=terms",       "Legal",      "Platform license, SLA & customer rights",        R.drawable.ic_legal, false));
+        allModules.add(new ModuleItem("Privacy & Health Data", "/terms-conditions?tab=privacy",     "Legal",      "Patient confidentiality & HIPAA/DISHA standards", R.drawable.ic_legal, false));
+        allModules.add(new ModuleItem("Refund & Cancellation", "/terms-conditions?tab=refunds",     "Legal",      "Subscription renewals & pro-rata settlements",    R.drawable.ic_legal, false));
     }
 
     private void renderModules() {
@@ -1181,8 +1688,21 @@ public class MainActivity extends BridgeActivity {
                     moreBottomSheetDialog.dismiss();
                 }
 
-                if (item.path.equals("/legal")) {
-                    showLegalBottomSheet();
+                if (item.path.equals("/legal") || item.path.contains("terms") || item.path.contains("privacy") || item.path.contains("refund")) {
+                    String url = "https://patholab.cloud/terms-conditions";
+                    if (item.path.contains("privacy")) {
+                        url = "https://patholab.cloud/terms-conditions?tab=privacy";
+                    } else if (item.path.contains("refund")) {
+                        url = "https://patholab.cloud/terms-conditions?tab=refunds";
+                    } else if (item.path.contains("terms")) {
+                        url = "https://patholab.cloud/terms-conditions?tab=terms";
+                    }
+                    try {
+                        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                        startActivity(browserIntent);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 } else {
                     navigate(item.path);
                 }
@@ -1358,16 +1878,21 @@ public class MainActivity extends BridgeActivity {
 
     private void showSkeletonForPath(String path) {
         if (path == null) path = "";
+        String p = path.toLowerCase();
         
-        String category = "detail";
-        if (path.contains("analytics") || path.contains("dashboard")) {
+        String category = "dashboard";
+        if (p.contains("analytics") || p.contains("finance") || p.equals("/") || p.contains("dashboard") || (p.contains("workspace") && !p.contains("/"))) {
             category = "dashboard";
-        } else if (path.contains("results") || path.contains("worklist") || path.contains("patients") || path.contains("bookings")) {
-            category = "list";
-        } else if (path.contains("registration") || path.contains("settings") || path.contains("config") || path.contains("forgot-password")) {
+        } else if (p.contains("registration") || p.contains("create") || p.contains("new") || p.contains("edit") || p.contains("add-")) {
             category = "form";
-        } else if (path.contains("categories") || path.contains("catalog") || path.contains("inventory")) {
+        } else if (p.contains("invoice") || p.contains("print") || p.contains("receipt") || p.contains("report-view") || p.contains("detail")) {
+            category = "detail";
+        } else if (p.contains("categories") || p.contains("catalog") || p.contains("analyzers") || p.contains("machines") || p.contains("inventory") || p.contains("b2b")) {
             category = "grid";
+        } else if (p.contains("settings") || p.contains("wallet") || p.contains("support") || p.contains("config") || p.contains("profile") || p.contains("security")) {
+            category = "settings";
+        } else if (p.contains("patients") || p.contains("results") || p.contains("reports") || p.contains("worklist") || p.contains("bookings") || p.contains("audit") || p.contains("staff") || p.contains("doctors") || p.contains("expenses")) {
+            category = "list";
         }
         
         if (category.equals(activeSkeletonCategory) && skeletonContainer != null && skeletonContainer.getVisibility() == View.VISIBLE) {
@@ -1376,26 +1901,42 @@ public class MainActivity extends BridgeActivity {
         activeSkeletonCategory = category;
         
         View sDash = findViewById(R.id.skeletonDashboard);
-        View sList = findViewById(R.id.skeletonList);
+        View sPatients = findViewById(R.id.skeletonPatients);
+        View sReports = findViewById(R.id.skeletonReports);
+        View sBilling = findViewById(R.id.skeletonBilling);
+        View sSettings = findViewById(R.id.skeletonSettings);
         View sForm = findViewById(R.id.skeletonForm);
-        View sGrid = findViewById(R.id.skeletonGrid);
-        View sDetail = findViewById(R.id.skeletonDetail);
         
         if (sDash != null) sDash.setVisibility(View.GONE);
-        if (sList != null) sList.setVisibility(View.GONE);
+        if (sPatients != null) sPatients.setVisibility(View.GONE);
+        if (sReports != null) sReports.setVisibility(View.GONE);
+        if (sBilling != null) sBilling.setVisibility(View.GONE);
+        if (sSettings != null) sSettings.setVisibility(View.GONE);
         if (sForm != null) sForm.setVisibility(View.GONE);
-        if (sGrid != null) sGrid.setVisibility(View.GONE);
-        if (sDetail != null) sDetail.setVisibility(View.GONE);
         
-        View activeSkeleton = sDetail;
-        if (path.contains("analytics") || path.contains("dashboard")) {
-            activeSkeleton = sDash;
-        } else if (path.contains("results") || path.contains("worklist") || path.contains("patients") || path.contains("bookings")) {
-            activeSkeleton = sList;
-        } else if (path.contains("registration") || path.contains("settings") || path.contains("config") || path.contains("forgot-password")) {
-            activeSkeleton = sForm;
-        } else if (path.contains("categories") || path.contains("catalog") || path.contains("inventory")) {
-            activeSkeleton = sGrid;
+        View activeSkeleton = sDash;
+        switch (category) {
+            case "dashboard":
+                activeSkeleton = sDash;
+                break;
+            case "patients":
+            case "list":
+                activeSkeleton = sPatients != null ? sPatients : sDash;
+                break;
+            case "reports":
+            case "detail":
+                activeSkeleton = sReports != null ? sReports : sDash;
+                break;
+            case "billing":
+            case "grid":
+                activeSkeleton = sBilling != null ? sBilling : sDash;
+                break;
+            case "form":
+                activeSkeleton = sForm != null ? sForm : sDash;
+                break;
+            case "settings":
+                activeSkeleton = sSettings != null ? sSettings : sDash;
+                break;
         }
         
         if (activeSkeleton != null) {
@@ -1417,6 +1958,11 @@ public class MainActivity extends BridgeActivity {
                 .start();
                 
             startPulseAnimation();
+            
+            // Hard safety timeout: auto-hide skeleton after at most 1.5s
+            skeletonContainer.postDelayed(() -> {
+                hideSkeleton();
+            }, 1500);
         }
     }
 
@@ -1464,21 +2010,30 @@ public class MainActivity extends BridgeActivity {
             ImageView bellImg = findViewById(R.id.imgHeaderBell);
             TextView badge = findViewById(R.id.txtNotificationBadge);
             if (bellImg != null && badge != null && badge.getVisibility() == View.VISIBLE) {
-                bellImg.animate().rotation(-15f).setDuration(150).withEndAction(() -> {
-                    bellImg.animate().rotation(15f).setDuration(150).withEndAction(() -> {
-                        bellImg.animate().rotation(-12f).setDuration(150).withEndAction(() -> {
-                            bellImg.animate().rotation(12f).setDuration(150).withEndAction(() -> {
-                                bellImg.animate().rotation(-8f).setDuration(150).withEndAction(() -> {
-                                    bellImg.animate().rotation(8f).setDuration(150).withEndAction(() -> {
-                                        bellImg.animate().rotation(0f).setDuration(150).start();
+                // Pivot swing from the top of the bell
+                bellImg.setPivotX(bellImg.getWidth() / 2f);
+                bellImg.setPivotY(bellImg.getHeight() * 0.15f);
+
+                bellImg.animate().rotation(-18f).setDuration(120).withEndAction(() -> {
+                    bellImg.animate().rotation(16f).setDuration(120).withEndAction(() -> {
+                        bellImg.animate().rotation(-12f).setDuration(120).withEndAction(() -> {
+                            bellImg.animate().rotation(10f).setDuration(120).withEndAction(() -> {
+                                bellImg.animate().rotation(-6f).setDuration(120).withEndAction(() -> {
+                                    bellImg.animate().rotation(4f).setDuration(120).withEndAction(() -> {
+                                        bellImg.animate().rotation(0f).setDuration(120).start();
                                     }).start();
                                 }).start();
                             }).start();
                         }).start();
                     }).start();
                 }).start();
+
+                // Synchronized badge pulse
+                badge.animate().scaleX(1.25f).scaleY(1.25f).setDuration(220).withEndAction(() -> {
+                    badge.animate().scaleX(1.0f).scaleY(1.0f).setDuration(220).start();
+                }).start();
             }
-            bellAnimationHandler.postDelayed(this, 3000);
+            bellAnimationHandler.postDelayed(this, 3500);
         }
     };
 
@@ -1498,6 +2053,12 @@ public class MainActivity extends BridgeActivity {
             if (bellImg != null) {
                 bellImg.animate().cancel();
                 bellImg.setRotation(0f);
+            }
+            TextView badge = findViewById(R.id.txtNotificationBadge);
+            if (badge != null) {
+                badge.animate().cancel();
+                badge.setScaleX(1.0f);
+                badge.setScaleY(1.0f);
             }
         });
     }
@@ -1556,7 +2117,7 @@ public class MainActivity extends BridgeActivity {
                         TextView badge = findViewById(R.id.txtNotificationBadge);
                         if (badge != null) {
                             if (finalUnreadCount > 0) {
-                                badge.setText(finalUnreadCount > 9 ? "9+" : String.valueOf(finalUnreadCount));
+                                badge.setText(finalUnreadCount > 9 ? "+9" : String.valueOf(finalUnreadCount));
                                 badge.setVisibility(View.VISIBLE);
                                 startBellAnimationLoop();
                             } else {

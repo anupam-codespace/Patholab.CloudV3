@@ -1,174 +1,353 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/helpSheetRoot"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:background="@drawable/bg_bottom_sheet_dark"
-    android:paddingBottom="24dp">
+    android:paddingBottom="16dp">
 
     <!-- Drag Handle Indicator -->
     <View
-        android:layout_width="40dp"
-        android:layout_height="5dp"
+        android:id="@+id/helpDragHandle"
+        android:layout_width="36dp"
+        android:layout_height="4dp"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="8dp"
-        android:layout_marginBottom="20dp"
+        android:layout_marginBottom="12dp"
         android:background="#D1D5DB" />
 
-    <!-- Header Section -->
-    <LinearLayout
+    <!-- Header Section with Title, Subtitle, and Close button -->
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingStart="24dp"
-        android:paddingEnd="24dp"
-        android:layout_marginBottom="8dp">
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:layout_marginBottom="10dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_toStartOf="@+id/btnHelpClose"
+            android:layout_marginEnd="12dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/txtHelpTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Help &amp; Support"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/txtHelpSubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Get direct assistance or create a support ticket."
+                android:textColor="#94A3B8"
+                android:textSize="12sp" />
+        </LinearLayout>
 
         <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_support_lifebuoy" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="NEED ASSISTANCE?"
-            android:textColor="#FFFFFF"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginStart="10dp"
-            android:letterSpacing="0.01" />
-    </LinearLayout>
-
-    <!-- Subtitle -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="We are here to support your daily laboratory operations."
-        android:textColor="#94A3B8"
-        android:textSize="12sp"
-        android:textStyle="bold"
-        android:paddingStart="24dp"
-        android:paddingEnd="24dp"
-        android:layout_marginBottom="20dp" />
+            android:id="@+id/btnHelpClose"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:src="@drawable/ic_close_circle"
+            android:clickable="true"
+            android:focusable="true" />
+    </RelativeLayout>
 
     <!-- Divider Line -->
     <View
+        android:id="@+id/helpDivider"
         android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#1E293B"
-        android:layout_marginBottom="12dp" />
+        android:layout_height="0.5dp"
+        android:background="#334155"
+        android:layout_marginBottom="10dp" />
 
-    <!-- Priority Call Row -->
+    <!-- 1. Call Support Row -->
     <RelativeLayout
-        android:id="@+id/btnPriorityCall"
+        android:id="@+id/btnHelpCall"
         android:layout_width="match_parent"
-        android:layout_height="68dp"
+        android:layout_height="wrap_content"
+        android:minHeight="60dp"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="8dp"
-        android:background="@drawable/bg_interactive_row"
+        android:padding="10dp"
+        android:background="@drawable/bg_help_row_dark"
         android:clickable="true"
         android:focusable="true">
 
         <FrameLayout
-            android:id="@+id/iconCallCircle"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:id="@+id/iconCallContainer"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
             android:layout_centerVertical="true"
             android:layout_alignParentStart="true"
-            android:layout_marginStart="14dp"
-            android:background="@drawable/bg_blue_circle_opacity">
+            android:background="@drawable/bg_help_icon_circle">
 
             <ImageView
                 android:layout_width="18dp"
                 android:layout_height="18dp"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_phone"
-                app:tint="#3B82F6" />
+                app:tint="#4F46E5" />
         </FrameLayout>
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_toEndOf="@id/iconCallCircle"
+            android:layout_toEndOf="@id/iconCallContainer"
+            android:layout_toStartOf="@+id/chevronCall"
             android:layout_centerVertical="true"
-            android:layout_marginStart="14dp"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="8dp"
             android:orientation="vertical">
 
             <TextView
+                android:id="@+id/lblCallTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="PRIORITY CALL"
-                android:textColor="#94A3B8"
-                android:textSize="10sp"
-                android:textStyle="bold"
-                android:letterSpacing="0.02" />
+                android:text="Call Support"
+                android:textColor="#FFFFFF"
+                android:textSize="15sp"
+                android:textStyle="bold" />
 
             <TextView
+                android:id="@+id/lblCallSubtitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="+91 8402010207"
-                android:textColor="#FFFFFF"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+                android:layout_marginTop="1dp"
+                android:text="+91 8402010207 • Tap to call"
+                android:textColor="#94A3B8"
+                android:textSize="12sp" />
         </LinearLayout>
+
+        <ImageView
+            android:id="@+id/chevronCall"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="4dp"
+            android:src="@drawable/ic_chevron_right"
+            app:tint="#94A3B8" />
     </RelativeLayout>
 
-    <!-- Email Support Row -->
+    <!-- 2. WhatsApp Support Row -->
     <RelativeLayout
-        android:id="@+id/btnEmailSupport"
+        android:id="@+id/btnHelpWhatsApp"
         android:layout_width="match_parent"
-        android:layout_height="68dp"
+        android:layout_height="wrap_content"
+        android:minHeight="60dp"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
-        android:background="@drawable/bg_interactive_row"
+        android:layout_marginBottom="8dp"
+        android:padding="10dp"
+        android:background="@drawable/bg_help_row_dark"
         android:clickable="true"
         android:focusable="true">
 
         <FrameLayout
-            android:id="@+id/iconEmailCircle"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:id="@+id/iconWhatsAppContainer"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
             android:layout_centerVertical="true"
             android:layout_alignParentStart="true"
-            android:layout_marginStart="14dp"
-            android:background="@drawable/bg_blue_circle_opacity">
+            android:background="@drawable/bg_help_icon_circle">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_chat_bubble"
+                app:tint="#4F46E5" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@id/iconWhatsAppContainer"
+            android:layout_toStartOf="@+id/chevronWhatsApp"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="8dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/lblWhatsAppTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="WhatsApp Support"
+                android:textColor="#FFFFFF"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/lblWhatsAppSubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:text="+91 8402010207 • Chat on WhatsApp"
+                android:textColor="#94A3B8"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/chevronWhatsApp"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="4dp"
+            android:src="@drawable/ic_chevron_right"
+            app:tint="#94A3B8" />
+    </RelativeLayout>
+
+    <!-- 3. Email Support Row -->
+    <RelativeLayout
+        android:id="@+id/btnHelpEmail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="60dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="8dp"
+        android:padding="10dp"
+        android:background="@drawable/bg_help_row_dark"
+        android:clickable="true"
+        android:focusable="true">
+
+        <FrameLayout
+            android:id="@+id/iconEmailContainer"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:layout_centerVertical="true"
+            android:layout_alignParentStart="true"
+            android:background="@drawable/bg_help_icon_circle">
 
             <ImageView
                 android:layout_width="18dp"
                 android:layout_height="18dp"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_envelope"
-                app:tint="#3B82F6" />
+                app:tint="#4F46E5" />
         </FrameLayout>
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_toEndOf="@id/iconEmailCircle"
+            android:layout_toEndOf="@id/iconEmailContainer"
+            android:layout_toStartOf="@+id/chevronEmail"
             android:layout_centerVertical="true"
-            android:layout_marginStart="14dp"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="8dp"
             android:orientation="vertical">
 
             <TextView
+                android:id="@+id/lblEmailTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="EMAIL SUPPORT"
-                android:textColor="#94A3B8"
-                android:textSize="10sp"
-                android:textStyle="bold"
-                android:letterSpacing="0.02" />
+                android:text="Email Support"
+                android:textColor="#FFFFFF"
+                android:textSize="15sp"
+                android:textStyle="bold" />
 
             <TextView
+                android:id="@+id/lblEmailSubtitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="support@patholab.cloud"
-                android:textColor="#FFFFFF"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+                android:layout_marginTop="1dp"
+                android:text="support@patholab.cloud • Pre-drafted ticket"
+                android:textColor="#94A3B8"
+                android:textSize="12sp" />
         </LinearLayout>
+
+        <ImageView
+            android:id="@+id/chevronEmail"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="4dp"
+            android:src="@drawable/ic_chevron_right"
+            app:tint="#94A3B8" />
+    </RelativeLayout>
+
+    <!-- 4. Report a Bug Row -->
+    <RelativeLayout
+        android:id="@+id/btnHelpBug"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="60dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="4dp"
+        android:padding="10dp"
+        android:background="@drawable/bg_help_row_dark"
+        android:clickable="true"
+        android:focusable="true">
+
+        <FrameLayout
+            android:id="@+id/iconBugContainer"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:layout_centerVertical="true"
+            android:layout_alignParentStart="true"
+            android:background="@drawable/bg_help_icon_circle">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_support_lifebuoy"
+                app:tint="#4F46E5" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@id/iconBugContainer"
+            android:layout_toStartOf="@+id/chevronBug"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="8dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/lblBugTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Report a Bug"
+                android:textColor="#FFFFFF"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/lblBugSubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:text="Create a new support ticket"
+                android:textColor="#94A3B8"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/chevronBug"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="4dp"
+            android:src="@drawable/ic_chevron_right"
+            app:tint="#94A3B8" />
     </RelativeLayout>
 </LinearLayout>

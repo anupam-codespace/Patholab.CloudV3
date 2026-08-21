@@ -237,6 +237,129 @@ class AuthBaseViewController: UIViewController {
         DispatchQueue.main.async { self.errorBanner.isHidden = true }
     }
 
+    func makeLegalFooter() -> UIView {
+        let stack = UIStackView()
+        stack.axis = .horizontal
+        stack.alignment = .center
+        stack.distribution = .fill
+        stack.spacing = 6
+        stack.translatesAutoresizingMaskIntoConstraints = false
+
+        let linkColor = UIColor(red: 100/255, green: 116/255, blue: 139/255, alpha: 1) // Slate-500
+        let linkFont = UIFont.systemFont(ofSize: 11, weight: .medium)
+
+        let btnTerms = UIButton(type: .system)
+        btnTerms.setTitle("Terms & Conditions", for: .normal)
+        btnTerms.setTitleColor(linkColor, for: .normal)
+        btnTerms.titleLabel?.font = linkFont
+        btnTerms.addTarget(self, action: #selector(openTermsTapped), for: .touchUpInside)
+
+        let dot1 = UILabel()
+        dot1.text = "•"
+        dot1.textColor = AuthBaseViewController.textHint
+        dot1.font = .systemFont(ofSize: 10)
+
+        let btnPrivacy = UIButton(type: .system)
+        btnPrivacy.setTitle("Privacy Policy", for: .normal)
+        btnPrivacy.setTitleColor(linkColor, for: .normal)
+        btnPrivacy.titleLabel?.font = linkFont
+        btnPrivacy.addTarget(self, action: #selector(openPrivacyTapped), for: .touchUpInside)
+
+        let dot2 = UILabel()
+        dot2.text = "•"
+        dot2.textColor = AuthBaseViewController.textHint
+        dot2.font = .systemFont(ofSize: 10)
+
+        let btnRefunds = UIButton(type: .system)
+        btnRefunds.setTitle("Refund Policy", for: .normal)
+        btnRefunds.setTitleColor(linkColor, for: .normal)
+        btnRefunds.titleLabel?.font = linkFont
+        btnRefunds.addTarget(self, action: #selector(openRefundsTapped), for: .touchUpInside)
+
+        stack.addArrangedSubview(btnTerms)
+        stack.addArrangedSubview(dot1)
+        stack.addArrangedSubview(btnPrivacy)
+        stack.addArrangedSubview(dot2)
+        stack.addArrangedSubview(btnRefunds)
+
+        let container = UIView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(stack)
+        NSLayoutConstraint.activate([
+            stack.centerXAnchor.constraint(equalTo: container.centerXAnchor),
+            stack.topAnchor.constraint(equalTo: container.topAnchor),
+            stack.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+            container.heightAnchor.constraint(equalToConstant: 20)
+        ])
+        return container
+    }
+
+    func makeLegalConsentBox() -> UIView {
+        let container = UIView()
+        container.backgroundColor = UIColor(red: 248/255, green: 250/255, blue: 252/255, alpha: 1)
+        container.layer.cornerRadius = 10
+        container.layer.borderWidth = 1
+        container.layer.borderColor = UIColor(red: 241/255, green: 245/255, blue: 249/255, alpha: 1).cgColor
+        container.translatesAutoresizingMaskIntoConstraints = false
+
+        let label = UILabel()
+        label.numberOfLines = 0
+        label.textAlignment = .center
+        label.font = .systemFont(ofSize: 11.5, weight: .regular)
+        label.textColor = AuthBaseViewController.textSecondary
+        label.translatesAutoresizingMaskIntoConstraints = false
+
+        let fullText = "By creating an account, you agree to our Terms & Conditions, Privacy Policy, and Refund Policy."
+        let attr = NSMutableAttributedString(string: fullText, attributes: [
+            .foregroundColor: AuthBaseViewController.textSecondary,
+            .font: UIFont.systemFont(ofSize: 11.5, weight: .regular)
+        ])
+
+        if let range = fullText.range(of: "Terms & Conditions") {
+            attr.addAttribute(.foregroundColor, value: AuthBaseViewController.indigoMid, range: NSRange(range, in: fullText))
+            attr.addAttribute(.font, value: UIFont.systemFont(ofSize: 11.5, weight: .bold), range: NSRange(range, in: fullText))
+        }
+        if let range = fullText.range(of: "Privacy Policy") {
+            attr.addAttribute(.foregroundColor, value: AuthBaseViewController.indigoMid, range: NSRange(range, in: fullText))
+            attr.addAttribute(.font, value: UIFont.systemFont(ofSize: 11.5, weight: .bold), range: NSRange(range, in: fullText))
+        }
+        if let range = fullText.range(of: "Refund Policy") {
+            attr.addAttribute(.foregroundColor, value: AuthBaseViewController.indigoMid, range: NSRange(range, in: fullText))
+            attr.addAttribute(.font, value: UIFont.systemFont(ofSize: 11.5, weight: .bold), range: NSRange(range, in: fullText))
+        }
+        label.attributedText = attr
+        label.isUserInteractionEnabled = true
+        label.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(openLegalTapped)))
+
+        container.addSubview(label)
+        NSLayoutConstraint.activate([
+            label.topAnchor.constraint(equalTo: container.topAnchor, constant: 10),
+            label.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -10),
+            label.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 12),
+            label.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -12)
+        ])
+        return container
+    }
+
+    @objc func openTermsTapped() { openLegal(tab: 0) }
+    @objc func openPrivacyTapped() { openLegal(tab: 1) }
+    @objc func openRefundsTapped() { openLegal(tab: 2) }
+    @objc func openLegalTapped() { openLegal(tab: 0) }
+
+    func openLegal(tab: Int) {
+        var urlString = "https://patholab.cloud/terms-conditions"
+        if tab == 1 {
+            urlString = "https://patholab.cloud/terms-conditions?tab=privacy"
+        } else if tab == 2 {
+            urlString = "https://patholab.cloud/terms-conditions?tab=refunds"
+        } else {
+            urlString = "https://patholab.cloud/terms-conditions?tab=terms"
+        }
+        if let url = URL(string: urlString) {
+            UIApplication.shared.open(url, options: [:], completionHandler: nil)
+        }
+    }
+
     // MARK: – Keyboard avoidance
 
     func registerKeyboardObservers() {
@@ -280,7 +403,7 @@ class AuthBaseViewController: UIViewController {
     }
 }
 
-// MARK: – Find active first responder in view hierarchy
+// MARK: – Find active first responder in view hierarchy & UI Shimmer / Haptics Engine
 extension UIView {
     var firstResponder: UIView? {
         if isFirstResponder { return self }
@@ -290,5 +413,89 @@ extension UIView {
             }
         }
         return nil
+    }
+
+    private static let shimmerLayerName = "ShimmerGradientLayer"
+
+    /// Adds a modern sweeping gradient wave shimmer across this view.
+    func startSkeletonShimmer(isDark: Bool = false) {
+        stopSkeletonShimmer()
+
+        let gradientLayer = CAGradientLayer()
+        gradientLayer.name = UIView.shimmerLayerName
+
+        let baseAlpha: CGFloat = isDark ? 0.30 : 0.50
+        let highlightAlpha: CGFloat = isDark ? 0.65 : 0.90
+
+        let baseColor = isDark
+            ? UIColor(red: 51/255, green: 65/255, blue: 85/255, alpha: baseAlpha).cgColor
+            : UIColor(red: 226/255, green: 232/255, blue: 240/255, alpha: baseAlpha).cgColor
+
+        let highlightColor = isDark
+            ? UIColor(red: 71/255, green: 85/255, blue: 105/255, alpha: highlightAlpha).cgColor
+            : UIColor(red: 248/255, green: 250/255, blue: 252/255, alpha: highlightAlpha).cgColor
+
+        gradientLayer.colors = [baseColor, highlightColor, baseColor]
+        gradientLayer.locations = [0.0, 0.5, 1.0]
+        gradientLayer.startPoint = CGPoint(x: 0.0, y: 0.5)
+        gradientLayer.endPoint = CGPoint(x: 1.0, y: 0.5)
+        gradientLayer.frame = bounds.isEmpty ? CGRect(x: 0, y: 0, width: 800, height: 1200) : bounds
+        gradientLayer.cornerRadius = layer.cornerRadius
+
+        let animation = CABasicAnimation(keyPath: "locations")
+        animation.fromValue = [-1.0, -0.5, 0.0]
+        animation.toValue = [1.0, 1.5, 2.0]
+        animation.repeatCount = .infinity
+        animation.duration = 1.25
+        animation.isRemovedOnCompletion = false
+        animation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+
+        gradientLayer.add(animation, forKey: "shimmerAnimation")
+        layer.addSublayer(gradientLayer)
+    }
+
+    /// Stops and cleanly removes the shimmer layer.
+    func stopSkeletonShimmer() {
+        layer.sublayers?.removeAll { $0.name == UIView.shimmerLayerName }
+    }
+
+    /// Interactive spring press feedback (scale down with spring release).
+    func triggerSpringPress(scale: CGFloat = 0.975, duration: TimeInterval = 0.18, completion: (() -> Void)? = nil) {
+        UIView.animate(withDuration: duration / 2.0, delay: 0, options: [.curveEaseOut, .allowUserInteraction], animations: {
+            self.transform = CGAffineTransform(scaleX: scale, y: scale)
+        }) { _ in
+            UIView.animate(withDuration: duration / 2.0, delay: 0, usingSpringWithDamping: 0.6, initialSpringVelocity: 0.8, options: [.allowUserInteraction], animations: {
+                self.transform = .identity
+            }) { _ in
+                completion?()
+            }
+        }
+    }
+}
+
+// MARK: – Native Haptic Engine Helpers
+enum AppHaptics {
+    static func selection() {
+        let generator = UISelectionFeedbackGenerator()
+        generator.prepare()
+        generator.selectionChanged()
+    }
+
+    static func lightImpact() {
+        let generator = UIImpactFeedbackGenerator(style: .light)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+
+    static func mediumImpact() {
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+
+    static func success() {
+        let generator = UINotificationFeedbackGenerator()
+        generator.prepare()
+        generator.notificationOccurred(.success)
     }
 }

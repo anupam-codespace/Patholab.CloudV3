@@ -151,6 +151,8 @@ public class OtpVerifyActivity extends AppCompatActivity {
                 resendCode();
             }
         });
+
+        AuthHelper.setupLegalLinks(this);
     }
 
     private void resendCode() {

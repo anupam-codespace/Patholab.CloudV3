@@ -317,6 +317,17 @@ export default function ForgotPasswordPage() {
               </div>
             )}
           </div>
+
+          <div className="mt-8 pt-5 border-t border-slate-100 text-center text-xs text-slate-400 space-y-2">
+            <div className="flex items-center justify-center gap-3 font-medium">
+              <Link href="/terms-conditions?tab=terms" className="text-slate-500 hover:text-cyan-600">Terms & Conditions</Link>
+              <span>•</span>
+              <Link href="/terms-conditions?tab=privacy" className="text-slate-500 hover:text-cyan-600">Privacy Policy</Link>
+              <span>•</span>
+              <Link href="/terms-conditions?tab=refunds" className="text-slate-500 hover:text-cyan-600">Refund Policy</Link>
+            </div>
+            <p>© {new Date().getFullYear()} Globizhub India Pvt. Ltd. · All rights reserved</p>
+          </div>
         </div>
       </div>
     </div>

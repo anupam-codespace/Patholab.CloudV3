@@ -26,6 +26,10 @@ function ThemeBridge() {
         window.dispatchEvent(new CustomEvent('patholab-theme-changed', { detail: { theme: nextTheme } }));
         return nextTheme === 'dark';
       };
+      (window as any).patholabSetTheme = (nextTheme: string) => {
+        setThemeRef.current(nextTheme);
+        window.dispatchEvent(new CustomEvent('patholab-theme-changed', { detail: { theme: nextTheme } }));
+      };
       (window as any).patholabGetTheme = () => resolvedRef.current || themeRef.current || 'light';
     }
   }, []); // run once – uses refs to always be current

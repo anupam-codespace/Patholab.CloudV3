@@ -107,6 +107,16 @@ class ResetPasswordViewController: AuthBaseViewController {
         spinner.color = AuthBaseViewController.indigoMid
         spinner.hidesWhenStopped = true
         content.addArrangedSubview(spinner)
+        content.setCustomSpacing(20, after: btn)
+
+        // Legal links
+        let legalFooter = makeLegalFooter()
+        content.addArrangedSubview(legalFooter)
+        content.setCustomSpacing(6, after: legalFooter)
+
+        let copyright = makeLabel("© 2026 Globizhub India Pvt. Ltd. · All rights reserved", size: 11, weight: .regular, color: AuthBaseViewController.textHint)
+        copyright.textAlignment = .center
+        content.addArrangedSubview(copyright)
     }
 
     private func setupErrorLabel(_ label: UILabel, to stack: UIStackView) {

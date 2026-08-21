@@ -385,10 +385,39 @@ export default function RegisterPage() {
               </div>
             </div>
 
+            {/* Terms and Policies Agreement */}
+            <div className="text-xs text-gray-500 leading-relaxed bg-slate-50 border border-slate-100 p-3 rounded-xl">
+              By creating an account, you agree to our{" "}
+              <Link
+                href="/terms-conditions?tab=terms"
+                target="_blank"
+                className="text-blue-600 font-semibold hover:underline"
+              >
+                Terms of Service
+              </Link>
+              ,{" "}
+              <Link
+                href="/terms-conditions?tab=privacy"
+                target="_blank"
+                className="text-blue-600 font-semibold hover:underline"
+              >
+                Privacy Policy
+              </Link>
+              , and{" "}
+              <Link
+                href="/terms-conditions?tab=refunds"
+                target="_blank"
+                className="text-blue-600 font-semibold hover:underline"
+              >
+                Refund Policy
+              </Link>
+              .
+            </div>
+
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl transition-all flex justify-center items-center gap-2 shadow-md shadow-blue-600/20 disabled:opacity-70 disabled:cursor-not-allowed">
+              className="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl transition-all flex justify-center items-center gap-2 shadow-md shadow-blue-600/20 disabled:opacity-70 disabled:cursor-not-allowed">
               {loading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" /> Creating
@@ -400,7 +429,7 @@ export default function RegisterPage() {
             </button>
           </form>
 
-          <p className="mt-8 text-center text-sm text-gray-500">
+          <p className="mt-6 text-center text-sm text-gray-500">
             Already have an account?{" "}
             <Link
               href="/login"
@@ -408,6 +437,17 @@ export default function RegisterPage() {
               Log in
             </Link>
           </p>
+
+          <div className="mt-6 pt-5 border-t border-gray-100 text-center text-xs text-gray-400 space-y-2">
+            <div className="flex items-center justify-center gap-3 font-medium">
+              <Link href="/terms-conditions?tab=terms" className="text-gray-500 hover:text-blue-600">Terms & Conditions</Link>
+              <span>•</span>
+              <Link href="/terms-conditions?tab=privacy" className="text-gray-500 hover:text-blue-600">Privacy Policy</Link>
+              <span>•</span>
+              <Link href="/terms-conditions?tab=refunds" className="text-gray-500 hover:text-blue-600">Refund Policy</Link>
+            </div>
+            <p>© {new Date().getFullYear()} Globizhub India Pvt. Ltd. · All rights reserved</p>
+          </div>
         </div>
       </div>
     </div>

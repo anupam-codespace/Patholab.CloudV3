@@ -12,7 +12,7 @@ import cloud.patholab.app.api.ApiClient;
 
 public class SplashActivity extends AppCompatActivity {
 
-    private static final int MIN_SPLASH_TIME_MS = 2000; // 2 seconds
+    private static final int MIN_SPLASH_TIME_MS = 2500; // 2.5 seconds
     private static final int SESSION_CHECK_TIMEOUT_MS = 5000;
     private final Handler handler = new Handler(Looper.getMainLooper());
     
@@ -96,7 +96,7 @@ public class SplashActivity extends AppCompatActivity {
             AuthManager.syncWebViewCookie(apiToken);
             goToMain();
         } else {
-            goToLogin();
+            goToOnboarding();
         }
     }
 
@@ -104,6 +104,12 @@ public class SplashActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         handler.removeCallbacksAndMessages(null);
+    }
+
+    private void goToOnboarding() {
+        startActivity(new Intent(this, OnboardingActivity.class));
+        finish();
+        overridePendingTransition(android.R.anim.fade_in, R.anim.fade_scale_out);
     }
 
     private void goToLogin() {

@@ -127,6 +127,8 @@ public class ResetPasswordActivity extends AppCompatActivity {
                 attemptReset();
             }
         });
+
+        AuthHelper.setupLegalLinks(this);
     }
 
     private void attemptReset() {

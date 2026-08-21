@@ -93,6 +93,16 @@ class ForgotPasswordViewController: AuthBaseViewController {
         backLink.isUserInteractionEnabled = true
         backLink.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(backTapped)))
         content.addArrangedSubview(backLink)
+        content.setCustomSpacing(20, after: backLink)
+
+        // Legal links
+        let legalFooter = makeLegalFooter()
+        content.addArrangedSubview(legalFooter)
+        content.setCustomSpacing(6, after: legalFooter)
+
+        let copyright = makeLabel("© 2026 Globizhub India Pvt. Ltd. · All rights reserved", size: 11, weight: .regular, color: AuthBaseViewController.textHint)
+        copyright.textAlignment = .center
+        content.addArrangedSubview(copyright)
     }
 
     @objc private func backTapped() {

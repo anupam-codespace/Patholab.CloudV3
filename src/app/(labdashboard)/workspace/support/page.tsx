@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -58,9 +59,28 @@ const createTicketSchema = z.object({
 type CreateTicketFormData = z.infer<typeof createTicketSchema>;
 
 // --- MAIN COMPONENT ---
-export default function LabSupportPage() {
+function LabSupportContent() {
+  const searchParams = useSearchParams();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [initialCategory, setInitialCategory] = useState<'TECHNICAL' | 'BILLING'>('TECHNICAL');
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
+
+  // Automatically open ticket modal when navigating via deep-link or action query param
+  useEffect(() => {
+    const action = searchParams?.get('action');
+    const newTicket = searchParams?.get('newTicket');
+    const create = searchParams?.get('create');
+    const category = searchParams?.get('category');
+
+    if (action === 'new-ticket' || action === 'new' || newTicket === 'true' || create === 'true') {
+      if (category === 'BILLING') {
+        setInitialCategory('BILLING');
+      } else {
+        setInitialCategory('TECHNICAL');
+      }
+      setIsCreateOpen(true);
+    }
+  }, [searchParams]);
   
   // Fetch Tickets
   const { data: tickets, isLoading, isError } = useQuery<Ticket[]>({
@@ -173,9 +193,21 @@ export default function LabSupportPage() {
         </Card>
       </div>
 
-      <CreateTicketDialog open={isCreateOpen} onOpenChange={setIsCreateOpen} />
+      <CreateTicketDialog 
+        open={isCreateOpen} 
+        onOpenChange={setIsCreateOpen} 
+        initialCategory={initialCategory} 
+      />
       <TicketDetailSheet ticketId={selectedTicketId} onClose={() => setSelectedTicketId(null)} />
     </div>
+  );
+}
+
+export default function LabSupportPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-muted-foreground">Loading support center...</div>}>
+      <LabSupportContent />
+    </Suspense>
   );
 }
 
@@ -341,18 +373,32 @@ function TicketDetailSheet({ ticketId, onClose }: { ticketId: string | null, onC
 }
 
 // ZOD POWERED CREATE DIALOG
-function CreateTicketDialog({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
+function CreateTicketDialog({ 
+  open, 
+  onOpenChange,
+  initialCategory = 'TECHNICAL'
+}: { 
+  open: boolean; 
+  onOpenChange: (open: boolean) => void;
+  initialCategory?: 'TECHNICAL' | 'BILLING';
+}) {
   const queryClient = useQueryClient();
 
   const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm<CreateTicketFormData>({
     resolver: zodResolver(createTicketSchema),
     defaultValues: {
-      category: 'TECHNICAL',
+      category: initialCategory,
       priority: 'MEDIUM',
       subject: '',
       description: ''
     }
   });
+
+  useEffect(() => {
+    if (open) {
+      setValue('category', initialCategory);
+    }
+  }, [open, initialCategory, setValue]);
 
   const createMutation = useMutation({
     mutationFn: async (data: CreateTicketFormData) => {
@@ -393,7 +439,7 @@ function CreateTicketDialog({ open, onOpenChange }: { open: boolean, onOpenChang
               <Select value={watch('category')} onValueChange={(v: any) => setValue('category', v)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="TECHNICAL">Technical Issue</SelectItem>
+                  <SelectItem value="TECHNICAL">Technical Issue / Bug Report</SelectItem>
                   <SelectItem value="BILLING">Billing / Invoice</SelectItem>
                 </SelectContent>
               </Select>
