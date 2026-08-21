@@ -81,9 +81,33 @@ public class MainActivity extends BridgeActivity {
                         showSkeletonForPath(url);
                     }
                 } else {
-                    if (skeletonContainer != null && skeletonContainer.getVisibility() == View.VISIBLE) {
-                        hideSkeleton();
-                    }
+                    // Inject JS helper to verify page-level React-Query / Next.js data fetching state
+                    webView.evaluateJavascript(
+                        "(function() {" +
+                        "  if (document.readyState !== 'complete') return true;" +
+                        "  var spinners = document.querySelectorAll('.animate-spin');" +
+                        "  for (var i = 0; i < spinners.length; i++) {" +
+                        "    var r = spinners[i].getBoundingClientRect();" +
+                        "    if (r.width >= 28 && r.height >= 28 && r.top > 0) return true;" +
+                        "  }" +
+                        "  return false;" +
+                        "})()",
+                        value -> {
+                            boolean isWebLoading = "true".equals(value);
+                            runOnUiThread(() -> {
+                                if (isWebLoading) {
+                                    if (skeletonContainer != null && skeletonContainer.getVisibility() != View.VISIBLE) {
+                                        String url = webView.getUrl();
+                                        showSkeletonForPath(url);
+                                    }
+                                } else {
+                                    if (skeletonContainer != null && skeletonContainer.getVisibility() == View.VISIBLE) {
+                                        hideSkeleton();
+                                    }
+                                }
+                            });
+                        }
+                    );
                 }
             }
             progressPollHandler.postDelayed(this, 100);
@@ -1399,6 +1423,7 @@ public class MainActivity extends BridgeActivity {
     private void hideSkeleton() {
         if (skeletonContainer != null && skeletonContainer.getVisibility() == View.VISIBLE) {
             activeSkeletonCategory = "";
+            stopPulseAnimation();
             skeletonContainer.animate().cancel();
             skeletonContainer.animate()
                 .alpha(0f)
@@ -1407,7 +1432,6 @@ public class MainActivity extends BridgeActivity {
                     @Override
                     public void onAnimationEnd(android.animation.Animator animation) {
                         skeletonContainer.setVisibility(View.GONE);
-                        stopPulseAnimation();
                     }
                 })
                 .start();

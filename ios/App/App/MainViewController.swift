@@ -52,6 +52,7 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
     private var activeSkeletonPath: String? = nil
     private var walletTimer: Timer? = nil
     private var bellAnimationTimer: Timer? = nil
+    private var progressPollTimer: Timer? = nil
 
     // ─────────────────────────────────────────────────────────────────────────
     // MARK: – Lifecycle
@@ -116,6 +117,11 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         // Navigate to dashboard once layout is ready
         DispatchQueue.main.async {
             self.selectTab(0)
+            
+            // Polling timer to monitor page load state and React-Query loading spinner state
+            self.progressPollTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+                self?.checkWebViewProgress()
+            }
             
             // Polling timer to sync theme with web view class state
             Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
@@ -865,11 +871,40 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
             checkAuthRedirect(url: url)
         }
         if keyPath == "estimatedProgress", let webView = object as? WKWebView {
-            let progress = webView.estimatedProgress
-            if progress < 1.0 {
-                showSkeleton(for: webView.url?.path ?? "")
-            } else {
-                hideSkeleton()
+            checkWebViewProgress()
+        }
+    }
+
+    private func checkWebViewProgress() {
+        guard let webView = self.webView else { return }
+        
+        let progress = webView.estimatedProgress
+        if progress < 1.0 {
+            DispatchQueue.main.async {
+                self.showSkeleton(for: webView.url?.path ?? "")
+            }
+        } else {
+            // Check for Next.js loading spinners (width/height >= 28px)
+            webView.evaluateJavaScript("""
+            (function() {
+              if (document.readyState !== 'complete') return true;
+              var spinners = document.querySelectorAll('.animate-spin');
+              for (var i = 0; i < spinners.length; i++) {
+                var r = spinners[i].getBoundingClientRect();
+                if (r.width >= 28 && r.height >= 28 && r.top > 0) return true;
+              }
+              return false;
+            })()
+            """) { [weak self] (result, error) in
+                guard let self = self else { return }
+                let isWebLoading = (result as? Bool) ?? false
+                DispatchQueue.main.async {
+                    if isWebLoading {
+                        self.showSkeleton(for: webView.url?.path ?? "")
+                    } else {
+                        self.hideSkeleton()
+                    }
+                }
             }
         }
     }
@@ -1026,18 +1061,30 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         let bgBlock = isDark ? UIColor(red: 71/255, green: 85/255, blue: 105/255, alpha: 1) : UIColor(red: 226/255, green: 232/255, blue: 240/255, alpha: 1)
         let borderColor = isDark ? UIColor(red: 51/255, green: 65/255, blue: 85/255, alpha: 1).cgColor : UIColor(white: 0.9, alpha: 1).cgColor
         
+        let scrollView = UIScrollView()
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.showsVerticalScrollIndicator = false
+        skeletonView.addSubview(scrollView)
+        
         // Main container StackView
         let mainStack = UIStackView()
         mainStack.axis = .vertical
         mainStack.spacing = 16
         mainStack.translatesAutoresizingMaskIntoConstraints = false
-        skeletonView.addSubview(mainStack)
+        scrollView.addSubview(mainStack)
         
         // Padding constraints
         NSLayoutConstraint.activate([
-            mainStack.topAnchor.constraint(equalTo: skeletonView.safeAreaLayoutGuide.topAnchor, constant: 16),
-            mainStack.leadingAnchor.constraint(equalTo: skeletonView.leadingAnchor, constant: 16),
-            mainStack.trailingAnchor.constraint(equalTo: skeletonView.trailingAnchor, constant: -16)
+            scrollView.topAnchor.constraint(equalTo: skeletonView.topAnchor),
+            scrollView.leadingAnchor.constraint(equalTo: skeletonView.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: skeletonView.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: skeletonView.bottomAnchor),
+            
+            mainStack.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor, constant: 16),
+            mainStack.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor, constant: 16),
+            mainStack.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor, constant: -16),
+            mainStack.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor, constant: -16),
+            mainStack.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor, constant: -32)
         ])
         
         if path.contains("analytics") || path.contains("dashboard") {
@@ -1466,6 +1513,8 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
     deinit {
         bellAnimationTimer?.invalidate()
         bellAnimationTimer = nil
+        progressPollTimer?.invalidate()
+        progressPollTimer = nil
         if let webView = self.webView {
             webView.removeObserver(self, forKeyPath: "URL")
             webView.removeObserver(self, forKeyPath: "estimatedProgress")
