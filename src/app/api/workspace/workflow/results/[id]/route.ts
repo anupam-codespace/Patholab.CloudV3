@@ -175,17 +175,20 @@ export async function POST(
                         ...(notes && notes[test.id] !== undefined ? { notes: notes[test.id] } : {}),
                         ...(impressions && impressions[test.id] !== undefined ? { impression: impressions[test.id] } : {}),
                         
-                        // ✅ ADDED: Dynamic dates for Batch Processing
-                        ...(sampleCollectedAt ? { sampleCollectedAt: new Date(sampleCollectedAt) } : {}),
-                        ...(sampleReceivedAt ? { sampleReceivedAt: new Date(sampleReceivedAt) } : {}),
+                        // ✅ v3.1 FIX: Only set sampleCollectedAt/sampleReceivedAt if they are NOT already set
+                        // This prevents overwriting the original immutable timestamps on edit
+                        ...(sampleCollectedAt && !test.sampleCollectedAt ? { sampleCollectedAt: new Date(sampleCollectedAt) } : {}),
+                        ...(sampleReceivedAt && !test.sampleReceivedAt ? { sampleReceivedAt: new Date(sampleReceivedAt) } : {}),
 
                         checkedBy: checkedById || undefined,
                         approvedBy: approvedById || undefined,
 
                         ...(newStatus ? {
                             status: newStatus as any,
-                            ...(newStatus === 'COMPLETED' ? { completedAt: new Date() } : {}),
-                            ...(newStatus === 'APPROVED' ? { approvedAt: new Date() } : {})
+                            // ✅ Only set checkedAt/completedAt once (first time)
+                            ...(newStatus === 'COMPLETED' && !test.completedAt ? { completedAt: new Date(), checkedAt: new Date() } : {}),
+                            // ✅ Only set approvedAt once (first time)
+                            ...(newStatus === 'APPROVED' && !test.approvedAt ? { approvedAt: new Date() } : {})
                         } : {})
                     }
                 });
@@ -254,23 +257,27 @@ export async function POST(
         if (action === 'UNLOCK') newStatus = 'COMPLETED'; 
 
         // 3. Update Test Record
+        // ✅ v3.1: Fetch existing test to check if timestamps are already set
+        const existingTest = await prisma.test.findUnique({ where: { id: testId }, select: { sampleCollectedAt: true, sampleReceivedAt: true, completedAt: true, approvedAt: true } });
+        
         await prisma.test.update({
             where: { id: testId },
             data: { 
                 notes: notes !== undefined ? notes : undefined,
                 impression: impression !== undefined ? impression : undefined,
                 
-                // ✅ FIXED: Both dates are now captured and saved properly
-                sampleCollectedAt: sampleCollectedAt ? new Date(sampleCollectedAt) : undefined,
-                sampleReceivedAt: sampleReceivedAt ? new Date(sampleReceivedAt) : undefined,
+                // ✅ v3.1 FIX: Only set timestamps if they are NOT already set (immutable)
+                ...(sampleCollectedAt && !existingTest?.sampleCollectedAt ? { sampleCollectedAt: new Date(sampleCollectedAt) } : {}),
+                ...(sampleReceivedAt && !existingTest?.sampleReceivedAt ? { sampleReceivedAt: new Date(sampleReceivedAt) } : {}),
                 
                 checkedBy: checkedById || null,
                 approvedBy: approvedById || null,
 
                 ...(newStatus ? { 
                     status: newStatus as any,
-                    // If approving, log the exact timestamp.
-                    ...(newStatus === 'APPROVED' ? { approvedAt: new Date() } : {})
+                    // ✅ Only set checkedAt/completedAt/approvedAt once (first time)
+                    ...(newStatus === 'COMPLETED' && !existingTest?.completedAt ? { completedAt: new Date(), checkedAt: new Date() } : {}),
+                    ...(newStatus === 'APPROVED' && !existingTest?.approvedAt ? { approvedAt: new Date() } : {})
                 } : {})
             }
         });

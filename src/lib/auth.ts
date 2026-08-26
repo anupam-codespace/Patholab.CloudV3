@@ -53,7 +53,7 @@ export async function generateToken(payload: JWTPayload): Promise<string> {
   return new SignJWT(payload as Record<string, unknown>)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime('8h') // ✅ Changed from '7d' to '8h'
+    .setExpirationTime('48h') // ✅ v3.1: 48-hour session timeout
     .sign(JWT_SECRET);
 }
 
@@ -96,7 +96,7 @@ export async function setAuthCookie(token: string) {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 28800, // ✅ Changed to 8 hours (8 * 60 * 60)
+    maxAge: 172800, // ✅ v3.1: 48 hours (48 * 60 * 60)
     path: '/',
   });
 }

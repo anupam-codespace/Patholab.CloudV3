@@ -3,6 +3,7 @@
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
+import { formatISTWithSeconds } from "@/lib/timezone";
 import {
   Loader2,
   Download,
@@ -266,14 +267,14 @@ export default function ClinicalReportPage() {
   const agencyName = primaryTest?.agency?.agencyName || "Self";
 
   const sampleCollectedAt = primaryTest?.sampleCollectedAt
-    ? format(new Date(primaryTest.sampleCollectedAt), "dd/MM/yy HH:mm:ss")
+    ? formatISTWithSeconds(primaryTest.sampleCollectedAt)
     : "-";
   const sampleReceivedAt = primaryTest?.sampleReceivedAt
-    ? format(new Date(primaryTest.sampleReceivedAt), "dd/MM/yy HH:mm:ss")
+    ? formatISTWithSeconds(primaryTest.sampleReceivedAt)
     : "-";
   const reportApprovedAt = primaryTest?.approvedAt
-    ? format(new Date(primaryTest.approvedAt), "dd/MM/yy HH:mm:ss")
-    : format(new Date(), "dd/MM/yy HH:mm:ss");
+    ? formatISTWithSeconds(primaryTest.approvedAt)
+    : formatISTWithSeconds(new Date());
 
   // --- PDF DOWNLOAD TRIGGER ---
   const handleDownload = async (visit: any) => {
@@ -302,20 +303,14 @@ export default function ClinicalReportPage() {
         barcodeValue: visit.tests[0]?.sample?.sampleId || patient.patientId,
         timestamps: {
           collected: visit.tests[0]?.sampleCollectedAt
-            ? format(
-                new Date(visit.tests[0].sampleCollectedAt),
-                "dd/MM/yy HH:mm:ss",
-              )
+            ? formatISTWithSeconds(visit.tests[0].sampleCollectedAt)
             : "-",
           received: visit.tests[0]?.sampleReceivedAt
-            ? format(
-                new Date(visit.tests[0].sampleReceivedAt),
-                "dd/MM/yy HH:mm:ss",
-              )
+            ? formatISTWithSeconds(visit.tests[0].sampleReceivedAt)
             : "-",
           reported: visit.tests[0]?.approvedAt
-            ? format(new Date(visit.tests[0].approvedAt), "dd/MM/yy HH:mm:ss")
-            : format(new Date(), "dd/MM/yy HH:mm:ss"),
+            ? formatISTWithSeconds(visit.tests[0].approvedAt)
+            : formatISTWithSeconds(new Date()),
           refDoctor:
             visit.tests[0]?.doctor?.user?.name ||
             visit.tests[0]?.referredBy ||

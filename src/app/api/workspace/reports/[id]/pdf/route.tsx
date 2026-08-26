@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { formatIST, formatISTWithSeconds, parseDate } from "@/lib/timezone";
 import {
   Document,
   Page,
@@ -134,12 +135,12 @@ const MedicalReportPDF = ({ report, test, lab, patient, showHeader = true, extra
       </View>
       )}
 
-      {/* ✅ NABL STANDARD TIMESTAMPS */}
-      {showHeader && nablData.collectedAt && (
+      {/* ✅ NABL STANDARD TIMESTAMPS — All in IST (Asia/Kolkata) */}
+      {showHeader && (
         <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 10, fontSize: 8, color: "#64748b" }}>
-          <Text>Collected: {new Date(nablData.collectedAt).toLocaleString('en-IN')}</Text>
-          <Text>Received: {nablData.receivedAt ? new Date(nablData.receivedAt).toLocaleString('en-IN') : '—'}</Text>
-          <Text>Printed: {new Date(nablData.printedAt).toLocaleString('en-IN')}</Text>
+          <Text>Collected: {formatIST(nablData.collectedAt)}</Text>
+          <Text>Received: {formatIST(nablData.receivedAt)}</Text>
+          <Text>Printed: {formatISTWithSeconds(nablData.printedAt)}</Text>
         </View>
       )}
 
@@ -221,17 +222,17 @@ const MedicalReportPDF = ({ report, test, lab, patient, showHeader = true, extra
           <View>
             <Text style={styles.signLine}>Technician Signature</Text>
             {nablData.checkedBy && <Text style={{ fontSize: 7, color: "#94a3b8" }}>Checked by: {nablData.checkedBy}</Text>}
-            {nablData.checkedAt && <Text style={{ fontSize: 7, color: "#94a3b8" }}>at: {new Date(nablData.checkedAt).toLocaleString('en-IN')}</Text>}
+            {nablData.checkedAt && <Text style={{ fontSize: 7, color: "#94a3b8" }}>at: {formatIST(nablData.checkedAt)}</Text>}
           </View>
           <View>
             <Text style={styles.signLine}>Pathologist / Lab Director</Text>
             {nablData.approvedBy && <Text style={{ fontSize: 7, color: "#94a3b8" }}>Approved by: {nablData.approvedBy}</Text>}
-            {nablData.approvedAt && <Text style={{ fontSize: 7, color: "#94a3b8" }}>at: {new Date(nablData.approvedAt).toLocaleString('en-IN')}</Text>}
+            {nablData.approvedAt && <Text style={{ fontSize: 7, color: "#94a3b8" }}>at: {formatIST(nablData.approvedAt)}</Text>}
           </View>
         </View>
         <Text style={styles.footerText}>
           This is a system generated report. Report ID: {report.id} v
-          {report.version}.0 | Generated at: {new Date().toLocaleString()}
+          {report.version}.0 | Generated at: {formatISTWithSeconds(new Date())} IST
         </Text>
       </View>
     </Page>
@@ -283,15 +284,23 @@ export async function GET(
       );
     }
 
-    // ✅ NABL timestamps
+    // ✅ NABL timestamps — IMMUTABLE source of truth
+    // Collected/Received times come from the SAMPLE model (set once at collection/receipt, never changed)
+    // NOT from test.sampleCollectedAt which can be edited by users
+    const collectedDate = parseDate(report.test.sample?.collectedAt) || parseDate(report.test.sampleCollectedAt);
+    const receivedDate = parseDate(report.test.sample?.receivedAt) || parseDate(report.test.sampleReceivedAt);
+    const now = new Date();
+
     const nablData = {
-      collectedAt: report.test.sample?.collectedAt || null,
-      receivedAt: report.test.sample?.receivedAt || null,
-      printedAt: new Date(),
+      // Prefer Sample.collectedAt (immutable, set at accession) over test.sampleCollectedAt (editable)
+      collectedAt: collectedDate || null,
+      receivedAt: receivedDate || null,
+      // Printed time is always NOW — guaranteed to be after collected/received
+      printedAt: now,
       checkedBy: report.test.checkedBy || null,
-      checkedAt: report.test.checkedAt || null,
+      checkedAt: parseDate(report.test.checkedAt) || null,
       approvedBy: report.test.approvedBy || null,
-      approvedAt: report.test.approvedAt || null,
+      approvedAt: parseDate(report.test.approvedAt) || null,
     };
 
     // Generate the PDF as a Node.js Stream
