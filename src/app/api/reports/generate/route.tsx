@@ -129,6 +129,12 @@ const ClinicalPDFDocument = ({ payload }: { payload: any }) => {
   const { branding, layout, header, footer, patientBlock, bodyOptions, body } =
     config;
 
+  // ✅ HEADER SKIP OPTION: Allow callers to download/print PDF without the lab header
+  // (used by Report Dispatch page's "Download without header" button)
+  if (payload.skipHeader) {
+    header.show = false;
+  }
+
   const pt = (mm: number) => (mm || 0) * 2.8346;
   const pxToPt = (px: number) => (px || 0) * 0.75;
 

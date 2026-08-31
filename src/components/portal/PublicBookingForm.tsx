@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
 interface BookingFormProps {
@@ -11,6 +12,7 @@ export default function PublicBookingForm({
   portalSlug,
   cartItems,
 }: BookingFormProps) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -57,8 +59,22 @@ export default function PublicBookingForm({
         throw new Error(data.error || "Failed to book");
       }
 
+      // ✅ If the API returned a trackId, redirect to the public tracking page
+      // so the user can monitor payment verification & sample collection.
+      if (data.trackId) {
+        toast.success(
+          "Appointment Booked! Save your tracking ID for later reference.",
+          { duration: 5000 },
+        );
+        // Small delay so the toast is visible before the hard redirect
+        setTimeout(() => {
+          router.push(`/track/${data.trackId}`);
+        }, 600);
+        return;
+      }
+
+      // Fallback: legacy invoice-based flow (should not happen with new API)
       toast.success("Appointment Booked Successfully!");
-      // TODO: Redirect to Payment Gateway (Razorpay) using data.payableAmount and data.invoiceId
       window.location.href = `/payment?invoice=${data.invoiceId}`;
     } catch (error: any) {
       toast.error(error.message);
@@ -233,6 +249,11 @@ export default function PublicBookingForm({
           className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-lg mt-6 hover:bg-primary/90 disabled:opacity-50">
           {loading ? "Processing..." : `Proceed to Pay ₹${totalAmount}`}
         </button>
+
+        <p className="text-xs text-muted-foreground mt-3 text-center">
+          Save your tracking ID after booking to check status later. You can
+          track payment verification, sample collection, and report readiness.
+        </p>
       </form>
     </div>
   );

@@ -167,15 +167,94 @@ export async function POST(req: NextRequest) {
             select: { defaultDoctorCommission: true, defaultAgencyCommission: true, commissionType: true }
         });
 
+        // ✅ v3.2.1 FIX: Support doctor lookup by NAME (not just ID).
+        // The registration page passes the doctor NAME via URL param `doc=...`
+        // when navigating to accession. Previously the accession API only did
+        // `findFirst({ where: { id: doctorId }})` which returned null for names,
+        // silently dropping the referral. Now we look up by ID first, then by name.
         if (doctorId && doctorId !== 'Self' && doctorId !== 'null') {
-            doctorData = await tx.doctor.findFirst({
-                where: { id: doctorId, labId: user.labId },
-            });
+            // First, try by ID (UUID/CUID)
+            const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(doctorId) || /^c[a-z0-9]{20,}$/i.test(doctorId);
+            if (isUuid) {
+                doctorData = await tx.doctor.findFirst({
+                    where: { id: doctorId, labId: user.labId },
+                });
+            }
+
+            // If not found by ID (or wasn't an ID), try by name (case-insensitive)
+            if (!doctorData) {
+                doctorData = await tx.doctor.findFirst({
+                    where: {
+                        labId: user.labId,
+                        name: { equals: doctorId, mode: 'insensitive' },
+                        deletedAt: null,
+                    },
+                });
+            }
+
+            // ✅ If still not found, AUTO-CREATE the doctor (mirrors registration page behavior)
+            if (!doctorData) {
+                doctorData = await tx.doctor.create({
+                    data: {
+                        labId: user.labId,
+                        name: doctorId.trim(),
+                        commissionRate: 0,
+                        commissionType: 'PERCENTAGE',
+                    },
+                });
+
+                await tx.activityLog.create({
+                    data: {
+                        labId: user.labId,
+                        userId: user.id,
+                        action: 'DOCTOR_AUTO_CREATED',
+                        entityType: 'DOCTOR',
+                        entity: 'DOCTOR',
+                        entityId: doctorData.id,
+                        description: `Doctor "${doctorData.name}" auto-created during accession (visit booking).`,
+                    },
+                }).catch(() => { /* non-fatal */ });
+            }
         }
+
         if (agencyId && agencyId !== 'Direct' && agencyId !== 'null') {
-            agencyData = await tx.agency.findFirst({
-                where: { id: agencyId, labId: user.labId },
-            });
+            const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(agencyId) || /^c[a-z0-9]{20,}$/i.test(agencyId);
+            if (isUuid) {
+                agencyData = await tx.agency.findFirst({
+                    where: { id: agencyId, labId: user.labId },
+                });
+            }
+            if (!agencyData) {
+                agencyData = await tx.agency.findFirst({
+                    where: {
+                        labId: user.labId,
+                        agencyName: { equals: agencyId, mode: 'insensitive' },
+                    },
+                });
+            }
+            // ✅ Auto-create agency if not found
+            if (!agencyData) {
+                agencyData = await tx.agency.create({
+                    data: {
+                        labId: user.labId,
+                        agencyName: agencyId.trim(),
+                        commissionRate: 0,
+                        commissionType: 'PERCENTAGE',
+                    },
+                });
+
+                await tx.activityLog.create({
+                    data: {
+                        labId: user.labId,
+                        userId: user.id,
+                        action: 'AGENCY_AUTO_CREATED',
+                        entityType: 'AGENCY',
+                        entity: 'AGENCY',
+                        entityId: agencyData.id,
+                        description: `Agency "${agencyData.agencyName}" auto-created during accession.`,
+                    },
+                }).catch(() => { /* non-fatal */ });
+            }
         }
 
         // --- G. FETCH CUSTOM COMMISSIONS ---

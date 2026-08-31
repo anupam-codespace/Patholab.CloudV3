@@ -101,26 +101,34 @@ export default function EditPatientPage() {
         if (!res.ok) throw new Error("Failed to load patient");
 
         const json = await res.json();
-        const data = json.data;
+        // ✅ v3.2.1 FIX: The GET /api/workspace/patients/[id] endpoint returns
+        // the patient object DIRECTLY (not wrapped in { data: ... }).
+        // Previously `json.data` was undefined, so all form fields reset to
+        // empty defaults — including the phone field. Now we unwrap correctly.
+        const data = json.data || json.patient || json;
 
         form.reset({
           title: data.title || "Mr.",
-          name: data.name,
-          age: data.age,
+          name: data.name || "",
+          age: data.age ?? 0,
           ageUnit: data.ageUnit || "Years",
-          gender: data.gender,
-          phone: data.phone,
+          gender: data.gender || "MALE",
+          phone: data.phone || "",
           email: data.email || "",
           address: data.address || "",
           doctorId: data.doctorId || "Self",
           agencyId: data.agencyId || "Direct",
           abhaNumber: data.abhaNumber || "",
-          passport: data.passport || "",
+          // ✅ Schema field is `passportNumber`, form field is `passport`
+          passport: data.passportNumber || data.passport || "",
           srfId: data.srfId || "",
-          collectionDate: data.collectionDate
-            ? format(new Date(data.collectionDate), "yyyy-MM-dd")
-            : format(new Date(), "yyyy-MM-dd"),
-          collectionTime: data.collectionTime || format(new Date(), "HH:mm"),
+          dob: data.dateOfBirth
+            ? format(new Date(data.dateOfBirth), "yyyy-MM-dd")
+            : "",
+          // collectionDate/collectionTime are visit-level fields, not on Patient.
+          // Default to today's date so the form validates.
+          collectionDate: format(new Date(), "yyyy-MM-dd"),
+          collectionTime: format(new Date(), "HH:mm"),
         });
       } catch (error) {
         toast.error("Could not load patient details");
@@ -146,13 +154,35 @@ export default function EditPatientPage() {
   }, [watchedDob]);
 
   // --- 2. SUBMIT HANDLER (PATCH) ---
+  // ✅ v3.2.1: Now sends ALL editable fields including phone, with correct
+  // field-name mapping (form field `dob` → schema field `dateOfBirth`,
+  // form field `passport` → schema field `passportNumber`).
   const onSubmit = async (data: PatientFormValues) => {
     setIsSubmitting(true);
     try {
+      // Build the PATCH payload, mapping form field names to schema field names
+      const payload: any = {
+        title: data.title,
+        name: data.name,
+        age: data.age,
+        ageUnit: data.ageUnit,
+        gender: data.gender,
+        phone: data.phone, // ✅ Phone is now fully editable
+        email: data.email || null,
+        address: data.address || null,
+        doctorId: data.doctorId || "Self",
+        agencyId: data.agencyId || "Direct",
+        abhaNumber: data.abhaNumber || null,
+        passport: data.passport || null, // API maps this to passportNumber
+        srfId: data.srfId || null,
+        // ✅ Map form field `dob` to schema field `dateOfBirth`
+        dateOfBirth: data.dob || null,
+      };
+
       const res = await fetch(`/api/workspace/patients/${patientId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
 
       const result = await res.json();
@@ -161,7 +191,7 @@ export default function EditPatientPage() {
         throw new Error(result.error || "Failed to update");
       }
 
-      toast.success("Patient Updated Successfully!");
+      toast.success("Patient details updated successfully — including phone number!");
       router.back();
     } catch (error: any) {
       toast.error(error.message || "An unknown error occurred");

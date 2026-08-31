@@ -41,9 +41,14 @@ export default function B2BReportsPage() {
                     <TableCell><Badge variant="outline" className={r.status === "APPROVED" || r.status === "VERIFIED" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}>{r.status}</Badge></TableCell>
                     <TableCell className="text-sm text-muted-foreground">{new Date(r.createdAt).toLocaleDateString()}</TableCell>
                     <TableCell className="text-right">
-                      <Button variant="outline" size="sm" onClick={() => handleDownload(r.testId)} disabled={r.status !== "APPROVED" && r.status !== "VERIFIED"}>
-                        <Download className="h-4 w-4 mr-1" /> PDF
-                      </Button>
+                      <div className="flex gap-1 justify-end">
+                        <Button variant="outline" size="sm" onClick={() => handleDownload(r.testId)} disabled={r.status !== "APPROVED" && r.status !== "VERIFIED"}>
+                          <Download className="h-4 w-4 mr-1" /> Lab Report
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => window.open(`/api/b2b/reports/${r.testId}/pdf`, "_blank")} disabled={r.status !== "APPROVED" && r.status !== "VERIFIED"}>
+                          <Download className="h-4 w-4 mr-1" /> On Letterhead
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))

@@ -28,6 +28,10 @@ import {
   Wallet,
   HelpCircle,
   Home,
+  CreditCard,
+  Image,
+  Map,
+  CheckCircle2,
 } from "lucide-react";
 
 export type NavItem = {
@@ -107,10 +111,13 @@ export const adminNav: NavGroup[] = [
       { name: "Staff Management", href: "/workspace/staff", icon: UserCog },
       { name: "Invoices & Payments", href: "/workspace/billing", icon: Receipt },
       { name: "Expenses", href: "/workspace/expenses", icon: ClipboardList },
+      { name: "Home Collection", href: "/workspace/home-collection", icon: Truck },
       { name: "Lab Settings", href: "/workspace/settings", icon: Settings },
+      { name: "Payment Settings", href: "/workspace/settings/payment", icon: CreditCard },
+      { name: "Invoice Branding", href: "/workspace/settings/branding", icon: Image },
       { name: "Audit Logs", href: "/workspace/audit-logs", icon: History },
-      { name: "Wallet & Billing", href: "/workspace/wallet", icon: Wallet }, 
-      { name: "Help & Support", href: "/workspace/support", icon: HelpCircle }, 
+      { name: "Wallet & Billing", href: "/workspace/wallet", icon: Wallet },
+      { name: "Help & Support", href: "/workspace/support", icon: HelpCircle },
 
     ],
   },
@@ -187,6 +194,27 @@ export const radiologyNav: NavGroup = {
 adminNav.splice(2, 0, radiologyNav);
 
 // ==========================================
+// 4b. PHLEBOTOMIST / COLLECTION STAFF
+// ==========================================
+export const phlebotomistNav: NavGroup[] = [
+  {
+    title: "My Collection Trips",
+    items: [
+      { name: "My Dashboard", href: "/workspace/collection-staff/dashboard", icon: Home },
+      { name: "Today's Trips", href: "/workspace/collection-staff/trips", icon: Truck, badge: "Live" },
+      { name: "Trip Map", href: "/workspace/collection-staff/map", icon: Map },
+    ],
+  },
+  {
+    title: "History",
+    items: [
+      { name: "Completed Collections", href: "/workspace/collection-staff/history", icon: CheckCircle2 },
+      { name: "My Profile", href: "/workspace/collection-staff/profile", icon: UserCog },
+    ],
+  },
+];
+
+// ==========================================
 // 5. ROLE MAPPER
 // ==========================================
 export const roleNavMap: Record<string, NavGroup[]> = {
@@ -195,6 +223,7 @@ export const roleNavMap: Record<string, NavGroup[]> = {
   LAB_MANAGER: adminNav, 
   TECHNICIAN: technicianNav,
   RECEPTIONIST: receptionistNav,
+  PHLEBOTOMIST: phlebotomistNav,
   DOCTOR: [], 
   AGENCY: [], 
 };

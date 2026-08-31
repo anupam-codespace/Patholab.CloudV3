@@ -3,6 +3,28 @@ import { PrismaClient, Prisma } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+// ----------------------------------------------------------------------------
+// Generate a unique tracking ID of the form TRK-YYYYMMDD-XXXX
+// Retries up to 5 times in the (very rare) case of a collision.
+// ----------------------------------------------------------------------------
+async function generateUniqueTrackId(tx: Prisma.TransactionClient): Promise<string> {
+  const datePart = new Date()
+    .toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" })
+    .replace(/-/g, "");
+
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const randomPart = Math.floor(1000 + Math.random() * 9000).toString();
+    const trackId = `TRK-${datePart}-${randomPart}`;
+    const exists = await tx.appointment.findFirst({
+      where: { trackId },
+      select: { id: true },
+    });
+    if (!exists) return trackId;
+  }
+  // Extremely unlikely fallback — uses milliseconds for extra entropy
+  return `TRK-${datePart}-${Date.now().toString().slice(-4)}`;
+}
+
 export async function POST(
   req: NextRequest,
   { params }: { params: { portalSlug: string } }
@@ -35,13 +57,23 @@ export async function POST(
     const grandTotal = subtotal + tax;
 
     // 3. Logic for Logistics Branch
+    // ✅ When collectionMode is HOME_COLLECTION, check if the pincode is in a ServiceArea
     let assignedBranchId: string | null = null;
-    if (collectionMode === "HOME_COLLECTION" && pincode) {
+    if (collectionMode === "HOME_COLLECTION") {
+      if (!pincode) {
+        return NextResponse.json(
+          { error: "Pincode is required for home collection" },
+          { status: 400 }
+        );
+      }
       const serviceArea = await prisma.serviceArea.findFirst({
         where: { labId: lab.id, pincode, isActive: true }
       });
       if (!serviceArea) {
-        return NextResponse.json({ error: "Sorry, we do not service this pincode yet." }, { status: 400 });
+        return NextResponse.json(
+          { error: "Sorry, we do not service this pincode yet." },
+          { status: 400 }
+        );
       }
       assignedBranchId = serviceArea.branchId;
     } else {
@@ -122,7 +154,11 @@ export async function POST(
         }
       });
 
+      // ✅ Generate a unique trackId up-front so we can return it to the booking page
+      const trackId = await generateUniqueTrackId(tx);
+
       // C. Create Appointment — Appointment model has scalar labId (no lab relation)
+      // ✅ status = PENDING_PAYMENT, paymentVerified = false (explicit), trackId assigned
       const appointment = await tx.appointment.create({
         data: {
           labId: lab.id,
@@ -135,7 +171,9 @@ export async function POST(
           pincode: pincode || null,
           appointmentDate: new Date(appointmentDate),
           timeSlot: timeSlot || null,
-          status: "PENDING_PAYMENT"
+          status: "PENDING_PAYMENT",
+          paymentVerified: false,
+          trackId,
         }
       });
 
@@ -160,14 +198,20 @@ export async function POST(
         });
       }
 
-      return { appointment, invoice };
+      return { appointment, invoice, trackId };
     });
 
     return NextResponse.json({
       success: true,
       appointmentId: result.appointment.id,
       invoiceId: result.invoice.id,
-      payableAmount: grandTotal
+      payableAmount: grandTotal,
+      // ✅ trackId returned so the booking page can redirect to /track/{trackId}
+      trackId: result.trackId,
+      status: "PENDING_PAYMENT",
+      paymentVerified: false,
+      message:
+        "Your booking has been received. Please complete payment and save your tracking ID.",
     });
 
   } catch (error: any) {

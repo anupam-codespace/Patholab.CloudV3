@@ -1,16 +1,16 @@
 {
   "name": "Patholab",
-  "version": "1.0.0",
+  "version": "3.2.3",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "prisma generate && next build",
-    "start": "next start",
+    "dev": "TZ=Asia/Kolkata next dev",
+    "build": "prisma generate && TZ=Asia/Kolkata next build",
+    "start": "TZ=Asia/Kolkata next start",
     "lint": "next lint",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
-    "prisma:seed": "ts-node -P tsconfig.prisma.json prisma/seed.ts"
+    "prisma:seed": "TZ=Asia/Kolkata ts-node -P tsconfig.prisma.json prisma/seed.ts"
   },
   "dependencies": {
     "@craftjs/core": "^0.2.12",

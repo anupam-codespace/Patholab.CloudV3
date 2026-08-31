@@ -119,4 +119,86 @@ export function parseDate(date: any): Date | null {
   }
 }
 
+/**
+ * Parse a datetime-local input value (e.g., "2026-08-31T15:30") as an IST timestamp
+ * and return a Date object representing that instant in UTC.
+ *
+ * This is the CRITICAL fix for the timezone bug. When a browser sends a datetime-local
+ * string (without timezone suffix), `new Date("2026-08-31T15:30")` interprets it using
+ * the SERVER's local timezone — which is UTC in our Docker/CI environment, causing
+ * a 5.5-hour shift in saved timestamps.
+ *
+ * This function ALWAYS interprets the input as IST (Asia/Kolkata, UTC+5:30),
+ * regardless of the server's local timezone, and returns the correct UTC Date.
+ *
+ * Accepts:
+ *   - "2026-08-31T15:30"         (datetime-local)
+ *   - "2026-08-31T15:30:00"      (datetime-local with seconds)
+ *   - "2026-08-31T15:30:00.000Z" (ISO with Z — pass through)
+ *   - "2026-08-31T15:30+05:30"   (ISO with offset — pass through)
+ *   - Date object                (pass through)
+ */
+export function parseISTInput(input: string | Date | null | undefined): Date | null {
+  if (!input) return null;
+  if (input instanceof Date) return isNaN(input.getTime()) ? null : input;
+
+  const str = String(input).trim();
+  if (!str) return null;
+
+  // If the string already carries explicit timezone info (Z or ±HH:MM), let Date parse it
+  if (/Z$|[+-]\d{2}:\d{2}$/.test(str)) {
+    const d = new Date(str);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  // Match "YYYY-MM-DDTHH:mm" or "YYYY-MM-DDTHH:mm:ss" or "YYYY-MM-DD HH:mm:ss"
+  const m = str.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?$/);
+  if (!m) {
+    // Date-only string like "2026-08-31" — treat as midnight IST
+    const d = new Date(str);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  const [, y, mo, d, h, mi, s] = m;
+  // Construct an ISO UTC string by adding 5:30 to the IST wall-clock time
+  // Equivalent to: new Date(Date.UTC(y, mo-1, d, h, mi, s) - 330*60*1000)
+  const utcMs = Date.UTC(
+    Number(y),
+    Number(mo) - 1,
+    Number(d),
+    Number(h),
+    Number(mi),
+    Number(s || 0)
+  ) - 330 * 60 * 1000; // subtract 5h30m to convert IST wall-clock -> UTC instant
+
+  return new Date(utcMs);
+}
+
+/**
+ * Convert a Date (UTC instant) to a datetime-local string in IST for HTML input.
+ * Output: "2026-08-31T15:30"
+ *
+ * This is the inverse of parseISTInput. Use it when pre-filling datetime-local inputs
+ * from server-provided UTC Date objects.
+ */
+export function toISTInputValue(date: Date | string | null | undefined): string {
+  if (!date) return '';
+  const d = typeof date === 'string' ? new Date(date) : date;
+  if (isNaN(d.getTime())) return '';
+
+  // Get IST wall-clock components by formatting in IST timezone
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: IST_TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(d);
+
+  const get = (type: string) => parts.find((p) => p.type === type)?.value || '';
+  return `${get('year')}-${get('month')}-${get('day')}T${get('hour')}:${get('minute')}`;
+}
+
 export { IST_TIMEZONE };

@@ -81,6 +81,242 @@ export async function GET(
 }
 
 // =========================================================================
+// PATCH: Update Patient Details (all fields including phone, name, age, etc.)
+//
+// v3.2.1 FIX: Previously this endpoint did NOT exist, so the Edit Patient page
+// would silently fail (404/405). The edit page called PATCH but the API only
+// had GET + DELETE handlers. Now we implement full PATCH support for ALL
+// editable fields: name, phone, email, age, ageUnit, gender, dateOfBirth,
+// address, doctorId, agencyId, abhaNumber, passport, srfId, title, isGlobal.
+//
+// ✅ Phone number is explicitly editable. If the new phone collides with
+// another patient's phone in the same lab, we return 409 Conflict.
+// =========================================================================
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const user = await getDataFromToken(req);
+    if (!user || !user.labId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (user.role !== 'LAB_OWNER' && user.role !== 'SUPER_ADMIN' && user.role !== 'LAB_MANAGER' && user.role !== 'RECEPTIONIST') {
+      return NextResponse.json(
+        { error: 'Permission Denied. Only Lab Owners, Managers, and Receptionists can edit patient records.' },
+        { status: 403 }
+      );
+    }
+
+    const resolvedParams = await params;
+    const searchId = resolvedParams.id;
+
+    // 1. Find the patient (by UUID or patientId like P-00123)
+    const patient = await prisma.patient.findFirst({
+      where: {
+        labId: user.labId,
+        deletedAt: null,
+        OR: [
+          { id: searchId },
+          { patientId: searchId },
+        ],
+      },
+    });
+
+    if (!patient) {
+      return NextResponse.json({ error: 'Patient not found.' }, { status: 404 });
+    }
+
+    const body = await req.json();
+
+    // 2. Build the update payload — only include fields that are present in the body
+    const updateData: any = {};
+
+    if (body.name !== undefined) {
+      const trimmed = String(body.name).trim();
+      if (!trimmed) return NextResponse.json({ error: 'Name cannot be empty' }, { status: 400 });
+      updateData.name = trimmed;
+    }
+
+    // ✅ Phone is the key v3.2.1 fix — previously the edit page had the field
+    // but the API had no PATCH handler, so phone edits were silently dropped.
+    if (body.phone !== undefined) {
+      const phone = String(body.phone).trim().replace(/\D/g, '');
+      if (phone.length < 10) {
+        return NextResponse.json({ error: 'Phone number must be at least 10 digits' }, { status: 400 });
+      }
+
+      // Check for phone collision with ANOTHER patient in the same lab
+      const conflict = await prisma.patient.findFirst({
+        where: {
+          labId: user.labId,
+          phone: phone,
+          id: { not: patient.id },
+          deletedAt: null,
+        },
+        select: { id: true, name: true, patientId: true },
+      });
+      if (conflict) {
+        return NextResponse.json({
+          error: `Phone number already in use by another patient: ${conflict.name} (${conflict.patientId}).`,
+        }, { status: 409 });
+      }
+      updateData.phone = phone;
+    }
+
+    if (body.email !== undefined) updateData.email = body.email?.trim() || null;
+    if (body.age !== undefined) {
+      const ageNum = Number(body.age);
+      if (!isNaN(ageNum) && ageNum >= 0) updateData.age = ageNum;
+    }
+    if (body.ageUnit !== undefined) updateData.ageUnit = body.ageUnit || 'Years';
+    if (body.gender !== undefined) {
+      const g = String(body.gender).toUpperCase();
+      if (['MALE', 'FEMALE', 'OTHER', 'CUSTOM'].includes(g)) {
+        updateData.gender = g;
+      }
+    }
+    if (body.dateOfBirth !== undefined) {
+      updateData.dateOfBirth = body.dateOfBirth ? new Date(body.dateOfBirth) : null;
+    }
+    if (body.address !== undefined) updateData.address = body.address?.trim() || null;
+    if (body.title !== undefined) updateData.title = body.title || null;
+    if (body.abhaNumber !== undefined) updateData.abhaNumber = body.abhaNumber?.trim() || null;
+    if (body.passport !== undefined) updateData.passportNumber = body.passport?.trim() || null;
+    if (body.srfId !== undefined) updateData.srfId = body.srfId?.trim() || null;
+    if (body.pincode !== undefined) updateData.pincode = body.pincode?.trim() || null;
+
+    // ✅ Edit global/branch scope (Lab Owner/Manager only)
+    if (body.isGlobal !== undefined && (user.role === 'LAB_OWNER' || user.role === 'SUPER_ADMIN')) {
+      updateData.isGlobal = body.isGlobal === true;
+      if (body.isGlobal === true) {
+        updateData.branchId = null; // global patient has no branch
+      } else if (body.branchId) {
+        updateData.branchId = body.branchId;
+      }
+    }
+
+    // ✅ Doctor reassignment — accept ID or NAME (auto-create if new)
+    if (body.doctorId !== undefined) {
+      const docVal = String(body.doctorId || '').trim();
+      if (!docVal || docVal === 'Self') {
+        updateData.doctorId = null;
+      } else {
+        // Try by ID
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(docVal) || /^c[a-z0-9]{20,}$/i.test(docVal);
+        let doctor: any = null;
+        if (isUuid) {
+          doctor = await prisma.doctor.findFirst({ where: { id: docVal, labId: user.labId } });
+        }
+        if (!doctor) {
+          // Try by name
+          doctor = await prisma.doctor.findFirst({
+            where: { labId: user.labId, name: { equals: docVal, mode: 'insensitive' } },
+          });
+        }
+        if (!doctor) {
+          // Auto-create new doctor
+          doctor = await prisma.doctor.create({
+            data: {
+              labId: user.labId,
+              name: docVal,
+              commissionRate: 0,
+              commissionType: 'PERCENTAGE',
+            },
+          });
+          await prisma.activityLog.create({
+            data: {
+              labId: user.labId,
+              userId: user.id,
+              action: 'DOCTOR_AUTO_CREATED',
+              entityType: 'DOCTOR',
+              entity: 'DOCTOR',
+              entityId: doctor.id,
+              description: `Doctor "${doctor.name}" auto-created during patient edit.`,
+            },
+          }).catch(() => { /* non-fatal */ });
+        }
+        updateData.doctorId = doctor.id;
+      }
+    }
+
+    // ✅ Agency reassignment — same logic as doctor
+    if (body.agencyId !== undefined) {
+      const agVal = String(body.agencyId || '').trim();
+      if (!agVal || agVal === 'Direct') {
+        updateData.agencyId = null;
+      } else {
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(agVal) || /^c[a-z0-9]{20,}$/i.test(agVal);
+        let agency: any = null;
+        if (isUuid) {
+          agency = await prisma.agency.findFirst({ where: { id: agVal, labId: user.labId } });
+        }
+        if (!agency) {
+          agency = await prisma.agency.findFirst({
+            where: { labId: user.labId, agencyName: { equals: agVal, mode: 'insensitive' } },
+          });
+        }
+        if (!agency) {
+          agency = await prisma.agency.create({
+            data: {
+              labId: user.labId,
+              agencyName: agVal,
+              commissionRate: 0,
+              commissionType: 'PERCENTAGE',
+            },
+          });
+          await prisma.activityLog.create({
+            data: {
+              labId: user.labId,
+              userId: user.id,
+              action: 'AGENCY_AUTO_CREATED',
+              entityType: 'AGENCY',
+              entity: 'AGENCY',
+              entityId: agency.id,
+              description: `Agency "${agency.agencyName}" auto-created during patient edit.`,
+            },
+          }).catch(() => { /* non-fatal */ });
+        }
+        updateData.agencyId = agency.id;
+      }
+    }
+
+    // 3. Perform the update
+    const updated = await prisma.patient.update({
+      where: { id: patient.id },
+      data: updateData,
+    });
+
+    // 4. Activity log (non-fatal)
+    await prisma.activityLog.create({
+      data: {
+        labId: user.labId,
+        userId: user.id,
+        action: 'PATIENT_UPDATED',
+        entityType: 'PATIENT',
+        entity: 'PATIENT',
+        entityId: patient.id,
+        description: `Patient ${updated.name} (${updated.patientId}) details updated by ${user.role}. Fields changed: ${Object.keys(updateData).join(', ')}.`,
+      },
+    }).catch(() => { /* non-fatal */ });
+
+    return NextResponse.json({
+      success: true,
+      patient: updated,
+      message: 'Patient details updated successfully.',
+    });
+
+  } catch (error: any) {
+    console.error('[PATIENT_PATCH_ERROR]', error);
+    return NextResponse.json(
+      { error: 'Failed to update patient', details: error.message },
+      { status: 500 }
+    );
+  }
+}
+
+// =========================================================================
 // DELETE: Soft Delete Patient (Lab Owner Only)
 // =========================================================================
 export async function DELETE(

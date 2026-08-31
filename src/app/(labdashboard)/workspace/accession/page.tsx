@@ -39,6 +39,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { CreatableCombobox } from "@/components/common/CreatableCombobox";
 
 // --- 1. TYPES & SCHEMA ---
 export type CatalogItem = {
@@ -123,8 +124,14 @@ export default function AccessionPage() {
   const collectedByParam = searchParams.get("colBy") || "";
 
   // ✅ Referral state — doctor & agency selectors
-  const [selectedDoctorId, setSelectedDoctorId] = useState<string>("");
-  const [selectedAgencyId, setSelectedAgencyId] = useState<string>("");
+  // v3.2.1: Initialize from URL params so the registration page's selected doctor
+  // is pre-populated on the accession page (was previously ignored).
+  const [selectedDoctorId, setSelectedDoctorId] = useState<string>(
+    doctorNameParam && doctorNameParam !== "Self" ? doctorNameParam : "",
+  );
+  const [selectedAgencyId, setSelectedAgencyId] = useState<string>(
+    agencyNameParam && agencyNameParam !== "Direct" ? agencyNameParam : "",
+  );
 
   // Fetch doctors and agencies for the referral dropdowns
   const { data: doctors } = useQuery({
@@ -135,6 +142,26 @@ export default function AccessionPage() {
     queryKey: ["agencies-for-accession"],
     queryFn: async () => await getAgencies(),
   });
+
+  // ✅ v3.2.1: Build combobox options (label = display name, value = doctor ID)
+  // When the URL param is a NAME (not an ID), the CreatableCombobox will display
+  // the raw name as the selected value, and the backend will auto-create the
+  // doctor record on submit.
+  const doctorOptions = useMemo(() => [
+    { label: "Self (No Doctor)", value: "" },
+    ...(doctors?.map((d: any) => ({
+      label: `${d.name}${d.specialization ? ` (${d.specialization})` : ""}${d.commissionRate ? ` — ${Number(d.commissionRate)}${d.commissionType === "PERCENTAGE" ? "%" : " Flat"}` : ""}`,
+      value: d.id,
+    })) || []),
+  ], [doctors]);
+
+  const agencyOptions = useMemo(() => [
+    { label: "Direct (No Agency)", value: "" },
+    ...(agencies?.map((a: any) => ({
+      label: `${a.agencyName}${a.commissionRate ? ` — ${Number(a.commissionRate)}${a.commissionType === "PERCENTAGE" ? "%" : " Flat"}` : ""}`,
+      value: a.id,
+    })) || []),
+  ], [agencies]);
 
   // Safely map URL payment parameters to strict Zod Enums
   const rawPay = searchParams.get("pay")?.toUpperCase() || "CASH";
@@ -401,42 +428,38 @@ export default function AccessionPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Doctor Selector */}
+          {/* ✅ v3.2.1: Doctor Selector — now a CreatableCombobox so users can
+              type a new doctor name and have it auto-created on submit.
+              Mirrors the registration page's behavior. */}
           <div className="flex flex-col">
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1">
               <Stethoscope className="w-3 h-3" /> Doctor
             </span>
-            <select
+            <CreatableCombobox
               value={selectedDoctorId}
-              onChange={(e) => setSelectedDoctorId(e.target.value)}
-              className="h-9 text-sm border border-slate-200 rounded-lg px-2 bg-white font-medium text-slate-700 focus:ring-2 focus:ring-primary/20 focus:border-primary">
-              <option value="">Self / No Doctor</option>
-              {doctors?.map((doc: any) => (
-                <option key={doc.id} value={doc.id}>
-                  {doc.name} ({Number(doc.commissionRate || 0)}
-                  {doc.commissionType === "PERCENTAGE" ? "%" : " Flat"})
-                </option>
-              ))}
-            </select>
+              onChange={setSelectedDoctorId}
+              options={doctorOptions}
+              placeholder="Self / No Doctor"
+              icon={Stethoscope}
+              emptyLabel="No doctor found."
+              className="h-9 w-64"
+            />
           </div>
 
-          {/* Agency Selector */}
+          {/* ✅ v3.2.1: Agency Selector — also a CreatableCombobox for symmetry */}
           <div className="flex flex-col">
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1">
               <Building2 className="w-3 h-3" /> Agency
             </span>
-            <select
+            <CreatableCombobox
               value={selectedAgencyId}
-              onChange={(e) => setSelectedAgencyId(e.target.value)}
-              className="h-9 text-sm border border-slate-200 rounded-lg px-2 bg-white font-medium text-slate-700 focus:ring-2 focus:ring-primary/20 focus:border-primary">
-              <option value="">Direct / No Agency</option>
-              {agencies?.map((ag: any) => (
-                <option key={ag.id} value={ag.id}>
-                  {ag.agencyName} ({Number(ag.commissionRate || 0)}
-                  {ag.commissionType === "PERCENTAGE" ? "%" : " Flat"})
-                </option>
-              ))}
-            </select>
+              onChange={setSelectedAgencyId}
+              options={agencyOptions}
+              placeholder="Direct / No Agency"
+              icon={Building2}
+              emptyLabel="No agency found."
+              className="h-9 w-64"
+            />
           </div>
         </div>
       </div>

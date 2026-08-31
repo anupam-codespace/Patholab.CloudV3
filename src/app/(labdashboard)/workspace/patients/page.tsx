@@ -271,7 +271,33 @@ export default function PatientWorklistPage() {
     return processedVisits.filter((visit) => visit.status === activeTabFilter);
   }, [processedVisits, activeTabFilter]);
 
-  const deleteMutation = useMutation({
+  // ✅ v3.2.1 FIX: Delete a single visit/invoice (preserves the patient record).
+  // Previously this called DELETE /api/workspace/patients/{id} which purged the
+  // ENTIRE patient record (all visits + demographics). Now we call
+  // DELETE /api/workspace/invoices/{invoiceId} which removes only the selected
+  // visit's invoice + tests + samples, keeping the patient profile intact.
+  const deleteVisitMutation = useMutation({
+    mutationFn: async (invoiceId: string) => {
+      const res = await fetch(`/api/workspace/invoices/${invoiceId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Delete failed");
+      }
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast.success(data.message || "Visit deleted. Patient record preserved.");
+      queryClient.invalidateQueries({ queryKey: ["patients"] });
+    },
+    onError: (err: any) => toast.error(err.message || "Failed to delete visit"),
+  });
+
+  // ✅ v3.2.1 FIX: Hard-purge the entire patient record (separate, explicit action).
+  // This is the legacy delete — now relabeled "PURGE PATIENT" in the UI so users
+  // understand the difference between deleting one visit vs. the whole patient.
+  const deletePatientMutation = useMutation({
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/workspace/patients/${id}`, {
         method: "DELETE",
@@ -279,15 +305,29 @@ export default function PatientWorklistPage() {
       if (!res.ok) throw new Error("Delete failed");
     },
     onSuccess: () => {
-      toast.success("Patient record removed");
+      toast.success("Patient record permanently removed");
       queryClient.invalidateQueries({ queryKey: ["patients"] });
     },
-    onError: () => toast.error("Failed to delete record"),
+    onError: () => toast.error("Failed to delete patient record"),
   });
 
-  const handleDelete = (id: string) => {
-    if (confirm("ARE YOU SURE YOU WANT TO PURGE THIS ENTIRE PATIENT RECORD?")) {
-      deleteMutation.mutate(id);
+  const handleDeleteVisit = (invoiceId: string, visitLabel: string) => {
+    if (
+      confirm(
+        `Delete this visit (${visitLabel})?\n\nThis removes ONLY this invoice, its tests, and samples. The patient record will be preserved for future visits.`,
+      )
+    ) {
+      deleteVisitMutation.mutate(invoiceId);
+    }
+  };
+
+  const handlePurgePatient = (id: string, patientName: string) => {
+    if (
+      confirm(
+        `⚠️ PURGE ENTIRE PATIENT RECORD?\n\nThis will permanently delete ${patientName} and ALL their visits, invoices, tests, and reports.\n\nThis action CANNOT be undone.\n\nConsider deleting individual visits instead.`,
+      )
+    ) {
+      deletePatientMutation.mutate(id);
     }
   };
 
@@ -799,13 +839,36 @@ export default function PatientWorklistPage() {
 
                                   <DropdownMenuSeparator className="bg-muted my-1" />
 
+                                  {/* ✅ v3.2.1: DELETE VISIT (single invoice) — keeps patient record */}
+                                  {visit.invoice && (
+                                    <DropdownMenuItem
+                                      className="text-amber-600 focus:text-amber-700 focus:bg-amber-50 rounded-lg py-2 font-medium"
+                                      onClick={() =>
+                                        handleDeleteVisit(
+                                          visit.invoice.id,
+                                          visit.invoice.invoiceNumber || visit.visitId,
+                                        )
+                                      }
+                                      disabled={deleteVisitMutation.isPending}
+                                    >
+                                      <Trash2 className="mr-2 h-4 w-4" /> DELETE
+                                      VISIT
+                                    </DropdownMenuItem>
+                                  )}
+
+                                  {/* ✅ v3.2.1: PURGE PATIENT (entire record) — destructive, separate confirmation */}
                                   <DropdownMenuItem
                                     className="text-rose-600 focus:text-rose-700 focus:bg-rose-50 rounded-lg py-2 font-medium"
                                     onClick={() =>
-                                      handleDelete(visit.patient.id)
-                                    }>
-                                    <Trash2 className="mr-2 h-4 w-4" /> DELETE
-                                    RECORD
+                                      handlePurgePatient(
+                                        visit.patient.id,
+                                        visit.patient.name || "this patient",
+                                      )
+                                    }
+                                    disabled={deletePatientMutation.isPending}
+                                  >
+                                    <Trash2 className="mr-2 h-4 w-4" /> PURGE
+                                    PATIENT
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>

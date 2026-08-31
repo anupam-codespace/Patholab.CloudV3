@@ -137,21 +137,41 @@ function A4FullTemplate({
       className="bg-white shadow-lg mx-auto"
       style={{ width: "210mm", minHeight: "297mm", padding: "15mm" }}>
       <div className="flex justify-between items-start border-b-2 border-primary pb-4 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-primary">
-            {lab?.name || "Laboratory"}
-          </h1>
-          <p className="text-xs text-slate-600 mt-1">
-            {lab?.address}, {lab?.city}, {lab?.state} - {lab?.pincode}
-          </p>
-          <p className="text-xs text-slate-600">
-            Phone: {lab?.phone} | Email: {lab?.email}
-          </p>
-          {lab?.licenseNumber && (
-            <p className="text-xs text-slate-500">
-              License: {lab.licenseNumber}
+        <div className="flex items-start gap-4">
+          {/* ✅ v3.2.3: Render lab logo if uploaded (Branding Settings → Logo) */}
+          {lab?.logo ? (
+            <img
+              src={lab.logo}
+              alt={lab?.name || "Lab Logo"}
+              className="h-16 w-auto object-contain"
+              style={{ maxHeight: 64 }}
+              crossOrigin="anonymous"
+            />
+          ) : null}
+          <div>
+            <h1 className="text-2xl font-bold text-primary">
+              {lab?.name || "Laboratory"}
+            </h1>
+            <p className="text-xs text-slate-600 mt-1">
+              {lab?.address}{lab?.address && (lab?.city || lab?.state) ? ", " : ""}
+              {lab?.city}{lab?.city && lab?.state ? ", " : ""}
+              {lab?.state}
+              {lab?.pincode ? ` - ${lab.pincode}` : ""}
             </p>
-          )}
+            <p className="text-xs text-slate-600">
+              {lab?.phone ? `Phone: ${lab.phone}` : ""}
+              {lab?.phone && lab?.email ? " | " : ""}
+              {lab?.email ? `Email: ${lab.email}` : ""}
+            </p>
+            {lab?.licenseNumber && (
+              <p className="text-xs text-slate-500">
+                License: {lab.licenseNumber}
+              </p>
+            )}
+            {lab?.gstNumber && (
+              <p className="text-xs text-slate-500">GST: {lab.gstNumber}</p>
+            )}
+          </div>
         </div>
         <div className="text-right">
           <h2 className="text-xl font-bold text-slate-800">INVOICE</h2>
@@ -262,11 +282,20 @@ function A4HalfTemplate({
       className="bg-white shadow-lg mx-auto"
       style={{ width: "148mm", minHeight: "210mm", padding: "10mm" }}>
       <div className="text-center border-b border-primary pb-3 mb-4">
+        {/* ✅ v3.2.3: Lab logo on A4 Half template */}
+        {lab?.logo ? (
+          <img
+            src={lab.logo}
+            alt={lab?.name || "Lab Logo"}
+            className="h-12 w-auto object-contain mx-auto mb-2"
+            crossOrigin="anonymous"
+          />
+        ) : null}
         <h1 className="text-xl font-bold text-primary">
           {lab?.name || "Laboratory"}
         </h1>
         <p className="text-[10px] text-slate-600">
-          {lab?.address}, {lab?.city} - {lab?.pincode} | Ph: {lab?.phone}
+          {lab?.address}{lab?.address && lab?.city ? ", " : ""}{lab?.city}{lab?.pincode ? ` - ${lab.pincode}` : ""}{lab?.phone ? ` | Ph: ${lab.phone}` : ""}
         </p>
       </div>
       <div className="flex justify-between text-xs mb-3">
@@ -335,11 +364,20 @@ function ThermalTemplate({
       className="bg-white shadow-lg mx-auto font-mono"
       style={{ width: "80mm", padding: "5mm" }}>
       <div className="text-center mb-3">
+        {/* ✅ v3.2.3: Lab logo on Thermal template */}
+        {lab?.logo ? (
+          <img
+            src={lab.logo}
+            alt={lab?.name || "Lab Logo"}
+            className="h-10 w-auto object-contain mx-auto mb-1"
+            crossOrigin="anonymous"
+          />
+        ) : null}
         <h1 className="text-base font-bold">{lab?.name || "Laboratory"}</h1>
         <p className="text-[9px] text-slate-600">
-          {lab?.address}, {lab?.city} - {lab?.pincode}
+          {lab?.address}{lab?.address && lab?.city ? ", " : ""}{lab?.city}{lab?.pincode ? ` - ${lab.pincode}` : ""}
         </p>
-        <p className="text-[9px] text-slate-600">Ph: {lab?.phone}</p>
+        {lab?.phone ? <p className="text-[9px] text-slate-600">Ph: {lab.phone}</p> : null}
       </div>
       <div className="border-t border-b border-dashed border-slate-300 py-2 mb-2 text-[10px]">
         <div className="flex justify-between">
@@ -411,9 +449,18 @@ function CompactTemplate({
       className="bg-white shadow-lg mx-auto"
       style={{ width: "80mm", padding: "3mm" }}>
       <div className="text-center mb-2">
+        {/* ✅ v3.2.3: Lab logo on Compact template */}
+        {lab?.logo ? (
+          <img
+            src={lab.logo}
+            alt={lab?.name || "Lab Logo"}
+            className="h-8 w-auto object-contain mx-auto mb-1"
+            crossOrigin="anonymous"
+          />
+        ) : null}
         <h1 className="text-sm font-bold text-primary">{lab?.name || "Lab"}</h1>
         <p className="text-[8px] text-slate-500">
-          {lab?.phone} | {lab?.city}
+          {lab?.phone ? lab.phone : ""}{lab?.phone && lab?.city ? " | " : ""}{lab?.city ? lab.city : ""}
         </p>
       </div>
       <div className="text-[10px] mb-2 flex justify-between">

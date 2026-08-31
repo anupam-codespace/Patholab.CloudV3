@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { formatISTWithSeconds } from "@/lib/timezone";
+import { formatIST, formatISTWithSeconds } from "@/lib/timezone";
 import {
   Loader2,
   Download,
@@ -185,7 +185,7 @@ export default function ClinicalReportPage() {
           invoiceId: invId,
           invoiceNumber: invNo,
           date: date,
-          formattedDate: format(new Date(date), "dd MMM yyyy, hh:mm a"),
+          formattedDate: formatIST(date),
           tests: [],
         };
       }

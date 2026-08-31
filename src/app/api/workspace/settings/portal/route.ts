@@ -1,8 +1,47 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-import { getDataFromToken } from "@/lib/auth"; // Adjust path if needed
+import { prisma } from "@/lib/prisma";
+import { getDataFromToken } from "@/lib/auth";
 
-const prisma = new PrismaClient();
+export const dynamic = "force-dynamic";
+
+// ============================================================================
+// GET: Fetch the current lab's portal slug (used by the Online Bookings page
+// to show the live public URL at the top — was previously only visible inside
+// Settings → Branding).
+// ============================================================================
+export async function GET(req: NextRequest) {
+  try {
+    const user = await getDataFromToken(req);
+    if (!user || !user.labId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const lab = await prisma.lab.findUnique({
+      where: { id: user.labId },
+      select: {
+        portalSlug: true,
+        name: true,
+        isActive: true,
+      },
+    });
+
+    if (!lab) {
+      return NextResponse.json({ error: "Lab not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({
+      portalSlug: lab.portalSlug,
+      labName: lab.name,
+      isActive: lab.isActive,
+    });
+  } catch (error: any) {
+    console.error("[PORTAL_SETTINGS_GET]", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
+}
 
 export async function PATCH(req: NextRequest) {
   try {

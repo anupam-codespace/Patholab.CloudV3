@@ -46,6 +46,7 @@ import {
 import Link from "next/link";
 
 import { CustomFieldInput } from "@/components/workflow/custom-field-input";
+import { toISTInputValue } from "@/lib/timezone";
 
 // HELPER 1: Range Checker
 const checkRange = (val: string, ranges: any[]) => {
@@ -154,11 +155,12 @@ export default function ResultEntryPage() {
   useEffect(() => {
     if (patient?.tests) {
       const initial: Record<string, string> = {};
-      
-      // We only want to generate a "fallback" NOW date once so both fields match perfectly if missing
-      const fallbackNow = new Date();
-      fallbackNow.setMinutes(fallbackNow.getMinutes() - fallbackNow.getTimezoneOffset());
-      const formattedNow = fallbackNow.toISOString().slice(0, 16);
+
+      // ✅ TIMEZONE FIX: Use toISTInputValue to format Date -> datetime-local IST string.
+      // The old code manually did `setMinutes(getMinutes() - getTimezoneOffset())` which
+      // broke when the SERVER's timezone was UTC (offset 0) instead of IST (offset -330).
+      // toISTInputValue always formats in IST regardless of server timezone.
+      const formattedNow = toISTInputValue(new Date());
 
       patient.tests.forEach((t: any) => {
         t.results.forEach((r: any) => {
@@ -172,23 +174,13 @@ export default function ResultEntryPage() {
         if (t.notes) initial[`${t.id}_NOTES`] = t.notes;
         if (t.impression) initial[`${t.id}_IMPRESSION`] = t.impression;
 
-        // ✅ HANDLE COLLECTED TIME
-        if (t.sampleCollectedAt) {
-          const d = new Date(t.sampleCollectedAt);
-          d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-          initial[`${t.id}_COLLECTED`] = d.toISOString().slice(0, 16);
-        } else {
-          initial[`${t.id}_COLLECTED`] = formattedNow;
-        }
+        initial[`${t.id}_COLLECTED`] = t.sampleCollectedAt
+          ? toISTInputValue(t.sampleCollectedAt)
+          : formattedNow;
 
-        // ✅ HANDLE RECEIVED TIME
-        if (t.sampleReceivedAt) {
-          const d = new Date(t.sampleReceivedAt);
-          d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-          initial[`${t.id}_RECEIVED`] = d.toISOString().slice(0, 16);
-        } else {
-          initial[`${t.id}_RECEIVED`] = formattedNow;
-        }
+        initial[`${t.id}_RECEIVED`] = t.sampleReceivedAt
+          ? toISTInputValue(t.sampleReceivedAt)
+          : formattedNow;
 
         if (t.checkedBy) initial[`${t.id}_CHECKED_BY`] = t.checkedBy;
         if (t.approvedBy) initial[`${t.id}_APPROVED_BY`] = t.approvedBy;

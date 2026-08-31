@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getDataFromToken } from '@/lib/auth';
-import { consumeReagentsForTest } from '@/lib/inventoryEngine'; 
+import { consumeReagentsForTest } from '@/lib/inventoryEngine';
+import { parseISTInput } from '@/lib/timezone';
 
 export const dynamic = 'force-dynamic';
 
@@ -175,10 +176,12 @@ export async function POST(
                         ...(notes && notes[test.id] !== undefined ? { notes: notes[test.id] } : {}),
                         ...(impressions && impressions[test.id] !== undefined ? { impression: impressions[test.id] } : {}),
                         
-                        // ✅ v3.1 FIX: Only set sampleCollectedAt/sampleReceivedAt if they are NOT already set
-                        // This prevents overwriting the original immutable timestamps on edit
-                        ...(sampleCollectedAt && !test.sampleCollectedAt ? { sampleCollectedAt: new Date(sampleCollectedAt) } : {}),
-                        ...(sampleReceivedAt && !test.sampleReceivedAt ? { sampleReceivedAt: new Date(sampleReceivedAt) } : {}),
+                        // ✅ TIMEZONE FIX: Parse naive datetime-local strings as IST explicitly.
+                        // `new Date("2026-08-31T15:30")` interprets the string in the SERVER's
+                        // local timezone (UTC in our Docker env), causing a 5.5h shift.
+                        // parseISTInput() always treats the input as IST (UTC+5:30).
+                        ...(sampleCollectedAt && !test.sampleCollectedAt ? { sampleCollectedAt: parseISTInput(sampleCollectedAt) || undefined } : {}),
+                        ...(sampleReceivedAt && !test.sampleReceivedAt ? { sampleReceivedAt: parseISTInput(sampleReceivedAt) || undefined } : {}),
 
                         checkedBy: checkedById || undefined,
                         approvedBy: approvedById || undefined,
@@ -199,6 +202,57 @@ export async function POST(
                         await consumeReagentsForTest(test.id, user.id || user.name || "SYSTEM");
                     } catch (err) {
                         console.error(`[Inventory Error] Test ${test.id}:`, err);
+                    }
+                }
+
+                // ✅ v3.2.3: AUTO-CREATE Report record when a test is APPROVED.
+                // Previously, no `prisma.report.create()` existed anywhere — so the
+                // Report Dispatch page was always empty. Now we create one Report
+                // per test the moment it gets APPROVED status (idempotent: skips if
+                // a report already exists for this test).
+                if (newStatus === 'APPROVED' && action === 'APPROVE') {
+                    try {
+                        const existingReport = await tx.report.findFirst({
+                            where: { testId: test.id },
+                            select: { id: true },
+                        });
+                        if (!existingReport) {
+                            // Fetch patientId for the test (needed for Report.patientId)
+                            const testWithPatient = await tx.test.findUnique({
+                                where: { id: test.id },
+                                select: { patientId: true, labId: true, branchId: true },
+                            });
+                            if (testWithPatient) {
+                                await tx.report.create({
+                                    data: {
+                                        labId: testWithPatient.labId,
+                                        branchId: testWithPatient.branchId || null,
+                                        testId: test.id,
+                                        patientId: testWithPatient.patientId,
+                                        status: 'APPROVED',
+                                        version: 1,
+                                        isSigned: true,
+                                        signedById: user.id || user.userId,
+                                        signedAt: new Date(),
+                                        approvedAt: new Date(),
+                                    },
+                                });
+                            }
+                        } else {
+                            // Already exists — just bump status to APPROVED
+                            await tx.report.update({
+                                where: { id: existingReport.id },
+                                data: {
+                                    status: 'APPROVED',
+                                    isSigned: true,
+                                    signedById: user.id || user.userId,
+                                    signedAt: new Date(),
+                                    approvedAt: new Date(),
+                                },
+                            });
+                        }
+                    } catch (err) {
+                        console.error(`[Report Auto-Create Error] Test ${test.id}:`, err);
                     }
                 }
             }
@@ -266,9 +320,9 @@ export async function POST(
                 notes: notes !== undefined ? notes : undefined,
                 impression: impression !== undefined ? impression : undefined,
                 
-                // ✅ v3.1 FIX: Only set timestamps if they are NOT already set (immutable)
-                ...(sampleCollectedAt && !existingTest?.sampleCollectedAt ? { sampleCollectedAt: new Date(sampleCollectedAt) } : {}),
-                ...(sampleReceivedAt && !existingTest?.sampleReceivedAt ? { sampleReceivedAt: new Date(sampleReceivedAt) } : {}),
+                // ✅ TIMEZONE FIX: Parse naive datetime-local strings as IST explicitly.
+                ...(sampleCollectedAt && !existingTest?.sampleCollectedAt ? { sampleCollectedAt: parseISTInput(sampleCollectedAt) || undefined } : {}),
+                ...(sampleReceivedAt && !existingTest?.sampleReceivedAt ? { sampleReceivedAt: parseISTInput(sampleReceivedAt) || undefined } : {}),
                 
                 checkedBy: checkedById || null,
                 approvedBy: approvedById || null,
@@ -285,6 +339,52 @@ export async function POST(
         // 4. Fire Inventory
         if (isFirstTimeCompletion) {
             consumeReagentsForTest(testId, user.id || user.name || "SYSTEM").catch(console.error);
+        }
+
+        // ✅ v3.2.3: AUTO-CREATE Report record when single test is APPROVED
+        // (mirrors the batch-branch logic above)
+        if (newStatus === 'APPROVED' && action === 'APPROVE') {
+            try {
+                const existingReport = await prisma.report.findFirst({
+                    where: { testId },
+                    select: { id: true },
+                });
+                if (!existingReport) {
+                    const testWithPatient = await prisma.test.findUnique({
+                        where: { id: testId },
+                        select: { patientId: true, labId: true, branchId: true },
+                    });
+                    if (testWithPatient) {
+                        await prisma.report.create({
+                            data: {
+                                labId: testWithPatient.labId,
+                                branchId: testWithPatient.branchId || null,
+                                testId,
+                                patientId: testWithPatient.patientId,
+                                status: 'APPROVED',
+                                version: 1,
+                                isSigned: true,
+                                signedById: user.id || user.userId,
+                                signedAt: new Date(),
+                                approvedAt: new Date(),
+                            },
+                        });
+                    }
+                } else {
+                    await prisma.report.update({
+                        where: { id: existingReport.id },
+                        data: {
+                            status: 'APPROVED',
+                            isSigned: true,
+                            signedById: user.id || user.userId,
+                            signedAt: new Date(),
+                            approvedAt: new Date(),
+                        },
+                    });
+                }
+            } catch (err) {
+                console.error(`[Report Auto-Create Error] Test ${testId}:`, err);
+            }
         }
 
         return NextResponse.json({ success: true, message: "Test update successful" });

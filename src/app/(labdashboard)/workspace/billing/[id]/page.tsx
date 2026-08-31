@@ -29,6 +29,7 @@ import {
   InvoiceTemplateSelector,
   type InvoiceTemplateVariant,
 } from "@/components/billing/InvoiceTemplateSelector";
+import InvoiceActions from "./invoice-actions";
 import { format } from "date-fns";
 import toast from "react-hot-toast";
 import Barcode from "react-barcode";
@@ -358,6 +359,17 @@ export default function InvoiceDetailsPage() {
               Print
             </Button>
           </div>
+        </div>
+
+        {/* ✅ SHARE ACTIONS: WhatsApp, Email, Server-side PDF download */}
+        <div className="mt-4">
+          <InvoiceActions
+            invoiceId={invoice?.id}
+            invoiceNumber={invoice?.invoiceNumber}
+            patientName={invoice?.patient?.name}
+            patientPhone={invoice?.patient?.phone}
+            patientEmail={invoice?.patient?.email}
+          />
         </div>
 
         {/* --- INVOICE TEMPLATE SELECTOR + RENDERER --- */}

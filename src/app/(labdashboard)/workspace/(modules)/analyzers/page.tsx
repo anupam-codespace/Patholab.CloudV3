@@ -76,6 +76,21 @@ export default async function AnalyzerPage() {
     },
   });
 
+  // ✅ NEW: Fetch the list of registered analyzers (auto-registered on first webhook call)
+  const registeredAnalyzers = await prisma.labAnalyzer.findMany({
+    where: { labId: labId },
+    include: {
+      _count: {
+        select: {
+          results: true,
+          mappings: true,
+          unmappedCodes: true,
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
   const recentSyncs = await prisma.sample.findMany({
     where: {
       labId: labId,
@@ -262,6 +277,108 @@ export default async function AnalyzerPage() {
               </li>
             </ul>
           </div>
+        </div>
+
+        {/* ✅ REGISTERED ANALYZERS LIST */}
+        <div className="lg:col-span-12 bg-card rounded-[40px] shadow-[0_30px_60px_rgba(0,0,0,0.03)] border border-slate-100 overflow-hidden mt-4">
+          <div className="px-10 py-8 border-b border-slate-50 flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-50/50">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-emerald-100 rounded-2xl">
+                <Cpu className="w-6 h-6 text-emerald-600" />
+              </div>
+              <div>
+                <h2 className="font-black text-foreground text-lg tracking-tight uppercase">
+                  Registered Analyzers
+                </h2>
+                <p className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-widest">
+                  Auto-discovered machines (first webhook ping creates the record)
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 rounded-full">
+              <span className="text-[10px] font-black text-emerald-700 uppercase tracking-tighter">
+                {registeredAnalyzers.length} Machine{registeredAnalyzers.length === 1 ? "" : "s"}
+              </span>
+            </div>
+          </div>
+
+          {registeredAnalyzers.length === 0 ? (
+            <div className="p-16 text-center flex flex-col items-center">
+              <div className="w-20 h-20 bg-muted/30 rounded-full flex items-center justify-center mb-6 shadow-inner">
+                <Cpu className="w-8 h-8 text-slate-300" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-800">
+                No machines registered yet.
+              </h3>
+              <p className="text-xs text-muted-foreground mt-2 font-bold uppercase tracking-widest max-w-sm mx-auto leading-relaxed">
+                Send a test result from your middleware/agent to register the first analyzer.
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="bg-card text-muted-foreground/70 text-[10px] font-black uppercase tracking-[0.2em] border-b border-slate-50">
+                    <th className="px-10 py-6">Machine Name</th>
+                    <th className="px-10 py-6">Model</th>
+                    <th className="px-10 py-6">Protocol</th>
+                    <th className="px-10 py-6">Results Synced</th>
+                    <th className="px-10 py-6">Mappings</th>
+                    <th className="px-10 py-6">Unmapped Queue</th>
+                    <th className="px-10 py-6">Status</th>
+                    <th className="px-10 py-6 text-right">Manage</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {registeredAnalyzers.map((analyzer) => (
+                    <tr key={analyzer.id} className="group hover:bg-muted/30 transition-all duration-300">
+                      <td className="px-10 py-6">
+                        <span className="font-mono font-black text-sm text-primary bg-indigo-50 px-4 py-2 rounded-xl">
+                          {analyzer.name}
+                        </span>
+                      </td>
+                      <td className="px-10 py-8 font-mono text-xs text-muted-foreground/70">
+                        {analyzer.model}
+                        <div className="text-[9px] text-slate-400">SN: {analyzer.serialNumber}</div>
+                      </td>
+                      <td className="px-10 py-6">
+                        <span className="text-xs font-bold uppercase tracking-wider text-emerald-600">
+                          {analyzer.protocol || "JSON"}
+                        </span>
+                      </td>
+                      <td className="px-10 py-6 font-mono text-sm text-foreground">
+                        {analyzer._count.results}
+                      </td>
+                      <td className="px-10 py-6 font-mono text-sm text-foreground">
+                        {analyzer._count.mappings}
+                      </td>
+                      <td className="px-10 py-6 font-mono text-sm">
+                        {analyzer._count.unmappedCodes > 0 ? (
+                          <span className="text-amber-600 font-bold">{analyzer._count.unmappedCodes} pending</span>
+                        ) : (
+                          <span className="text-muted-foreground">0</span>
+                        )}
+                      </td>
+                      <td className="px-10 py-6">
+                        <span className={`inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${analyzer.isActive ? "bg-emerald-50 text-emerald-700 border border-emerald-100" : "bg-slate-50 text-slate-500 border border-slate-100"}`}>
+                          <span className={`h-1.5 w-1.5 rounded-full ${analyzer.isActive ? "bg-emerald-500" : "bg-slate-400"}`} />
+                          {analyzer.isActive ? "Active" : "Inactive"}
+                        </span>
+                      </td>
+                      <td className="px-10 py-6 text-right">
+                        <Link
+                          href="/workspace/analyzers/mappings"
+                          className="inline-flex items-center gap-2 text-foreground hover:text-primary font-black text-[10px] uppercase tracking-widest transition-all group/link">
+                          Manage Mappings
+                          <ChevronRight className="w-4 h-4 transition-transform group-hover/link:translate-x-1" />
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
         {/* LIVE FEED TABLE */}

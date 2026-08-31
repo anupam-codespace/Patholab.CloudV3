@@ -6,7 +6,16 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  // ✅ v3.2.2: Switched from sqlite to postgresql for Neon / managed Postgres.
+  // SQLite silently serialized JS arrays into strings; Postgres enforces strict
+  // typing, which is why the old `String` declaration broke on Neon when the
+  // Lab/Staff modules API wrote `["b2b","inventory",...]` into a TEXT column.
+  // The four fields that hold arrays are now correctly typed as `String[]`:
+  //   - User.activeModules
+  //   - Lab.activeModules
+  //   - Branch.activeModules
+  //   - LabStaff.permissions
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -28,7 +37,7 @@ model SystemConfig {
   defaultMinRecharge  Decimal  @default(100.00)
   googleAnalyticsId   String?
   facebookPixelId     String?
-  socialLinks         String?
+  socialLinks         Json? // ✅ v3.2.2: Json? — typically holds {facebook, twitter, instagram, linkedin} object
   systemEmail         String?
   systemPhone         String?
   systemAddress       String?
@@ -67,7 +76,7 @@ model User {
   emailVerified    Boolean          @default(false)
   onboardingStatus OnboardingStatus @default(REGISTERED)
   isActive         Boolean          @default(false)
-  activeModules    String           @default("") // ✅ FIXED: PostgreSQL Array for User
+  activeModules    String[]         @default([]) // ✅ v3.2.2: Postgres native String[] array (was String on SQLite)
   avatar           String?
   abhaNumber       String?          @unique
   abhaAddress      String?
@@ -208,7 +217,7 @@ model Lab {
   smsApiKey       String?
   smsSenderId     String?
 
-  activeModules String @default("") // ✅ FIXED: Changed to String @default("")
+  activeModules String[] @default([]) // ✅ v3.2.2: Postgres native String[] array
 
   defaultDoctorCommission Decimal?       @default(10.0)
   defaultAgencyCommission Decimal?       @default(5.0)
@@ -274,7 +283,7 @@ model Branch {
   email        String?
   isActive     Boolean @default(true)
 
-  activeModules String @default("") // ✅ ADDED: Allow branch-level module locking
+  activeModules String[] @default([]) // ✅ v3.2.2: Postgres native String[] array for branch-level module locking
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -334,7 +343,7 @@ model LabStaff {
   joinDate   DateTime @default(now())
   isActive   Boolean  @default(true)
 
-  permissions String @default("") // ✅ FIXED: Changed to String @default("") for granular auth checks
+  permissions String[] @default([]) // ✅ v3.2.2: Postgres native String[] array for granular auth checks
 
   createdAt DateTime @default(now())
 
@@ -684,8 +693,12 @@ model HomeCollectionTrip {
   endLocation    String?
   totalDistance  Float?
   status         TripStatus    @default(SCHEDULED)
+  startedAt      DateTime?
+  completedAt    DateTime?
+  notes          String?
   appointments   Appointment[]
   createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 }
 
 enum TripStatus {
@@ -723,6 +736,13 @@ model Appointment {
   transactionId    String? // ✅ RESTORED
   invoiceId        String?  @unique
   invoice          Invoice? @relation(fields: [invoiceId], references: [id])
+
+  // ✅ v3.2: Unique tracking ID for public tracking page
+  trackId           String?   @unique
+  // ✅ v3.2: Payment verification status for online bookings
+  paymentVerified   Boolean   @default(false)
+  paymentVerifiedAt DateTime?
+  paymentVerifiedBy String?
 
   status    AppointmentStatus @default(SCHEDULED)
   deletedAt DateTime? // ✅ RESTORED
@@ -1435,7 +1455,7 @@ model RadiologyStudy {
   scanName         String
   clinicalHistory  String?
   isContrastUsed   Boolean   @default(false)
-  safetyChecklist  String?
+  safetyChecklist  Json? // ✅ v3.2.2: Changed from String? to Json? — frontend stores a {idVerified, safetyCleared, consentSigned} object
   mediaStatus      String?
   referringDoctor  String?
   technicianId     String?

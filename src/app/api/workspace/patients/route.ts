@@ -227,26 +227,96 @@ export async function POST(req: NextRequest) {
     const nextId = `P-${nextNumber.toString().padStart(5, '0')}`;
     
     // 4. RESOLVE DOCTORS & AGENCIES
+    // ✅ v3.2.1 FIX: When a lab user types a NEW doctor name (not already in the DB)
+    // in the registration page's CreatableCombobox, we AUTO-CREATE the doctor record
+    // so it shows up immediately on the accession page's doctor dropdown.
+    // Previously the code silently dropped the doctor if it didn't exist, so the
+    // accession page showed "Self / No Doctor" even though the user typed a name.
     const isDbId = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str) || /^c[a-z0-9]{20,}$/i.test(str);
-    
+
     let finalDoctorId = null;
     let finalAgencyId = null;
     const incomingDoctor = body.doctorId || body.doctorName;
     const incomingAgency = body.agencyId || body.agencyName;
 
     if (incomingDoctor && incomingDoctor !== "Self") {
-        if (isDbId(incomingDoctor)) finalDoctorId = incomingDoctor;
-        else {
-            const doc = await prisma.doctor.findFirst({ where: { labId: user.labId, name: { equals: incomingDoctor, mode: 'insensitive' } } });
-            if (doc) finalDoctorId = doc.id;
+        if (isDbId(incomingDoctor)) {
+            finalDoctorId = incomingDoctor;
+        } else {
+            // Look up by name (case-insensitive)
+            const doc = await prisma.doctor.findFirst({
+                where: { labId: user.labId, name: { equals: incomingDoctor, mode: 'insensitive' } },
+            });
+            if (doc) {
+                finalDoctorId = doc.id;
+            } else {
+                // ✅ AUTO-CREATE: Doctor doesn't exist — create a minimal record
+                // so the lab user doesn't have to navigate away to the Doctors page.
+                // They can fill in specialization/clinic/commission later.
+                const newDoc = await prisma.doctor.create({
+                    data: {
+                        labId: user.labId,
+                        name: incomingDoctor.trim(),
+                        phone: body.doctorPhone || null,
+                        email: body.doctorEmail || null,
+                        specialization: body.doctorSpecialization || null,
+                        clinic: body.doctorClinic || null,
+                        commissionRate: 0,
+                        commissionType: 'PERCENTAGE',
+                    },
+                });
+                finalDoctorId = newDoc.id;
+
+                // Log the auto-creation so the lab owner can audit it later
+                await prisma.activityLog.create({
+                    data: {
+                        labId: user.labId,
+                        userId: user.id,
+                        action: 'DOCTOR_AUTO_CREATED',
+                        entityType: 'DOCTOR',
+                        entity: 'DOCTOR',
+                        entityId: newDoc.id,
+                        description: `Doctor "${newDoc.name}" auto-created during patient registration.`,
+                    },
+                }).catch(() => { /* non-fatal */ });
+            }
         }
     }
 
     if (incomingAgency && incomingAgency !== "Direct") {
-        if (isDbId(incomingAgency)) finalAgencyId = incomingAgency;
-        else {
+        if (isDbId(incomingAgency)) {
+            finalAgencyId = incomingAgency;
+        } else {
             const ag = await prisma.agency.findFirst({ where: { labId: user.labId, agencyName: { equals: incomingAgency, mode: 'insensitive' } } });
-            if (ag) finalAgencyId = ag.id;
+            if (ag) {
+                finalAgencyId = ag.id;
+            } else {
+                // ✅ AUTO-CREATE: Agency doesn't exist — create a minimal record.
+                const newAg = await prisma.agency.create({
+                    data: {
+                        labId: user.labId,
+                        agencyName: incomingAgency.trim(),
+                        contactPerson: body.agencyContactPerson || null,
+                        phone: body.agencyPhone || null,
+                        email: body.agencyEmail || null,
+                        commissionRate: 0,
+                        commissionType: 'PERCENTAGE',
+                    },
+                });
+                finalAgencyId = newAg.id;
+
+                await prisma.activityLog.create({
+                    data: {
+                        labId: user.labId,
+                        userId: user.id,
+                        action: 'AGENCY_AUTO_CREATED',
+                        entityType: 'AGENCY',
+                        entity: 'AGENCY',
+                        entityId: newAg.id,
+                        description: `Agency "${newAg.agencyName}" auto-created during patient registration.`,
+                    },
+                }).catch(() => { /* non-fatal */ });
+            }
         }
     }
 
