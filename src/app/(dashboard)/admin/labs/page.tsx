@@ -34,6 +34,7 @@ import Link from "next/link";
 // UI Components
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { CSVExportButton } from "@/components/admin/CSVExportButton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -344,10 +345,14 @@ export default function AdminLabsPage() {
           </p>
         </div>
 
-        <OnboardLabDialog
-          open={isOnboardOpen}
-          onOpenChange={setIsOnboardOpen}
-        />
+        <div className="flex items-center gap-2">
+          <CSVExportButton resource="labs" label="Export Labs" filters={{ statuses: ['active', 'inactive'] }} />
+          <CSVExportButton resource="active-labs" label="Export Active Labs" />
+          <OnboardLabDialog
+            open={isOnboardOpen}
+            onOpenChange={setIsOnboardOpen}
+          />
+        </div>
       </div>
 
       {/* STATS CARDS */}

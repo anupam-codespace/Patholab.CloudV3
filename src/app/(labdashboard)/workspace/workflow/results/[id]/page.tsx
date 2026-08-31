@@ -589,7 +589,7 @@ export default function ResultEntryPage() {
                         </Button>
                         {isReviewReady ? (
                           <Button
-                            className="h-9 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 transition-all shadow-md shadow-emerald-500/20"
+                            className="h-9 text-xs font-bold bg-primary hover:bg-primary/90 transition-all shadow-md shadow-primary/20"
                             onClick={() => actionMutation.mutate({ testId: test.id, action: "APPROVE" })}
                             disabled={activeAction !== null}>
                             {activeAction === `${test.id}_APPROVE` ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <ShieldCheck className="h-3.5 w-3.5 mr-1.5" />}
@@ -597,7 +597,7 @@ export default function ResultEntryPage() {
                           </Button>
                         ) : (
                           <Button
-                            className="h-9 text-xs font-bold bg-blue-600 hover:bg-blue-700 transition-all shadow-md shadow-blue-500/20"
+                            className="h-9 text-xs font-bold bg-primary hover:bg-primary/90 transition-all shadow-md shadow-primary/20"
                             onClick={() => actionMutation.mutate({ testId: test.id, action: "SUBMIT_FOR_REVIEW" })}
                             disabled={activeAction !== null}>
                             {activeAction === `${test.id}_SUBMIT_FOR_REVIEW` ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : "Submit for Review"}

@@ -262,8 +262,10 @@ export default function ClinicalReportPage() {
   const primaryTest = latestVisit.tests[0];
   const barcodeValue =
     primaryTest?.sample?.sampleId || patient.patientId || "UNKNOWN";
+  // ✅ v3.1.1 FIX: Use doctor.name (Doctor model's own name field) instead of doctor.user.name
+  // Doctor.name is always set when a doctor is created; doctor.userId may be null
   const refDoctorName =
-    primaryTest?.doctor?.user?.name || primaryTest?.referredBy || "Self";
+    primaryTest?.doctor?.name || primaryTest?.doctor?.user?.name || primaryTest?.referredBy || "Self";
   const agencyName = primaryTest?.agency?.agencyName || "Self";
 
   const sampleCollectedAt = primaryTest?.sampleCollectedAt
@@ -312,6 +314,7 @@ export default function ClinicalReportPage() {
             ? formatISTWithSeconds(visit.tests[0].approvedAt)
             : formatISTWithSeconds(new Date()),
           refDoctor:
+            visit.tests[0]?.doctor?.name ||
             visit.tests[0]?.doctor?.user?.name ||
             visit.tests[0]?.referredBy ||
             "Self",

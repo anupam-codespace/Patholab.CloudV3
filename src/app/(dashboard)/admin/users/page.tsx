@@ -15,6 +15,7 @@ import toast from 'react-hot-toast';
 // UI Components
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { CSVExportButton } from '@/components/admin/CSVExportButton';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { 
@@ -218,6 +219,10 @@ export default function GlobalUsersPage() {
 
   return (
     <div className="space-y-6 p-8 min-h-screen bg-muted/5">
+      {/* --- HEADER WITH EXPORT --- */}
+      <div className="flex items-center justify-end">
+        <CSVExportButton resource="users" label="Export Users" filters={{ roles: ['SUPER_ADMIN', 'LAB_OWNER', 'LAB_MANAGER', 'TECHNICIAN', 'RECEPTIONIST', 'PHLEBOTOMIST', 'B2B_PARTNER', 'PATIENT'], statuses: ['active', 'inactive'] }} />
+      </div>
       {/* --- STATS ROW --- */}
       {data?.stats && (
         <div className="grid gap-4 md:grid-cols-3">

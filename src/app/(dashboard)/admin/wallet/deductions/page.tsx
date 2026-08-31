@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { CSVExportButton } from "@/components/admin/CSVExportButton";
 
 export const dynamic = "force-dynamic";
 
@@ -63,11 +64,7 @@ export default async function AdminDeductionsPage() {
             Real-time firehose of clinical operations burning platform credits.
           </p>
         </div>
-        <Button
-          variant="outline"
-          className="text-foreground/80 rounded-xl shadow-sm font-bold border-border">
-          <Download className="w-4 h-4 mr-2" /> Export Ledger
-        </Button>
+        <CSVExportButton resource="deductions" label="Export Deductions" />
       </div>
 
       {/* KPI METRIC */}

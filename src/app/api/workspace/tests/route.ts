@@ -78,7 +78,7 @@ export async function GET(req: NextRequest) {
         location: 'Home Collection' 
       },
       
-      refBy: t.doctor?.user?.name || t.referredBy || 'Self'
+      refBy: t.doctor?.name || t.doctor?.user?.name || t.referredBy || 'Self'
     }));
 
     return NextResponse.json({

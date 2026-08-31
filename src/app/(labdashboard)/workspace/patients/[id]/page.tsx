@@ -507,7 +507,7 @@ export default function PatientDetailPage() {
                                   </span>
                                   <span className="flex items-center gap-1">
                                     <Stethoscope className="h-3 w-3" /> Ref:{" "}
-                                    {test.doctor?.user?.name || "Self"}
+                                    {test.doctor?.name || test.doctor?.user?.name || "Self"}
                                   </span>
                                 </div>
                               </div>

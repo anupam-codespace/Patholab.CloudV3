@@ -28,6 +28,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { CSVExportButton } from "@/components/admin/CSVExportButton";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -73,6 +74,7 @@ export default function AdminInvoicesPage() {
           </p>
         </div>
         <div className="flex gap-2">
+          <CSVExportButton resource="invoices" label="Export Invoices" filters={{ statuses: ['PAID', 'PENDING', 'PARTIAL', 'CANCELLED'] }} />
           <Button
             variant={activeTab === "list" ? "default" : "outline"}
             className={

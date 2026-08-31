@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { CSVExportButton } from "@/components/admin/CSVExportButton";
 
 export const dynamic = "force-dynamic";
 
@@ -66,9 +67,7 @@ export default async function AdminRechargesPage() {
             platform.
           </p>
         </div>
-        <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-md font-bold">
-          <Download className="w-4 h-4 mr-2" /> Export to CSV
-        </Button>
+        <CSVExportButton resource="recharges" label="Export Recharges" />
       </div>
 
       {/* KPI METRIC */}

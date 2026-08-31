@@ -20,6 +20,7 @@ import {
 // UI Components
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { CSVExportButton } from "@/components/admin/CSVExportButton";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -94,6 +95,7 @@ export default function AdminActivityLogsPage() {
             Global monitoring of all user and system operations.
           </p>
         </div>
+        <CSVExportButton resource="activity" label="Export Logs" />
       </div>
 
       <Tabs

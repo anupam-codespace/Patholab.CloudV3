@@ -936,6 +936,7 @@ export async function POST(req: NextRequest) {
             ? format(new Date(primaryTest.approvedAt), "dd/MM/yy HH:mm:ss")
             : "-",
           refDoctor:
+            primaryTest.doctor?.name ||
             primaryTest.doctor?.user?.name ||
             primaryTest.referredBy ||
             primaryTest.agency?.agencyName ||
