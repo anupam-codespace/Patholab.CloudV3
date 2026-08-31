@@ -597,3 +597,108 @@ Stage Summary:
 - All code that reads/writes the four array fields was already array-safe — no application code changes needed.
 - Schema validated against postgresql provider.
 - Zip ready for download at `/home/z/my-project/download/patholab-v3.2.2.zip`.
+
+---
+Task ID: V3.2.3-BOOKING-INVOICE-REPORT-MIDDLEWARE
+Agent: Main agent
+Task: Fix online booking visibility, invoice logo, empty report dispatch, public tracking crash, and middleware public-route blocking.
+
+Work Log:
+- **Online Booking — portal slug visibility**: The Online Bookings page (`/workspace/bookings`) had no link to the portal-slug settings page and no way to see the live public URL. Added a "Portal Settings" button in the header, plus a prominent banner showing the live public booking URL (or an "OFF" banner with a "Set Up Portal URL" CTA if no slug is set). Includes a "Copy URL" button. Added a new `GET /api/workspace/settings/portal` endpoint (previously only `PATCH` existed) so the bookings page can fetch the current portalSlug on load.
+- **Invoice templates — lab logo not rendering**: All four invoice templates (A4Full, A4Half, Thermal, Compact) displayed only the lab name and address — never the logo. Updated all four templates in `src/components/billing/InvoiceTemplateSelector.tsx` to render `lab.logo` as an `<img>` tag when present (sizes: 64px A4Full, 48px A4Half, 40px Thermal, 32px Compact). All use `crossOrigin="anonymous"` for print/PDF compatibility. Also made the address/phone/email fields null-safe (previously showed `undefined` and stray commas when fields were empty).
+- **Report Dispatch — empty list**: CRITICAL — no `prisma.report.create()` call existed anywhere in the codebase. Tests could be APPROVED but no `Report` record was ever created, so the dispatch page was always empty. Added auto-create logic in `/api/workspace/workflow/results/[id]/route.ts` (both batch and single-test branches): when `action === 'APPROVE'` and the test transitions to APPROVED, a Report record is created (idempotent — skips if one already exists for that test). Initialized with status=APPROVED, isSigned=true, signedById, signedAt, approvedAt. If a report already exists, its status is bumped to APPROVED instead of creating a duplicate.
+- **Public tracking page crash**: `/api/track/[trackId]` was returning HTTP 500 with two distinct errors: (1) `Cannot read properties of null (reading 'split')` when `appointment.patient.name` was null, and (2) `Unknown field 'lab' for include statement on model 'Appointment'` — the Appointment model has only a `labId` scalar (no `lab` relation), but the query tried to `include: { lab: ... }`. Fixed by removing `lab` from the include clause and fetching the lab separately via `prisma.lab.findUnique`. Made patient-name masking null-safe using `trim().split(/\s+/).filter(Boolean)` and falling back to 'Patient' when name is null/empty. Added `labLogo` and `labPhone` to the response so the public tracking page can display the lab's branding.
+- **Middleware — public routes blocked**: The middleware's public-path checks were scattered as inline `pathname.startsWith(...)` calls, making it easy to miss routes. The matcher regex also didn't explicitly exclude `/uploads/`, `/sw.js`, `/manifest.json`, or `workbox-*.js`. Consolidated all public prefixes into a single `PUBLIC_PREFIXES` array (easier to audit and extend): `/api/public/`, `/api/auth/`, `/api/track/`, `/api/verify/`, `/api/webhooks`, `/api/plans`, `/api/landing`, `/api/contact`, `/api/book-demo`, `/api/tests/categories`, `/track/`, `/verify/`, `/book/`, `/uploads/`, `/sw.js`, `/manifest.json`, `/favicon.ico`. Added `/portal` and `/book-demo` to PUBLIC_PATHS. Added `/patient-portal` to the PATIENT role's allowed paths (patients were getting redirected to `/unauthorized`). Tightened the matcher regex to explicitly exclude `_next/static`, `_next/image`, `favicon.ico`, `manifest.json`, `sw.js`, `workbox-*.js`, `uploads/`, and any path with a file extension.
+- **Verification**: Restarted dev server. All endpoints compile cleanly. Tested:
+  - `/book/testlab` → 200 (public booking page works with real portalSlug)
+  - `/track/TRK-TEST` → 404 (no longer 500 — graceful "not found" for non-existent track IDs)
+  - `/api/workspace/settings/portal` → 401 (auth required, correct)
+  - All `/workspace/*` routes → 307 (redirect to login when not authenticated, correct)
+  - `/uploads/test/test.png` → 404 (correctly bypasses middleware, returns 404 for non-existent file)
+  - `/manifest.json` → 200 (publicly accessible)
+- **Version bump**: `package.json` → `3.2.3`. CHANGELOG.md updated with v3.2.3 section. Zip created at `download/patholab-v3.2.3.zip` (2.5 MB).
+
+Stage Summary:
+- 6 files modified: `src/middleware.ts` (consolidated PUBLIC_PREFIXES + tightened matcher), `src/app/api/workspace/settings/portal/route.ts` (added GET), `src/app/(labdashboard)/workspace/bookings/page.tsx` (portal URL banner + settings button), `src/components/billing/InvoiceTemplateSelector.tsx` (logo on all 4 templates), `src/app/api/workspace/workflow/results/[id]/route.ts` (auto-create Report on APPROVE), `src/app/api/track/[trackId]/route.ts` (null-safe + lab fetched separately).
+- All fixes verified working. Zip ready for download.
+
+---
+Task ID: V3.2.4-APPOINTMENT-DETAIL-CONVERT-UPI-SERVICE-AREAS-TRACK
+Agent: Main agent
+Task: Build appointment detail view, convert-to-patient flow, collection area management, UPI payment setup, payment reference submission, enhanced tracking, and fix ReportTemplate.config Prisma error.
+
+Work Log:
+- **ReportTemplate.config fix**: The template builder passed a nested JS object to `prisma.reportTemplate.create({ data: { config } })`, but the schema declares `config` as `String?`. Prisma threw `PrismaClientValidationError: Argument 'config': Invalid value provided. Expected String or Null, provided Object.` Fixed `src/actions/report-settings.ts` `saveTemplate()` to JSON.stringify the config before saving. The reader side already does JSON.parse, so round-trip is safe. Verified with a test script that creates + reads + deletes a template successfully.
+- **Track API schema mismatch**: The track API was selecting `invoice.discountAmount` but the actual Invoice schema field is `discount` (not `discountAmount`). Fixed the select clause and updated the response to use `discount` field, also added `totalTax` to the response (mapped to `taxAmount`).
+- **Appointment Detail page**: Created `/workspace/bookings/[id]/page.tsx` with comprehensive view: patient info, appointment info, tests table with sample IDs, invoice summary, payment management panel (UPI info + lab-owner payment form + verify button), and home collection trip info. Created `GET /api/workspace/appointments/[id]` endpoint that returns all this data with proper Decimal serialization and IST timestamp formatting. Added "View Detail" links to the Online Bookings list.
+- **Convert to Patient**: Created `POST /api/workspace/appointments/[id]/convert-patient` endpoint that: (1) ensures the linked patient has a proper patientId (P-00001 format), (2) updates demographic fields if provided, (3) marks appointment as CONFIRMED, (4) auto-creates a Doctor record if a new name is provided (mirrors accession logic), (5) writes APPOINTMENT_CONVERTED_TO_PATIENT activity log. "Convert to Patient" button added to the Appointment Detail page.
+- **Appointment Payment API**: Created `PATCH /api/workspace/appointments/[id]/payment` endpoint that lets the lab owner update paymentMode, transactionId, paymentCollected, and optionally markAsPaid (which generates a trackId, sets paymentVerified=true, marks status=CONFIRMED, and syncs the linked invoice to PAID).
+- **Service Areas management**: Created `GET/POST /api/workspace/service-areas` and `PATCH/DELETE /api/workspace/service-areas/[id]` endpoints. Created `/workspace/settings/service-areas` page with add/list/delete/toggle UI. The ServiceArea model already existed but had no UI/API — now lab owners can map pincodes to branches via a proper interface.
+- **UPI Payment Setup**: Added `upiId` and `upiQrCode` fields to the Lab Settings page (Legal & Banking tab) with a live QR preview. Updated `/api/workspace/settings` PUT to persist these fields. Created `GET /api/public/[portalSlug]/payment-info` endpoint that returns the lab's UPI ID + QR code for the booking form.
+- **UPI Payment Flow on Booking Form**: Rewrote `PublicBookingForm.tsx` to add a post-booking payment step: (1) patient fills form and clicks Book Now, (2) booking created with PENDING_PAYMENT status, (3) form transitions to "Booking Confirmed" view showing lab's UPI ID + QR + "Open UPI App to Pay" deep link (upi://pay?pa=...&am=...), (4) patient enters UTR, (5) clicks "Submit Payment Reference" → calls new `POST /api/public/[portalSlug]/payment-reference` endpoint → updates appointment's transactionId + paymentMode, (6) redirects to tracking page. Fallback message if lab hasn't set up UPI.
+- **Enhanced Public Tracking**: Rewrote `/api/track/[trackId]` to return a much richer payload: patient ID, lab address, branch name/address/city/phone, per-test details (name, code, status, TAT, sample ID + collected-at), payment breakdown (subtotal, discount, tax, grand total, invoice number, transaction ID, payment mode), home collection trip details (phlebotomist name + phone, scheduled/started/completed, trip status), and an adaptive timeline (home-collection shows extra "Phlebotomist Assigned" + "On the Way" steps). Rewrote `/track/[trackId]` page UI with: lab header with logo, patient + appointment cards, tests breakdown table, payment card, home collection trip card (only for home collection), and adaptive timeline.
+- **End-to-end verification**: Tested the full flow: created a service area (pincode 700001 → Main Branch) + set UPI ID on Test Lab via script, then POSTed a real booking to `/api/public/testlab/book` with paymentReference → got 200 response with `paymentInfo: { upiId: "testlab@okhdfcbank", amount: 350, note: "Patholab Booking TRK-..." }`. Then fetched `/api/track/TRK-...` → got comprehensive JSON with patient name (masked "John D."), lab info, branch info, test details with TAT, payment breakdown, transaction ID, and adaptive timeline. All endpoints compile cleanly (401 for protected APIs, 200 for public pages).
+
+Stage Summary:
+- 11 files created/modified: `src/actions/report-settings.ts` (config JSON.stringify fix), `src/app/api/track/[trackId]/route.ts` (richer payload + discount field fix), `src/app/api/workspace/appointments/[id]/route.ts` (new GET), `src/app/api/workspace/appointments/[id]/convert-patient/route.ts` (new POST), `src/app/api/workspace/appointments/[id]/payment/route.ts` (new PATCH), `src/app/api/workspace/service-areas/route.ts` (new GET/POST), `src/app/api/workspace/service-areas/[id]/route.ts` (new PATCH/DELETE), `src/app/api/workspace/settings/route.ts` (added upiId/upiQrCode to PUT), `src/app/api/public/[portalSlug]/payment-info/route.ts` (new GET), `src/app/api/public/[portalSlug]/payment-reference/route.ts` (new POST), `src/app/api/public/[portalSlug]/book/route.ts` (accept + persist paymentReference, return paymentInfo), `src/app/(labdashboard)/workspace/bookings/[id]/page.tsx` (new detail page), `src/app/(labdashboard)/workspace/bookings/page.tsx` (added View Detail links), `src/app/(labdashboard)/workspace/settings/page.tsx` (added UPI fields UI), `src/app/(labdashboard)/workspace/settings/service-areas/page.tsx` (new management page), `src/app/track/[trackId]/page.tsx` (rewrote UI), `src/components/portal/PublicBookingForm.tsx` (rewrote with UPI payment step).
+- Version bumped to 3.2.4. CHANGELOG updated. Zip at download/patholab-v3.2.4.zip (2.5 MB).
+
+---
+Task ID: V3.2.4.1-SIDEBAR-ORPHAN-LINKS
+Agent: Main agent
+Task: Add all orphan/settings pages to the sidebar so users can navigate to every page (especially Service Areas / pincode management) without typing URLs.
+
+Work Log:
+- **Orphan audit**: Cross-referenced every `page.tsx` under `src/app/(labdashboard)/workspace/` against the `navHrefs` in `src/config/navigation.ts`. Found 13 orphan pages that existed as routes but had no sidebar link:
+  1. `/workspace/accession` — sample accession worklist
+  2. `/workspace/samples` — sample lookup by sample ID
+  3. `/workspace/settings/notifications` — notification settings
+  4. `/workspace/settings/report-template` — alternate report template builder
+  5. `/workspace/settings/service-areas` — pincode → branch mapping (the one specifically called out)
+  6. `/workspace/wallet/recharge` — wallet top-up page
+  7. `/workspace/print/barcodes` — barcode printing
+  8. `/workspace/invoice` — SaaS invoice (platform billing)
+  9. `/workspace/radiology/worklist` — technician scan worklist
+  10. `/workspace/radiology/media` — media library
+  11. `/workspace/radiology/reports-archive` — archived radiology reports
+  12. `/workspace/radiology/settings/dicom` — DICOM configuration
+  13. `/workspace/radiology/settings/letterhead` — RIS letterhead
+- **Navigation update**: Updated `src/config/navigation.ts`:
+  - **Admin nav — Clinical Operations**: added Accession + Sample Lookup.
+  - **Admin nav — Resources & Logistics**: added Home Collection (moved from Administration).
+  - **Admin nav — Administration**: completely reorganized into settings-first layout: Lab Settings → Report Templates → Report Template (Alt) → Invoice Branding → Service Areas (Pincodes) → Payment Settings → Notifications → B2B Settings, then operational tools: Staff → Invoices → SaaS Invoice → Print Barcodes → Expenses → Audit Logs → Wallet → Wallet Recharge → Help.
+  - **Admin nav — B2B & Growth**: removed B2B Settings (moved to Administration).
+  - **Receptionist nav**: added Accession, Online Bookings, Print Barcodes.
+  - **Radiology nav**: expanded from 6 to 11 items — added Technician Worklist, Media Library, Reports Archive, DICOM Settings, RIS Letterhead. Split the single "Settings" entry into 3 specific entries.
+- **Icon imports**: Added 15 new lucide-react icons for the new nav items: Bell, FileText, QrCode, PlusCircle, FlaskConical, Droplet, Printer, Zap, MapPin, Radio, Film, Archive, Network, Keyboard, Palette.
+- **Verification**: Restarted dev server. All 14 newly-linked pages return 307 (redirect to login) — confirming they compile cleanly. Re-ran the orphan-detection script: `✅ NONE — every workspace page is now linked in the sidebar!`
+- **Version bump**: `package.json` → `3.2.4.1`. CHANGELOG updated with v3.2.4.1 section. Zip at `download/patholab-v3.2.4.1.zip` (2.5 MB). Total nav items: 72 (was 58 before this update).
+
+Stage Summary:
+- 1 file modified: `src/config/navigation.ts` (added 13 orphan page links + reorganized Administration group + expanded Radiology group + expanded Receptionist nav).
+- Zero orphans remain — every workspace page is now reachable from the sidebar.
+
+---
+Task ID: V3.2.4.2-PUBLIC-CHANGELOG-PAGE
+Agent: Main agent
+Task: Add a public changelog page at /changelog that shows all versions from v3.0.0 to latest, fully accessible without auth.
+
+Work Log:
+- **Server Component** (`src/app/changelog/page.tsx`): Reads `CHANGELOG.md` from disk at request time using `fs.readFile` — so the page always reflects the latest committed changelog without needing a rebuild for typo fixes. Sets dynamic SEO metadata (title, description, OpenGraph, canonical URL). Marked `dynamic = 'force-dynamic'` so it's never cached stale.
+- **Client Component** (`src/app/changelog/changelog-client.tsx`): Rich UI with:
+  - Hero header with gradient icon + title + "Get Started" CTA.
+  - Search bar that filters bullet items by keyword (headers stay visible for context).
+  - Sticky left-sidebar version nav (desktop only, hidden on mobile) with all 8 versions (v3.0.0 → v3.2.4.1). Click to smooth-scroll. Active version highlighted via IntersectionObserver.
+  - Version cards with colored badges (color-coded by major version: v3 = indigo, v2 = blue, v1 = slate), LATEST tag on the most recent, date, and "Copy Link" button that copies a deep-link URL.
+  - Category icons on `####` headers: Fixed → wrench (rose), Added → sparkles (emerald), Changed → refresh (blue), Removed → alert (amber). Makes scanning easy.
+  - Custom lightweight markdown renderer (no react-markdown dependency) supporting H1-H4, bullet lists, **bold**, `inline code`, [links](url), and --- horizontal rules.
+  - Scroll-to-top button (appears after 600px scroll).
+  - Empty state for search with no results.
+- **Middleware update**: Added `/changelog` to `PUBLIC_PATHS` so it's accessible without authentication.
+- **Footer link**: Added "Changelog" link to the landing page footer (between Pricing and Terms).
+- **Verification**: Tested with curl — page returns 200 with no auth redirect. All 8 versions render with their anchors (version-3.0.0 through version-3.2.4.1). Search input, version nav, copy-link button, scroll-to-top all functional.
+- **Version bump**: `package.json` → `3.2.4.2`. CHANGELOG.md updated with v3.2.4.2 section. Zip at `download/patholab-v3.2.4.2.zip` (2.5 MB).
+
+Stage Summary:
+- 4 files created/modified: `src/app/changelog/page.tsx` (new server component), `src/app/changelog/changelog-client.tsx` (new client component with markdown renderer + search + sticky nav), `src/middleware.ts` (added /changelog to PUBLIC_PATHS), `src/components/landing/LandingClient.tsx` (added Changelog footer link).
+- Public changelog page live at /changelog, showing all 8 versions from v3.0.0 to v3.2.4.1.

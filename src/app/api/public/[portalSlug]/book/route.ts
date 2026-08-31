@@ -34,7 +34,11 @@ export async function POST(
     const {
       name, email, phone, gender, dateOfBirth,
       testTemplateIds, collectionMode, address, pincode,
-      appointmentDate, timeSlot
+      appointmentDate, timeSlot,
+      // ✅ v3.2.4: Optional payment reference (UTR/transaction ID) submitted by
+      // the patient after paying via UPI. The lab owner verifies it later.
+      paymentReference,
+      paymentMode,
     } = body;
 
     // 1. Validate Lab
@@ -174,6 +178,12 @@ export async function POST(
           status: "PENDING_PAYMENT",
           paymentVerified: false,
           trackId,
+          // ✅ v3.2.4: Persist the patient-submitted payment reference + mode
+          paymentMode: paymentMode || 'UPI',
+          transactionId: paymentReference || null,
+          // ✅ v3.2.4: Also record the collected amount on the appointment
+          // (so the lab owner can see at a glance what the patient claims to have paid).
+          paymentCollected: grandTotal,
         }
       });
 
@@ -210,6 +220,14 @@ export async function POST(
       trackId: result.trackId,
       status: "PENDING_PAYMENT",
       paymentVerified: false,
+      // ✅ v3.2.4: Return the lab's UPI info so the booking form can show
+      // a "Pay via UPI" section with the lab's UPI ID + QR code.
+      paymentInfo: {
+        upiId: lab.upiId,
+        upiQrCode: lab.upiQrCode,
+        amount: grandTotal,
+        note: `Patholab Booking ${result.trackId}`,
+      },
       message:
         "Your booking has been received. Please complete payment and save your tracking ID.",
     });

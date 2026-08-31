@@ -12,6 +12,7 @@ const PUBLIC_PATHS = [
   '/pricing', '/unauthorized', '/verify', '/contact-us',
   '/patient-portal', '/portal',
   '/book-demo',
+  '/changelog', // ✅ v3.2.4.2: Public changelog page
 ];
 
 const GUEST_ONLY_PATHS = ['/login', '/register'];

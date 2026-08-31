@@ -108,6 +108,9 @@ export default function ProfileSettingsPage() {
     accountNumber: "",
     ifscCode: "",
     accountHolder: "",
+    // ✅ v3.2.4: UPI Payment Settings (for online booking + home collection)
+    upiId: "",
+    upiQrCode: "",
     defaultDoctorCommission: 10,
     defaultAgencyCommission: 5,
     commissionType: "PERCENTAGE",
@@ -1014,6 +1017,66 @@ export default function ProfileSettingsPage() {
                         />
                       </div>
                     </div>
+                  </div>
+
+                  {/* ✅ v3.2.4: UPI Payment Settings — for online booking + home collection */}
+                  <div className="mt-8 p-6 bg-emerald-50/50 rounded-2xl border border-emerald-100">
+                    <div className="mb-4">
+                      <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
+                        UPI Payment Settings
+                      </h3>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Shown to patients on the public booking form so they can pay via UPI
+                        after booking. Used for both online bookings and home collection.
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
+                          UPI ID
+                        </Label>
+                        <Input
+                          value={labSettings.upiId || ""}
+                          onChange={(e) =>
+                            setLabSettings({
+                              ...labSettings,
+                              upiId: e.target.value,
+                            })
+                          }
+                          placeholder="e.g., lab@okhdfcbank"
+                          className="h-12 rounded-xl bg-card border-border focus:border-emerald-500 font-medium"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
+                          UPI QR Code Image URL
+                        </Label>
+                        <Input
+                          value={labSettings.upiQrCode || ""}
+                          onChange={(e) =>
+                            setLabSettings({
+                              ...labSettings,
+                              upiQrCode: e.target.value,
+                            })
+                          }
+                          placeholder="/uploads/lab-id/qr.png or data:image/..."
+                          className="h-12 rounded-xl bg-card border-border focus:border-emerald-500 font-medium"
+                        />
+                      </div>
+                    </div>
+                    {labSettings.upiQrCode && (
+                      <div className="mt-3 flex items-center gap-3">
+                        <img
+                          src={labSettings.upiQrCode}
+                          alt="UPI QR Preview"
+                          className="h-20 w-20 border rounded"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Preview of the QR code patients will see on the booking form.
+                        </p>
+                      </div>
+                    )}
                   </div>
                   <div className="flex justify-end pt-6 border-t border-border">
                     <Button

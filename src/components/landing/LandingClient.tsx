@@ -829,6 +829,9 @@ export default function LandingClient() {
             <Link href="#pricing" className="hover:text-stone-900">
               Pricing
             </Link>
+            <Link href="/changelog" className="hover:text-stone-900">
+              Changelog
+            </Link>
             <Link href="/terms-conditions" className="hover:text-stone-900">
               Terms
             </Link>

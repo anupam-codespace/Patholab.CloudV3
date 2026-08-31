@@ -7,6 +7,161 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.2.4.3] — 2026-08-31
+
+### Fixed
+
+#### "Too many re-renders" on Service Areas page
+- **Issue**: `/workspace/settings/service-areas` threw `Error: Too many re-renders. React limits the number of renders to prevent an infinite loop.` immediately on load.
+- **Root cause**: The component called `setBranches(labData.lab.branches)` directly in the render body (inside an `if` block). React re-renders → re-evaluates the condition → calls `setBranches` again → infinite loop. The `branches.length === 0` guard didn't help because React batches state updates and the re-render happens before the state is read again.
+- **Fix**: Moved the `setBranches` call into a `useEffect` with proper dependencies `[labData, branches.length]`. Effects run after render, so they don't trigger re-renders during the render phase.
+
+#### Same bug on Appointment Detail page
+- The Appointment Detail page (`/workspace/bookings/[id]`) had the same anti-pattern: it used `useState(() => {...})` to sync `paymentMode`, `transactionId`, and `paymentCollected` from the fetched appointment data. `useState`'s initializer is for computing initial state only — calling `setState` inside it runs during render and triggers the same infinite loop.
+- **Fix**: Replaced `useState(() => {...})` with `useEffect(() => {...}, [appt])` so the state sync happens after render, not during.
+
+### Changed
+- Bumped `package.json` version to `3.2.4.3`.
+
+---
+
+## [3.2.4.2] — 2026-08-31
+
+### Added
+
+#### Public Changelog page at `/changelog`
+- New public-facing changelog page that renders `CHANGELOG.md` as a beautifully formatted, searchable web page — no auth required.
+- **Page structure**:
+  - **Hero header** with gradient icon, title, and "Get Started" CTA.
+  - **Search bar** — filter changelog entries by keyword (e.g., "invoice", "timezone", "report"). Bullet items that don't match the query are hidden; headers stay visible for context.
+  - **Sticky version nav** (desktop) — left sidebar listing all 8 versions (v3.0.0 → v3.2.4.1). Click to smooth-scroll to that version. Active version is highlighted via `IntersectionObserver`.
+  - **Version cards** — each release has a colored version badge (color-coded by major version), the LATEST tag on the most recent release, date, and a "Copy Link" button that copies a deep-link URL to that version.
+  - **Category icons** — `#### Fixed` sections get a wrench icon (rose), `#### Added` get sparkles (emerald), `#### Changed` get refresh (blue), `#### Removed` get alert (amber). Makes it easy to scan what kind of change each entry is.
+  - **Markdown rendering** — custom lightweight renderer supports `#`/`##`/`###`/`####` headers, bullet lists, `**bold**`, `` `inline code` ``, `[links](url)`, and `---` horizontal rules. No `react-markdown` dependency added (keeps bundle small).
+  - **Scroll-to-top button** — appears after scrolling 600px.
+  - **Empty state** — shows a "No results" message when search yields nothing.
+- **Footer link added** — the landing page footer now has a "Changelog" link between Pricing and Terms.
+- **Middleware updated** — `/changelog` added to `PUBLIC_PATHS` so it's accessible without authentication.
+- **SEO metadata** — dynamic `<title>`, `<meta description>`, OpenGraph tags, and canonical URL set in the server component.
+
+### Changed
+- Bumped `package.json` version to `3.2.4.2`.
+
+---
+
+## [3.2.4.1] — 2026-08-31
+
+### Fixed
+
+#### All orphan pages now linked in the sidebar
+- **Issue**: 13 workspace pages existed as routes but had NO link in the sidebar — users had to type the URL manually or click deep links from other pages. The most painful example was **Service Areas (pincode management)** which was added in v3.2.4 but had no sidebar entry.
+- **Audit result**: Cross-referenced every `page.tsx` under `src/app/(labdashboard)/workspace/` against the `navHrefs` in `src/config/navigation.ts`. Found 13 orphans:
+  - `/workspace/accession`
+  - `/workspace/samples` (sample lookup)
+  - `/workspace/settings/notifications`
+  - `/workspace/settings/report-template` (alternate template builder)
+  - `/workspace/settings/service-areas` ← **the one you specifically mentioned**
+  - `/workspace/wallet/recharge`
+  - `/workspace/print/barcodes`
+  - `/workspace/invoice` (SaaS invoice)
+  - `/workspace/radiology/worklist`
+  - `/workspace/radiology/media`
+  - `/workspace/radiology/reports-archive`
+  - `/workspace/radiology/settings/dicom`
+  - `/workspace/radiology/settings/letterhead`
+- **Fix**: Updated `src/config/navigation.ts` to add all 13 orphans to the appropriate nav groups. After the fix, re-ran the orphan check → **zero orphans remain**.
+
+### Changed
+
+#### Admin navigation — expanded
+- **Clinical Operations** group: added "Accession" and "Sample Lookup".
+- **Resources & Logistics** group: added "Home Collection" (was previously only in Administration).
+- **Administration** group: completely reorganized into a settings-first layout:
+  - Lab Settings → Report Templates → Report Template (Alt) → Invoice Branding → **Service Areas (Pincodes)** → Payment Settings → Notifications → B2B Settings
+  - Then operational tools: Staff Management → Invoices & Payments → SaaS Invoice → Print Barcodes → Expenses → Audit Logs → Wallet & Billing → Wallet Recharge → Help & Support
+- **B2B & Growth** group: removed "B2B Settings" (moved to Administration alongside other settings).
+
+#### Receptionist navigation — expanded
+- Added "Accession", "Online Bookings", and "Print Barcodes" to the relevant groups (receptionists verify payments and print barcodes, so these belong there).
+
+#### Radiology navigation — expanded
+- Was 6 items, now 11 items. Added: Technician Worklist, Media Library, Reports Archive, DICOM Settings, RIS Letterhead. The old single "Settings" entry (which only pointed to macros) is now split into 3 specific entries (Macros, DICOM, Letterhead).
+
+### Added
+- New lucide-react icons imported for the new nav items: `Bell`, `FileText`, `QrCode`, `PlusCircle`, `FlaskConical`, `Droplet`, `Printer`, `Zap`, `MapPin`, `Radio`, `Film`, `Archive`, `Network`, `Keyboard`, `Palette`.
+
+### Verification
+- Restarted dev server. All 14 newly-linked pages return `307` (redirect to login) — confirming they compile cleanly and are now reachable.
+- Re-ran the orphan-detection script: `✅ NONE — every workspace page is now linked in the sidebar!`
+
+---
+
+## [3.2.4] — 2026-08-31
+
+### Fixed
+
+#### ReportTemplate.config Prisma validation error
+- **Critical**: Saving a report template from `/workspace/settings/templates/new` threw `PrismaClientValidationError: Argument 'config': Invalid value provided. Expected String or Null, provided Object.` The template builder passes a nested JS object, but the Prisma schema declares `ReportTemplate.config` as `String?`.
+- **Fix**: Updated `src/actions/report-settings.ts` `saveTemplate()` to `JSON.stringify(config)` before passing to Prisma. The reader side (`/api/reports/generate/route.tsx`) already does `JSON.parse(config)`, so round-trip is safe.
+
+#### Track API — schema mismatch on `discountAmount`
+- The track API was selecting `invoice.discountAmount` but the actual Invoice schema field is `discount` (not `discountAmount`). This caused a 500 error on every track page load.
+- **Fix**: Changed the select to `discount` and added `totalTax` to the response (mapped to `taxAmount` in the JSON response).
+
+### Added
+
+#### Convert online appointment to patient
+- New endpoint `POST /api/workspace/appointments/[id]/convert-patient` — converts an online-booked appointment into a full Patient record that appears in the Patient Directory. Ensures the patient has a proper `patientId` (P-00001 format), updates demographic fields, marks the appointment as `CONFIRMED`, auto-creates a Doctor record if a new name is provided, and writes an `APPOINTMENT_CONVERTED_TO_PATIENT` activity log entry.
+- "Convert to Patient" button added to the new Appointment Detail page.
+
+#### Appointment Detail page
+- New page at `/workspace/bookings/[id]` — comprehensive view of a single online appointment showing:
+  - Patient info (name, ID, phone, email, age/gender, address for home collection)
+  - Appointment info (date, time slot, source, branch, booked-at, verified-at)
+  - Tests table (name, code, price, status, sample ID + collected-at)
+  - Invoice summary (subtotal, discount, tax, grand total, payment status)
+  - Payment management panel (lab UPI ID + QR, patient-submitted transaction ID, lab-owner form to update payment mode/transaction ID/amount, "Verify & Generate Track ID" button)
+  - Home collection trip info (phlebotomist, scheduled/started/completed timestamps, trip status)
+- "View Detail" links added to the Online Bookings list (visible for both verified and pending appointments).
+
+#### Appointment payment management API
+- New endpoint `PATCH /api/workspace/appointments/[id]/payment` — lets the lab owner update `paymentMode`, `transactionId`, `paymentCollected`, and optionally `markAsPaid` (which generates a trackId, sets `paymentVerified=true`, marks `status=CONFIRMED`, and syncs the linked invoice to `PAID`).
+
+#### Service Areas management
+- New API: `GET/POST /api/workspace/service-areas` and `PATCH/DELETE /api/workspace/service-areas/[id]` for managing pincode → branch mappings (the `ServiceArea` model already existed but had no UI/API).
+- New page at `/workspace/settings/service-areas` — add/list/delete service areas with pincode, area name, delivery fee, branch, and active/inactive toggle.
+- When a patient books a home collection, the system checks if their pincode is in the lab's service areas and auto-assigns the matching branch (existing logic, now configurable via UI).
+
+#### UPI payment setup
+- Lab Settings page (`/workspace/settings`) now has a "UPI Payment Settings" section in the Legal & Banking tab with fields for `upiId` and `upiQrCode` (URL or data URL). Includes a live QR preview.
+- The settings PUT endpoint (`/api/workspace/settings`) now persists `upiId` and `upiQrCode` to the `Lab` record.
+- New public endpoint `GET /api/public/[portalSlug]/payment-info` — returns the lab's UPI ID + QR code so the booking form can display them.
+
+#### UPI payment flow on public booking form
+- Rewrote `PublicBookingForm.tsx` to add a post-booking payment step:
+  1. Patient fills the form and clicks "Book Now".
+  2. Booking is created with `status=PENDING_PAYMENT`.
+  3. Form transitions to a "Booking Confirmed" view showing the lab's UPI ID + QR code + a "Open UPI App to Pay" deep link (`upi://pay?pa=...&am=...`).
+  4. Patient enters their UPI transaction ID / UTR.
+  5. Patient clicks "Submit Payment Reference" → calls `POST /api/public/[portalSlug]/payment-reference` → updates the appointment's `transactionId` and `paymentMode`.
+  6. Patient is redirected to the tracking page.
+- If the lab hasn't set up UPI yet, shows a fallback message asking the patient to call the lab.
+
+#### Enhanced public tracking page
+- The track API (`/api/track/[trackId]`) now returns a much richer payload:
+  - Patient ID, lab address, branch name/address/city/phone
+  - Per-test details: name, code, status, TAT hours, sample ID + collected-at timestamp
+  - Payment breakdown: subtotal, discount, tax, grand total, invoice number, transaction ID, payment mode
+  - Home collection trip details: phlebotomist name + phone, scheduled/started/completed timestamps, trip status
+  - Adaptive timeline: home-collection appointments show extra "Phlebotomist Assigned" and "On the Way" steps that lab-visit appointments don't.
+- Rewrote the `/track/[trackId]` page UI to display all this: lab header with logo, patient + appointment cards, tests breakdown table, payment card with subtotal/discount/tax/total + transaction ID, home collection trip card (only for home collection), and the adaptive timeline.
+
+### Changed
+- Bumped `package.json` version to `3.2.4`.
+- The public booking API (`/api/public/[portalSlug]/book`) now accepts `paymentReference` and `paymentMode` in the request body, persists them on the appointment, and returns a `paymentInfo` object (lab's UPI ID + QR + amount + note) in the response.
+
+---
+
 ## [3.2.3] — 2026-08-31
 
 ### Fixed

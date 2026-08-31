@@ -78,8 +78,12 @@ export async function PUT(req: NextRequest) {
           entityType: body.entityType, 
           bankName: body.bankName,
           accountNumber: body.accountNumber,
-          ifscCode: body.ifscCode,
           accountHolder: body.accountHolder,
+          ifscCode: body.ifscCode,
+
+          // ✅ v3.2.4: UPI Payment Settings (for online booking + home collection)
+          upiId: body.upiId || null,
+          upiQrCode: body.upiQrCode || null,
 
           // Branding Assets
           logo: body.logo,

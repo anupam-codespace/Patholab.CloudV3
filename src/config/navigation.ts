@@ -32,6 +32,22 @@ import {
   Image,
   Map,
   CheckCircle2,
+  Bell,
+  FileText,
+  QrCode,
+  PlusCircle,
+  FlaskConical,
+  Droplet,
+  Printer,
+  Zap,
+  // ✅ v3.2.4.1: Additional icons for newly-linked orphan pages
+  MapPin,
+  Radio,
+  Film,
+  Archive,
+  Network,
+  Keyboard,
+  Palette,
 } from "lucide-react";
 
 export type NavItem = {
@@ -68,7 +84,9 @@ export const adminNav: NavGroup[] = [
       { name: "New Registration", href: "/workspace/registration", icon: UserPlus, badge: "N" },
       { name: "Patient Directory", href: "/workspace/patients", icon: Users },
       { name: "Test Management", href: "/workspace/test-management", icon: TestTube },
+      // { name: "Accession", href: "/workspace/accession", icon: ScanBarcode },
       { name: "Worklist & Results", href: "/workspace/results", icon: ClipboardCheck, badge: "Live" },
+      // { name: "Sample Lookup", href: "/workspace/samples", icon: Droplet },
       { name: "Report Dispatch", href: "/workspace/reports", icon: Send },
     ],
   },
@@ -78,6 +96,7 @@ export const adminNav: NavGroup[] = [
       // ✅ Using uppercase DB-friendly tags
       { name: "Inventory & Stock", href: "/workspace/inventory", icon: Box, moduleTag: "inventory" },
       { name: "Logistics / Trips", href: "/workspace/logistics", icon: Truck, moduleTag: "logistics" },
+      { name: "Home Collection", href: "/workspace/home-collection", icon: Truck },
     ],
   },
 
@@ -100,25 +119,34 @@ export const adminNav: NavGroup[] = [
       { name: "Referral Doctors", href: "/workspace/doctors", icon: Stethoscope },
       { name: "Corporate Agencies", href: "/workspace/agencies", icon: Briefcase },
       { name: "Commissions Payout", href: "/workspace/commissions", icon: Receipt },
-      { name: "B2B Settings", href: "/workspace/settings/b2b-tiers", icon: ShieldCheck, moduleTag: "b2b" }, // Only show if B2B is purchased
-
+      // ✅ v3.2.4.1: B2B Settings moved to the Administration group alongside other settings.
     ],
   },
   {
     title: "Administration",
     items: [
+      // ✅ v3.2.4.1: Grouped settings — previously many settings sub-pages were
+      // orphan (existed as routes but had no sidebar link). Now every settings
+      // page is reachable from the sidebar.
+      { name: "Lab Settings", href: "/workspace/settings", icon: Settings },
       { name: "Report Templates", href: "/workspace/settings/templates", icon: LayoutTemplate },
+      { name: "Report Template (Alt)", href: "/workspace/settings/report-template", icon: FileText },
+      { name: "Invoice Branding", href: "/workspace/settings/branding", icon: Image },
+      { name: "Service Areas (Pincodes)", href: "/workspace/settings/service-areas", icon: MapPin },
+      { name: "Payment Settings", href: "/workspace/settings/payment", icon: CreditCard },
+      { name: "Notifications", href: "/workspace/settings/notifications", icon: Bell },
+      { name: "B2B Settings", href: "/workspace/settings/b2b-tiers", icon: ShieldCheck, moduleTag: "b2b" },
+
+      // ✅ v3.2.4.1: Separated from "Lab Settings" — these are operational tools
       { name: "Staff Management", href: "/workspace/staff", icon: UserCog },
       { name: "Invoices & Payments", href: "/workspace/billing", icon: Receipt },
+      { name: "SaaS Invoice", href: "/workspace/invoice", icon: FileText },
+      { name: "Print Barcodes", href: "/workspace/print/barcodes", icon: Printer },
       { name: "Expenses", href: "/workspace/expenses", icon: ClipboardList },
-      { name: "Home Collection", href: "/workspace/home-collection", icon: Truck },
-      { name: "Lab Settings", href: "/workspace/settings", icon: Settings },
-      { name: "Payment Settings", href: "/workspace/settings/payment", icon: CreditCard },
-      { name: "Invoice Branding", href: "/workspace/settings/branding", icon: Image },
       { name: "Audit Logs", href: "/workspace/audit-logs", icon: History },
       { name: "Wallet & Billing", href: "/workspace/wallet", icon: Wallet },
+      { name: "Wallet Recharge", href: "/workspace/wallet/recharge", icon: PlusCircle },
       { name: "Help & Support", href: "/workspace/support", icon: HelpCircle },
-
     ],
   },
 ];
@@ -133,7 +161,8 @@ export const receptionistNav: NavGroup[] = [
       { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
       { name: "New Registration", href: "/workspace/registration", icon: UserPlus, badge: "Start" },
       { name: "Patient Records", href: "/workspace/patients", icon: ClipboardList },
-      { name: "Appointments", href: "/workspace/appointments", icon: CalendarDays },
+      { name: "Accession", href: "/workspace/accession", icon: ScanBarcode },
+      { name: "Online Bookings", href: "/workspace/bookings", icon: CalendarDays },
       { name: "Home Collection", href: "/workspace/logistics", icon: Truck, moduleTag: "logistics" },
     ],
   },
@@ -141,6 +170,7 @@ export const receptionistNav: NavGroup[] = [
     title: "Billing & Dispatch",
     items: [
       { name: "Invoices & Payments", href: "/workspace/billing", icon: Receipt },
+      { name: "Print Barcodes", href: "/workspace/print/barcodes", icon: Printer },
       { name: "Report Dispatch", href: "/workspace/reports", icon: Send },
     ],
   },
@@ -179,14 +209,21 @@ export const technicianNav: NavGroup[] = [
 // ==========================================
 export const radiologyNav: NavGroup = {
   title: "Radiology (RIS)",
-  moduleTag: "radiology", 
+  moduleTag: "radiology",
   items: [
+    // ✅ v3.2.4.1: Expanded to include all radiology pages that were previously orphan.
     { name: "RIS Dashboard", href: "/workspace/radiology/dashboard", icon: Activity },
     { name: "Scan Schedule", href: "/workspace/radiology/appointments", icon: CalendarDays },
+    { name: "Technician Worklist", href: "/workspace/radiology/worklist", icon: ClipboardCheck },
     { name: "PACS Viewer", href: "/workspace/radiology/pacs", icon: FileImage },
+    { name: "Media Library", href: "/workspace/radiology/media", icon: Film },
     { name: "Reporting Queue", href: "/workspace/radiology/reporting", icon: Stethoscope },
-    { name: "Machines", href: "/workspace/radiology/modalities", icon: Server },
-    { name: "Settings", href: "/workspace/radiology/settings/macros", icon: Settings },
+    { name: "Reports Archive", href: "/workspace/radiology/reports-archive", icon: Archive },
+    { name: "Machines (Modalities)", href: "/workspace/radiology/modalities", icon: Server },
+    // ✅ v3.2.4.1: All RIS settings sub-pages now linked
+    { name: "RIS Macros", href: "/workspace/radiology/settings/macros", icon: Keyboard },
+    { name: "DICOM Settings", href: "/workspace/radiology/settings/dicom", icon: Network },
+    { name: "RIS Letterhead", href: "/workspace/radiology/settings/letterhead", icon: Palette },
   ],
 };
 

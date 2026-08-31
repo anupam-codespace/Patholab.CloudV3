@@ -30,6 +30,16 @@ export async function saveTemplate(templateId: string | null, name: string, conf
   const user = await getCurrentUser();
   if (!user?.labId) throw new Error("Unauthorized");
 
+  // ✅ v3.2.4 FIX: ReportTemplate.config is declared as String? in the Prisma schema,
+  // but the template builder passes a nested JS object. We must JSON.stringify it
+  // before saving, otherwise Prisma throws:
+  //   "Argument `config`: Invalid value provided. Expected String or Null, provided Object."
+  // The reader side (report PDF generator) already does JSON.parse(config) when
+  // it loads the template, so round-trip is safe.
+  const configString = config == null
+    ? null
+    : (typeof config === 'string' ? config : JSON.stringify(config));
+
   // If creating the very first template, make it active automatically
   const count = await prisma.reportTemplate.count({ where: { labId: user.labId } });
   const isFirst = count === 0;
@@ -38,7 +48,7 @@ export async function saveTemplate(templateId: string | null, name: string, conf
     // UPDATE Existing
     await prisma.reportTemplate.update({
       where: { id: templateId },
-      data: { name, config, updatedAt: new Date() }
+      data: { name, config: configString, updatedAt: new Date() }
     });
   } else {
     // CREATE New
@@ -46,7 +56,7 @@ export async function saveTemplate(templateId: string | null, name: string, conf
       data: {
         labId: user.labId,
         name: name || "New Template",
-        config,
+        config: configString,
         isActive: isFirst // Auto-activate if it's the first one
       }
     });

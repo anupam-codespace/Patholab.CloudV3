@@ -38,6 +38,7 @@ import {
   Calendar,
   Settings,
   Globe,
+  FileText,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -393,15 +394,26 @@ export default function OnlineBookingsManagementPage() {
                       <TableCell>
                         <div className="flex flex-col gap-1">
                           {b.paymentVerified ? (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              asChild
-                            >
-                              <Link href={`/track/${b.trackId}`} target="_blank">
-                                <ExternalLink className="w-3 h-3 mr-1" /> View Tracking
-                              </Link>
-                            </Button>
+                            <div className="flex gap-1">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                asChild
+                              >
+                                <Link href={`/workspace/bookings/${b.id}`}>
+                                  <FileText className="w-3 h-3 mr-1" /> View Detail
+                                </Link>
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                asChild
+                              >
+                                <Link href={`/track/${b.trackId}`} target="_blank">
+                                  <ExternalLink className="w-3 h-3 mr-1" /> Track
+                                </Link>
+                              </Button>
+                            </div>
                           ) : (
                             <>
                               <Input
@@ -415,18 +427,29 @@ export default function OnlineBookingsManagementPage() {
                                 }
                                 className="h-8 text-xs"
                               />
-                              <Button
-                                size="sm"
-                                onClick={() => handleVerify(b.id)}
-                                disabled={verifyingId === b.id}
-                              >
-                                {verifyingId === b.id ? (
-                                  <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                                ) : (
-                                  <ShieldCheck className="w-3 h-3 mr-1" />
-                                )}
-                                Verify Payment
-                              </Button>
+                              <div className="flex gap-1">
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleVerify(b.id)}
+                                  disabled={verifyingId === b.id}
+                                >
+                                  {verifyingId === b.id ? (
+                                    <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                  ) : (
+                                    <ShieldCheck className="w-3 h-3 mr-1" />
+                                  )}
+                                  Verify
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  asChild
+                                >
+                                  <Link href={`/workspace/bookings/${b.id}`}>
+                                    <FileText className="w-3 h-3 mr-1" /> Detail
+                                  </Link>
+                                </Button>
+                              </div>
                             </>
                           )}
                         </div>

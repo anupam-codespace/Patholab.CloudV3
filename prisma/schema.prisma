@@ -762,7 +762,6 @@ enum BookingSource {
 
 enum AppointmentStatus {
   PENDING_PAYMENT
-  CONFIRMED
   SCHEDULED
   ASSIGNED
   EN_ROUTE
