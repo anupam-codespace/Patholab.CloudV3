@@ -130,7 +130,7 @@ export const adminNav: NavGroup[] = [
       // page is reachable from the sidebar.
       { name: "Lab Settings", href: "/workspace/settings", icon: Settings },
       { name: "Report Templates", href: "/workspace/settings/templates", icon: LayoutTemplate },
-      { name: "Report Template (Alt)", href: "/workspace/settings/report-template", icon: FileText },
+      // { name: "Report Template (Alt)", href: "/workspace/settings/report-template", icon: FileText },
       { name: "Invoice Branding", href: "/workspace/settings/branding", icon: Image },
       { name: "Service Areas (Pincodes)", href: "/workspace/settings/service-areas", icon: MapPin },
       { name: "Payment Settings", href: "/workspace/settings/payment", icon: CreditCard },
@@ -140,8 +140,8 @@ export const adminNav: NavGroup[] = [
       // ✅ v3.2.4.1: Separated from "Lab Settings" — these are operational tools
       { name: "Staff Management", href: "/workspace/staff", icon: UserCog },
       { name: "Invoices & Payments", href: "/workspace/billing", icon: Receipt },
-      { name: "SaaS Invoice", href: "/workspace/invoice", icon: FileText },
-      { name: "Print Barcodes", href: "/workspace/print/barcodes", icon: Printer },
+      // { name: "SaaS Invoice", href: "/workspace/invoice", icon: FileText },
+      // { name: "Print Barcodes", href: "/workspace/print/barcodes", icon: Printer },
       { name: "Expenses", href: "/workspace/expenses", icon: ClipboardList },
       { name: "Audit Logs", href: "/workspace/audit-logs", icon: History },
       { name: "Wallet & Billing", href: "/workspace/wallet", icon: Wallet },
@@ -170,7 +170,7 @@ export const receptionistNav: NavGroup[] = [
     title: "Billing & Dispatch",
     items: [
       { name: "Invoices & Payments", href: "/workspace/billing", icon: Receipt },
-      { name: "Print Barcodes", href: "/workspace/print/barcodes", icon: Printer },
+      // { name: "Print Barcodes", href: "/workspace/print/barcodes", icon: Printer },
       { name: "Report Dispatch", href: "/workspace/reports", icon: Send },
     ],
   },
