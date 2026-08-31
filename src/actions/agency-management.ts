@@ -114,7 +114,7 @@ export async function updateAgency(id: string, data: {
   commissionType: CommissionType;
   customCommissions?: {
     testTemplateId: string;
-    commissionRate?: number | null;
+    commissionRate?: number | null; 
     commissionType: CommissionType;
     netPrice?: number | null; // Allow passing fixed B2B rates
   }[];
