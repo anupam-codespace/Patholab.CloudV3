@@ -1,0 +1,29 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Document with folded corner -->
+    <path
+        android:strokeColor="#0284C7"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M14,3H6a2,2 0,0,0 -2,2v14a2,2 0,0,0 2,2h12a2,2 0,0,0 2,-2V9z" />
+    <path
+        android:strokeColor="#0284C7"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M14,3v6h6" />
+    <!-- Checkmark inside document -->
+    <path
+        android:strokeColor="#0284C7"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M8,14.5l2.5,2.5l5.5,-5.5" />
+</vector>

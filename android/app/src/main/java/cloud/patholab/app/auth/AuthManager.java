@@ -57,6 +57,10 @@ public class AuthManager {
         return getPrefs(context).getString(KEY_USER_EMAIL, null);
     }
 
+    public static String getUserName(Context context) {
+        return getPrefs(context).getString(KEY_USER_NAME, null);
+    }
+
     private static final String KEY_ONBOARDING_COMPLETED = "onboarding_completed";
 
     public static boolean isOnboardingCompleted(Context context) {

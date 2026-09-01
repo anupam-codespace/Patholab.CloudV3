@@ -43,12 +43,17 @@ public class MainActivity extends BridgeActivity {
     // ── Views ────────────────────────────────────────────────────────────────
     private WebView webView;
     private SwipeRefreshLayout swipeRefresh;
-    private BottomNavigationView bottomNavigation;
+    private androidx.cardview.widget.CardView floatingNavBarCard;
+    private View navTabHome, navTabPatients, navTabCenter, navTabReports, navTabMore;
+    private ImageView imgNavHome, imgNavPatients, imgNavReports, imgNavMore;
+    private TextView txtNavHome, txtNavPatients, txtNavReports, txtNavMore;
+    private View navCenterCircle;
+    private int currentSelectedTabIndex = 0;
     private View offlineOverlay;
     private ScrollView moreScrollView;
     private View topLayoutContainer;
     private FloatingActionButton fabNewRegistration;
-    
+
     // Header & Wallet Views
     private View headerBlurGradientView;
     private View topHeaderBar;
@@ -59,7 +64,7 @@ public class MainActivity extends BridgeActivity {
     private TextView txtWalletStatus;
     private View btnWalletTopUp;
     private View walletChevron;
-    
+
     // Category containers matching web app groups
     private LinearLayout containerOverview, containerClinical, containerLogistics;
     private LinearLayout containerMachine, containerB2B, containerAdmin, containerLegal;
@@ -76,221 +81,63 @@ public class MainActivity extends BridgeActivity {
     private int previousTab = R.id.nav_dashboard;
     private boolean isDarkMode = false;
     private String activeSkeletonCategory = "";
+    // ── Native Home Screen ────────────────────────────────────────────────────
+    private HomeNativeManager homeNativeManager;
 
     private FrameLayout skeletonContainer;
     private android.animation.ObjectAnimator pulseAnimator;
-    private boolean isBottomNavHidden = false;
-
-    private int getNativeTopPadding() {
-        if (topLayoutContainer != null && topLayoutContainer.getHeight() > 0) {
-            float density = getResources().getDisplayMetrics().density;
-            int measuredDp = (int) (topLayoutContainer.getHeight() / density);
-            if (measuredDp > 0) return measuredDp;
-        }
-        return (walletCard != null && walletCard.getVisibility() == View.VISIBLE) ? 118 : 60;
-    }
-
-    private void syncWebLayoutPadding() {
-        if (webView == null) return;
-        int topPaddingPx = getNativeTopPadding();
-        boolean isDark = this.isDarkMode;
-        String theme = isDark ? "dark" : "light";
-        webView.evaluateJavascript(
-            "(function() {" +
-            "  var styleId = 'native-hide-header-style';" +
-            "  var style = document.getElementById(styleId);" +
-            "  if(!style) {" +
-            "    style = document.createElement('style');" +
-            "    style.id = styleId;" +
-            "    document.head.appendChild(style);" +
-            "  }" +
-            "  style.innerHTML = 'html, body { padding-top: 0 !important; margin-top: 0 !important; } .mobile-app-header-web-component, header, .sticky.top-0 { display: none !important; } main, .is-native-app main, .is-capacitor main { padding-top: " + topPaddingPx + "px !important; margin-top: 0px !important; padding-bottom: 84px !important; }';" +
-            "  document.documentElement.style.setProperty('--native-top-padding', '" + topPaddingPx + "px');" +
-            "  var isDark = " + isDark + ";" +
-            "  var theme = '" + theme + "';" +
-            "  if (isDark && !document.documentElement.classList.contains('dark')) {" +
-            "    document.documentElement.classList.add('dark');" +
-            "  } else if (!isDark && document.documentElement.classList.contains('dark')) {" +
-            "    document.documentElement.classList.remove('dark');" +
-            "  }" +
-            "  if (localStorage.getItem('theme') !== theme) {" +
-            "    localStorage.setItem('theme', theme);" +
-            "  }" +
-            "  if (window.patholabSetTheme) {" +
-            "    window.patholabSetTheme(theme);" +
-            "  }" +
-            "})()", null
-        );
-    }
-
-    private void setBottomNav(boolean visible, boolean animated) {
-        final boolean shouldHide = !visible;
-        if (isBottomNavHidden == shouldHide || bottomNavigation == null) return;
-        isBottomNavHidden = shouldHide;
-
-        if (animated) {
-            if (!shouldHide) {
-                bottomNavigation.setVisibility(View.VISIBLE);
-                bottomNavigation.animate()
-                    .translationY(0)
-                    .alpha(1.0f)
-                    .setDuration(220)
-                    .setInterpolator(new android.view.animation.DecelerateInterpolator())
-                    .setListener(null)
-                    .start();
-            } else {
-                bottomNavigation.animate()
-                    .translationY(bottomNavigation.getHeight() > 0 ? bottomNavigation.getHeight() + 40 : 200)
-                    .alpha(0.0f)
-                    .setDuration(220)
-                    .setInterpolator(new android.view.animation.AccelerateInterpolator())
-                    .setListener(new android.animation.AnimatorListenerAdapter() {
-                        @Override
-                        public void onAnimationEnd(android.animation.Animator animation) {
-                            if (isBottomNavHidden && bottomNavigation != null) {
-                                bottomNavigation.setVisibility(View.GONE);
-                            }
-                        }
-                    })
-                    .start();
-            }
-        } else {
-            if (shouldHide) {
-                bottomNavigation.setVisibility(View.GONE);
-                bottomNavigation.setAlpha(0.0f);
-            } else {
-                bottomNavigation.setVisibility(View.VISIBLE);
-                bottomNavigation.setAlpha(1.0f);
-                bottomNavigation.setTranslationY(0);
-            }
-        }
-    }
-
-    private void checkRechargeAndPaymentState() {
-        if (webView == null) return;
-        
-        String url = webView.getUrl();
-        final boolean urlIsRecharge = url != null && (
-            url.contains("/wallet/recharge") ||
-            url.contains("/recharge") ||
-            url.contains("action=recharge") ||
-            url.contains("action=topup") ||
-            url.contains("recharge=true") ||
-            url.contains("cashfree") ||
-            url.contains("razorpay")
-        );
-
-        if (urlIsRecharge) {
-            runOnUiThread(() -> {
-                setBottomNav(false, true);
-                if (swipeRefresh != null && swipeRefresh.isEnabled()) {
-                    swipeRefresh.setEnabled(false);
-                }
-                if (walletCard != null && walletCard.getVisibility() == View.VISIBLE) {
-                    walletCard.setVisibility(View.GONE);
-                    updateHeaderBlurHeight();
-                    syncWebLayoutPadding();
-                }
-            });
-            return;
-        }
-
-        // Check DOM state for active payment modals, cashfree SDK iframe, payment processing headers
-        webView.evaluateJavascript(
-            "(function() {" +
-            "  var path = window.location.pathname || '';" +
-            "  var search = window.location.search || '';" +
-            "  if (path.includes('/recharge') || path.includes('/wallet/recharge') || search.includes('action=recharge') || search.includes('action=topup')) return true;" +
-            "  var hasPaymentModal = document.querySelector('iframe[src*=\"cashfree\"], iframe[src*=\"razorpay\"], .cashfree-modal, [class*=\"payment-modal\"], [class*=\"cashfree\"], [data-payment-overlay=\"true\"], [id*=\"cashfree\"], [id*=\"razorpay\"]') !== null;" +
-            "  if (hasPaymentModal) return true;" +
-            "  var headings = document.querySelectorAll('h1, h2, h3, div');" +
-            "  for (var i = 0; i < Math.min(headings.length, 30); i++) {" +
-            "    if (headings[i].textContent && (headings[i].textContent.includes('Processing your payment') || headings[i].textContent.includes('Payment Options') || headings[i].textContent.includes('Recharge Wallet'))) return true;" +
-            "  }" +
-            "  return false;" +
-            "})()",
-            value -> {
-                boolean isRecharging = "true".equals(value);
-                runOnUiThread(() -> {
-                    if (isRecharging) {
-                        setBottomNav(false, true);
-                        if (swipeRefresh != null && swipeRefresh.isEnabled()) {
-                            swipeRefresh.setEnabled(false);
-                        }
-                        if (walletCard != null && walletCard.getVisibility() == View.VISIBLE) {
-                            walletCard.setVisibility(View.GONE);
-                            updateHeaderBlurHeight();
-                            syncWebLayoutPadding();
-                        }
-                    } else {
-                        setBottomNav(true, true);
-                        if (swipeRefresh != null && !swipeRefresh.isEnabled()) {
-                            swipeRefresh.setEnabled(true);
-                        }
-                    }
-                });
-            }
-        );
-    }
-
     private final Handler progressPollHandler = new Handler(Looper.getMainLooper());
-    private final Runnable progressPollRunnable = new Runnable() {
-        @Override
-        public void run() {
-            if (webView != null) {
-                int progress = webView.getProgress();
-                syncWebLayoutPadding();
-                checkRechargeAndPaymentState();
-                if (progress >= 75) {
-                    if (skeletonContainer != null && skeletonContainer.getVisibility() == View.VISIBLE) {
-                        hideSkeleton();
-                    }
-                }
-            }
-            progressPollHandler.postDelayed(this, 150);
-        }
-    };
+    private final Runnable progressPollRunnable=new Runnable(){@Override public void run(){if(webView!=null){int progress=webView.getProgress();if(progress>=75){if(skeletonContainer!=null&&skeletonContainer.getVisibility()==View.VISIBLE){hideSkeleton();}}}progressPollHandler.postDelayed(this,150);}};
 
     // Polling handler for wallet details
     private final Handler walletHandler = new Handler(Looper.getMainLooper());
-    private final Runnable walletRunnable = new Runnable() {
-        @Override
-        public void run() {
-            fetchWalletDetails();
-            fetchNotificationCount();
-            walletHandler.postDelayed(this, 15000); // poll every 15s
-        }
-    };
+    private final Runnable walletRunnable=new Runnable(){@Override public void run(){fetchWalletDetails();fetchNotificationCount();walletHandler.postDelayed(this,15000); // poll
+                                                                                                                                                                          // every
+                                                                                                                                                                          // 15s
+    }};
 
-    // Polling handler for auth status redirect check (safeguard for token expiry redirection)
+    // Polling handler for auth status redirect check (safeguard for token expiry
+    // redirection)
     private final Handler authCheckHandler = new Handler(Looper.getMainLooper());
-    private final Runnable authCheckRunnable = new Runnable() {
-        @Override
-        public void run() {
-            checkAuthRedirect();
-            if (webView != null) {
-                webView.evaluateJavascript("document.documentElement.classList.contains('dark')", value -> {
-                    boolean isDark = "true".equals(value);
-                    runOnUiThread(() -> applyNativeTheme(isDark));
-                });
-            }
-            authCheckHandler.postDelayed(this, 1000); // poll every 1s
-        }
-    };
+    private final Runnable authCheckRunnable=new Runnable(){@Override public void run(){checkAuthRedirect();if(webView!=null){webView.evaluateJavascript("document.documentElement.classList.contains('dark')",value->{boolean isDark="true".equals(value);runOnUiThread(()->applyNativeTheme(isDark));});}authCheckHandler.postDelayed(this,1000); // poll
+                                                                                                                                                                                                                                                                                                                                                    // every
+                                                                                                                                                                                                                                                                                                                                                    // 1s
+    }};
 
     private void checkAuthRedirect() {
-        if (webView == null) return;
-        
-        syncWebLayoutPadding();
-        checkRechargeAndPaymentState();
+        if (webView == null)
+            return;
+
+        int topPaddingPx = (walletCard != null && walletCard.getVisibility() == View.VISIBLE) ? 118 : 60;
+        webView.evaluateJavascript(
+                "var style = document.getElementById('native-hide-header-style');" +
+                        "if(!style) {" +
+                        "  style = document.createElement('style');" +
+                        "  style.id = 'native-hide-header-style';" +
+                        "  document.head.appendChild(style);" +
+                        "}" +
+                        "style.innerHTML = 'html, body { padding-top: 0 !important; margin-top: 0 !important; } .mobile-app-header-web-component, header, .sticky.top-0 { display: none !important; } main, .is-native-app main, .is-capacitor main { padding-top: "
+                        + topPaddingPx
+                        + "px !important; margin-top: 0px !important; padding-bottom: 84px !important; }';" +
+                        "var isDark = " + isDarkMode + ";" +
+                        "if (isDark && !document.documentElement.classList.contains('dark')) {" +
+                        "  document.documentElement.classList.add('dark');" +
+                        "  localStorage.setItem('theme', 'dark');" +
+                        "} else if (!isDark && document.documentElement.classList.contains('dark')) {" +
+                        "  document.documentElement.classList.remove('dark');" +
+                        "  localStorage.setItem('theme', 'light');" +
+                        "}",
+                null);
 
         String url = webView.getUrl();
-        if (url == null) return;
-        
-        if (url.contains("/login") || url.contains("/register") || url.contains("/forgot-password") || url.contains("/verify") || url.contains("/reset-password")) {
+        if (url == null)
+            return;
+
+        if (url.contains("/login") || url.contains("/register") || url.contains("/forgot-password")
+                || url.contains("/verify") || url.contains("/reset-password")) {
             authCheckHandler.removeCallbacks(authCheckRunnable);
             walletHandler.removeCallbacks(walletRunnable);
-            
+
             AuthManager.clearSession(this);
             Intent intent = new Intent(this, LoginActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -300,7 +147,8 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void applyNativeTheme(boolean isDark) {
-        if (isDarkMode == isDark && prefs != null && prefs.contains("is_dark_mode")) return;
+        if (isDarkMode == isDark && prefs != null && prefs.contains("is_dark_mode"))
+            return;
         isDarkMode = isDark;
 
         if (prefs != null) {
@@ -312,12 +160,15 @@ public class MainActivity extends BridgeActivity {
             android.view.WindowInsetsController controller = getWindow().getInsetsController();
             if (controller != null) {
                 if (isDark) {
-                    controller.setSystemBarsAppearance(0, android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS | android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS);
+                    controller.setSystemBarsAppearance(0,
+                            android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+                                    | android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS);
                 } else {
                     controller.setSystemBarsAppearance(
-                        android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS | android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
-                        android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS | android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
-                    );
+                            android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+                                    | android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
+                            android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+                                    | android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS);
                 }
             }
         } else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
@@ -336,16 +187,20 @@ public class MainActivity extends BridgeActivity {
             }
             decor.setSystemUiVisibility(flags);
         }
-        getWindow().setStatusBarColor(isDark ? android.graphics.Color.parseColor("#0F172A") : android.graphics.Color.parseColor("#FFFFFF"));
-        getWindow().setNavigationBarColor(isDark ? android.graphics.Color.parseColor("#0F172A") : android.graphics.Color.parseColor("#FFFFFF"));
+        getWindow().setStatusBarColor(
+                isDark ? android.graphics.Color.parseColor("#0F172A") : android.graphics.Color.parseColor("#FFFFFF"));
+        getWindow().setNavigationBarColor(
+                isDark ? android.graphics.Color.parseColor("#0F172A") : android.graphics.Color.parseColor("#FFFFFF"));
 
         // Parent root layout
         View mainParentLayout = findViewById(R.id.mainParentLayout);
         if (mainParentLayout != null) {
-            mainParentLayout.setBackgroundColor(isDark ? android.graphics.Color.parseColor("#0F172A") : android.graphics.Color.parseColor("#F8FAFC"));
+            mainParentLayout.setBackgroundColor(isDark ? android.graphics.Color.parseColor("#0F172A")
+                    : android.graphics.Color.parseColor("#F8FAFC"));
         }
 
-        // Header containers (Transparent to allow blurred gradient backdrop to show through)
+        // Header containers (Transparent to allow blurred gradient backdrop to show
+        // through)
         if (topLayoutContainer != null) {
             topLayoutContainer.setBackgroundColor(android.graphics.Color.TRANSPARENT);
         }
@@ -356,11 +211,13 @@ public class MainActivity extends BridgeActivity {
         // Header Dividers (Subtle translucent hairlines)
         View headerDivider = findViewById(R.id.headerDivider);
         if (headerDivider != null) {
-            headerDivider.setBackgroundColor(isDark ? android.graphics.Color.parseColor("#14FFFFFF") : android.graphics.Color.parseColor("#0A000000"));
+            headerDivider.setBackgroundColor(isDark ? android.graphics.Color.parseColor("#14FFFFFF")
+                    : android.graphics.Color.parseColor("#0A000000"));
         }
         View dividerLineTop = findViewById(R.id.dividerLineTop);
         if (dividerLineTop != null) {
-            dividerLineTop.setBackgroundColor(isDark ? android.graphics.Color.parseColor("#14FFFFFF") : android.graphics.Color.parseColor("#0A000000"));
+            dividerLineTop.setBackgroundColor(isDark ? android.graphics.Color.parseColor("#14FFFFFF")
+                    : android.graphics.Color.parseColor("#0A000000"));
         }
 
         updateHeaderGradientBackground();
@@ -369,16 +226,20 @@ public class MainActivity extends BridgeActivity {
         // Title Texts
         TextView lblHeaderTitle = findViewById(R.id.lblHeaderTitle);
         if (lblHeaderTitle != null) {
-            lblHeaderTitle.setTextColor(isDark ? android.graphics.Color.parseColor("#FFFFFF") : android.graphics.Color.parseColor("#0F172A"));
+            lblHeaderTitle.setTextColor(isDark ? android.graphics.Color.parseColor("#FFFFFF")
+                    : android.graphics.Color.parseColor("#0F172A"));
         }
         TextView lblHeaderSubtitle = findViewById(R.id.lblHeaderSubtitle);
         if (lblHeaderSubtitle != null) {
-            lblHeaderSubtitle.setTextColor(isDark ? android.graphics.Color.parseColor("#94A3B8") : android.graphics.Color.parseColor("#94A3B8"));
+            lblHeaderSubtitle.setTextColor(isDark ? android.graphics.Color.parseColor("#94A3B8")
+                    : android.graphics.Color.parseColor("#94A3B8"));
         }
 
         // Native Buttons Bg Tint and Text / Icon tint
-        int btnBgColor = isDark ? android.graphics.Color.parseColor("#334155") : android.graphics.Color.parseColor("#F1F5F9");
-        int btnIconColor = isDark ? android.graphics.Color.parseColor("#E2E8F0") : android.graphics.Color.parseColor("#475569");
+        int btnBgColor = isDark ? android.graphics.Color.parseColor("#334155")
+                : android.graphics.Color.parseColor("#F1F5F9");
+        int btnIconColor = isDark ? android.graphics.Color.parseColor("#E2E8F0")
+                : android.graphics.Color.parseColor("#475569");
 
         View btnMenu = findViewById(R.id.btnHeaderMenu);
         if (btnMenu != null) {
@@ -413,20 +274,11 @@ public class MainActivity extends BridgeActivity {
             tintImageViewsInViewGroup(btnSupport, btnIconColor);
         }
 
-        // Bottom Navigation Bar
-        if (bottomNavigation != null) {
-            bottomNavigation.setBackgroundColor(isDark ? android.graphics.Color.parseColor("#0F172A") : android.graphics.Color.parseColor("#FFFFFF"));
-            int[][] states = new int[][] {
-                new int[] { android.R.attr.state_checked }, // checked
-                new int[] { -android.R.attr.state_checked } // unchecked
-            };
-            int[] colors = new int[] {
-                isDark ? android.graphics.Color.parseColor("#818CF8") : android.graphics.Color.parseColor("#4338CA"), // active
-                isDark ? android.graphics.Color.parseColor("#94A3B8") : android.graphics.Color.parseColor("#475569") // inactive
-            };
-            android.content.res.ColorStateList colorStateList = new android.content.res.ColorStateList(states, colors);
-            bottomNavigation.setItemIconTintList(colorStateList);
-            bottomNavigation.setItemTextColor(colorStateList);
+        // Floating Glassmorphic Navigation Bar
+        if (floatingNavBarCard != null) {
+            floatingNavBarCard.setCardBackgroundColor(isDark ? android.graphics.Color.parseColor("#1E293B")
+                    : android.graphics.Color.parseColor("#FFFFFF"));
+            selectNavTab(currentSelectedTabIndex, false);
         }
 
         if (skeletonContainer != null && skeletonContainer.getVisibility() == View.VISIBLE) {
@@ -435,15 +287,15 @@ public class MainActivity extends BridgeActivity {
 
         if (webView != null) {
             String script = "(function() {" +
-                "  var isDark = " + isDark + ";" +
-                "  if (isDark) {" +
-                "    document.documentElement.classList.add('dark');" +
-                "    localStorage.setItem('theme', 'dark');" +
-                "  } else {" +
-                "    document.documentElement.classList.remove('dark');" +
-                "    localStorage.setItem('theme', 'light');" +
-                "  }" +
-                "})();";
+                    "  var isDark = " + isDark + ";" +
+                    "  if (isDark) {" +
+                    "    document.documentElement.classList.add('dark');" +
+                    "    localStorage.setItem('theme', 'dark');" +
+                    "  } else {" +
+                    "    document.documentElement.classList.remove('dark');" +
+                    "    localStorage.setItem('theme', 'light');" +
+                    "  }" +
+                    "})();";
             webView.evaluateJavascript(script, null);
         }
     }
@@ -505,13 +357,53 @@ public class MainActivity extends BridgeActivity {
         initModulesData();
         setupBottomNavigation();
 
-        // 7. Navigate to Dashboard
-        loadUrl("/workspace/analytics");
-
-        // 8. Start wallet details polling
+        // 7. Navigate to native Home screen (bypasses WebView for Home tab)
+        initNativeHomeScreen();
+        // Start wallet details polling (for web pages, independent from native home)
         walletHandler.post(walletRunnable);
         authCheckHandler.post(authCheckRunnable);
         progressPollHandler.post(progressPollRunnable);
+    }
+
+    /** Initialise the native home screen and show it on launch */
+    private void initNativeHomeScreen() {
+        View homeRoot = findViewById(R.id.nativeHomeScreen);
+        if (homeRoot == null) {
+            // Fallback: load web dashboard
+            loadUrl("/workspace/analytics");
+            return;
+        }
+        homeNativeManager = new HomeNativeManager(
+                this,
+                homeRoot,
+                prefs,
+                path -> {
+                    // When a module/button on native home is tapped, navigate in WebView
+                    showWebView();
+                    navigate(path);
+                }
+        );
+        // Show native home, hide WebView
+        homeNativeManager.show();
+        swipeRefresh.setVisibility(View.GONE);
+        // Pre-load the web app silently in background so switching tabs is instant
+        loadUrl("/workspace/analytics");
+        swipeRefresh.setVisibility(View.GONE); // keep hidden
+    }
+
+    /** Show the WebView container and hide native home screen */
+    private void showWebView() {
+        if (homeNativeManager != null) homeNativeManager.hide();
+        swipeRefresh.setVisibility(View.VISIBLE);
+    }
+
+    /** Show the native home screen and hide the WebView container */
+    private void showNativeHome() {
+        if (homeNativeManager != null) {
+            homeNativeManager.show();
+            homeNativeManager.fetchWalletBalance(); // refresh on each return
+        }
+        swipeRefresh.setVisibility(View.GONE);
     }
 
     // ── Setup helpers ──────────────────────────────────────────────────────────
@@ -536,9 +428,10 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void bindViews() {
-        swipeRefresh      = findViewById(R.id.swipeRefresh);
+        swipeRefresh = findViewById(R.id.swipeRefresh);
 
-        // Fix: SwipeRefreshLayout must check WebView scroll position so it NEVER traps scrolling down or stuck at bottom
+        // Fix: SwipeRefreshLayout must check WebView scroll position so it NEVER traps
+        // scrolling down or stuck at bottom
         if (swipeRefresh != null) {
             swipeRefresh.setOnChildScrollUpCallback((parent, child) -> {
                 if (webView != null) {
@@ -548,30 +441,21 @@ public class MainActivity extends BridgeActivity {
             });
         }
 
-        bottomNavigation  = findViewById(R.id.bottomNavigation);
-        offlineOverlay    = findViewById(R.id.offlineOverlay);
+        offlineOverlay = findViewById(R.id.offlineOverlay);
         skeletonContainer = findViewById(R.id.skeletonContainer);
         topLayoutContainer = findViewById(R.id.topLayoutContainer);
 
         // Adjust top container padding dynamically for system status bar / notch height
         if (topLayoutContainer != null) {
             androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(topLayoutContainer, (v, insets) -> {
-                androidx.core.graphics.Insets systemBars = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars());
+                androidx.core.graphics.Insets systemBars = insets
+                        .getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars());
                 v.setPadding(0, systemBars.top, 0, 0);
                 updateHeaderBlurHeight();
                 return insets;
             });
         }
 
-        // Adjust bottom navigation padding dynamically for system gesture navigation bar height
-        if (bottomNavigation != null) {
-            androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(bottomNavigation, (v, insets) -> {
-                androidx.core.graphics.Insets systemBars = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars());
-                v.setPadding(0, 0, 0, systemBars.bottom);
-                return insets;
-            });
-        }
-        
         // Retry button
         View btnRetry = findViewById(R.id.btnRetry);
         if (btnRetry != null) {
@@ -589,10 +473,7 @@ public class MainActivity extends BridgeActivity {
             fabNewRegistration.setOnClickListener(v -> {
                 currentPath = null; // force navigation even if already on sub-path
                 loadUrl("/workspace/registration");
-                // Update bottom nav to Patients tab
-                if (bottomNavigation != null) {
-                    bottomNavigation.setSelectedItemId(R.id.nav_patients);
-                }
+                selectNavTab(1, true);
             });
         }
 
@@ -629,32 +510,35 @@ public class MainActivity extends BridgeActivity {
 
                 // Animated rotation and spring scale matching iOS
                 btnTheme.animate()
-                    .rotationBy(90f)
-                    .scaleX(0.82f)
-                    .scaleY(0.82f)
-                    .setDuration(160)
-                    .withEndAction(() -> {
-                        btnTheme.animate()
-                            .scaleX(1.0f)
-                            .scaleY(1.0f)
-                            .setDuration(220)
-                            .setInterpolator(new android.view.animation.OvershootInterpolator(1.8f))
-                            .start();
-                    })
-                    .start();
+                        .rotationBy(90f)
+                        .scaleX(0.82f)
+                        .scaleY(0.82f)
+                        .setDuration(160)
+                        .withEndAction(() -> {
+                            btnTheme.animate()
+                                    .scaleX(1.0f)
+                                    .scaleY(1.0f)
+                                    .setDuration(220)
+                                    .setInterpolator(new android.view.animation.OvershootInterpolator(1.8f))
+                                    .start();
+                        })
+                        .start();
 
                 applyNativeTheme(newDark);
 
                 if (webView != null) {
                     webView.evaluateJavascript(
-                        "(function() {" +
-                        "  var btn = document.querySelector('.mobile-app-header-web-component button[aria-label=\"Toggle dark mode\"]') || document.querySelector('[aria-label=\"Toggle dark mode\"]');" +
-                        "  if (btn) { btn.click(); return; }" +
-                        "  var html = document.documentElement;" +
-                        "  var isDark = " + newDark + ";" +
-                        "  if (isDark) { html.classList.add('dark'); } else { html.classList.remove('dark'); }" +
-                        "  localStorage.setItem('theme', isDark ? 'dark' : 'light');" +
-                        "})()", null);
+                            "(function() {" +
+                                    "  var btn = document.querySelector('.mobile-app-header-web-component button[aria-label=\"Toggle dark mode\"]') || document.querySelector('[aria-label=\"Toggle dark mode\"]');"
+                                    +
+                                    "  if (btn) { btn.click(); return; }" +
+                                    "  var html = document.documentElement;" +
+                                    "  var isDark = " + newDark + ";" +
+                                    "  if (isDark) { html.classList.add('dark'); } else { html.classList.remove('dark'); }"
+                                    +
+                                    "  localStorage.setItem('theme', isDark ? 'dark' : 'light');" +
+                                    "})()",
+                            null);
                 }
             });
         }
@@ -682,42 +566,116 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void setupBottomNavigation() {
-        bottomNavigation.setOnItemSelectedListener(item -> {
-            int id = item.getItemId();
-            if (id != R.id.nav_more) {
-                previousTab = id;
-            }
+        floatingNavBarCard = findViewById(R.id.floatingNavBarCard);
+        navTabHome = findViewById(R.id.navTabHome);
+        navTabPatients = findViewById(R.id.navTabPatients);
+        navTabCenter = findViewById(R.id.navTabCenter);
+        navTabReports = findViewById(R.id.navTabReports);
+        navTabMore = findViewById(R.id.navTabMore);
 
-            // Subtle selection scale pop animation for premium micro-feedback
-            View itemView = bottomNavigation.findViewById(id);
-            if (itemView != null) {
-                itemView.animate()
-                    .scaleX(1.1f)
-                    .scaleY(1.1f)
-                    .setDuration(120)
-                    .withEndAction(() -> itemView.animate().scaleX(1.0f).scaleY(1.0f).setDuration(120).start())
-                    .start();
-            }
+        imgNavHome = findViewById(R.id.imgNavHome);
+        imgNavPatients = findViewById(R.id.imgNavPatients);
+        imgNavReports = findViewById(R.id.imgNavReports);
+        imgNavMore = findViewById(R.id.imgNavMore);
 
-            if (id == R.id.nav_dashboard) {
-                navigate("/workspace/analytics");
-                return true;
-            } else if (id == R.id.nav_patients) {
-                navigate("/workspace/patients");
-                return true;
-            } else if (id == R.id.nav_categories) {
-                navigate("/workspace/test-management");
-                return true;
-            } else if (id == R.id.nav_more) {
-                showMorePanel();
-                return false;
+        txtNavHome = findViewById(R.id.txtNavHome);
+        txtNavPatients = findViewById(R.id.txtNavPatients);
+        txtNavReports = findViewById(R.id.txtNavReports);
+        txtNavMore = findViewById(R.id.txtNavMore);
+
+        navCenterCircle = findViewById(R.id.navCenterCircle);
+
+        if (navTabHome != null) navTabHome.setOnClickListener(v -> selectNavTab(0, true));
+        if (navTabPatients != null) navTabPatients.setOnClickListener(v -> selectNavTab(1, true));
+        if (navTabCenter != null) navTabCenter.setOnClickListener(v -> {
+            // Animate center button bounce & open native wallet
+            if (navCenterCircle != null) {
+                navCenterCircle.animate()
+                        .scaleX(0.85f).scaleY(0.85f).setDuration(120)
+                        .withEndAction(() -> navCenterCircle.animate().scaleX(1.0f).scaleY(1.0f).setDuration(150).start())
+                        .start();
             }
-            return false;
+            startActivity(new Intent(MainActivity.this, WalletActivity.class));
         });
+        if (navTabReports != null) navTabReports.setOnClickListener(v -> selectNavTab(2, true));
+        if (navTabMore != null) navTabMore.setOnClickListener(v -> showMorePanel());
+
+        selectNavTab(0, false);
+    }
+
+    public void selectNavTab(int tabIndex, boolean animate) {
+        currentSelectedTabIndex = tabIndex;
+        int activeColor = isDarkMode ? 0xFF818CF8 : 0xFF0D6EFD;
+        int inactiveColor = 0xFF94A3B8;
+
+        // Tab 0: Home
+        boolean isHome = (tabIndex == 0);
+        if (imgNavHome != null) {
+            imgNavHome.setColorFilter(isHome ? activeColor : inactiveColor);
+            if (isHome && animate) animateTabSelection(imgNavHome);
+        }
+        if (txtNavHome != null) {
+            txtNavHome.setTextColor(isHome ? activeColor : inactiveColor);
+            txtNavHome.setTypeface(null, isHome ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
+        }
+
+        // Tab 1: Patients
+        boolean isPatients = (tabIndex == 1);
+        if (imgNavPatients != null) {
+            imgNavPatients.setColorFilter(isPatients ? activeColor : inactiveColor);
+            if (isPatients && animate) animateTabSelection(imgNavPatients);
+        }
+        if (txtNavPatients != null) {
+            txtNavPatients.setTextColor(isPatients ? activeColor : inactiveColor);
+            txtNavPatients.setTypeface(null, isPatients ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
+        }
+
+        // Tab 2: Reports
+        boolean isReports = (tabIndex == 2);
+        if (imgNavReports != null) {
+            imgNavReports.setColorFilter(isReports ? activeColor : inactiveColor);
+            if (isReports && animate) animateTabSelection(imgNavReports);
+        }
+        if (txtNavReports != null) {
+            txtNavReports.setTextColor(isReports ? activeColor : inactiveColor);
+            txtNavReports.setTypeface(null, isReports ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
+        }
+
+        // Tab 3: More (just opens sheet, not persistent selection)
+        if (imgNavMore != null) imgNavMore.setColorFilter(inactiveColor);
+        if (txtNavMore != null) {
+            txtNavMore.setTextColor(inactiveColor);
+            txtNavMore.setTypeface(null, android.graphics.Typeface.NORMAL);
+        }
+
+        // Action execution
+        if (tabIndex == 0) {
+            showNativeHome();
+        } else if (tabIndex == 1) {
+            showWebView();
+            navigate("/workspace/patients");
+        } else if (tabIndex == 2) {
+            showWebView();
+            navigate("/workspace/reports");
+        }
+    }
+
+    private void animateTabSelection(View view) {
+        if (view == null) return;
+        view.setScaleX(0.82f);
+        view.setScaleY(0.82f);
+        view.animate()
+                .scaleX(1.15f)
+                .scaleY(1.15f)
+                .setDuration(160)
+                .setInterpolator(new android.view.animation.OvershootInterpolator(2.0f))
+                .withEndAction(() -> view.animate().scaleX(1.0f).scaleY(1.0f).setDuration(100).start())
+                .start();
     }
 
     private void navigate(String path) {
-        if (offlineOverlay != null) offlineOverlay.setVisibility(View.GONE);
+        if (offlineOverlay != null)
+            offlineOverlay.setVisibility(View.GONE);
         swipeRefresh.setVisibility(View.VISIBLE);
         loadUrl(path);
     }
@@ -735,18 +693,19 @@ public class MainActivity extends BridgeActivity {
 
             final boolean isDark = this.isDarkMode;
             if (isDark) {
-                sheetView.setBackgroundTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#0F172A")));
-                
+                sheetView.setBackgroundTintList(
+                        android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#0F172A")));
+
                 TextView txtTitle = sheetView.findViewById(R.id.txtMoreTitle);
                 if (txtTitle != null) {
                     txtTitle.setTextColor(android.graphics.Color.parseColor("#FFFFFF"));
                 }
-                
+
                 TextView txtSubtitle = sheetView.findViewById(R.id.txtMoreSubtitle);
                 if (txtSubtitle != null) {
                     txtSubtitle.setTextColor(android.graphics.Color.parseColor("#94A3B8"));
                 }
-                
+
                 View divider = sheetView.findViewById(R.id.moreDivider);
                 if (divider != null) {
                     divider.setBackgroundColor(android.graphics.Color.parseColor("#334155"));
@@ -754,24 +713,24 @@ public class MainActivity extends BridgeActivity {
             }
 
             // Bind views inside sheet view
-            moreScrollView    = sheetView.findViewById(R.id.moreSettingsScrollView);
-            containerOverview    = sheetView.findViewById(R.id.containerOverview);
-            containerClinical    = sheetView.findViewById(R.id.containerClinical);
-            containerRadiology   = sheetView.findViewById(R.id.containerRadiology);
-            containerLogistics   = sheetView.findViewById(R.id.containerLogistics);
-            containerMachine     = sheetView.findViewById(R.id.containerMachine);
-            containerB2B         = sheetView.findViewById(R.id.containerB2B);
-            containerAdmin       = sheetView.findViewById(R.id.containerAdmin);
-            containerLegal       = sheetView.findViewById(R.id.containerLegal);
+            moreScrollView = sheetView.findViewById(R.id.moreSettingsScrollView);
+            containerOverview = sheetView.findViewById(R.id.containerOverview);
+            containerClinical = sheetView.findViewById(R.id.containerClinical);
+            containerRadiology = sheetView.findViewById(R.id.containerRadiology);
+            containerLogistics = sheetView.findViewById(R.id.containerLogistics);
+            containerMachine = sheetView.findViewById(R.id.containerMachine);
+            containerB2B = sheetView.findViewById(R.id.containerB2B);
+            containerAdmin = sheetView.findViewById(R.id.containerAdmin);
+            containerLegal = sheetView.findViewById(R.id.containerLegal);
 
-            lblOverviewHeader    = sheetView.findViewById(R.id.lblOverviewHeader);
-            lblClinicalHeader    = sheetView.findViewById(R.id.lblClinicalHeader);
-            lblRadiologyHeader   = sheetView.findViewById(R.id.lblRadiologyHeader);
-            lblLogisticsHeader   = sheetView.findViewById(R.id.lblLogisticsHeader);
-            lblMachineHeader     = sheetView.findViewById(R.id.lblMachineHeader);
-            lblB2BHeader         = sheetView.findViewById(R.id.lblB2BHeader);
-            lblAdminHeader       = sheetView.findViewById(R.id.lblAdminHeader);
-            lblLegalHeader       = sheetView.findViewById(R.id.lblLegalHeader);
+            lblOverviewHeader = sheetView.findViewById(R.id.lblOverviewHeader);
+            lblClinicalHeader = sheetView.findViewById(R.id.lblClinicalHeader);
+            lblRadiologyHeader = sheetView.findViewById(R.id.lblRadiologyHeader);
+            lblLogisticsHeader = sheetView.findViewById(R.id.lblLogisticsHeader);
+            lblMachineHeader = sheetView.findViewById(R.id.lblMachineHeader);
+            lblB2BHeader = sheetView.findViewById(R.id.lblB2BHeader);
+            lblAdminHeader = sheetView.findViewById(R.id.lblAdminHeader);
+            lblLegalHeader = sheetView.findViewById(R.id.lblLegalHeader);
 
             // Logout inside bottom sheet
             android.widget.Button btnLogout = sheetView.findViewById(R.id.btnMoreLogout);
@@ -780,34 +739,32 @@ public class MainActivity extends BridgeActivity {
                     moreBottomSheetDialog.dismiss();
                     confirmLogout();
                 });
-                int redColor = isDark ? android.graphics.Color.parseColor("#EF4444") : android.graphics.Color.parseColor("#DC2626");
+                int redColor = isDark ? android.graphics.Color.parseColor("#EF4444")
+                        : android.graphics.Color.parseColor("#DC2626");
                 btnLogout.setBackgroundTintList(android.content.res.ColorStateList.valueOf(redColor));
                 btnLogout.setTypeface(android.graphics.Typeface.defaultFromStyle(android.graphics.Typeface.BOLD));
             }
 
             // OnDismiss resets selection
             moreBottomSheetDialog.setOnDismissListener(dialog -> {
-                bottomNavigation.setOnItemSelectedListener(null);
-                bottomNavigation.setSelectedItemId(previousTab);
-                setupBottomNavigation();
+                selectNavTab(currentSelectedTabIndex, false);
             });
 
             // Adjust height to 80% of screen height
             moreBottomSheetDialog.setOnShowListener(dialog -> {
-                com.google.android.material.bottomsheet.BottomSheetDialog d = 
-                    (com.google.android.material.bottomsheet.BottomSheetDialog) dialog;
+                com.google.android.material.bottomsheet.BottomSheetDialog d = (com.google.android.material.bottomsheet.BottomSheetDialog) dialog;
                 FrameLayout bottomSheet = d.findViewById(com.google.android.material.R.id.design_bottom_sheet);
                 if (bottomSheet != null) {
-                    com.google.android.material.bottomsheet.BottomSheetBehavior<FrameLayout> behavior = 
-                        com.google.android.material.bottomsheet.BottomSheetBehavior.from(bottomSheet);
-                    
+                    com.google.android.material.bottomsheet.BottomSheetBehavior<FrameLayout> behavior = com.google.android.material.bottomsheet.BottomSheetBehavior
+                            .from(bottomSheet);
+
                     int screenHeight = getResources().getDisplayMetrics().heightPixels;
                     int targetHeight = (int) (screenHeight * 0.8);
-                    
+
                     android.view.ViewGroup.LayoutParams layoutParams = bottomSheet.getLayoutParams();
                     layoutParams.height = targetHeight;
                     bottomSheet.setLayoutParams(layoutParams);
-                    
+
                     behavior.setPeekHeight(targetHeight);
                     behavior.setState(com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED);
                 }
@@ -819,8 +776,8 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void showNotificationsPanel() {
-        final com.google.android.material.bottomsheet.BottomSheetDialog dialog =
-            new com.google.android.material.bottomsheet.BottomSheetDialog(this);
+        final com.google.android.material.bottomsheet.BottomSheetDialog dialog = new com.google.android.material.bottomsheet.BottomSheetDialog(
+                this);
         View sheetView = getLayoutInflater().inflate(R.layout.layout_notifications_sheet, null);
         dialog.setContentView(sheetView);
 
@@ -833,28 +790,29 @@ public class MainActivity extends BridgeActivity {
         // Theme the sheet natively based on current app theme
         final boolean isDark = this.isDarkMode;
         if (isDark) {
-            sheetView.setBackgroundTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#0F172A")));
-            
+            sheetView.setBackgroundTintList(
+                    android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#0F172A")));
+
             TextView txtTitle = sheetView.findViewById(R.id.txtNotificationsTitle);
             if (txtTitle != null) {
                 txtTitle.setTextColor(android.graphics.Color.parseColor("#FFFFFF"));
             }
-            
+
             View divider = sheetView.findViewById(R.id.notificationsDivider);
             if (divider != null) {
                 divider.setBackgroundColor(android.graphics.Color.parseColor("#334155"));
             }
-            
+
             ImageView imgEmpty = sheetView.findViewById(R.id.imgNotificationsEmpty);
             if (imgEmpty != null) {
                 imgEmpty.setColorFilter(android.graphics.Color.parseColor("#334155"));
             }
-            
+
             TextView txtEmptyTitle = sheetView.findViewById(R.id.txtNotificationsEmptyTitle);
             if (txtEmptyTitle != null) {
                 txtEmptyTitle.setTextColor(android.graphics.Color.parseColor("#FFFFFF"));
             }
-            
+
             TextView txtEmptySubtitle = sheetView.findViewById(R.id.txtNotificationsEmptySubtitle);
             if (txtEmptySubtitle != null) {
                 txtEmptySubtitle.setTextColor(android.graphics.Color.parseColor("#94A3B8"));
@@ -865,8 +823,8 @@ public class MainActivity extends BridgeActivity {
         dialog.setOnShowListener(d -> {
             FrameLayout bottomSheet = dialog.findViewById(com.google.android.material.R.id.design_bottom_sheet);
             if (bottomSheet != null) {
-                com.google.android.material.bottomsheet.BottomSheetBehavior<FrameLayout> behavior =
-                    com.google.android.material.bottomsheet.BottomSheetBehavior.from(bottomSheet);
+                com.google.android.material.bottomsheet.BottomSheetBehavior<FrameLayout> behavior = com.google.android.material.bottomsheet.BottomSheetBehavior
+                        .from(bottomSheet);
                 int screenHeight = getResources().getDisplayMetrics().heightPixels;
                 int targetHeight = (int) (screenHeight * 0.8);
                 android.view.ViewGroup.LayoutParams lp = bottomSheet.getLayoutParams();
@@ -877,14 +835,16 @@ public class MainActivity extends BridgeActivity {
             }
         });
 
-        // Save the last seen time immediately (but keep previous value to check which ones are new)
+        // Save the last seen time immediately (but keep previous value to check which
+        // ones are new)
         final long lastSeenTime = prefs != null ? prefs.getLong("last_seen_notification_time", 0L) : 0L;
         if (prefs != null) {
             prefs.edit().putLong("last_seen_notification_time", System.currentTimeMillis()).apply();
         }
         runOnUiThread(() -> {
             TextView badge = findViewById(R.id.txtNotificationBadge);
-            if (badge != null) badge.setVisibility(View.GONE);
+            if (badge != null)
+                badge.setVisibility(View.GONE);
             stopBellAnimationLoop();
         });
 
@@ -897,32 +857,39 @@ public class MainActivity extends BridgeActivity {
                 conn.setRequestProperty("Accept", "application/json");
                 // Forward the session cookie from the WebView cookie store
                 String cookie = android.webkit.CookieManager.getInstance().getCookie(BASE_URL);
-                if (cookie != null) conn.setRequestProperty("Cookie", cookie);
+                if (cookie != null)
+                    conn.setRequestProperty("Cookie", cookie);
                 conn.setConnectTimeout(10000);
                 conn.setReadTimeout(10000);
 
                 int code = conn.getResponseCode();
                 StringBuilder sb = new StringBuilder();
-                java.io.InputStream stream = (code >= 200 && code < 300) ? conn.getInputStream() : conn.getErrorStream();
+                java.io.InputStream stream = (code >= 200 && code < 300) ? conn.getInputStream()
+                        : conn.getErrorStream();
                 if (stream != null) {
-                    java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(stream, "UTF-8"));
+                    java.io.BufferedReader reader = new java.io.BufferedReader(
+                            new java.io.InputStreamReader(stream, "UTF-8"));
                     String line;
-                    while ((line = reader.readLine()) != null) sb.append(line);
+                    while ((line = reader.readLine()) != null)
+                        sb.append(line);
                     reader.close();
                 }
                 conn.disconnect();
 
                 final String responseBody = sb.toString();
                 runOnUiThread(() -> {
-                    if (spinner != null) spinner.setVisibility(View.GONE);
-                    if (stackNotifications == null) return;
+                    if (spinner != null)
+                        spinner.setVisibility(View.GONE);
+                    if (stackNotifications == null)
+                        return;
                     stackNotifications.removeAllViews();
 
                     try {
                         org.json.JSONObject root = new org.json.JSONObject(responseBody);
                         org.json.JSONArray arr = root.optJSONArray("notifications");
                         if (arr != null && arr.length() > 0) {
-                            if (scrollNotifications != null) scrollNotifications.setVisibility(View.VISIBLE);
+                            if (scrollNotifications != null)
+                                scrollNotifications.setVisibility(View.VISIBLE);
                             for (int i = 0; i < arr.length(); i++) {
                                 org.json.JSONObject n = arr.getJSONObject(i);
                                 String title = n.optString("title", "");
@@ -940,22 +907,30 @@ public class MainActivity extends BridgeActivity {
                                 row.setOrientation(LinearLayout.VERTICAL);
                                 row.setPadding(48, 28, 48, 28);
                                 if (!isRead) {
-                                    row.setBackgroundColor(isDark ? android.graphics.Color.parseColor("#1E3A8A") : 0xFFEFF6FF); // Blue-50/unread highlight
+                                    row.setBackgroundColor(
+                                            isDark ? android.graphics.Color.parseColor("#1E3A8A") : 0xFFEFF6FF); // Blue-50/unread
+                                                                                                                 // highlight
                                 } else {
-                                    row.setBackgroundColor(isDark ? android.graphics.Color.parseColor("#1E293B") : android.graphics.Color.parseColor("#FFFFFF"));
+                                    row.setBackgroundColor(isDark ? android.graphics.Color.parseColor("#1E293B")
+                                            : android.graphics.Color.parseColor("#FFFFFF"));
                                 }
 
                                 TextView tvTitle = new TextView(MainActivity.this);
                                 tvTitle.setText(title);
-                                tvTitle.setTextColor(isDark ? (isRead ? android.graphics.Color.parseColor("#E2E8F0") : android.graphics.Color.parseColor("#93C5FD")) : (isRead ? 0xFF475569 : 0xFF1E40AF));
+                                tvTitle.setTextColor(isDark
+                                        ? (isRead ? android.graphics.Color.parseColor("#E2E8F0")
+                                                : android.graphics.Color.parseColor("#93C5FD"))
+                                        : (isRead ? 0xFF475569 : 0xFF1E40AF));
                                 tvTitle.setTextSize(13.5f);
-                                if (!isRead) tvTitle.setTypeface(null, android.graphics.Typeface.BOLD);
+                                if (!isRead)
+                                    tvTitle.setTypeface(null, android.graphics.Typeface.BOLD);
                                 row.addView(tvTitle);
 
                                 if (!body.isEmpty()) {
                                     TextView tvBody = new TextView(MainActivity.this);
                                     tvBody.setText(body);
-                                    tvBody.setTextColor(isDark ? android.graphics.Color.parseColor("#94A3B8") : 0xFF94A3B8);
+                                    tvBody.setTextColor(
+                                            isDark ? android.graphics.Color.parseColor("#94A3B8") : 0xFF94A3B8);
                                     tvBody.setTextSize(11.5f);
                                     tvBody.setPadding(0, 4, 0, 0);
                                     row.addView(tvBody);
@@ -963,28 +938,37 @@ public class MainActivity extends BridgeActivity {
 
                                 // Separator
                                 View sep = new View(MainActivity.this);
-                                sep.setBackgroundColor(isDark ? android.graphics.Color.parseColor("#334155") : 0xFFF1F5F9);
-                                LinearLayout.LayoutParams sepLp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 1);
+                                sep.setBackgroundColor(
+                                        isDark ? android.graphics.Color.parseColor("#334155") : 0xFFF1F5F9);
+                                LinearLayout.LayoutParams sepLp = new LinearLayout.LayoutParams(
+                                        LinearLayout.LayoutParams.MATCH_PARENT, 1);
                                 sep.setLayoutParams(sepLp);
 
                                 stackNotifications.addView(row);
                                 stackNotifications.addView(sep);
                             }
                         } else {
-                            if (scrollNotifications != null) scrollNotifications.setVisibility(View.GONE);
-                            if (lblNoNotifications != null) lblNoNotifications.setVisibility(View.VISIBLE);
+                            if (scrollNotifications != null)
+                                scrollNotifications.setVisibility(View.GONE);
+                            if (lblNoNotifications != null)
+                                lblNoNotifications.setVisibility(View.VISIBLE);
                         }
                     } catch (Exception e) {
                         // Fallback: show no notifications
-                        if (scrollNotifications != null) scrollNotifications.setVisibility(View.GONE);
-                        if (lblNoNotifications != null) lblNoNotifications.setVisibility(View.VISIBLE);
+                        if (scrollNotifications != null)
+                            scrollNotifications.setVisibility(View.GONE);
+                        if (lblNoNotifications != null)
+                            lblNoNotifications.setVisibility(View.VISIBLE);
                     }
                 });
             } catch (Exception e) {
                 runOnUiThread(() -> {
-                    if (spinner != null) spinner.setVisibility(View.GONE);
-                    if (scrollNotifications != null) scrollNotifications.setVisibility(View.GONE);
-                    if (lblNoNotifications != null) lblNoNotifications.setVisibility(View.VISIBLE);
+                    if (spinner != null)
+                        spinner.setVisibility(View.GONE);
+                    if (scrollNotifications != null)
+                        scrollNotifications.setVisibility(View.GONE);
+                    if (lblNoNotifications != null)
+                        lblNoNotifications.setVisibility(View.VISIBLE);
                 });
             }
         }).start();
@@ -998,19 +982,25 @@ public class MainActivity extends BridgeActivity {
                         java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
                         conn.setRequestMethod("POST");
                         String cookie = android.webkit.CookieManager.getInstance().getCookie(BASE_URL);
-                        if (cookie != null) conn.setRequestProperty("Cookie", cookie);
+                        if (cookie != null)
+                            conn.setRequestProperty("Cookie", cookie);
                         conn.getResponseCode();
                         conn.disconnect();
-                    } catch (Exception ignored) {}
+                    } catch (Exception ignored) {
+                    }
                 }).start();
 
-                if (stackNotifications != null) stackNotifications.removeAllViews();
-                if (scrollNotifications != null) scrollNotifications.setVisibility(View.GONE);
-                if (lblNoNotifications != null) lblNoNotifications.setVisibility(View.VISIBLE);
+                if (stackNotifications != null)
+                    stackNotifications.removeAllViews();
+                if (scrollNotifications != null)
+                    scrollNotifications.setVisibility(View.GONE);
+                if (lblNoNotifications != null)
+                    lblNoNotifications.setVisibility(View.VISIBLE);
 
                 // Instantly clear the badge and stop bell animation
                 TextView badge = findViewById(R.id.txtNotificationBadge);
-                if (badge != null) badge.setVisibility(View.GONE);
+                if (badge != null)
+                    badge.setVisibility(View.GONE);
                 stopBellAnimationLoop();
             });
         }
@@ -1019,8 +1009,8 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void showLegalBottomSheet() {
-        final com.google.android.material.bottomsheet.BottomSheetDialog dialog =
-            new com.google.android.material.bottomsheet.BottomSheetDialog(this);
+        final com.google.android.material.bottomsheet.BottomSheetDialog dialog = new com.google.android.material.bottomsheet.BottomSheetDialog(
+                this);
         View sheetView = getLayoutInflater().inflate(R.layout.layout_legal_sheet, null);
         dialog.setContentView(sheetView);
 
@@ -1038,12 +1028,14 @@ public class MainActivity extends BridgeActivity {
 
         View separator = sheetView.findViewById(R.id.legalSeparator);
         if (separator != null) {
-            separator.setBackgroundColor(isDark ? android.graphics.Color.parseColor("#334155") : android.graphics.Color.parseColor("#F1F5F9"));
+            separator.setBackgroundColor(isDark ? android.graphics.Color.parseColor("#334155")
+                    : android.graphics.Color.parseColor("#F1F5F9"));
         }
 
         TextView txtContent = sheetView.findViewById(R.id.txtLegalContentSheet);
         if (txtContent != null) {
-            txtContent.setTextColor(isDark ? android.graphics.Color.parseColor("#CBD5E1") : android.graphics.Color.parseColor("#334155"));
+            txtContent.setTextColor(isDark ? android.graphics.Color.parseColor("#CBD5E1")
+                    : android.graphics.Color.parseColor("#334155"));
             String html = buildLegalHtml(isDark);
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
                 txtContent.setText(android.text.Html.fromHtml(html, android.text.Html.FROM_HTML_MODE_LEGACY));
@@ -1052,9 +1044,12 @@ public class MainActivity extends BridgeActivity {
             }
         }
 
-        TextView btnClose = sheetView.findViewById(R.id.btnLegalClose) instanceof TextView ? (TextView) sheetView.findViewById(R.id.btnLegalClose) : null;
+        TextView btnClose = sheetView.findViewById(R.id.btnLegalClose) instanceof TextView
+                ? (TextView) sheetView.findViewById(R.id.btnLegalClose)
+                : null;
         if (btnClose != null) {
-            btnClose.setTextColor(isDark ? android.graphics.Color.parseColor("#818CF8") : android.graphics.Color.parseColor("#4338CA"));
+            btnClose.setTextColor(isDark ? android.graphics.Color.parseColor("#818CF8")
+                    : android.graphics.Color.parseColor("#4338CA"));
             btnClose.setOnClickListener(v -> dialog.dismiss());
         }
 
@@ -1062,8 +1057,8 @@ public class MainActivity extends BridgeActivity {
         dialog.setOnShowListener(d -> {
             FrameLayout bottomSheet = dialog.findViewById(com.google.android.material.R.id.design_bottom_sheet);
             if (bottomSheet != null) {
-                com.google.android.material.bottomsheet.BottomSheetBehavior<FrameLayout> behavior =
-                    com.google.android.material.bottomsheet.BottomSheetBehavior.from(bottomSheet);
+                com.google.android.material.bottomsheet.BottomSheetBehavior<FrameLayout> behavior = com.google.android.material.bottomsheet.BottomSheetBehavior
+                        .from(bottomSheet);
                 int screenHeight = getResources().getDisplayMetrics().heightPixels;
                 int targetHeight = (int) (screenHeight * 0.85);
                 android.view.ViewGroup.LayoutParams lp = bottomSheet.getLayoutParams();
@@ -1080,44 +1075,65 @@ public class MainActivity extends BridgeActivity {
     private String buildLegalHtml(boolean isDark) {
         String primaryColor = isDark ? "#818CF8" : "#4338CA";
         String secondaryColor = isDark ? "#E2E8F0" : "#1E293B";
-        return
-            "<b><font color=\"" + primaryColor + "\">(A) Google Play Beta Testing — Terms of Service</font></b><br/><br/>" +
-            "<b><font color=\"" + secondaryColor + "\">Key Summary</font></b><br/><br/>" +
-            "• Diagnostics, usage, and crash reports related to your use of each Beta App will automatically be collected by Google and the Application Provider.<br/><br/>" +
-            "• You may submit feedback, suggestions, and feature ideas to the Application Provider of the Beta App.<br/><br/>" +
-            "• Beta Apps are pre-release software and may crash, resulting in data loss.<br/><br/>" +
-            "• If you already have the production version installed, the Beta version will replace it and may overwrite app data.<br/><br/>" +
-            "• You can opt out of Beta testing at any time by leaving the program on Google Play and reinstalling the production version.<br/><br/>" +
-            "Your use of the Google Play Beta Testing service, including downloading any pre-release or beta-stage applications for Android (\"Beta Apps\"), is governed by these terms. The standard Google Play Terms of Service for your region are incorporated by reference.<br/><br/>" +
-            "<b><font color=\"" + secondaryColor + "\">Beta Tester Eligibility</font></b><br/><br/>" +
-            "You must meet the age requirements for Google Play in your country. If you are under 18, review this Agreement with your parent or guardian.<br/><br/>" +
-            "The Application Provider grants you a limited, non-exclusive, non-transferable, non-sublicensable license to access, download, and use the Beta App solely for testing and evaluation purposes.<br/><br/>" +
-            "You acknowledge that Beta Apps are pre-release, unfinished software and may contain errors. You should not use them in critical operating environments or with highly valuable data. Back up your device prior to installing any Beta App. Google and the Application Provider shall not be liable for any data loss, device damage, or service interruptions caused by your use of Beta Apps.<br/><br/>" +
-            "<b><font color=\"" + secondaryColor + "\">No Warranty</font></b><br/><br/>" +
-            "YOU EXPRESSLY ACKNOWLEDGE AND AGREE THAT USE OF THE BETA APP IS AT YOUR SOLE RISK. TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE BETA APP IS PROVIDED \"AS IS\" AND \"AS AVAILABLE\", WITH ALL FAULTS AND WITHOUT WARRANTY OF ANY KIND.<br/><br/>" +
-            "<b><font color=\"" + secondaryColor + "\">Termination</font></b><br/><br/>" +
-            "To terminate participation, leave the beta program in Google Play. Google and/or the Application Provider reserve the right to terminate your participation at any time.<br/><br/>" +
-            "────────────────────────────<br/><br/>" +
-            "<b><font color=\"" + primaryColor + "\">(B) Google LLC — Android Beta Program License Agreement</font></b><br/><br/>" +
-            "<b><font color=\"" + secondaryColor + "\">Standard Software License</font></b><br/><br/>" +
-            "PLEASE READ THIS LICENSE AGREEMENT CAREFULLY BEFORE INSTALLING OR USING THE SOFTWARE. BY INSTALLING AND/OR USING THE PRE-RELEASE SOFTWARE, YOU AGREE TO BE BOUND BY THE TERMS OF THIS LICENSE.<br/><br/>" +
-            "<b>1. General.</b><br/><br/>" +
-            "A. The pre-release software, APIs, documentation, and assets (collectively, the \"Beta Software\") are licensed, not sold, to you by Google LLC (\"Google\") for use only under the terms of this License.<br/><br/>" +
-            "B. Google may make available updates or modifications to the Beta Software at its discretion. The terms of this License will govern any such updates unless accompanied by a separate license agreement.<br/><br/>" +
-            "<b>2. Permitted Uses and Restrictions.</b><br/><br/>" +
-            "A. License. You are granted a limited, non-transferable, non-exclusive license to install and use the Beta Software on compatible Android-branded devices you own or control solely for test and evaluation purposes.<br/><br/>" +
-            "B. Restrictions. You may not: (a) copy, decompile, reverse engineer, or disassemble the Beta Software; (b) distribute, sell, lease, or rent it; or (c) demonstrate it to unauthorized individuals without prior consent.<br/><br/>" +
-            "<b>3. Consent to Use of Data.</b><br/><br/>" +
-            "A. System Diagnostics. You agree that Google and its affiliates may collect and use diagnostic, technical, usage, and crash data to facilitate system updates and improve Android products.<br/><br/>" +
-            "B. Privacy. Google's Privacy Policy governs the collection, processing, and storage of personal data during your participation (https://policies.google.com/privacy).<br/><br/>" +
-            "<b>4. Pre-release Software.</b><br/><br/>" +
-            "Pre-release versions are time-limited and for test purposes only. They should not be relied upon to perform in the same manner as a final-release product, nor used with important data. Back up your data before installing.<br/><br/>" +
-            "<b>5. Termination.</b><br/><br/>" +
-            "This License is effective until terminated. Your rights will terminate automatically if you fail to comply with any term. Upon termination, cease all use and destroy all copies of the Beta Software.<br/><br/>" +
-            "<b>6. Disclaimer of Warranties.</b><br/><br/>" +
-            "TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE BETA SOFTWARE IS PROVIDED \"AS IS\" AND \"AS AVAILABLE\", WITH ALL FAULTS AND WITHOUT WARRANTY OF ANY KIND.<br/><br/>" +
-            "<b>7. Governing Law.</b><br/><br/>" +
-            "This License will be governed by the laws of the State of California. If any provision is found unenforceable, the remainder continues in full force and effect.";
+        return "<b><font color=\"" + primaryColor
+                + "\">(A) Google Play Beta Testing — Terms of Service</font></b><br/><br/>" +
+                "<b><font color=\"" + secondaryColor + "\">Key Summary</font></b><br/><br/>" +
+                "• Diagnostics, usage, and crash reports related to your use of each Beta App will automatically be collected by Google and the Application Provider.<br/><br/>"
+                +
+                "• You may submit feedback, suggestions, and feature ideas to the Application Provider of the Beta App.<br/><br/>"
+                +
+                "• Beta Apps are pre-release software and may crash, resulting in data loss.<br/><br/>" +
+                "• If you already have the production version installed, the Beta version will replace it and may overwrite app data.<br/><br/>"
+                +
+                "• You can opt out of Beta testing at any time by leaving the program on Google Play and reinstalling the production version.<br/><br/>"
+                +
+                "Your use of the Google Play Beta Testing service, including downloading any pre-release or beta-stage applications for Android (\"Beta Apps\"), is governed by these terms. The standard Google Play Terms of Service for your region are incorporated by reference.<br/><br/>"
+                +
+                "<b><font color=\"" + secondaryColor + "\">Beta Tester Eligibility</font></b><br/><br/>" +
+                "You must meet the age requirements for Google Play in your country. If you are under 18, review this Agreement with your parent or guardian.<br/><br/>"
+                +
+                "The Application Provider grants you a limited, non-exclusive, non-transferable, non-sublicensable license to access, download, and use the Beta App solely for testing and evaluation purposes.<br/><br/>"
+                +
+                "You acknowledge that Beta Apps are pre-release, unfinished software and may contain errors. You should not use them in critical operating environments or with highly valuable data. Back up your device prior to installing any Beta App. Google and the Application Provider shall not be liable for any data loss, device damage, or service interruptions caused by your use of Beta Apps.<br/><br/>"
+                +
+                "<b><font color=\"" + secondaryColor + "\">No Warranty</font></b><br/><br/>" +
+                "YOU EXPRESSLY ACKNOWLEDGE AND AGREE THAT USE OF THE BETA APP IS AT YOUR SOLE RISK. TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE BETA APP IS PROVIDED \"AS IS\" AND \"AS AVAILABLE\", WITH ALL FAULTS AND WITHOUT WARRANTY OF ANY KIND.<br/><br/>"
+                +
+                "<b><font color=\"" + secondaryColor + "\">Termination</font></b><br/><br/>" +
+                "To terminate participation, leave the beta program in Google Play. Google and/or the Application Provider reserve the right to terminate your participation at any time.<br/><br/>"
+                +
+                "────────────────────────────<br/><br/>" +
+                "<b><font color=\"" + primaryColor
+                + "\">(B) Google LLC — Android Beta Program License Agreement</font></b><br/><br/>" +
+                "<b><font color=\"" + secondaryColor + "\">Standard Software License</font></b><br/><br/>" +
+                "PLEASE READ THIS LICENSE AGREEMENT CAREFULLY BEFORE INSTALLING OR USING THE SOFTWARE. BY INSTALLING AND/OR USING THE PRE-RELEASE SOFTWARE, YOU AGREE TO BE BOUND BY THE TERMS OF THIS LICENSE.<br/><br/>"
+                +
+                "<b>1. General.</b><br/><br/>" +
+                "A. The pre-release software, APIs, documentation, and assets (collectively, the \"Beta Software\") are licensed, not sold, to you by Google LLC (\"Google\") for use only under the terms of this License.<br/><br/>"
+                +
+                "B. Google may make available updates or modifications to the Beta Software at its discretion. The terms of this License will govern any such updates unless accompanied by a separate license agreement.<br/><br/>"
+                +
+                "<b>2. Permitted Uses and Restrictions.</b><br/><br/>" +
+                "A. License. You are granted a limited, non-transferable, non-exclusive license to install and use the Beta Software on compatible Android-branded devices you own or control solely for test and evaluation purposes.<br/><br/>"
+                +
+                "B. Restrictions. You may not: (a) copy, decompile, reverse engineer, or disassemble the Beta Software; (b) distribute, sell, lease, or rent it; or (c) demonstrate it to unauthorized individuals without prior consent.<br/><br/>"
+                +
+                "<b>3. Consent to Use of Data.</b><br/><br/>" +
+                "A. System Diagnostics. You agree that Google and its affiliates may collect and use diagnostic, technical, usage, and crash data to facilitate system updates and improve Android products.<br/><br/>"
+                +
+                "B. Privacy. Google's Privacy Policy governs the collection, processing, and storage of personal data during your participation (https://policies.google.com/privacy).<br/><br/>"
+                +
+                "<b>4. Pre-release Software.</b><br/><br/>" +
+                "Pre-release versions are time-limited and for test purposes only. They should not be relied upon to perform in the same manner as a final-release product, nor used with important data. Back up your data before installing.<br/><br/>"
+                +
+                "<b>5. Termination.</b><br/><br/>" +
+                "This License is effective until terminated. Your rights will terminate automatically if you fail to comply with any term. Upon termination, cease all use and destroy all copies of the Beta Software.<br/><br/>"
+                +
+                "<b>6. Disclaimer of Warranties.</b><br/><br/>" +
+                "TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE BETA SOFTWARE IS PROVIDED \"AS IS\" AND \"AS AVAILABLE\", WITH ALL FAULTS AND WITHOUT WARRANTY OF ANY KIND.<br/><br/>"
+                +
+                "<b>7. Governing Law.</b><br/><br/>" +
+                "This License will be governed by the laws of the State of California. If any provision is found unenforceable, the remainder continues in full force and effect.";
     }
 
     private void showHelpPanel() {
@@ -1148,47 +1164,79 @@ public class MainActivity extends BridgeActivity {
         TextView lblBugSubtitle = sheetView.findViewById(R.id.lblBugSubtitle);
 
         if (isDark) {
-            if (root != null) root.setBackgroundResource(R.drawable.bg_bottom_sheet_dark);
-            if (txtTitle != null) txtTitle.setTextColor(0xFFFFFFFF);
-            if (txtSubtitle != null) txtSubtitle.setTextColor(0xFF94A3B8);
-            if (divider != null) divider.setBackgroundColor(0xFF334155);
+            if (root != null)
+                root.setBackgroundResource(R.drawable.bg_bottom_sheet_dark);
+            if (txtTitle != null)
+                txtTitle.setTextColor(0xFFFFFFFF);
+            if (txtSubtitle != null)
+                txtSubtitle.setTextColor(0xFF94A3B8);
+            if (divider != null)
+                divider.setBackgroundColor(0xFF334155);
 
             int cardBg = R.drawable.bg_help_row_dark;
-            if (rowCall != null) rowCall.setBackgroundResource(cardBg);
-            if (rowWhatsApp != null) rowWhatsApp.setBackgroundResource(cardBg);
-            if (rowEmail != null) rowEmail.setBackgroundResource(cardBg);
-            if (rowBug != null) rowBug.setBackgroundResource(cardBg);
+            if (rowCall != null)
+                rowCall.setBackgroundResource(cardBg);
+            if (rowWhatsApp != null)
+                rowWhatsApp.setBackgroundResource(cardBg);
+            if (rowEmail != null)
+                rowEmail.setBackgroundResource(cardBg);
+            if (rowBug != null)
+                rowBug.setBackgroundResource(cardBg);
 
-            if (lblCallTitle != null) lblCallTitle.setTextColor(0xFFFFFFFF);
-            if (lblWhatsAppTitle != null) lblWhatsAppTitle.setTextColor(0xFFFFFFFF);
-            if (lblEmailTitle != null) lblEmailTitle.setTextColor(0xFFFFFFFF);
-            if (lblBugTitle != null) lblBugTitle.setTextColor(0xFFFFFFFF);
+            if (lblCallTitle != null)
+                lblCallTitle.setTextColor(0xFFFFFFFF);
+            if (lblWhatsAppTitle != null)
+                lblWhatsAppTitle.setTextColor(0xFFFFFFFF);
+            if (lblEmailTitle != null)
+                lblEmailTitle.setTextColor(0xFFFFFFFF);
+            if (lblBugTitle != null)
+                lblBugTitle.setTextColor(0xFFFFFFFF);
 
-            if (lblCallSubtitle != null) lblCallSubtitle.setTextColor(0xFF94A3B8);
-            if (lblWhatsAppSubtitle != null) lblWhatsAppSubtitle.setTextColor(0xFF94A3B8);
-            if (lblEmailSubtitle != null) lblEmailSubtitle.setTextColor(0xFF94A3B8);
-            if (lblBugSubtitle != null) lblBugSubtitle.setTextColor(0xFF94A3B8);
+            if (lblCallSubtitle != null)
+                lblCallSubtitle.setTextColor(0xFF94A3B8);
+            if (lblWhatsAppSubtitle != null)
+                lblWhatsAppSubtitle.setTextColor(0xFF94A3B8);
+            if (lblEmailSubtitle != null)
+                lblEmailSubtitle.setTextColor(0xFF94A3B8);
+            if (lblBugSubtitle != null)
+                lblBugSubtitle.setTextColor(0xFF94A3B8);
         } else {
-            if (root != null) root.setBackgroundResource(R.drawable.bg_bottom_sheet);
-            if (txtTitle != null) txtTitle.setTextColor(0xFF0F172A);
-            if (txtSubtitle != null) txtSubtitle.setTextColor(0xFF64748B);
-            if (divider != null) divider.setBackgroundColor(0xFFE2E8F0);
+            if (root != null)
+                root.setBackgroundResource(R.drawable.bg_bottom_sheet);
+            if (txtTitle != null)
+                txtTitle.setTextColor(0xFF0F172A);
+            if (txtSubtitle != null)
+                txtSubtitle.setTextColor(0xFF64748B);
+            if (divider != null)
+                divider.setBackgroundColor(0xFFE2E8F0);
 
             int cardBg = R.drawable.bg_help_row_light;
-            if (rowCall != null) rowCall.setBackgroundResource(cardBg);
-            if (rowWhatsApp != null) rowWhatsApp.setBackgroundResource(cardBg);
-            if (rowEmail != null) rowEmail.setBackgroundResource(cardBg);
-            if (rowBug != null) rowBug.setBackgroundResource(cardBg);
+            if (rowCall != null)
+                rowCall.setBackgroundResource(cardBg);
+            if (rowWhatsApp != null)
+                rowWhatsApp.setBackgroundResource(cardBg);
+            if (rowEmail != null)
+                rowEmail.setBackgroundResource(cardBg);
+            if (rowBug != null)
+                rowBug.setBackgroundResource(cardBg);
 
-            if (lblCallTitle != null) lblCallTitle.setTextColor(0xFF0F172A);
-            if (lblWhatsAppTitle != null) lblWhatsAppTitle.setTextColor(0xFF0F172A);
-            if (lblEmailTitle != null) lblEmailTitle.setTextColor(0xFF0F172A);
-            if (lblBugTitle != null) lblBugTitle.setTextColor(0xFF0F172A);
+            if (lblCallTitle != null)
+                lblCallTitle.setTextColor(0xFF0F172A);
+            if (lblWhatsAppTitle != null)
+                lblWhatsAppTitle.setTextColor(0xFF0F172A);
+            if (lblEmailTitle != null)
+                lblEmailTitle.setTextColor(0xFF0F172A);
+            if (lblBugTitle != null)
+                lblBugTitle.setTextColor(0xFF0F172A);
 
-            if (lblCallSubtitle != null) lblCallSubtitle.setTextColor(0xFF64748B);
-            if (lblWhatsAppSubtitle != null) lblWhatsAppSubtitle.setTextColor(0xFF64748B);
-            if (lblEmailSubtitle != null) lblEmailSubtitle.setTextColor(0xFF64748B);
-            if (lblBugSubtitle != null) lblBugSubtitle.setTextColor(0xFF64748B);
+            if (lblCallSubtitle != null)
+                lblCallSubtitle.setTextColor(0xFF64748B);
+            if (lblWhatsAppSubtitle != null)
+                lblWhatsAppSubtitle.setTextColor(0xFF64748B);
+            if (lblEmailSubtitle != null)
+                lblEmailSubtitle.setTextColor(0xFF64748B);
+            if (lblBugSubtitle != null)
+                lblBugSubtitle.setTextColor(0xFF64748B);
         }
 
         // Close button
@@ -1207,7 +1255,8 @@ public class MainActivity extends BridgeActivity {
                     ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
                     if (clipboard != null) {
                         clipboard.setPrimaryClip(ClipData.newPlainText("Support Phone", "+918402010207"));
-                        Toast.makeText(MainActivity.this, "Copied +91 8402010207 to clipboard", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, "Copied +91 8402010207 to clipboard", Toast.LENGTH_SHORT)
+                                .show();
                     }
                 }
             });
@@ -1237,7 +1286,7 @@ public class MainActivity extends BridgeActivity {
                 String body = "Hello Support Team,\n\nI need assistance with my Patholab Cloud account.\n\nIssue Details:\n- Topic / Issue: \n- Lab Name: \n- Contact Number: \n\nPlease assist me at your earliest convenience.\n\nThank you,\nPatholab Cloud User";
                 Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
                 emailIntent.setData(Uri.parse("mailto:" + email));
-                emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{email});
+                emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[] { email });
                 emailIntent.putExtra(Intent.EXTRA_SUBJECT, subject);
                 emailIntent.putExtra(Intent.EXTRA_TEXT, body);
                 try {
@@ -1246,7 +1295,8 @@ public class MainActivity extends BridgeActivity {
                     ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
                     if (clipboard != null) {
                         clipboard.setPrimaryClip(ClipData.newPlainText("Support Email", email));
-                        Toast.makeText(MainActivity.this, "Copied support@patholab.cloud to clipboard", Toast.LENGTH_LONG).show();
+                        Toast.makeText(MainActivity.this, "Copied support@patholab.cloud to clipboard",
+                                Toast.LENGTH_LONG).show();
                     }
                 }
             });
@@ -1264,14 +1314,17 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void loadUrl(String path) {
-        if (webView == null) return;
+        if (webView == null)
+            return;
         if (lblHeaderTitle != null) {
             lblHeaderTitle.setText(getHeaderTitle(path));
         }
-        if (path.equals(currentPath)) return;
+        if (path.equals(currentPath))
+            return;
         currentPath = path;
         String token = AuthManager.getToken(this);
-        if (token != null) AuthManager.syncWebViewCookie(token);
+        if (token != null)
+            AuthManager.syncWebViewCookie(token);
 
         // ── FAB visibility: show only on the Patients worklist ──
         boolean isPatientsList = path.equals("/workspace/patients");
@@ -1296,34 +1349,19 @@ public class MainActivity extends BridgeActivity {
                     if (printManager != null) {
                         PrintDocumentAdapter adapter = webView.createPrintDocumentAdapter("PatholabReport");
                         printManager.print("PatholabReport", adapter,
-                            new PrintAttributes.Builder()
-                                .setMediaSize(PrintAttributes.MediaSize.ISO_A4)
-                                .setResolution(new PrintAttributes.Resolution("pdf", "pdf", 600, 600))
-                                .setMinMargins(PrintAttributes.Margins.NO_MARGINS)
-                                .build());
+                                new PrintAttributes.Builder()
+                                        .setMediaSize(PrintAttributes.MediaSize.ISO_A4)
+                                        .setResolution(new PrintAttributes.Resolution("pdf", "pdf", 600, 600))
+                                        .setMinMargins(PrintAttributes.Margins.NO_MARGINS)
+                                        .build());
                     }
                 }
             }, 2500);
             return;
         }
 
-        if (path.contains("/recharge") || path.contains("action=recharge") || path.contains("action=topup") || path.contains("recharge=true")) {
-            setBottomNav(false, true);
-            if (swipeRefresh != null) swipeRefresh.setEnabled(false);
-            if (walletCard != null && walletCard.getVisibility() == View.VISIBLE) {
-                walletCard.setVisibility(View.GONE);
-                updateHeaderBlurHeight();
-                syncWebLayoutPadding();
-            }
-        } else {
-            setBottomNav(true, true);
-            if (swipeRefresh != null) swipeRefresh.setEnabled(true);
-        }
-
         webView.loadUrl(BASE_URL + path);
         fetchWalletDetails();
-        syncWebLayoutPadding();
-        checkRechargeAndPaymentState();
 
         // ── CSS injection: smooth scroll + expanded patient cards ──
         if (isPatientsList) {
@@ -1332,15 +1370,15 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void injectPatientScrollFixes() {
-        if (webView == null) return;
-        String css =
-            "var s=document.getElementById('ptl-native-scroll-fix');" +
-            "if(!s){" +
-            "  s=document.createElement('style');" +
-            "  s.id='ptl-native-scroll-fix';" +
-            "  s.textContent='tbody tr td{padding-top:22px!important;padding-bottom:22px!important}';" +
-            "  document.head.appendChild(s);" +
-            "}";
+        if (webView == null)
+            return;
+        String css = "var s=document.getElementById('ptl-native-scroll-fix');" +
+                "if(!s){" +
+                "  s=document.createElement('style');" +
+                "  s.id='ptl-native-scroll-fix';" +
+                "  s.textContent='tbody tr td{padding-top:22px!important;padding-bottom:22px!important}';" +
+                "  document.head.appendChild(s);" +
+                "}";
         webView.evaluateJavascript(css, null);
     }
 
@@ -1350,7 +1388,8 @@ public class MainActivity extends BridgeActivity {
         final String token = AuthManager.getToken(this);
         if (token == null || token.isEmpty()) {
             runOnUiThread(() -> {
-                if (walletCard != null) walletCard.setVisibility(View.GONE);
+                if (walletCard != null)
+                    walletCard.setVisibility(View.GONE);
             });
             return;
         }
@@ -1370,7 +1409,8 @@ public class MainActivity extends BridgeActivity {
                     int code = conn.getResponseCode();
                     if (code >= 200 && code < 300) {
                         java.io.InputStream stream = conn.getInputStream();
-                        java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(stream, "UTF-8"));
+                        java.io.BufferedReader reader = new java.io.BufferedReader(
+                                new java.io.InputStreamReader(stream, "UTF-8"));
                         StringBuilder sb = new StringBuilder();
                         String line;
                         while ((line = reader.readLine()) != null) {
@@ -1388,11 +1428,13 @@ public class MainActivity extends BridgeActivity {
                         }
                     } else {
                         runOnUiThread(() -> {
-                            if (walletCard != null) walletCard.setVisibility(View.GONE);
+                            if (walletCard != null)
+                                walletCard.setVisibility(View.GONE);
                         });
                     }
                 } finally {
-                    if (conn != null) conn.disconnect();
+                    if (conn != null)
+                        conn.disconnect();
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -1401,7 +1443,8 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void updateWalletCard(double balance, boolean isOwner) {
-        if (walletCard == null) return;
+        if (walletCard == null)
+            return;
         View dividerLineTop = findViewById(R.id.dividerLineTop);
         if (!isOwner) {
             walletCard.setVisibility(View.GONE);
@@ -1417,17 +1460,15 @@ public class MainActivity extends BridgeActivity {
         if (dividerLineTop != null) {
             dividerLineTop.setVisibility(View.GONE);
         }
-        updateHeaderBlurHeight();
-        checkAuthRedirect();
 
         if (txtWalletBalance != null) {
             txtWalletBalance.setText(String.format("₹%.2f", balance));
         }
-        
+
         int strokeColor = android.graphics.Color.parseColor(this.isDarkMode ? "#334155" : "#334155");
         String statusText = "●  ACTIVE";
         String statusColor = "#10B981"; // emerald-500
-        
+
         if (balance <= 20.0) {
             statusText = "●  LOW BALANCE • ADD FUNDS";
             statusColor = "#EF4444";
@@ -1435,12 +1476,12 @@ public class MainActivity extends BridgeActivity {
             statusText = "●  LOW BALANCE • ADD FUNDS";
             statusColor = "#F97316";
         }
-        
+
         if (txtWalletStatus != null) {
             txtWalletStatus.setText(statusText);
             txtWalletStatus.setTextColor(android.graphics.Color.parseColor(statusColor));
         }
-        
+
         // Top Up button only appears when wallet balance is less than 49 rupees
         final boolean showTopUp = balance < 49.0;
         if (btnWalletTopUp != null) {
@@ -1460,7 +1501,7 @@ public class MainActivity extends BridgeActivity {
         if (walletChevron != null) {
             walletChevron.setVisibility(showTopUp ? View.GONE : View.VISIBLE);
         }
-        
+
         android.graphics.drawable.GradientDrawable gd = new android.graphics.drawable.GradientDrawable();
         String boxBgColor = this.isDarkMode ? "#0F172A" : "#111827";
         gd.setColor(android.graphics.Color.parseColor(boxBgColor));
@@ -1468,19 +1509,20 @@ public class MainActivity extends BridgeActivity {
         gd.setCornerRadius(27 * density);
         gd.setStroke((int) (1.5 * density), strokeColor);
         walletCard.setBackground(gd);
-        
+
         updateHeaderBlurHeight();
         checkAuthRedirect();
     }
 
     private void setupHeaderBlurAndGradient() {
-        if (headerBlurGradientView == null) return;
+        if (headerBlurGradientView == null)
+            return;
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
             try {
                 headerBlurGradientView.setRenderEffect(
-                    android.graphics.RenderEffect.createBlurEffect(35f, 35f, android.graphics.Shader.TileMode.CLAMP)
-                );
+                        android.graphics.RenderEffect.createBlurEffect(35f, 35f,
+                                android.graphics.Shader.TileMode.CLAMP));
             } catch (Exception ignored) {
             }
         }
@@ -1490,36 +1532,37 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void updateHeaderGradientBackground() {
-        if (headerBlurGradientView == null) return;
+        if (headerBlurGradientView == null)
+            return;
 
         int[] colors;
         if (isDarkMode) {
             colors = new int[] {
-                android.graphics.Color.argb(248, 15, 23, 42),  // 97% opacity #0F172A (status bar top)
-                android.graphics.Color.argb(235, 15, 23, 42),  // 92% opacity across header bar
-                android.graphics.Color.argb(160, 15, 23, 42),  // 63% opacity entering wallet box
-                android.graphics.Color.argb(70, 15, 23, 42),   // 27% opacity approaching center
-                android.graphics.Color.argb(0, 15, 23, 42)     // 0% transparent at exact wallet halfway point
+                    android.graphics.Color.argb(248, 15, 23, 42), // 97% opacity #0F172A (status bar top)
+                    android.graphics.Color.argb(235, 15, 23, 42), // 92% opacity across header bar
+                    android.graphics.Color.argb(160, 15, 23, 42), // 63% opacity entering wallet box
+                    android.graphics.Color.argb(70, 15, 23, 42), // 27% opacity approaching center
+                    android.graphics.Color.argb(0, 15, 23, 42) // 0% transparent at exact wallet halfway point
             };
         } else {
             colors = new int[] {
-                android.graphics.Color.argb(248, 255, 255, 255), // 97% opacity white (status bar top)
-                android.graphics.Color.argb(235, 255, 255, 255), // 92% opacity across header bar
-                android.graphics.Color.argb(160, 255, 255, 255), // 63% opacity entering wallet box
-                android.graphics.Color.argb(70, 255, 255, 255),  // 27% opacity approaching center
-                android.graphics.Color.argb(0, 255, 255, 255)    // 0% transparent at exact wallet halfway point
+                    android.graphics.Color.argb(248, 255, 255, 255), // 97% opacity white (status bar top)
+                    android.graphics.Color.argb(235, 255, 255, 255), // 92% opacity across header bar
+                    android.graphics.Color.argb(160, 255, 255, 255), // 63% opacity entering wallet box
+                    android.graphics.Color.argb(70, 255, 255, 255), // 27% opacity approaching center
+                    android.graphics.Color.argb(0, 255, 255, 255) // 0% transparent at exact wallet halfway point
             };
         }
 
         android.graphics.drawable.GradientDrawable gradient = new android.graphics.drawable.GradientDrawable(
-            android.graphics.drawable.GradientDrawable.Orientation.TOP_BOTTOM,
-            colors
-        );
+                android.graphics.drawable.GradientDrawable.Orientation.TOP_BOTTOM,
+                colors);
         headerBlurGradientView.setBackground(gradient);
     }
 
     private void updateHeaderBlurHeight() {
-        if (headerBlurGradientView == null || topLayoutContainer == null) return;
+        if (headerBlurGradientView == null || topLayoutContainer == null)
+            return;
 
         topLayoutContainer.post(() -> {
             float density = getResources().getDisplayMetrics().density;
@@ -1528,20 +1571,20 @@ public class MainActivity extends BridgeActivity {
 
             if (walletCard != null && walletCard.getVisibility() == View.VISIBLE) {
                 int walletHeight = (walletCard.getHeight() > 0)
-                    ? walletCard.getHeight()
-                    : (int) (54 * density);
+                        ? walletCard.getHeight()
+                        : (int) (54 * density);
                 int walletTop = walletCard.getTop();
                 if (walletTop <= 0) {
                     int headerHeight = (topHeaderBar != null && topHeaderBar.getHeight() > 0)
-                        ? topHeaderBar.getHeight()
-                        : (int) (60 * density);
+                            ? topHeaderBar.getHeight()
+                            : (int) (60 * density);
                     walletTop = headerHeight + (int) (1 * density);
                 }
                 totalHeight = topPadding + walletTop + (walletHeight / 2);
             } else {
                 int headerHeight = (topHeaderBar != null && topHeaderBar.getHeight() > 0)
-                    ? topHeaderBar.getHeight()
-                    : (int) (60 * density);
+                        ? topHeaderBar.getHeight()
+                        : (int) (60 * density);
                 totalHeight = topPadding + headerHeight;
             }
 
@@ -1567,59 +1610,94 @@ public class MainActivity extends BridgeActivity {
         allModules = new ArrayList<>();
 
         // ── Radiology (RIS) (navigation.ts: Radiology Group) ─────────────────
-        allModules.add(new ModuleItem("RIS Dashboard",         "/workspace/radiology/dashboard",    "Radiology",  "Radiology Information System overview",         R.drawable.ic_chart,        false));
-        allModules.add(new ModuleItem("Scan Schedule",         "/workspace/radiology/appointments", "Radiology",  "Book & manage radiology scans",                 R.drawable.ic_calendar,       false));
-        allModules.add(new ModuleItem("PACS Viewer",           "/workspace/radiology/pacs",         "Radiology",  "View digital imaging & PACS files",            R.drawable.ic_barcode,  false));
-        allModules.add(new ModuleItem("Reporting Queue",       "/workspace/radiology/reporting",    "Radiology",  "Radiologist report queue & sign-off",           R.drawable.ic_stethoscope,         false));
-        allModules.add(new ModuleItem("Machines",              "/workspace/radiology/modalities",   "Radiology",  "Configure radiology equipment & modalities",    R.drawable.ic_cpu,  false));
-        allModules.add(new ModuleItem("Radiology Settings",    "/workspace/radiology/settings/macros", "Radiology", "Configure macros & report templates",         R.drawable.ic_gear,         false));
+        allModules.add(new ModuleItem("RIS Dashboard", "/workspace/radiology/dashboard", "Radiology",
+                "Radiology Information System overview", R.drawable.ic_chart, false));
+        allModules.add(new ModuleItem("Scan Schedule", "/workspace/radiology/appointments", "Radiology",
+                "Book & manage radiology scans", R.drawable.ic_calendar, false));
+        allModules.add(new ModuleItem("PACS Viewer", "/workspace/radiology/pacs", "Radiology",
+                "View digital imaging & PACS files", R.drawable.ic_barcode, false));
+        allModules.add(new ModuleItem("Reporting Queue", "/workspace/radiology/reporting", "Radiology",
+                "Radiologist report queue & sign-off", R.drawable.ic_stethoscope, false));
+        allModules.add(new ModuleItem("Machines", "/workspace/radiology/modalities", "Radiology",
+                "Configure radiology equipment & modalities", R.drawable.ic_cpu, false));
+        allModules.add(new ModuleItem("Radiology Settings", "/workspace/radiology/settings/macros", "Radiology",
+                "Configure macros & report templates", R.drawable.ic_gear, false));
 
         // ── Overview (navigation.ts: "Overview") ──────────────────────────────
-        allModules.add(new ModuleItem("Financial Analytics",   "/workspace/analytics",              "Overview",   "Revenue reports & analytical charts",           R.drawable.ic_chart,        false));
-        allModules.add(new ModuleItem("Online Booking",        "/workspace/bookings",               "Overview",   "Manage home collections & appointments",        R.drawable.ic_calendar,        true));
+        allModules.add(new ModuleItem("Financial Analytics", "/workspace/analytics", "Overview",
+                "Revenue reports & analytical charts", R.drawable.ic_chart, false));
+        allModules.add(new ModuleItem("Online Booking", "/workspace/bookings", "Overview",
+                "Manage home collections & appointments", R.drawable.ic_calendar, true));
 
         // ── Clinical Operations (navigation.ts: "Clinical Operations") ───────
-        allModules.add(new ModuleItem("Patient Registration",  "/workspace/registration",           "Clinical",   "Register patients & book new lab tests",        R.drawable.ic_nav_patients,          true));
-        allModules.add(new ModuleItem("Patient Directory",     "/workspace/patients",               "Clinical",   "Browse & search patient records",               R.drawable.ic_nav_patients,          false));
-        allModules.add(new ModuleItem("Test Catalog",          "/workspace/test-management",        "Clinical",   "Manage test packages & profiles",               R.drawable.ic_flask,         false));
-        allModules.add(new ModuleItem("Worklist & Results",    "/workspace/results",                "Clinical",   "Fill raw values & review parameters",           R.drawable.ic_flask,         false));
-        allModules.add(new ModuleItem("Report Dispatch",       "/workspace/reports",                "Clinical",   "Sign off & dispatch PDF reports",               R.drawable.ic_document,       false));
+        allModules.add(new ModuleItem("Patient Registration", "/workspace/registration", "Clinical",
+                "Register patients & book new lab tests", R.drawable.ic_nav_patients, true));
+        allModules.add(new ModuleItem("Patient Directory", "/workspace/patients", "Clinical",
+                "Browse & search patient records", R.drawable.ic_nav_patients, false));
+        allModules.add(new ModuleItem("Test Catalog", "/workspace/test-management", "Clinical",
+                "Manage test packages & profiles", R.drawable.ic_flask, false));
+        allModules.add(new ModuleItem("Worklist & Results", "/workspace/results", "Clinical",
+                "Fill raw values & review parameters", R.drawable.ic_flask, false));
+        allModules.add(new ModuleItem("Report Dispatch", "/workspace/reports", "Clinical",
+                "Sign off & dispatch PDF reports", R.drawable.ic_document, false));
 
         // ── Resources & Logistics (navigation.ts: "Resources & Logistics") ──
-        allModules.add(new ModuleItem("Inventory & Stock",     "/workspace/inventory",              "Logistics",  "Track reagents, consumables & items",           R.drawable.ic_box,         false));
-        allModules.add(new ModuleItem("Logistics / Trips",     "/workspace/logistics",              "Logistics",  "Manage field agents & pickup trips",            R.drawable.ic_box,   false));
+        allModules.add(new ModuleItem("Inventory & Stock", "/workspace/inventory", "Logistics",
+                "Track reagents, consumables & items", R.drawable.ic_box, false));
+        allModules.add(new ModuleItem("Logistics / Trips", "/workspace/logistics", "Logistics",
+                "Manage field agents & pickup trips", R.drawable.ic_box, false));
 
         // ── Machine & AI (navigation.ts: "Machine & AI") ─────────────────────
-        allModules.add(new ModuleItem("Analyzer",              "/workspace/analyzers",              "Machine",    "Connect analyzers & view output logs",          R.drawable.ic_cpu,  false));
-        allModules.add(new ModuleItem("Visual Mapper",         "/workspace/analyzers/mapper",       "Machine",    "Map barcode codes visually to fields",          R.drawable.ic_barcode,  false));
-        allModules.add(new ModuleItem("Mappings",              "/workspace/analyzers/mappings",     "Machine",    "Configure machine integration parameters",      R.drawable.ic_barcode,  false));
-        allModules.add(new ModuleItem("AI Analysis",           "/workspace/analyzers/ai",           "Machine",    "AI models on clinical samples",                 R.drawable.ic_cpu,  true));
+        allModules.add(new ModuleItem("Analyzer", "/workspace/analyzers", "Machine",
+                "Connect analyzers & view output logs", R.drawable.ic_cpu, false));
+        allModules.add(new ModuleItem("Visual Mapper", "/workspace/analyzers/mapper", "Machine",
+                "Map barcode codes visually to fields", R.drawable.ic_barcode, false));
+        allModules.add(new ModuleItem("Mappings", "/workspace/analyzers/mappings", "Machine",
+                "Configure machine integration parameters", R.drawable.ic_barcode, false));
+        allModules.add(new ModuleItem("AI Analysis", "/workspace/analyzers/ai", "Machine",
+                "AI models on clinical samples", R.drawable.ic_cpu, true));
 
         // ── B2B & Growth (navigation.ts: "B2B & Growth") ─────────────────────
-        allModules.add(new ModuleItem("Referral Doctors",      "/workspace/doctors",                "B2B",        "Track referring doctors & commission profiles",  R.drawable.ic_stethoscope,     false));
-        allModules.add(new ModuleItem("Corporate Agencies",    "/workspace/agencies",               "B2B",        "Manage corporate agency tie-ups",               R.drawable.ic_stethoscope,     false));
-        allModules.add(new ModuleItem("Commissions Payout",    "/workspace/commissions",            "B2B",        "View payout summaries for referrals",           R.drawable.ic_document,     false));
-        allModules.add(new ModuleItem("B2B Settings",          "/workspace/settings/b2b-tiers",     "B2B",        "Manage outsourced labs & tier pricings",        R.drawable.ic_gear,     false));
+        allModules.add(new ModuleItem("Referral Doctors", "/workspace/doctors", "B2B",
+                "Track referring doctors & commission profiles", R.drawable.ic_stethoscope, false));
+        allModules.add(new ModuleItem("Corporate Agencies", "/workspace/agencies", "B2B",
+                "Manage corporate agency tie-ups", R.drawable.ic_stethoscope, false));
+        allModules.add(new ModuleItem("Commissions Payout", "/workspace/commissions", "B2B",
+                "View payout summaries for referrals", R.drawable.ic_document, false));
+        allModules.add(new ModuleItem("B2B Settings", "/workspace/settings/b2b-tiers", "B2B",
+                "Manage outsourced labs & tier pricings", R.drawable.ic_gear, false));
 
         // ── Administration (navigation.ts: "Administration") ─────────────────
-        allModules.add(new ModuleItem("Report Templates",      "/workspace/settings/templates",     "Admin",      "Design & manage report layout templates",       R.drawable.ic_document,         false));
-        allModules.add(new ModuleItem("Staff Management",      "/workspace/staff",                  "Admin",      "Manage team roles, access keys & logs",         R.drawable.ic_nav_patients,         false));
-        allModules.add(new ModuleItem("Invoices & Payments",   "/workspace/billing",                "Admin",      "Track cash flow & pending invoices",            R.drawable.ic_credit_card,         false));
-        allModules.add(new ModuleItem("Expenses",              "/workspace/expenses",               "Admin",      "Record & categorise lab expenses",              R.drawable.ic_document,         false));
-        allModules.add(new ModuleItem("Lab Settings",          "/workspace/settings",               "Admin",      "Configure letterhead, templates & formats",     R.drawable.ic_gear,         false));
-        allModules.add(new ModuleItem("Audit Logs",            "/workspace/audit-logs",             "Admin",      "View security access logs & trace changes",     R.drawable.ic_document,         false));
-        allModules.add(new ModuleItem("Wallet & Billing",      "/workspace/wallet",                 "Admin",      "Top-up wallet & view billing history",          R.drawable.ic_credit_card,         false));
-        allModules.add(new ModuleItem("Help & Support",        "/workspace/support",                "Admin",      "Raise tickets & browse documentation",          R.drawable.ic_support_lifebuoy, false));
+        allModules.add(new ModuleItem("Report Templates", "/workspace/settings/templates", "Admin",
+                "Design & manage report layout templates", R.drawable.ic_document, false));
+        allModules.add(new ModuleItem("Staff Management", "/workspace/staff", "Admin",
+                "Manage team roles, access keys & logs", R.drawable.ic_nav_patients, false));
+        allModules.add(new ModuleItem("Invoices & Payments", "/workspace/billing", "Admin",
+                "Track cash flow & pending invoices", R.drawable.ic_credit_card, false));
+        allModules.add(new ModuleItem("Expenses", "/workspace/expenses", "Admin", "Record & categorise lab expenses",
+                R.drawable.ic_document, false));
+        allModules.add(new ModuleItem("Lab Settings", "/workspace/settings", "Admin",
+                "Configure letterhead, templates & formats", R.drawable.ic_gear, false));
+        allModules.add(new ModuleItem("Audit Logs", "/workspace/audit-logs", "Admin",
+                "View security access logs & trace changes", R.drawable.ic_document, false));
+        allModules.add(new ModuleItem("Wallet & Billing", "/workspace/wallet", "Admin",
+                "Top-up wallet & view billing history", R.drawable.ic_credit_card, false));
+        allModules.add(new ModuleItem("Help & Support", "/workspace/support", "Admin",
+                "Raise tickets & browse documentation", R.drawable.ic_support_lifebuoy, false));
 
         // ── Legal & Agreements ────────────────────────────────────────────────
-        allModules.add(new ModuleItem("Terms & Conditions",    "/terms-conditions?tab=terms",       "Legal",      "Platform license, SLA & customer rights",        R.drawable.ic_legal, false));
-        allModules.add(new ModuleItem("Privacy & Health Data", "/terms-conditions?tab=privacy",     "Legal",      "Patient confidentiality & HIPAA/DISHA standards", R.drawable.ic_legal, false));
-        allModules.add(new ModuleItem("Refund & Cancellation", "/terms-conditions?tab=refunds",     "Legal",      "Subscription renewals & pro-rata settlements",    R.drawable.ic_legal, false));
+        allModules.add(new ModuleItem("Terms & Conditions", "/terms-conditions?tab=terms", "Legal",
+                "Platform license, SLA & customer rights", R.drawable.ic_legal, false));
+        allModules.add(new ModuleItem("Privacy & Health Data", "/terms-conditions?tab=privacy", "Legal",
+                "Patient confidentiality & HIPAA/DISHA standards", R.drawable.ic_legal, false));
+        allModules.add(new ModuleItem("Refund & Cancellation", "/terms-conditions?tab=refunds", "Legal",
+                "Subscription renewals & pro-rata settlements", R.drawable.ic_legal, false));
     }
 
     private void renderModules() {
-        if (containerOverview == null) return;
-        
+        if (containerOverview == null)
+            return;
+
         containerOverview.removeAllViews();
         containerClinical.removeAllViews();
         containerLogistics.removeAllViews();
@@ -1629,15 +1707,24 @@ public class MainActivity extends BridgeActivity {
         containerLegal.removeAllViews();
 
         final boolean isDark = this.isDarkMode;
-        int headerColor = isDark ? android.graphics.Color.parseColor("#818CF8") : android.graphics.Color.parseColor("#4338CA");
-        if (lblOverviewHeader != null) lblOverviewHeader.setTextColor(headerColor);
-        if (lblClinicalHeader != null) lblClinicalHeader.setTextColor(headerColor);
-        if (lblRadiologyHeader != null) lblRadiologyHeader.setTextColor(headerColor);
-        if (lblLogisticsHeader != null) lblLogisticsHeader.setTextColor(headerColor);
-        if (lblMachineHeader != null) lblMachineHeader.setTextColor(headerColor);
-        if (lblB2BHeader != null) lblB2BHeader.setTextColor(headerColor);
-        if (lblAdminHeader != null) lblAdminHeader.setTextColor(headerColor);
-        if (lblLegalHeader != null) lblLegalHeader.setTextColor(headerColor);
+        int headerColor = isDark ? android.graphics.Color.parseColor("#818CF8")
+                : android.graphics.Color.parseColor("#4338CA");
+        if (lblOverviewHeader != null)
+            lblOverviewHeader.setTextColor(headerColor);
+        if (lblClinicalHeader != null)
+            lblClinicalHeader.setTextColor(headerColor);
+        if (lblRadiologyHeader != null)
+            lblRadiologyHeader.setTextColor(headerColor);
+        if (lblLogisticsHeader != null)
+            lblLogisticsHeader.setTextColor(headerColor);
+        if (lblMachineHeader != null)
+            lblMachineHeader.setTextColor(headerColor);
+        if (lblB2BHeader != null)
+            lblB2BHeader.setTextColor(headerColor);
+        if (lblAdminHeader != null)
+            lblAdminHeader.setTextColor(headerColor);
+        if (lblLegalHeader != null)
+            lblLegalHeader.setTextColor(headerColor);
 
         int overviewCount = 0, clinicalCount = 0, logisticsCount = 0;
         int machineCount = 0, b2bCount = 0, adminCount = 0, legalCount = 0;
@@ -1646,13 +1733,12 @@ public class MainActivity extends BridgeActivity {
         for (final ModuleItem item : allModules) {
             View row = LayoutInflater.from(this).inflate(R.layout.layout_setting_item, null);
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            );
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
             int margin = (int) (10 * getResources().getDisplayMetrics().density);
             lp.setMargins(0, 0, 0, margin);
             row.setLayoutParams(lp);
-            
+
             TextView tvTitle = row.findViewById(R.id.tvItemTitle);
             TextView tvDesc = row.findViewById(R.id.tvItemDesc);
             ImageView ivIcon = row.findViewById(R.id.ivItemIcon);
@@ -1662,19 +1748,24 @@ public class MainActivity extends BridgeActivity {
             tvTitle.setText(item.title);
             tvDesc.setText(item.desc);
             ivIcon.setImageResource(item.iconRes);
-            
+
             if (isDark) {
-                row.setBackgroundTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#1E293B")));
+                row.setBackgroundTintList(
+                        android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#1E293B")));
                 tvTitle.setTextColor(android.graphics.Color.parseColor("#FFFFFF"));
                 tvDesc.setTextColor(android.graphics.Color.parseColor("#94A3B8"));
-                if (ivChevron != null) ivChevron.setColorFilter(android.graphics.Color.parseColor("#64748B"));
-                if (ivIcon != null) ivIcon.setColorFilter(android.graphics.Color.parseColor("#818CF8")); // Indigo-400
+                if (ivChevron != null)
+                    ivChevron.setColorFilter(android.graphics.Color.parseColor("#64748B"));
+                if (ivIcon != null)
+                    ivIcon.setColorFilter(android.graphics.Color.parseColor("#818CF8")); // Indigo-400
             } else {
                 row.setBackgroundTintList(null);
                 tvTitle.setTextColor(android.graphics.Color.parseColor("#0F172A"));
                 tvDesc.setTextColor(android.graphics.Color.parseColor("#64748B"));
-                if (ivChevron != null) ivChevron.clearColorFilter();
-                if (ivIcon != null) ivIcon.clearColorFilter();
+                if (ivChevron != null)
+                    ivChevron.clearColorFilter();
+                if (ivIcon != null)
+                    ivIcon.clearColorFilter();
             }
 
             boolean hasOpened = prefs.getBoolean("opened_" + item.path, false);
@@ -1683,12 +1774,13 @@ public class MainActivity extends BridgeActivity {
             row.setOnClickListener(v -> {
                 prefs.edit().putBoolean("opened_" + item.path, true).apply();
                 badge.setVisibility(View.GONE);
-                
+
                 if (moreBottomSheetDialog != null) {
                     moreBottomSheetDialog.dismiss();
                 }
 
-                if (item.path.equals("/legal") || item.path.contains("terms") || item.path.contains("privacy") || item.path.contains("refund")) {
+                if (item.path.equals("/legal") || item.path.contains("terms") || item.path.contains("privacy")
+                        || item.path.contains("refund")) {
                     String url = "https://patholab.cloud/terms-conditions";
                     if (item.path.contains("privacy")) {
                         url = "https://patholab.cloud/terms-conditions?tab=privacy";
@@ -1748,8 +1840,10 @@ public class MainActivity extends BridgeActivity {
 
         lblOverviewHeader.setVisibility(overviewCount > 0 ? View.VISIBLE : View.GONE);
         lblClinicalHeader.setVisibility(clinicalCount > 0 ? View.VISIBLE : View.GONE);
-        if (lblRadiologyHeader != null) lblRadiologyHeader.setVisibility(radiologyCount > 0 ? View.VISIBLE : View.GONE);
-        if (containerRadiology != null) containerRadiology.setVisibility(radiologyCount > 0 ? View.VISIBLE : View.GONE);
+        if (lblRadiologyHeader != null)
+            lblRadiologyHeader.setVisibility(radiologyCount > 0 ? View.VISIBLE : View.GONE);
+        if (containerRadiology != null)
+            containerRadiology.setVisibility(radiologyCount > 0 ? View.VISIBLE : View.GONE);
         lblLogisticsHeader.setVisibility(logisticsCount > 0 ? View.VISIBLE : View.GONE);
         lblMachineHeader.setVisibility(machineCount > 0 ? View.VISIBLE : View.GONE);
         lblB2BHeader.setVisibility(b2bCount > 0 ? View.VISIBLE : View.GONE);
@@ -1759,17 +1853,17 @@ public class MainActivity extends BridgeActivity {
 
     private void confirmLogout() {
         new AlertDialog.Builder(this)
-            .setTitle("Sign Out")
-            .setMessage("Are you sure you want to sign out of your account?")
-            .setPositiveButton("Sign Out", (dialog, which) -> {
-                AuthManager.clearSession(MainActivity.this);
-                Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(intent);
-                finish();
-            })
-            .setNegativeButton("Cancel", null)
-            .show();
+                .setTitle("Sign Out")
+                .setMessage("Are you sure you want to sign out of your account?")
+                .setPositiveButton("Sign Out", (dialog, which) -> {
+                    AuthManager.clearSession(MainActivity.this);
+                    Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intent);
+                    finish();
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     @Override
@@ -1798,7 +1892,12 @@ public class MainActivity extends BridgeActivity {
         }
         webView = null;
         swipeRefresh = null;
-        bottomNavigation = null;
+        floatingNavBarCard = null;
+        navTabHome = null;
+        navTabPatients = null;
+        navTabCenter = null;
+        navTabReports = null;
+        navTabMore = null;
         moreScrollView = null;
         containerOverview = null;
         containerClinical = null;
@@ -1824,39 +1923,63 @@ public class MainActivity extends BridgeActivity {
         final String title, path, category, desc;
         final int iconRes;
         final boolean isNew;
+
         ModuleItem(String t, String p, String c, String d, int icon, boolean n) {
-            title = t; path = p; category = c; desc = d; iconRes = icon; isNew = n;
+            title = t;
+            path = p;
+            category = c;
+            desc = d;
+            iconRes = icon;
+            isNew = n;
         }
     }
 
     private String getHeaderTitle(String path) {
-        if (path.contains("analytics")) return "Financial Analytics";
-        if (path.contains("patients")) return "Patient Worklist";
-        if (path.contains("test-management")) return "Categories";
-        if (path.contains("bookings")) return "Online Bookings";
-        if (path.contains("registration")) return "Registration";
-        if (path.contains("results")) return "Worklist & Results";
-        if (path.contains("reports")) return "Report Dispatch";
-        if (path.contains("inventory")) return "Inventory & Stock";
-        if (path.contains("logistics")) return "Logistics & Trips";
-        if (path.contains("analyzers")) return "Analyzer";
-        if (path.contains("support")) return "Help & Support";
-        if (path.contains("billing")) return "Invoices & Payments";
-        if (path.contains("expenses")) return "Expenses";
-        if (path.contains("settings")) return "Lab Settings";
-        if (path.contains("audit-logs")) return "Audit Logs";
-        if (path.contains("wallet")) return "Wallet & Billing";
+        if (path.contains("analytics"))
+            return "Financial Analytics";
+        if (path.contains("patients"))
+            return "Patient Worklist";
+        if (path.contains("test-management"))
+            return "Categories";
+        if (path.contains("bookings"))
+            return "Online Bookings";
+        if (path.contains("registration"))
+            return "Registration";
+        if (path.contains("results"))
+            return "Worklist & Results";
+        if (path.contains("reports"))
+            return "Report Dispatch";
+        if (path.contains("inventory"))
+            return "Inventory & Stock";
+        if (path.contains("logistics"))
+            return "Logistics & Trips";
+        if (path.contains("analyzers"))
+            return "Analyzer";
+        if (path.contains("support"))
+            return "Help & Support";
+        if (path.contains("billing"))
+            return "Invoices & Payments";
+        if (path.contains("expenses"))
+            return "Expenses";
+        if (path.contains("settings"))
+            return "Lab Settings";
+        if (path.contains("audit-logs"))
+            return "Audit Logs";
+        if (path.contains("wallet"))
+            return "Wallet & Billing";
         return "Dashboard";
     }
 
     private void applySkeletonTheme(View view, boolean isDark) {
-        if (view == null) return;
+        if (view == null)
+            return;
         if (view instanceof android.view.ViewGroup) {
             android.view.ViewGroup group = (android.view.ViewGroup) view;
             android.graphics.drawable.Drawable bg = group.getBackground();
             if (bg != null) {
                 if (isDark) {
-                    bg.setColorFilter(android.graphics.Color.parseColor("#1E293B"), android.graphics.PorterDuff.Mode.SRC_IN);
+                    bg.setColorFilter(android.graphics.Color.parseColor("#1E293B"),
+                            android.graphics.PorterDuff.Mode.SRC_IN);
                 } else {
                     bg.clearColorFilter();
                 }
@@ -1868,7 +1991,8 @@ public class MainActivity extends BridgeActivity {
             android.graphics.drawable.Drawable bg = view.getBackground();
             if (bg != null) {
                 if (isDark) {
-                    bg.setColorFilter(android.graphics.Color.parseColor("#334155"), android.graphics.PorterDuff.Mode.SRC_IN);
+                    bg.setColorFilter(android.graphics.Color.parseColor("#334155"),
+                            android.graphics.PorterDuff.Mode.SRC_IN);
                 } else {
                     bg.clearColorFilter();
                 }
@@ -1877,43 +2001,58 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void showSkeletonForPath(String path) {
-        if (path == null) path = "";
+        if (path == null)
+            path = "";
         String p = path.toLowerCase();
-        
+
         String category = "dashboard";
-        if (p.contains("analytics") || p.contains("finance") || p.equals("/") || p.contains("dashboard") || (p.contains("workspace") && !p.contains("/"))) {
+        if (p.contains("analytics") || p.contains("finance") || p.equals("/") || p.contains("dashboard")
+                || (p.contains("workspace") && !p.contains("/"))) {
             category = "dashboard";
-        } else if (p.contains("registration") || p.contains("create") || p.contains("new") || p.contains("edit") || p.contains("add-")) {
+        } else if (p.contains("registration") || p.contains("create") || p.contains("new") || p.contains("edit")
+                || p.contains("add-")) {
             category = "form";
-        } else if (p.contains("invoice") || p.contains("print") || p.contains("receipt") || p.contains("report-view") || p.contains("detail")) {
+        } else if (p.contains("invoice") || p.contains("print") || p.contains("receipt") || p.contains("report-view")
+                || p.contains("detail")) {
             category = "detail";
-        } else if (p.contains("categories") || p.contains("catalog") || p.contains("analyzers") || p.contains("machines") || p.contains("inventory") || p.contains("b2b")) {
+        } else if (p.contains("categories") || p.contains("catalog") || p.contains("analyzers")
+                || p.contains("machines") || p.contains("inventory") || p.contains("b2b")) {
             category = "grid";
-        } else if (p.contains("settings") || p.contains("wallet") || p.contains("support") || p.contains("config") || p.contains("profile") || p.contains("security")) {
+        } else if (p.contains("settings") || p.contains("wallet") || p.contains("support") || p.contains("config")
+                || p.contains("profile") || p.contains("security")) {
             category = "settings";
-        } else if (p.contains("patients") || p.contains("results") || p.contains("reports") || p.contains("worklist") || p.contains("bookings") || p.contains("audit") || p.contains("staff") || p.contains("doctors") || p.contains("expenses")) {
+        } else if (p.contains("patients") || p.contains("results") || p.contains("reports") || p.contains("worklist")
+                || p.contains("bookings") || p.contains("audit") || p.contains("staff") || p.contains("doctors")
+                || p.contains("expenses")) {
             category = "list";
         }
-        
-        if (category.equals(activeSkeletonCategory) && skeletonContainer != null && skeletonContainer.getVisibility() == View.VISIBLE) {
+
+        if (category.equals(activeSkeletonCategory) && skeletonContainer != null
+                && skeletonContainer.getVisibility() == View.VISIBLE) {
             return;
         }
         activeSkeletonCategory = category;
-        
+
         View sDash = findViewById(R.id.skeletonDashboard);
         View sPatients = findViewById(R.id.skeletonPatients);
         View sReports = findViewById(R.id.skeletonReports);
         View sBilling = findViewById(R.id.skeletonBilling);
         View sSettings = findViewById(R.id.skeletonSettings);
         View sForm = findViewById(R.id.skeletonForm);
-        
-        if (sDash != null) sDash.setVisibility(View.GONE);
-        if (sPatients != null) sPatients.setVisibility(View.GONE);
-        if (sReports != null) sReports.setVisibility(View.GONE);
-        if (sBilling != null) sBilling.setVisibility(View.GONE);
-        if (sSettings != null) sSettings.setVisibility(View.GONE);
-        if (sForm != null) sForm.setVisibility(View.GONE);
-        
+
+        if (sDash != null)
+            sDash.setVisibility(View.GONE);
+        if (sPatients != null)
+            sPatients.setVisibility(View.GONE);
+        if (sReports != null)
+            sReports.setVisibility(View.GONE);
+        if (sBilling != null)
+            sBilling.setVisibility(View.GONE);
+        if (sSettings != null)
+            sSettings.setVisibility(View.GONE);
+        if (sForm != null)
+            sForm.setVisibility(View.GONE);
+
         View activeSkeleton = sDash;
         switch (category) {
             case "dashboard":
@@ -1938,27 +2077,28 @@ public class MainActivity extends BridgeActivity {
                 activeSkeleton = sSettings != null ? sSettings : sDash;
                 break;
         }
-        
+
         if (activeSkeleton != null) {
             activeSkeleton.setVisibility(View.VISIBLE);
         }
-        
+
         final boolean isDark = this.isDarkMode;
         if (skeletonContainer != null) {
-            skeletonContainer.setBackgroundColor(isDark ? android.graphics.Color.parseColor("#0F172A") : android.graphics.Color.parseColor("#F8FAFC"));
+            skeletonContainer.setBackgroundColor(isDark ? android.graphics.Color.parseColor("#0F172A")
+                    : android.graphics.Color.parseColor("#F8FAFC"));
             applySkeletonTheme(skeletonContainer, isDark);
-            
+
             skeletonContainer.animate().cancel();
             skeletonContainer.setAlpha(0f);
             skeletonContainer.setVisibility(View.VISIBLE);
             skeletonContainer.animate()
-                .alpha(1f)
-                .setDuration(150)
-                .setListener(null)
-                .start();
-                
+                    .alpha(1f)
+                    .setDuration(150)
+                    .setListener(null)
+                    .start();
+
             startPulseAnimation();
-            
+
             // Hard safety timeout: auto-hide skeleton after at most 1.5s
             skeletonContainer.postDelayed(() -> {
                 hideSkeleton();
@@ -1972,15 +2112,15 @@ public class MainActivity extends BridgeActivity {
             stopPulseAnimation();
             skeletonContainer.animate().cancel();
             skeletonContainer.animate()
-                .alpha(0f)
-                .setDuration(180)
-                .setListener(new android.animation.AnimatorListenerAdapter() {
-                    @Override
-                    public void onAnimationEnd(android.animation.Animator animation) {
-                        skeletonContainer.setVisibility(View.GONE);
-                    }
-                })
-                .start();
+                    .alpha(0f)
+                    .setDuration(180)
+                    .setListener(new android.animation.AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationEnd(android.animation.Animator animation) {
+                            skeletonContainer.setVisibility(View.GONE);
+                        }
+                    })
+                    .start();
         }
     }
 
@@ -2004,42 +2144,19 @@ public class MainActivity extends BridgeActivity {
 
     private final Handler bellAnimationHandler = new Handler(Looper.getMainLooper());
     private boolean isBellAnimationRunning = false;
-    private final Runnable bellAnimationRunnable = new Runnable() {
-        @Override
-        public void run() {
-            ImageView bellImg = findViewById(R.id.imgHeaderBell);
-            TextView badge = findViewById(R.id.txtNotificationBadge);
-            if (bellImg != null && badge != null && badge.getVisibility() == View.VISIBLE) {
-                // Pivot swing from the top of the bell
-                bellImg.setPivotX(bellImg.getWidth() / 2f);
-                bellImg.setPivotY(bellImg.getHeight() * 0.15f);
+    private final Runnable bellAnimationRunnable=new Runnable(){@Override public void run(){ImageView bellImg=findViewById(R.id.imgHeaderBell);TextView badge=findViewById(R.id.txtNotificationBadge);if(bellImg!=null&&badge!=null&&badge.getVisibility()==View.VISIBLE){
+    // Pivot swing from the top of the bell
+    bellImg.setPivotX(bellImg.getWidth()/2f);bellImg.setPivotY(bellImg.getHeight()*0.15f);
 
-                bellImg.animate().rotation(-18f).setDuration(120).withEndAction(() -> {
-                    bellImg.animate().rotation(16f).setDuration(120).withEndAction(() -> {
-                        bellImg.animate().rotation(-12f).setDuration(120).withEndAction(() -> {
-                            bellImg.animate().rotation(10f).setDuration(120).withEndAction(() -> {
-                                bellImg.animate().rotation(-6f).setDuration(120).withEndAction(() -> {
-                                    bellImg.animate().rotation(4f).setDuration(120).withEndAction(() -> {
-                                        bellImg.animate().rotation(0f).setDuration(120).start();
-                                    }).start();
-                                }).start();
-                            }).start();
-                        }).start();
-                    }).start();
-                }).start();
+    bellImg.animate().rotation(-18f).setDuration(120).withEndAction(()->{bellImg.animate().rotation(16f).setDuration(120).withEndAction(()->{bellImg.animate().rotation(-12f).setDuration(120).withEndAction(()->{bellImg.animate().rotation(10f).setDuration(120).withEndAction(()->{bellImg.animate().rotation(-6f).setDuration(120).withEndAction(()->{bellImg.animate().rotation(4f).setDuration(120).withEndAction(()->{bellImg.animate().rotation(0f).setDuration(120).start();}).start();}).start();}).start();}).start();}).start();}).start();
 
-                // Synchronized badge pulse
-                badge.animate().scaleX(1.25f).scaleY(1.25f).setDuration(220).withEndAction(() -> {
-                    badge.animate().scaleX(1.0f).scaleY(1.0f).setDuration(220).start();
-                }).start();
-            }
-            bellAnimationHandler.postDelayed(this, 3500);
-        }
-    };
+    // Synchronized badge pulse
+    badge.animate().scaleX(1.25f).scaleY(1.25f).setDuration(220).withEndAction(()->{badge.animate().scaleX(1.0f).scaleY(1.0f).setDuration(220).start();}).start();}bellAnimationHandler.postDelayed(this,3500);}};
 
     private void startBellAnimationLoop() {
         runOnUiThread(() -> {
-            if (isBellAnimationRunning) return;
+            if (isBellAnimationRunning)
+                return;
             isBellAnimationRunning = true;
             bellAnimationHandler.post(bellAnimationRunnable);
         });
@@ -2068,7 +2185,8 @@ public class MainActivity extends BridgeActivity {
         if (token == null || token.isEmpty()) {
             runOnUiThread(() -> {
                 TextView badge = findViewById(R.id.txtNotificationBadge);
-                if (badge != null) badge.setVisibility(View.GONE);
+                if (badge != null)
+                    badge.setVisibility(View.GONE);
                 stopBellAnimationLoop();
             });
             return;
@@ -2081,22 +2199,25 @@ public class MainActivity extends BridgeActivity {
                 conn.setRequestMethod("GET");
                 conn.setRequestProperty("Accept", "application/json");
                 String cookie = android.webkit.CookieManager.getInstance().getCookie(BASE_URL);
-                if (cookie != null) conn.setRequestProperty("Cookie", cookie);
+                if (cookie != null)
+                    conn.setRequestProperty("Cookie", cookie);
                 conn.setConnectTimeout(8000);
                 conn.setReadTimeout(8000);
 
                 int code = conn.getResponseCode();
                 if (code >= 200 && code < 300) {
                     java.io.InputStream stream = conn.getInputStream();
-                    java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(stream, "UTF-8"));
+                    java.io.BufferedReader reader = new java.io.BufferedReader(
+                            new java.io.InputStreamReader(stream, "UTF-8"));
                     StringBuilder sb = new StringBuilder();
                     String line;
-                    while ((line = reader.readLine()) != null) sb.append(line);
+                    while ((line = reader.readLine()) != null)
+                        sb.append(line);
                     reader.close();
 
                     org.json.JSONObject root = new org.json.JSONObject(sb.toString());
                     org.json.JSONArray arr = root.optJSONArray("notifications");
-                    
+
                     long lastSeenTime = prefs != null ? prefs.getLong("last_seen_notification_time", 0L) : 0L;
                     int unreadCount = 0;
                     if (arr != null) {
@@ -2137,12 +2258,14 @@ public class MainActivity extends BridgeActivity {
     private long parseIsoDateTime(String isoString) {
         try {
             String clean = isoString.replaceAll("Z$", "+0000");
-            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", java.util.Locale.US);
+            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ",
+                    java.util.Locale.US);
             return sdf.parse(clean).getTime();
         } catch (Exception e) {
             try {
                 String clean = isoString.replaceAll("Z$", "+0000");
-                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", java.util.Locale.US);
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ",
+                        java.util.Locale.US);
                 return sdf.parse(clean).getTime();
             } catch (Exception ex) {
                 return 0L;

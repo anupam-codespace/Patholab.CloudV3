@@ -3,15 +3,15 @@
     <item
         android:id="@+id/nav_dashboard"
         android:icon="@drawable/ic_nav_dashboard"
-        android:title="Dashboard" />
+        android:title="Home" />
     <item
         android:id="@+id/nav_patients"
         android:icon="@drawable/ic_nav_patients"
         android:title="Patients" />
     <item
         android:id="@+id/nav_categories"
-        android:icon="@drawable/ic_nav_categories"
-        android:title="Categories" />
+        android:icon="@drawable/ic_document"
+        android:title="Reports" />
     <item
         android:id="@+id/nav_more"
         android:icon="@drawable/ic_nav_more"

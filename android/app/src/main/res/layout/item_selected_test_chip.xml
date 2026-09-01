@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Selected Test Card/Row on Registration Form -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:background="@drawable/bg_setting_item"
+    android:paddingStart="12dp"
+    android:paddingEnd="12dp"
+    android:paddingTop="10dp"
+    android:paddingBottom="10dp"
+    android:layout_marginBottom="6dp">
+
+    <ImageView
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:src="@drawable/ic_flask"
+        android:tint="#0D6EFD" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="8dp">
+
+        <TextView
+            android:id="@+id/lblSelectedTestName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Complete Blood Count"
+            android:textSize="13.5sp"
+            android:textStyle="bold"
+            android:textColor="#0F172A" />
+
+        <TextView
+            android:id="@+id/lblSelectedTestCode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="CBC001"
+            android:textSize="11sp"
+            android:textColor="#64748B" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/lblSelectedTestPrice"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="₹350"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="#0F172A"
+        android:layout_marginEnd="12dp" />
+
+    <!-- Remove Test Button -->
+    <ImageView
+        android:id="@+id/btnRemoveSelectedTest"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:src="@drawable/ic_close_cross"
+        android:tint="#EF4444"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:clickable="true"
+        android:focusable="true"
+        android:padding="3dp" />
+
+</LinearLayout>

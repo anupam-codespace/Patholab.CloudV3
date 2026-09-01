@@ -243,7 +243,7 @@ export async function GET(req: NextRequest) {
         netProfit: netProfit,
         samplesToday: samplesToday,
         pendingSamples: pendingSamples,
-        topReferrers:topReferrers,
+        topReferrers: topReferrers,
         // Add this to the KPI object
       },
       charts: {

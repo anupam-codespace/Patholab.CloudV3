@@ -67,11 +67,17 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
 }
 
 // =====================
-// API Helper (Crucial for Dashboard)
+// API Helper (Crucial for Dashboard & Native Apps)
 // =====================
 export async function getDataFromToken(request: NextRequest): Promise<JWTPayload | null> {
   try {
-    const token = request.cookies.get('token')?.value;
+    let token = request.cookies.get('token')?.value;
+    if (!token) {
+      const authHeader = request.headers.get('authorization');
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7).trim();
+      }
+    }
     if (!token) return null;
     return await verifyToken(token);
   } catch (error) {

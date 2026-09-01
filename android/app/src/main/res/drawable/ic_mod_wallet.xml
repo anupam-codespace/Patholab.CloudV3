@@ -1,0 +1,33 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Card emerging from top -->
+    <path
+        android:strokeColor="#4F46E5"
+        android:strokeWidth="1.6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M6,7V4a1,1 0,0,1 1,-1h10a1,1 0,0,1 1,1v3" />
+    <!-- Wallet body -->
+    <path
+        android:strokeColor="#4F46E5"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M3,7h18a2,2 0,0,1 2,2v9a2,2 0,0,1 -2,2H3a2,2 0,0,1 -2,-2V9a2,2 0,0,1 2,-2z" />
+    <!-- Clasp and coin slot / button -->
+    <path
+        android:strokeColor="#4F46E5"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M16,11h5a2,2 0,0,1 2,2v1a2,2 0,0,1 -2,2h-5z" />
+    <circle
+        android:fillColor="#4F46E5"
+        android:pathData="M18.5,13.5 m-1,0 a1,1 0,1,0 2,0 a1,1 0,1,0 -2,0" />
+</vector>

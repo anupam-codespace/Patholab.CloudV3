@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:background="@drawable/bg_module_card_ripple"
+    android:paddingStart="14dp"
+    android:paddingEnd="14dp"
+    android:paddingTop="12dp"
+    android:paddingBottom="12dp"
+    android:layout_marginBottom="8dp"
+    android:clickable="true"
+    android:focusable="true">
+
+    <!-- Credit/Debit Icon Badge -->
+    <FrameLayout
+        android:id="@+id/txIconFrame"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="@drawable/bg_mod_icon_emerald">
+
+        <ImageView
+            android:id="@+id/txIcon"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_arrow_down_left"
+            android:tint="#059669" />
+
+    </FrameLayout>
+
+    <!-- Description & Time Details -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="8dp">
+
+        <TextView
+            android:id="@+id/txDescription"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Wallet Recharge"
+            android:textSize="13.5sp"
+            android:textStyle="bold"
+            android:textColor="#0F172A"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="3dp"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/txDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="01 Sep 2026, 12:45 PM"
+                android:textSize="11.5sp"
+                android:textColor="#64748B" />
+
+            <TextView
+                android:id="@+id/txRefId"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_pill_inactive"
+                android:paddingStart="6dp"
+                android:paddingEnd="6dp"
+                android:paddingTop="1dp"
+                android:paddingBottom="1dp"
+                android:text="TX-8291"
+                android:textSize="10sp"
+                android:textColor="#475569" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Amount & Balance After -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="end">
+
+        <TextView
+            android:id="@+id/txAmount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="+₹1,000.00"
+            android:textSize="14.5sp"
+            android:textStyle="bold"
+            android:textColor="#059669" />
+
+        <TextView
+            android:id="@+id/txBalanceAfter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="Bal: ₹2,450.00"
+            android:textSize="11sp"
+            android:textColor="#94A3B8" />
+
+    </LinearLayout>
+
+</LinearLayout>

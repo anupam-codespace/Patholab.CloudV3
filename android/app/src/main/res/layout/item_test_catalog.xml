@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Catalog Test Item Row -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/rootTestItem"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:paddingTop="12dp"
+    android:paddingBottom="12dp"
+    android:background="?attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true">
+
+    <!-- Checkbox Indicator -->
+    <CheckBox
+        android:id="@+id/chkTestSelected"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="false"
+        android:focusable="false"
+        app:buttonTint="#0D6EFD" />
+
+    <!-- Test Info -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp">
+
+        <TextView
+            android:id="@+id/lblTestName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Complete Blood Count (CBC)"
+            android:textSize="14.5sp"
+            android:textStyle="bold"
+            android:textColor="#0F172A" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="3dp">
+
+            <TextView
+                android:id="@+id/lblTestCode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="CBC001"
+                android:textSize="11.5sp"
+                android:textStyle="bold"
+                android:textColor="#64748B"
+                android:background="#F1F5F9"
+                android:paddingStart="6dp"
+                android:paddingEnd="6dp"
+                android:paddingTop="1dp"
+                android:paddingBottom="1dp" />
+
+            <TextView
+                android:id="@+id/lblTestType"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:text="SINGLE"
+                android:textSize="11sp"
+                android:textColor="#0D6EFD"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Test Price -->
+    <TextView
+        android:id="@+id/lblTestPrice"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="₹350"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:textColor="#0D6EFD" />
+
+</LinearLayout>

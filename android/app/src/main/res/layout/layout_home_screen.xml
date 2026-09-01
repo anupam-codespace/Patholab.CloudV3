@@ -1,0 +1,621 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Native Home Screen layout for Patholab Android app.
+  Completely independent – no WebView. Data fetched from REST API.
+  Matches the reference mockup exactly with vibrant modern module icons.
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/homeScreenRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F8FAFC"
+    android:visibility="gone">
+
+    <!-- Full-page scroll container -->
+    <ScrollView
+        android:id="@+id/homeScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:overScrollMode="never"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="110dp">
+
+            <!-- ══════════════════════════════════════════════════ -->
+            <!--  1. HEADER (Vibrant Blue Curved Top Bar)          -->
+            <!-- ══════════════════════════════════════════════════ -->
+            <FrameLayout
+                android:id="@+id/homeHeader"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_home_header"
+                android:paddingStart="20dp"
+                android:paddingTop="54dp"
+                android:paddingEnd="20dp"
+                android:paddingBottom="36dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <!-- User Avatar & Online Wave Status Dot -->
+                    <FrameLayout
+                        android:id="@+id/homeAvatarContainer"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:clipChildren="false"
+                        android:clipToPadding="false"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <androidx.cardview.widget.CardView
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
+                            android:layout_gravity="bottom|start"
+                            app:cardCornerRadius="22dp"
+                            app:cardElevation="3dp"
+                            app:cardBackgroundColor="#FFFFFF">
+
+                            <FrameLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:background="@drawable/bg_avatar_gradient">
+
+                                <!-- Fallback Initial Text -->
+                                <TextView
+                                    android:id="@+id/homeAvatarInitial"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:gravity="center"
+                                    android:textSize="18sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#0D6EFD"
+                                    android:text="A"
+                                    android:visibility="gone" />
+
+                                <!-- User Profile Picture Image -->
+                                <ImageView
+                                    android:id="@+id/homeAvatarImage"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:scaleType="centerCrop"
+                                    android:src="@drawable/avatar_boy" />
+
+                            </FrameLayout>
+
+                        </androidx.cardview.widget.CardView>
+
+                        <!-- Top-Right Status Dot with Smooth Emitting Wave behind -->
+                        <FrameLayout
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_gravity="top|end"
+                            android:layout_marginEnd="-2dp"
+                            android:layout_marginTop="-2dp"
+                            android:clipChildren="false"
+                            android:clipToPadding="false">
+
+                            <!-- Smooth Wave Ripple Emitting from behind the dot -->
+                            <View
+                                android:id="@+id/homeStatusWave"
+                                android:layout_width="12dp"
+                                android:layout_height="12dp"
+                                android:layout_gravity="center"
+                                android:background="@drawable/bg_status_wave_white"
+                                android:alpha="0.8" />
+
+                            <!-- Solid Foreground Status Dot (Green = Online, Red = Offline) -->
+                            <View
+                                android:id="@+id/homeStatusDot"
+                                android:layout_width="12dp"
+                                android:layout_height="12dp"
+                                android:layout_gravity="center"
+                                android:background="@drawable/bg_online_dot" />
+
+                        </FrameLayout>
+
+                    </FrameLayout>
+
+                    <!-- Greeting + Sleek Wallet Capsule -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="8dp">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:id="@+id/homeGreeting"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Hello, Monowar"
+                                android:textSize="19sp"
+                                android:textStyle="bold"
+                                android:textColor="#FFFFFF"
+                                android:letterSpacing="-0.02"
+                                android:singleLine="true"
+                                android:ellipsize="end" />
+
+                            <TextView
+                                android:id="@+id/homeWaveEmoji"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="6dp"
+                                android:text="👋"
+                                android:textSize="24sp" />
+
+                        </LinearLayout>
+
+                        <!-- Modern Sleek Wallet Balance Capsule -->
+                        <FrameLayout
+                            android:id="@+id/homeWalletPill"
+                            android:layout_width="wrap_content"
+                            android:layout_height="28dp"
+                            android:layout_marginTop="4dp"
+                            android:background="@drawable/bg_wallet_pill"
+                            android:paddingStart="10dp"
+                            android:paddingEnd="10dp"
+                            android:clickable="true"
+                            android:focusable="true">
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="match_parent"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical">
+
+                                <ImageView
+                                    android:layout_width="13dp"
+                                    android:layout_height="13dp"
+                                    android:src="@drawable/ic_card"
+                                    android:tint="#BAE6FD" />
+
+                                <TextView
+                                    android:id="@+id/homeWalletBalance"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="5dp"
+                                    android:text="₹0.00"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#FFFFFF"
+                                    android:singleLine="true" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="4dp"
+                                    android:text="• Credits"
+                                    android:textSize="11sp"
+                                    android:textColor="#BAE6FD"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="4dp"
+                                    android:text="›"
+                                    android:textSize="13sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#BAE6FD" />
+
+                            </LinearLayout>
+
+                        </FrameLayout>
+
+                    </LinearLayout>
+
+                    <!-- Notification Bell -->
+                    <FrameLayout
+                        android:id="@+id/homeBellBtn"
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:background="@drawable/bg_bell_btn"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:elevation="4dp">
+
+                        <ImageView
+                            android:id="@+id/homeBellIcon"
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_bell"
+                            android:tint="#0D6EFD" />
+
+                        <!-- Red unread dot -->
+                        <View
+                            android:id="@+id/homeBellDot"
+                            android:layout_width="9dp"
+                            android:layout_height="9dp"
+                            android:layout_gravity="top|end"
+                            android:layout_marginTop="8dp"
+                            android:layout_marginEnd="9dp"
+                            android:background="@drawable/bg_notif_dot"
+                            android:visibility="visible" />
+
+                    </FrameLayout>
+
+                </LinearLayout>
+            </FrameLayout>
+
+            <!-- ══════════════════════════════════════════════════ -->
+            <!--  2. BANNER CAROUSEL                               -->
+            <!-- ══════════════════════════════════════════════════ -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingStart="16dp"
+                android:paddingTop="16dp"
+                android:paddingEnd="16dp">
+
+                <!-- Banner Card -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/homeBannerCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="195dp"
+                    app:cardCornerRadius="22dp"
+                    app:cardElevation="6dp">
+
+                    <!-- Blue gradient background -->
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/bg_banner_gradient">
+
+                        <!-- Scientist image on right -->
+                        <ImageView
+                            android:id="@+id/homeBannerImage"
+                            android:layout_width="210dp"
+                            android:layout_height="match_parent"
+                            android:layout_gravity="end"
+                            android:scaleType="centerCrop"
+                            android:src="@drawable/img_scientist_banner" />
+
+                        <!-- Gradient fade overlay on image from left to right -->
+                        <View
+                            android:layout_width="210dp"
+                            android:layout_height="match_parent"
+                            android:layout_gravity="end"
+                            android:background="@drawable/bg_banner_image_fade" />
+
+                        <!-- Text content on left -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="vertical"
+                            android:paddingStart="20dp"
+                            android:paddingTop="18dp"
+                            android:paddingBottom="18dp"
+                            android:paddingEnd="16dp"
+                            android:gravity="center_vertical|start">
+
+                            <TextView
+                                android:id="@+id/homeBannerTitle"
+                                android:layout_width="190dp"
+                                android:layout_height="wrap_content"
+                                android:text="₹2.5 Per\nRegistration"
+                                android:textSize="22sp"
+                                android:textStyle="bold"
+                                android:textColor="#FFFFFF"
+                                android:letterSpacing="-0.02"
+                                android:lineSpacingMultiplier="1.1" />
+
+                            <TextView
+                                android:id="@+id/homeBannerSubtitle"
+                                android:layout_width="190dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="6dp"
+                                android:text="Cloud reporting, instant WhatsApp sharing &amp; B2B automation at the lowest cost."
+                                android:textSize="11.5sp"
+                                android:textColor="#E0EDFF"
+                                android:maxLines="2"
+                                android:ellipsize="end"
+                                android:lineSpacingMultiplier="1.25" />
+
+                            <Button
+                                android:id="@+id/homeBannerCta"
+                                android:layout_width="wrap_content"
+                                android:layout_height="36dp"
+                                android:layout_marginTop="10dp"
+                                android:text="Recharge Now →"
+                                android:textSize="12.5sp"
+                                android:textStyle="bold"
+                                android:textColor="#0D6EFD"
+                                android:backgroundTint="#FFFFFF"
+                                android:paddingStart="14dp"
+                                android:paddingEnd="14dp"
+                                style="?attr/materialButtonStyle"
+                                app:cornerRadius="18dp"
+                                app:elevation="2dp" />
+
+                        </LinearLayout>
+
+                    </FrameLayout>
+                </androidx.cardview.widget.CardView>
+
+                <!-- Pagination dots -->
+                <LinearLayout
+                    android:id="@+id/homeBannerDots"
+                    android:layout_width="wrap_content"
+                    android:layout_height="12dp"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:layout_marginBottom="4dp" />
+
+            </LinearLayout>
+
+            <!-- ══════════════════════════════════════════════════ -->
+            <!--  3. TOP MODULES (2 × 4 = 8 modules)              -->
+            <!-- ══════════════════════════════════════════════════ -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingStart="16dp"
+                android:paddingTop="20dp"
+                android:paddingEnd="16dp">
+
+                <!-- Section header row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="14dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Our Modules"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="#0F172A"
+                        android:letterSpacing="-0.02" />
+
+                    <TextView
+                        android:id="@+id/homeSeeAllModules"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="See all"
+                        android:textSize="13.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#0D6EFD"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:padding="4dp" />
+
+                </LinearLayout>
+
+                <!-- Row 1 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:weightSum="4"
+                    android:layout_marginBottom="10dp">
+
+                    <!-- Register -->
+                    <LinearLayout android:id="@+id/modRegistration"
+                        style="@style/HomeModuleItem"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="10dp">
+                        <FrameLayout
+                            android:layout_width="46dp"
+                            android:layout_height="46dp"
+                            android:background="@drawable/bg_mod_icon_blue">
+                            <ImageView style="@style/HomeModuleIcon" android:src="@drawable/ic_mod_registration" />
+                        </FrameLayout>
+                        <TextView style="@style/HomeModuleBold" android:text="Register" />
+                    </LinearLayout>
+
+                    <!-- Tests -->
+                    <LinearLayout android:id="@+id/modTests"
+                        style="@style/HomeModuleItem"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="10dp">
+                        <FrameLayout
+                            android:layout_width="46dp"
+                            android:layout_height="46dp"
+                            android:background="@drawable/bg_mod_icon_purple">
+                            <ImageView style="@style/HomeModuleIcon" android:src="@drawable/ic_mod_tests" />
+                        </FrameLayout>
+                        <TextView style="@style/HomeModuleBold" android:text="Tests" />
+                    </LinearLayout>
+
+                    <!-- Billing -->
+                    <LinearLayout android:id="@+id/modBilling"
+                        style="@style/HomeModuleItem"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="10dp">
+                        <FrameLayout
+                            android:layout_width="46dp"
+                            android:layout_height="46dp"
+                            android:background="@drawable/bg_mod_icon_emerald">
+                            <ImageView style="@style/HomeModuleIcon" android:src="@drawable/ic_mod_billing" />
+                        </FrameLayout>
+                        <TextView style="@style/HomeModuleBold" android:text="Billing" />
+                    </LinearLayout>
+
+                    <!-- Reports -->
+                    <LinearLayout android:id="@+id/modReports"
+                        style="@style/HomeModuleItem"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1">
+                        <FrameLayout
+                            android:layout_width="46dp"
+                            android:layout_height="46dp"
+                            android:background="@drawable/bg_mod_icon_sky">
+                            <ImageView style="@style/HomeModuleIcon" android:src="@drawable/ic_mod_reports" />
+                        </FrameLayout>
+                        <TextView style="@style/HomeModuleBold" android:text="Reports" />
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- Row 2 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:weightSum="4">
+
+                    <!-- Samples -->
+                    <LinearLayout android:id="@+id/modSamples"
+                        style="@style/HomeModuleItem"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="10dp">
+                        <FrameLayout
+                            android:layout_width="46dp"
+                            android:layout_height="46dp"
+                            android:background="@drawable/bg_mod_icon_rose">
+                            <ImageView style="@style/HomeModuleIcon" android:src="@drawable/ic_mod_samples" />
+                        </FrameLayout>
+                        <TextView style="@style/HomeModuleBold" android:text="Samples" />
+                    </LinearLayout>
+
+                    <!-- Share (WhatsApp) -->
+                    <LinearLayout android:id="@+id/modWhatsapp"
+                        style="@style/HomeModuleItem"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="10dp">
+                        <FrameLayout
+                            android:layout_width="46dp"
+                            android:layout_height="46dp"
+                            android:background="@drawable/bg_mod_icon_green">
+                            <ImageView style="@style/HomeModuleIcon" android:src="@drawable/ic_mod_whatsapp" />
+                        </FrameLayout>
+                        <TextView style="@style/HomeModuleBold" android:text="Share" />
+                    </LinearLayout>
+
+                    <!-- Logistics -->
+                    <LinearLayout android:id="@+id/modLogistics"
+                        style="@style/HomeModuleItem"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="10dp">
+                        <FrameLayout
+                            android:layout_width="46dp"
+                            android:layout_height="46dp"
+                            android:background="@drawable/bg_mod_icon_amber">
+                            <ImageView style="@style/HomeModuleIcon" android:src="@drawable/ic_mod_logistics" />
+                        </FrameLayout>
+                        <TextView style="@style/HomeModuleBold" android:text="Logistics" />
+                    </LinearLayout>
+
+                    <!-- Wallet -->
+                    <LinearLayout android:id="@+id/modWallet"
+                        style="@style/HomeModuleItem"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1">
+                        <FrameLayout
+                            android:layout_width="46dp"
+                            android:layout_height="46dp"
+                            android:background="@drawable/bg_mod_icon_indigo">
+                            <ImageView style="@style/HomeModuleIcon" android:src="@drawable/ic_mod_wallet" />
+                        </FrameLayout>
+                        <TextView style="@style/HomeModuleBold" android:text="Wallet" />
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- ══════════════════════════════════════════════════ -->
+            <!--  4. TODAY'S WORKLIST (horizontal scroll)          -->
+            <!-- ══════════════════════════════════════════════════ -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingTop="22dp">
+
+                <!-- Section header without arrow -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:layout_marginBottom="12dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Today's Worklist"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="#0F172A"
+                        android:letterSpacing="-0.02" />
+
+                    <TextView
+                        android:id="@+id/homeViewAllWorklist"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="View All"
+                        android:textSize="13.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#0D6EFD"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:padding="4dp" />
+
+                </LinearLayout>
+
+                <!-- Horizontal scroll of patient cards -->
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:scrollbars="none"
+                    android:overScrollMode="never"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:clipToPadding="false">
+
+                    <LinearLayout
+                        android:id="@+id/homeWorklistContainer"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal" />
+
+                </HorizontalScrollView>
+
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+</FrameLayout>

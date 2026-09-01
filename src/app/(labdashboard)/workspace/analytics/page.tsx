@@ -279,13 +279,12 @@ export default async function FinancialAnalyticsPage() {
                         </td>
                         <td className="px-5 py-4 text-center">
                           <span
-                            className={`px-2.5 py-1 rounded-md text-[11px] font-black uppercase tracking-wider ${
-                              inv.status === "PAID"
+                            className={`px-2.5 py-1 rounded-md text-[11px] font-black uppercase tracking-wider ${inv.status === "PAID"
                                 ? "bg-emerald-100 text-emerald-700"
                                 : inv.status === "PENDING"
                                   ? "bg-amber-100 text-amber-700"
                                   : "bg-rose-100 text-rose-700"
-                            }`}>
+                              }`}>
                             {inv.status}
                           </span>
                         </td>

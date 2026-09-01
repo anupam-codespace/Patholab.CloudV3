@@ -12,7 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_alignParentTop="true"
-        android:layout_above="@id/bottomNavigation">
+        android:layout_above="@id/floatingNavBarCard">
 
         <FrameLayout
             android:id="@+id/webViewContainer"
@@ -319,7 +319,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/topLayoutContainer"
-        android:layout_above="@id/bottomNavigation"
+        android:layout_above="@id/floatingNavBarCard"
         android:orientation="vertical"
         android:gravity="center"
         android:background="#F8FAFC"
@@ -363,7 +363,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/topLayoutContainer"
-        android:layout_above="@id/bottomNavigation"
+        android:layout_above="@id/floatingNavBarCard"
         android:background="#F8FAFC"
         android:visibility="gone">
         <include layout="@layout/layout_skeletons" />
@@ -376,7 +376,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_alignParentEnd="true"
-        android:layout_marginBottom="80dp"
+        android:layout_marginBottom="96dp"
         android:layout_marginEnd="20dp"
         android:backgroundTint="#4F46E5"
         android:src="@android:drawable/ic_input_add"
@@ -388,21 +388,186 @@
         app:rippleColor="#7C3AED"
         app:tint="@android:color/white" />
 
-    <!-- 4. Bottom Navigation Bar -->
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottomNavigation"
+    <!-- 5. Native Home Screen (shown instead of WebView when Home tab is active) -->
+    <include
+        layout="@layout/layout_home_screen"
+        android:id="@+id/nativeHomeScreen"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_alignParentTop="true"
+        android:layout_above="@id/floatingNavBarCard" />
+
+    <!-- 4. Floating Glassmorphic Pill Navigation Bar -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/floatingNavBarCard"
+        android:layout_width="match_parent"
+        android:layout_height="66dp"
         android:layout_alignParentBottom="true"
-        android:background="#FFFFFF"
-        app:elevation="8dp"
-        app:menu="@menu/bottom_nav_menu"
-        app:itemIconSize="20dp"
-        app:itemIconTint="@color/nav_item_tint"
-        app:itemTextColor="@color/nav_item_tint"
-        app:itemRippleColor="@null"
-        app:itemTextAppearanceActive="@style/BottomNavActive"
-        app:itemTextAppearanceInactive="@style/BottomNavInactive"
-        app:labelVisibilityMode="labeled" />
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        app:cardCornerRadius="33dp"
+        app:cardElevation="14dp"
+        app:cardBackgroundColor="#FFFFFF"
+        app:cardPreventCornerOverlap="false">
+
+        <LinearLayout
+            android:id="@+id/floatingNavItemsLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:baselineAligned="false"
+            android:background="@drawable/bg_floating_glass_navbar"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp">
+
+            <!-- Tab 0: Home -->
+            <LinearLayout
+                android:id="@+id/navTabHome"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:id="@+id/imgNavHome"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:src="@drawable/ic_nav_dashboard"
+                    android:tint="#0D6EFD" />
+
+                <TextView
+                    android:id="@+id/txtNavHome"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Home"
+                    android:textSize="10.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#0D6EFD" />
+            </LinearLayout>
+
+            <!-- Tab 1: Patients -->
+            <LinearLayout
+                android:id="@+id/navTabPatients"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:id="@+id/imgNavPatients"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:src="@drawable/ic_nav_patients"
+                    android:tint="#94A3B8" />
+
+                <TextView
+                    android:id="@+id/txtNavPatients"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Patients"
+                    android:textSize="10.5sp"
+                    android:textStyle="normal"
+                    android:textColor="#94A3B8" />
+            </LinearLayout>
+
+            <!-- Tab Center: Elevated Glowing Card / Action Button -->
+            <FrameLayout
+                android:id="@+id/navTabCenter"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true">
+
+                <FrameLayout
+                    android:id="@+id/navCenterCircle"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/bg_nav_center_circle"
+                    android:elevation="6dp">
+
+                    <ImageView
+                        android:id="@+id/imgNavCenter"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_nav_card_center"
+                        android:tint="#FFFFFF" />
+
+                </FrameLayout>
+            </FrameLayout>
+
+            <!-- Tab 2: Reports -->
+            <LinearLayout
+                android:id="@+id/navTabReports"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:id="@+id/imgNavReports"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:src="@drawable/ic_document"
+                    android:tint="#94A3B8" />
+
+                <TextView
+                    android:id="@+id/txtNavReports"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Reports"
+                    android:textSize="10.5sp"
+                    android:textStyle="normal"
+                    android:textColor="#94A3B8" />
+            </LinearLayout>
+
+            <!-- Tab 3: More -->
+            <LinearLayout
+                android:id="@+id/navTabMore"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:id="@+id/imgNavMore"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:src="@drawable/ic_nav_categories"
+                    android:tint="#94A3B8" />
+
+                <TextView
+                    android:id="@+id/txtNavMore"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="More"
+                    android:textSize="10.5sp"
+                    android:textStyle="normal"
+                    android:textColor="#94A3B8" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
 
 </RelativeLayout>

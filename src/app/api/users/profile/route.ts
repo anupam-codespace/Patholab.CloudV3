@@ -1,21 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getCurrentUser } from '@/lib/auth';
+import { getCurrentUser, getDataFromToken } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
-    const user = await getCurrentUser();
+    const user = (await getDataFromToken(req)) || (await getCurrentUser());
+    const uid = user?.userId || user?.id;
     
-    // ✅ THE FIX: Checking for user.userId instead of user.id
-    if (!user || !user.userId) {
+    // ✅ THE FIX: Checking for user.userId or user.id
+    if (!user || !uid) {
       return NextResponse.json({ error: 'Unauthorized or missing User ID' }, { status: 401 });
     }
 
     // Fetch fresh data from DB
     const dbUser = await prisma.user.findUnique({
-      where: { id: user.userId }, // ✅ THE FIX: Passing user.userId
+      where: { id: uid },
       select: {
         id: true,
         name: true,
@@ -38,10 +39,10 @@ export async function GET(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
-    const user = await getCurrentUser();
+    const user = (await getDataFromToken(req)) || (await getCurrentUser());
+    const uid = user?.userId || user?.id;
     
-    // ✅ THE FIX: Checking for user.userId instead of user.id
-    if (!user || !user.userId) {
+    if (!user || !uid) {
       return NextResponse.json({ error: 'Unauthorized or missing User ID' }, { status: 401 });
     }
 

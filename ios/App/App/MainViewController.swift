@@ -46,6 +46,9 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
     private let offlineView        = UIView()
     private let skeletonView       = UIView()
     private let notificationBadge  = UILabel()
+    
+    // MARK: – Native Home Screen
+    private let homeNativeView     = HomeNativeView()
 
     // MARK: – Constraints updated for dynamic safe area
     private var bottomNavHeightConstraint: NSLayoutConstraint!
@@ -85,6 +88,7 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         buildOfflineView()        // 2. Offline overlay (hidden by default)
         buildSkeletonView()       // 2b. Full screen skeleton loading screen (hidden by default)
         embedMoreViewController() // 3. More panel (hidden by default)
+        buildHomeNativeView()     // 4. Native Home Dashboard screen
 
         view.bringSubviewToFront(topLayoutContainer)
         view.bringSubviewToFront(bottomNavBar)
@@ -122,9 +126,8 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
                     }
                 } catch (e) {}
 
-                var css = 'html { -webkit-text-size-adjust: 100%; touch-action: pan-x pan-y pinch-zoom; scroll-behavior: smooth; } html, body { padding-top: 0 !important; margin-top: 0 !important; -webkit-overflow-scrolling: touch !important; overscroll-behavior-y: none !important; -webkit-tap-highlight-color: transparent !important; } .mobile-app-header-web-component, header, .sticky.top-0 { display: none !important; } main, .is-native-app main, .is-capacitor main { padding-top: var(--native-top-padding, 160px) !important; margin-top: 0px !important; padding-bottom: 84px !important; min-height: 100%; -webkit-overflow-scrolling: touch; } .overflow-x-auto { -webkit-overflow-scrolling: touch !important; overscroll-behavior-x: contain !important; touch-action: pan-x pan-y !important; scrollbar-width: none !important; } .overflow-x-auto::-webkit-scrollbar { display: none !important; }';
+                var css = 'html { -webkit-text-size-adjust: 100%; touch-action: pan-x pan-y pinch-zoom; scroll-behavior: smooth; } html, body { padding-top: 0 !important; margin-top: 0 !important; -webkit-overflow-scrolling: touch !important; overscroll-behavior-y: none !important; -webkit-tap-highlight-color: transparent !important; } .mobile-app-header-web-component, header, .sticky.top-0 { display: none !important; } main, .is-native-app main, .is-capacitor main { padding-top: 0px !important; margin-top: 0px !important; padding-bottom: 84px !important; min-height: 100%; -webkit-overflow-scrolling: touch; } .overflow-x-auto { -webkit-overflow-scrolling: touch !important; overscroll-behavior-x: contain !important; touch-action: pan-x pan-y !important; scrollbar-width: none !important; } .overflow-x-auto::-webkit-scrollbar { display: none !important; }';
                 var style = document.createElement('style');
-                style.id = 'native-layout-padding-style';
                 style.innerHTML = css;
                 if (document.head) {
                     document.head.appendChild(style);
@@ -153,38 +156,23 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
             webView.addObserver(self, forKeyPath: "estimatedProgress", options: .new, context: nil)
         }
 
-        // NOTE: Initial navigation is deferred to viewDidAppear so the WebView
-        // has a real frame before loading. Calling webView.load() with a zero frame
-        // causes WKWebView to freeze (the WebKit renderer never updates visibleContentRect).
-    }
-
-    // Flag to ensure the initial tab load + timers are set up exactly once.
-    private var initialLoadDone = false
-
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        guard !initialLoadDone else { return }
-        initialLoadDone = true
-
-        // Force layout so webView.frame is correct before first load
-        view.setNeedsLayout()
-        view.layoutIfNeeded()
-
-        // Now the WebView has a valid frame — safe to navigate
-        selectTab(0)
-
-        // Polling timer: monitor page load state / React-Query spinner
-        progressPollTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
-            self?.checkWebViewProgress()
-        }
-
-        // Polling timer: sync theme with web view class state
-        Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            guard let self = self, let webView = self.webView else { return }
-            webView.evaluateJavaScript("document.documentElement.classList.contains('dark')") { (result, error) in
-                if let isDark = result as? Bool {
-                    DispatchQueue.main.async {
-                        self.applyNativeTheme(isDark: isDark)
+        // Navigate to dashboard once layout is ready
+        DispatchQueue.main.async {
+            self.selectTab(0)
+            
+            // Polling timer to monitor page load state and React-Query loading spinner state
+            self.progressPollTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+                self?.checkWebViewProgress()
+            }
+            
+            // Polling timer to sync theme with web view class state
+            Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+                guard let self = self, let webView = self.webView else { return }
+                webView.evaluateJavaScript("document.documentElement.classList.contains('dark')") { (result, error) in
+                    if let isDark = result as? Bool {
+                        DispatchQueue.main.async {
+                            self.applyNativeTheme(isDark: isDark)
+                        }
                     }
                 }
             }
@@ -203,8 +191,13 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-
-        syncWebLayoutPadding()
+        
+        let topY = topLayoutContainer.frame.maxY
+        let bottomY = bottomNavBar.frame.minY > 0 ? bottomNavBar.frame.minY : view.bounds.height
+        let targetFrame = CGRect(x: 0, y: topY, width: view.bounds.width, height: max(0, bottomY - topY))
+        if let webView = self.webView, webView.frame != targetFrame {
+            webView.frame = targetFrame
+        }
 
         CATransaction.begin()
         CATransaction.setDisableActions(true)
@@ -212,55 +205,6 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         headerGradientLayer.frame  = headerBlurContainer.bounds
         headerMaskLayer.frame      = headerBlurContainer.bounds
         CATransaction.commit()
-    }
-
-    private func getNativeTopPadding() -> Int {
-        let topY = topLayoutContainer.frame.maxY
-        if topY > 0 {
-            return Int(ceil(topY))
-        }
-        let safeTop = view.safeAreaInsets.top > 0 ? view.safeAreaInsets.top : 48
-        let containerHeight: CGFloat = walletCardView.isHidden ? 56 : 106
-        return Int(ceil(safeTop + containerHeight))
-    }
-
-    private func syncWebLayoutPadding() {
-        guard let webView = self.webView else { return }
-        let topPadding = getNativeTopPadding()
-        let isDark = self.isDarkMode
-        let js = """
-        (function() {
-            var styleId = 'native-layout-padding-style';
-            var style = document.getElementById(styleId);
-            if (!style) {
-                style = document.createElement('style');
-                style.id = styleId;
-                document.head.appendChild(style);
-            }
-            style.innerHTML = 'html, body { padding-top: 0 !important; margin-top: 0 !important; } .mobile-app-header-web-component, header, .sticky.top-0 { display: none !important; } main, .is-native-app main, .is-capacitor main { padding-top: \(topPadding)px !important; margin-top: 0px !important; padding-bottom: 84px !important; }';
-            document.documentElement.style.setProperty('--native-top-padding', '\(topPadding)px');
-            
-            // Continuous dark mode enforcement across SPA route switches and new page loads
-            var isDark = \(isDark ? "true" : "false");
-            var theme = isDark ? 'dark' : 'light';
-            if (isDark) {
-                if (!document.documentElement.classList.contains('dark')) {
-                    document.documentElement.classList.add('dark');
-                }
-            } else {
-                if (document.documentElement.classList.contains('dark')) {
-                    document.documentElement.classList.remove('dark');
-                }
-            }
-            if (localStorage.getItem('theme') !== theme) {
-                localStorage.setItem('theme', theme);
-            }
-            if (window.patholabSetTheme) {
-                window.patholabSetTheme(theme);
-            }
-        })()
-        """
-        webView.evaluateJavaScript(js, completionHandler: nil)
     }
 
     override func viewSafeAreaInsetsDidChange() {
@@ -356,17 +300,11 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
 
     private func updateWalletCard(balance: Double, isOwner: Bool) {
         guard isOwner else {
-            if !walletCardView.isHidden {
-                walletCardView.isHidden = true
-                syncWebLayoutPadding()
-            }
+            walletCardView.isHidden = true
             return
         }
 
-        if walletCardView.isHidden {
-            walletCardView.isHidden = false
-            syncWebLayoutPadding()
-        }
+        walletCardView.isHidden = false
         let formatted = String(format: "₹%.2f", balance)
         if txtWalletBalance.text != formatted {
             UIView.transition(with: txtWalletBalance, duration: 0.2, options: .transitionCrossDissolve, animations: {
@@ -405,55 +343,83 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
     // ─────────────────────────────────────────────────────────────────────────
 
     private func buildBottomNavBar() {
-        // ── Container
+        // ── Floating Glassmorphic Pill Container
         bottomNavBar.backgroundColor    = .white
-        bottomNavBar.translatesAutoresizingMaskIntoConstraints = false
-        // Shadow
+        bottomNavBar.layer.cornerRadius = 33
         bottomNavBar.layer.shadowColor   = UIColor.black.cgColor
-        bottomNavBar.layer.shadowOpacity = 0.08
-        bottomNavBar.layer.shadowOffset  = CGSize(width: 0, height: -2)
-        bottomNavBar.layer.shadowRadius  = 4
+        bottomNavBar.layer.shadowOpacity = 0.10
+        bottomNavBar.layer.shadowRadius  = 16
+        bottomNavBar.layer.shadowOffset  = CGSize(width: 0, height: 8)
+        bottomNavBar.layer.borderWidth   = 1.5
+        bottomNavBar.layer.borderColor   = UIColor(red: 0.945, green: 0.961, blue: 0.976, alpha: 1).cgColor
+        bottomNavBar.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(bottomNavBar)
 
-        // ── Top separator
-        bottomBorder.backgroundColor = UIColor(white: 0.88, alpha: 1)
-        bottomBorder.translatesAutoresizingMaskIntoConstraints = false
-        bottomNavBar.addSubview(bottomBorder)
-
-        // ── Items stack (fills top 56pt, below that is safe-area padding)
+        // ── Items stack
         navStack.axis        = .horizontal
         navStack.distribution = .fillEqually
+        navStack.alignment    = .center
         navStack.translatesAutoresizingMaskIntoConstraints = false
         bottomNavBar.addSubview(navStack)
 
-        let items: [(String, String, Int)] = [
-            ("Dashboard",  "house",                  0),
-            ("Patients",   "person.2",               1),
-            ("Categories", "square.grid.2x2",        2),
-            ("More",       "ellipsis.circle",        3)
-        ]
-        items.forEach { navStack.addArrangedSubview(makeNavButton(title: $0.0, icon: $0.1, tag: $0.2)) }
-
-        // ── Constraints
-        let initHeight: CGFloat = 56 + (view.safeAreaInsets.bottom > 0 ? view.safeAreaInsets.bottom : 34)
-        bottomNavHeightConstraint = bottomNavBar.heightAnchor.constraint(equalToConstant: initHeight)
+        // Tabs: Home, Patients, Center Action Button, Reports, More
+        navStack.addArrangedSubview(makeNavButton(title: "Home", icon: "house.fill", tag: 0))
+        navStack.addArrangedSubview(makeNavButton(title: "Patients", icon: "person.2.fill", tag: 1))
+        navStack.addArrangedSubview(makeCenterActionButton())
+        navStack.addArrangedSubview(makeNavButton(title: "Reports", icon: "doc.text.fill", tag: 2))
+        navStack.addArrangedSubview(makeNavButton(title: "More", icon: "square.grid.2x2.fill", tag: 3))
 
         NSLayoutConstraint.activate([
-            bottomNavBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            bottomNavBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            bottomNavBar.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            bottomNavHeightConstraint,
-
-            bottomBorder.topAnchor.constraint(equalTo: bottomNavBar.topAnchor),
-            bottomBorder.leadingAnchor.constraint(equalTo: bottomNavBar.leadingAnchor),
-            bottomBorder.trailingAnchor.constraint(equalTo: bottomNavBar.trailingAnchor),
-            bottomBorder.heightAnchor.constraint(equalToConstant: 0.5),
+            bottomNavBar.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            bottomNavBar.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            bottomNavBar.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -10),
+            bottomNavBar.heightAnchor.constraint(equalToConstant: 66),
 
             navStack.topAnchor.constraint(equalTo: bottomNavBar.topAnchor),
-            navStack.leadingAnchor.constraint(equalTo: bottomNavBar.leadingAnchor),
-            navStack.trailingAnchor.constraint(equalTo: bottomNavBar.trailingAnchor),
-            navStack.heightAnchor.constraint(equalToConstant: 56)
+            navStack.bottomAnchor.constraint(equalTo: bottomNavBar.bottomAnchor),
+            navStack.leadingAnchor.constraint(equalTo: bottomNavBar.leadingAnchor, constant: 4),
+            navStack.trailingAnchor.constraint(equalTo: bottomNavBar.trailingAnchor, constant: -4)
         ])
+    }
+
+    private func makeCenterActionButton() -> UIView {
+        let container = UIView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+
+        let circle = UIButton(type: .custom)
+        circle.backgroundColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1) // #0D6EFD
+        circle.layer.cornerRadius = 24
+        circle.layer.shadowColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1).cgColor
+        circle.layer.shadowOpacity = 0.45
+        circle.layer.shadowRadius = 10
+        circle.layer.shadowOffset = CGSize(width: 0, height: 4)
+        circle.layer.borderWidth = 2
+        circle.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+        circle.setImage(UIImage(systemName: "creditcard.fill"), for: .normal)
+        circle.tintColor = .white
+        circle.tag = 99
+        circle.addTarget(self, action: #selector(centerActionTapped(_:)), for: .touchUpInside)
+        circle.translatesAutoresizingMaskIntoConstraints = false
+
+        container.addSubview(circle)
+        NSLayoutConstraint.activate([
+            circle.widthAnchor.constraint(equalToConstant: 48),
+            circle.heightAnchor.constraint(equalToConstant: 48),
+            circle.centerXAnchor.constraint(equalTo: container.centerXAnchor),
+            circle.centerYAnchor.constraint(equalTo: container.centerYAnchor)
+        ])
+
+        return container
+    }
+
+    @objc private func centerActionTapped(_ sender: UIButton) {
+        sender.transform = CGAffineTransform(scaleX: 0.85, y: 0.85)
+        UIView.animate(withDuration: 0.25, delay: 0, usingSpringWithDamping: 0.5, initialSpringVelocity: 0.8, options: .curveEaseOut) {
+            sender.transform = .identity
+        }
+        let walletVC = WalletViewController()
+        walletVC.modalPresentationStyle = .fullScreen
+        present(walletVC, animated: true, completion: nil)
     }
 
     private func makeNavButton(title: String, icon: String, tag: Int) -> UIButton {
@@ -462,11 +428,11 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         cfg.image            = UIImage(systemName: icon)
         cfg.title            = title
         cfg.imagePlacement   = .top
-        cfg.imagePadding     = 4
-        cfg.baseForegroundColor = .gray
+        cfg.imagePadding     = 3
+        cfg.baseForegroundColor = UIColor(red: 0.580, green: 0.639, blue: 0.722, alpha: 1)
         if #available(iOS 15, *) {
             cfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attr in
-                var a = attr; a.font = UIFont.systemFont(ofSize: 10, weight: .medium); return a
+                var a = attr; a.font = UIFont.systemFont(ofSize: 10, weight: .semibold); return a
             }
         }
         btn.configuration = cfg
@@ -480,9 +446,9 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
             let active = btn.tag == selectedTab
             let color: UIColor
             if active {
-                color = isDarkMode ? UIColor(red: 129/255, green: 140/255, blue: 248/255, alpha: 1) : UIColor(red: 55/255, green: 48/255, blue: 163/255, alpha: 1)
+                color = isDarkMode ? UIColor(red: 129/255, green: 140/255, blue: 248/255, alpha: 1) : UIColor(red: 13/255, green: 110/255, blue: 253/255, alpha: 1)
             } else {
-                color = isDarkMode ? UIColor(red: 148/255, green: 163/255, blue: 184/255, alpha: 1) : UIColor(white: 0.55, alpha: 1)
+                color = isDarkMode ? UIColor(red: 148/255, green: 163/255, blue: 184/255, alpha: 1) : UIColor(red: 148/255, green: 163/255, blue: 184/255, alpha: 1)
             }
             btn.tintColor = color
             btn.setTitleColor(color, for: .normal)
@@ -577,19 +543,86 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
 
         switch tag {
         case 0:
-            headerTitleLabel.text = getHeaderTitle(for: "/workspace/analytics")
-            showWeb(path: "/workspace/analytics")
+            showNativeHome()
         case 1:
+            homeNativeView.isHidden = true
+            topLayoutContainer.isHidden = false
+            headerBlurContainer.isHidden = false
             headerTitleLabel.text = "PATIENT WORKLIST"
             showWeb(path: "/workspace/patients")
         case 2:
-            headerTitleLabel.text = "CATEGORIES"
-            showWeb(path: "/workspace/test-management")
+            homeNativeView.isHidden = true
+            topLayoutContainer.isHidden = false
+            headerBlurContainer.isHidden = false
+            headerTitleLabel.text = "REPORTS & ANALYTICS"
+            showWeb(path: "/workspace/reports")
         case 3:
             showMorePanel()
         default:
             break
         }
+    }
+
+    private func buildHomeNativeView() {
+        homeNativeView.translatesAutoresizingMaskIntoConstraints = false
+        homeNativeView.isHidden = true
+        view.addSubview(homeNativeView)
+
+        NSLayoutConstraint.activate([
+            homeNativeView.topAnchor.constraint(equalTo: view.topAnchor),
+            homeNativeView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            homeNativeView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            homeNativeView.bottomAnchor.constraint(equalTo: bottomNavBar.topAnchor)
+        ])
+
+        homeNativeView.onNavigate = { [weak self] path in
+            guard let self = self else { return }
+            if path == "/workspace/settings" {
+                let settingsVC = ProfileSettingsViewController()
+                let nav = UINavigationController(rootViewController: settingsVC)
+                nav.modalPresentationStyle = .fullScreen
+                self.present(nav, animated: true, completion: nil)
+                return
+            }
+            if path == "/workspace/wallet" || path.starts(with: "/workspace/wallet") {
+                let walletVC = WalletViewController()
+                walletVC.modalPresentationStyle = .fullScreen
+                self.present(walletVC, animated: true, completion: nil)
+                return
+            }
+            if path == "/workspace/registration" || path.starts(with: "/workspace/registration") || path == "/workspace/patients/new" {
+                let regVC = RegistrationViewController()
+                regVC.modalPresentationStyle = .fullScreen
+                self.present(regVC, animated: true, completion: nil)
+                return
+            }
+            self.showWebView(navigatingTo: path)
+        }
+
+        homeNativeView.onSignOut = {
+            if let appDelegate = UIApplication.shared.delegate as? AppDelegate {
+                appDelegate.signOut()
+            }
+        }
+    }
+
+    private func showNativeHome() {
+        homeNativeView.isHidden = false
+        view.bringSubviewToFront(homeNativeView)
+        view.bringSubviewToFront(bottomNavBar)
+        topLayoutContainer.isHidden = true
+        headerBlurContainer.isHidden = true
+        skeletonView.isHidden = true
+        offlineView.isHidden = true
+        homeNativeView.fetchWalletBalance()
+        homeNativeView.fetchTodaysWorklist()
+    }
+
+    private func showWebView(navigatingTo path: String) {
+        homeNativeView.isHidden = true
+        topLayoutContainer.isHidden = false
+        headerBlurContainer.isHidden = false
+        loadUrl(path: path)
     }
 
     private func showWeb(path: String) {
@@ -625,9 +658,6 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
     private func loadUrl(path: String) {
         guard let webView = self.webView else { return }
         headerTitleLabel.text = getHeaderTitle(for: path)
-        if let url = URL(string: baseUrl + path) {
-            checkRouteAndUpdateUI(url: url)
-        }
         if path == currentPath { return }
         currentPath = path
         showSkeleton(for: path)
@@ -983,8 +1013,8 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         topLayoutContainer.addArrangedSubview(walletCardView)
         
         NSLayoutConstraint.activate([
-            walletWrapper.topAnchor.constraint(equalTo: walletCardView.topAnchor, constant: -4),
-            walletWrapper.bottomAnchor.constraint(equalTo: walletCardView.bottomAnchor, constant: -6),
+            walletWrapper.topAnchor.constraint(equalTo: walletCardView.topAnchor, constant: 1),
+            walletWrapper.bottomAnchor.constraint(equalTo: walletCardView.bottomAnchor, constant: -3),
             walletWrapper.leadingAnchor.constraint(equalTo: walletCardView.leadingAnchor, constant: 14),
             walletWrapper.trailingAnchor.constraint(equalTo: walletCardView.trailingAnchor, constant: -14),
             walletWrapper.heightAnchor.constraint(equalToConstant: 54),
@@ -1101,18 +1131,15 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         }
         
         if let webView = self.webView {
+            // Trigger web app theme switch button click inside WebView or toggle class directly
             webView.evaluateJavaScript("""
             (function() {
-                var isDark = \(newDark ? "true" : "false");
-                if (isDark) {
-                    document.documentElement.classList.add('dark');
-                    localStorage.setItem('theme', 'dark');
-                } else {
-                    document.documentElement.classList.remove('dark');
-                    localStorage.setItem('theme', 'light');
-                }
-                var btn = document.querySelector('.mobile-app-header-web-component button[aria-label="Toggle dark mode"]') || document.querySelector('[aria-label="Toggle dark mode"]');
-                if (btn) { btn.click(); }
+                var btn = document.querySelector('.mobile-app-header-web-component button[aria-label=\"Toggle dark mode\"]') || document.querySelector('[aria-label=\"Toggle dark mode\"]');
+                if (btn) { btn.click(); return; }
+                var html = document.documentElement;
+                var isDark = html.classList.toggle('dark');
+                var theme = isDark ? 'dark' : 'light';
+                localStorage.setItem('theme', theme);
             })()
             """, completionHandler: nil)
         }
@@ -1232,7 +1259,6 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
         if keyPath == "URL", let webView = object as? WKWebView, let url = webView.url {
             checkAuthRedirect(url: url)
-            checkRouteAndUpdateUI(url: url)
         }
         if keyPath == "estimatedProgress" {
             checkWebViewProgress()
@@ -1240,117 +1266,31 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
     }
 
     private func injectWebHeaderHider() {
-        syncWebLayoutPadding()
-    }
-
-    private var isBottomNavHidden = false
-
-    private func setBottomNav(visible: Bool, animated: Bool) {
-        let shouldHide = !visible
-        guard isBottomNavHidden != shouldHide else { return }
-        isBottomNavHidden = shouldHide
-
-        let targetTransform = shouldHide
-            ? CGAffineTransform(translationX: 0, y: bottomNavHeightConstraint.constant + 24)
-            : .identity
-        let targetAlpha: CGFloat = shouldHide ? 0.0 : 1.0
-
-        if animated {
-            if !shouldHide {
-                self.bottomNavBar.isHidden = false
-            }
-            UIView.animate(withDuration: 0.28, delay: 0, options: [.curveEaseInOut, .allowUserInteraction], animations: {
-                self.bottomNavBar.transform = targetTransform
-                self.bottomNavBar.alpha = targetAlpha
-            }) { _ in
-                if shouldHide {
-                    self.bottomNavBar.isHidden = true
-                }
-            }
-        } else {
-            bottomNavBar.transform = targetTransform
-            bottomNavBar.alpha = targetAlpha
-            bottomNavBar.isHidden = shouldHide
-        }
-    }
-
-    private func checkRouteAndUpdateUI(url: URL) {
-        let path = url.path.lowercased()
-        let query = url.query?.lowercased() ?? ""
-        let host = url.host?.lowercased() ?? ""
-        
-        let isRecharge = path.contains("/wallet/recharge") ||
-                         path.contains("/recharge") ||
-                         query.contains("action=recharge") ||
-                         query.contains("action=topup") ||
-                         query.contains("recharge=true") ||
-                         host.contains("cashfree") ||
-                         host.contains("razorpay")
-
-        if isRecharge {
-            setBottomNav(visible: false, animated: true)
-            if !walletCardView.isHidden {
-                walletCardView.isHidden = true
-                syncWebLayoutPadding()
-            }
-        } else {
-            setBottomNav(visible: true, animated: true)
-        }
-    }
-
-    private func checkRechargeAndPaymentState() {
         guard let webView = self.webView else { return }
-        
+        let css = ".mobile-app-header-web-component, header { display: none !important; } main, .is-native-app main, .is-capacitor main { padding-top: 0px !important; }"
         let js = """
         (function() {
-            var path = window.location.pathname || '';
-            var search = window.location.search || '';
-            if (path.includes('/recharge') || path.includes('/wallet/recharge') || search.includes('action=recharge') || search.includes('action=topup')) {
-                return true;
+            var styleId = 'native-header-hider-style';
+            if (!document.getElementById(styleId)) {
+                var style = document.createElement('style');
+                style.id = styleId;
+                style.innerHTML = '\(css)';
+                document.head.appendChild(style);
             }
-            var hasPaymentModal = document.querySelector('iframe[src*=\"cashfree\"], iframe[src*=\"razorpay\"], .cashfree-modal, [class*=\"payment-modal\"], [class*=\"cashfree\"], [data-payment-overlay=\"true\"]') !== null;
-            if (hasPaymentModal) return true;
-            var headings = document.querySelectorAll('h1, h2, h3, div');
-            for (var i = 0; i < Math.min(headings.length, 30); i++) {
-                if (headings[i].textContent && (headings[i].textContent.includes('Processing your payment') || headings[i].textContent.includes('Payment Options'))) return true;
-            }
-            return false;
         })()
         """
-        webView.evaluateJavaScript(js) { [weak self] (result, _) in
-            guard let self = self else { return }
-            let isRecharge = (result as? Bool) ?? false
-            if isRecharge {
-                self.setBottomNav(visible: false, animated: true)
-                if !self.walletCardView.isHidden {
-                    self.walletCardView.isHidden = true
-                    self.syncWebLayoutPadding()
-                }
-            } else if let url = self.webView?.url {
-                self.checkRouteAndUpdateUI(url: url)
-            }
-        }
+        webView.evaluateJavaScript(js, completionHandler: nil)
     }
 
     private func checkWebViewProgress() {
         guard let webView = self.webView else { return }
         
         self.injectWebHeaderHider()
-        self.checkRechargeAndPaymentState()
         
         let progress = webView.estimatedProgress
-        if progress >= 0.80 {
-            // Verify if DOM actually contains body elements before fading out skeleton
-            webView.evaluateJavaScript("document.body && document.body.innerText.length > 5") { [weak self] (result, _) in
-                if let ready = result as? Bool, ready {
-                    DispatchQueue.main.async {
-                        self?.hideSkeleton()
-                    }
-                } else if progress >= 0.95 {
-                    DispatchQueue.main.async {
-                        self?.hideSkeleton()
-                    }
-                }
+        if progress >= 0.75 {
+            DispatchQueue.main.async {
+                self.hideSkeleton()
             }
         }
     }
@@ -1452,9 +1392,6 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
             ? UIColor(red: 15/255, green: 23/255, blue: 42/255, alpha: 1)
             : UIColor(red: 17/255, green: 24/255, blue: 39/255, alpha: 1)
 
-        // ── Offline view update
-        offlineView.backgroundColor = isDark ? slate900 : UIColor(red: 248/255, green: 250/255, blue: 252/255, alpha: 1)
-
         // ── Skeleton & WebView — update background to avoid flash during page transitions
         if let webView = self.webView {
             webView.backgroundColor = isDark
@@ -1466,19 +1403,6 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
             skeletonView.backgroundColor = isDark
                 ? slate900
                 : UIColor(red: 248/255, green: 250/255, blue: 252/255, alpha: 1)
-            
-            // Recursively update theme across active skeleton blocks
-            func updateSkeletonThemes(in v: UIView) {
-                if let block = v as? SkeletonBlockView {
-                    block.updateTheme(isDark: isDark)
-                } else if let card = v as? SkeletonCardView {
-                    card.updateTheme(isDark: isDark)
-                }
-                for sub in v.subviews {
-                    updateSkeletonThemes(in: sub)
-                }
-            }
-            updateSkeletonThemes(in: skeletonView)
         }
 
         // ── More panel
@@ -1504,9 +1428,7 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
 
     private func buildSkeletonView() {
         skeletonView.translatesAutoresizingMaskIntoConstraints = false
-        skeletonView.backgroundColor = isDarkMode
-            ? UIColor(red: 15/255, green: 23/255, blue: 42/255, alpha: 1)
-            : UIColor(red: 248/255, green: 250/255, blue: 252/255, alpha: 1)
+        skeletonView.backgroundColor = UIColor(red: 248/255, green: 250/255, blue: 252/255, alpha: 1)
         skeletonView.isHidden = true
         view.addSubview(skeletonView)
         
@@ -1518,39 +1440,38 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         ])
     }
 
-    private func createShimmerLine(width: CGFloat?, height: CGFloat, cornerRadius: CGFloat? = nil, isDark: Bool) -> SkeletonBlockView {
-        let rad = cornerRadius ?? (height / 2.0)
-        let block = SkeletonBlockView(cornerRadius: rad, isDark: isDark)
-        block.translatesAutoresizingMaskIntoConstraints = false
+    private func createShimmerLine(width: CGFloat?, height: CGFloat, color: UIColor) -> UIView {
+        let view = UIView()
+        view.backgroundColor = color
+        view.layer.cornerRadius = height / 2.0
+        view.translatesAutoresizingMaskIntoConstraints = false
         if let w = width {
-            block.widthAnchor.constraint(equalToConstant: w).isActive = true
+            view.widthAnchor.constraint(equalToConstant: w).isActive = true
         }
-        block.heightAnchor.constraint(equalToConstant: height).isActive = true
-        return block
+        view.heightAnchor.constraint(equalToConstant: height).isActive = true
+        return view
     }
     
-    private func createShimmerCircle(size: CGFloat, isDark: Bool) -> SkeletonBlockView {
-        let block = SkeletonBlockView(cornerRadius: size / 2.0, isDark: isDark)
-        block.translatesAutoresizingMaskIntoConstraints = false
+    private func createShimmerCircle(size: CGFloat, color: UIColor) -> UIView {
+        let view = UIView()
+        view.backgroundColor = color
+        view.layer.cornerRadius = size / 2.0
+        view.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            block.widthAnchor.constraint(equalToConstant: size),
-            block.heightAnchor.constraint(equalToConstant: size)
+            view.widthAnchor.constraint(equalToConstant: size),
+            view.heightAnchor.constraint(equalToConstant: size)
         ])
-        return block
-    }
-
-    private func createShimmerPill(width: CGFloat, height: CGFloat, isDark: Bool) -> SkeletonBlockView {
-        let block = SkeletonBlockView(cornerRadius: height / 2.0, isDark: isDark)
-        block.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            block.widthAnchor.constraint(equalToConstant: width),
-            block.heightAnchor.constraint(equalToConstant: height)
-        ])
-        return block
+        return view
     }
     
-    private func createCardWrapper(isDark: Bool) -> SkeletonCardView {
-        return SkeletonCardView(cornerRadius: 16, isDark: isDark)
+    private func createCardWrapper(color: UIColor, borderColor: CGColor) -> UIView {
+        let view = UIView()
+        view.backgroundColor = color
+        view.layer.cornerRadius = 16
+        view.layer.borderWidth = 1
+        view.layer.borderColor = borderColor
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
     }
 
     private func getSkeletonCategory(for path: String) -> String {
@@ -1564,7 +1485,7 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         if p.contains("invoice") || p.contains("print") || p.contains("receipt") || p.contains("report-view") || p.contains("detail") {
             return "detail"
         }
-        if p.contains("categories") || p.contains("catalog") || p.contains("analyzers") || p.contains("machines") || p.contains("inventory") || p.contains("b2b") || p.contains("test-management") {
+        if p.contains("categories") || p.contains("catalog") || p.contains("analyzers") || p.contains("machines") || p.contains("inventory") || p.contains("b2b") {
             return "grid"
         }
         if p.contains("settings") || p.contains("wallet") || p.contains("support") || p.contains("config") || p.contains("profile") || p.contains("security") {
@@ -1576,15 +1497,12 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         return "dashboard"
     }
 
-    private var skeletonShowTimestamp: Date?
-
     private func showSkeleton(for path: String) {
         let category = getSkeletonCategory(for: path)
         if let currentPath = activeSkeletonPath, getSkeletonCategory(for: currentPath) == category && !skeletonView.isHidden {
             return
         }
         activeSkeletonPath = path
-        skeletonShowTimestamp = Date()
         
         let isDark = self.isDarkMode
         skeletonView.backgroundColor = isDark ? UIColor(red: 15/255, green: 23/255, blue: 42/255, alpha: 1) : UIColor(red: 248/255, green: 250/255, blue: 252/255, alpha: 1)
@@ -1592,340 +1510,223 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         // Remove existing subviews in skeletonView
         skeletonView.subviews.forEach { $0.removeFromSuperview() }
         
+        let bgCard = isDark ? UIColor(red: 30/255, green: 41/255, blue: 59/255, alpha: 1) : .white
+        let bgBlock = isDark ? UIColor(red: 71/255, green: 85/255, blue: 105/255, alpha: 1) : UIColor(red: 226/255, green: 232/255, blue: 240/255, alpha: 1)
+        let borderColor = isDark ? UIColor(red: 51/255, green: 65/255, blue: 85/255, alpha: 1).cgColor : UIColor(white: 0.9, alpha: 1).cgColor
+        
         let scrollView = UIScrollView()
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.showsVerticalScrollIndicator = false
-        scrollView.alwaysBounceVertical = true
         skeletonView.addSubview(scrollView)
         
+        // Main container StackView
         let mainStack = UIStackView()
         mainStack.axis = .vertical
-        mainStack.spacing = 14
+        mainStack.spacing = 16
         mainStack.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(mainStack)
         
+        // Padding constraints
         NSLayoutConstraint.activate([
             scrollView.topAnchor.constraint(equalTo: skeletonView.topAnchor),
             scrollView.leadingAnchor.constraint(equalTo: skeletonView.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: skeletonView.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: skeletonView.bottomAnchor),
             
-            mainStack.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor, constant: 14),
-            mainStack.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor, constant: 14),
-            mainStack.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor, constant: -14),
-            mainStack.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor, constant: -24),
-            mainStack.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor, constant: -28)
+            mainStack.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor, constant: 16),
+            mainStack.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor, constant: 16),
+            mainStack.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor, constant: -16),
+            mainStack.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor, constant: -16),
+            mainStack.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor, constant: -32)
         ])
         
         switch category {
         case "dashboard":
-            buildDashboardSkeleton(in: mainStack, isDark: isDark)
+            buildDashboardSkeleton(in: mainStack, bgCard: bgCard, bgBlock: bgBlock, borderColor: borderColor)
         case "list":
-            buildListSkeleton(in: mainStack, isDark: isDark)
+            buildListSkeleton(in: mainStack, bgCard: bgCard, bgBlock: bgBlock, borderColor: borderColor)
         case "form":
-            buildFormSkeleton(in: mainStack, isDark: isDark)
+            buildFormSkeleton(in: mainStack, bgCard: bgCard, bgBlock: bgBlock, borderColor: borderColor)
         case "grid":
-            buildGridSkeleton(in: mainStack, isDark: isDark)
+            buildGridSkeleton(in: mainStack, bgCard: bgCard, bgBlock: bgBlock, borderColor: borderColor)
         case "detail":
-            buildDetailSkeleton(in: mainStack, isDark: isDark)
+            buildDetailSkeleton(in: mainStack, bgCard: bgCard, bgBlock: bgBlock, borderColor: borderColor)
         case "settings":
-            buildSettingsSkeleton(in: mainStack, isDark: isDark)
+            buildSettingsSkeleton(in: mainStack, bgCard: bgCard, bgBlock: bgBlock, borderColor: borderColor)
         default:
-            buildDashboardSkeleton(in: mainStack, isDark: isDark)
+            buildDashboardSkeleton(in: mainStack, bgCard: bgCard, bgBlock: bgBlock, borderColor: borderColor)
         }
         
+        // Fast Fade in transition
         skeletonView.layer.removeAllAnimations()
         skeletonView.alpha = 0.0
         skeletonView.isHidden = false
         
-        UIView.animate(withDuration: 0.18, delay: 0, options: [.curveEaseOut, .allowUserInteraction]) {
+        UIView.animate(withDuration: 0.15, animations: {
             self.skeletonView.alpha = 1.0
+        }) { _ in
+            self.startPulseAnimation()
         }
 
-        // Hard safety timeout: auto-hide skeleton after at most 1.8s so user is NEVER stuck
+        // Hard safety timeout: auto-hide skeleton after at most 1.5s so user is NEVER stuck on loading
         skeletonTimeoutTimer?.invalidate()
-        skeletonTimeoutTimer = Timer.scheduledTimer(withTimeInterval: 1.8, repeats: false) { [weak self] _ in
+        skeletonTimeoutTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: false) { [weak self] _ in
             self?.hideSkeleton()
         }
     }
 
-    // ── 1. DASHBOARD / FINANCIAL ANALYTICS SKELETON ────────────────────────────
-    private func buildDashboardSkeleton(in mainStack: UIStackView, isDark: Bool) {
-        // Welcome Header Banner Card
-        let welcome = createCardWrapper(isDark: isDark)
-        let wTopStack = UIStackView()
-        wTopStack.axis = .horizontal
-        wTopStack.alignment = .center
-        wTopStack.distribution = .equalSpacing
-        wTopStack.translatesAutoresizingMaskIntoConstraints = false
-        welcome.addSubview(wTopStack)
-        
-        let wText = UIStackView(arrangedSubviews: [
-            createShimmerLine(width: 180, height: 18, isDark: isDark),
-            createShimmerLine(width: 120, height: 12, isDark: isDark)
+    // ── 1. DASHBOARD / FINANCE SKELETON ─────────────────────────────────────────
+    private func buildDashboardSkeleton(in mainStack: UIStackView, bgCard: UIColor, bgBlock: UIColor, borderColor: CGColor) {
+        // Welcome Card
+        let welcome = createCardWrapper(color: bgCard, borderColor: borderColor)
+        let wStack = UIStackView(arrangedSubviews: [
+            createShimmerLine(width: 200, height: 22, color: bgBlock),
+            createShimmerLine(width: 130, height: 14, color: bgBlock)
         ])
-        wText.axis = .vertical
-        wText.spacing = 6
-        wTopStack.addArrangedSubview(wText)
-        
-        let wPill = createShimmerPill(width: 76, height: 26, isDark: isDark)
-        wTopStack.addArrangedSubview(wPill)
-        
+        wStack.axis = .vertical
+        wStack.spacing = 8
+        wStack.translatesAutoresizingMaskIntoConstraints = false
+        welcome.addSubview(wStack)
         NSLayoutConstraint.activate([
-            wTopStack.topAnchor.constraint(equalTo: welcome.topAnchor, constant: 16),
-            wTopStack.bottomAnchor.constraint(equalTo: welcome.bottomAnchor, constant: -16),
-            wTopStack.leadingAnchor.constraint(equalTo: welcome.leadingAnchor, constant: 16),
-            wTopStack.trailingAnchor.constraint(equalTo: welcome.trailingAnchor, constant: -16)
+            wStack.topAnchor.constraint(equalTo: welcome.topAnchor, constant: 18),
+            wStack.bottomAnchor.constraint(equalTo: welcome.bottomAnchor, constant: -18),
+            wStack.leadingAnchor.constraint(equalTo: welcome.leadingAnchor, constant: 18),
+            wStack.trailingAnchor.constraint(equalTo: welcome.trailingAnchor, constant: -18)
         ])
         mainStack.addArrangedSubview(welcome)
         
-        // 2x2 Grid of KPI Metrics Cards
+        // KPI Metrics Row 1
         let gridH1 = UIStackView()
         gridH1.axis = .horizontal
         gridH1.spacing = 12
         gridH1.distribution = .fillEqually
-        for w in [90, 85] {
-            let card = createCardWrapper(isDark: isDark)
-            let cStack = UIStackView()
+        for w in [85, 95] {
+            let card = createCardWrapper(color: bgCard, borderColor: borderColor)
+            let cStack = UIStackView(arrangedSubviews: [
+                createShimmerCircle(size: 34, color: bgBlock),
+                createShimmerLine(width: CGFloat(w), height: 18, color: bgBlock),
+                createShimmerLine(width: CGFloat(w - 25), height: 12, color: bgBlock)
+            ])
             cStack.axis = .vertical
-            cStack.spacing = 8
+            cStack.spacing = 10
             cStack.translatesAutoresizingMaskIntoConstraints = false
             card.addSubview(cStack)
-            
-            let topRow = UIStackView(arrangedSubviews: [
-                createShimmerCircle(size: 34, isDark: isDark),
-                createShimmerPill(width: 44, height: 18, isDark: isDark)
-            ])
-            topRow.axis = .horizontal
-            topRow.distribution = .equalSpacing
-            cStack.addArrangedSubview(topRow)
-            
-            cStack.addArrangedSubview(createShimmerLine(width: CGFloat(w), height: 20, isDark: isDark))
-            cStack.addArrangedSubview(createShimmerLine(width: CGFloat(w - 20), height: 11, isDark: isDark))
-            
             NSLayoutConstraint.activate([
-                cStack.topAnchor.constraint(equalTo: card.topAnchor, constant: 14),
-                cStack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -14),
-                cStack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
-                cStack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14)
+                cStack.topAnchor.constraint(equalTo: card.topAnchor, constant: 16),
+                cStack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -16),
+                cStack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 16),
+                cStack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -16),
+                card.heightAnchor.constraint(equalToConstant: 115)
             ])
             gridH1.addArrangedSubview(card)
         }
         mainStack.addArrangedSubview(gridH1)
 
+        // KPI Metrics Row 2
         let gridH2 = UIStackView()
         gridH2.axis = .horizontal
         gridH2.spacing = 12
         gridH2.distribution = .fillEqually
-        for w in [80, 95] {
-            let card = createCardWrapper(isDark: isDark)
-            let cStack = UIStackView()
+        for w in [75, 90] {
+            let card = createCardWrapper(color: bgCard, borderColor: borderColor)
+            let cStack = UIStackView(arrangedSubviews: [
+                createShimmerCircle(size: 34, color: bgBlock),
+                createShimmerLine(width: CGFloat(w), height: 18, color: bgBlock),
+                createShimmerLine(width: CGFloat(w - 20), height: 12, color: bgBlock)
+            ])
             cStack.axis = .vertical
-            cStack.spacing = 8
+            cStack.spacing = 10
             cStack.translatesAutoresizingMaskIntoConstraints = false
             card.addSubview(cStack)
-            
-            let topRow = UIStackView(arrangedSubviews: [
-                createShimmerCircle(size: 34, isDark: isDark),
-                createShimmerPill(width: 44, height: 18, isDark: isDark)
-            ])
-            topRow.axis = .horizontal
-            topRow.distribution = .equalSpacing
-            cStack.addArrangedSubview(topRow)
-            
-            cStack.addArrangedSubview(createShimmerLine(width: CGFloat(w), height: 20, isDark: isDark))
-            cStack.addArrangedSubview(createShimmerLine(width: CGFloat(w - 25), height: 11, isDark: isDark))
-            
             NSLayoutConstraint.activate([
-                cStack.topAnchor.constraint(equalTo: card.topAnchor, constant: 14),
-                cStack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -14),
-                cStack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
-                cStack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14)
+                cStack.topAnchor.constraint(equalTo: card.topAnchor, constant: 16),
+                cStack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -16),
+                cStack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 16),
+                cStack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -16),
+                card.heightAnchor.constraint(equalToConstant: 115)
             ])
             gridH2.addArrangedSubview(card)
         }
         mainStack.addArrangedSubview(gridH2)
 
-        // Revenue / Volume Chart Analytics Card
-        let chartCard = createCardWrapper(isDark: isDark)
-        let chartHead = UIStackView(arrangedSubviews: [
-            createShimmerLine(width: 150, height: 16, isDark: isDark),
-            createShimmerPill(width: 60, height: 22, isDark: isDark)
-        ])
-        chartHead.axis = .horizontal
-        chartHead.distribution = .equalSpacing
-        chartHead.translatesAutoresizingMaskIntoConstraints = false
-        chartCard.addSubview(chartHead)
+        // Chart / Analytics Card
+        let chartCard = createCardWrapper(color: bgCard, borderColor: borderColor)
+        let chartHeader = createShimmerLine(width: 140, height: 18, color: bgBlock)
+        chartHeader.translatesAutoresizingMaskIntoConstraints = false
+        chartCard.addSubview(chartHeader)
         
         let barStack = UIStackView()
         barStack.axis = .horizontal
-        barStack.spacing = 12
+        barStack.spacing = 10
         barStack.alignment = .bottom
         barStack.distribution = .fillEqually
         barStack.translatesAutoresizingMaskIntoConstraints = false
         chartCard.addSubview(barStack)
         
-        let heights: [CGFloat] = [75, 120, 60, 140, 100, 160]
+        let heights: [CGFloat] = [80, 130, 65, 150, 105, 165]
         for h in heights {
-            let col = UIStackView()
-            col.axis = .vertical
-            col.alignment = .center
-            col.spacing = 6
-            
-            let bar = createShimmerLine(width: nil, height: h, cornerRadius: 6, isDark: isDark)
-            col.addArrangedSubview(bar)
-            col.addArrangedSubview(createShimmerLine(width: 24, height: 8, isDark: isDark))
-            barStack.addArrangedSubview(col)
+            let bar = UIView()
+            bar.backgroundColor = bgBlock
+            bar.layer.cornerRadius = 4
+            bar.translatesAutoresizingMaskIntoConstraints = false
+            bar.heightAnchor.constraint(equalToConstant: h).isActive = true
+            barStack.addArrangedSubview(bar)
         }
         
         NSLayoutConstraint.activate([
-            chartHead.topAnchor.constraint(equalTo: chartCard.topAnchor, constant: 16),
-            chartHead.leadingAnchor.constraint(equalTo: chartCard.leadingAnchor, constant: 16),
-            chartHead.trailingAnchor.constraint(equalTo: chartCard.trailingAnchor, constant: -16),
-            
-            barStack.topAnchor.constraint(equalTo: chartHead.bottomAnchor, constant: 18),
+            chartHeader.topAnchor.constraint(equalTo: chartCard.topAnchor, constant: 16),
+            chartHeader.leadingAnchor.constraint(equalTo: chartCard.leadingAnchor, constant: 16),
+            barStack.topAnchor.constraint(equalTo: chartHeader.bottomAnchor, constant: 16),
             barStack.leadingAnchor.constraint(equalTo: chartCard.leadingAnchor, constant: 16),
             barStack.trailingAnchor.constraint(equalTo: chartCard.trailingAnchor, constant: -16),
-            barStack.bottomAnchor.constraint(equalTo: chartCard.bottomAnchor, constant: -16)
+            barStack.bottomAnchor.constraint(equalTo: chartCard.bottomAnchor, constant: -16),
+            chartCard.heightAnchor.constraint(equalToConstant: 230)
         ])
         mainStack.addArrangedSubview(chartCard)
-        
-        // Recent Activity Card
-        let actCard = createCardWrapper(isDark: isDark)
-        let actStack = UIStackView()
-        actStack.axis = .vertical
-        actStack.spacing = 14
-        actStack.translatesAutoresizingMaskIntoConstraints = false
-        actCard.addSubview(actStack)
-        
-        actStack.addArrangedSubview(createShimmerLine(width: 140, height: 15, isDark: isDark))
-        
-        for _ in 0..<3 {
-            let row = UIStackView()
-            row.axis = .horizontal
-            row.spacing = 12
-            row.alignment = .center
-            
-            row.addArrangedSubview(createShimmerCircle(size: 38, isDark: isDark))
-            
-            let rowTxt = UIStackView(arrangedSubviews: [
-                createShimmerLine(width: 120, height: 14, isDark: isDark),
-                createShimmerLine(width: 75, height: 10, isDark: isDark)
-            ])
-            rowTxt.axis = .vertical
-            rowTxt.spacing = 4
-            row.addArrangedSubview(rowTxt)
-            
-            let space = UIView()
-            space.setContentHuggingPriority(.defaultLow, for: .horizontal)
-            row.addArrangedSubview(space)
-            
-            row.addArrangedSubview(createShimmerPill(width: 58, height: 22, isDark: isDark))
-            actStack.addArrangedSubview(row)
-        }
-        
-        NSLayoutConstraint.activate([
-            actStack.topAnchor.constraint(equalTo: actCard.topAnchor, constant: 16),
-            actStack.bottomAnchor.constraint(equalTo: actCard.bottomAnchor, constant: -16),
-            actStack.leadingAnchor.constraint(equalTo: actCard.leadingAnchor, constant: 16),
-            actStack.trailingAnchor.constraint(equalTo: actCard.trailingAnchor, constant: -16)
-        ])
-        mainStack.addArrangedSubview(actCard)
     }
 
-    // ── 2. LIST / RECORDS SKELETON (Patients, Reports, Worklist) ───────────────
-    private func buildListSkeleton(in mainStack: UIStackView, isDark: Bool) {
+    // ── 2. LIST / RECORDS SKELETON (Patients, Reports, Bookings) ────────────────
+    private func buildListSkeleton(in mainStack: UIStackView, bgCard: UIColor, bgBlock: UIColor, borderColor: CGColor) {
         // Search & Filter Row
-        let searchRow = UIStackView()
-        searchRow.axis = .horizontal
-        searchRow.spacing = 10
+        let filterStack = UIStackView()
+        filterStack.axis = .horizontal
+        filterStack.spacing = 10
         
-        let searchBox = createCardWrapper(isDark: isDark)
-        let sIcon = createShimmerCircle(size: 20, isDark: isDark)
-        let sLine = createShimmerLine(width: 120, height: 12, isDark: isDark)
-        let sStack = UIStackView(arrangedSubviews: [sIcon, sLine])
-        sStack.axis = .horizontal
-        sStack.spacing = 10
-        sStack.alignment = .center
-        sStack.translatesAutoresizingMaskIntoConstraints = false
-        searchBox.addSubview(sStack)
+        let searchField = createCardWrapper(color: bgCard, borderColor: borderColor)
+        searchField.heightAnchor.constraint(equalToConstant: 44).isActive = true
+        filterStack.addArrangedSubview(searchField)
         
+        let filterButton = createCardWrapper(color: bgCard, borderColor: borderColor)
         NSLayoutConstraint.activate([
-            searchBox.heightAnchor.constraint(equalToConstant: 44),
-            sStack.leadingAnchor.constraint(equalTo: searchBox.leadingAnchor, constant: 14),
-            sStack.centerYAnchor.constraint(equalTo: searchBox.centerYAnchor)
+            filterButton.widthAnchor.constraint(equalToConstant: 44),
+            filterButton.heightAnchor.constraint(equalToConstant: 44)
         ])
-        searchRow.addArrangedSubview(searchBox)
+        filterStack.addArrangedSubview(filterButton)
+        mainStack.addArrangedSubview(filterStack)
         
-        let filterBtn = createCardWrapper(isDark: isDark)
-        let fIcon = createShimmerCircle(size: 22, isDark: isDark)
-        fIcon.translatesAutoresizingMaskIntoConstraints = false
-        filterBtn.addSubview(fIcon)
-        NSLayoutConstraint.activate([
-            filterBtn.widthAnchor.constraint(equalToConstant: 44),
-            filterBtn.heightAnchor.constraint(equalToConstant: 44),
-            fIcon.centerXAnchor.constraint(equalTo: filterBtn.centerXAnchor),
-            fIcon.centerYAnchor.constraint(equalTo: filterBtn.centerYAnchor)
-        ])
-        searchRow.addArrangedSubview(filterBtn)
-        mainStack.addArrangedSubview(searchRow)
-        
-        // Category Filter Chips
-        let chipStack = UIStackView()
-        chipStack.axis = .horizontal
-        chipStack.spacing = 8
-        chipStack.distribution = .fillProportionally
-        for w in [65, 80, 75, 70] {
-            chipStack.addArrangedSubview(createShimmerPill(width: CGFloat(w), height: 32, isDark: isDark))
+        // Tab Pills
+        let pillsStack = UIStackView()
+        pillsStack.axis = .horizontal
+        pillsStack.spacing = 8
+        pillsStack.distribution = .fillProportionally
+        for w in [70, 85, 65, 80] {
+            let pill = createCardWrapper(color: bgCard, borderColor: borderColor)
+            pill.layer.cornerRadius = 16
+            NSLayoutConstraint.activate([
+                pill.widthAnchor.constraint(equalToConstant: CGFloat(w)),
+                pill.heightAnchor.constraint(equalToConstant: 32)
+            ])
+            pillsStack.addArrangedSubview(pill)
         }
-        mainStack.addArrangedSubview(chipStack)
+        mainStack.addArrangedSubview(pillsStack)
         
-        // 4 Patient / Worklist Item Cards
-        let listCard = createCardWrapper(isDark: isDark)
+        // List Items Card
+        let listCard = createCardWrapper(color: bgCard, borderColor: borderColor)
         let listStack = UIStackView()
         listStack.axis = .vertical
-        listStack.spacing = 14
+        listStack.spacing = 16
         listStack.translatesAutoresizingMaskIntoConstraints = false
         listCard.addSubview(listStack)
-        
-        let widths: [[CGFloat]] = [[140, 85], [165, 105], [130, 70], [155, 95]]
-        for (idx, w) in widths.enumerated() {
-            let row = UIStackView()
-            row.axis = .horizontal
-            row.spacing = 12
-            row.alignment = .center
-            
-            row.addArrangedSubview(createShimmerCircle(size: 42, isDark: isDark))
-            
-            let txtCol = UIStackView(arrangedSubviews: [
-                createShimmerLine(width: w[0], height: 14, isDark: isDark),
-                createShimmerLine(width: w[1], height: 11, isDark: isDark)
-            ])
-            txtCol.axis = .vertical
-            txtCol.spacing = 5
-            row.addArrangedSubview(txtCol)
-            
-            let space = UIView()
-            space.setContentHuggingPriority(.defaultLow, for: .horizontal)
-            row.addArrangedSubview(space)
-            
-            let rightStack = UIStackView(arrangedSubviews: [
-                createShimmerPill(width: 62, height: 20, isDark: isDark),
-                createShimmerLine(width: 48, height: 10, isDark: isDark)
-            ])
-            rightStack.axis = .vertical
-            rightStack.alignment = .trailing
-            rightStack.spacing = 4
-            row.addArrangedSubview(rightStack)
-            
-            listStack.addArrangedSubview(row)
-            
-            if idx < widths.count - 1 {
-                let divider = createShimmerLine(width: nil, height: 1, isDark: isDark)
-                divider.alpha = 0.4
-                listStack.addArrangedSubview(divider)
-            }
-        }
         
         NSLayoutConstraint.activate([
             listStack.topAnchor.constraint(equalTo: listCard.topAnchor, constant: 16),
@@ -1933,192 +1734,155 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
             listStack.leadingAnchor.constraint(equalTo: listCard.leadingAnchor, constant: 16),
             listStack.trailingAnchor.constraint(equalTo: listCard.trailingAnchor, constant: -16)
         ])
+        
+        let widths: [[CGFloat]] = [[140, 90], [170, 110], [130, 75], [160, 100], [120, 85], [150, 95]]
+        for w in widths {
+            let rowStack = UIStackView()
+            rowStack.axis = .horizontal
+            rowStack.spacing = 12
+            rowStack.alignment = .center
+            
+            let circle = createShimmerCircle(size: 42, color: bgBlock)
+            rowStack.addArrangedSubview(circle)
+            
+            let textStack = UIStackView(arrangedSubviews: [
+                createShimmerLine(width: w[0], height: 15, color: bgBlock),
+                createShimmerLine(width: w[1], height: 11, color: bgBlock)
+            ])
+            textStack.axis = .vertical
+            textStack.spacing = 6
+            rowStack.addArrangedSubview(textStack)
+            
+            let badge = createShimmerLine(width: 60, height: 22, color: bgBlock)
+            badge.layer.cornerRadius = 11
+            rowStack.addArrangedSubview(badge)
+            
+            listStack.addArrangedSubview(rowStack)
+        }
         mainStack.addArrangedSubview(listCard)
     }
 
-    // ── 3. FORM / ENTRY SKELETON (New Registration, Add Record) ───────────────
-    private func buildFormSkeleton(in mainStack: UIStackView, isDark: Bool) {
+    // ── 3. FORM / ENTRY SKELETON (New Registration, Edit Record) ───────────────
+    private func buildFormSkeleton(in mainStack: UIStackView, bgCard: UIColor, bgBlock: UIColor, borderColor: CGColor) {
         // Step progress row
         let stepRow = UIStackView()
         stepRow.axis = .horizontal
-        stepRow.spacing = 10
+        stepRow.spacing = 8
         stepRow.alignment = .center
         stepRow.distribution = .equalCentering
-        for i in 0..<3 {
-            stepRow.addArrangedSubview(createShimmerCircle(size: 28, isDark: isDark))
-            if i < 2 {
-                let stepLine = createShimmerLine(width: 60, height: 3, isDark: isDark)
-                stepRow.addArrangedSubview(stepLine)
-            }
+        for _ in 0..<3 {
+            let stepDot = createShimmerCircle(size: 28, color: bgBlock)
+            stepRow.addArrangedSubview(stepDot)
         }
         mainStack.addArrangedSubview(stepRow)
         
-        // Section 1: Demographics Card
-        let card1 = createCardWrapper(isDark: isDark)
-        let s1 = UIStackView()
-        s1.axis = .vertical
-        s1.spacing = 12
-        s1.translatesAutoresizingMaskIntoConstraints = false
-        card1.addSubview(s1)
+        // Form Card
+        let formCard = createCardWrapper(color: bgCard, borderColor: borderColor)
+        let formStack = UIStackView()
+        formStack.axis = .vertical
+        formStack.spacing = 14
+        formStack.translatesAutoresizingMaskIntoConstraints = false
+        formCard.addSubview(formStack)
         
-        s1.addArrangedSubview(createShimmerLine(width: 140, height: 16, isDark: isDark))
+        NSLayoutConstraint.activate([
+            formStack.topAnchor.constraint(equalTo: formCard.topAnchor, constant: 18),
+            formStack.bottomAnchor.constraint(equalTo: formCard.bottomAnchor, constant: -18),
+            formStack.leadingAnchor.constraint(equalTo: formCard.leadingAnchor, constant: 18),
+            formStack.trailingAnchor.constraint(equalTo: formCard.trailingAnchor, constant: -18)
+        ])
         
-        // Full Name Field
-        s1.addArrangedSubview(createShimmerLine(width: 80, height: 11, isDark: isDark))
-        s1.addArrangedSubview(createShimmerLine(width: nil, height: 44, cornerRadius: 10, isDark: isDark))
+        formStack.addArrangedSubview(createShimmerLine(width: 160, height: 20, color: bgBlock))
+        formStack.setCustomSpacing(20, after: formStack.arrangedSubviews.last!)
         
-        // 2-column Age & Gender Fields
-        let split = UIStackView()
-        split.axis = .horizontal
-        split.spacing = 10
-        split.distribution = .fillEqually
+        let labelWidths: [CGFloat] = [100, 120, 110]
+        for lw in labelWidths {
+            let lbl = createShimmerLine(width: lw, height: 12, color: bgBlock)
+            formStack.addArrangedSubview(lbl)
+            
+            let box = createShimmerLine(width: nil, height: 46, color: bgBlock)
+            box.layer.cornerRadius = 12
+            formStack.addArrangedSubview(box)
+            formStack.setCustomSpacing(14, after: box)
+        }
+        
+        // 2-column split inputs
+        let splitStack = UIStackView()
+        splitStack.axis = .horizontal
+        splitStack.spacing = 10
+        splitStack.distribution = .fillEqually
         for _ in 0..<2 {
             let col = UIStackView(arrangedSubviews: [
-                createShimmerLine(width: 50, height: 11, isDark: isDark),
-                createShimmerLine(width: nil, height: 44, cornerRadius: 10, isDark: isDark)
+                createShimmerLine(width: 60, height: 12, color: bgBlock),
+                createShimmerLine(width: nil, height: 46, color: bgBlock)
             ])
             col.axis = .vertical
-            col.spacing = 4
-            split.addArrangedSubview(col)
+            col.spacing = 6
+            splitStack.addArrangedSubview(col)
         }
-        s1.addArrangedSubview(split)
+        formStack.addArrangedSubview(splitStack)
+        formStack.setCustomSpacing(20, after: splitStack)
         
-        // Phone Field
-        s1.addArrangedSubview(createShimmerLine(width: 90, height: 11, isDark: isDark))
-        s1.addArrangedSubview(createShimmerLine(width: nil, height: 44, cornerRadius: 10, isDark: isDark))
-        
-        NSLayoutConstraint.activate([
-            s1.topAnchor.constraint(equalTo: card1.topAnchor, constant: 16),
-            s1.bottomAnchor.constraint(equalTo: card1.bottomAnchor, constant: -16),
-            s1.leadingAnchor.constraint(equalTo: card1.leadingAnchor, constant: 16),
-            s1.trailingAnchor.constraint(equalTo: card1.trailingAnchor, constant: -16)
+        // Form Action Buttons
+        let actionsStack = UIStackView(arrangedSubviews: [
+            createShimmerLine(width: 90, height: 42, color: bgBlock),
+            createShimmerLine(width: 140, height: 42, color: bgBlock)
         ])
-        mainStack.addArrangedSubview(card1)
+        actionsStack.axis = .horizontal
+        actionsStack.spacing = 12
+        actionsStack.alignment = .trailing
+        formStack.addArrangedSubview(actionsStack)
         
-        // Section 2: Tests & Referral Card
-        let card2 = createCardWrapper(isDark: isDark)
-        let s2 = UIStackView()
-        s2.axis = .vertical
-        s2.spacing = 12
-        s2.translatesAutoresizingMaskIntoConstraints = false
-        card2.addSubview(s2)
-        
-        s2.addArrangedSubview(createShimmerLine(width: 150, height: 16, isDark: isDark))
-        s2.addArrangedSubview(createShimmerLine(width: 100, height: 11, isDark: isDark))
-        s2.addArrangedSubview(createShimmerLine(width: nil, height: 44, cornerRadius: 10, isDark: isDark))
-        
-        // Test chips
-        s2.addArrangedSubview(createShimmerLine(width: 90, height: 11, isDark: isDark))
-        let chips = UIStackView()
-        chips.axis = .horizontal
-        chips.spacing = 8
-        chips.distribution = .fillProportionally
-        for w in [70, 90, 65, 80] {
-            chips.addArrangedSubview(createShimmerPill(width: CGFloat(w), height: 30, isDark: isDark))
-        }
-        s2.addArrangedSubview(chips)
-        
-        NSLayoutConstraint.activate([
-            s2.topAnchor.constraint(equalTo: card2.topAnchor, constant: 16),
-            s2.bottomAnchor.constraint(equalTo: card2.bottomAnchor, constant: -16),
-            s2.leadingAnchor.constraint(equalTo: card2.leadingAnchor, constant: 16),
-            s2.trailingAnchor.constraint(equalTo: card2.trailingAnchor, constant: -16)
-        ])
-        mainStack.addArrangedSubview(card2)
-        
-        // Action Buttons
-        let btnRow = UIStackView(arrangedSubviews: [
-            createShimmerLine(width: 90, height: 44, cornerRadius: 12, isDark: isDark),
-            createShimmerLine(width: 140, height: 44, cornerRadius: 12, isDark: isDark)
-        ])
-        btnRow.axis = .horizontal
-        btnRow.spacing = 12
-        btnRow.alignment = .trailing
-        mainStack.addArrangedSubview(btnRow)
+        mainStack.addArrangedSubview(formCard)
     }
 
-    // ── 4. GRID / CATALOG SKELETON (Categories, Machines, Inventory) ────────────
-    private func buildGridSkeleton(in mainStack: UIStackView, isDark: Bool) {
+    // ── 4. GRID / CATALOG SKELETON (Categories, Inventory, Analyzers) ────────────
+    private func buildGridSkeleton(in mainStack: UIStackView, bgCard: UIColor, bgBlock: UIColor, borderColor: CGColor) {
         // Search Header
-        let searchBox = createCardWrapper(isDark: isDark)
-        let sIcon = createShimmerCircle(size: 20, isDark: isDark)
-        let sLine = createShimmerLine(width: 140, height: 12, isDark: isDark)
-        let sStack = UIStackView(arrangedSubviews: [sIcon, sLine])
-        sStack.axis = .horizontal
-        sStack.spacing = 10
-        sStack.alignment = .center
-        sStack.translatesAutoresizingMaskIntoConstraints = false
-        searchBox.addSubview(sStack)
-        
-        NSLayoutConstraint.activate([
-            searchBox.heightAnchor.constraint(equalToConstant: 44),
-            sStack.leadingAnchor.constraint(equalTo: searchBox.leadingAnchor, constant: 14),
-            sStack.centerYAnchor.constraint(equalTo: searchBox.centerYAnchor)
-        ])
+        let searchBox = createCardWrapper(color: bgCard, borderColor: borderColor)
+        searchBox.heightAnchor.constraint(equalToConstant: 42).isActive = true
         mainStack.addArrangedSubview(searchBox)
         
-        // Category Pills
-        let pills = UIStackView()
-        pills.axis = .horizontal
-        pills.spacing = 8
-        pills.distribution = .fillProportionally
-        for w in [70, 95, 65, 80] {
-            pills.addArrangedSubview(createShimmerPill(width: CGFloat(w), height: 30, isDark: isDark))
-        }
-        mainStack.addArrangedSubview(pills)
-        
-        // 2x3 Grid of Module Catalog Cards
+        // 2x3 Grid of Module Cards
         for _ in 0..<3 {
-            let row = UIStackView()
-            row.axis = .horizontal
-            row.spacing = 12
-            row.distribution = .fillEqually
+            let gridH = UIStackView()
+            gridH.axis = .horizontal
+            gridH.spacing = 12
+            gridH.distribution = .fillEqually
             
             for w in [85, 90] {
-                let card = createCardWrapper(isDark: isDark)
+                let card = createCardWrapper(color: bgCard, borderColor: borderColor)
                 let cStack = UIStackView(arrangedSubviews: [
-                    createShimmerCircle(size: 38, isDark: isDark),
-                    createShimmerLine(width: CGFloat(w), height: 15, isDark: isDark),
-                    createShimmerLine(width: CGFloat(w - 20), height: 11, isDark: isDark),
-                    createShimmerPill(width: 48, height: 18, isDark: isDark)
+                    createShimmerCircle(size: 38, color: bgBlock),
+                    createShimmerLine(width: CGFloat(w), height: 16, color: bgBlock),
+                    createShimmerLine(width: CGFloat(w - 25), height: 12, color: bgBlock)
                 ])
                 cStack.axis = .vertical
-                cStack.spacing = 8
+                cStack.spacing = 10
                 cStack.translatesAutoresizingMaskIntoConstraints = false
                 card.addSubview(cStack)
-                
                 NSLayoutConstraint.activate([
                     cStack.topAnchor.constraint(equalTo: card.topAnchor, constant: 14),
                     cStack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -14),
                     cStack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
-                    cStack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14)
+                    cStack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14),
+                    card.heightAnchor.constraint(equalToConstant: 130)
                 ])
-                row.addArrangedSubview(card)
+                gridH.addArrangedSubview(card)
             }
-            mainStack.addArrangedSubview(row)
+            mainStack.addArrangedSubview(gridH)
         }
     }
 
     // ── 5. DETAIL / INVOICE SKELETON (Report View, Invoice, Billing) ────────────
-    private func buildDetailSkeleton(in mainStack: UIStackView, isDark: Bool) {
-        // Invoice / Test Header Hero Card
-        let headerCard = createCardWrapper(isDark: isDark)
+    private func buildDetailSkeleton(in mainStack: UIStackView, bgCard: UIColor, bgBlock: UIColor, borderColor: CGColor) {
+        // Invoice / Test Header Summary Card
+        let headerCard = createCardWrapper(color: bgCard, borderColor: borderColor)
         let hStack = UIStackView()
-        hStack.axis = .vertical
-        hStack.spacing = 12
+        hStack.axis = .horizontal
+        hStack.spacing = 14
+        hStack.alignment = .center
         hStack.translatesAutoresizingMaskIntoConstraints = false
         headerCard.addSubview(hStack)
-        
-        let topRow = UIStackView(arrangedSubviews: [
-            createShimmerPill(width: 90, height: 24, isDark: isDark),
-            createShimmerLine(width: 70, height: 12, isDark: isDark)
-        ])
-        topRow.axis = .horizontal
-        topRow.distribution = .equalSpacing
-        hStack.addArrangedSubview(topRow)
-        
-        hStack.addArrangedSubview(createShimmerLine(width: 170, height: 20, isDark: isDark))
-        hStack.addArrangedSubview(createShimmerLine(width: nil, height: 32, cornerRadius: 6, isDark: isDark))
         
         NSLayoutConstraint.activate([
             hStack.topAnchor.constraint(equalTo: headerCard.topAnchor, constant: 16),
@@ -2126,81 +1890,80 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
             hStack.leadingAnchor.constraint(equalTo: headerCard.leadingAnchor, constant: 16),
             hStack.trailingAnchor.constraint(equalTo: headerCard.trailingAnchor, constant: -16)
         ])
+        
+        hStack.addArrangedSubview(createShimmerCircle(size: 50, color: bgBlock))
+        let hText = UIStackView(arrangedSubviews: [
+            createShimmerLine(width: 150, height: 18, color: bgBlock),
+            createShimmerLine(width: 95, height: 12, color: bgBlock)
+        ])
+        hText.axis = .vertical
+        hText.spacing = 6
+        hStack.addArrangedSubview(hText)
+        
+        let pill = createShimmerLine(width: 75, height: 26, color: bgBlock)
+        pill.layer.cornerRadius = 13
+        hStack.addArrangedSubview(pill)
         mainStack.addArrangedSubview(headerCard)
         
-        // 2-Column Metadata Card
-        let metaCard = createCardWrapper(isDark: isDark)
-        let mGrid = UIStackView()
-        mGrid.axis = .horizontal
-        mGrid.spacing = 12
-        mGrid.distribution = .fillEqually
-        mGrid.translatesAutoresizingMaskIntoConstraints = false
-        metaCard.addSubview(mGrid)
-        
-        for _ in 0..<2 {
-            let col = UIStackView()
-            col.axis = .vertical
-            col.spacing = 8
-            for _ in 0..<3 {
-                col.addArrangedSubview(createShimmerLine(width: 60, height: 10, isDark: isDark))
-                col.addArrangedSubview(createShimmerLine(width: 100, height: 13, isDark: isDark))
-            }
-            mGrid.addArrangedSubview(col)
-        }
+        // 2-Column Info Grid Card
+        let infoCard = createCardWrapper(color: bgCard, borderColor: borderColor)
+        let iStack = UIStackView()
+        iStack.axis = .vertical
+        iStack.spacing = 12
+        iStack.translatesAutoresizingMaskIntoConstraints = false
+        infoCard.addSubview(iStack)
         
         NSLayoutConstraint.activate([
-            mGrid.topAnchor.constraint(equalTo: metaCard.topAnchor, constant: 16),
-            mGrid.bottomAnchor.constraint(equalTo: metaCard.bottomAnchor, constant: -16),
-            mGrid.leadingAnchor.constraint(equalTo: metaCard.leadingAnchor, constant: 16),
-            mGrid.trailingAnchor.constraint(equalTo: metaCard.trailingAnchor, constant: -16)
+            iStack.topAnchor.constraint(equalTo: infoCard.topAnchor, constant: 16),
+            iStack.bottomAnchor.constraint(equalTo: infoCard.bottomAnchor, constant: -16),
+            iStack.leadingAnchor.constraint(equalTo: infoCard.leadingAnchor, constant: 16),
+            iStack.trailingAnchor.constraint(equalTo: infoCard.trailingAnchor, constant: -16)
         ])
-        mainStack.addArrangedSubview(metaCard)
         
-        // Itemized Breakdown Table Card
-        let tableCard = createCardWrapper(isDark: isDark)
-        let tStack = UIStackView()
-        tStack.axis = .vertical
-        tStack.spacing = 12
-        tStack.translatesAutoresizingMaskIntoConstraints = false
-        tableCard.addSubview(tStack)
+        iStack.addArrangedSubview(createShimmerLine(width: 110, height: 14, color: bgBlock))
+        for _ in 0..<3 {
+            let row = UIStackView(arrangedSubviews: [
+                createShimmerLine(width: 70, height: 12, color: bgBlock),
+                createShimmerLine(width: 120, height: 14, color: bgBlock)
+            ])
+            row.axis = .horizontal
+            row.distribution = .equalSpacing
+            iStack.addArrangedSubview(row)
+        }
+        mainStack.addArrangedSubview(infoCard)
         
-        tStack.addArrangedSubview(createShimmerLine(width: 130, height: 15, isDark: isDark))
+        // Item Rows / Breakdown Card
+        let itemsCard = createCardWrapper(color: bgCard, borderColor: borderColor)
+        let itemStack = UIStackView()
+        itemStack.axis = .vertical
+        itemStack.spacing = 14
+        itemStack.translatesAutoresizingMaskIntoConstraints = false
+        itemsCard.addSubview(itemStack)
         
+        NSLayoutConstraint.activate([
+            itemStack.topAnchor.constraint(equalTo: itemsCard.topAnchor, constant: 16),
+            itemStack.bottomAnchor.constraint(equalTo: itemsCard.bottomAnchor, constant: -16),
+            itemStack.leadingAnchor.constraint(equalTo: itemsCard.leadingAnchor, constant: 16),
+            itemStack.trailingAnchor.constraint(equalTo: itemsCard.trailingAnchor, constant: -16)
+        ])
+        
+        itemStack.addArrangedSubview(createShimmerLine(width: 130, height: 16, color: bgBlock))
         for _ in 0..<3 {
             let itemRow = UIStackView(arrangedSubviews: [
-                createShimmerLine(width: 130, height: 13, isDark: isDark),
-                createShimmerLine(width: 55, height: 13, isDark: isDark)
+                createShimmerLine(width: 120, height: 12, color: bgBlock),
+                createShimmerLine(width: 60, height: 14, color: bgBlock)
             ])
             itemRow.axis = .horizontal
             itemRow.distribution = .equalSpacing
-            tStack.addArrangedSubview(itemRow)
+            itemStack.addArrangedSubview(itemRow)
         }
-        
-        let divider = createShimmerLine(width: nil, height: 1, isDark: isDark)
-        divider.alpha = 0.4
-        tStack.addArrangedSubview(divider)
-        
-        let totalRow = UIStackView(arrangedSubviews: [
-            createShimmerLine(width: 90, height: 16, isDark: isDark),
-            createShimmerLine(width: 70, height: 18, isDark: isDark)
-        ])
-        totalRow.axis = .horizontal
-        totalRow.distribution = .equalSpacing
-        tStack.addArrangedSubview(totalRow)
-        
-        NSLayoutConstraint.activate([
-            tStack.topAnchor.constraint(equalTo: tableCard.topAnchor, constant: 16),
-            tStack.bottomAnchor.constraint(equalTo: tableCard.bottomAnchor, constant: -16),
-            tStack.leadingAnchor.constraint(equalTo: tableCard.leadingAnchor, constant: 16),
-            tStack.trailingAnchor.constraint(equalTo: tableCard.trailingAnchor, constant: -16)
-        ])
-        mainStack.addArrangedSubview(tableCard)
+        mainStack.addArrangedSubview(itemsCard)
     }
 
-    // ── 6. SETTINGS / PROFILE / WALLET SKELETON ─────────────────────────────────
-    private func buildSettingsSkeleton(in mainStack: UIStackView, isDark: Bool) {
-        // Profile Hero Card
-        let profCard = createCardWrapper(isDark: isDark)
+    // ── 6. SETTINGS / WALLET / PROFILE SKELETON ─────────────────────────────────
+    private func buildSettingsSkeleton(in mainStack: UIStackView, bgCard: UIColor, bgBlock: UIColor, borderColor: CGColor) {
+        // Profile Card
+        let profCard = createCardWrapper(color: bgCard, borderColor: borderColor)
         let pStack = UIStackView()
         pStack.axis = .horizontal
         pStack.spacing = 14
@@ -2208,43 +1971,30 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         pStack.translatesAutoresizingMaskIntoConstraints = false
         profCard.addSubview(pStack)
         
-        pStack.addArrangedSubview(createShimmerCircle(size: 54, isDark: isDark))
+        NSLayoutConstraint.activate([
+            pStack.topAnchor.constraint(equalTo: profCard.topAnchor, constant: 18),
+            pStack.bottomAnchor.constraint(equalTo: profCard.bottomAnchor, constant: -18),
+            pStack.leadingAnchor.constraint(equalTo: profCard.leadingAnchor, constant: 18),
+            pStack.trailingAnchor.constraint(equalTo: profCard.trailingAnchor, constant: -18)
+        ])
+        
+        pStack.addArrangedSubview(createShimmerCircle(size: 54, color: bgBlock))
         let pText = UIStackView(arrangedSubviews: [
-            createShimmerLine(width: 140, height: 16, isDark: isDark),
-            createShimmerLine(width: 180, height: 11, isDark: isDark),
-            createShimmerPill(width: 70, height: 18, isDark: isDark)
+            createShimmerLine(width: 130, height: 16, color: bgBlock),
+            createShimmerLine(width: 90, height: 12, color: bgBlock)
         ])
         pText.axis = .vertical
-        pText.spacing = 5
+        pText.spacing = 6
         pStack.addArrangedSubview(pText)
-        
-        NSLayoutConstraint.activate([
-            pStack.topAnchor.constraint(equalTo: profCard.topAnchor, constant: 16),
-            pStack.bottomAnchor.constraint(equalTo: profCard.bottomAnchor, constant: -16),
-            pStack.leadingAnchor.constraint(equalTo: profCard.leadingAnchor, constant: 16),
-            pStack.trailingAnchor.constraint(equalTo: profCard.trailingAnchor, constant: -16)
-        ])
         mainStack.addArrangedSubview(profCard)
         
-        // Grouped Settings Section 1
-        let group1 = createCardWrapper(isDark: isDark)
+        // Group 1: General Preferences
+        let group1 = createCardWrapper(color: bgCard, borderColor: borderColor)
         let g1Stack = UIStackView()
         g1Stack.axis = .vertical
         g1Stack.spacing = 14
         g1Stack.translatesAutoresizingMaskIntoConstraints = false
         group1.addSubview(g1Stack)
-        
-        for w in [120, 140, 100] {
-            let row = UIStackView(arrangedSubviews: [
-                createShimmerCircle(size: 32, isDark: isDark),
-                createShimmerLine(width: CGFloat(w), height: 13, isDark: isDark),
-                createShimmerCircle(size: 14, isDark: isDark)
-            ])
-            row.axis = .horizontal
-            row.spacing = 12
-            row.alignment = .center
-            g1Stack.addArrangedSubview(row)
-        }
         
         NSLayoutConstraint.activate([
             g1Stack.topAnchor.constraint(equalTo: group1.topAnchor, constant: 16),
@@ -2252,27 +2002,27 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
             g1Stack.leadingAnchor.constraint(equalTo: group1.leadingAnchor, constant: 16),
             g1Stack.trailingAnchor.constraint(equalTo: group1.trailingAnchor, constant: -16)
         ])
+        
+        for w in [110, 130, 95] {
+            let row = UIStackView(arrangedSubviews: [
+                createShimmerCircle(size: 32, color: bgBlock),
+                createShimmerLine(width: CGFloat(w), height: 14, color: bgBlock),
+                createShimmerCircle(size: 14, color: bgBlock)
+            ])
+            row.axis = .horizontal
+            row.spacing = 12
+            row.alignment = .center
+            g1Stack.addArrangedSubview(row)
+        }
         mainStack.addArrangedSubview(group1)
         
-        // Grouped Settings Section 2
-        let group2 = createCardWrapper(isDark: isDark)
+        // Group 2: Account & Security
+        let group2 = createCardWrapper(color: bgCard, borderColor: borderColor)
         let g2Stack = UIStackView()
         g2Stack.axis = .vertical
         g2Stack.spacing = 14
         g2Stack.translatesAutoresizingMaskIntoConstraints = false
         group2.addSubview(g2Stack)
-        
-        for w in [130, 110] {
-            let row = UIStackView(arrangedSubviews: [
-                createShimmerCircle(size: 32, isDark: isDark),
-                createShimmerLine(width: CGFloat(w), height: 13, isDark: isDark),
-                createShimmerCircle(size: 14, isDark: isDark)
-            ])
-            row.axis = .horizontal
-            row.spacing = 12
-            row.alignment = .center
-            g2Stack.addArrangedSubview(row)
-        }
         
         NSLayoutConstraint.activate([
             g2Stack.topAnchor.constraint(equalTo: group2.topAnchor, constant: 16),
@@ -2280,6 +2030,18 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
             g2Stack.leadingAnchor.constraint(equalTo: group2.leadingAnchor, constant: 16),
             g2Stack.trailingAnchor.constraint(equalTo: group2.trailingAnchor, constant: -16)
         ])
+        
+        for w in [120, 100] {
+            let row = UIStackView(arrangedSubviews: [
+                createShimmerCircle(size: 32, color: bgBlock),
+                createShimmerLine(width: CGFloat(w), height: 14, color: bgBlock),
+                createShimmerCircle(size: 14, color: bgBlock)
+            ])
+            row.axis = .horizontal
+            row.spacing = 12
+            row.alignment = .center
+            g2Stack.addArrangedSubview(row)
+        }
         mainStack.addArrangedSubview(group2)
     }
     
@@ -2287,34 +2049,26 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         skeletonTimeoutTimer?.invalidate()
         skeletonTimeoutTimer = nil
         guard !skeletonView.isHidden else { return }
-        
-        // Ensure a minimum display duration of 220ms to eliminate visual flashing/jitter
-        if let showTime = skeletonShowTimestamp {
-            let elapsed = Date().timeIntervalSince(showTime)
-            if elapsed < 0.22 {
-                let remaining = 0.22 - elapsed
-                DispatchQueue.main.asyncAfter(deadline: .now() + remaining) { [weak self] in
-                    self?.performHideSkeletonAnimation()
-                }
-                return
-            }
-        }
-        
-        performHideSkeletonAnimation()
-    }
-    
-    private func performHideSkeletonAnimation() {
-        guard !skeletonView.isHidden else { return }
         activeSkeletonPath = nil
-        skeletonShowTimestamp = nil
+        skeletonView.stopSkeletonShimmer()
+        skeletonView.layer.removeAllAnimations()
         
-        UIView.animate(withDuration: 0.28, delay: 0, options: [.curveEaseInOut, .allowUserInteraction], animations: {
+        UIView.animate(withDuration: 0.20, animations: {
             self.skeletonView.alpha = 0.0
         }) { _ in
-            if self.skeletonView.alpha == 0.0 {
-                self.skeletonView.isHidden = true
-            }
+            self.skeletonView.isHidden = true
         }
+    }
+    
+    private func startPulseAnimation() {
+        skeletonView.alpha = 1.0
+        let isDark = self.isDarkMode
+        skeletonView.startSkeletonShimmer(isDark: isDark)
+    }
+    
+    private func stopPulseAnimation() {
+        skeletonView.stopSkeletonShimmer()
+        skeletonView.layer.removeAllAnimations()
     }
     
     private func startBellAnimationLoop() {
@@ -2758,91 +2512,7 @@ class HelpPanelViewController: UIViewController, MFMailComposeViewControllerDele
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// MARK: – High Performance Skeleton Components
-// ─────────────────────────────────────────────────────────────────────────────
 
-final class SkeletonBlockView: UIView {
-    private let shimmerLayer = CAGradientLayer()
-    private var isDark: Bool = false
-
-    init(cornerRadius: CGFloat = 8, isDark: Bool = false) {
-        self.isDark = isDark
-        super.init(frame: .zero)
-        self.layer.cornerRadius = cornerRadius
-        self.layer.masksToBounds = true
-        setupShimmer()
-        updateTheme(isDark: isDark)
-    }
-
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
-        setupShimmer()
-    }
-
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        shimmerLayer.frame = CGRect(x: -bounds.width, y: 0, width: max(1, bounds.width * 3), height: max(1, bounds.height))
-        shimmerLayer.cornerRadius = layer.cornerRadius
-    }
-
-    private func setupShimmer() {
-        shimmerLayer.startPoint = CGPoint(x: 0.0, y: 0.5)
-        shimmerLayer.endPoint = CGPoint(x: 1.0, y: 0.5)
-        shimmerLayer.locations = [0.25, 0.5, 0.75]
-        layer.addSublayer(shimmerLayer)
-
-        let anim = CABasicAnimation(keyPath: "transform.translation.x")
-        anim.fromValue = -200
-        anim.toValue = 400
-        anim.duration = 1.35
-        anim.repeatCount = .infinity
-        anim.timingFunction = CAMediaTimingFunction(controlPoints: 0.4, 0.0, 0.2, 1.0)
-        anim.isRemovedOnCompletion = false
-        shimmerLayer.add(anim, forKey: "skeletonShimmerWave")
-    }
-
-    func updateTheme(isDark: Bool) {
-        self.isDark = isDark
-        if isDark {
-            backgroundColor = UIColor(red: 30/255, green: 41/255, blue: 59/255, alpha: 0.7) // slate-800
-            let base = UIColor(red: 51/255, green: 65/255, blue: 85/255, alpha: 0.0).cgColor
-            let highlight = UIColor(red: 71/255, green: 85/255, blue: 105/255, alpha: 0.45).cgColor
-            shimmerLayer.colors = [base, highlight, base]
-        } else {
-            backgroundColor = UIColor(red: 226/255, green: 232/255, blue: 240/255, alpha: 0.6) // slate-200
-            let base = UIColor(white: 1.0, alpha: 0.0).cgColor
-            let highlight = UIColor(white: 1.0, alpha: 0.75).cgColor
-            shimmerLayer.colors = [base, highlight, base]
-        }
-    }
-}
-
-final class SkeletonCardView: UIView {
-    private var isDark: Bool = false
-
-    init(cornerRadius: CGFloat = 16, isDark: Bool = false) {
-        self.isDark = isDark
-        super.init(frame: .zero)
-        self.layer.cornerRadius = cornerRadius
-        self.layer.borderWidth = 1.0
-        self.translatesAutoresizingMaskIntoConstraints = false
-        updateTheme(isDark: isDark)
-    }
-
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
-    }
-
-    func updateTheme(isDark: Bool) {
-        self.isDark = isDark
-        if isDark {
-            backgroundColor = UIColor(red: 30/255, green: 41/255, blue: 59/255, alpha: 1.0) // slate-800
-            layer.borderColor = UIColor(red: 51/255, green: 65/255, blue: 85/255, alpha: 0.8).cgColor // slate-700
-            layer.shadowOpacity = 0
-        } else {
-            backgroundColor = .white
-            layer.borderColor = UIColor(red: 226/255, green: 232/255, blue: 240/255, alpha: 0.8).cgColor // slate-200
             layer.shadowColor = UIColor.black.cgColor
             layer.shadowOpacity = 0.03
             layer.shadowOffset = CGSize(width: 0, height: 2)

@@ -50,7 +50,7 @@ public class ApiClient {
 
             int code = conn.getResponseCode();
             InputStream stream = (code >= 200 && code < 300) ? conn.getInputStream() : conn.getErrorStream();
-            
+
             StringBuilder responseText = new StringBuilder();
             if (stream != null) {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
@@ -147,7 +147,8 @@ public class ApiClient {
         }).start();
     }
 
-    public static void register(final String labName, final String name, final String email, final String phone, final String password, final ApiCallback callback) {
+    public static void register(final String labName, final String name, final String email, final String phone,
+            final String password, final ApiCallback callback) {
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -218,7 +219,8 @@ public class ApiClient {
         }).start();
     }
 
-    public static void resetPassword(final String email, final String code, final String newPassword, final ApiCallback callback) {
+    public static void resetPassword(final String email, final String code, final String newPassword,
+            final ApiCallback callback) {
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -285,7 +287,8 @@ public class ApiClient {
     }
 
     public static String extractTokenFromCookies(List<String> cookies) {
-        if (cookies == null) return null;
+        if (cookies == null)
+            return null;
         for (String cookie : cookies) {
             if (cookie.startsWith("token=")) {
                 String[] parts = cookie.split(";");
@@ -301,13 +304,15 @@ public class ApiClient {
     }
 
     private static void injectWebViewCookie(List<String> rawCookies) {
-        if (rawCookies == null) return;
+        if (rawCookies == null)
+            return;
         try {
             CookieManager cookieManager = CookieManager.getInstance();
             for (String cookie : rawCookies) {
                 cookieManager.setCookie("https://app.patholab.cloud", cookie);
             }
             cookieManager.flush();
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
     }
 }

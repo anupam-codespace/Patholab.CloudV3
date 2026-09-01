@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getCurrentUser } from '@/lib/auth';
+import { getCurrentUser, getDataFromToken } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 // ============================================================================
 export async function GET(req: NextRequest) {
   try {
-    const user = await getCurrentUser();
+    const user = (await getDataFromToken(req)) || (await getCurrentUser());
     
     if (!user || !user.labId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -24,8 +24,6 @@ export async function GET(req: NextRequest) {
         branches: {
           orderBy: { createdAt: 'asc' }
         },
-        // 🚨 DELETED: subscription, plan, and currentUsage includes have been stripped.
-        // The new Pay-As-You-Go Wallet System handles limits via real-time transaction balances.
       }
     });
 
@@ -45,7 +43,7 @@ export async function GET(req: NextRequest) {
 // ============================================================================
 export async function PUT(req: NextRequest) {
   try {
-    const user = await getCurrentUser();
+    const user = (await getDataFromToken(req)) || (await getCurrentUser());
     
     if (!user || !user.labId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

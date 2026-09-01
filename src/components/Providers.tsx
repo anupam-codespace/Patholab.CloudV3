@@ -26,10 +26,6 @@ function ThemeBridge() {
         window.dispatchEvent(new CustomEvent('patholab-theme-changed', { detail: { theme: nextTheme } }));
         return nextTheme === 'dark';
       };
-      (window as any).patholabSetTheme = (nextTheme: string) => {
-        setThemeRef.current(nextTheme);
-        window.dispatchEvent(new CustomEvent('patholab-theme-changed', { detail: { theme: nextTheme } }));
-      };
       (window as any).patholabGetTheme = () => resolvedRef.current || themeRef.current || 'light';
     }
   }, []); // run once – uses refs to always be current
@@ -43,7 +39,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     defaultOptions: {
       queries: {
         // Prevent immediate refetching on window focus during hydration
-        staleTime: 60 * 1000, 
+        staleTime: 60 * 1000,
         retry: 1,
       },
     },
@@ -55,6 +51,37 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         <ThemeBridge />
         {children}
         <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+}
+export default function Providers({ children }: { children: React.ReactNode }) {
+  // Create a client inside the component to ensure data isn't shared between users/requests
+  const [queryClient] = useState(() => new QueryClient({
+    defaultOptions: {
+      queries: {
+        // Prevent immediate refetching on window focus during hydration
+        staleTime: 60 * 1000,
+        retry: 1,
+      },
+    },
+  }));
+
+  const toastTop = useNativeToastTop();
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+        <ThemeBridge />
+        {children}
+        {/* Push toasts below the native Android/iOS header bar.
+            toastTop is reactive — it updates once --native-top-padding is injected
+            by MainActivity.java (Android) or MainViewController.swift (iOS). */}
+        <Toaster
+          position="top-center"
+          toastOptions={{ duration: 4000 }}
+          containerStyle={{ top: toastTop }}
+        />
       </ThemeProvider>
     </QueryClientProvider>
   );

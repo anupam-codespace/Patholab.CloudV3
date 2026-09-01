@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Celebratory Payment Succeeded Bottom Sheet Modal -->
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@android:color/transparent"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:paddingBottom="24dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/bg_payment_success_dialog"
+        android:gravity="center_horizontal"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="32dp"
+        android:paddingBottom="32dp"
+        android:elevation="12dp">
+
+        <!-- Confetti & Checkmark Container -->
+        <FrameLayout
+            android:layout_width="160dp"
+            android:layout_height="100dp"
+            android:layout_gravity="center_horizontal">
+
+            <!-- Confetti Particles Background -->
+            <ImageView
+                android:id="@+id/imgConfetti"
+                android:layout_width="160dp"
+                android:layout_height="100dp"
+                android:src="@drawable/ic_sparkle_confetti"
+                android:scaleType="fitCenter" />
+
+            <!-- Glowing Green Checkmark Circle -->
+            <FrameLayout
+                android:id="@+id/badgeCheckCircle"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_success_check_circle">
+
+                <ImageView
+                    android:id="@+id/imgCheckMark"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_check_bold" />
+
+            </FrameLayout>
+
+        </FrameLayout>
+
+        <!-- Title -->
+        <TextView
+            android:id="@+id/txtSuccessTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Payment succeeded!"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:letterSpacing="-0.02"
+            android:gravity="center" />
+
+        <!-- Subtitle Description -->
+        <TextView
+            android:id="@+id/txtSuccessDesc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Your transaction was completed successfully. Thank you for your recharge!"
+            android:textSize="13.5sp"
+            android:textColor="#94A3B8"
+            android:gravity="center"
+            android:lineSpacingExtra="3dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp" />
+
+        <!-- Amount & Transaction Pill -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_pill_glass"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:layout_marginTop="18dp"
+            android:layout_marginBottom="24dp">
+
+            <TextView
+                android:id="@+id/txtSuccessAmountBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="+₹1,000.00 Credits Added"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="#34D399" />
+
+        </LinearLayout>
+
+        <!-- Primary Action Button: "Go to Your Dashboard" -->
+        <android.widget.Button
+            android:id="@+id/btnSuccessDashboard"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:background="@drawable/bg_btn_success_green"
+            android:text="Go to Your Dashboard"
+            android:textColor="#FFFFFF"
+            android:textSize="15.5sp"
+            android:textStyle="bold"
+            android:textAllCaps="false"
+            android:elevation="4dp" />
+
+    </LinearLayout>
+
+</FrameLayout>

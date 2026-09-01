@@ -152,7 +152,7 @@ function LabOwnerDashboard() {
 
   // Wallet Low Balance Alert Threshold
   const isLowBalance = (kpi?.walletBalance || 0) < 100;
-  
+
 
   return (
     <div className="space-y-6 p-4 md:p-8 min-h-screen bg-slate-50/50">
@@ -270,20 +270,18 @@ function LabOwnerDashboard() {
           </CardHeader>
           <CardContent>
             <div
-              className={`text-3xl font-black ${
-                (kpi?.netProfit || 0) >= 0
+              className={`text-3xl font-black ${(kpi?.netProfit || 0) >= 0
                   ? "text-emerald-700"
                   : "text-rose-700"
-              }`}
+                }`}
             >
               {formatCurrency(kpi?.netProfit || 0)}
             </div>
             <p
-              className={`text-xs mt-1 flex items-center font-semibold ${
-                (kpi?.netProfit || 0) >= 0
+              className={`text-xs mt-1 flex items-center font-semibold ${(kpi?.netProfit || 0) >= 0
                   ? "text-emerald-600"
                   : "text-rose-600"
-              }`}
+                }`}
             >
               {(kpi?.netProfit || 0) >= 0 ? (
                 <>
