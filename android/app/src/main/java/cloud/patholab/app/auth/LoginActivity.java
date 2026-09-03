@@ -97,18 +97,7 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
-        ivTogglePassword.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                passwordVisible = !passwordVisible;
-                if (passwordVisible) {
-                    etPassword.setInputType(InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
-                } else {
-                    etPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-                }
-                etPassword.setSelection(etPassword.getText().length());
-            }
-        });
+        PasswordEyeHelper.setupPasswordToggle(etPassword, ivTogglePassword);
 
         tvForgotPassword.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -152,7 +141,9 @@ public class LoginActivity extends AppCompatActivity {
                     public void run() {
                         setLoading(false);
                         if (success && token != null) {
+                            AuthManager.clearSession(LoginActivity.this);
                             AuthManager.saveToken(LoginActivity.this, token);
+                            AuthManager.saveUserInfo(LoginActivity.this, email, "User", "Lab Owner");
                             try {
                                 Vibrator v = (Vibrator) getSystemService(VIBRATOR_SERVICE);
                                 if (v != null) {

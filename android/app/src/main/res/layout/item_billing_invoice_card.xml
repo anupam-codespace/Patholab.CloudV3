@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ══ Premium Invoice Ledger Card ══ -->
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="4dp"
+    app:cardBackgroundColor="#FFFFFF"
+    app:cardPreventCornerOverlap="false"
+    android:layout_marginTop="6dp"
+    android:layout_marginBottom="8dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- ── Colored accent strip at top ────────────────────────────── -->
+        <View
+            android:id="@+id/invoiceAccentStrip"
+            android:layout_width="match_parent"
+            android:layout_height="4dp"
+            android:background="#059669" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- TOP HEADER ROW -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="10dp">
+
+                <!-- Standardized Patient Avatar -->
+                <ImageView
+                    android:id="@+id/lblInvoicePatientAvatar"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:src="@drawable/ic_patient_avatar"
+                    android:scaleType="centerCrop" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="10dp">
+
+                    <TextView
+                        android:id="@+id/lblInvoicePatientName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Ramesh Sen"
+                        android:textSize="15.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#0F172A"
+                        android:letterSpacing="-0.01" />
+
+                    <TextView
+                        android:id="@+id/lblInvoicePatientDetails"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="1dp"
+                        android:text="42Y • Male • +91 98765 43210"
+                        android:textSize="12sp"
+                        android:textColor="#64748B" />
+
+                </LinearLayout>
+
+                <!-- Invoice Number Badge -->
+                <TextView
+                    android:id="@+id/lblInvoiceNumber"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:background="@drawable/bg_bento_blue"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:paddingTop="5dp"
+                    android:paddingBottom="5dp"
+                    android:text="INV-10492"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="#0D6EFD" />
+
+            </LinearLayout>
+
+            <!-- DATE + PAYMENT MODE + STATUS ROW -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="14dp">
+
+                <!-- Date with calendar icon -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:id="@+id/rowInvoiceDate">
+
+                    <ImageView
+                        android:layout_width="13dp"
+                        android:layout_height="13dp"
+                        android:src="@drawable/ic_calendar_clock"
+                        android:tint="#94A3B8"
+                        android:layout_marginEnd="4dp" />
+
+                    <TextView
+                        android:id="@+id/lblInvoiceDate"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="01 Sep, 02:45 PM"
+                        android:textSize="12sp"
+                        android:textColor="#64748B" />
+
+                </LinearLayout>
+
+                <!-- Payment mode pill -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_setting_item"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:paddingTop="3dp"
+                    android:paddingBottom="3dp"
+                    android:id="@+id/rowInvoicePayment">
+
+                    <ImageView
+                        android:layout_width="11dp"
+                        android:layout_height="11dp"
+                        android:src="@drawable/ic_card"
+                        android:tint="#475569"
+                        android:layout_marginEnd="4dp" />
+
+                    <TextView
+                        android:id="@+id/lblInvoicePaymentMethod"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="UPI"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:textColor="#334155" />
+
+                </LinearLayout>
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1" />
+
+                <!-- Status Badge -->
+                <TextView
+                    android:id="@+id/lblInvoiceStatusBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_bento_emerald"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:paddingTop="4dp"
+                    android:paddingBottom="4dp"
+                    android:text="PAID"
+                    android:textSize="11.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#059669" />
+
+            </LinearLayout>
+
+            <!-- Divider -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#F1F5F9"
+                android:layout_marginBottom="14dp" />
+
+            <!-- FINANCIALS + VIEW RECEIPT CTA -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="GRAND TOTAL"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:textColor="#94A3B8"
+                        android:letterSpacing="0.06" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginTop="2dp">
+
+                        <TextView
+                            android:id="@+id/lblInvoiceTotal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="₹1,250.00"
+                            android:textSize="22sp"
+                            android:textStyle="bold"
+                            android:textColor="#0F172A" />
+
+                        <TextView
+                            android:id="@+id/lblInvoiceBalanceDue"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
+                            android:text="Due: ₹450"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:textColor="#D97706"
+                            android:visibility="gone" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- View Receipt Button -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnViewInvoiceReceipt"
+                    android:layout_width="wrap_content"
+                    android:layout_height="42dp"
+                    android:text="Receipt →"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textColor="#1D4ED8"
+                    android:backgroundTint="#EFF6FF"
+                    app:cornerRadius="14dp"
+                    app:strokeColor="#BFDBFE"
+                    app:strokeWidth="1dp"
+                    android:elevation="0dp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:textAllCaps="false" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

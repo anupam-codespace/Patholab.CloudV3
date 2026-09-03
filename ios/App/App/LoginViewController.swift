@@ -161,37 +161,15 @@ class LoginViewController: AuthBaseViewController {
     }
 
     private func configuredPasswordField() -> UIView {
-        let container = UIView()
-        container.translatesAutoresizingMaskIntoConstraints = false
-        container.heightAnchor.constraint(equalToConstant: 52).isActive = true
-
         let tf = makeTextField(placeholder: "Enter your password", isSecure: true)
         tf.textContentType = .password
         tf.returnKeyType = .done
         tf.tag = 2
         tf.delegate = self
-        tf.accessibilityIdentifier = "password_field"
-        container.addSubview(tf)
 
-        let eye = UIButton(type: .system)
-        eye.setImage(UIImage(systemName: "eye.slash"), for: .normal)
-        eye.tintColor = AuthBaseViewController.textHint
-        eye.addTarget(self, action: #selector(togglePassword(_:)), for: .touchUpInside)
-        eye.translatesAutoresizingMaskIntoConstraints = false
-        container.addSubview(eye)
+        let (container, eye) = makeAnimatedPasswordRow(tf: tf, identifier: "password_field")
         self.eyeButton = eye
         self.passwordField.copyProperties(from: tf)
-
-        NSLayoutConstraint.activate([
-            tf.topAnchor.constraint(equalTo: container.topAnchor),
-            tf.bottomAnchor.constraint(equalTo: container.bottomAnchor),
-            tf.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-            tf.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-            eye.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -12),
-            eye.centerYAnchor.constraint(equalTo: container.centerYAnchor),
-            eye.widthAnchor.constraint(equalToConstant: 32),
-            eye.heightAnchor.constraint(equalToConstant: 32)
-        ])
         return container
     }
 

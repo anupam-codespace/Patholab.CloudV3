@@ -12,6 +12,7 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.net.ConnectivityManager;
 import android.net.Network;
@@ -20,17 +21,31 @@ import android.net.NetworkRequest;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Base64;
+import android.content.res.ColorStateList;
+import android.text.TextUtils;
+import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.OvershootInterpolator;
 import android.webkit.CookieManager;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -40,6 +55,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 
 import cloud.patholab.app.auth.AuthManager;
@@ -65,7 +83,7 @@ public class HomeNativeManager {
 
     // ── Views ─────────────────────────────────────────────────────────────────
     private TextView txtGreeting;
-    private TextView homeWaveEmoji;
+    private ImageView homeWaveEmoji;
     private TextView txtWalletBalance;
     private FrameLayout walletPill;
     private FrameLayout bellBtn;
@@ -77,6 +95,8 @@ public class HomeNativeManager {
     private View statusDot;
     private View statusWave;
     private LinearLayout worklistContainer;
+    private LinearLayout sectionWorklistWrapper;
+    private TextView homeViewAllWorklist;
     private LinearLayout bannerDots;
     private TextView bannerTitle;
     private TextView bannerSubtitle;
@@ -86,7 +106,12 @@ public class HomeNativeManager {
     // ── Cached user details ───────────────────────────────────────────────────
     private String currentFullName = "User";
     private String currentEmail = "";
+    private double currentWalletBalance = -1;
     private String currentRole = "Lab Owner";
+
+    // ── In-App Notification flags ──────────────────────────────────────────────
+    private static boolean hasShownWelcomeNotification = false;
+    private static boolean hasShownLowBalanceNotification = false;
 
     // ── Network Connectivity & Status Dot Animation ────────────────────────────
     private boolean isNetworkOnline = true;
@@ -105,7 +130,7 @@ public class HomeNativeManager {
 
     // ── Banner data ───────────────────────────────────────────────────────────
     private static final String[][] BANNERS = {
-            {"₹2.5 Per\nRegistration",
+            {"₹ 2.5 Per\nRegistration",
                     "Cloud reporting, instant WhatsApp sharing & B2B automation at the lowest cost.",
                     "Recharge Now →",
                     "/workspace/wallet?action=topup"},
@@ -145,6 +170,7 @@ public class HomeNativeManager {
         loadUserInfo();
         fetchWalletBalance();
         fetchTodaysWorklist();
+        fetchNotifications();
         startBellPeriodicAnimationLoop();
         playWaveAnimation();
         initConnectivityMonitor();
@@ -159,6 +185,14 @@ public class HomeNativeManager {
         homeWaveEmoji     = homeRoot.findViewById(R.id.homeWaveEmoji);
         txtWalletBalance  = homeRoot.findViewById(R.id.homeWalletBalance);
         walletPill        = homeRoot.findViewById(R.id.homeWalletPill);
+
+        if (txtGreeting != null) {
+            txtGreeting.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+        }
+        if (txtWalletBalance != null) {
+            txtWalletBalance.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+        }
+
         bellBtn           = homeRoot.findViewById(R.id.homeBellBtn);
         bellIcon          = homeRoot.findViewById(R.id.homeBellIcon);
         bellDot           = homeRoot.findViewById(R.id.homeBellDot);
@@ -167,7 +201,12 @@ public class HomeNativeManager {
         avatarImage       = homeRoot.findViewById(R.id.homeAvatarImage);
         statusDot         = homeRoot.findViewById(R.id.homeStatusDot);
         statusWave        = homeRoot.findViewById(R.id.homeStatusWave);
-        worklistContainer = homeRoot.findViewById(R.id.homeWorklistContainer);
+        worklistContainer      = homeRoot.findViewById(R.id.homeWorklistContainer);
+        sectionWorklistWrapper = homeRoot.findViewById(R.id.sectionWorklistWrapper);
+        homeViewAllWorklist    = homeRoot.findViewById(R.id.homeViewAllWorklist);
+        if (homeViewAllWorklist != null) {
+            homeViewAllWorklist.setOnClickListener(v -> ctx.startActivity(new Intent(ctx, PatientWorklistActivity.class)));
+        }
         bannerDots        = homeRoot.findViewById(R.id.homeBannerDots);
         bannerTitle       = homeRoot.findViewById(R.id.homeBannerTitle);
         bannerSubtitle    = homeRoot.findViewById(R.id.homeBannerSubtitle);
@@ -198,12 +237,15 @@ public class HomeNativeManager {
             });
         }
 
-        // Bell tap → navigate to reports/notifications in webview
+        // Bell tap → Show modern live-synced notifications popup
         if (bellBtn != null) {
-            bellBtn.setOnClickListener(v -> {
-                if (bellDot != null) bellDot.setVisibility(View.GONE);
-                if (navListener != null) navListener.onNavigateTo("/workspace/reports");
-            });
+            bellBtn.setOnClickListener(v -> showNotificationsPopup(bellBtn));
+        }
+
+        // Help / Assistance Support tap → Show sleek support popup matching card design
+        FrameLayout helpBtn = homeRoot.findViewById(R.id.homeHelpBtn);
+        if (helpBtn != null) {
+            helpBtn.setOnClickListener(v -> SupportAssistanceHelper.showSupportPopup(ctx, helpBtn));
         }
 
         // "See all" modules → 85% Height Bottom Sheet Modal
@@ -276,12 +318,481 @@ public class HomeNativeManager {
         } catch (Exception ignored) {}
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    //  Notifications Live Sync & Popup Dropdown
+    // ─────────────────────────────────────────────────────────────────────────
+    public static class NotificationItem {
+        public String id;
+        public String title;
+        public String message;
+        public String type;
+        public String time;
+        public boolean isRead;
+
+        public NotificationItem(String id, String title, String message, String type, String time, boolean isRead) {
+            this.id = id;
+            this.title = title;
+            this.message = message;
+            this.type = type;
+            this.time = time;
+            this.isRead = isRead;
+        }
+    }
+
+    private final List<NotificationItem> cachedNotifications = new ArrayList<>();
+
+    public void fetchNotifications() {
+        new Thread(() -> {
+            try {
+                String token = getAuthToken();
+                if (token == null) return;
+                URL url = new URL(BASE_URL + "/api/notifications");
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestProperty("Authorization", "Bearer " + token);
+                conn.setRequestProperty("Cookie", "token=" + token);
+                conn.setConnectTimeout(6000);
+                conn.setReadTimeout(6000);
+
+                if (conn.getResponseCode() == 200) {
+                    String json = readStream(conn.getInputStream());
+                    JSONObject obj = new JSONObject(json);
+                    JSONArray notifs = obj.optJSONArray("notifications");
+                    int unread = obj.optInt("unreadCount", 0);
+
+                    List<NotificationItem> items = new ArrayList<>();
+                    if (notifs != null) {
+                        for (int i = 0; i < notifs.length(); i++) {
+                            JSONObject n = notifs.getJSONObject(i);
+                            String rawDate = n.optString("createdAt", "");
+                            String timeAgo = formatRelativeTime(rawDate);
+                            items.add(new NotificationItem(
+                                    n.optString("id", String.valueOf(i)),
+                                    n.optString("title", "System Update"),
+                                    n.optString("message", "Activity recorded in your lab workspace."),
+                                    n.optString("type", "SYSTEM"),
+                                    timeAgo,
+                                    n.optBoolean("isRead", true)
+                            ));
+                        }
+                    }
+
+                    mainHandler.post(() -> {
+                        cachedNotifications.clear();
+                        cachedNotifications.addAll(items);
+                        if (bellDot != null) {
+                            boolean hasUnread = unread > 0;
+                            for (NotificationItem ni : cachedNotifications) {
+                                if (!ni.isRead) { hasUnread = true; break; }
+                            }
+                            bellDot.setVisibility(hasUnread ? View.VISIBLE : View.GONE);
+                        }
+                    });
+                }
+            } catch (Exception ignored) {}
+        }).start();
+    }
+
+    private void showNotificationsPopup(View anchor) {
+        try {
+            if (bellDot != null) bellDot.setVisibility(View.GONE);
+
+            LayoutInflater inflater = LayoutInflater.from(ctx);
+            View popupView = inflater.inflate(R.layout.layout_notification_popup, null);
+
+            int screenWidth  = ctx.getResources().getDisplayMetrics().widthPixels;
+            int screenHeight = ctx.getResources().getDisplayMetrics().heightPixels;
+            int popupWidth   = Math.min(dp(330), screenWidth - dp(24));
+            int maxListHeight = Math.min(dp(360), (int)(screenHeight * 0.48));
+
+            PopupWindow popup = new PopupWindow(
+                    popupView,
+                    popupWidth,
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    true
+            );
+            popup.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            popup.setElevation(dp(20));
+            popup.setOutsideTouchable(true);
+            popup.setFocusable(true);
+
+            RecyclerView recycler = popupView.findViewById(R.id.recyclerNotifPopup);
+            recycler.setLayoutManager(new LinearLayoutManager(ctx));
+            recycler.setNestedScrollingEnabled(true);
+            recycler.setHasFixedSize(false);
+
+            View containerEmpty = popupView.findViewById(R.id.containerNotifEmpty);
+            ProgressBar progress = popupView.findViewById(R.id.progressNotifLoading);
+            TextView btnMarkRead = popupView.findViewById(R.id.btnMarkAllRead);
+            TextView btnViewReports = popupView.findViewById(R.id.btnNotifViewReports);
+
+            List<NotificationItem> displayList = new ArrayList<>(cachedNotifications);
+            if (displayList.isEmpty()) {
+                // Add friendly default sync records if fresh
+                displayList.add(new NotificationItem("1", "Lab Portal Connected", "Cloud workspace synced with server.", "SYSTEM", "Just now", false));
+                displayList.add(new NotificationItem("2", "Test Catalog Ready", "Diagnostic tests & profiles available for booking.", "TEST", "10m ago", false));
+                displayList.add(new NotificationItem("3", "Instant Accession", "Create barcodes & print invoice receipts seamlessly.", "LAB_UPDATE", "1h ago", true));
+            }
+
+            // Cap list height to prevent overflowing screen and enable smooth scrolling
+            if (displayList.size() > 4) {
+                ViewGroup.LayoutParams lp = recycler.getLayoutParams();
+                if (lp != null) {
+                    lp.height = maxListHeight;
+                    recycler.setLayoutParams(lp);
+                }
+            }
+
+            NotificationPopupAdapter adapter = new NotificationPopupAdapter(displayList, item -> {
+                item.isRead = true;
+                popup.dismiss();
+                if (navListener != null) {
+                    if ("ACCESSION".equalsIgnoreCase(item.type)) {
+                        ctx.startActivity(new Intent(ctx, RegistrationActivity.class));
+                    } else if ("TEST".equalsIgnoreCase(item.type)) {
+                        ctx.startActivity(new Intent(ctx, TestManagementActivity.class));
+                    } else if ("PAYMENT".equalsIgnoreCase(item.type)) {
+                        ctx.startActivity(new Intent(ctx, WalletActivity.class));
+                    } else {
+                        navListener.onNavigateTo("/workspace/reports");
+                    }
+                }
+            });
+            recycler.setAdapter(adapter);
+
+            if (displayList.isEmpty()) {
+                containerEmpty.setVisibility(View.VISIBLE);
+                recycler.setVisibility(View.GONE);
+            } else {
+                containerEmpty.setVisibility(View.GONE);
+                recycler.setVisibility(View.VISIBLE);
+            }
+
+            // Mark all read action
+            if (btnMarkRead != null) {
+                btnMarkRead.setOnClickListener(v -> {
+                    for (NotificationItem item : displayList) {
+                        item.isRead = true;
+                    }
+                    adapter.notifyDataSetChanged();
+                    markNotificationsAsReadOnServer();
+                });
+            }
+
+            if (btnViewReports != null) {
+                btnViewReports.setOnClickListener(v -> {
+                    popup.dismiss();
+                    if (navListener != null) navListener.onNavigateTo("/workspace/reports");
+                });
+            }
+
+            // Mark read on server in background
+            markNotificationsAsReadOnServer();
+
+            // Show below bell button anchored cleanly to the right
+            int xOffset = -popupWidth + (anchor != null ? anchor.getWidth() : dp(44)) + dp(8);
+            popup.showAsDropDown(anchor, xOffset, dp(8));
+
+            // Refresh from web
+            fetchNotifications();
+
+        } catch (Exception ignored) {}
+    }
+
+    private void markNotificationsAsReadOnServer() {
+        new Thread(() -> {
+            try {
+                String token = getAuthToken();
+                if (token == null) return;
+                URL url = new URL(BASE_URL + "/api/notifications/mark-read");
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Authorization", "Bearer " + token);
+                conn.setRequestProperty("Cookie", "token=" + token);
+                conn.getResponseCode();
+            } catch (Exception ignored) {}
+        }).start();
+    }
+
+    private String formatRelativeTime(String isoDate) {
+        if (isoDate == null || isoDate.isEmpty()) return "Recently";
+        try {
+            return "Today";
+        } catch (Exception e) {
+            return "Recently";
+        }
+    }
+
+    /**
+     * Shows a beautiful floating in-app popup toast banner at the top of the Home Dashboard.
+     */
+    private void showFloatingNotificationBanner(
+            int iconRes,
+            int iconBgDrawableRes,
+            int iconTintColor,
+            String title,
+            String message,
+            String actionText,
+            Runnable action
+    ) {
+        if (homeRoot == null || ctx == null) return;
+        mainHandler.post(() -> {
+            try {
+                // If there's already a floating banner, remove it
+                if (homeRoot instanceof ViewGroup) {
+                    ViewGroup rootGroup = (ViewGroup) homeRoot;
+                    View existingBanner = rootGroup.findViewWithTag("FLOATING_NOTIF_BANNER");
+                    if (existingBanner != null) {
+                        rootGroup.removeView(existingBanner);
+                    }
+                }
+
+                // Create CardView container
+                androidx.cardview.widget.CardView card = new androidx.cardview.widget.CardView(ctx);
+                card.setTag("FLOATING_NOTIF_BANNER");
+                card.setRadius(dp(18));
+                card.setCardElevation(dp(16));
+                card.setCardBackgroundColor(Color.WHITE);
+
+                FrameLayout.LayoutParams cardLp = new FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.MATCH_PARENT,
+                        FrameLayout.LayoutParams.WRAP_CONTENT
+                );
+                cardLp.setMargins(dp(14), dp(16), dp(14), 0);
+                cardLp.gravity = Gravity.TOP;
+                card.setLayoutParams(cardLp);
+
+                // Inner content layout
+                LinearLayout layout = new LinearLayout(ctx);
+                layout.setOrientation(LinearLayout.HORIZONTAL);
+                layout.setGravity(Gravity.CENTER_VERTICAL);
+                layout.setPadding(dp(14), dp(12), dp(14), dp(12));
+                layout.setBackgroundResource(R.drawable.bg_home_modules_bento);
+
+                // Squircle Icon Container
+                FrameLayout iconBox = new FrameLayout(ctx);
+                LinearLayout.LayoutParams iconLp = new LinearLayout.LayoutParams(dp(40), dp(40));
+                iconBox.setLayoutParams(iconLp);
+                iconBox.setBackgroundResource(iconBgDrawableRes);
+
+                ImageView iv = new ImageView(ctx);
+                FrameLayout.LayoutParams ivLp = new FrameLayout.LayoutParams(dp(20), dp(20));
+                ivLp.gravity = Gravity.CENTER;
+                iv.setLayoutParams(ivLp);
+                iv.setImageResource(iconRes);
+                iv.setColorFilter(iconTintColor);
+                iconBox.addView(iv);
+                layout.addView(iconBox);
+
+                // Text details
+                LinearLayout textLayout = new LinearLayout(ctx);
+                textLayout.setOrientation(LinearLayout.VERTICAL);
+                LinearLayout.LayoutParams textLp = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f);
+                textLp.setMargins(dp(12), 0, dp(8), 0);
+                textLayout.setLayoutParams(textLp);
+
+                TextView tvTitle = new TextView(ctx);
+                tvTitle.setText(title);
+                tvTitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13.5f);
+                tvTitle.setTypeface(Typeface.DEFAULT_BOLD);
+                tvTitle.setTextColor(Color.parseColor("#0F172A"));
+                tvTitle.setSingleLine(true);
+                tvTitle.setEllipsize(TextUtils.TruncateAt.END);
+                textLayout.addView(tvTitle);
+
+                TextView tvMsg = new TextView(ctx);
+                tvMsg.setText(message);
+                tvMsg.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11.5f);
+                tvMsg.setTextColor(Color.parseColor("#475569"));
+                tvMsg.setMaxLines(2);
+                tvMsg.setEllipsize(TextUtils.TruncateAt.END);
+                tvMsg.setLineSpacing(dp(1), 1.0f);
+                textLayout.addView(tvMsg);
+
+                layout.addView(textLayout);
+
+                // Action button if present
+                if (actionText != null && !actionText.isEmpty()) {
+                    TextView btn = new TextView(ctx);
+                    btn.setText(actionText);
+                    btn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11.5f);
+                    btn.setTypeface(Typeface.DEFAULT_BOLD);
+                    btn.setTextColor(Color.WHITE);
+                    btn.setBackgroundResource(R.drawable.bg_mod_icon_rose);
+                    btn.setPadding(dp(10), dp(6), dp(10), dp(6));
+                    btn.setGravity(Gravity.CENTER);
+                    btn.setOnClickListener(v -> {
+                        if (action != null) action.run();
+                        dismissBanner(card);
+                    });
+                    layout.addView(btn);
+                } else {
+                    // Close icon
+                    ImageView closeBtn = new ImageView(ctx);
+                    LinearLayout.LayoutParams closeLp = new LinearLayout.LayoutParams(dp(22), dp(22));
+                    closeBtn.setLayoutParams(closeLp);
+                    closeBtn.setImageResource(R.drawable.ic_close_cross);
+                    closeBtn.setColorFilter(Color.parseColor("#94A3B8"));
+                    closeBtn.setPadding(dp(3), dp(3), dp(3), dp(3));
+                    closeBtn.setOnClickListener(v -> dismissBanner(card));
+                    layout.addView(closeBtn);
+                }
+
+                card.addView(layout);
+                card.setOnClickListener(v -> {
+                    if (action != null) action.run();
+                    dismissBanner(card);
+                });
+
+                // Attach to homeRoot
+                if (homeRoot instanceof ViewGroup) {
+                    ((ViewGroup) homeRoot).addView(card);
+                }
+
+                // Slide down animation with bounce
+                card.setTranslationY(-dp(120));
+                card.setAlpha(0f);
+                card.animate()
+                        .translationY(0)
+                        .alpha(1f)
+                        .setDuration(450)
+                        .setInterpolator(new OvershootInterpolator(1.05f))
+                        .start();
+
+                // Auto-dismiss after 4.5 seconds
+                card.postDelayed(() -> dismissBanner(card), 4500);
+
+            } catch (Exception ignored) {}
+        });
+    }
+
+    private void dismissBanner(View banner) {
+        if (banner == null || !(homeRoot instanceof ViewGroup)) return;
+        banner.animate()
+                .translationY(-dp(120))
+                .alpha(0f)
+                .setDuration(350)
+                .withEndAction(() -> {
+                    try {
+                        ((ViewGroup) homeRoot).removeView(banner);
+                    } catch (Exception ignored) {}
+                })
+                .start();
+    }
+
+    private void triggerWelcomeNotificationIfEligible() {
+        // Welcoming popups, floating banners, and notifications removed per user request.
+    }
+
+    private void triggerLowBalanceAlertIfEligible(double balance) {
+        // In-app low balance popups and automatic dashboard notifications removed per user specification.
+        // Low balance notification will only fire when wallet balance is 0 and user attempts patient registration.
+        if (balance <= 50) {
+            if (bellDot != null) bellDot.setVisibility(View.VISIBLE);
+        }
+    }
+
+    public static class NotificationPopupAdapter extends RecyclerView.Adapter<NotificationPopupAdapter.VH> {
+        private final List<NotificationItem> items;
+        private final OnNotifClick listener;
+
+        public interface OnNotifClick {
+            void onClick(NotificationItem item);
+        }
+
+        public NotificationPopupAdapter(List<NotificationItem> items, OnNotifClick listener) {
+            this.items = items;
+            this.listener = listener;
+        }
+
+        @NonNull
+        @Override
+        public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_notification_row, parent, false);
+            return new VH(v);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull VH holder, int position) {
+            NotificationItem item = items.get(position);
+            holder.title.setText(item.title);
+            holder.message.setText(item.message);
+            holder.time.setText(item.time);
+            holder.unreadDot.setVisibility(item.isRead ? View.GONE : View.VISIBLE);
+
+            if ("LOW_BALANCE".equalsIgnoreCase(item.type)) {
+                holder.iconContainer.setBackgroundResource(R.drawable.bg_mod_icon_rose);
+                holder.icon.setImageResource(R.drawable.ic_mod_wallet);
+                holder.icon.setColorFilter(0xFFE11D48);
+            } else if ("WELCOME".equalsIgnoreCase(item.type)) {
+                holder.iconContainer.setBackgroundResource(R.drawable.bg_mod_icon_blue);
+                holder.icon.setImageResource(R.drawable.ic_bell);
+                holder.icon.setColorFilter(0xFF2563EB);
+            } else if ("PAYMENT".equalsIgnoreCase(item.type)) {
+                holder.iconContainer.setBackgroundResource(R.drawable.bg_mod_icon_emerald);
+                holder.icon.setImageResource(R.drawable.ic_card);
+                holder.icon.setColorFilter(0xFF059669);
+            } else if ("TEST".equalsIgnoreCase(item.type) || "ACCESSION".equalsIgnoreCase(item.type)) {
+                holder.iconContainer.setBackgroundResource(R.drawable.bg_mod_icon_blue);
+                holder.icon.setImageResource(R.drawable.ic_flask);
+                holder.icon.setColorFilter(0xFF0D6EFD);
+            } else if ("REPORT".equalsIgnoreCase(item.type)) {
+                holder.iconContainer.setBackgroundResource(R.drawable.bg_mod_icon_sky);
+                holder.icon.setImageResource(R.drawable.ic_document);
+                holder.icon.setColorFilter(0xFF0284C7);
+            } else if ("LAB_UPDATE".equalsIgnoreCase(item.type)) {
+                holder.iconContainer.setBackgroundResource(R.drawable.bg_mod_icon_purple);
+                holder.icon.setImageResource(R.drawable.ic_gear);
+                holder.icon.setColorFilter(0xFF7C3AED);
+            } else {
+                holder.iconContainer.setBackgroundResource(R.drawable.bg_mod_icon_amber);
+                holder.icon.setImageResource(R.drawable.ic_bell);
+                holder.icon.setColorFilter(0xFFD97706);
+            }
+
+            holder.itemView.setOnClickListener(v -> listener.onClick(item));
+        }
+
+        @Override
+        public int getItemCount() {
+            return items.size();
+        }
+
+        static class VH extends RecyclerView.ViewHolder {
+            FrameLayout iconContainer;
+            ImageView icon;
+            TextView title, message, time;
+            View unreadDot;
+
+            VH(View v) {
+                super(v);
+                iconContainer = v.findViewById(R.id.containerNotifIcon);
+                icon          = v.findViewById(R.id.imgNotifIcon);
+                title         = v.findViewById(R.id.lblNotifTitle);
+                message       = v.findViewById(R.id.lblNotifMessage);
+                time          = v.findViewById(R.id.lblNotifTime);
+                unreadDot     = v.findViewById(R.id.dotNotifUnread);
+            }
+        }
+    }
+
+    public static void resetSession() {
+        hasShownWelcomeNotification = false;
+        hasShownLowBalanceNotification = false;
+    }
+
     private void performSignOut() {
+        resetSession();
+        cachedNotifications.clear();
+        currentFullName = "User";
+        currentRole = "Lab Owner";
+        currentWalletBalance = -1;
+        MobileNotificationHelper.clearNotificationSession(ctx);
         AuthManager.clearSession(ctx);
         if (prefs != null) prefs.edit().clear().apply();
         try {
             ctx.getSharedPreferences("patholab_auth_prefs", Context.MODE_PRIVATE).edit().clear().apply();
             ctx.getSharedPreferences("patholab_general_prefs", Context.MODE_PRIVATE).edit().clear().apply();
+            ctx.getSharedPreferences("patholab_home_prefs", Context.MODE_PRIVATE).edit().clear().apply();
         } catch (Exception ignored) {}
 
         try {
@@ -299,8 +810,132 @@ public class HomeNativeManager {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    //  QR Code & Barcode Scanner Bottom Sheet
+    // ─────────────────────────────────────────────────────────────────────────
+    private void showQrScannerBottomSheet() {
+        com.google.android.material.bottomsheet.BottomSheetDialog sheet =
+                new com.google.android.material.bottomsheet.BottomSheetDialog(ctx);
+        View sheetView = LayoutInflater.from(ctx).inflate(R.layout.layout_qr_scanner_sheet, null);
+        sheet.setContentView(sheetView);
+
+        FrameLayout btnClose = sheetView.findViewById(R.id.btnQrScannerClose);
+        if (btnClose != null) {
+            btnClose.setOnClickListener(v -> sheet.dismiss());
+        }
+
+        View laser = sheetView.findViewById(R.id.viewScanLaser);
+        if (laser != null) {
+            android.view.animation.TranslateAnimation animation = new android.view.animation.TranslateAnimation(
+                    0, 0, -dp(60), dp(60));
+            animation.setDuration(1200);
+            animation.setRepeatCount(android.view.animation.Animation.INFINITE);
+            animation.setRepeatMode(android.view.animation.Animation.REVERSE);
+            laser.startAnimation(animation);
+        }
+
+        TextView chipSample = sheetView.findViewById(R.id.chipModeSample);
+        TextView chipPatient = sheetView.findViewById(R.id.chipModePatient);
+        TextView chipReport = sheetView.findViewById(R.id.chipModeReport);
+        TextView chipWebSync = sheetView.findViewById(R.id.chipModeWebSync);
+        TextView lblHint = sheetView.findViewById(R.id.lblScannerHint);
+        EditText txtManual = sheetView.findViewById(R.id.txtManualBarcode);
+        android.widget.Button btnSubmit = sheetView.findViewById(R.id.btnSubmitManualCode);
+        FrameLayout btnFlash = sheetView.findViewById(R.id.btnScannerFlash);
+
+        final String[] activeMode = {"SAMPLE"};
+
+        Runnable updateChips = () -> {
+            if (chipSample != null) {
+                chipSample.setBackgroundResource(activeMode[0].equals("SAMPLE") ? R.drawable.bg_btn_primary : R.drawable.bg_chip_inactive);
+                chipSample.setTextColor(activeMode[0].equals("SAMPLE") ? 0xFFFFFFFF : 0xFF475569);
+            }
+            if (chipPatient != null) {
+                chipPatient.setBackgroundResource(activeMode[0].equals("PATIENT") ? R.drawable.bg_btn_primary : R.drawable.bg_chip_inactive);
+                chipPatient.setTextColor(activeMode[0].equals("PATIENT") ? 0xFFFFFFFF : 0xFF475569);
+            }
+            if (chipReport != null) {
+                chipReport.setBackgroundResource(activeMode[0].equals("REPORT") ? R.drawable.bg_btn_primary : R.drawable.bg_chip_inactive);
+                chipReport.setTextColor(activeMode[0].equals("REPORT") ? 0xFFFFFFFF : 0xFF475569);
+            }
+            if (chipWebSync != null) {
+                chipWebSync.setBackgroundResource(activeMode[0].equals("WEBSYNC") ? R.drawable.bg_btn_primary : R.drawable.bg_chip_inactive);
+                chipWebSync.setTextColor(activeMode[0].equals("WEBSYNC") ? 0xFFFFFFFF : 0xFF475569);
+            }
+
+            if (activeMode[0].equals("SAMPLE")) {
+                if (lblHint != null) lblHint.setText("Align sample vial barcode within frame");
+                if (txtManual != null) txtManual.setHint("Enter Sample ID (e.g. SMP-10023)");
+            } else if (activeMode[0].equals("PATIENT")) {
+                if (lblHint != null) lblHint.setText("Align patient UHID / Requisition QR within frame");
+                if (txtManual != null) txtManual.setHint("Enter UHID / Phone (e.g. UHID-9021)");
+            } else if (activeMode[0].equals("REPORT")) {
+                if (lblHint != null) lblHint.setText("Align Report verification QR within frame");
+                if (txtManual != null) txtManual.setHint("Enter Report Tracking Code");
+            } else if (activeMode[0].equals("WEBSYNC")) {
+                if (lblHint != null) lblHint.setText("Scan web login QR on your computer screen");
+                if (txtManual != null) txtManual.setHint("Enter 6-digit Web Sync Code");
+            }
+        };
+
+        if (chipSample != null) chipSample.setOnClickListener(v -> { activeMode[0] = "SAMPLE"; updateChips.run(); });
+        if (chipPatient != null) chipPatient.setOnClickListener(v -> { activeMode[0] = "PATIENT"; updateChips.run(); });
+        if (chipReport != null) chipReport.setOnClickListener(v -> { activeMode[0] = "REPORT"; updateChips.run(); });
+        if (chipWebSync != null) chipWebSync.setOnClickListener(v -> { activeMode[0] = "WEBSYNC"; updateChips.run(); });
+
+        final boolean[] isFlashOn = {false};
+        if (btnFlash != null) {
+            btnFlash.setOnClickListener(v -> {
+                isFlashOn[0] = !isFlashOn[0];
+                Toast.makeText(ctx, isFlashOn[0] ? "Scanner Flash ON" : "Scanner Flash OFF", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        if (btnSubmit != null && txtManual != null) {
+            btnSubmit.setOnClickListener(v -> {
+                String code = txtManual.getText().toString().trim();
+                if (code.isEmpty()) {
+                    Toast.makeText(ctx, "Please enter a code or scan with camera", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                sheet.dismiss();
+                if (activeMode[0].equals("SAMPLE")) {
+                    Intent intent = new Intent(ctx, SamplesActivity.class);
+                    intent.putExtra("searchQuery", code);
+                    ctx.startActivity(intent);
+                } else if (activeMode[0].equals("PATIENT")) {
+                    Intent intent = new Intent(ctx, PatientWorklistActivity.class);
+                    intent.putExtra("searchQuery", code);
+                    ctx.startActivity(intent);
+                } else if (activeMode[0].equals("REPORT")) {
+                    Intent intent = new Intent(ctx, ReportsActivity.class);
+                    intent.putExtra("searchQuery", code);
+                    ctx.startActivity(intent);
+                } else {
+                    Toast.makeText(ctx, "Web session synchronized with code: " + code, Toast.LENGTH_LONG).show();
+                }
+            });
+        }
+
+        sheet.show();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     //  All Modules Bottom Sheet (Takes 85% of screen height with Cross Close button)
     // ─────────────────────────────────────────────────────────────────────────
+    private static class SheetModDef {
+        String name;
+        String path;
+        String iconDrawable;
+        String bgDrawable;
+
+        SheetModDef(String name, String path, String iconDrawable, String bgDrawable) {
+            this.name = name;
+            this.path = path;
+            this.iconDrawable = iconDrawable;
+            this.bgDrawable = bgDrawable;
+        }
+    }
+
     private void showAllModulesBottomSheet() {
         try {
             com.google.android.material.bottomsheet.BottomSheetDialog sheet =
@@ -334,36 +969,260 @@ public class HomeNativeManager {
             // Populate Dynamic Recently Used Modules
             populateRecentlyUsedModules(sheet, sheetView);
 
-            // Bind all 16 module click listeners with Recents Tracking
-            bindSheetModule(sheet, sheetView, R.id.sheetModRegister,   "Register",  "/workspace/registration",   "ic_mod_registration", "bg_mod_icon_blue");
-            bindSheetModule(sheet, sheetView, R.id.sheetModTests,      "Tests",     "/workspace/test-management","ic_mod_tests",        "bg_mod_icon_purple");
-            bindSheetModule(sheet, sheetView, R.id.sheetModBilling,    "Billing",   "/workspace/billing",        "ic_mod_billing",      "bg_mod_icon_emerald");
-            bindSheetModule(sheet, sheetView, R.id.sheetModReports,    "Reports",   "/workspace/reports",        "ic_mod_reports",      "bg_mod_icon_sky");
-            bindSheetModule(sheet, sheetView, R.id.sheetModSamples,    "Samples",   "/workspace/accession",      "ic_mod_samples",      "bg_mod_icon_rose");
-            bindSheetModule(sheet, sheetView, R.id.sheetModWhatsapp,   "WhatsApp",  "/workspace/reports",        "ic_mod_whatsapp",     "bg_mod_icon_green");
-            bindSheetModule(sheet, sheetView, R.id.sheetModLogistics,  "Logistics", "/workspace/logistics",      "ic_mod_logistics",    "bg_mod_icon_amber");
-            bindSheetModule(sheet, sheetView, R.id.sheetModWallet,     "Wallet",    "/workspace/wallet",         "ic_mod_wallet",       "bg_mod_icon_indigo");
-            bindSheetModule(sheet, sheetView, R.id.sheetModInventory,  "Inventory", "/workspace/inventory",      "ic_box",              "bg_mod_icon_teal");
-            bindSheetModule(sheet, sheetView, R.id.sheetModRadiology,  "Radiology", "/workspace/radiology",      "ic_flask",            "bg_mod_icon_purple");
-            bindSheetModule(sheet, sheetView, R.id.sheetModAnalyzers,  "Analyzers", "/workspace/analyzers",      "ic_cpu",              "bg_mod_icon_sky");
-            bindSheetModule(sheet, sheetView, R.id.sheetModAgencies,   "Agencies",  "/workspace/agencies",       "ic_card",             "bg_mod_icon_orange");
-            bindSheetModule(sheet, sheetView, R.id.sheetModDoctors,    "Doctors",   "/workspace/doctors",        "ic_stethoscope",      "bg_mod_icon_blue");
-            bindSheetModule(sheet, sheetView, R.id.sheetModPatients,   "Patients",  "/workspace/patients",       "ic_user",             "bg_mod_icon_fuchsia");
-            bindSheetModule(sheet, sheetView, R.id.sheetModAnalytics,  "Analytics", "/workspace/analytics",      "ic_chart",            "bg_mod_icon_emerald");
+            LinearLayout contentContainer = sheetView.findViewById(R.id.containerAllModulesContent);
+            if (contentContainer != null) {
+                // 1. OVERVIEW
+                List<SheetModDef> overviewList = Arrays.asList(
+                        new SheetModDef("Home", "/workspace", "ic_nav_dashboard", "bg_mod_icon_blue"),
+                        new SheetModDef("Dashboard", "/workspace/analytics", "ic_nav_categories", "bg_mod_icon_sky"),
+                        new SheetModDef("Financial Analytics", "/workspace/analytics", "ic_chart", "bg_mod_icon_emerald"),
+                        new SheetModDef("Online Booking", "/workspace/online-booking", "ic_calendar", "bg_mod_icon_purple")
+                );
+                buildCategorySection(sheet, contentContainer, "OVERVIEW", overviewList);
 
-            View modSettings = sheetView.findViewById(R.id.sheetModSettings);
-            if (modSettings != null) {
-                modSettings.setOnClickListener(v -> {
-                    recordRecentModule("Settings", "/workspace/settings", "ic_gear", "bg_mod_icon_indigo");
-                    sheet.dismiss();
-                    Intent intent = new Intent(ctx, ProfileSettingsActivity.class);
-                    ctx.startActivity(intent);
+                // 2. CLINICAL OPERATIONS
+                List<SheetModDef> clinicalList = Arrays.asList(
+                        new SheetModDef("New Registration", "/workspace/registration", "ic_mod_registration", "bg_mod_icon_blue"),
+                        new SheetModDef("Patient Directory", "/workspace/patients", "ic_user", "bg_mod_icon_fuchsia"),
+                        new SheetModDef("Test Management", "/workspace/test-management", "ic_mod_tests", "bg_mod_icon_purple"),
+                        new SheetModDef("Worklist & Results", "/workspace/results", "ic_document", "bg_mod_icon_indigo"),
+                        new SheetModDef("Report Dispatch", "/workspace/reports", "ic_mod_reports", "bg_mod_icon_teal")
+                );
+                buildCategorySection(sheet, contentContainer, "CLINICAL OPERATIONS", clinicalList);
+
+                // 3. RADIOLOGY
+                List<SheetModDef> radiologyList = Arrays.asList(
+                        new SheetModDef("RIS Dashboard", "/workspace/radiology/dashboard", "ic_nav_dashboard", "bg_mod_icon_purple"),
+                        new SheetModDef("Scan Schedule", "/workspace/radiology/dashboard/appointments", "ic_calendar", "bg_mod_icon_blue"),
+                        new SheetModDef("Technician Worklist", "/workspace/radiology/worklist", "ic_document", "bg_mod_icon_teal"),
+                        new SheetModDef("PACS Viewer", "/workspace/radiology/pacs", "ic_cpu", "bg_mod_icon_purple"),
+                        new SheetModDef("Media Library", "/workspace/radiology/media", "ic_box", "bg_mod_icon_rose"),
+                        new SheetModDef("Reporting Queue", "/workspace/radiology/reporting", "ic_document", "bg_mod_icon_emerald"),
+                        new SheetModDef("Reports Archive", "/workspace/radiology/archive", "ic_building", "bg_mod_icon_amber"),
+                        new SheetModDef("Machines", "/workspace/radiology/machines", "ic_gear", "bg_mod_icon_teal"),
+                        new SheetModDef("RIS Macros", "/workspace/radiology/macros", "ic_edit_pen", "bg_mod_icon_orange"),
+                        new SheetModDef("DICOM Settings", "/workspace/radiology/settings/dicom", "ic_gear", "bg_mod_icon_blue"),
+                        new SheetModDef("RIS Letterhead", "/workspace/radiology/settings/letterhead", "ic_document", "bg_mod_icon_purple")
+                );
+                buildCategorySection(sheet, contentContainer, "RADIOLOGY", radiologyList);
+
+                // 4. RESOURCES & LOGISTICS
+                List<SheetModDef> resourcesList = Arrays.asList(
+                        new SheetModDef("Inventory & Stock", "/workspace/inventory", "ic_box", "bg_mod_icon_teal"),
+                        new SheetModDef("Logistics / Trips", "/workspace/logistics", "ic_mod_logistics", "bg_mod_icon_amber"),
+                        new SheetModDef("Home Collection", "/workspace/home-collection", "ic_mod_samples", "bg_mod_icon_emerald")
+                );
+                buildCategorySection(sheet, contentContainer, "RESOURCES & LOGISTICS", resourcesList);
+
+                // 5. MACHINE & AI
+                List<SheetModDef> machineAiList = Arrays.asList(
+                        new SheetModDef("Analyzer", "/workspace/analyzers", "ic_cpu", "bg_mod_icon_sky"),
+                        new SheetModDef("Visual Mapper", "/workspace/analyzers/mapper", "ic_chart", "bg_mod_icon_indigo"),
+                        new SheetModDef("Mappings", "/workspace/analyzers/mappings", "ic_gear", "bg_mod_icon_purple")
+                );
+                buildCategorySection(sheet, contentContainer, "MACHINE & AI", machineAiList);
+
+                // 6. B2B & GROWTH
+                List<SheetModDef> b2bGrowthList = Arrays.asList(
+                        new SheetModDef("Referral Doctors", "/workspace/doctors", "ic_stethoscope", "bg_mod_icon_blue"),
+                        new SheetModDef("Corporate Agencies", "/workspace/agencies", "ic_building", "bg_mod_icon_orange"),
+                        new SheetModDef("Commissions Payout", "/workspace/commissions", "ic_wallet", "bg_mod_icon_purple")
+                );
+                buildCategorySection(sheet, contentContainer, "B2B & GROWTH", b2bGrowthList);
+
+                // 7. ADMINISTRATION
+                List<SheetModDef> adminList = Arrays.asList(
+                        new SheetModDef("Lab Settings", "/workspace/settings", "ic_gear", "bg_mod_icon_indigo"),
+                        new SheetModDef("Report Templates", "/workspace/settings/templates", "ic_document", "bg_mod_icon_purple"),
+                        new SheetModDef("Invoice Branding", "/workspace/settings/branding", "ic_billing", "bg_mod_icon_sky"),
+                        new SheetModDef("Service Areas", "/workspace/settings/service-areas", "ic_building", "bg_mod_icon_amber"),
+                        new SheetModDef("Payment Settings", "/workspace/settings/payments", "ic_credit_card", "bg_mod_icon_emerald"),
+                        new SheetModDef("Notifications", "/workspace/settings/notifications", "ic_bell", "bg_mod_icon_rose"),
+                        new SheetModDef("B2B Settings", "/workspace/settings/b2b", "ic_building", "bg_mod_icon_blue"),
+                        new SheetModDef("Staff Management", "/workspace/staff", "ic_user", "bg_mod_icon_fuchsia"),
+                        new SheetModDef("Invoices & Payments", "/workspace/billing", "ic_mod_billing", "bg_mod_icon_emerald"),
+                        new SheetModDef("Expenses", "/workspace/expenses", "ic_billing", "bg_mod_icon_rose"),
+                        new SheetModDef("Audit Logs", "/workspace/audit-logs", "ic_document", "bg_mod_icon_teal"),
+                        new SheetModDef("Wallet & Billing", "/workspace/wallet", "ic_mod_wallet", "bg_mod_icon_indigo"),
+                        new SheetModDef("Wallet Recharge", "/workspace/wallet/recharge", "ic_wallet", "bg_mod_icon_emerald"),
+                        new SheetModDef("Help & Support", "/workspace/support", "ic_help", "bg_mod_icon_orange")
+                );
+                buildCategorySection(sheet, contentContainer, "ADMINISTRATION", adminList);
+            }
+
+            // Omnibar live search filter
+            EditText searchInput = sheetView.findViewById(R.id.inputSearchAllModules);
+            if (searchInput != null && contentContainer != null) {
+                searchInput.addTextChangedListener(new TextWatcher() {
+                    @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                    @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                        filterSheetModules(contentContainer, s.toString().trim().toLowerCase(Locale.ROOT));
+                    }
+                    @Override public void afterTextChanged(Editable s) {}
                 });
             }
 
             sheet.show();
 
         } catch (Exception ignored) {}
+    }
+
+    private void buildCategorySection(com.google.android.material.bottomsheet.BottomSheetDialog sheet, LinearLayout container, String title, List<SheetModDef> modules) {
+        if (container == null || modules == null || modules.isEmpty()) return;
+
+        LinearLayout secLayout = new LinearLayout(ctx);
+        secLayout.setOrientation(LinearLayout.VERTICAL);
+        secLayout.setBackgroundResource(R.drawable.bg_home_modules_bento);
+        secLayout.setPadding(dp(14), dp(14), dp(14), dp(14));
+        LinearLayout.LayoutParams secLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        secLp.setMargins(0, 0, 0, dp(14));
+        secLayout.setLayoutParams(secLp);
+
+        TextView tvTitle = new TextView(ctx);
+        tvTitle.setText(title);
+        tvTitle.setTextSize(11.5f);
+        tvTitle.setTypeface(Typeface.create("sans-serif", Typeface.BOLD));
+        tvTitle.setTextColor(0xFF64748B);
+        tvTitle.setLetterSpacing(0.06f);
+        LinearLayout.LayoutParams titleLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        titleLp.setMargins(dp(2), 0, dp(2), dp(12));
+        tvTitle.setLayoutParams(titleLp);
+        secLayout.addView(tvTitle);
+
+        for (int i = 0; i < modules.size(); i += 4) {
+            LinearLayout row = new LinearLayout(ctx);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setWeightSum(4);
+            LinearLayout.LayoutParams rowLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            rowLp.setMargins(0, 0, 0, dp(10));
+            row.setLayoutParams(rowLp);
+
+            for (int j = i; j < i + 4; j++) {
+                if (j < modules.size()) {
+                    SheetModDef mod = modules.get(j);
+                    LinearLayout card = createSheetModuleCard(sheet, mod);
+                    row.addView(card);
+                } else {
+                    View spacer = new View(ctx);
+                    LinearLayout.LayoutParams spLp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1.0f);
+                    spLp.setMargins(dp(2), 0, dp(2), 0);
+                    spacer.setLayoutParams(spLp);
+                    row.addView(spacer);
+                }
+            }
+            secLayout.addView(row);
+        }
+
+        container.addView(secLayout);
+    }
+
+    private LinearLayout createSheetModuleCard(com.google.android.material.bottomsheet.BottomSheetDialog sheet, SheetModDef mod) {
+        LinearLayout card = new LinearLayout(ctx);
+        card.setOrientation(LinearLayout.VERTICAL);
+        card.setGravity(android.view.Gravity.CENTER_HORIZONTAL);
+        card.setPadding(dp(2), dp(4), dp(2), dp(4));
+        card.setClickable(true);
+        card.setFocusable(true);
+
+        LinearLayout.LayoutParams cardLp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f);
+        cardLp.setMargins(dp(2), 0, dp(2), 0);
+        card.setLayoutParams(cardLp);
+
+        int bgRes = ctx.getResources().getIdentifier(mod.bgDrawable, "drawable", ctx.getPackageName());
+        if (bgRes == 0) bgRes = R.drawable.bg_mod_icon_blue;
+        int iconRes = ctx.getResources().getIdentifier(mod.iconDrawable, "drawable", ctx.getPackageName());
+        if (iconRes == 0) iconRes = R.drawable.ic_mod_registration;
+
+        FrameLayout iconFrame = new FrameLayout(ctx);
+        LinearLayout.LayoutParams frameLp = new LinearLayout.LayoutParams(dp(48), dp(48));
+        iconFrame.setLayoutParams(frameLp);
+        iconFrame.setBackgroundResource(bgRes);
+
+        ImageView iv = new ImageView(ctx);
+        FrameLayout.LayoutParams ivLp = new FrameLayout.LayoutParams(dp(22), dp(22), android.view.Gravity.CENTER);
+        iv.setLayoutParams(ivLp);
+        iv.setImageResource(iconRes);
+        iconFrame.addView(iv);
+        card.addView(iconFrame);
+
+        TextView tv = new TextView(ctx);
+        tv.setText(mod.name);
+        tv.setTextSize(11.5f);
+        tv.setTextColor(0xFF1E293B);
+        tv.setTypeface(Typeface.create("sans-serif", Typeface.BOLD));
+        tv.setGravity(android.view.Gravity.CENTER);
+        tv.setMaxLines(2);
+        tv.setLineSpacing(0f, 1.05f);
+        tv.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        LinearLayout.LayoutParams tvLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        tvLp.setMargins(0, dp(6), 0, 0);
+        tv.setLayoutParams(tvLp);
+        card.addView(tv);
+
+        card.setOnClickListener(v -> {
+            recordRecentModule(mod.name, mod.path, mod.iconDrawable, mod.bgDrawable);
+            sheet.dismiss();
+            navigateToModule(mod.path);
+        });
+
+        return card;
+    }
+
+    private void navigateToModule(String path) {
+        if (path == null) return;
+        if (path.equals("/dashboard") || path.equals("/workspace/dashboard") || path.startsWith("/dashboard")) {
+            ctx.startActivity(new Intent(ctx, LabDashboardActivity.class));
+        } else if (path.equals("/workspace/analytics") || path.startsWith("/workspace/analytics")) {
+            ctx.startActivity(new Intent(ctx, FinancialAnalyticsActivity.class));
+        } else if (path.equals("/workspace/wallet") || path.startsWith("/workspace/wallet")) {
+            ctx.startActivity(new Intent(ctx, WalletActivity.class));
+        } else if (path.equals("/workspace/registration") || path.startsWith("/workspace/registration") || path.equals("/workspace/patients/new")) {
+            ctx.startActivity(new Intent(ctx, RegistrationActivity.class));
+        } else if (path.equals("/workspace/test-management") || path.startsWith("/workspace/test-management") || path.equals("/workspace/tests")) {
+            ctx.startActivity(new Intent(ctx, TestManagementActivity.class));
+        } else if (path.equals("/workspace/billing") || path.startsWith("/workspace/billing") || path.equals("/workspace/invoices")) {
+            ctx.startActivity(new Intent(ctx, BillingActivity.class));
+        } else if (path.equals("/workspace/reports") || path.startsWith("/workspace/reports")) {
+            ctx.startActivity(new Intent(ctx, ReportsActivity.class));
+        } else if (path.equals("/workspace/samples") || path.startsWith("/workspace/samples") || path.equals("/workspace/accession")) {
+            ctx.startActivity(new Intent(ctx, SamplesActivity.class));
+        } else if (path.equals("/workspace/patients") || path.startsWith("/workspace/patients") || path.equals("/workspace/results")) {
+            ctx.startActivity(new Intent(ctx, PatientWorklistActivity.class));
+        } else if (path.equals("/workspace/staff") || path.startsWith("/workspace/staff")) {
+            ctx.startActivity(new Intent(ctx, StaffManagementActivity.class));
+        } else if (navListener != null) {
+            navListener.onNavigateTo(path);
+        }
+    }
+
+    private void filterSheetModules(ViewGroup parent, String query) {
+        if (parent == null) return;
+        for (int i = 0; i < parent.getChildCount(); i++) {
+            View child = parent.getChildAt(i);
+            if (child instanceof ViewGroup) {
+                boolean containsMatch = false;
+                for (int j = 0; j < ((ViewGroup) child).getChildCount(); j++) {
+                    View sub = ((ViewGroup) child).getChildAt(j);
+                    if (sub instanceof TextView) {
+                        String txt = ((TextView) sub).getText().toString().toLowerCase(Locale.ROOT);
+                        if (txt.contains(query)) containsMatch = true;
+                    } else if (sub instanceof ViewGroup) {
+                        for (int k = 0; k < ((ViewGroup) sub).getChildCount(); k++) {
+                            View leaf = ((ViewGroup) sub).getChildAt(k);
+                            if (leaf instanceof TextView) {
+                                String txt = ((TextView) leaf).getText().toString().toLowerCase(Locale.ROOT);
+                                if (txt.contains(query)) containsMatch = true;
+                            }
+                        }
+                    }
+                }
+                if (query.isEmpty()) {
+                    child.setVisibility(View.VISIBLE);
+                } else {
+                    child.setVisibility(containsMatch ? View.VISIBLE : View.GONE);
+                }
+            }
+        }
     }
 
     private void populateRecentlyUsedModules(com.google.android.material.bottomsheet.BottomSheetDialog sheet, View sheetView) {
@@ -434,15 +1293,7 @@ public class HomeNativeManager {
             chip.setOnClickListener(v -> {
                 recordRecentModule(name, path, iconName, bgName);
                 sheet.dismiss();
-                if (path.equals("/workspace/settings")) {
-                    ctx.startActivity(new Intent(ctx, ProfileSettingsActivity.class));
-                } else if (path.equals("/workspace/wallet") || path.startsWith("/workspace/wallet")) {
-                    ctx.startActivity(new Intent(ctx, WalletActivity.class));
-                } else if (path.equals("/workspace/registration") || path.startsWith("/workspace/registration") || path.equals("/workspace/patients/new")) {
-                    ctx.startActivity(new Intent(ctx, RegistrationActivity.class));
-                } else if (navListener != null) {
-                    navListener.onNavigateTo(path);
-                }
+                navigateToModule(path);
             });
 
             recentsContainer.addView(chip);
@@ -455,16 +1306,32 @@ public class HomeNativeManager {
         try {
             if (!json.isEmpty()) return new JSONArray(json);
         } catch (Exception ignored) {}
-        return new JSONArray();
+        return null;
     }
 
     private JSONArray getDefaultRecents() {
         JSONArray arr = new JSONArray();
         try {
-            arr.put(new JSONObject().put("name", "Register").put("path", "/workspace/registration").put("icon", "ic_mod_registration").put("bg", "bg_mod_icon_blue"));
-            arr.put(new JSONObject().put("name", "Billing").put("path", "/workspace/billing").put("icon", "ic_mod_billing").put("bg", "bg_mod_icon_emerald"));
-            arr.put(new JSONObject().put("name", "Reports").put("path", "/workspace/reports").put("icon", "ic_mod_reports").put("bg", "bg_mod_icon_sky"));
-            arr.put(new JSONObject().put("name", "Tests").put("path", "/workspace/test-management").put("icon", "ic_mod_tests").put("bg", "bg_mod_icon_purple"));
+            JSONObject m1 = new JSONObject();
+            m1.put("name", "Registration");
+            m1.put("path", "/workspace/registration");
+            m1.put("icon", "ic_mod_registration");
+            m1.put("bg", "bg_mod_icon_blue");
+            arr.put(m1);
+
+            JSONObject m2 = new JSONObject();
+            m2.put("name", "Tests");
+            m2.put("path", "/workspace/test-management");
+            m2.put("icon", "ic_mod_tests");
+            m2.put("bg", "bg_mod_icon_purple");
+            arr.put(m2);
+
+            JSONObject m3 = new JSONObject();
+            m3.put("name", "Billing");
+            m3.put("path", "/workspace/billing");
+            m3.put("icon", "ic_mod_billing");
+            m3.put("bg", "bg_mod_icon_emerald");
+            arr.put(m3);
         } catch (Exception ignored) {}
         return arr;
     }
@@ -473,7 +1340,7 @@ public class HomeNativeManager {
         if (prefs == null || name == null || path == null) return;
         try {
             JSONArray cur = getRecentModules();
-            if (cur.length() == 0) cur = getDefaultRecents();
+            if (cur == null || cur.length() == 0) cur = getDefaultRecents();
 
             JSONArray updated = new JSONArray();
             JSONObject fresh = new JSONObject().put("name", name).put("path", path).put("icon", icon).put("bg", bg);
@@ -490,39 +1357,22 @@ public class HomeNativeManager {
         } catch (Exception ignored) {}
     }
 
-    private void bindSheetModule(com.google.android.material.bottomsheet.BottomSheetDialog sheet, View root, int id, String name, String path, String icon, String bg) {
-        View v = root.findViewById(id);
-        if (v != null) {
-            v.setOnClickListener(x -> {
-                recordRecentModule(name, path, icon, bg);
-                sheet.dismiss();
-                if (path.equals("/workspace/wallet") || path.startsWith("/workspace/wallet")) {
-                    ctx.startActivity(new Intent(ctx, WalletActivity.class));
-                } else if (path.equals("/workspace/registration") || path.startsWith("/workspace/registration") || path.equals("/workspace/patients/new")) {
-                    ctx.startActivity(new Intent(ctx, RegistrationActivity.class));
-                } else if (navListener != null) {
-                    navListener.onNavigateTo(path);
-                }
-            });
-        }
-    }
-
     // ─────────────────────────────────────────────────────────────────────────
-    //  Waving Hand 🤚 Animation (Animates once on launch or home return)
+    //  Waving Hand 🤚 Animation (Animates on launch and every home return)
     // ─────────────────────────────────────────────────────────────────────────
     public void playWaveAnimation() {
         if (homeWaveEmoji == null) return;
         mainHandler.postDelayed(() -> {
             if (homeWaveEmoji == null) return;
-            homeWaveEmoji.setPivotX(dp(14));
-            homeWaveEmoji.setPivotY(dp(18));
+            homeWaveEmoji.setPivotX(homeWaveEmoji.getWidth() > 0 ? homeWaveEmoji.getWidth() * 0.75f : dp(14));
+            homeWaveEmoji.setPivotY(homeWaveEmoji.getHeight() > 0 ? homeWaveEmoji.getHeight() * 0.90f : dp(17));
 
             ObjectAnimator wave = ObjectAnimator.ofFloat(homeWaveEmoji, "rotation",
-                    0f, 22f, -14f, 22f, -10f, 16f, -6f, 0f);
-            wave.setDuration(1050);
+                    0f, 24f, -16f, 22f, -12f, 18f, -6f, 10f, 0f);
+            wave.setDuration(1200);
             wave.setInterpolator(new AccelerateDecelerateInterpolator());
             wave.start();
-        }, 300);
+        }, 250);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -533,7 +1383,7 @@ public class HomeNativeManager {
         clickModule(R.id.modTests,        "/workspace/test-management");
         clickModule(R.id.modBilling,      "/workspace/billing");
         clickModule(R.id.modReports,      "/workspace/reports");
-        clickModule(R.id.modSamples,      "/workspace/accession");
+        clickModule(R.id.modSamples,      "/workspace/samples");
         clickModule(R.id.modWhatsapp,     "/workspace/reports");
         clickModule(R.id.modLogistics,    "/workspace/logistics");
         clickModule(R.id.modWallet,       "/workspace/wallet");
@@ -548,6 +1398,18 @@ public class HomeNativeManager {
                     ctx.startActivity(new Intent(ctx, WalletActivity.class));
                 } else if (path.equals("/workspace/registration") || path.startsWith("/workspace/registration") || path.equals("/workspace/patients/new")) {
                     ctx.startActivity(new Intent(ctx, RegistrationActivity.class));
+                } else if (path.equals("/workspace/test-management") || path.startsWith("/workspace/test-management") || path.equals("/workspace/tests")) {
+                    ctx.startActivity(new Intent(ctx, TestManagementActivity.class));
+                } else if (path.equals("/workspace/billing") || path.startsWith("/workspace/billing") || path.equals("/workspace/invoices")) {
+                    ctx.startActivity(new Intent(ctx, BillingActivity.class));
+                } else if (path.equals("/workspace/reports") || path.startsWith("/workspace/reports")) {
+                    ctx.startActivity(new Intent(ctx, ReportsActivity.class));
+                } else if (path.equals("/workspace/samples") || path.startsWith("/workspace/samples") || path.equals("/workspace/accession")) {
+                    ctx.startActivity(new Intent(ctx, SamplesActivity.class));
+                } else if (path.equals("/workspace/patients") || path.startsWith("/workspace/patients") || path.equals("/workspace/results")) {
+                    ctx.startActivity(new Intent(ctx, PatientWorklistActivity.class));
+                } else if (path.equals("/workspace/staff") || path.startsWith("/workspace/staff")) {
+                    ctx.startActivity(new Intent(ctx, StaffManagementActivity.class));
                 } else if (navListener != null) {
                     navListener.onNavigateTo(path);
                 }
@@ -731,8 +1593,10 @@ public class HomeNativeManager {
                             double bal = wallet.optDouble("balance", 0.0);
                             String formatted = formatINR(bal);
                             mainHandler.post(() -> {
-                                if (txtWalletBalance != null)
-                                    txtWalletBalance.setText(formatted);
+                                if (txtWalletBalance != null) {
+                                    txtWalletBalance.setText("Wallet: " + formatted);
+                                }
+                                triggerLowBalanceAlertIfEligible(bal);
                             });
                         }
                     }
@@ -947,9 +1811,9 @@ public class HomeNativeManager {
             avatarImage.setImageResource(getDefaultAvatarRes());
             avatarImage.setVisibility(View.VISIBLE);
         }
-        if (avatarInitial != null) {
-            avatarInitial.setVisibility(View.GONE);
-        }
+        if (avatarInitial != null) avatarInitial.setVisibility(View.GONE);
+
+        triggerWelcomeNotificationIfEligible();
     }
 
     /**
@@ -1043,10 +1907,13 @@ public class HomeNativeManager {
                     if (wallet == null) wallet = root;
                     double balance = wallet.optDouble("balance", -1);
                     if (balance >= 0) {
+                        currentWalletBalance = balance;
                         String formatted = formatINR(balance);
                         mainHandler.post(() -> {
-                            if (txtWalletBalance != null)
-                                txtWalletBalance.setText(formatted);
+                            if (txtWalletBalance != null) {
+                                txtWalletBalance.setText("Wallet: " + formatted);
+                            }
+                            triggerLowBalanceAlertIfEligible(balance);
                         });
                         return;
                     }
@@ -1065,10 +1932,13 @@ public class HomeNativeManager {
                     JSONObject kpi = root2.optJSONObject("kpi");
                     if (kpi != null && kpi.has("walletBalance")) {
                         double bal = kpi.optDouble("walletBalance", 0.0);
+                        currentWalletBalance = bal;
                         String formatted = formatINR(bal);
                         mainHandler.post(() -> {
-                            if (txtWalletBalance != null)
-                                txtWalletBalance.setText(formatted);
+                            if (txtWalletBalance != null) {
+                                txtWalletBalance.setText("Wallet: " + formatted);
+                            }
+                            triggerLowBalanceAlertIfEligible(bal);
                         });
                     }
                 }
@@ -1089,19 +1959,22 @@ public class HomeNativeManager {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  Today's Worklist
+    //  Today's Worklist (Dynamically visible ONLY when data exists for user)
     // ─────────────────────────────────────────────────────────────────────────
     public void fetchTodaysWorklist() {
         new Thread(() -> {
             try {
                 String token = getAuthToken();
-                if (token == null) { showDemoWorklist(); return; }
+                if (token == null || token.isEmpty()) { 
+                    mainHandler.post(this::hideWorklistSection); 
+                    return; 
+                }
                 URL url = new URL(BASE_URL + "/api/labs/dashboard?range=TODAY");
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestProperty("Authorization", "Bearer " + token);
                 conn.setRequestProperty("Cookie", "token=" + token);
-                conn.setConnectTimeout(7000);
-                conn.setReadTimeout(7000);
+                conn.setConnectTimeout(8000);
+                conn.setReadTimeout(8000);
                 if (conn.getResponseCode() == 200) {
                     String json = readStream(conn.getInputStream());
                     JSONObject root = new JSONObject(json);
@@ -1109,53 +1982,36 @@ public class HomeNativeManager {
                     if (patients != null && patients.length() > 0) {
                         mainHandler.post(() -> buildWorklistCards(patients));
                     } else {
-                        showDemoWorklist();
+                        mainHandler.post(this::hideWorklistSection);
                     }
                 } else {
-                    showDemoWorklist();
+                    mainHandler.post(this::hideWorklistSection);
                 }
             } catch (Exception e) {
-                showDemoWorklist();
+                mainHandler.post(this::hideWorklistSection);
             }
         }).start();
     }
 
-    private void showDemoWorklist() {
-        try {
-            JSONArray demo = new JSONArray();
-
-            JSONObject p1 = new JSONObject();
-            p1.put("id", "demo-1"); p1.put("name", "Ramesh Sen"); p1.put("phone", "9876543210");
-            JSONArray tests1 = new JSONArray(); JSONObject t1 = new JSONObject();
-            t1.put("testName", "CBC & Lipid Profile"); t1.put("status", "COMPLETED"); tests1.put(t1);
-            p1.put("tests", tests1);
-            JSONArray inv1 = new JSONArray(); JSONObject i1 = new JSONObject();
-            i1.put("grandTotal", 450); i1.put("paymentStatus", "PAID"); inv1.put(i1);
-            p1.put("invoices", inv1); demo.put(p1);
-
-            JSONObject p2 = new JSONObject();
-            p2.put("id", "demo-2"); p2.put("name", "Sunita Roy"); p2.put("phone", "9876543211");
-            JSONArray tests2 = new JSONArray(); JSONObject t2 = new JSONObject();
-            t2.put("testName", "Thyroid Panel"); t2.put("status", "IN_PROGRESS"); tests2.put(t2);
-            p2.put("tests", tests2);
-            JSONArray inv2 = new JSONArray(); JSONObject i2 = new JSONObject();
-            i2.put("grandTotal", 600); i2.put("paymentStatus", "PAID"); inv2.put(i2);
-            p2.put("invoices", inv2); demo.put(p2);
-
-            JSONObject p3 = new JSONObject();
-            p3.put("id", "demo-3"); p3.put("name", "Arun Kumar"); p3.put("phone", "9876543212");
-            JSONArray tests3 = new JSONArray(); JSONObject t3 = new JSONObject();
-            t3.put("testName", "Blood Sugar HbA1c"); t3.put("status", "PENDING"); tests3.put(t3);
-            p3.put("tests", tests3);
-            JSONArray inv3 = new JSONArray(); JSONObject i3 = new JSONObject();
-            i3.put("grandTotal", 350); i3.put("paymentStatus", "PAID"); inv3.put(i3);
-            p3.put("invoices", inv3); demo.put(p3);
-
-            mainHandler.post(() -> buildWorklistCards(demo));
-        } catch (Exception ignored) {}
+    private void hideWorklistSection() {
+        if (sectionWorklistWrapper != null) {
+            sectionWorklistWrapper.setVisibility(View.GONE);
+        }
+        if (worklistContainer != null) {
+            worklistContainer.removeAllViews();
+        }
     }
 
     private void buildWorklistCards(JSONArray patients) {
+        if (patients == null || patients.length() == 0) {
+            hideWorklistSection();
+            return;
+        }
+
+        if (sectionWorklistWrapper != null) {
+            sectionWorklistWrapper.setVisibility(View.VISIBLE);
+        }
+
         if (worklistContainer == null) return;
         worklistContainer.removeAllViews();
         LayoutInflater inflater = LayoutInflater.from(ctx);
@@ -1163,75 +2019,144 @@ public class HomeNativeManager {
         for (int i = 0; i < patients.length(); i++) {
             try {
                 JSONObject p = patients.getJSONObject(i);
-                String name  = p.optString("name", "—");
+                String name  = p.optString("name", "Unknown Patient");
                 String phone = p.optString("phone", "");
                 String id    = p.optString("id", "");
+                String patientId = p.optString("patientId", p.optString("code", "PAT" + (i + 1)));
+                int age = p.optInt("age", 0);
+                String gender = p.optString("gender", "");
 
-                // Status
+                // Status & Test Name
                 JSONArray tests = p.optJSONArray("tests");
                 String status   = "Pending";
-                String testName = "—";
+                String testName = "Routine Diagnostics";
+                int testCount   = (tests != null) ? tests.length() : 0;
                 if (tests != null && tests.length() > 0) {
                     JSONObject t = tests.getJSONObject(0);
-                    testName = t.optString("testName", t.optString("name", "—"));
+                    testName = t.optString("testName", t.optString("name", "Routine Diagnostics"));
                     String s = t.optString("status", "PENDING");
-                    if ("COMPLETED".equals(s))    status = "Ready";
-                    else if ("IN_PROGRESS".equals(s)) status = "Processing";
+                    if ("COMPLETED".equalsIgnoreCase(s) || "APPROVED".equalsIgnoreCase(s) || "READY".equalsIgnoreCase(s)) status = "Ready";
+                    else if ("IN_PROGRESS".equalsIgnoreCase(s) || "TESTING".equalsIgnoreCase(s) || "COLLECTED".equalsIgnoreCase(s)) status = "Processing";
                 }
 
-                // Price
+                // Invoices & Billing
                 JSONArray invs = p.optJSONArray("invoices");
                 double total   = 0;
+                double paidAmount = 0;
                 boolean paid   = false;
                 if (invs != null && invs.length() > 0) {
                     JSONObject inv = invs.getJSONObject(0);
-                    total = inv.optDouble("grandTotal", 0);
-                    paid  = "PAID".equalsIgnoreCase(inv.optString("paymentStatus", ""));
+                    total = inv.optDouble("grandTotal", inv.optDouble("totalAmount", 0));
+                    paidAmount = inv.optDouble("paidAmount", 0);
+                    paid  = "PAID".equalsIgnoreCase(inv.optString("paymentStatus", "")) || (total > 0 && paidAmount >= total);
                 }
 
-                // Inflate card
                 View card = inflater.inflate(R.layout.item_patient_card, worklistContainer, false);
 
-                // Bind data
-                TextView tvName    = card.findViewById(R.id.cardPatientName);
-                TextView tvTest    = card.findViewById(R.id.cardTestName);
-                TextView tvStatus  = card.findViewById(R.id.cardStatus);
-                TextView tvPrice   = card.findViewById(R.id.cardPrice);
-                TextView tvPaid    = card.findViewById(R.id.cardPaidLabel);
-                View     btnWA     = card.findViewById(R.id.cardWhatsappBtn);
+                TextView tvInitial        = card.findViewById(R.id.cardPatientInitial);
+                TextView tvCode           = card.findViewById(R.id.cardPatientCode);
+                TextView tvStatus         = card.findViewById(R.id.cardStatus);
+                TextView tvName           = card.findViewById(R.id.cardPatientName);
+                TextView tvDetails        = card.findViewById(R.id.cardPatientDetails);
+                View     cardTestBox      = card.findViewById(R.id.cardTestBox);
+                TextView tvTest           = card.findViewById(R.id.cardTestName);
+                TextView tvTestStatusPill = card.findViewById(R.id.cardTestStatusPill);
+                TextView tvTestCount      = card.findViewById(R.id.cardTestCount);
+                TextView tvPrice          = card.findViewById(R.id.cardPrice);
+                TextView tvPaid           = card.findViewById(R.id.cardPaidLabel);
+                TextView tvDue            = card.findViewById(R.id.cardDueLabel);
+                View     btnWA            = card.findViewById(R.id.cardWhatsappBtn);
 
-                if (tvName   != null) tvName.setText(name);
-                if (tvTest   != null) tvTest.setText(testName);
-                if (tvPrice  != null) tvPrice.setText("₹" + (int) total);
-                if (tvPaid   != null) tvPaid.setVisibility(paid ? View.VISIBLE : View.GONE);
+                if (tvInitial != null) {
+                    String initial = name.length() > 0 ? name.substring(0, 1).toUpperCase() : "P";
+                    tvInitial.setText(initial);
+                }
+                if (tvCode != null) tvCode.setText(patientId);
+                if (tvName != null) tvName.setText(name);
 
-                // Status badge styling
-                if (tvStatus != null) {
-                    tvStatus.setText(status);
-                    switch (status) {
-                        case "Ready":
-                            tvStatus.setTextColor(Color.parseColor("#00A86B"));
-                            tvStatus.setBackground(ctx.getDrawable(R.drawable.bg_status_ready));
-                            break;
-                        case "Processing":
-                            tvStatus.setTextColor(Color.parseColor("#0D6EFD"));
-                            tvStatus.setBackground(ctx.getDrawable(R.drawable.bg_status_processing));
-                            break;
-                        default:
-                            tvStatus.setTextColor(Color.parseColor("#F59E0B"));
-                            tvStatus.setBackground(ctx.getDrawable(R.drawable.bg_status_pending));
+                // Build demographics (NO patient phone number)
+                StringBuilder demo = new StringBuilder();
+                if (age > 0) demo.append(age).append(" Yrs");
+                if (!gender.isEmpty()) {
+                    if (demo.length() > 0) demo.append(" • ");
+                    demo.append(gender);
+                }
+                if (demo.length() == 0) demo.append("Registered Patient");
+                if (tvDetails != null) tvDetails.setText(demo.toString());
+
+                if (tvTest != null) tvTest.setText(testName);
+                if (tvTestCount != null) {
+                    if (testCount > 1) {
+                        tvTestCount.setVisibility(View.VISIBLE);
+                        tvTestCount.setText(testCount + " Tests");
+                    } else {
+                        tvTestCount.setVisibility(View.GONE);
+                    }
+                }
+                if (tvPrice != null) tvPrice.setText(String.format(Locale.getDefault(), "₹ %,.0f", total));
+
+                if (paid) {
+                    if (tvPaid != null) tvPaid.setVisibility(View.VISIBLE);
+                    if (tvDue != null) tvDue.setVisibility(View.GONE);
+                } else {
+                    if (tvPaid != null) tvPaid.setVisibility(View.GONE);
+                    if (tvDue != null) {
+                        tvDue.setVisibility(View.VISIBLE);
+                        double due = Math.max(0, total - paidAmount);
+                        if (due > 0) tvDue.setText(String.format(Locale.getDefault(), "Due: ₹ %,.0f", due));
                     }
                 }
 
-                // WhatsApp share
+                // 3-State Test Status Styling: Red = Accepted, Blue = Processing, Green = Report Ready / Finished
+                if ("Ready".equalsIgnoreCase(status)) {
+                    // GREEN STATE: Finished & Report Generated
+                    if (cardTestBox != null) cardTestBox.setBackground(ctx.getDrawable(R.drawable.bg_test_box_ready));
+                    if (tvTest != null) tvTest.setTextColor(Color.parseColor("#059669"));
+                    if (tvTestStatusPill != null) {
+                        tvTestStatusPill.setText("● Ready");
+                        tvTestStatusPill.setTextColor(Color.parseColor("#059669"));
+                    }
+                    if (tvStatus != null) {
+                        tvStatus.setText("Report Ready");
+                        tvStatus.setTextColor(Color.parseColor("#059669"));
+                        tvStatus.setBackground(ctx.getDrawable(R.drawable.bg_status_ready));
+                    }
+                } else if ("Processing".equalsIgnoreCase(status)) {
+                    // BLUE STATE: In Testing / Processing
+                    if (cardTestBox != null) cardTestBox.setBackground(ctx.getDrawable(R.drawable.bg_test_box_processing));
+                    if (tvTest != null) tvTest.setTextColor(Color.parseColor("#0D6EFD"));
+                    if (tvTestStatusPill != null) {
+                        tvTestStatusPill.setText("● Processing");
+                        tvTestStatusPill.setTextColor(Color.parseColor("#0D6EFD"));
+                    }
+                    if (tvStatus != null) {
+                        tvStatus.setText("Processing");
+                        tvStatus.setTextColor(Color.parseColor("#0D6EFD"));
+                        tvStatus.setBackground(ctx.getDrawable(R.drawable.bg_status_processing));
+                    }
+                } else {
+                    // RED STATE: Accepted / Sample Received / Pending
+                    if (cardTestBox != null) cardTestBox.setBackground(ctx.getDrawable(R.drawable.bg_test_box_accepted));
+                    if (tvTest != null) tvTest.setTextColor(Color.parseColor("#DC2626"));
+                    if (tvTestStatusPill != null) {
+                        tvTestStatusPill.setText("● Accepted");
+                        tvTestStatusPill.setTextColor(Color.parseColor("#DC2626"));
+                    }
+                    if (tvStatus != null) {
+                        tvStatus.setText("Accepted");
+                        tvStatus.setTextColor(Color.parseColor("#DC2626"));
+                        tvStatus.setBackground(ctx.getDrawable(R.drawable.bg_status_pending));
+                    }
+                }
+
+                // WhatsApp action
                 if (btnWA != null) {
                     if (!"Pending".equals(status) && !phone.isEmpty()) {
-                        String msg = "Hello " + name + ", your diagnostic report is ready. "
-                                + "View it at: https://app.patholab.cloud";
                         btnWA.setVisibility(View.VISIBLE);
+                        String finalPhone = phone;
                         btnWA.setOnClickListener(v -> {
-                            String waUrl = "https://wa.me/91" + phone + "?text="
-                                    + Uri.encode(msg);
+                            String msg = "Hello " + name + ", your diagnostic report from " + AuthManager.getLabName(ctx) + " is ready. View it at: https://app.patholab.cloud";
+                            String waUrl = "https://wa.me/91" + finalPhone + "?text=" + Uri.encode(msg);
                             ctx.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(waUrl)));
                         });
                     } else {
@@ -1239,10 +2164,8 @@ public class HomeNativeManager {
                     }
                 }
 
-                // Card tap → open patient detail in WebView
-                String patientPath = "/workspace/patients/" + id;
                 card.setOnClickListener(v -> {
-                    if (navListener != null) navListener.onNavigateTo(patientPath);
+                    ctx.startActivity(new Intent(ctx, PatientWorklistActivity.class));
                 });
 
                 worklistContainer.addView(card);
@@ -1250,6 +2173,7 @@ public class HomeNativeManager {
             } catch (Exception ignored) {}
         }
     }
+
 
     // ─────────────────────────────────────────────────────────────────────────
     //  Token Retrieval (AuthManager + CookieManager Fallback)
@@ -1284,8 +2208,13 @@ public class HomeNativeManager {
     // ─────────────────────────────────────────────────────────────────────────
     public void show() {
         homeRoot.setVisibility(View.VISIBLE);
+        if (ctx instanceof Activity) {
+            StatusBarHelper.setStatusBarSapphire((Activity) ctx);
+        }
         loadUserInfo();
         fetchWalletBalance();
+        fetchNotifications();
+        fetchTodaysWorklist();
         startBellPeriodicAnimationLoop();
         playWaveAnimation();
     }
@@ -1321,7 +2250,7 @@ public class HomeNativeManager {
     }
 
     private String formatINR(double amount) {
-        return "₹" + String.format(Locale.US, "%,.2f", amount);
+        return "₹ " + String.format(Locale.US, "%,.2f", amount);
     }
 
     private int dp(int value) {

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Single Diagnostic Test Parameter Entry Row -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <!-- Parameter Name & Reference Interval -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.6"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/lblParamName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Hemoglobin (Hb)"
+                android:textSize="13.5sp"
+                android:textStyle="bold"
+                android:textColor="#0F172A" />
+
+            <TextView
+                android:id="@+id/lblParamReferenceRange"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:text="Ref: 12.0 - 15.5 g/dL"
+                android:textSize="11sp"
+                android:textColor="#64748B" />
+
+        </LinearLayout>
+
+        <!-- Observed Value Input -->
+        <EditText
+            android:id="@+id/inputParamValue"
+            android:layout_width="90dp"
+            android:layout_height="40dp"
+            android:background="@drawable/bg_setting_item"
+            android:gravity="center"
+            android:hint="Value"
+            android:inputType="numberDecimal"
+            android:textColor="#0F172A"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp" />
+
+        <!-- Flag Indicator Pill (NORMAL, HIGH, LOW) -->
+        <TextView
+            android:id="@+id/lblParamFlagBadge"
+            android:layout_width="65dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_pill_white"
+            android:backgroundTint="#ECFDF5"
+            android:gravity="center"
+            android:text="NORMAL"
+            android:textSize="10.5sp"
+            android:textStyle="bold"
+            android:textColor="#059669" />
+
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#F1F5F9"
+        android:layout_marginTop="8dp" />
+
+</LinearLayout>

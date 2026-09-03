@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getDataFromToken } from "@/lib/auth";
+import { getDataFromToken, getCurrentUser } from "@/lib/auth";
 import {
   startOfDay,
   endOfDay,
@@ -16,13 +16,15 @@ export const dynamic = "force-dynamic";
 export async function GET(req: NextRequest) {
   try {
     // 1. Authenticate Request
-    const user = await getDataFromToken(req);
-    if (!user || !user.userId)
+    const user = (await getDataFromToken(req)) || (await getCurrentUser());
+    if (!user || (!user.userId && !user.id))
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const userId = user.userId || user.id;
 
     // 2. Enterprise Query: Fetch User + Owner Lab OR Staff Profiles
     const dbUser = await prisma.user.findUnique({
-      where: { id: user.userId },
+      where: { id: userId },
       include: {
         lab: { include: { wallet: true } }, // A. If LAB_OWNER
         staffLabs: {

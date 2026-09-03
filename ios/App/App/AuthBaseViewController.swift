@@ -10,18 +10,18 @@ class AuthBaseViewController: UIViewController {
         NotificationCenter.default.removeObserver(self)
     }
 
-    // MARK: – Brand colours
-    static let indigoPrimary = UIColor(red: 55/255, green: 48/255, blue: 163/255, alpha: 1)
-    static let indigoDark    = UIColor(red: 49/255, green: 46/255, blue: 129/255, alpha: 1)
-    static let indigoMid     = UIColor(red: 67/255, green: 56/255, blue: 202/255, alpha: 1)
-    static let inputBg       = UIColor(red: 245/255, green: 245/255, blue: 247/255, alpha: 1)
-    static let textPrimary   = UIColor(red: 31/255,  green: 41/255,  blue: 55/255,  alpha: 1)
-    static let textSecondary = UIColor(red: 107/255, green: 114/255, blue: 128/255, alpha: 1)
-    static let textHint      = UIColor(red: 156/255, green: 163/255, blue: 175/255, alpha: 1)
+    // MARK: – Brand colours (Sapphire Brand Theme)
+    static let indigoPrimary = UIColor(red: 13/255,  green: 110/255, blue: 253/255, alpha: 1) // #0D6EFD
+    static let indigoDark    = UIColor(red: 29/255,  green: 78/255,  blue: 216/255, alpha: 1) // #1D4ED8
+    static let indigoMid     = UIColor(red: 37/255,  green: 99/255,  blue: 235/255, alpha: 1) // #2563EB
+    static let inputBg       = UIColor(red: 255/255, green: 255/255, blue: 255/255, alpha: 1) // #FFFFFF
+    static let textPrimary   = UIColor(red: 15/255,  green: 23/255,  blue: 42/255,  alpha: 1) // #0F172A
+    static let textSecondary = UIColor(red: 100/255, green: 116/255, blue: 139/255, alpha: 1) // #64748B
+    static let textHint      = UIColor(red: 148/255, green: 163/255, blue: 184/255, alpha: 1) // #94A3B8
     static let errorRed      = UIColor(red: 220/255, green: 38/255,  blue: 38/255,  alpha: 1)
     static let errorBg       = UIColor(red: 254/255, green: 242/255, blue: 242/255, alpha: 1)
-    static let successGreen  = UIColor(red: 22/255,  green: 163/255, blue: 74/255,  alpha: 1)
-    static let successBg     = UIColor(red: 240/255, green: 253/255, blue: 244/255, alpha: 1)
+    static let successGreen  = UIColor(red: 5/255,   green: 150/255, blue: 105/255, alpha: 1) // #059669
+    static let successBg     = UIColor(red: 236/255, green: 253/255, blue: 245/255, alpha: 1)
 
     // MARK: – Common layout containers
     var headerView = UIView()
@@ -68,44 +68,42 @@ class AuthBaseViewController: UIViewController {
     private func setupStatusBar() {
         // Use full-screen and make status bar light
         if #available(iOS 13.0, *) {
-            overrideUserInterfaceStyle = .light
+            // Light content handled by preferredStatusBarStyle
         }
-        setNeedsStatusBarAppearanceUpdate()
     }
 
-    override var preferredStatusBarStyle: UIStatusBarStyle { .lightContent }
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        return .lightContent
+    }
 
     private func setupHeaderBackground() {
-        let gradient = CAGradientLayer()
-        gradient.colors = [
-            UIColor(red: 55/255, green: 48/255, blue: 163/255, alpha: 1).cgColor,
-            UIColor(red: 67/255, green: 56/255, blue: 202/255, alpha: 1).cgColor
-        ]
-        gradient.startPoint = CGPoint(x: 0, y: 0)
-        gradient.endPoint   = CGPoint(x: 1, y: 1)
-        gradient.frame = view.bounds
-        view.layer.insertSublayer(gradient, at: 0)
+        headerView.backgroundColor = .clear
+        headerView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(headerView)
     }
 
-    // MARK: – White Card Setup
+    // MARK: – Card setup
 
-    func setupCard(below anchorView: UIView, in parent: UIView) {
-        cardScrollView.translatesAutoresizingMaskIntoConstraints = false
+    func setupCard(below anchorView: UIView, in parentView: UIView) {
         cardScrollView.backgroundColor = .white
         cardScrollView.layer.cornerRadius = 32
         cardScrollView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+        cardScrollView.layer.masksToBounds = true
         cardScrollView.showsVerticalScrollIndicator = false
         cardScrollView.alwaysBounceVertical = true
-        parent.addSubview(cardScrollView)
+        cardScrollView.translatesAutoresizingMaskIntoConstraints = false
+        parentView.addSubview(cardScrollView)
 
+        cardContentView.backgroundColor = .white
         cardContentView.translatesAutoresizingMaskIntoConstraints = false
         cardScrollView.addSubview(cardContentView)
 
         NSLayoutConstraint.activate([
             cardScrollView.topAnchor.constraint(equalTo: anchorView.bottomAnchor),
-            cardScrollView.leadingAnchor.constraint(equalTo: parent.leadingAnchor),
-            cardScrollView.trailingAnchor.constraint(equalTo: parent.trailingAnchor),
-            cardScrollView.bottomAnchor.constraint(equalTo: parent.bottomAnchor),
+            cardScrollView.leadingAnchor.constraint(equalTo: parentView.leadingAnchor),
+            cardScrollView.trailingAnchor.constraint(equalTo: parentView.trailingAnchor),
+            cardScrollView.bottomAnchor.constraint(equalTo: parentView.bottomAnchor),
+
             cardContentView.topAnchor.constraint(equalTo: cardScrollView.topAnchor),
             cardContentView.leadingAnchor.constraint(equalTo: cardScrollView.leadingAnchor),
             cardContentView.trailingAnchor.constraint(equalTo: cardScrollView.trailingAnchor),
@@ -114,9 +112,9 @@ class AuthBaseViewController: UIViewController {
         ])
     }
 
-    // MARK: – UI Factory Methods
+    // MARK: – Factory helpers
 
-    func makeLabel(_ text: String, size: CGFloat = 14, weight: UIFont.Weight = .semibold, color: UIColor = AuthBaseViewController.textPrimary) -> UILabel {
+    func makeLabel(_ text: String, size: CGFloat, weight: UIFont.Weight = .regular, color: UIColor = .white) -> UILabel {
         let l = UILabel()
         l.text = text
         l.font = .systemFont(ofSize: size, weight: weight)
@@ -133,9 +131,11 @@ class AuthBaseViewController: UIViewController {
         tf.autocorrectionType = .no
         tf.autocapitalizationType = .none
         tf.backgroundColor = AuthBaseViewController.inputBg
-        tf.layer.cornerRadius = 12
+        tf.layer.cornerRadius = 14
+        tf.layer.borderWidth = 1
+        tf.layer.borderColor = UIColor(red: 226/255, green: 232/255, blue: 240/255, alpha: 1).cgColor
         tf.layer.masksToBounds = true
-        tf.font = .systemFont(ofSize: 15)
+        tf.font = .systemFont(ofSize: 15, weight: .medium)
         tf.textColor = AuthBaseViewController.textPrimary
         tf.attributedPlaceholder = NSAttributedString(
             string: placeholder,
@@ -150,6 +150,67 @@ class AuthBaseViewController: UIViewController {
         return tf
     }
 
+    func makeAnimatedPasswordRow(tf: UITextField, identifier: String? = nil) -> (container: UIView, eyeButton: UIButton) {
+        let container = UIView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+        container.heightAnchor.constraint(equalToConstant: 52).isActive = true
+
+        if let identifier = identifier {
+            tf.accessibilityIdentifier = identifier
+        }
+        tf.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(tf)
+
+        let eye = UIButton(type: .custom)
+        let config = UIImage.SymbolConfiguration(pointSize: 15, weight: .semibold)
+        eye.setImage(UIImage(systemName: "eye.slash", withConfiguration: config), for: .normal)
+        eye.tintColor = UIColor(red: 148/255, green: 163/255, blue: 184/255, alpha: 1)
+        eye.translatesAutoresizingMaskIntoConstraints = false
+
+        eye.addAction(UIAction { [weak tf, weak eye] _ in
+            guard let tf = tf, let eye = eye else { return }
+
+            let generator = UIImpactFeedbackGenerator(style: .light)
+            generator.prepare()
+            generator.impactOccurred()
+
+            UIView.animate(withDuration: 0.08, delay: 0, options: .curveEaseIn, animations: {
+                eye.transform = CGAffineTransform(scaleX: 0.85, y: 0.12)
+            }) { _ in
+                tf.isSecureTextEntry.toggle()
+                let isHidden = tf.isSecureTextEntry
+                let iconName = isHidden ? "eye.slash" : "eye"
+                let iconColor = isHidden ? UIColor(red: 148/255, green: 163/255, blue: 184/255, alpha: 1) : AuthBaseViewController.indigoMid
+
+                eye.setImage(UIImage(systemName: iconName, withConfiguration: config), for: .normal)
+                eye.tintColor = iconColor
+
+                if let text = tf.text, let range = tf.textRange(from: tf.endOfDocument, to: tf.endOfDocument) {
+                    tf.selectedTextRange = range
+                }
+
+                UIView.animate(withDuration: 0.18, delay: 0, usingSpringWithDamping: 0.5, initialSpringVelocity: 0.8, options: .curveEaseOut, animations: {
+                    eye.transform = .identity
+                })
+            }
+        }, for: .touchUpInside)
+
+        container.addSubview(eye)
+
+        NSLayoutConstraint.activate([
+            tf.topAnchor.constraint(equalTo: container.topAnchor),
+            tf.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+            tf.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            tf.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+            eye.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -10),
+            eye.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+            eye.widthAnchor.constraint(equalToConstant: 36),
+            eye.heightAnchor.constraint(equalToConstant: 36)
+        ])
+
+        return (container, eye)
+    }
+
     func makePrimaryButton(title: String) -> UIButton {
         let btn = UIButton(type: .system)
         btn.setTitle(title, for: .normal)
@@ -157,12 +218,12 @@ class AuthBaseViewController: UIViewController {
         btn.titleLabel?.font = .systemFont(ofSize: 16, weight: .bold)
         btn.layer.cornerRadius = 14
         btn.layer.masksToBounds = true
-        btn.backgroundColor = AuthBaseViewController.indigoDark
+        btn.backgroundColor = AuthBaseViewController.indigoPrimary
         // Gradient
         let gradient = CAGradientLayer()
         gradient.colors = [
-            AuthBaseViewController.indigoMid.cgColor,
-            AuthBaseViewController.indigoPrimary.cgColor
+            AuthBaseViewController.indigoPrimary.cgColor,
+            AuthBaseViewController.indigoMid.cgColor
         ]
         gradient.startPoint = CGPoint(x: 0, y: 0)
         gradient.endPoint   = CGPoint(x: 1, y: 1)
@@ -176,11 +237,12 @@ class AuthBaseViewController: UIViewController {
 
     func makeBackButton() -> UIButton {
         let btn = UIButton(type: .system)
-        btn.setTitle("‹", for: .normal)
-        btn.setTitleColor(.white, for: .normal)
-        btn.titleLabel?.font = .systemFont(ofSize: 22, weight: .bold)
-        btn.backgroundColor = UIColor(white: 1, alpha: 0.15)
-        btn.layer.cornerRadius = 10
+        btn.setImage(UIImage(systemName: "chevron.left"), for: .normal)
+        btn.tintColor = .white
+        btn.backgroundColor = UIColor(white: 1, alpha: 0.18)
+        btn.layer.cornerRadius = 20
+        btn.layer.borderWidth = 1
+        btn.layer.borderColor = UIColor(white: 1, alpha: 0.25).cgColor
         btn.layer.masksToBounds = true
         btn.translatesAutoresizingMaskIntoConstraints = false
         btn.widthAnchor.constraint(equalToConstant: 40).isActive = true
@@ -347,13 +409,13 @@ class AuthBaseViewController: UIViewController {
     @objc func openLegalTapped() { openLegal(tab: 0) }
 
     func openLegal(tab: Int) {
-        var urlString = "https://patholab.cloud/terms-conditions"
+        var urlString = "https://patholab.cloud/terms-and-conditions/"
         if tab == 1 {
-            urlString = "https://patholab.cloud/terms-conditions?tab=privacy"
+            urlString = "https://patholab.cloud/privacy-policy/"
         } else if tab == 2 {
-            urlString = "https://patholab.cloud/terms-conditions?tab=refunds"
+            urlString = "https://patholab.cloud/refund-and-cancellation/"
         } else {
-            urlString = "https://patholab.cloud/terms-conditions?tab=terms"
+            urlString = "https://patholab.cloud/terms-and-conditions/"
         }
         if let url = URL(string: urlString) {
             UIApplication.shared.open(url, options: [:], completionHandler: nil)

@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Quick Price & TAT Override Bottom Sheet Modal -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_bottom_sheet"
+    android:paddingTop="12dp"
+    android:paddingBottom="24dp"
+    android:paddingStart="20dp"
+    android:paddingEnd="20dp">
+
+    <!-- Drag Handle -->
+    <View
+        android:layout_width="44dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="14dp"
+        android:background="#CBD5E1" />
+
+    <!-- Modal Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="14dp">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/lblModalTestName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Complete Blood Count (CBC)"
+                android:textSize="17.5sp"
+                android:textStyle="bold"
+                android:textColor="#0F172A"
+                android:letterSpacing="-0.01" />
+
+            <TextView
+                android:id="@+id/lblModalTestCodeDept"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Code: CBC • Hematology"
+                android:textSize="12.5sp"
+                android:textColor="#64748B" />
+
+        </LinearLayout>
+
+        <FrameLayout
+            android:id="@+id/btnClosePricingModal"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@drawable/bg_bell_btn"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_close_cross"
+                android:tint="#475569" />
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#F1F5F9"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Retail Price Field -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Lab Selling Price (Retail ₹) *"
+        android:textSize="12.5sp"
+        android:textStyle="bold"
+        android:textColor="#475569"
+        android:layout_marginBottom="6dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="@drawable/bg_input_field"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:layout_marginBottom="14dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="₹"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#0D6EFD" />
+
+        <EditText
+            android:id="@+id/inputModalPrice"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:background="@android:color/transparent"
+            android:hint="Enter selling price (e.g. 350)"
+            android:inputType="numberDecimal"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="#0F172A"
+            android:textColorHint="#94A3B8"
+            android:singleLine="true" />
+
+    </LinearLayout>
+
+    <!-- B2B Partner Price Field -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="B2B / Agency Partner Price (₹) *"
+        android:textSize="12.5sp"
+        android:textStyle="bold"
+        android:textColor="#475569"
+        android:layout_marginBottom="6dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="@drawable/bg_input_field"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:layout_marginBottom="14dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="₹"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#EA580C" />
+
+        <EditText
+            android:id="@+id/inputModalB2BPrice"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:background="@android:color/transparent"
+            android:hint="Enter B2B agency rate (e.g. 200)"
+            android:inputType="numberDecimal"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="#0F172A"
+            android:textColorHint="#94A3B8"
+            android:singleLine="true" />
+
+    </LinearLayout>
+
+    <!-- Turnaround Time (TAT Hours) Field -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Turnaround Time (Hours) *"
+        android:textSize="12.5sp"
+        android:textStyle="bold"
+        android:textColor="#475569"
+        android:layout_marginBottom="6dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="@drawable/bg_input_field"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:layout_marginBottom="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="TAT"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="#64748B" />
+
+        <EditText
+            android:id="@+id/inputModalTatHours"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:background="@android:color/transparent"
+            android:hint="Hours to deliver report (e.g. 4, 12, 24)"
+            android:inputType="number"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="#0F172A"
+            android:textColorHint="#94A3B8"
+            android:singleLine="true" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Hours"
+            android:textSize="13sp"
+            android:textColor="#64748B" />
+
+    </LinearLayout>
+
+    <!-- Save Pricing Override Button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnSavePricingOverride"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:text="Save Pricing &amp; TAT Override"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:backgroundTint="#0D6EFD"
+        app:cornerRadius="16dp"
+        android:elevation="4dp"
+        app:icon="@drawable/ic_check_bold"
+        app:iconGravity="textStart"
+        app:iconPadding="8dp"
+        app:iconTint="#FFFFFF"
+        android:textAllCaps="false" />
+
+</LinearLayout>

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:background="@drawable/bg_setting_item"
+    android:paddingStart="12dp"
+    android:paddingEnd="12dp"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp"
+    android:layout_marginBottom="6dp">
+
+    <!-- Parameter Name & Code -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/lblSelectedParamName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Hemoglobin"
+            android:textSize="13.5sp"
+            android:textStyle="bold"
+            android:textColor="#0F172A" />
+
+        <TextView
+            android:id="@+id/lblSelectedParamCode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Code: HB • g/dL"
+            android:textSize="11.5sp"
+            android:textColor="#64748B" />
+
+    </LinearLayout>
+
+    <!-- Up / Down Reorder Buttons -->
+    <ImageView
+        android:id="@+id/btnParamMoveUp"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:src="@drawable/ic_chevron_up"
+        android:tint="#64748B"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="5dp"
+        android:clickable="true"
+        android:focusable="true" />
+
+    <ImageView
+        android:id="@+id/btnParamMoveDown"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:src="@drawable/ic_chevron_down"
+        android:tint="#64748B"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="5dp"
+        android:clickable="true"
+        android:focusable="true" />
+
+    <!-- Remove Button -->
+    <ImageView
+        android:id="@+id/btnParamRemove"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:layout_marginStart="4dp"
+        android:src="@drawable/ic_trash"
+        android:tint="#E11D48"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="5dp"
+        android:clickable="true"
+        android:focusable="true" />
+
+</LinearLayout>

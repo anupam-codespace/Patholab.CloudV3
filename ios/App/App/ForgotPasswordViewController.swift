@@ -14,19 +14,16 @@ class ForgotPasswordViewController: AuthBaseViewController {
     }
 
     private func buildUI() {
-        let backBtn = makeBackButton()
-        backBtn.addTarget(self, action: #selector(backTapped), for: .touchUpInside)
-        backBtn.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(backBtn)
-
         let headerStack = UIStackView()
         headerStack.axis = .vertical
-        headerStack.spacing = 6
+        headerStack.spacing = 2
         headerStack.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(headerStack)
 
-        let titleLabel = makeLabel("Forgot Password", size: 38, weight: .black, color: .white)
-        let subtitleLabel = makeLabel("Enter your email to get a reset code.", size: 14, weight: .regular, color: UIColor(red: 199/255, green: 210/255, blue: 254/255, alpha: 1))
+        let titleLabel = makeLabel("Forgot Password", size: 32, weight: .black, color: .white)
+        titleLabel.adjustsFontSizeToFitWidth = true
+        titleLabel.minimumScaleFactor = 0.8
+        let subtitleLabel = makeLabel("Enter your email to get a reset code.", size: 13.5, weight: .regular, color: UIColor(red: 199/255, green: 210/255, blue: 254/255, alpha: 1))
         headerStack.addArrangedSubview(titleLabel)
         headerStack.addArrangedSubview(subtitleLabel)
 
@@ -35,12 +32,11 @@ class ForgotPasswordViewController: AuthBaseViewController {
         view.addSubview(spacer)
 
         NSLayoutConstraint.activate([
-            backBtn.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 12),
-            backBtn.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
-            headerStack.topAnchor.constraint(equalTo: backBtn.bottomAnchor, constant: 16),
-            headerStack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 28),
-            headerStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -28),
-            spacer.topAnchor.constraint(equalTo: headerStack.bottomAnchor, constant: 24),
+            headerStack.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 14),
+            headerStack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
+            headerStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
+
+            spacer.topAnchor.constraint(equalTo: headerStack.bottomAnchor, constant: 16),
             spacer.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             spacer.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             spacer.heightAnchor.constraint(equalToConstant: 0)
@@ -83,17 +79,22 @@ class ForgotPasswordViewController: AuthBaseViewController {
         spinner.color = AuthBaseViewController.indigoMid
         spinner.hidesWhenStopped = true
         content.addArrangedSubview(spinner)
-        content.setCustomSpacing(20, after: btn)
+        content.setCustomSpacing(16, after: btn)
 
-        let backLink = UILabel()
-        backLink.text = "← Back to Login"
-        backLink.textColor = AuthBaseViewController.indigoMid
-        backLink.font = .systemFont(ofSize: 14, weight: .bold)
-        backLink.textAlignment = .center
-        backLink.isUserInteractionEnabled = true
-        backLink.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(backTapped)))
-        content.addArrangedSubview(backLink)
-        content.setCustomSpacing(20, after: backLink)
+        // Outlined Back to Login Box Button
+        let backToLoginBtn = UIButton(type: .system)
+        backToLoginBtn.setTitle("Back to Login", for: .normal)
+        backToLoginBtn.setTitleColor(AuthBaseViewController.indigoMid, for: .normal)
+        backToLoginBtn.titleLabel?.font = .systemFont(ofSize: 15, weight: .bold)
+        backToLoginBtn.backgroundColor = .white
+        backToLoginBtn.layer.cornerRadius = 14
+        backToLoginBtn.layer.borderWidth = 1.5
+        backToLoginBtn.layer.borderColor = UIColor(red: 203/255, green: 213/255, blue: 225/255, alpha: 1).cgColor
+        backToLoginBtn.addTarget(self, action: #selector(backTapped), for: .touchUpInside)
+        backToLoginBtn.translatesAutoresizingMaskIntoConstraints = false
+        backToLoginBtn.heightAnchor.constraint(equalToConstant: 52).isActive = true
+        content.addArrangedSubview(backToLoginBtn)
+        content.setCustomSpacing(20, after: backToLoginBtn)
 
         // Legal links
         let legalFooter = makeLegalFooter()

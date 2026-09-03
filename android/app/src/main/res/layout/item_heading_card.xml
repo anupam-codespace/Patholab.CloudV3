@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Clean, Modern Report Heading Bento Card -->
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardCornerRadius="18dp"
+    app:cardElevation="2dp"
+    app:cardBackgroundColor="#FFFFFF"
+    app:cardPreventCornerOverlap="false"
+    android:layout_marginStart="4dp"
+    android:layout_marginEnd="4dp"
+    android:layout_marginTop="4dp"
+    android:layout_marginBottom="6dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="14dp">
+
+        <!-- Top Row: Order Badge + Scope + Action Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <!-- Order Badge -->
+            <TextView
+                android:id="@+id/lblHeadingOrder"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_mod_icon_indigo"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:paddingTop="3dp"
+                android:paddingBottom="3dp"
+                android:text="Order #1"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="#4F46E5" />
+
+            <!-- Scope Pill -->
+            <TextView
+                android:id="@+id/lblHeadingScope"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_pill_indigo_soft"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:paddingTop="3dp"
+                android:paddingBottom="3dp"
+                android:text="Global"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="#4338CA" />
+
+            <!-- Spacer -->
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <!-- Edit Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnEditHeading"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:backgroundTint="#EFF6FF"
+                app:cornerRadius="9dp"
+                app:strokeColor="#BFDBFE"
+                app:strokeWidth="1dp"
+                android:elevation="0dp"
+                app:icon="@drawable/ic_edit_pen"
+                app:iconTint="#2563EB"
+                app:iconGravity="textStart"
+                app:iconPadding="0dp"
+                android:insetLeft="0dp"
+                android:insetTop="0dp"
+                android:insetRight="0dp"
+                android:insetBottom="0dp"
+                android:padding="0dp" />
+
+            <!-- Delete Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDeleteHeading"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:layout_marginStart="6dp"
+                android:backgroundTint="#FFF1F2"
+                app:cornerRadius="9dp"
+                app:strokeColor="#FECDD3"
+                app:strokeWidth="1dp"
+                android:elevation="0dp"
+                app:icon="@drawable/ic_trash"
+                app:iconTint="#E11D48"
+                app:iconGravity="textStart"
+                app:iconPadding="0dp"
+                android:insetLeft="0dp"
+                android:insetTop="0dp"
+                android:insetRight="0dp"
+                android:insetBottom="0dp"
+                android:padding="0dp" />
+
+        </LinearLayout>
+
+        <!-- Heading Name -->
+        <TextView
+            android:id="@+id/lblHeadingName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="LIPID PROFILE INVESTIGATION"
+            android:textSize="15.5sp"
+            android:textStyle="bold"
+            android:textColor="#0F172A" />
+
+        <!-- Description / Note -->
+        <TextView
+            android:id="@+id/lblHeadingDesc"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:text="Section header for grouping lipid parameters on the diagnostic report"
+            android:textSize="12sp"
+            android:textColor="#64748B" />
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

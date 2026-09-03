@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Clean, Modern Clinical Parameter Bento Card (Extended Width & Polished Hierarchy) -->
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardCornerRadius="18dp"
+    app:cardElevation="2dp"
+    app:cardBackgroundColor="#FFFFFF"
+    app:cardPreventCornerOverlap="false"
+    android:layout_marginStart="4dp"
+    android:layout_marginEnd="4dp"
+    android:layout_marginTop="4dp"
+    android:layout_marginBottom="6dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="14dp">
+
+        <!-- Top Header Row: Code + Scope Pill + Input Type + Unit + Actions -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <!-- Code Badge -->
+            <TextView
+                android:id="@+id/lblParamCode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_mod_icon_purple"
+                android:paddingStart="9dp"
+                android:paddingEnd="9dp"
+                android:paddingTop="3dp"
+                android:paddingBottom="3dp"
+                android:text="HGB"
+                android:textSize="11.5sp"
+                android:fontFamily="monospace"
+                android:textStyle="bold"
+                android:textColor="#7C3AED" />
+
+            <!-- Scope Pill -->
+            <TextView
+                android:id="@+id/lblParamScope"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_pill_indigo_soft"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:paddingTop="3dp"
+                android:paddingBottom="3dp"
+                android:text="Global"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="#4338CA" />
+
+            <!-- Input Type Badge -->
+            <TextView
+                android:id="@+id/lblParamInputType"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_setting_item"
+                android:paddingStart="7dp"
+                android:paddingEnd="7dp"
+                android:paddingTop="3dp"
+                android:paddingBottom="3dp"
+                android:text="NUMBER"
+                android:textSize="10.5sp"
+                android:textStyle="bold"
+                android:textColor="#475569" />
+
+            <!-- Unit Badge -->
+            <TextView
+                android:id="@+id/lblParamUnit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_bento_blue"
+                android:paddingStart="7dp"
+                android:paddingEnd="7dp"
+                android:paddingTop="2.5dp"
+                android:paddingBottom="2.5dp"
+                android:text="g/dL"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="#0D6EFD" />
+
+            <!-- Spacer -->
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <!-- Action Buttons: Edit & Delete -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnEditParam"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:backgroundTint="#EFF6FF"
+                app:cornerRadius="9dp"
+                app:strokeColor="#BFDBFE"
+                app:strokeWidth="1dp"
+                android:elevation="0dp"
+                app:icon="@drawable/ic_edit_pen"
+                app:iconTint="#2563EB"
+                app:iconGravity="textStart"
+                app:iconPadding="0dp"
+                android:insetLeft="0dp"
+                android:insetTop="0dp"
+                android:insetRight="0dp"
+                android:insetBottom="0dp"
+                android:padding="0dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDeleteParam"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:layout_marginStart="6dp"
+                android:backgroundTint="#FFF1F2"
+                app:cornerRadius="9dp"
+                app:strokeColor="#FECDD3"
+                app:strokeWidth="1dp"
+                android:elevation="0dp"
+                app:icon="@drawable/ic_trash"
+                app:iconTint="#E11D48"
+                app:iconGravity="textStart"
+                app:iconPadding="0dp"
+                android:insetLeft="0dp"
+                android:insetTop="0dp"
+                android:insetRight="0dp"
+                android:insetBottom="0dp"
+                android:padding="0dp" />
+
+        </LinearLayout>
+
+        <!-- Parameter Name -->
+        <TextView
+            android:id="@+id/lblParamName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Hemoglobin (Hb)"
+            android:textSize="15.5sp"
+            android:textStyle="bold"
+            android:textColor="#0F172A"
+            android:letterSpacing="-0.01" />
+
+        <!-- Method & Specimen Container Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="6dp">
+
+            <TextView
+                android:id="@+id/lblParamMethod"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Method: SLS-Hemoglobin / Photometry"
+                android:textSize="12sp"
+                android:textColor="#64748B"
+                android:singleLine="true"
+                android:ellipsize="end" />
+
+            <!-- Tube badge with colored cap dot -->
+            <LinearLayout
+                android:id="@+id/containerParamTube"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_setting_item"
+                android:paddingStart="7dp"
+                android:paddingEnd="8dp"
+                android:paddingTop="2.5dp"
+                android:paddingBottom="2.5dp">
+
+                <View
+                    android:id="@+id/dotParamCapColor"
+                    android:layout_width="7dp"
+                    android:layout_height="7dp"
+                    android:background="@drawable/bg_circle_slate"
+                    android:backgroundTint="#7C3AED" />
+
+                <TextView
+                    android:id="@+id/lblParamTubeCode"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="5dp"
+                    android:text="EDTA Tube"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="#334155" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Auto Reagents & Standalone Price Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
+
+            <!-- Auto-Reagents Chip -->
+            <TextView
+                android:id="@+id/lblParamReagents"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_tag_emerald"
+                android:paddingStart="7dp"
+                android:paddingEnd="7dp"
+                android:paddingTop="2.5dp"
+                android:paddingBottom="2.5dp"
+                android:text="Auto Reagents"
+                android:textSize="10.5sp"
+                android:textStyle="bold"
+                android:textColor="#059669"
+                android:visibility="gone" />
+
+            <!-- Standalone Price -->
+            <TextView
+                android:id="@+id/lblParamPrice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_setting_item"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:paddingTop="2.5dp"
+                android:paddingBottom="2.5dp"
+                android:text="₹120.00"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="#0F172A"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
+        <!-- Reference Ranges Preview Box -->
+        <LinearLayout
+            android:id="@+id/boxParamRangesPreview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_bento_emerald"
+            android:orientation="vertical"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp">
+
+            <TextView
+                android:id="@+id/lblParamRefRange"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Ref: 12.0 - 16.0 g/dL (Both, 0-100 Years)"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="#047857" />
+
+            <TextView
+                android:id="@+id/lblParamPanicRange"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Panic: &lt; 7.0 or &gt; 20.0"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="#DC2626"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

@@ -162,7 +162,7 @@
                     android:layout_centerVertical="true"
                     android:layout_marginEnd="4dp"
                     android:padding="12dp"
-                    android:src="@android:drawable/ic_menu_view"
+                    android:src="@drawable/ic_eye_closed"
                     android:contentDescription="Toggle password visibility"
                     android:tint="@color/textHint" />
             </RelativeLayout>

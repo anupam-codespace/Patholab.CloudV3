@@ -1,36 +1,68 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Worklist patient card used in HorizontalScrollView -->
+<!-- Clean, Modern Today's Worklist Patient Bento Card (Android) -->
 <androidx.cardview.widget.CardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="210dp"
+    android:layout_width="265dp"
     android:layout_height="wrap_content"
     android:layout_marginEnd="12dp"
-    app:cardCornerRadius="18dp"
+    android:layout_marginTop="2dp"
+    android:layout_marginBottom="6dp"
+    app:cardCornerRadius="20dp"
     app:cardElevation="2dp"
-    app:cardBackgroundColor="#FFFFFF">
+    app:cardBackgroundColor="#FFFFFF"
+    app:cardPreventCornerOverlap="false"
+    android:clickable="true"
+    android:focusable="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="14dp">
+        android:padding="16dp">
 
-        <!-- Row 1: Patient label + Status badge -->
+        <!-- Top Header Row: Avatar Initial + Code/UHID + Status Badge -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
+            <!-- Initial Avatar Badge -->
             <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Patient"
-                android:textSize="11sp"
-                android:textColor="#94A3B8" />
+                android:id="@+id/cardPatientInitial"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:background="@drawable/bg_mod_icon_indigo"
+                android:gravity="center"
+                android:text="P"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="#4F46E5" />
 
+            <!-- UHID / Patient ID Pill -->
+            <TextView
+                android:id="@+id/cardPatientCode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_setting_item"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:paddingTop="3dp"
+                android:paddingBottom="3dp"
+                android:text="PAT0001"
+                android:textSize="11sp"
+                android:fontFamily="monospace"
+                android:textStyle="bold"
+                android:textColor="#475569" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <!-- Status Badge -->
             <TextView
                 android:id="@+id/cardStatus"
                 android:layout_width="wrap_content"
@@ -38,52 +70,149 @@
                 android:text="Ready"
                 android:textSize="11sp"
                 android:textStyle="bold"
-                android:textColor="#00A86B"
-                android:paddingStart="8dp"
-                android:paddingEnd="8dp"
-                android:paddingTop="2dp"
-                android:paddingBottom="2dp"
+                android:textColor="#059669"
+                android:paddingStart="9dp"
+                android:paddingEnd="9dp"
+                android:paddingTop="3.5dp"
+                android:paddingBottom="3.5dp"
                 android:background="@drawable/bg_status_ready" />
 
         </LinearLayout>
 
-        <!-- Row 2: Patient name -->
-        <TextView
-            android:id="@+id/cardPatientName"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="Ramesh Sen"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            android:textColor="#0F172A" />
-
-        <!-- Row 3: Test name -->
-        <TextView
-            android:id="@+id/cardTestName"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:text="CBC &amp; Lipid Profile"
-            android:textSize="12sp"
-            android:textColor="#64748B"
-            android:singleLine="true"
-            android:ellipsize="end" />
-
-        <!-- Divider -->
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginTop="10dp"
-            android:background="#F1F5F9" />
-
-        <!-- Row 4: Price + WhatsApp button -->
+        <!-- Patient Info Row (Avatar + Name & Demographics) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginTop="8dp">
+            android:layout_marginTop="10dp">
+
+            <!-- Patient Profile Avatar -->
+            <ImageView
+                android:id="@+id/cardPatientAvatar"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:src="@drawable/ic_patient_avatar"
+                android:scaleType="centerCrop" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginStart="10dp">
+
+                <!-- Patient Name -->
+                <TextView
+                    android:id="@+id/cardPatientName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Ramesh Sen"
+                    android:textSize="15.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#0F172A"
+                    android:letterSpacing="-0.01"
+                    android:singleLine="true"
+                    android:ellipsize="end" />
+
+                <!-- Patient Demographics (Age & Gender - No Phone) -->
+                <TextView
+                    android:id="@+id/cardPatientDetails"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="1dp"
+                    android:text="34 Yrs • Male"
+                    android:textSize="12sp"
+                    android:textColor="#64748B"
+                    android:singleLine="true"
+                    android:ellipsize="end" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Assigned Investigation Test Bento Box (Color-coded: Red = Accepted, Blue = Processing, Green = Finished/Ready) -->
+        <LinearLayout
+            android:id="@+id/cardTestBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_test_box_accepted"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:paddingTop="7dp"
+            android:paddingBottom="7dp"
+            android:layout_marginTop="10dp">
+
+            <ImageView
+                android:id="@+id/cardTestIcon"
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:src="@drawable/ic_flask"
+                android:tint="#DC2626"
+                app:tint="#DC2626" />
+
+            <TextView
+                android:id="@+id/cardTestName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="6dp"
+                android:text="CBC &amp; Lipid Profile"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="#DC2626"
+                android:singleLine="true"
+                android:ellipsize="end" />
+
+            <TextView
+                android:id="@+id/cardTestStatusPill"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:paddingStart="6dp"
+                android:paddingEnd="6dp"
+                android:paddingTop="1.5dp"
+                android:paddingBottom="1.5dp"
+                android:text="Accepted"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:textColor="#DC2626"
+                android:visibility="visible" />
+
+            <TextView
+                android:id="@+id/cardTestCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:background="@drawable/bg_bento_blue"
+                android:paddingStart="6dp"
+                android:paddingEnd="6dp"
+                android:paddingTop="1.5dp"
+                android:paddingBottom="1.5dp"
+                android:text="2 Tests"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:textColor="#0D6EFD"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
+        <!-- Divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="12dp"
+            android:background="#F1F5F9" />
+
+        <!-- Bottom Row: Price + Paid/Due Badge + Action Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="10dp">
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -97,7 +226,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="₹450"
-                    android:textSize="14sp"
+                    android:textSize="15.5sp"
                     android:textStyle="bold"
                     android:textColor="#0F172A" />
 
@@ -105,32 +234,63 @@
                     android:id="@+id/cardPaidLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="5dp"
+                    android:layout_marginStart="6dp"
                     android:text="Paid"
-                    android:textSize="12sp"
+                    android:textSize="11sp"
                     android:textStyle="bold"
-                    android:textColor="#00A86B" />
+                    android:textColor="#059669"
+                    android:background="@drawable/bg_tag_emerald"
+                    android:paddingStart="7dp"
+                    android:paddingEnd="7dp"
+                    android:paddingTop="2dp"
+                    android:paddingBottom="2dp" />
+
+                <TextView
+                    android:id="@+id/cardDueLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:text="Due"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="#E11D48"
+                    android:background="@drawable/bg_tag_rose"
+                    android:paddingStart="7dp"
+                    android:paddingEnd="7dp"
+                    android:paddingTop="2dp"
+                    android:paddingBottom="2dp"
+                    android:visibility="gone" />
 
             </LinearLayout>
 
-            <!-- WhatsApp share button -->
+            <!-- WhatsApp Share Button -->
             <FrameLayout
                 android:id="@+id/cardWhatsappBtn"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:background="@drawable/bg_whatsapp_btn"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:background="@drawable/bg_pill_white"
+                android:backgroundTint="#DCFCE7"
                 android:clickable="true"
                 android:focusable="true"
-                android:elevation="2dp">
+                android:elevation="1dp">
 
                 <ImageView
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:layout_gravity="center"
-                    android:src="@drawable/ic_whatsapp"
-                    android:tint="#FFFFFF" />
+                    android:src="@drawable/ic_whatsapp_logo" />
 
             </FrameLayout>
+
+            <!-- View / Enter Details Chevron Icon -->
+            <ImageView
+                android:id="@+id/cardChevronBtn"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_marginStart="6dp"
+                android:src="@drawable/ic_chevron_right"
+                android:tint="#94A3B8"
+                app:tint="#94A3B8" />
 
         </LinearLayout>
 

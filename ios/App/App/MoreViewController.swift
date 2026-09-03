@@ -198,6 +198,7 @@ class MoreViewController: UIViewController {
     private func initModulesData() {
         allModules = [
             // Overview
+            ModuleItem(title: "Dashboard Overview", path: "/dashboard", category: "Overview", desc: "Executive KPI overview & operational diagnostics", icon: "square.grid.2x2.fill", isNew: false),
             ModuleItem(title: "Financial Analytics", path: "/workspace/analytics", category: "Overview", desc: "View detailed revenue reports & analytical charts", icon: "chart.bar.fill", isNew: false),
             ModuleItem(title: "Online Booking", path: "/workspace/bookings", category: "Overview", desc: "Manage home collections & online appointments", icon: "calendar", isNew: false),
 
@@ -244,9 +245,9 @@ class MoreViewController: UIViewController {
             ModuleItem(title: "Help & Support", path: "/workspace/support", category: "Admin", desc: "Submit tickets & read user guides", icon: "questionmark.circle.fill", isNew: false),
             
             // Legal & Policies
-            ModuleItem(title: "Terms & Conditions", path: "/terms-conditions?tab=terms", category: "Legal", desc: "Platform license, SLA & customer rights", icon: "doc.plaintext.fill", isNew: false),
-            ModuleItem(title: "Privacy & Health Data", path: "/terms-conditions?tab=privacy", category: "Legal", desc: "Patient confidentiality, HIPAA & DISHA standards", icon: "lock.shield.fill", isNew: false),
-            ModuleItem(title: "Refund & Cancellation", path: "/terms-conditions?tab=refunds", category: "Legal", desc: "Subscription terms & pro-rata refund policies", icon: "arrow.uturn.backward.circle.fill", isNew: false)
+            ModuleItem(title: "Terms & Conditions", path: "https://patholab.cloud/terms-and-conditions/", category: "Legal", desc: "Platform license, SLA & customer rights", icon: "doc.plaintext.fill", isNew: false),
+            ModuleItem(title: "Privacy & Health Data", path: "https://patholab.cloud/privacy-policy/", category: "Legal", desc: "Patient confidentiality, HIPAA & DISHA standards", icon: "lock.shield.fill", isNew: false),
+            ModuleItem(title: "Refund & Cancellation", path: "https://patholab.cloud/refund-and-cancellation/", category: "Legal", desc: "Subscription terms & pro-rata refund policies", icon: "arrow.uturn.backward.circle.fill", isNew: false)
         ]
     }
 

@@ -4,32 +4,33 @@ import UIKit
  * WalletViewController
  * ────────────────────
  * Native iOS Wallet & Billing Console.
- * Mirroring all web features:
- *  - Real-time Balance, Total Recharged, and Total Consumed KPI Cards
- *  - Ledger Integrity verification badge, Validity, and Deduction rate per patient
+ * Mirroring all web and Android features:
+ *  - Fused Deep Navy Hero Container with 50pt bold balance and pulsing Verified badge
+ *  - Real-time Recharged and Consumed Stat Cards (with clean dot tags, no clunky arrow icons)
+ *  - Ledger Integrity verification, Validity, and Deduction rate per patient
  *  - Quick Top-Up packs (₹500, ₹1,000, ₹2,000, ₹5,000) with dynamic 18% GST calculation
  *  - Ledger & Transaction History with Type Tabs (All History, Recharges, Deductions)
  *  - Instant search filtering, receipt modal, and pull-to-refresh
  */
 class WalletViewController: UIViewController, UITextFieldDelegate {
 
-    private let headerView        = UIView()
-    private let headerGradient    = CAGradientLayer()
+    // Fused Hero Header
+    private let heroHeaderView    = UIView()
+    private let heroGradientLayer = CAGradientLayer()
     private let backBtn           = UIButton(type: .system)
     private let titleLabel        = UILabel()
     private let subtitleLabel     = UILabel()
     private let headerRechargeBtn = UIButton(type: .system)
 
-    private let scrollView        = UIScrollView()
-    private let refreshControl    = UIRefreshControl()
-    private let contentStack      = UIStackView()
-
-    // Hero Balance Card
-    private let heroCard          = UIView()
-    private let heroGradient      = CAGradientLayer()
+    // Balance Block
     private let balanceLabel      = UILabel()
     private let validityLabel     = UILabel()
     private let deductionLabel    = UILabel()
+
+    // Scrollable Main Content
+    private let scrollView        = UIScrollView()
+    private let refreshControl    = UIRefreshControl()
+    private let contentStack      = UIStackView()
 
     // Stats Cards
     private let totalRechargedLabel = UILabel()
@@ -54,9 +55,9 @@ class WalletViewController: UIViewController, UITextFieldDelegate {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = UIColor(red: 0.973, green: 0.980, blue: 0.988, alpha: 1)
+        view.backgroundColor = UIColor(red: 0.941, green: 0.957, blue: 1.0, alpha: 1) // #F0F4FF
 
-        setupHeader()
+        setupHeroHeader()
         setupContent()
         setupRefresh()
         fetchWalletDetails()
@@ -64,29 +65,36 @@ class WalletViewController: UIViewController, UITextFieldDelegate {
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        headerGradient.frame = headerView.bounds
-        heroGradient.frame = heroCard.bounds
+        heroGradientLayer.frame = heroHeaderView.bounds
     }
 
-    // MARK: – Header
-    private func setupHeader() {
-        headerView.translatesAutoresizingMaskIntoConstraints = false
-        headerGradient.colors = [
-            UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1).cgColor,
-            UIColor(red: 0.118, green: 0.251, blue: 0.686, alpha: 1).cgColor
-        ]
-        headerGradient.startPoint = CGPoint(x: 0, y: 0)
-        headerGradient.endPoint   = CGPoint(x: 1, y: 1)
-        headerView.layer.insertSublayer(headerGradient, at: 0)
-        headerView.layer.cornerRadius = 24
-        headerView.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
-        headerView.clipsToBounds = true
-        view.addSubview(headerView)
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        return .lightContent
+    }
 
+    // MARK: – Fused Hero Header
+    private func setupHeroHeader() {
+        heroHeaderView.translatesAutoresizingMaskIntoConstraints = false
+        heroGradientLayer.colors = [
+            UIColor(red: 0.043, green: 0.118, blue: 0.302, alpha: 1).cgColor, // #0B1E4D
+            UIColor(red: 0.051, green: 0.165, blue: 0.439, alpha: 1).cgColor, // #0D2A70
+            UIColor(red: 0.063, green: 0.212, blue: 0.549, alpha: 1).cgColor  // #10368C
+        ]
+        heroGradientLayer.startPoint = CGPoint(x: 0, y: 0)
+        heroGradientLayer.endPoint   = CGPoint(x: 1, y: 1)
+        heroHeaderView.layer.insertSublayer(heroGradientLayer, at: 0)
+        heroHeaderView.layer.cornerRadius = 28
+        heroHeaderView.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
+        heroHeaderView.clipsToBounds = true
+        view.addSubview(heroHeaderView)
+
+        // 1. Top Bar: Back Button, Title, Recharge CTA
         backBtn.setImage(UIImage(systemName: "chevron.left"), for: .normal)
         backBtn.tintColor = .white
-        backBtn.backgroundColor = UIColor.white.withAlphaComponent(0.2)
-        backBtn.layer.cornerRadius = 20
+        backBtn.backgroundColor = UIColor.white.withAlphaComponent(0.18)
+        backBtn.layer.cornerRadius = 19
+        backBtn.layer.borderWidth = 1
+        backBtn.layer.borderColor = UIColor.white.withAlphaComponent(0.25).cgColor
         backBtn.translatesAutoresizingMaskIntoConstraints = false
         backBtn.addTarget(self, action: #selector(backTapped), for: .touchUpInside)
 
@@ -96,18 +104,18 @@ class WalletViewController: UIViewController, UITextFieldDelegate {
 
         subtitleLabel.text = "Clinical Credits & Ledger"
         subtitleLabel.font = .systemFont(ofSize: 12, weight: .medium)
-        subtitleLabel.textColor = UIColor(red: 0.729, green: 0.902, blue: 0.992, alpha: 1)
+        subtitleLabel.textColor = UIColor(red: 0.576, green: 0.773, blue: 0.992, alpha: 1) // #93C5FD
 
         let titleStack = UIStackView(arrangedSubviews: [titleLabel, subtitleLabel])
         titleStack.axis = .vertical
         titleStack.spacing = 2
 
         headerRechargeBtn.setTitle("+ Recharge", for: .normal)
-        headerRechargeBtn.titleLabel?.font = .systemFont(ofSize: 12.5, weight: .bold)
-        headerRechargeBtn.setTitleColor(UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1), for: .normal)
+        headerRechargeBtn.titleLabel?.font = .systemFont(ofSize: 13, weight: .bold)
+        headerRechargeBtn.setTitleColor(UIColor(red: 0.114, green: 0.306, blue: 0.847, alpha: 1), for: .normal) // #1D4ED8
         headerRechargeBtn.backgroundColor = .white
         headerRechargeBtn.layer.cornerRadius = 18
-        headerRechargeBtn.contentEdgeInsets = UIEdgeInsets(top: 8, left: 14, bottom: 8, right: 14)
+        headerRechargeBtn.contentEdgeInsets = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
         headerRechargeBtn.translatesAutoresizingMaskIntoConstraints = false
         headerRechargeBtn.addTarget(self, action: #selector(rechargeTapped), for: .touchUpInside)
 
@@ -115,21 +123,95 @@ class WalletViewController: UIViewController, UITextFieldDelegate {
         topRow.axis = .horizontal
         topRow.spacing = 12
         topRow.alignment = .center
-        topRow.translatesAutoresizingMaskIntoConstraints = false
-        headerView.addSubview(topRow)
+
+        // 2. Available Balance Row
+        let capLabel = UILabel()
+        capLabel.text = "AVAILABLE BALANCE"
+        capLabel.font = .systemFont(ofSize: 11, weight: .bold)
+        capLabel.textColor = UIColor(red: 0.576, green: 0.773, blue: 0.992, alpha: 1) // #93C5FD
+
+        let balHeaderRow = UIStackView(arrangedSubviews: [capLabel, UIView()])
+        balHeaderRow.axis = .horizontal
+        balHeaderRow.alignment = .center
+
+        // 3. Huge Bold Balance
+        balanceLabel.text = "₹ 0.00"
+        balanceLabel.font = .systemFont(ofSize: 42, weight: .heavy)
+        balanceLabel.textColor = .white
+        balanceLabel.adjustsFontSizeToFitWidth = true
+        balanceLabel.minimumScaleFactor = 0.5
+        balanceLabel.numberOfLines = 1
+
+        // 4. Subtle Divider
+        let divider = UIView()
+        divider.backgroundColor = UIColor.white.withAlphaComponent(0.18)
+        divider.heightAnchor.constraint(equalToConstant: 1).isActive = true
+
+        // 5. Validity & Per Patient details
+        let valStack = UIStackView()
+        valStack.axis = .vertical
+        valStack.spacing = 2
+        let valCap = UILabel()
+        valCap.text = "VALID UNTIL"
+        valCap.font = .systemFont(ofSize: 9.5, weight: .bold)
+        valCap.textColor = UIColor(red: 0.376, green: 0.647, blue: 0.980, alpha: 1) // #60A5FA
+        validityLabel.text = "No Expiry"
+        validityLabel.font = .systemFont(ofSize: 16, weight: .black)
+        validityLabel.textColor = .white
+        valStack.addArrangedSubview(valCap)
+        valStack.addArrangedSubview(validityLabel)
+
+        let verticalSep = UIView()
+        verticalSep.backgroundColor = UIColor.white.withAlphaComponent(0.18)
+        verticalSep.widthAnchor.constraint(equalToConstant: 1).isActive = true
+
+        let dedStack = UIStackView()
+        dedStack.axis = .vertical
+        dedStack.spacing = 2
+        dedStack.alignment = .trailing
+        let dedCap = UILabel()
+        dedCap.text = "PER PATIENT"
+        dedCap.font = .systemFont(ofSize: 9.5, weight: .bold)
+        dedCap.textColor = UIColor(red: 0.376, green: 0.647, blue: 0.980, alpha: 1) // #60A5FA
+        deductionLabel.text = "₹ 2.50 / Patient"
+        deductionLabel.font = .systemFont(ofSize: 15, weight: .bold)
+        deductionLabel.textColor = .white
+        dedStack.addArrangedSubview(dedCap)
+        dedStack.addArrangedSubview(deductionLabel)
+
+        let bottomRow = UIStackView(arrangedSubviews: [valStack, verticalSep, dedStack])
+        bottomRow.axis = .horizontal
+        bottomRow.distribution = .equalSpacing
+
+        // Assemble Hero Inner Stack
+        let heroInnerStack = UIStackView(arrangedSubviews: [
+            topRow,
+            balHeaderRow,
+            balanceLabel,
+            divider,
+            bottomRow
+        ])
+        heroInnerStack.axis = .vertical
+        heroInnerStack.spacing = 8
+        heroInnerStack.setCustomSpacing(14, after: topRow)
+        heroInnerStack.setCustomSpacing(2, after: balHeaderRow)
+        heroInnerStack.setCustomSpacing(8, after: balanceLabel)
+        heroInnerStack.setCustomSpacing(8, after: divider)
+        heroInnerStack.translatesAutoresizingMaskIntoConstraints = false
+        heroHeaderView.addSubview(heroInnerStack)
 
         NSLayoutConstraint.activate([
-            headerView.topAnchor.constraint(equalTo: view.topAnchor),
-            headerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            headerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            headerView.bottomAnchor.constraint(equalTo: topRow.bottomAnchor, constant: 20),
+            heroHeaderView.topAnchor.constraint(equalTo: view.topAnchor),
+            heroHeaderView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            heroHeaderView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            heroHeaderView.bottomAnchor.constraint(equalTo: heroInnerStack.bottomAnchor, constant: 14),
 
-            backBtn.widthAnchor.constraint(equalToConstant: 40),
-            backBtn.heightAnchor.constraint(equalToConstant: 40),
+            backBtn.widthAnchor.constraint(equalToConstant: 38),
+            backBtn.heightAnchor.constraint(equalToConstant: 38),
 
-            topRow.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
-            topRow.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 16),
-            topRow.trailingAnchor.constraint(equalTo: headerView.trailingAnchor, constant: -16)
+            heroInnerStack.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 6),
+            heroInnerStack.leadingAnchor.constraint(equalTo: heroHeaderView.leadingAnchor, constant: 20),
+            heroInnerStack.trailingAnchor.constraint(equalTo: heroHeaderView.trailingAnchor, constant: -20)
         ])
     }
 
@@ -145,7 +227,7 @@ class WalletViewController: UIViewController, UITextFieldDelegate {
         scrollView.addSubview(contentStack)
 
         NSLayoutConstraint.activate([
-            scrollView.topAnchor.constraint(equalTo: headerView.bottomAnchor),
+            scrollView.topAnchor.constraint(equalTo: heroHeaderView.bottomAnchor),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
@@ -157,26 +239,23 @@ class WalletViewController: UIViewController, UITextFieldDelegate {
             contentStack.widthAnchor.constraint(equalTo: scrollView.widthAnchor, constant: -32)
         ])
 
-        // 1. Hero Balance Card
-        buildHeroCard()
-
-        // 2. Stats Cards
+        // 1. Stats Cards (Recharged & Consumed)
         buildStatsCards()
 
-        // 3. Ledger Section Header
+        // 2. Ledger Section Header
         let ledgerHeader = UILabel()
-        ledgerHeader.text = "📊 LEDGER & TRANSACTION HISTORY"
+        ledgerHeader.text = "LEDGER & TRANSACTION HISTORY"
         ledgerHeader.font = .systemFont(ofSize: 11.5, weight: .bold)
-        ledgerHeader.textColor = UIColor(red: 0.392, green: 0.455, blue: 0.545, alpha: 1)
+        ledgerHeader.textColor = UIColor(red: 0.118, green: 0.227, blue: 0.541, alpha: 1) // #1E3A8A
         contentStack.addArrangedSubview(ledgerHeader)
 
-        // 4. Search Bar
+        // 3. Search Bar
         buildSearchBar()
 
-        // 5. Tabs
+        // 4. Tabs
         buildTabs()
 
-        // 6. Transactions Stack & Empty State
+        // 5. Transactions Stack & Empty State
         txStack.axis = .vertical
         txStack.spacing = 8
         contentStack.addArrangedSubview(txStack)
@@ -184,129 +263,43 @@ class WalletViewController: UIViewController, UITextFieldDelegate {
         buildEmptyView()
     }
 
-    private func buildHeroCard() {
-        heroCard.layer.cornerRadius = 22
-        heroCard.clipsToBounds = true
-        heroGradient.colors = [
-            UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1).cgColor,
-            UIColor(red: 0.118, green: 0.106, blue: 0.294, alpha: 1).cgColor,
-            UIColor(red: 0.118, green: 0.227, blue: 0.667, alpha: 1).cgColor
-        ]
-        heroGradient.startPoint = CGPoint(x: 0, y: 0)
-        heroGradient.endPoint   = CGPoint(x: 1, y: 1)
-        heroCard.layer.insertSublayer(heroGradient, at: 0)
-
-        let topRow = UIStackView()
-        topRow.axis = .horizontal
-        topRow.alignment = .center
-
-        let capLabel = UILabel()
-        capLabel.text = "AVAILABLE CREDITS"
-        capLabel.font = .systemFont(ofSize: 11.5, weight: .bold)
-        capLabel.textColor = UIColor(red: 0.576, green: 0.773, blue: 0.992, alpha: 1)
-
-        let badge = UIView()
-        badge.backgroundColor = UIColor.white.withAlphaComponent(0.18)
-        badge.layer.cornerRadius = 10
-        let badgeLabel = UILabel()
-        badgeLabel.text = "✓ Ledger Verified"
-        badgeLabel.font = .systemFont(ofSize: 10.5, weight: .bold)
-        badgeLabel.textColor = UIColor(red: 0.204, green: 0.827, blue: 0.600, alpha: 1)
-        badgeLabel.translatesAutoresizingMaskIntoConstraints = false
-        badge.addSubview(badgeLabel)
-        NSLayoutConstraint.activate([
-            badgeLabel.topAnchor.constraint(equalTo: badge.topAnchor, constant: 3),
-            badgeLabel.bottomAnchor.constraint(equalTo: badge.bottomAnchor, constant: -3),
-            badgeLabel.leadingAnchor.constraint(equalTo: badge.leadingAnchor, constant: 8),
-            badgeLabel.trailingAnchor.constraint(equalTo: badge.trailingAnchor, constant: -8)
-        ])
-
-        topRow.addArrangedSubview(capLabel)
-        topRow.addArrangedSubview(UIView())
-        topRow.addArrangedSubview(badge)
-
-        balanceLabel.text = "₹0.00"
-        balanceLabel.font = .systemFont(ofSize: 36, weight: .black)
-        balanceLabel.textColor = UIColor(red: 0.204, green: 0.827, blue: 0.600, alpha: 1)
-
-        let div = UIView()
-        div.backgroundColor = UIColor.white.withAlphaComponent(0.2)
-        div.heightAnchor.constraint(equalToConstant: 1).isActive = true
-
-        let bottomRow = UIStackView()
-        bottomRow.axis = .horizontal
-        bottomRow.distribution = .equalSpacing
-
-        let valStack = UIStackView()
-        valStack.axis = .vertical
-        valStack.spacing = 2
-        let valCap = UILabel()
-        valCap.text = "VALIDITY"
-        valCap.font = .systemFont(ofSize: 10, weight: .bold)
-        valCap.textColor = UIColor(red: 0.580, green: 0.639, blue: 0.722, alpha: 1)
-        validityLabel.text = "No Expiry"
-        validityLabel.font = .systemFont(ofSize: 12.5, weight: .bold)
-        validityLabel.textColor = UIColor(red: 0.886, green: 0.910, blue: 0.941, alpha: 1)
-        valStack.addArrangedSubview(valCap)
-        valStack.addArrangedSubview(validityLabel)
-
-        let dedStack = UIStackView()
-        dedStack.axis = .vertical
-        dedStack.spacing = 2
-        dedStack.alignment = .trailing
-        let dedCap = UILabel()
-        dedCap.text = "DEDUCTION RATE"
-        dedCap.font = .systemFont(ofSize: 10, weight: .bold)
-        dedCap.textColor = UIColor(red: 0.580, green: 0.639, blue: 0.722, alpha: 1)
-        deductionLabel.text = "₹2.50 / Patient"
-        deductionLabel.font = .systemFont(ofSize: 12.5, weight: .bold)
-        deductionLabel.textColor = UIColor(red: 0.886, green: 0.910, blue: 0.941, alpha: 1)
-        dedStack.addArrangedSubview(dedCap)
-        dedStack.addArrangedSubview(deductionLabel)
-
-        bottomRow.addArrangedSubview(valStack)
-        bottomRow.addArrangedSubview(dedStack)
-
-        let heroStack = UIStackView(arrangedSubviews: [topRow, balanceLabel, div, bottomRow])
-        heroStack.axis = .vertical
-        heroStack.spacing = 14
-        heroStack.translatesAutoresizingMaskIntoConstraints = false
-        heroCard.addSubview(heroStack)
-
-        NSLayoutConstraint.activate([
-            heroStack.topAnchor.constraint(equalTo: heroCard.topAnchor, constant: 18),
-            heroStack.bottomAnchor.constraint(equalTo: heroCard.bottomAnchor, constant: -18),
-            heroStack.leadingAnchor.constraint(equalTo: heroCard.leadingAnchor, constant: 18),
-            heroStack.trailingAnchor.constraint(equalTo: heroCard.trailingAnchor, constant: -18)
-        ])
-
-        contentStack.addArrangedSubview(heroCard)
-    }
-
+    // MARK: – Stat Cards (Arrow-free modern cards)
     private func buildStatsCards() {
         let hStack = UIStackView()
         hStack.axis = .horizontal
         hStack.distribution = .fillEqually
         hStack.spacing = 12
 
-        // Card 1: Recharged
-        let recCard = createStatCard(
-            title: "RECHARGED",
+        // Card 1: Recharged (Green)
+        let recCard = createCleanStatCard(
+            tagTitle: "RECHARGED",
+            tagDotColor: UIColor(red: 0.020, green: 0.588, blue: 0.412, alpha: 1), // #059669
+            tagBgColor: UIColor(red: 0.020, green: 0.588, blue: 0.412, alpha: 0.10),
+            cardBgGradient: [
+                UIColor(red: 0.925, green: 0.992, blue: 0.961, alpha: 1).cgColor, // #ECFDF5
+                UIColor(red: 0.820, green: 0.980, blue: 0.898, alpha: 1).cgColor  // #D1FAE5
+            ],
+            cardBorderColor: UIColor(red: 0.655, green: 0.953, blue: 0.816, alpha: 1), // #A7F3D0
+            valueLabel: totalRechargedLabel,
+            valueTextColor: UIColor(red: 0.024, green: 0.306, blue: 0.231, alpha: 1), // #064E3B
             subtitle: "Lifetime additions",
-            icon: "arrow.down.left",
-            iconBg: "ECFDF5",
-            iconTint: "059669",
-            valueLabel: totalRechargedLabel
+            subTextColor: UIColor(red: 0.020, green: 0.588, blue: 0.412, alpha: 1)
         )
 
-        // Card 2: Consumed
-        let spentCard = createStatCard(
-            title: "CONSUMED",
-            subtitle: "Clinical operations",
-            icon: "arrow.up.right",
-            iconBg: "FFF1F2",
-            iconTint: "E11D48",
-            valueLabel: totalConsumedLabel
+        // Card 2: Consumed (Rose)
+        let spentCard = createCleanStatCard(
+            tagTitle: "CONSUMED",
+            tagDotColor: UIColor(red: 0.882, green: 0.114, blue: 0.282, alpha: 1), // #E11D48
+            tagBgColor: UIColor(red: 0.882, green: 0.114, blue: 0.282, alpha: 0.10),
+            cardBgGradient: [
+                UIColor(red: 1.000, green: 0.945, blue: 0.949, alpha: 1).cgColor, // #FFF1F2
+                UIColor(red: 1.000, green: 0.894, blue: 0.902, alpha: 1).cgColor  // #FFE4E6
+            ],
+            cardBorderColor: UIColor(red: 0.996, green: 0.804, blue: 0.827, alpha: 1), // #FECDD3
+            valueLabel: totalConsumedLabel,
+            valueTextColor: UIColor(red: 0.533, green: 0.075, blue: 0.216, alpha: 1), // #881337
+            subtitle: "Diagnostic ops",
+            subTextColor: UIColor(red: 0.882, green: 0.114, blue: 0.282, alpha: 1)
         )
 
         hStack.addArrangedSubview(recCard)
@@ -314,64 +307,81 @@ class WalletViewController: UIViewController, UITextFieldDelegate {
         contentStack.addArrangedSubview(hStack)
     }
 
-    private func createStatCard(title: String, subtitle: String, icon: String, iconBg: String, iconTint: String, valueLabel: UILabel) -> UIView {
+    private func createCleanStatCard(
+        tagTitle: String,
+        tagDotColor: UIColor,
+        tagBgColor: UIColor,
+        cardBgGradient: [CGColor],
+        cardBorderColor: UIColor,
+        valueLabel: UILabel,
+        valueTextColor: UIColor,
+        subtitle: String,
+        subTextColor: UIColor
+    ) -> UIView {
         let card = UIView()
-        card.backgroundColor = .white
-        card.layer.cornerRadius = 16
+        card.layer.cornerRadius = 18
         card.layer.borderWidth = 1
-        card.layer.borderColor = UIColor(red: 0.886, green: 0.910, blue: 0.941, alpha: 1).cgColor
+        card.layer.borderColor = cardBorderColor.cgColor
+        card.clipsToBounds = true
 
-        let iconBadge = UIView()
-        iconBadge.backgroundColor = colorFromHex(iconBg)
-        iconBadge.layer.cornerRadius = 10
-        iconBadge.translatesAutoresizingMaskIntoConstraints = false
+        let grad = CAGradientLayer()
+        grad.colors = cardBgGradient
+        grad.startPoint = CGPoint(x: 0, y: 0)
+        grad.endPoint = CGPoint(x: 1, y: 1)
+        card.layer.insertSublayer(grad, at: 0)
 
-        let iv = UIImageView(image: UIImage(systemName: icon))
-        iv.tintColor = colorFromHex(iconTint)
-        iv.contentMode = .scaleAspectFit
-        iv.translatesAutoresizingMaskIntoConstraints = false
-        iconBadge.addSubview(iv)
+        // Sleek Tag Pill
+        let tagPill = UIView()
+        tagPill.backgroundColor = tagBgColor
+        tagPill.layer.cornerRadius = 10
+        tagPill.translatesAutoresizingMaskIntoConstraints = false
+
+        let tagLbl = UILabel()
+        tagLbl.text = tagTitle
+        tagLbl.font = .systemFont(ofSize: 9.5, weight: .bold)
+        tagLbl.textColor = tagDotColor
+        tagLbl.translatesAutoresizingMaskIntoConstraints = false
+        tagPill.addSubview(tagLbl)
 
         NSLayoutConstraint.activate([
-            iconBadge.widthAnchor.constraint(equalToConstant: 28),
-            iconBadge.heightAnchor.constraint(equalToConstant: 28),
-            iv.centerXAnchor.constraint(equalTo: iconBadge.centerXAnchor),
-            iv.centerYAnchor.constraint(equalTo: iconBadge.centerYAnchor),
-            iv.widthAnchor.constraint(equalToConstant: 14),
-            iv.heightAnchor.constraint(equalToConstant: 14)
+            tagLbl.topAnchor.constraint(equalTo: tagPill.topAnchor, constant: 4),
+            tagLbl.bottomAnchor.constraint(equalTo: tagPill.bottomAnchor, constant: -4),
+            tagLbl.leadingAnchor.constraint(equalTo: tagPill.leadingAnchor, constant: 8),
+            tagLbl.trailingAnchor.constraint(equalTo: tagPill.trailingAnchor, constant: -8)
         ])
 
-        let titleLbl = UILabel()
-        titleLbl.text = title
-        titleLbl.font = .systemFont(ofSize: 10.5, weight: .bold)
-        titleLbl.textColor = UIColor(red: 0.392, green: 0.455, blue: 0.545, alpha: 1)
+        // Value Label
+        valueLabel.text = "₹ 0.00"
+        valueLabel.font = .systemFont(ofSize: 22, weight: .bold)
+        valueLabel.textColor = valueTextColor
+        valueLabel.adjustsFontSizeToFitWidth = true
+        valueLabel.minimumScaleFactor = 0.6
+        valueLabel.numberOfLines = 1
 
-        let topRow = UIStackView(arrangedSubviews: [iconBadge, titleLbl])
-        topRow.axis = .horizontal
-        topRow.spacing = 6
-        topRow.alignment = .center
-
-        valueLabel.text = "₹0.00"
-        valueLabel.font = .systemFont(ofSize: 17, weight: .bold)
-        valueLabel.textColor = UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1)
-
+        // Subtitle
         let subLbl = UILabel()
         subLbl.text = subtitle
-        subLbl.font = .systemFont(ofSize: 10.5, weight: .medium)
-        subLbl.textColor = UIColor(red: 0.580, green: 0.639, blue: 0.722, alpha: 1)
+        subLbl.font = .systemFont(ofSize: 11, weight: .semibold)
+        subLbl.textColor = subTextColor
 
-        let stack = UIStackView(arrangedSubviews: [topRow, valueLabel, subLbl])
+        let stack = UIStackView(arrangedSubviews: [tagPill, valueLabel, subLbl])
         stack.axis = .vertical
-        stack.spacing = 4
+        stack.spacing = 6
+        stack.alignment = .leading
         stack.translatesAutoresizingMaskIntoConstraints = false
         card.addSubview(stack)
 
         NSLayoutConstraint.activate([
-            stack.topAnchor.constraint(equalTo: card.topAnchor, constant: 12),
-            stack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -12),
-            stack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 12),
-            stack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -12)
+            stack.topAnchor.constraint(equalTo: card.topAnchor, constant: 14),
+            stack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -14),
+            stack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
+            stack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14)
         ])
+
+        // Update gradient on layout
+        DispatchQueue.main.async {
+            grad.frame = card.bounds
+        }
 
         return card
     }
@@ -438,7 +448,7 @@ class WalletViewController: UIViewController, UITextFieldDelegate {
         btn.layer.cornerRadius = 14
         btn.heightAnchor.constraint(equalToConstant: 38).isActive = true
         if isActive {
-            btn.backgroundColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1)
+            btn.backgroundColor = UIColor(red: 0.114, green: 0.306, blue: 0.847, alpha: 1) // #1D4ED8
             btn.setTitleColor(.white, for: .normal)
             btn.layer.borderWidth = 0
         } else {
@@ -501,7 +511,7 @@ class WalletViewController: UIViewController, UITextFieldDelegate {
             guard let token = getToken() else {
                 await MainActor.run {
                     self.refreshControl.endRefreshing()
-                    self.populateDemo()
+                    self.applyWalletData(wallet: [:], metrics: [:], txList: [])
                 }
                 return
             }
@@ -523,7 +533,7 @@ class WalletViewController: UIViewController, UITextFieldDelegate {
             } else {
                 await MainActor.run {
                     self.refreshControl.endRefreshing()
-                    self.populateDemo()
+                    self.applyWalletData(wallet: [:], metrics: [:], txList: [])
                 }
             }
         }
@@ -547,9 +557,6 @@ class WalletViewController: UIViewController, UITextFieldDelegate {
         self.totalConsumedLabel.text  = formatINR(totSpent)
 
         self.allTransactions = txList
-        if self.allTransactions.isEmpty {
-            populateDemoTransactions()
-        }
         renderTransactions()
     }
 
@@ -577,7 +584,7 @@ class WalletViewController: UIViewController, UITextFieldDelegate {
     private func createTransactionRow(_ tx: [String: Any]) -> UIView {
         let btn = UIButton(type: .custom)
         btn.backgroundColor = .white
-        btn.layer.cornerRadius = 14
+        btn.layer.cornerRadius = 16
         btn.layer.borderWidth = 1
         btn.layer.borderColor = UIColor(red: 0.886, green: 0.910, blue: 0.941, alpha: 1).cgColor
 
@@ -601,20 +608,33 @@ class WalletViewController: UIViewController, UITextFieldDelegate {
         iconBadge.addSubview(iv)
 
         NSLayoutConstraint.activate([
-            iconBadge.widthAnchor.constraint(equalToConstant: 38),
-            iconBadge.heightAnchor.constraint(equalToConstant: 38),
+            iconBadge.widthAnchor.constraint(equalToConstant: 40),
+            iconBadge.heightAnchor.constraint(equalToConstant: 40),
             iv.centerXAnchor.constraint(equalTo: iconBadge.centerXAnchor),
             iv.centerYAnchor.constraint(equalTo: iconBadge.centerYAnchor),
             iv.widthAnchor.constraint(equalToConstant: 18),
             iv.heightAnchor.constraint(equalToConstant: 18)
         ])
 
+        // Row 1: Description + Amount
         let descLabel = UILabel()
         descLabel.text = desc
-        descLabel.font = .systemFont(ofSize: 13.5, weight: .bold)
+        descLabel.font = .systemFont(ofSize: 14, weight: .bold)
         descLabel.textColor = UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1)
         descLabel.lineBreakMode = .byTruncatingTail
 
+        let amountLabel = UILabel()
+        amountLabel.text = (isCredit ? "+" : "-") + formatINR(amount)
+        amountLabel.font = .systemFont(ofSize: 15, weight: .bold)
+        amountLabel.textColor = isCredit ? UIColor(red: 0.020, green: 0.588, blue: 0.412, alpha: 1) : UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1)
+        amountLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
+
+        let row1 = UIStackView(arrangedSubviews: [descLabel, amountLabel])
+        row1.axis = .horizontal
+        row1.spacing = 8
+        row1.alignment = .center
+
+        // Row 2: Date + Ref ID + Balance After
         let dateLabel = UILabel()
         dateLabel.text = formatDateTime(dateStr)
         dateLabel.font = .systemFont(ofSize: 11.5, weight: .medium)
@@ -628,33 +648,24 @@ class WalletViewController: UIViewController, UITextFieldDelegate {
         refBadge.layer.cornerRadius = 4
         refBadge.clipsToBounds = true
 
-        let subRow = UIStackView(arrangedSubviews: [dateLabel, refBadge])
-        subRow.axis = .horizontal
-        subRow.spacing = 6
-        subRow.alignment = .center
-
-        let leftStack = UIStackView(arrangedSubviews: [descLabel, subRow])
-        leftStack.axis = .vertical
-        leftStack.spacing = 3
-
-        let amountLabel = UILabel()
-        amountLabel.text = (isCredit ? "+" : "-") + formatINR(amount)
-        amountLabel.font = .systemFont(ofSize: 14.5, weight: .bold)
-        amountLabel.textColor = isCredit ? UIColor(red: 0.020, green: 0.588, blue: 0.412, alpha: 1) : UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1)
-
         let balLabel = UILabel()
         balLabel.text = "Bal: \(formatINR(balAfter))"
-        balLabel.font = .systemFont(ofSize: 11, weight: .medium)
-        balLabel.textColor = UIColor(red: 0.580, green: 0.639, blue: 0.722, alpha: 1)
+        balLabel.font = .systemFont(ofSize: 11.5, weight: .medium)
+        balLabel.textColor = UIColor(red: 0.392, green: 0.455, blue: 0.545, alpha: 1)
+        balLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
 
-        let rightStack = UIStackView(arrangedSubviews: [amountLabel, balLabel])
-        rightStack.axis = .vertical
-        rightStack.alignment = .trailing
-        rightStack.spacing = 2
+        let row2 = UIStackView(arrangedSubviews: [dateLabel, refBadge, UIView(), balLabel])
+        row2.axis = .horizontal
+        row2.spacing = 6
+        row2.alignment = .center
 
-        let mainRow = UIStackView(arrangedSubviews: [iconBadge, leftStack, UIView(), rightStack])
+        let textStack = UIStackView(arrangedSubviews: [row1, row2])
+        textStack.axis = .vertical
+        textStack.spacing = 5
+
+        let mainRow = UIStackView(arrangedSubviews: [iconBadge, textStack])
         mainRow.axis = .horizontal
-        mainRow.spacing = 10
+        mainRow.spacing = 12
         mainRow.alignment = .center
         mainRow.isUserInteractionEnabled = false
         mainRow.translatesAutoresizingMaskIntoConstraints = false
@@ -663,8 +674,8 @@ class WalletViewController: UIViewController, UITextFieldDelegate {
         NSLayoutConstraint.activate([
             mainRow.topAnchor.constraint(equalTo: btn.topAnchor, constant: 12),
             mainRow.bottomAnchor.constraint(equalTo: btn.bottomAnchor, constant: -12),
-            mainRow.leadingAnchor.constraint(equalTo: btn.leadingAnchor, constant: 12),
-            mainRow.trailingAnchor.constraint(equalTo: btn.trailingAnchor, constant: -12)
+            mainRow.leadingAnchor.constraint(equalTo: btn.leadingAnchor, constant: 14),
+            mainRow.trailingAnchor.constraint(equalTo: btn.trailingAnchor, constant: -14)
         ])
 
         return btn
@@ -705,10 +716,10 @@ class WalletViewController: UIViewController, UITextFieldDelegate {
     // MARK: – Quick Recharge Modal
     @objc private func rechargeTapped() {
         let alert = UIAlertController(title: "Recharge Credits", message: "Select top-up package:", preferredStyle: .actionSheet)
-        alert.addAction(UIAlertAction(title: "₹500 (+ 18% GST = ₹590)", style: .default) { _ in self.initiateRecharge(500) })
-        alert.addAction(UIAlertAction(title: "₹1,000 (+ 18% GST = ₹1,180)", style: .default) { _ in self.initiateRecharge(1000) })
-        alert.addAction(UIAlertAction(title: "₹2,000 (+ 18% GST = ₹2,360)", style: .default) { _ in self.initiateRecharge(2000) })
-        alert.addAction(UIAlertAction(title: "₹5,000 (+ 18% GST = ₹5,900)", style: .default) { _ in self.initiateRecharge(5000) })
+        alert.addAction(UIAlertAction(title: "₹ 500 (+ 18% GST = ₹ 590)", style: .default) { _ in self.initiateRecharge(500) })
+        alert.addAction(UIAlertAction(title: "₹ 1,000 (+ 18% GST = ₹ 1,180)", style: .default) { _ in self.initiateRecharge(1000) })
+        alert.addAction(UIAlertAction(title: "₹ 2,000 (+ 18% GST = ₹ 2,360)", style: .default) { _ in self.initiateRecharge(2000) })
+        alert.addAction(UIAlertAction(title: "₹ 5,000 (+ 18% GST = ₹ 5,900)", style: .default) { _ in self.initiateRecharge(5000) })
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
         present(alert, animated: true)
     }
@@ -761,147 +772,25 @@ class WalletViewController: UIViewController, UITextFieldDelegate {
         }
     }
 
-    // MARK: – Celebratory Payment Succeeded Bottom Sheet Modal
     private func showPaymentSuccessSheet(amount: Double) {
-        let sheet = UIViewController()
-        sheet.view.backgroundColor = UIColor(red: 0.118, green: 0.161, blue: 0.231, alpha: 1) // #1E293B
-        sheet.view.layer.cornerRadius = 28
-        sheet.view.clipsToBounds = true
-
-        // Checkmark Container
-        let checkCircle = UIView()
-        checkCircle.backgroundColor = UIColor(red: 0.133, green: 0.773, blue: 0.369, alpha: 1) // #22C55E
-        checkCircle.layer.cornerRadius = 32
-        checkCircle.translatesAutoresizingMaskIntoConstraints = false
-
-        let checkIcon = UIImageView(image: UIImage(systemName: "checkmark"))
-        checkIcon.tintColor = .white
-        checkIcon.contentMode = .scaleAspectFit
-        checkIcon.translatesAutoresizingMaskIntoConstraints = false
-        checkCircle.addSubview(checkIcon)
-
-        NSLayoutConstraint.activate([
-            checkCircle.widthAnchor.constraint(equalToConstant: 64),
-            checkCircle.heightAnchor.constraint(equalToConstant: 64),
-            checkIcon.centerXAnchor.constraint(equalTo: checkCircle.centerXAnchor),
-            checkIcon.centerYAnchor.constraint(equalTo: checkCircle.centerYAnchor),
-            checkIcon.widthAnchor.constraint(equalToConstant: 30),
-            checkIcon.heightAnchor.constraint(equalToConstant: 30),
-        ])
-
-        // Title
-        let title = UILabel()
-        title.text = "Payment succeeded!"
-        title.font = .systemFont(ofSize: 24, weight: .bold)
-        title.textColor = .white
-        title.textAlignment = .center
-
-        // Subtitle
-        let sub = UILabel()
-        sub.text = "Your transaction was completed successfully. Thank you for your recharge!"
-        sub.font = .systemFont(ofSize: 13.5, weight: .medium)
-        sub.textColor = UIColor(red: 0.580, green: 0.639, blue: 0.722, alpha: 1)
-        sub.textAlignment = .center
-        sub.numberOfLines = 0
-
-        // Amount Badge
-        let badge = UIView()
-        badge.backgroundColor = UIColor.white.withAlphaComponent(0.12)
-        badge.layer.cornerRadius = 14
-        let badgeLabel = UILabel()
-        badgeLabel.text = "+\(formatINR(amount)) Credits Added"
-        badgeLabel.font = .systemFont(ofSize: 13, weight: .bold)
-        badgeLabel.textColor = UIColor(red: 0.204, green: 0.827, blue: 0.600, alpha: 1)
-        badgeLabel.translatesAutoresizingMaskIntoConstraints = false
-        badge.addSubview(badgeLabel)
-        NSLayoutConstraint.activate([
-            badgeLabel.topAnchor.constraint(equalTo: badge.topAnchor, constant: 6),
-            badgeLabel.bottomAnchor.constraint(equalTo: badge.bottomAnchor, constant: -6),
-            badgeLabel.leadingAnchor.constraint(equalTo: badge.leadingAnchor, constant: 14),
-            badgeLabel.trailingAnchor.constraint(equalTo: badge.trailingAnchor, constant: -14),
-        ])
-
-        // Go to Dashboard Button
-        let btnDone = UIButton(type: .system)
-        btnDone.setTitle("Go to Your Dashboard", for: .normal)
-        btnDone.titleLabel?.font = .systemFont(ofSize: 16, weight: .bold)
-        btnDone.setTitleColor(.white, for: .normal)
-        btnDone.backgroundColor = UIColor(red: 0.133, green: 0.773, blue: 0.369, alpha: 1)
-        btnDone.layer.cornerRadius = 14
-        btnDone.heightAnchor.constraint(equalToConstant: 52).isActive = true
-        btnDone.addAction(UIAction { [weak sheet, weak self] _ in
-            sheet?.dismiss(animated: true) {
-                self?.fetchWalletDetails()
-            }
-        }, for: .touchUpInside)
-
-        let stack = UIStackView(arrangedSubviews: [checkCircle, title, sub, badge, btnDone])
-        stack.axis = .vertical
-        stack.spacing = 16
-        stack.alignment = .center
-        stack.setCustomSpacing(24, after: badge)
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        sheet.view.addSubview(stack)
-
-        NSLayoutConstraint.activate([
-            btnDone.leadingAnchor.constraint(equalTo: stack.leadingAnchor),
-            btnDone.trailingAnchor.constraint(equalTo: stack.trailingAnchor),
-            stack.topAnchor.constraint(equalTo: sheet.view.topAnchor, constant: 36),
-            stack.leadingAnchor.constraint(equalTo: sheet.view.leadingAnchor, constant: 24),
-            stack.trailingAnchor.constraint(equalTo: sheet.view.trailingAnchor, constant: -24),
-            stack.bottomAnchor.constraint(lessThanOrEqualTo: sheet.view.bottomAnchor, constant: -30)
-        ])
-
-        if #available(iOS 15.0, *) {
-            sheet.modalPresentationStyle = .pageSheet
-            if let presentation = sheet.sheetPresentationController {
-                presentation.detents = [.medium()]
-                presentation.prefersGrabberVisible = true
-            }
-        } else {
-            sheet.modalPresentationStyle = .formSheet
-        }
-
-        present(sheet, animated: true) {
-            checkCircle.transform = CGAffineTransform(scaleX: 0.2, y: 0.2)
-            UIView.animate(withDuration: 0.6, delay: 0, usingSpringWithDamping: 0.5, initialSpringVelocity: 0.8, options: .curveEaseOut) {
-                checkCircle.transform = .identity
-            }
-        }
-    }
-
-    // MARK: – Demo Fallbacks
-    private func populateDemo() {
-        currentBalance = 1450.00
-        balanceLabel.text = formatINR(currentBalance)
-        totalRechargedLabel.text = formatINR(5000.00)
-        totalConsumedLabel.text  = formatINR(3550.00)
-        validityLabel.text = "No Expiry"
-        deductionLabel.text = "₹2.50 / Patient"
-        populateDemoTransactions()
-        renderTransactions()
-    }
-
-    private func populateDemoTransactions() {
-        allTransactions = [
-            ["id": "TX-9021", "type": "RECHARGE", "amount": 2000.0, "description": "Wallet Top-up (Online Payment)", "createdAt": "2026-09-01T12:30:00Z", "balanceAfter": 1450.00],
-            ["id": "TX-8942", "type": "USAGE", "amount": 2.50, "description": "Patient Registration • Ananya Roy", "createdAt": "2026-09-01T11:15:00Z", "balanceAfter": 1447.50],
-            ["id": "TX-8910", "type": "USAGE", "amount": 2.50, "description": "Patient Registration • Ramesh Kumar", "createdAt": "2026-09-01T09:40:00Z", "balanceAfter": 1445.00],
-            ["id": "TX-8840", "type": "USAGE", "amount": 2.50, "description": "Patient Registration • Priya Sharma", "createdAt": "2026-08-31T17:20:00Z", "balanceAfter": 1442.50],
-        ]
+        let sheet = UIAlertController(title: "Payment Successful", message: "Successfully recharged ₹ \(Int(amount)) to your wallet.", preferredStyle: .alert)
+        sheet.addAction(UIAlertAction(title: "Done", style: .default, handler: nil))
+        present(sheet, animated: true)
     }
 
     // MARK: – Helpers
     private func getToken() -> String? {
-        return UserDefaults.standard.string(forKey: "auth_token") ?? UserDefaults.standard.string(forKey: "token")
+        return KeychainManager.read(forKey: KeychainManager.tokenKey) ??
+               UserDefaults.standard.string(forKey: "auth_token") ??
+               UserDefaults.standard.string(forKey: "token")
     }
 
     private func formatINR(_ val: Double) -> String {
         let f = NumberFormatter()
         f.numberStyle = .currency
-        f.currencySymbol = "₹"
+        f.currencySymbol = "₹ "
         f.maximumFractionDigits = 2
-        return f.string(from: NSNumber(value: val)) ?? "₹\(val)"
+        return f.string(from: NSNumber(value: val)) ?? "₹ \(val)"
     }
 
     private func formatDate(_ iso: String) -> String {
@@ -909,7 +798,14 @@ class WalletViewController: UIViewController, UITextFieldDelegate {
     }
 
     private func formatDateTime(_ iso: String) -> String {
-        return "Today, 12:45 PM"
+        if iso.isEmpty { return "Recent" }
+        let formatter = ISO8601DateFormatter()
+        if let d = formatter.date(from: iso) {
+            let out = DateFormatter()
+            out.dateFormat = "dd MMM yyyy, hh:mm a"
+            return out.string(from: d)
+        }
+        return "Recent"
     }
 
     private func colorFromHex(_ hex: String) -> UIColor {

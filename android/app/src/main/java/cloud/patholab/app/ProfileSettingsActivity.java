@@ -21,6 +21,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.widget.NestedScrollView;
 
+import com.google.android.material.button.MaterialButton;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -46,7 +48,6 @@ public class ProfileSettingsActivity extends AppCompatActivity {
 
     // Header & Navigation
     private FrameLayout btnBack;
-    private FrameLayout btnTopSave;
     private TextView heroAvatarInitial;
     private android.widget.ImageView heroAvatarImage;
     private TextView heroUserName;
@@ -99,7 +100,7 @@ public class ProfileSettingsActivity extends AppCompatActivity {
     private EditText inputWaPhoneId;
 
     // Bottom Save
-    private Button btnSaveAll;
+    private MaterialButton btnSaveAll;
     private ProgressBar progressBarSave;
 
     @Override
@@ -115,7 +116,6 @@ public class ProfileSettingsActivity extends AppCompatActivity {
 
     private void bindViews() {
         btnBack            = findViewById(R.id.btnBack);
-        btnTopSave         = findViewById(R.id.btnTopSave);
         heroAvatarInitial  = findViewById(R.id.heroAvatarInitial);
         heroAvatarImage    = findViewById(R.id.heroAvatarImage);
         heroUserName       = findViewById(R.id.heroUserName);
@@ -209,7 +209,6 @@ public class ProfileSettingsActivity extends AppCompatActivity {
 
     private void setupActions() {
         btnBack.setOnClickListener(v -> finish());
-        btnTopSave.setOnClickListener(v -> saveAllSettings());
         btnSaveAll.setOnClickListener(v -> saveAllSettings());
     }
 
@@ -446,11 +445,11 @@ public class ProfileSettingsActivity extends AppCompatActivity {
                 setSavingState(false);
                 if (success) {
                     vibrateSuccess();
-                    Toast.makeText(ProfileSettingsActivity.this, "✅ Settings saved successfully!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ProfileSettingsActivity.this, "Settings saved successfully!", Toast.LENGTH_SHORT).show();
                     heroUserName.setText(pName);
                     heroUserEmail.setText(pEmail);
                 } else {
-                    Toast.makeText(ProfileSettingsActivity.this, "⚠️ Failed to save settings. Please try again.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ProfileSettingsActivity.this, "Failed to save settings. Please try again.", Toast.LENGTH_SHORT).show();
                 }
             });
         }).start();

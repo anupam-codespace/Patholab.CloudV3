@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Clean, Professional Diagnostic Test Catalog Bento Card -->
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardCornerRadius="18dp"
+    app:cardElevation="2dp"
+    app:cardBackgroundColor="#FFFFFF"
+    app:cardPreventCornerOverlap="false"
+    android:layout_marginStart="4dp"
+    android:layout_marginEnd="4dp"
+    android:layout_marginTop="4dp"
+    android:layout_marginBottom="6dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="14dp">
+
+        <!-- Top Header Row: Test Code + Scope + Status Tags + Action Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <!-- Test Code Pill -->
+            <TextView
+                android:id="@+id/lblTestItemCode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_pill_indigo_soft"
+                android:paddingStart="9dp"
+                android:paddingEnd="9dp"
+                android:paddingTop="3dp"
+                android:paddingBottom="3dp"
+                android:text="CBC"
+                android:textSize="11.5sp"
+                android:textStyle="bold"
+                android:textColor="#1D4ED8" />
+
+            <!-- Scope Pill: Global vs Local (No Emojis) -->
+            <TextView
+                android:id="@+id/lblTestScope"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_pill_indigo_soft"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:paddingTop="3dp"
+                android:paddingBottom="3dp"
+                android:text="Global"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="#4338CA" />
+
+            <!-- Inactive Status Badge -->
+            <TextView
+                android:id="@+id/lblTestInactive"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_tag_rose"
+                android:paddingStart="7dp"
+                android:paddingEnd="7dp"
+                android:paddingTop="2.5dp"
+                android:paddingBottom="2.5dp"
+                android:text="Inactive"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:textColor="#E11D48"
+                android:visibility="gone" />
+
+            <!-- Custom Price Tag -->
+            <TextView
+                android:id="@+id/lblTestCustomPriceTag"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_bento_blue"
+                android:paddingStart="7dp"
+                android:paddingEnd="7dp"
+                android:paddingTop="2.5dp"
+                android:paddingBottom="2.5dp"
+                android:text="Custom Price"
+                android:textSize="10.5sp"
+                android:textStyle="bold"
+                android:textColor="#0D6EFD"
+                android:visibility="gone" />
+
+            <!-- Spacer -->
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <!-- Top-Right Actions: Edit Pen & Delete Trash -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnFullEditTest"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:backgroundTint="#EFF6FF"
+                app:cornerRadius="9dp"
+                app:strokeColor="#BFDBFE"
+                app:strokeWidth="1dp"
+                android:elevation="0dp"
+                app:icon="@drawable/ic_edit_pen"
+                app:iconTint="#2563EB"
+                app:iconGravity="textStart"
+                app:iconPadding="0dp"
+                android:insetLeft="0dp"
+                android:insetTop="0dp"
+                android:insetRight="0dp"
+                android:insetBottom="0dp"
+                android:padding="0dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDeleteTest"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:layout_marginStart="6dp"
+                android:backgroundTint="#FFF1F2"
+                app:cornerRadius="9dp"
+                app:strokeColor="#FECDD3"
+                app:strokeWidth="1dp"
+                android:elevation="0dp"
+                app:icon="@drawable/ic_trash"
+                app:iconTint="#E11D48"
+                app:iconGravity="textStart"
+                app:iconPadding="0dp"
+                android:insetLeft="0dp"
+                android:insetTop="0dp"
+                android:insetRight="0dp"
+                android:insetBottom="0dp"
+                android:padding="0dp" />
+
+        </LinearLayout>
+
+        <!-- Test Name -->
+        <TextView
+            android:id="@+id/lblTestItemName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Complete Blood Count (CBC)"
+            android:textSize="15.5sp"
+            android:textStyle="bold"
+            android:textColor="#0F172A"
+            android:letterSpacing="-0.01" />
+
+        <!-- Department Subtitle -->
+        <TextView
+            android:id="@+id/lblTestItemDept"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="Hematology"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="#64748B" />
+
+        <!-- Specimen Tube, Parameter Count, Auto-Reagents & TAT Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="4dp">
+
+            <!-- Specimen Container Badge with Cap Color Dot -->
+            <LinearLayout
+                android:id="@+id/containerSpecimenBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_setting_item"
+                android:paddingStart="8dp"
+                android:paddingEnd="9dp"
+                android:paddingTop="3dp"
+                android:paddingBottom="3dp">
+
+                <View
+                    android:id="@+id/dotTubeCapColor"
+                    android:layout_width="7.5dp"
+                    android:layout_height="7.5dp"
+                    android:background="@drawable/bg_circle_slate"
+                    android:backgroundTint="#0D6EFD" />
+
+                <TextView
+                    android:id="@+id/lblTestSpecimen"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="5dp"
+                    android:text="Serum"
+                    android:textSize="11.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#334155" />
+
+            </LinearLayout>
+
+            <!-- Parameters Count Pill -->
+            <TextView
+                android:id="@+id/lblTestParamsCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_setting_item"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:paddingTop="3dp"
+                android:paddingBottom="3dp"
+                android:text="8 Parameters"
+                android:textSize="11.5sp"
+                android:textStyle="bold"
+                android:textColor="#475569" />
+
+            <!-- Turnaround Time Pill (No Emoji) -->
+            <TextView
+                android:id="@+id/lblTestTat"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_setting_item"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:paddingTop="3dp"
+                android:paddingBottom="3dp"
+                android:text="24 Hours"
+                android:textSize="11.5sp"
+                android:textStyle="bold"
+                android:textColor="#475569" />
+
+            <!-- Auto-Reagents Deduction Badge (No Emoji) -->
+            <TextView
+                android:id="@+id/lblTestReagents"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_tag_emerald"
+                android:paddingStart="7dp"
+                android:paddingEnd="7dp"
+                android:paddingTop="3dp"
+                android:paddingBottom="3dp"
+                android:text="Auto Reagents"
+                android:textSize="10.5sp"
+                android:textStyle="bold"
+                android:textColor="#059669"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
+        <!-- Subtle Divider Line -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp"
+            android:background="#F1F5F9" />
+
+        <!-- Bottom Footer Row: Lab Selling Price + B2B Rate & Quick Price Button -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <!-- Price Stack: Selling Price + B2B Rate -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Lab Selling Price"
+                    android:textSize="10.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#94A3B8" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="1dp">
+
+                    <TextView
+                        android:id="@+id/lblTestPrice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="₹3,000.00"
+                        android:textSize="16.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#0D6EFD" />
+
+                    <TextView
+                        android:id="@+id/lblTestB2BPrice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_mod_icon_amber"
+                        android:paddingStart="7dp"
+                        android:paddingEnd="7dp"
+                        android:paddingTop="2dp"
+                        android:paddingBottom="2dp"
+                        android:text="B2B: ₹2,100"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#B45309"
+                        android:singleLine="true" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- Quick Price Action Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnEditTestPrice"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="₹ Price"
+                android:textSize="12.5sp"
+                android:textStyle="bold"
+                android:textColor="#059669"
+                android:backgroundTint="#ECFDF5"
+                app:cornerRadius="10dp"
+                app:strokeColor="#A7F3D0"
+                app:strokeWidth="1dp"
+                android:elevation="0dp"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:textAllCaps="false"
+                android:insetTop="0dp"
+                android:insetBottom="0dp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3730a3</color>
-    <color name="colorPrimaryDark">#312e81</color>
-    <color name="colorAccent">#4338ca</color>
-    <color name="indigoPrimary">#3730a3</color>
-    <color name="indigoDark">#312e81</color>
-    <color name="indigoMid">#4338ca</color>
+    <color name="colorPrimary">#0D6EFD</color>
+    <color name="colorPrimaryDark">#1D4ED8</color>
+    <color name="colorAccent">#2563EB</color>
+    <color name="indigoPrimary">#0D6EFD</color>
+    <color name="indigoDark">#1D4ED8</color>
+    <color name="indigoMid">#2563EB</color>
     <color name="white">#FFFFFF</color>
-    <color name="inputBg">#f5f5f7</color>
-    <color name="textPrimary">#1f2937</color>
-    <color name="textSecondary">#6b7280</color>
-    <color name="textHint">#9ca3af</color>
-    <color name="errorRed">#dc2626</color>
-    <color name="errorRedLight">#fef2f2</color>
-    <color name="successGreen">#16a34a</color>
-    <color name="divider">#e5e7eb</color>
+    <color name="inputBg">#F8FAFC</color>
+    <color name="textPrimary">#0F172A</color>
+    <color name="textSecondary">#64748B</color>
+    <color name="textHint">#94A3B8</color>
+    <color name="errorRed">#DC2626</color>
+    <color name="errorRedLight">#FEF2F2</color>
+    <color name="successGreen">#059669</color>
+    <color name="divider">#E2E8F0</color>
 </resources>

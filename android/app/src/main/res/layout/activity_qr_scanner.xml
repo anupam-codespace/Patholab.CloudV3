@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ══ Full-Screen Native UPI / Barcode / QR Scanner Activity (Android) ══ -->
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_upi_scanner_gradient"
+    android:fitsSystemWindows="false">
+
+    <!-- ── 1. TOP ACTION BAR (Back, Torch, Upload) ────────────────────────── -->
+    <LinearLayout
+        android:id="@+id/qrTopBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="48dp"
+        android:paddingBottom="16dp">
+
+        <!-- Back Button (<) -->
+        <FrameLayout
+            android:id="@+id/btnScannerBack"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackgroundBorderless">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_back_arrow"
+                android:tint="#FFFFFF"
+                app:tint="#FFFFFF" />
+
+        </FrameLayout>
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <!-- Torch / Flashlight Button -->
+        <FrameLayout
+            android:id="@+id/btnScannerTorch"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginEnd="8dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackgroundBorderless">
+
+            <ImageView
+                android:id="@+id/imgTorchIcon"
+                android:layout_width="26dp"
+                android:layout_height="26dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_torch_lightbulb"
+                android:tint="#FFFFFF"
+                app:tint="#FFFFFF" />
+
+        </FrameLayout>
+
+        <!-- Upload from Gallery / Share Button -->
+        <FrameLayout
+            android:id="@+id/btnScannerUpload"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackgroundBorderless">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_gallery_upload"
+                android:tint="#FFFFFF"
+                app:tint="#FFFFFF" />
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+    <!-- ── 2. CENTER VIEWFINDER WITH NEON LIME BRACKETS ─────────────────── -->
+    <FrameLayout
+        android:id="@+id/viewfinderContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/qrTopBar"
+        android:layout_above="@id/bottomBrandSection"
+        android:layout_centerInParent="true">
+
+        <FrameLayout
+            android:layout_width="280dp"
+            android:layout_height="280dp"
+            android:layout_gravity="center">
+
+            <!-- Live Camera Texture / Surface View -->
+            <TextureView
+                android:id="@+id/cameraTextureView"
+                android:layout_width="260dp"
+                android:layout_height="260dp"
+                android:layout_gravity="center"
+                android:background="#1E293B" />
+
+            <!-- Neon Lime Green Viewfinder Corner Brackets Overlay -->
+            <ImageView
+                android:layout_width="280dp"
+                android:layout_height="280dp"
+                android:layout_gravity="center"
+                android:src="@drawable/bg_qr_viewfinder_neon"
+                android:scaleType="fitXY" />
+
+            <!-- Animated Laser Line -->
+            <View
+                android:id="@+id/laserScanLine"
+                android:layout_width="240dp"
+                android:layout_height="2.5dp"
+                android:layout_gravity="center"
+                android:background="#A3E635" />
+
+        </FrameLayout>
+
+    </FrameLayout>
+
+    <!-- ── 3. BOTTOM BRANDING & UPI PARTNERS SECTION ────────────────────── -->
+    <LinearLayout
+        android:id="@+id/bottomBrandSection"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:paddingBottom="42dp">
+
+        <!-- BHIM UPI Logo -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="BHIM"
+                android:textSize="17sp"
+                android:fontFamily="sans-serif-black"
+                android:textStyle="bold|italic"
+                android:textColor="#FFFFFF"
+                android:letterSpacing="0.04" />
+
+            <View
+                android:layout_width="1.5dp"
+                android:layout_height="18dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:background="#FFFFFF"
+                android:alpha="0.8" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="UPI ▶"
+                android:textSize="17sp"
+                android:fontFamily="sans-serif-black"
+                android:textStyle="bold|italic"
+                android:textColor="#22C55E"
+                android:letterSpacing="0.04" />
+
+        </LinearLayout>
+
+        <!-- Subtitle: Scan any UPI QR code to pay -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Scan any UPI QR code to pay"
+            android:textSize="13.5sp"
+            android:textColor="#FFFFFF"
+            android:alpha="0.9"
+            android:layout_marginBottom="24dp" />
+
+        <!-- Bottom Payment Partner Apps Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp">
+
+            <!-- super money -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginEnd="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="◆"
+                    android:textSize="12sp"
+                    android:textColor="#FFFFFF"
+                    android:layout_marginEnd="4dp" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="super"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"
+                        android:lineSpacingExtra="-2dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="money"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"
+                        android:lineSpacingExtra="-2dp" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- Paytm -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Paytm"
+                android:textSize="14sp"
+                android:fontFamily="sans-serif-black"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:layout_marginEnd="18dp" />
+
+            <!-- Google Pay -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Google Pay"
+                android:textSize="13.5sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:layout_marginEnd="18dp" />
+
+            <!-- PhonePe -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="PhonePe"
+                android:textSize="13.5sp"
+                android:fontFamily="sans-serif-black"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</RelativeLayout>

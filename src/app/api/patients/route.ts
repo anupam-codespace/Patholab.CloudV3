@@ -1,6 +1,6 @@
 // FILE: src/app/api/patients/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { getCurrentUser } from '@/lib/auth';
+import { getCurrentUser, getDataFromToken } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { createPatientSchema } from '@/lib/validation';
 import { ZodError } from 'zod';
@@ -11,10 +11,25 @@ export const dynamic = 'force-dynamic';
 // GET: List Patients
 export async function GET(request: NextRequest) {
   try {
-    const currentUser = await getCurrentUser();
-    
+    const userFromToken = await getDataFromToken(request);
+    let currentUser = await getCurrentUser();
+    let labId = currentUser?.labId;
+
+    if (!labId && userFromToken && (userFromToken.userId || userFromToken.id)) {
+      const uid = userFromToken.userId || userFromToken.id;
+      const dbUser = await prisma.user.findUnique({
+        where: { id: uid },
+        include: {
+          lab: true,
+          staffLabs: { include: { lab: true } }
+        }
+      });
+      const activeLab = dbUser?.lab || dbUser?.staffLabs[0]?.lab;
+      if (activeLab) labId = activeLab.id;
+    }
+
     // Security Check: Ensure User has a Lab ID
-    if (!currentUser || !currentUser.labId) {
+    if (!labId) {
       return NextResponse.json({ error: 'Not authenticated or no Lab assigned' }, { status: 401 });
     }
     

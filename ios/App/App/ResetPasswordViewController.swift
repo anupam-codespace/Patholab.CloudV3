@@ -38,12 +38,14 @@ class ResetPasswordViewController: AuthBaseViewController {
 
         let headerStack = UIStackView()
         headerStack.axis = .vertical
-        headerStack.spacing = 6
+        headerStack.spacing = 2
         headerStack.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(headerStack)
 
-        let titleLabel = makeLabel("Reset Password", size: 38, weight: .black, color: .white)
-        let subtitleLabel = makeLabel("Enter your new password below.", size: 14, weight: .regular, color: UIColor(red: 199/255, green: 210/255, blue: 254/255, alpha: 1))
+        let titleLabel = makeLabel("Reset Password", size: 32, weight: .black, color: .white)
+        titleLabel.adjustsFontSizeToFitWidth = true
+        titleLabel.minimumScaleFactor = 0.8
+        let subtitleLabel = makeLabel("Enter your new password below.", size: 13.5, weight: .regular, color: UIColor(red: 199/255, green: 210/255, blue: 254/255, alpha: 1))
         headerStack.addArrangedSubview(titleLabel)
         headerStack.addArrangedSubview(subtitleLabel)
 
@@ -52,12 +54,16 @@ class ResetPasswordViewController: AuthBaseViewController {
         view.addSubview(spacer)
 
         NSLayoutConstraint.activate([
-            backBtn.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 12),
-            backBtn.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
-            headerStack.topAnchor.constraint(equalTo: backBtn.bottomAnchor, constant: 16),
-            headerStack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 28),
-            headerStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -28),
-            spacer.topAnchor.constraint(equalTo: headerStack.bottomAnchor, constant: 24),
+            backBtn.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
+            backBtn.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            backBtn.widthAnchor.constraint(equalToConstant: 40),
+            backBtn.heightAnchor.constraint(equalToConstant: 40),
+
+            headerStack.leadingAnchor.constraint(equalTo: backBtn.trailingAnchor, constant: 14),
+            headerStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            headerStack.centerYAnchor.constraint(equalTo: backBtn.centerYAnchor),
+
+            spacer.topAnchor.constraint(equalTo: backBtn.bottomAnchor, constant: 12),
             spacer.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             spacer.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             spacer.heightAnchor.constraint(equalToConstant: 0)
@@ -130,34 +136,7 @@ class ResetPasswordViewController: AuthBaseViewController {
     }
 
     private func createSecureContainer(tf: UITextField, identifier: String) -> UIView {
-        let container = UIView()
-        container.translatesAutoresizingMaskIntoConstraints = false
-        container.heightAnchor.constraint(equalToConstant: 52).isActive = true
-        tf.accessibilityIdentifier = identifier
-        tf.translatesAutoresizingMaskIntoConstraints = false
-        container.addSubview(tf)
-
-        let eye = UIButton(type: .system)
-        eye.setImage(UIImage(systemName: "eye.slash"), for: .normal)
-        eye.tintColor = AuthBaseViewController.textHint
-        eye.translatesAutoresizingMaskIntoConstraints = false
-        eye.addAction(UIAction { [weak tf, weak eye] _ in
-            tf?.isSecureTextEntry.toggle()
-            let img = (tf?.isSecureTextEntry ?? true) ? "eye.slash" : "eye"
-            eye?.setImage(UIImage(systemName: img), for: .normal)
-        }, for: .touchUpInside)
-        container.addSubview(eye)
-
-        NSLayoutConstraint.activate([
-            tf.topAnchor.constraint(equalTo: container.topAnchor),
-            tf.bottomAnchor.constraint(equalTo: container.bottomAnchor),
-            tf.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-            tf.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-            eye.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -12),
-            eye.centerYAnchor.constraint(equalTo: container.centerYAnchor),
-            eye.widthAnchor.constraint(equalToConstant: 32),
-            eye.heightAnchor.constraint(equalToConstant: 32)
-        ])
+        let (container, _) = makeAnimatedPasswordRow(tf: tf, identifier: identifier)
         return container
     }
 

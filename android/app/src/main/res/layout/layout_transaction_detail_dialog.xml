@@ -82,10 +82,15 @@
                 android:id="@+id/receiptAmount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="+₹1,000.00"
-                android:textSize="28sp"
+                android:text="+₹ 1,000.00"
+                android:textSize="26sp"
                 android:textStyle="bold"
-                android:textColor="#059669" />
+                android:fontFamily="sans-serif"
+                android:textFontWeight="800"
+                android:textColor="#059669"
+                android:maxLines="1"
+                android:singleLine="true"
+                android:paddingEnd="4dp" />
 
             <TextView
                 android:id="@+id/receiptStatus"
@@ -140,7 +145,17 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
                 <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Balance After" android:textSize="12.5sp" android:textColor="#64748B" />
-                <TextView android:id="@+id/receiptBalanceAfter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="₹2,450.00" android:textSize="12.5sp" android:textStyle="bold" android:textColor="#0F172A" />
+                <TextView
+                    android:id="@+id/receiptBalanceAfter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="₹ 2,450.00"
+                    android:textSize="12.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#0F172A"
+                    android:maxLines="1"
+                    android:singleLine="true"
+                    android:paddingEnd="4dp" />
             </LinearLayout>
 
         </LinearLayout>

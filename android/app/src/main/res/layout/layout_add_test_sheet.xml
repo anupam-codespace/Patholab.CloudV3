@@ -1,0 +1,795 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Full 3-Tab Comprehensive Test Editor / Creator Sheet -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/bg_bottom_sheet"
+    android:paddingTop="12dp">
+
+    <!-- Drag Handle -->
+    <View
+        android:layout_width="44dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="12dp"
+        android:background="#CBD5E1" />
+
+    <!-- Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="10dp">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/lblSheetTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Create Custom Test"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#0F172A"
+                android:letterSpacing="-0.01" />
+
+            <TextView
+                android:id="@+id/lblSheetSubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Configure clinical parameters, pricing and turnaround time"
+                android:textSize="12sp"
+                android:textColor="#64748B" />
+
+        </LinearLayout>
+
+        <FrameLayout
+            android:id="@+id/btnCloseAddTestSheet"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@drawable/bg_bell_btn"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_close_cross"
+                android:tint="#475569" />
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+    <!-- Global Test Notice Box (Visible when editing a Global test) -->
+    <LinearLayout
+        android:id="@+id/boxGlobalTestNotice"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="10dp"
+        android:background="@drawable/bg_pill_indigo_soft"
+        android:orientation="horizontal"
+        android:padding="10dp"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="NOTE"
+            android:textSize="10.5sp"
+            android:textStyle="bold"
+            android:textColor="#4338CA" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:text="Editing Master Catalog Test. Modifying clinical details or parameters will automatically generate a customized local copy specifically for your lab."
+            android:textSize="11.5sp"
+            android:textColor="#3730A3"
+            android:lineSpacingExtra="2dp" />
+
+    </LinearLayout>
+
+    <!-- 3-Tab Segment Selector -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="12dp"
+        android:background="@drawable/bg_setting_item"
+        android:padding="3dp"
+        android:orientation="horizontal"
+        android:weightSum="3">
+
+        <TextView
+            android:id="@+id/tabFormBasic"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="Basic Details"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="#0D6EFD"
+            android:background="@drawable/bg_pill_white"
+            android:elevation="1dp" />
+
+        <TextView
+            android:id="@+id/tabFormParameters"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="Parameters"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="#64748B" />
+
+        <TextView
+            android:id="@+id/tabFormPricing"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="Pricing &amp; Ops"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="#64748B" />
+
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#F1F5F9" />
+
+    <!-- Tab Contents Scroll View -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:padding="20dp">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!-- ══════════════════════════════════════════════════ -->
+            <!-- TAB 1: BASIC DETAILS                               -->
+            <!-- ══════════════════════════════════════════════════ -->
+            <LinearLayout
+                android:id="@+id/contentFormBasic"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="visible">
+
+                <!-- Test Name -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Test / Profile Name *"
+                    android:textSize="12.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#475569"
+                    android:layout_marginBottom="6dp" />
+
+                <EditText
+                    android:id="@+id/inputNewTestName"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:background="@drawable/bg_input_field"
+                    android:hint="e.g. Complete Blood Count (CBC)"
+                    android:inputType="textCapWords"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:textSize="14.5sp"
+                    android:textColor="#0F172A"
+                    android:textColorHint="#94A3B8"
+                    android:layout_marginBottom="14dp"
+                    android:singleLine="true" />
+
+                <!-- Short Code & Print Name -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="14dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Short Code *"
+                            android:textSize="12.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#475569"
+                            android:layout_marginBottom="6dp" />
+
+                        <EditText
+                            android:id="@+id/inputNewTestCode"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:background="@drawable/bg_input_field"
+                            android:hint="e.g. CBC"
+                            android:inputType="textCapCharacters"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp"
+                            android:textSize="14.5sp"
+                            android:textColor="#0F172A"
+                            android:textColorHint="#94A3B8"
+                            android:singleLine="true" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1.3"
+                        android:layout_marginStart="10dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Print Name (on Report)"
+                            android:textSize="12.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#475569"
+                            android:layout_marginBottom="6dp" />
+
+                        <EditText
+                            android:id="@+id/inputNewTestPrintName"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:background="@drawable/bg_input_field"
+                            android:hint="Usually same as name"
+                            android:inputType="textCapWords"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp"
+                            android:textSize="14.5sp"
+                            android:textColor="#0F172A"
+                            android:textColorHint="#94A3B8"
+                            android:singleLine="true" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- Department -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Department *"
+                    android:textSize="12.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#475569"
+                    android:layout_marginBottom="6dp" />
+
+                <Spinner
+                    android:id="@+id/spinnerNewTestDept"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:background="@drawable/bg_input_field"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:layout_marginBottom="14dp" />
+
+                <!-- Sample Type & Container Tube -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="14dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Sample Type *"
+                            android:textSize="12.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#475569"
+                            android:layout_marginBottom="6dp" />
+
+                        <Spinner
+                            android:id="@+id/spinnerNewTestSample"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:background="@drawable/bg_input_field"
+                            android:paddingStart="8dp"
+                            android:paddingEnd="8dp" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="10dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Container / Tube"
+                            android:textSize="12.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#475569"
+                            android:layout_marginBottom="6dp" />
+
+                        <Spinner
+                            android:id="@+id/spinnerNewTestContainer"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:background="@drawable/bg_input_field"
+                            android:paddingStart="8dp"
+                            android:paddingEnd="8dp" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- ══════════════════════════════════════════════════ -->
+            <!-- TAB 2: PARAMETERS MAPPING                          -->
+            <!-- ══════════════════════════════════════════════════ -->
+            <LinearLayout
+                android:id="@+id/contentFormParameters"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <!-- Search & Add Parameter Box -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Add Parameters from Library"
+                    android:textSize="12.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#475569"
+                    android:layout_marginBottom="6dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:background="@drawable/bg_input_field"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:layout_marginBottom="6dp">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:src="@drawable/ic_search"
+                        android:tint="#94A3B8" />
+
+                    <EditText
+                        android:id="@+id/inputFormParamSearch"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        android:background="@android:color/transparent"
+                        android:hint="Search parameter name or code..."
+                        android:textSize="14sp"
+                        android:textColor="#0F172A"
+                        android:textColorHint="#94A3B8"
+                        android:singleLine="true" />
+
+                </LinearLayout>
+
+                <!-- Dynamic Search Suggestion Dropdown List -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recyclerParamSuggestions"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:maxHeight="160dp"
+                    android:background="@drawable/bg_setting_item"
+                    android:layout_marginBottom="12dp"
+                    android:visibility="gone" />
+
+                <!-- Selected Parameters Header -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp">
+
+                    <TextView
+                        android:id="@+id/lblSelectedParamsCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Selected Parameters (0)"
+                        android:textSize="13.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#0F172A" />
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="1dp"
+                        android:layout_weight="1" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Min. 1 required"
+                        android:textSize="11sp"
+                        android:textColor="#64748B" />
+
+                </LinearLayout>
+
+                <!-- Selected Parameters Container -->
+                <LinearLayout
+                    android:id="@+id/containerSelectedParams"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:minHeight="80dp" />
+
+                <!-- Reagents Consumption Summary Box -->
+                <LinearLayout
+                    android:id="@+id/boxReagentsSummary"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_tag_emerald"
+                    android:orientation="vertical"
+                    android:padding="12dp"
+                    android:layout_marginTop="12dp"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Estimated Auto-Reagents Deduction"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:textColor="#059669" />
+
+                    <TextView
+                        android:id="@+id/lblReagentsSummaryDetails"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Standard reagent quantities configured for these parameters"
+                        android:textSize="11.5sp"
+                        android:textColor="#047857" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- ══════════════════════════════════════════════════ -->
+            <!-- TAB 3: PRICING & OPERATIONS                        -->
+            <!-- ══════════════════════════════════════════════════ -->
+            <LinearLayout
+                android:id="@+id/contentFormPricing"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <!-- Patient Selling Price -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Patient Selling Rate (Retail ₹) *"
+                    android:textSize="12.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#475569"
+                    android:layout_marginBottom="6dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:background="@drawable/bg_input_field"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:layout_marginBottom="4dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="₹"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#0D6EFD" />
+
+                    <EditText
+                        android:id="@+id/inputNewTestPrice"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        android:background="@android:color/transparent"
+                        android:hint="Standard price (e.g. 350)"
+                        android:inputType="numberDecimal"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:textColor="#0F172A"
+                        android:textColorHint="#94A3B8"
+                        android:singleLine="true" />
+
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Auto-calculated from parameters or set your custom price"
+                    android:textSize="11sp"
+                    android:textColor="#94A3B8"
+                    android:layout_marginBottom="14dp" />
+
+                <!-- B2B Rate & Lab Cost -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="14dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="B2B / Agency Rate (₹)"
+                            android:textSize="12.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#475569"
+                            android:layout_marginBottom="6dp" />
+
+                        <EditText
+                            android:id="@+id/inputNewTestB2BPrice"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:background="@drawable/bg_input_field"
+                            android:hint="₹ 200"
+                            android:inputType="numberDecimal"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp"
+                            android:textSize="14.5sp"
+                            android:textColor="#0F172A"
+                            android:textColorHint="#94A3B8"
+                            android:singleLine="true" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="10dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Lab Direct Cost (₹)"
+                            android:textSize="12.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#475569"
+                            android:layout_marginBottom="6dp" />
+
+                        <EditText
+                            android:id="@+id/inputNewTestCost"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:background="@drawable/bg_input_field"
+                            android:hint="₹ 60"
+                            android:inputType="numberDecimal"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp"
+                            android:textSize="14.5sp"
+                            android:textColor="#0F172A"
+                            android:textColorHint="#94A3B8"
+                            android:singleLine="true" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- TAT & Methodology -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="14dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="TAT (Hours) *"
+                            android:textSize="12.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#475569"
+                            android:layout_marginBottom="6dp" />
+
+                        <EditText
+                            android:id="@+id/inputNewTestTat"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:background="@drawable/bg_input_field"
+                            android:hint="e.g. 4 Hours"
+                            android:inputType="text"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp"
+                            android:textSize="14.5sp"
+                            android:textColor="#0F172A"
+                            android:textColorHint="#94A3B8"
+                            android:singleLine="true" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1.2"
+                        android:layout_marginStart="10dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Methodology *"
+                            android:textSize="12.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#475569"
+                            android:layout_marginBottom="6dp" />
+
+                        <EditText
+                            android:id="@+id/inputNewTestMethod"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:background="@drawable/bg_input_field"
+                            android:hint="e.g. CLIA / Automated"
+                            android:inputType="text"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp"
+                            android:textSize="14.5sp"
+                            android:textColor="#0F172A"
+                            android:textColorHint="#94A3B8"
+                            android:singleLine="true" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- Active Toggle Switch -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_setting_item"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:padding="14dp"
+                    android:layout_marginBottom="16dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Test is Active"
+                            android:textSize="13.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#0F172A" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="Available for patient accession and billing desk"
+                            android:textSize="11.5sp"
+                            android:textColor="#64748B" />
+
+                    </LinearLayout>
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/switchTestActive"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="true" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </FrameLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Bottom Actions Toolbar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:background="#FFFFFF"
+        android:elevation="8dp">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCancelSheet"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:text="Cancel"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#64748B"
+            android:backgroundTint="#F1F5F9"
+            app:cornerRadius="14dp"
+            android:elevation="0dp"
+            android:textAllCaps="false" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSubmitCreateTest"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="2"
+            android:text="Save Test Details"
+            android:textSize="14.5sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#0D6EFD"
+            app:cornerRadius="14dp"
+            android:elevation="2dp"
+            app:icon="@drawable/ic_check_bold"
+            app:iconGravity="textStart"
+            app:iconPadding="6dp"
+            app:iconTint="#FFFFFF"
+            android:textAllCaps="false" />
+
+    </LinearLayout>
+
+</LinearLayout>

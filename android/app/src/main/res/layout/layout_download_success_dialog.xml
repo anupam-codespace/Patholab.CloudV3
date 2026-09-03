@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Download Success Pop-up Modal Dialog -->
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardCornerRadius="24dp"
+    app:cardElevation="12dp"
+    app:cardBackgroundColor="#FFFFFF"
+    android:layout_margin="20dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:padding="24dp">
+
+        <!-- Emerald Success Circle Badge -->
+        <FrameLayout
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:background="@drawable/bg_bento_emerald"
+            android:layout_marginBottom="16dp">
+
+            <ImageView
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_check_bold"
+                app:tint="#059669" />
+        </FrameLayout>
+
+        <!-- Title -->
+        <TextView
+            android:id="@+id/lblDownloadSuccessTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Report Downloaded Successfully!"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#0F172A"
+            android:textAlignment="center"
+            android:layout_marginBottom="6dp" />
+
+        <!-- Subtitle & File Details -->
+        <TextView
+            android:id="@+id/lblDownloadSuccessDetails"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Diagnostic report for PRATIMA GHOSH (v1.0) has been saved to your device Downloads."
+            android:textSize="13.5sp"
+            android:textColor="#64748B"
+            android:textAlignment="center"
+            android:lineSpacingMultiplier="1.2"
+            android:layout_marginBottom="20dp" />
+
+        <!-- Action 1: Open / View PDF -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSuccessOpenPdf"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="Open &amp; View PDF"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#0D6EFD"
+            app:cornerRadius="14dp"
+            android:elevation="0dp"
+            android:textAllCaps="false"
+            android:layout_marginBottom="10dp" />
+
+        <!-- Action 2: Share via WhatsApp -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSuccessShareWhatsApp"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="Share with Patient on WhatsApp"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#059669"
+            android:backgroundTint="#ECFDF5"
+            app:cornerRadius="14dp"
+            app:strokeColor="#A7F3D0"
+            app:strokeWidth="1.2dp"
+            android:elevation="0dp"
+            android:textAllCaps="false"
+            android:layout_marginBottom="10dp" />
+
+        <!-- Action 3: Done / Dismiss -->
+        <TextView
+            android:id="@+id/btnSuccessDismiss"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Done"
+            android:textSize="13.5sp"
+            android:textStyle="bold"
+            android:textColor="#94A3B8"
+            android:padding="8dp"
+            android:clickable="true"
+            android:focusable="true" />
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

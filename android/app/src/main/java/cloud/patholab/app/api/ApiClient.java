@@ -1,6 +1,7 @@
 package cloud.patholab.app.api;
 
 import android.webkit.CookieManager;
+import cloud.patholab.app.auth.AuthManager;
 import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -134,7 +135,13 @@ public class ApiClient {
 
                     if (response.success) {
                         String token = extractTokenFromCookies(response.rawCookies);
+                        if (token == null || token.isEmpty()) {
+                            token = response.body.optString("token", null);
+                        }
                         injectWebViewCookie(response.rawCookies);
+                        if (token != null && !token.isEmpty()) {
+                            AuthManager.syncWebViewCookie(token);
+                        }
                         callback.onResult(true, null, token);
                     } else {
                         String error = response.body.optString("error", "Login failed");

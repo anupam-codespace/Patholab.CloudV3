@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Torch / Lightbulb icon with radiant rays -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="26dp"
+    android:height="26dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- Lightbulb Outline -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M9,18H15 M10,21H14 M12,3A6,6 0 0,0 6,9C6,12.2 8,14.5 9,16H15C16,14.5 18,12.2 18,9A6,6 0 0,0 12,3Z" />
+
+    <!-- Radiant Rays -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:pathData="M12,1V2 M4.22,4.22L4.93,4.93 M1,12H2 M4.22,19.78L4.93,19.07 M19.78,4.22L19.07,4.93 M22,12H23 M19.78,19.78L19.07,19.07" />
+
+</vector>

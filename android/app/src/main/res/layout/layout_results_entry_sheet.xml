@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Bottom Sheet Modal for Laboratory Results Entry & Clinical Authorization -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_bottom_sheet"
+    android:paddingStart="20dp"
+    android:paddingEnd="20dp"
+    android:paddingTop="14dp"
+    android:paddingBottom="28dp">
+
+    <!-- Drag Handle -->
+    <View
+        android:layout_width="44dp"
+        android:layout_height="4.5dp"
+        android:layout_gravity="center_horizontal"
+        android:background="@drawable/bg_skeleton_line"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Sheet Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <FrameLayout
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/bg_pill_white"
+            android:backgroundTint="#EFF6FF">
+
+            <ImageView
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_flask"
+                android:tint="#0D6EFD"
+                app:tint="#0D6EFD" />
+
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="14dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/lblResultsSheetTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Results Entry: Complete Blood Count"
+                android:textSize="16.5sp"
+                android:textStyle="bold"
+                android:textColor="#0F172A" />
+
+            <TextView
+                android:id="@+id/lblResultsSheetSubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Patient: PRATIMA GHOSH (45Y/F • P-00096)"
+                android:textSize="12sp"
+                android:textColor="#64748B" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#F1F5F9"
+        android:layout_marginTop="14dp"
+        android:layout_marginBottom="10dp" />
+
+    <!-- Scrollable container for dynamic parameter rows -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:maxHeight="380dp"
+        android:fillViewport="true"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Container for dynamic parameter rows -->
+            <LinearLayout
+                android:id="@+id/containerParameterRows"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
+            <!-- Pathologist Remarks / Clinical Comments -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:text="Pathologist Clinical Impressions &amp; Remarks"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="#475569" />
+
+            <EditText
+                android:id="@+id/inputClinicalRemarks"
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/bg_setting_item"
+                android:hint="e.g. Normocytic normochromic blood picture. Platelet count within normal limits."
+                android:textColorHint="#94A3B8"
+                android:textColor="#0F172A"
+                android:textSize="13sp"
+                android:padding="12dp"
+                android:gravity="top|start" />
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Bottom Action Buttons: Save Draft & Authorize Report -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSaveDraftResults"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_weight="1"
+            android:backgroundTint="#F1F5F9"
+            android:text="Save Draft"
+            android:textAllCaps="false"
+            android:textColor="#334155"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:singleLine="true"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            app:cornerRadius="14dp"
+            app:elevation="0dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnApproveAndAuthorize"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_weight="1.6"
+            android:layout_marginStart="10dp"
+            android:backgroundTint="#059669"
+            android:text="Authorize Report"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:singleLine="true"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            app:icon="@drawable/ic_check_bold"
+            app:iconGravity="textStart"
+            app:iconPadding="6dp"
+            app:iconTint="#FFFFFF"
+            app:cornerRadius="14dp"
+            app:elevation="1dp" />
+
+    </LinearLayout>
+
+</LinearLayout>

@@ -15,6 +15,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             window = UIWindow(frame: UIScreen.main.bounds)
         }
         
+        // Initialize mobile notification center permissions & delegate
+        MobileNotificationHelper.shared.setupNotificationCenter()
+
         // Show splash screen first, which handles session verification and minimum display timing
         let splashVC = SplashViewController()
         window?.rootViewController = splashVC
@@ -98,7 +101,20 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     /// re-calling didFinishLaunching (which would double-initialize Capacitor).
     func signOut() {
         KeychainManager.delete(forKey: KeychainManager.tokenKey)
+        KeychainManager.delete(forKey: KeychainManager.nameKey)
+        KeychainManager.delete(forKey: KeychainManager.emailKey)
+        KeychainManager.delete(forKey: KeychainManager.roleKey)
         AuthService.clearWebViewCookie()
+        UserDefaults.standard.removeObject(forKey: "user_name")
+        UserDefaults.standard.removeObject(forKey: "user_email")
+        UserDefaults.standard.removeObject(forKey: "user_role")
+        UserDefaults.standard.removeObject(forKey: "auth_token")
+        UserDefaults.standard.removeObject(forKey: "lab_id")
+        UserDefaults.standard.removeObject(forKey: "lab_name")
+        UserDefaults.standard.removeObject(forKey: "user_avatar_gender")
+        UserDefaults.standard.synchronize()
+        MobileNotificationHelper.shared.clearNotificationSession()
+        HomeNativeView.resetSession()
         presentNativeLogin()
     }
 

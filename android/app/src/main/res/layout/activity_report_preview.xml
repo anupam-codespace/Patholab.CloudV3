@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dedicated In-App Report Preview & Native Printing Screen -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#F8FAFC">
+
+    <!-- Top Sapphire Header with Status Bar Inset Support -->
+    <LinearLayout
+        android:id="@+id/previewHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_home_header"
+        android:orientation="vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="48dp"
+        android:paddingBottom="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <!-- Back Button -->
+            <FrameLayout
+                android:id="@+id/btnPreviewBack"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_pill_white"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_back_arrow"
+                    app:tint="#0D6EFD" />
+            </FrameLayout>
+
+            <!-- Standardized Patient Avatar -->
+            <ImageView
+                android:id="@+id/lblPreviewPatientAvatar"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:layout_marginStart="10dp"
+                android:src="@drawable/ic_patient_avatar"
+                android:scaleType="centerCrop" />
+
+            <!-- Title & Patient Info -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/lblPreviewPatientName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="PRATIMA GHOSH"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:singleLine="true"
+                    android:ellipsize="end" />
+
+                <TextView
+                    android:id="@+id/lblPreviewSubTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Complete Blood Count (CBC) • v1.0"
+                    android:textSize="12sp"
+                    android:textColor="#C7D2FE"
+                    android:singleLine="true"
+                    android:ellipsize="end" />
+
+            </LinearLayout>
+
+            <!-- Action: Direct Print (🖨️) -->
+            <FrameLayout
+                android:id="@+id/btnPreviewPrint"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/bg_pill_glass"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_document"
+                    app:tint="#FFFFFF" />
+            </FrameLayout>
+
+            <!-- Action: Direct Download (📥) -->
+            <FrameLayout
+                android:id="@+id/btnPreviewDownload"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:background="@drawable/bg_pill_glass"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_save"
+                    app:tint="#FFFFFF" />
+            </FrameLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Top Loading Progress Bar -->
+    <ProgressBar
+        android:id="@+id/progressPreviewLoading"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="4dp"
+        android:indeterminate="true"
+        android:indeterminateTint="#0D6EFD"
+        android:visibility="visible" />
+
+    <!-- Report Web Canvas View -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <WebView
+            android:id="@+id/webViewReportPreview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <!-- Floating Bottom Quick Action Bar -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:background="@drawable/bg_bottom_nav_pill"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginBottom="24dp"
+            android:padding="10dp"
+            android:elevation="8dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <!-- Print Spooler Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnBottomPrintSpooler"
+                android:layout_width="0dp"
+                android:layout_height="46dp"
+                android:layout_weight="1"
+                android:text="Print Report"
+                android:textSize="13.5sp"
+                android:textStyle="bold"
+                android:textColor="#0D6EFD"
+                android:backgroundTint="#EFF6FF"
+                app:cornerRadius="14dp"
+                app:strokeColor="#BFDBFE"
+                app:strokeWidth="1.2dp"
+                android:elevation="0dp"
+                android:textAllCaps="false"
+                android:layout_marginEnd="8dp" />
+
+            <!-- Download PDF Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnBottomDownloadPdf"
+                android:layout_width="0dp"
+                android:layout_height="46dp"
+                android:layout_weight="1"
+                android:text="Download PDF"
+                android:textSize="13.5sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#0D6EFD"
+                app:cornerRadius="14dp"
+                android:elevation="0dp"
+                android:textAllCaps="false" />
+
+        </LinearLayout>
+
+    </FrameLayout>
+
+</LinearLayout>

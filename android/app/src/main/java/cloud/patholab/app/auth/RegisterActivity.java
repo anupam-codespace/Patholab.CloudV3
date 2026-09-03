@@ -50,6 +50,8 @@ public class RegisterActivity extends AppCompatActivity {
     private TextView tvStrength;
     private List<View> strengthBars;
     private TextView tvLogin;
+    private androidx.appcompat.widget.AppCompatCheckBox cbTerms;
+    private TextView tvTermsError;
 
     private boolean passwordVisible = false;
     private boolean confirmPasswordVisible = false;
@@ -110,6 +112,8 @@ public class RegisterActivity extends AppCompatActivity {
         tvConfirmPasswordError = findViewById(R.id.tvConfirmPasswordError);
         strengthContainer = findViewById(R.id.strengthContainer);
         tvStrength = findViewById(R.id.tvStrength);
+        cbTerms = findViewById(R.id.cbTerms);
+        tvTermsError = findViewById(R.id.tvTermsError);
         
         strengthBars = new ArrayList<>();
         strengthBars.add(findViewById(R.id.bar1));
@@ -143,31 +147,8 @@ public class RegisterActivity extends AppCompatActivity {
             }
         });
 
-        ivTogglePassword.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                passwordVisible = !passwordVisible;
-                if (passwordVisible) {
-                    etPassword.setInputType(InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
-                } else {
-                    etPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-                }
-                etPassword.setSelection(etPassword.getText().length());
-            }
-        });
-
-        ivToggleConfirmPassword.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                confirmPasswordVisible = !confirmPasswordVisible;
-                if (confirmPasswordVisible) {
-                    etConfirmPassword.setInputType(InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
-                } else {
-                    etConfirmPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-                }
-                etConfirmPassword.setSelection(etConfirmPassword.getText().length());
-            }
-        });
+        PasswordEyeHelper.setupPasswordToggle(etPassword, ivTogglePassword);
+        PasswordEyeHelper.setupPasswordToggle(etConfirmPassword, ivToggleConfirmPassword);
 
         etPassword.addTextChangedListener(new TextWatcher() {
             @Override
@@ -188,7 +169,15 @@ public class RegisterActivity extends AppCompatActivity {
         TextView tvConsent = findViewById(R.id.tvLegalConsent);
         if (tvConsent == null) return;
 
-        String fullText = "By creating an account, you agree to our Terms & Conditions, Privacy Policy, and Refund Policy.";
+        if (cbTerms != null) {
+            cbTerms.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (isChecked && tvTermsError != null) {
+                    tvTermsError.setVisibility(View.GONE);
+                }
+            });
+        }
+
+        String fullText = "I agree to the Terms & Conditions, Privacy Policy, and Refund Policy.";
         android.text.SpannableString spannable = new android.text.SpannableString(fullText);
 
         final int indigoColor = Color.parseColor("#4F46E5");
@@ -203,7 +192,7 @@ public class RegisterActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View widget) {
                     try {
-                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://patholab.cloud/terms-conditions?tab=terms")));
+                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://patholab.cloud/terms-and-conditions/")));
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -227,7 +216,7 @@ public class RegisterActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View widget) {
                     try {
-                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://patholab.cloud/terms-conditions?tab=privacy")));
+                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://patholab.cloud/privacy-policy/")));
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -251,7 +240,7 @@ public class RegisterActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View widget) {
                     try {
-                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://patholab.cloud/terms-conditions?tab=refunds")));
+                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://patholab.cloud/refund-and-cancellation/")));
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -353,6 +342,15 @@ public class RegisterActivity extends AppCompatActivity {
             valid = false;
         } else {
             tvConfirmPasswordError.setVisibility(View.GONE);
+        }
+
+        if (cbTerms != null && !cbTerms.isChecked()) {
+            if (tvTermsError != null) {
+                tvTermsError.setVisibility(View.VISIBLE);
+            }
+            valid = false;
+        } else if (tvTermsError != null) {
+            tvTermsError.setVisibility(View.GONE);
         }
 
         return valid;

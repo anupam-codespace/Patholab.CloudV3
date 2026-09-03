@@ -41,12 +41,14 @@ class OtpVerifyViewController: AuthBaseViewController {
 
         let headerStack = UIStackView()
         headerStack.axis = .vertical
-        headerStack.spacing = 6
+        headerStack.spacing = 2
         headerStack.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(headerStack)
 
-        let titleLabel = makeLabel("Verify Email", size: 38, weight: .black, color: .white)
-        let subtitleLabel = makeLabel("Enter the 6-digit code sent to your email.", size: 14, weight: .regular, color: UIColor(red: 199/255, green: 210/255, blue: 254/255, alpha: 1))
+        let titleLabel = makeLabel("Verify Email", size: 32, weight: .black, color: .white)
+        titleLabel.adjustsFontSizeToFitWidth = true
+        titleLabel.minimumScaleFactor = 0.8
+        let subtitleLabel = makeLabel("Enter the 6-digit code sent to your email.", size: 13.5, weight: .regular, color: UIColor(red: 199/255, green: 210/255, blue: 254/255, alpha: 1))
         headerStack.addArrangedSubview(titleLabel)
         headerStack.addArrangedSubview(subtitleLabel)
 
@@ -55,12 +57,16 @@ class OtpVerifyViewController: AuthBaseViewController {
         view.addSubview(spacer)
 
         NSLayoutConstraint.activate([
-            backBtn.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 12),
-            backBtn.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
-            headerStack.topAnchor.constraint(equalTo: backBtn.bottomAnchor, constant: 16),
-            headerStack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 28),
-            headerStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -28),
-            spacer.topAnchor.constraint(equalTo: headerStack.bottomAnchor, constant: 24),
+            backBtn.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
+            backBtn.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            backBtn.widthAnchor.constraint(equalToConstant: 40),
+            backBtn.heightAnchor.constraint(equalToConstant: 40),
+
+            headerStack.leadingAnchor.constraint(equalTo: backBtn.trailingAnchor, constant: 14),
+            headerStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            headerStack.centerYAnchor.constraint(equalTo: backBtn.centerYAnchor),
+
+            spacer.topAnchor.constraint(equalTo: backBtn.bottomAnchor, constant: 12),
             spacer.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             spacer.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             spacer.heightAnchor.constraint(equalToConstant: 0)

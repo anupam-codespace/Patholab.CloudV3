@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Native Independent Patient Visit Worklist & Clinical Queue Console -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#F8FAFC">
+
+    <!-- ── TOP CURVED SAPPHIRE HEADER ─────────────────────────────── -->
+    <FrameLayout
+        android:id="@+id/worklistHeaderLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_home_header"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingTop="32dp"
+        android:paddingBottom="46dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Top Row: Back + Title + Action Buttons -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <FrameLayout
+                    android:id="@+id/btnWorklistBack"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/bg_bell_btn"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_back_arrow"
+                        android:tint="#0D6EFD" />
+
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="14dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Patient Visit Worklist"
+                        android:textSize="18.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"
+                        android:letterSpacing="-0.02" />
+
+                    <TextView
+                        android:id="@+id/lblWorklistSubtitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Clinical Accessions • TAT Monitoring"
+                        android:textSize="12sp"
+                        android:textColor="#C7DFFF" />
+
+                </LinearLayout>
+
+                <!-- Refresh Button -->
+                <FrameLayout
+                    android:id="@+id/btnRefreshWorklist"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:background="@drawable/bg_bell_btn"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_refresh_cw"
+                        android:tint="#0D6EFD"
+                        app:tint="#0D6EFD" />
+
+                </FrameLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </FrameLayout>
+
+    <!-- ── KPI STATISTICS CARDS (Horizontal Scroll) ────────────────── -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="0dp"
+        android:paddingBottom="6dp"
+        android:layout_marginTop="-22dp"
+        android:clipToPadding="false">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <!-- Card 1: Total Patient Visits -->
+            <LinearLayout
+                android:layout_width="164dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_setting_item"
+                android:padding="14dp"
+                android:layout_marginEnd="10dp"
+                android:elevation="2dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="TOTAL VISITS"
+                    android:textSize="10.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#64748B"
+                    android:letterSpacing="0.05" />
+
+                <TextView
+                    android:id="@+id/lblKpiTotalVisits"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="42"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:textColor="#0D6EFD" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Accessioned Today"
+                    android:textSize="11.5sp"
+                    android:textColor="#94A3B8" />
+
+            </LinearLayout>
+
+            <!-- Card 2: In-Progress / Testing -->
+            <LinearLayout
+                android:layout_width="164dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_setting_item"
+                android:padding="14dp"
+                android:layout_marginEnd="10dp"
+                android:elevation="2dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="IN PROGRESS"
+                    android:textSize="10.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#64748B"
+                    android:letterSpacing="0.05" />
+
+                <TextView
+                    android:id="@+id/lblKpiInProgressVisits"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="12"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:textColor="#D97706" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Testing Underway"
+                    android:textSize="11.5sp"
+                    android:textColor="#94A3B8" />
+
+            </LinearLayout>
+
+            <!-- Card 3: Completed & Approved -->
+            <LinearLayout
+                android:layout_width="164dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_setting_item"
+                android:padding="14dp"
+                android:layout_marginEnd="10dp"
+                android:elevation="2dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="COMPLETED &amp; READY"
+                    android:textSize="10.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#64748B"
+                    android:letterSpacing="0.05" />
+
+                <TextView
+                    android:id="@+id/lblKpiCompletedVisits"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="28"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:textColor="#059669" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Authorized Reports"
+                    android:textSize="11.5sp"
+                    android:textColor="#94A3B8" />
+
+            </LinearLayout>
+
+            <!-- Card 4: Registered Only / Unbilled -->
+            <LinearLayout
+                android:layout_width="164dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_setting_item"
+                android:padding="14dp"
+                android:elevation="2dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="REGISTERED ONLY"
+                    android:textSize="10.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#64748B"
+                    android:letterSpacing="0.05" />
+
+                <TextView
+                    android:id="@+id/lblKpiRegisteredVisits"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="2"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:textColor="#64748B" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Awaiting Billing / Tests"
+                    android:textSize="11.5sp"
+                    android:textColor="#94A3B8" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </HorizontalScrollView>
+
+    <!-- ── SEARCH OMNIBAR ─────────────────────────────────────────── -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@drawable/bg_setting_item"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="6dp"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp">
+
+        <ImageView
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:src="@drawable/ic_search"
+            android:tint="#94A3B8" />
+
+        <EditText
+            android:id="@+id/inputSearchWorklist"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@null"
+            android:hint="Search patient, UHID, invoice, phone, or test..."
+            android:textColorHint="#94A3B8"
+            android:textColor="#0F172A"
+            android:textSize="13.5sp"
+            android:layout_marginStart="10dp"
+            android:singleLine="true"
+            android:imeOptions="actionSearch" />
+
+        <ImageView
+            android:id="@+id/btnClearSearchWorklist"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:src="@drawable/ic_back_arrow"
+            android:tint="#94A3B8"
+            android:visibility="gone"
+            android:clickable="true"
+            android:focusable="true" />
+
+    </LinearLayout>
+
+    <!-- ── STATUS FILTER CHIPS (Horizontal Scroll) ────────────────── -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="6dp"
+        android:clipToPadding="false">
+
+        <LinearLayout
+            android:id="@+id/containerWorklistFilterChips"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" />
+
+    </HorizontalScrollView>
+
+    <!-- ── LIST CONTAINER & EMPTY STATE ───────────────────────────── -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="4dp">
+
+        <!-- Progress Bar -->
+        <ProgressBar
+            android:id="@+id/progressWorklist"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:indeterminateTint="#0D6EFD"
+            android:visibility="gone" />
+
+        <!-- Recycler View -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerWorklist"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingBottom="20dp"
+            android:clipToPadding="false" />
+
+        <!-- Empty State View -->
+        <LinearLayout
+            android:id="@+id/emptyStateWorklist"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="32dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📋"
+                android:textSize="48sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="No Patient Visits Found"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:textColor="#0F172A" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="No accession records matched your search query or filter."
+                android:textSize="13sp"
+                android:textColor="#64748B"
+                android:gravity="center" />
+
+        </LinearLayout>
+
+    </FrameLayout>
+
+</LinearLayout>

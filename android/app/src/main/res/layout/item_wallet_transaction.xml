@@ -1,16 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Premium Spacious Transaction Row Card -->
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:gravity="center_vertical"
-    android:background="@drawable/bg_module_card_ripple"
+    android:background="@drawable/bg_tx_card_ripple"
     android:paddingStart="14dp"
     android:paddingEnd="14dp"
     android:paddingTop="12dp"
     android:paddingBottom="12dp"
     android:layout_marginBottom="8dp"
+    android:elevation="1dp"
     android:clickable="true"
     android:focusable="true">
 
@@ -23,40 +25,65 @@
 
         <ImageView
             android:id="@+id/txIcon"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
             android:layout_gravity="center"
             android:src="@drawable/ic_arrow_down_left"
             android:tint="#059669" />
 
     </FrameLayout>
 
-    <!-- Description & Time Details -->
+    <!-- Content 2-Row Layout -->
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:orientation="vertical"
-        android:layout_marginStart="12dp"
-        android:layout_marginEnd="8dp">
+        android:layout_marginStart="12dp">
 
-        <TextView
-            android:id="@+id/txDescription"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Wallet Recharge"
-            android:textSize="13.5sp"
-            android:textStyle="bold"
-            android:textColor="#0F172A"
-            android:maxLines="1"
-            android:ellipsize="end" />
-
+        <!-- Row 1: Description + Amount -->
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginTop="3dp"
             android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/txDescription"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Wallet Recharge"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#0F172A"
+                android:maxLines="1"
+                android:ellipsize="end" />
+
+            <TextView
+                android:id="@+id/txAmount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="+₹ 1,000.00"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif"
+                android:textFontWeight="800"
+                android:textColor="#059669"
+                android:maxLines="1"
+                android:singleLine="true"
+                android:paddingEnd="4dp" />
+
+        </LinearLayout>
+
+        <!-- Row 2: Date + Ref ID Badge + Balance After -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="4dp">
 
             <TextView
                 android:id="@+id/txDate"
@@ -64,50 +91,47 @@
                 android:layout_height="wrap_content"
                 android:text="01 Sep 2026, 12:45 PM"
                 android:textSize="11.5sp"
-                android:textColor="#64748B" />
+                android:textColor="#64748B"
+                android:maxLines="1"
+                android:singleLine="true"
+                android:ellipsize="end" />
 
+            <!-- Ref ID pill (Single Line Guaranteed) -->
             <TextView
                 android:id="@+id/txRefId"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="6dp"
-                android:background="@drawable/bg_pill_inactive"
+                android:background="@drawable/bg_pill_slate"
                 android:paddingStart="6dp"
                 android:paddingEnd="6dp"
                 android:paddingTop="1dp"
                 android:paddingBottom="1dp"
                 android:text="TX-8291"
-                android:textSize="10sp"
-                android:textColor="#475569" />
+                android:textSize="9.5sp"
+                android:textColor="#475569"
+                android:singleLine="true"
+                android:maxLines="1"
+                android:lines="1" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <TextView
+                android:id="@+id/txBalanceAfter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:text="Bal: ₹ 2,450.00"
+                android:textSize="11.5sp"
+                android:textColor="#64748B"
+                android:maxLines="1"
+                android:singleLine="true"
+                android:paddingEnd="4dp" />
 
         </LinearLayout>
-
-    </LinearLayout>
-
-    <!-- Amount & Balance After -->
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="end">
-
-        <TextView
-            android:id="@+id/txAmount"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="+₹1,000.00"
-            android:textSize="14.5sp"
-            android:textStyle="bold"
-            android:textColor="#059669" />
-
-        <TextView
-            android:id="@+id/txBalanceAfter"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:text="Bal: ₹2,450.00"
-            android:textSize="11sp"
-            android:textColor="#94A3B8" />
 
     </LinearLayout>
 

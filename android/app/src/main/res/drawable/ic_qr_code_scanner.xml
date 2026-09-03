@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- Outer Viewfinder Corner Brackets -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#0D6EFD"
+        android:strokeWidth="2.2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M3,8V5.5C3,4.12 4.12,3 5.5,3H8 M16,3H18.5C19.88,3 21,4.12 21,5.5V8 M3,16V18.5C3,19.88 4.12,21 5.5,21H8 M16,21H18.5C19.88,21 21,19.88 21,18.5V16" />
+
+    <!-- Top-Left QR Eye -->
+    <path
+        android:fillColor="#0D6EFD"
+        android:pathData="M6,6H10V10H6V6ZM7.2,7.2V8.8H8.8V7.2H7.2Z"
+        android:fillType="evenOdd" />
+    <path
+        android:fillColor="#0D6EFD"
+        android:pathData="M7.7,7.7H8.3V8.3H7.7V7.7Z" />
+
+    <!-- Top-Right QR Eye -->
+    <path
+        android:fillColor="#0D6EFD"
+        android:pathData="M14,6H18V10H14V6ZM15.2,7.2V8.8H16.8V7.2H15.2Z"
+        android:fillType="evenOdd" />
+    <path
+        android:fillColor="#0D6EFD"
+        android:pathData="M15.7,7.7H16.3V8.3H15.7V7.7Z" />
+
+    <!-- Bottom-Left QR Eye -->
+    <path
+        android:fillColor="#0D6EFD"
+        android:pathData="M6,14H10V18H6V14ZM7.2,15.2V16.8H8.8V15.2H7.2Z"
+        android:fillType="evenOdd" />
+    <path
+        android:fillColor="#0D6EFD"
+        android:pathData="M7.7,15.7H8.3V16.3H7.7V15.7Z" />
+
+    <!-- QR Data Matrix Dots -->
+    <path
+        android:fillColor="#0D6EFD"
+        android:pathData="M14,14H15.5V15.5H14V14ZM16.5,14H18V15.5H16.5V14ZM15.5,15.5H17V17H15.5V15.5ZM14,17H15.5V18H14V17ZM17,17H18V18H17V17ZM11.5,6H12.5V8H11.5V6ZM11.5,10H12.5V14H11.5V10ZM6,11.5H8V12.5H6V11.5ZM16,11.5H18V12.5H16V11.5ZM11.5,16H12.5V18H11.5V16Z" />
+
+</vector>

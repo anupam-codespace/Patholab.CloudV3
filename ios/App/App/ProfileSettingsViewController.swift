@@ -72,12 +72,6 @@ class ProfileSettingsViewController: UIViewController {
             target: self,
             action: #selector(backTapped)
         )
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
-            title: "Save",
-            style: .done,
-            target: self,
-            action: #selector(saveTapped)
-        )
         navigationController?.navigationBar.tintColor = Self.headerBlue
     }
 

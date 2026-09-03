@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Amend Medical Report Modal Dialog (Matching Web UI Exactly) -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_bottom_sheet"
+    android:paddingTop="16dp"
+    android:paddingBottom="28dp">
+
+    <!-- Top Drag Handle / Close Row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="20dp"
+        android:paddingEnd="16dp"
+        android:layout_marginBottom="14dp">
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <View
+            android:layout_width="44dp"
+            android:layout_height="4dp"
+            android:background="#CBD5E1" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <FrameLayout
+            android:id="@+id/btnCloseAmendSheet"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="@drawable/bg_bell_btn"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_close_cross"
+                android:tint="#475569" />
+        </FrameLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp">
+
+        <!-- Title Row with Warning Triangle -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
+
+            <ImageView
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:src="@drawable/ic_warning_triangle"
+                android:tint="#D97706" />
+
+            <TextView
+                android:id="@+id/lblAmendSheetTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="Amend Medical Report"
+                android:textSize="19sp"
+                android:textStyle="bold"
+                android:textColor="#0F172A"
+                android:letterSpacing="-0.01" />
+
+        </LinearLayout>
+
+        <!-- Compliance Description -->
+        <TextView
+            android:id="@+id/lblAmendSheetDescription"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="You are about to unlock report v1.0 for PRATIMA GHOSH. This will increment the version to v2.0. Under medical compliance laws, you MUST state the reason for this change."
+            android:textSize="13sp"
+            android:textColor="#64748B"
+            android:lineSpacingMultiplier="1.2"
+            android:layout_marginBottom="18dp" />
+
+        <!-- Label -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Reason for Amendment *"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="#334155"
+            android:layout_marginBottom="6dp" />
+
+        <!-- Input Textarea -->
+        <EditText
+            android:id="@+id/inputAmendmentReason"
+            android:layout_width="match_parent"
+            android:layout_height="110dp"
+            android:background="@drawable/bg_input_field"
+            android:padding="12dp"
+            android:gravity="top|start"
+            android:hint="e.g., Corrected typo in clinical notes, re-ran sample for verification..."
+            android:textSize="13.5sp"
+            android:textColor="#0F172A"
+            android:textColorHint="#94A3B8"
+            android:inputType="textMultiLine"
+            android:layout_marginBottom="22dp" />
+
+        <!-- Action Buttons: Cancel and Confirm & Unlock -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnCancelAmendment"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:text="Cancel"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#475569"
+                android:backgroundTint="#F1F5F9"
+                app:cornerRadius="14dp"
+                android:elevation="0dp"
+                android:textAllCaps="false"
+                android:layout_marginEnd="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSubmitAmendment"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1.3"
+                android:text="Confirm &amp; Unlock"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#F59E0B"
+                app:cornerRadius="14dp"
+                android:elevation="0dp"
+                android:textAllCaps="false" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

@@ -193,18 +193,42 @@
 
         </LinearLayout>
 
-        <!-- Action Button: Print Receipt & Worklist -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnSuccessPrintReceipt"
+        <!-- Action Buttons: WhatsApp Share + Print Receipt -->
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:text="Print Receipt / Worklist"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            android:textColor="#FFFFFF"
-            android:backgroundTint="#22C55E"
-            app:cornerRadius="16dp"
-            android:elevation="4dp" />
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSuccessWhatsAppShare"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:text="Send WhatsApp Receipt"
+                android:textSize="14.5sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#25D366"
+                app:cornerRadius="16dp"
+                app:icon="@drawable/ic_whatsapp"
+                app:iconGravity="textStart"
+                app:iconPadding="8dp"
+                app:iconTint="#FFFFFF"
+                android:layout_marginBottom="10dp"
+                android:elevation="4dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSuccessPrintReceipt"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:text="View Invoice &amp; Worklist"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#0D6EFD"
+                app:cornerRadius="16dp"
+                android:elevation="4dp" />
+
+        </LinearLayout>
 
         <!-- Dismiss / Return to Dashboard -->
         <TextView

@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Bottom Sheet Modal for Specimen Accessioning & Phlebotomy -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_bottom_sheet"
+    android:padding="24dp">
+
+    <!-- Drag Handle -->
+    <View
+        android:layout_width="40dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:background="@drawable/bg_skeleton_line"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Sheet Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <FrameLayout
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/bg_pill_white"
+            android:backgroundTint="#EFF6FF">
+
+            <ImageView
+                android:layout_width="26dp"
+                android:layout_height="26dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_testtube"
+                android:tint="#0D6EFD" />
+
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="14dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Accession &amp; Draw Specimen"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:textColor="#0F172A" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Assign container, barcode ID, and phlebotomist notes"
+                android:textSize="12sp"
+                android:textColor="#64748B" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#F1F5F9"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Patient Name Input -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Patient Name / UHID"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:textColor="#475569" />
+
+    <EditText
+        android:id="@+id/inputAccessionPatient"
+        android:layout_width="match_parent"
+        android:layout_height="46dp"
+        android:layout_marginTop="6dp"
+        android:background="@drawable/bg_setting_item"
+        android:hint="e.g. PRATIMA GHOSH (P-00096)"
+        android:textColorHint="#94A3B8"
+        android:textColor="#0F172A"
+        android:textSize="13.5sp"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:singleLine="true" />
+
+    <!-- Container / Tube Type Selection -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="Container / Vacutainer Tube Type"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:textColor="#475569" />
+
+    <Spinner
+        android:id="@+id/spinnerTubeType"
+        android:layout_width="match_parent"
+        android:layout_height="46dp"
+        android:layout_marginTop="6dp"
+        android:background="@drawable/bg_setting_item"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp" />
+
+    <!-- Investigation Tests -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="Investigation Tests"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:textColor="#475569" />
+
+    <EditText
+        android:id="@+id/inputAccessionTests"
+        android:layout_width="match_parent"
+        android:layout_height="46dp"
+        android:layout_marginTop="6dp"
+        android:background="@drawable/bg_setting_item"
+        android:hint="e.g. Complete Blood Count (CBC)"
+        android:textColorHint="#94A3B8"
+        android:textColor="#0F172A"
+        android:textSize="13.5sp"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:singleLine="true" />
+
+    <!-- Phlebotomist Collector Name -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="Phlebotomist / Collector Name"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:textColor="#475569" />
+
+    <EditText
+        android:id="@+id/inputPhlebotomistName"
+        android:layout_width="match_parent"
+        android:layout_height="46dp"
+        android:layout_marginTop="6dp"
+        android:background="@drawable/bg_setting_item"
+        android:hint="e.g. Rajesh Kumar"
+        android:textColorHint="#94A3B8"
+        android:textColor="#0F172A"
+        android:textSize="13.5sp"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:singleLine="true" />
+
+    <!-- Confirm & Action Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginTop="20dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnCancelAccession"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:backgroundTint="#F1F5F9"
+            android:text="Cancel"
+            android:textColor="#475569"
+            android:textStyle="bold"
+            app:cornerRadius="12dp" />
+
+        <Button
+            android:id="@+id/btnConfirmAccession"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1.6"
+            android:layout_marginStart="10dp"
+            android:backgroundTint="#0D6EFD"
+            android:text="Save &amp; Generate Barcode"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            app:cornerRadius="12dp" />
+
+    </LinearLayout>
+
+</LinearLayout>

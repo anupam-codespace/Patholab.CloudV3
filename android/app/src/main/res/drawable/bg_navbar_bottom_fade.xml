@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- White gradient fade from bottom to top: solid white at bottom, fading to transparent at top -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:type="linear"
+        android:angle="90"
+        android:startColor="#FFFFFFFF"
+        android:centerColor="#E6FFFFFF"
+        android:endColor="#00FFFFFF" />
+</shape>

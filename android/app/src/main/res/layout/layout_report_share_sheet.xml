@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Share Report Link Modal Dialog (Matching Web UI Exactly) -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_bottom_sheet"
+    android:paddingTop="16dp"
+    android:paddingBottom="28dp">
+
+    <!-- Top Drag Handle / Close Row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="20dp"
+        android:paddingEnd="16dp"
+        android:layout_marginBottom="12dp">
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <View
+            android:layout_width="44dp"
+            android:layout_height="4dp"
+            android:background="#CBD5E1" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <FrameLayout
+            android:id="@+id/btnCloseShareSheet"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="@drawable/bg_bell_btn"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_close_cross"
+                android:tint="#475569" />
+        </FrameLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp">
+
+        <!-- Circular Green Share Badge -->
+        <FrameLayout
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:background="@drawable/bg_bento_emerald"
+            android:layout_marginBottom="16dp">
+
+            <ImageView
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_nav_more"
+                app:tint="#059669" />
+        </FrameLayout>
+
+        <!-- Title -->
+        <TextView
+            android:id="@+id/lblShareSheetTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Share Report Link"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#0F172A"
+            android:letterSpacing="-0.01"
+            android:layout_marginBottom="6dp" />
+
+        <!-- Subtitle -->
+        <TextView
+            android:id="@+id/lblShareSheetPatientName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Send a secure verification link for v1.0 to PRATIMA GHOSH."
+            android:textSize="13.5sp"
+            android:textColor="#64748B"
+            android:textAlignment="center"
+            android:layout_marginBottom="24dp" />
+
+        <!-- 1. Send via WhatsApp Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnShareWhatsAppAction"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="Send via WhatsApp"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#22C55E"
+            app:cornerRadius="14dp"
+            android:elevation="0dp"
+            android:textAllCaps="false"
+            android:layout_marginBottom="12dp" />
+
+        <!-- 2. Send via Email Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnShareEmailAction"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="Send via Email"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="#0D6EFD"
+            android:backgroundTint="#EFF6FF"
+            app:cornerRadius="14dp"
+            app:strokeColor="#BFDBFE"
+            app:strokeWidth="1.2dp"
+            android:elevation="0dp"
+            android:textAllCaps="false"
+            android:layout_marginBottom="12dp" />
+
+        <!-- 3. Copy Verification Link -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCopyReportLinkAction"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="Copy Secure Verification Link"
+            android:textSize="13.5sp"
+            android:textStyle="bold"
+            android:textColor="#475569"
+            android:backgroundTint="#F8FAFC"
+            app:cornerRadius="14dp"
+            app:strokeColor="#E2E8F0"
+            app:strokeWidth="1dp"
+            android:elevation="0dp"
+            android:textAllCaps="false" />
+
+    </LinearLayout>
+
+</LinearLayout>

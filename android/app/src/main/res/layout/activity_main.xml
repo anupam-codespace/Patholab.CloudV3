@@ -6,13 +6,13 @@
     android:layout_height="match_parent"
     android:background="#F8FAFC">
 
-    <!-- 1. Web view content container (Full screen behind header & wallet card) -->
+    <!-- 1. Web view content container (Full screen behind header & bottom nav) -->
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefresh"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_alignParentTop="true"
-        android:layout_above="@id/floatingNavBarCard">
+        android:layout_alignParentBottom="true">
 
         <FrameLayout
             android:id="@+id/webViewContainer"
@@ -395,20 +395,21 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_alignParentTop="true"
-        android:layout_above="@id/floatingNavBarCard" />
+        android:layout_alignParentBottom="true" />
+
 
     <!-- 4. Floating Glassmorphic Pill Navigation Bar -->
     <androidx.cardview.widget.CardView
         android:id="@+id/floatingNavBarCard"
         android:layout_width="match_parent"
-        android:layout_height="66dp"
+        android:layout_height="68dp"
         android:layout_alignParentBottom="true"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="16dp"
-        app:cardCornerRadius="33dp"
+        android:layout_marginStart="14dp"
+        android:layout_marginEnd="14dp"
+        android:layout_marginBottom="14dp"
+        app:cardCornerRadius="34dp"
         app:cardElevation="14dp"
-        app:cardBackgroundColor="#FFFFFF"
+        app:cardBackgroundColor="@android:color/transparent"
         app:cardPreventCornerOverlap="false">
 
         <LinearLayout
@@ -433,20 +434,32 @@
                 android:clickable="true"
                 android:focusable="true">
 
-                <ImageView
-                    android:id="@+id/imgNavHome"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:src="@drawable/ic_nav_dashboard"
-                    android:tint="#0D6EFD" />
+                <FrameLayout
+                    android:id="@+id/indicatorNavHome"
+                    android:layout_width="46dp"
+                    android:layout_height="30dp"
+                    android:background="@drawable/bg_nav_active_indicator">
+
+                    <ImageView
+                        android:id="@+id/imgNavHome"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_nav_dashboard"
+                        android:tint="#0D6EFD" />
+                </FrameLayout>
 
                 <TextView
                     android:id="@+id/txtNavHome"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
+                    android:gravity="center"
+                    android:singleLine="true"
+                    android:lines="1"
+                    android:ellipsize="none"
                     android:text="Home"
-                    android:textSize="10.5sp"
+                    android:textSize="11sp"
                     android:textStyle="bold"
                     android:textColor="#0D6EFD" />
             </LinearLayout>
@@ -462,25 +475,36 @@
                 android:clickable="true"
                 android:focusable="true">
 
-                <ImageView
-                    android:id="@+id/imgNavPatients"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:src="@drawable/ic_nav_patients"
-                    android:tint="#94A3B8" />
+                <FrameLayout
+                    android:id="@+id/indicatorNavPatients"
+                    android:layout_width="46dp"
+                    android:layout_height="30dp">
+
+                    <ImageView
+                        android:id="@+id/imgNavPatients"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_nav_patients"
+                        android:tint="#94A3B8" />
+                </FrameLayout>
 
                 <TextView
                     android:id="@+id/txtNavPatients"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
+                    android:gravity="center"
+                    android:singleLine="true"
+                    android:lines="1"
+                    android:ellipsize="none"
                     android:text="Patients"
-                    android:textSize="10.5sp"
+                    android:textSize="11sp"
                     android:textStyle="normal"
                     android:textColor="#94A3B8" />
             </LinearLayout>
 
-            <!-- Tab Center: Elevated Glowing Card / Action Button -->
+            <!-- Tab Center: Elevated Glowing Sapphire Card / Action Button -->
             <FrameLayout
                 android:id="@+id/navTabCenter"
                 android:layout_width="0dp"
@@ -500,8 +524,8 @@
 
                     <ImageView
                         android:id="@+id/imgNavCenter"
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
                         android:layout_gravity="center"
                         android:src="@drawable/ic_nav_card_center"
                         android:tint="#FFFFFF" />
@@ -520,20 +544,31 @@
                 android:clickable="true"
                 android:focusable="true">
 
-                <ImageView
-                    android:id="@+id/imgNavReports"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:src="@drawable/ic_document"
-                    android:tint="#94A3B8" />
+                <FrameLayout
+                    android:id="@+id/indicatorNavReports"
+                    android:layout_width="46dp"
+                    android:layout_height="30dp">
+
+                    <ImageView
+                        android:id="@+id/imgNavReports"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_document"
+                        android:tint="#94A3B8" />
+                </FrameLayout>
 
                 <TextView
                     android:id="@+id/txtNavReports"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
+                    android:gravity="center"
+                    android:singleLine="true"
+                    android:lines="1"
+                    android:ellipsize="none"
                     android:text="Reports"
-                    android:textSize="10.5sp"
+                    android:textSize="11sp"
                     android:textStyle="normal"
                     android:textColor="#94A3B8" />
             </LinearLayout>
@@ -549,20 +584,31 @@
                 android:clickable="true"
                 android:focusable="true">
 
-                <ImageView
-                    android:id="@+id/imgNavMore"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:src="@drawable/ic_nav_categories"
-                    android:tint="#94A3B8" />
+                <FrameLayout
+                    android:id="@+id/indicatorNavMore"
+                    android:layout_width="46dp"
+                    android:layout_height="30dp">
+
+                    <ImageView
+                        android:id="@+id/imgNavMore"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_nav_categories"
+                        android:tint="#94A3B8" />
+                </FrameLayout>
 
                 <TextView
                     android:id="@+id/txtNavMore"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
+                    android:gravity="center"
+                    android:singleLine="true"
+                    android:lines="1"
+                    android:ellipsize="none"
                     android:text="More"
-                    android:textSize="10.5sp"
+                    android:textSize="11sp"
                     android:textStyle="normal"
                     android:textColor="#94A3B8" />
             </LinearLayout>

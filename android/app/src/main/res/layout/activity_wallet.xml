@@ -4,49 +4,52 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8FAFC">
+    android:background="#F0F4FF">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <!-- ── HEADER BANNER (Vibrant Blue curved header) ────────────── -->
-        <FrameLayout
+        <!-- ══════════════════════════════════════════════════════════════
+             HERO HEADER — Deep Navy Gradient + Balance Card Fused
+             ══════════════════════════════════════════════════════════════ -->
+        <LinearLayout
             android:id="@+id/walletHeader"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/bg_header_curved"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:paddingTop="50dp"
-            android:paddingBottom="24dp">
+            android:background="@drawable/bg_wallet_hero_card_premium"
+            android:orientation="vertical"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingTop="36dp"
+            android:paddingBottom="16dp">
 
+            <!-- Row 1: Back Button + Title + Recharge CTA -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:layout_marginBottom="16dp">
 
-                <!-- Back Button -->
                 <FrameLayout
                     android:id="@+id/btnWalletBack"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:background="@drawable/bg_bell_btn"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:background="@drawable/bg_glass_back_btn"
                     android:clickable="true"
                     android:focusable="true">
 
                     <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
                         android:layout_gravity="center"
                         android:src="@drawable/ic_back_arrow"
                         android:tint="#FFFFFF" />
 
                 </FrameLayout>
 
-                <!-- Title & Subtitle -->
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -69,20 +72,20 @@
                         android:layout_marginTop="2dp"
                         android:text="Clinical Credits &amp; Ledger"
                         android:textSize="12sp"
-                        android:textColor="#BAE6FD" />
+                        android:textColor="#93C5FD" />
 
                 </LinearLayout>
 
-                <!-- Recharge Quick Action Pill -->
+                <!-- Premium Recharge CTA Button -->
                 <LinearLayout
                     android:id="@+id/btnHeaderRecharge"
                     android:layout_width="wrap_content"
-                    android:layout_height="38dp"
+                    android:layout_height="40dp"
                     android:background="@drawable/bg_pill_white"
                     android:orientation="horizontal"
                     android:gravity="center"
-                    android:paddingStart="14dp"
-                    android:paddingEnd="14dp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
                     android:clickable="true"
                     android:focusable="true">
 
@@ -90,24 +93,157 @@
                         android:layout_width="14dp"
                         android:layout_height="14dp"
                         android:src="@drawable/ic_plus"
-                        android:tint="#0D6EFD" />
+                        android:tint="#1D4ED8" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="6dp"
                         android:text="Recharge"
-                        android:textSize="12.5sp"
+                        android:textSize="13sp"
                         android:textStyle="bold"
-                        android:textColor="#0D6EFD" />
+                        android:textColor="#1D4ED8" />
 
                 </LinearLayout>
 
             </LinearLayout>
 
-        </FrameLayout>
+            <!-- ── BALANCE BLOCK ─────────────────────────────────────── -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
-        <!-- ── MAIN SCROLLABLE CONTENT ───────────────────────────────── -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="AVAILABLE BALANCE"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-medium"
+                    android:textColor="#93C5FD"
+                    android:letterSpacing="0.08" />
+
+            </LinearLayout>
+
+            <!-- ₹ Big Bold Balance Number -->
+            <TextView
+                android:id="@+id/txtWalletBalanceHero"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="₹ 0.00"
+                android:textSize="40sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:fontFamily="sans-serif"
+                android:textFontWeight="800"
+                android:maxLines="1"
+                android:singleLine="true"
+                android:paddingEnd="6dp"
+                app:autoSizeTextType="uniform"
+                app:autoSizeMinTextSize="22sp"
+                app:autoSizeMaxTextSize="40sp"
+                app:autoSizeStepGranularity="1sp"
+                android:autoSizeTextType="uniform"
+                android:autoSizeMinTextSize="22sp"
+                android:autoSizeMaxTextSize="40sp"
+                android:autoSizeStepGranularity="1sp" />
+
+            <!-- Divider -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#26FFFFFF"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Validity + Deduction Rate Row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="VALID UNTIL"
+                        android:textSize="9.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#60A5FA"
+                        android:letterSpacing="0.10" />
+
+                    <TextView
+                        android:id="@+id/txtWalletValidity"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:text="No Expiry"
+                        android:textSize="14.5sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-medium"
+                        android:textColor="#FFFFFF"
+                        android:maxLines="1"
+                        android:singleLine="true"
+                        android:ellipsize="end"
+                        android:paddingEnd="4dp" />
+
+                </LinearLayout>
+
+                <!-- Vertical Separator -->
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"
+                    android:background="#26FFFFFF"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginEnd="12dp" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="end">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="PER PATIENT"
+                        android:textSize="9.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#60A5FA"
+                        android:letterSpacing="0.10" />
+
+                    <TextView
+                        android:id="@+id/txtWalletDeduction"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:text="₹ 2.50 / Patient"
+                        android:textSize="14.5sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-medium"
+                        android:textColor="#FFFFFF"
+                        android:maxLines="1"
+                        android:singleLine="true"
+                        android:paddingEnd="4dp" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- ══════════════════════════════════════════════════════════════
+             MAIN SCROLLABLE CONTENT
+             ══════════════════════════════════════════════════════════════ -->
         <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
             android:id="@+id/walletSwipeRefresh"
             android:layout_width="match_parent"
@@ -126,294 +262,179 @@
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
                     android:paddingTop="16dp"
-                    android:paddingBottom="40dp">
+                    android:paddingBottom="48dp">
 
-                    <!-- ── HERO AVAILABLE BALANCE CARD ──────────────────────── -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:background="@drawable/bg_wallet_hero_card"
-                        android:padding="20dp"
-                        android:elevation="4dp"
-                        android:layout_marginBottom="16dp">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical">
-
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="AVAILABLE CREDITS"
-                                android:textSize="11.5sp"
-                                android:textStyle="bold"
-                                android:textColor="#93C5FD"
-                                android:letterSpacing="0.08" />
-
-                            <LinearLayout
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:background="@drawable/bg_pill_glass"
-                                android:paddingStart="8dp"
-                                android:paddingEnd="8dp"
-                                android:paddingTop="3dp"
-                                android:paddingBottom="3dp"
-                                android:gravity="center">
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="✓ Ledger Verified"
-                                    android:textSize="10.5sp"
-                                    android:textStyle="bold"
-                                    android:textColor="#34D399" />
-
-                            </LinearLayout>
-
-                        </LinearLayout>
-
-                        <TextView
-                            android:id="@+id/txtWalletBalanceHero"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="₹0.00"
-                            android:textSize="38sp"
-                            android:textStyle="bold"
-                            android:textColor="#34D399"
-                            android:letterSpacing="-0.02" />
-
-                        <View
-                            android:layout_width="match_parent"
-                            android:layout_height="1dp"
-                            android:background="#334155"
-                            android:layout_marginTop="16dp"
-                            android:layout_marginBottom="12dp" />
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal">
-
-                            <LinearLayout
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:orientation="vertical">
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="VALIDITY"
-                                    android:textSize="10sp"
-                                    android:textStyle="bold"
-                                    android:textColor="#94A3B8"
-                                    android:letterSpacing="0.06" />
-
-                                <TextView
-                                    android:id="@+id/txtWalletValidity"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="2dp"
-                                    android:text="No Expiry"
-                                    android:textSize="12.5sp"
-                                    android:textStyle="bold"
-                                    android:textColor="#E2E8F0" />
-
-                            </LinearLayout>
-
-                            <LinearLayout
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:orientation="vertical"
-                                android:gravity="end">
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="DEDUCTION RATE"
-                                    android:textSize="10sp"
-                                    android:textStyle="bold"
-                                    android:textColor="#94A3B8"
-                                    android:letterSpacing="0.06" />
-
-                                <TextView
-                                    android:id="@+id/txtWalletDeduction"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="2dp"
-                                    android:text="₹2.50 / Patient"
-                                    android:textSize="12.5sp"
-                                    android:textStyle="bold"
-                                    android:textColor="#E2E8F0" />
-
-                            </LinearLayout>
-
-                        </LinearLayout>
-
-                    </LinearLayout>
-
-                    <!-- ── 2 STATS CARDS (Total Recharged & Total Consumed) ─── -->
+                    <!-- ── STAT CARDS: RECHARGED + CONSUMED ───────────── -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:layout_marginBottom="20dp">
 
-                        <!-- Card 1: Total Recharged -->
+                        <!-- Card 1: Recharged (Green) -->
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:layout_marginEnd="6dp"
-                            android:background="@drawable/bg_module_card"
-                            android:padding="14dp"
+                            android:layout_marginEnd="7dp"
+                            android:background="@drawable/bg_wallet_stat_green"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp"
+                            android:paddingTop="14dp"
+                            android:paddingBottom="14dp"
                             android:elevation="1dp"
                             android:orientation="vertical">
 
+                            <!-- Sleek Tag Chip -->
                             <LinearLayout
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:background="@drawable/bg_tag_emerald"
+                                android:paddingStart="8dp"
+                                android:paddingEnd="8dp"
+                                android:paddingTop="3dp"
+                                android:paddingBottom="3dp"
                                 android:orientation="horizontal"
                                 android:gravity="center_vertical"
                                 android:layout_marginBottom="8dp">
 
-                                <FrameLayout
-                                    android:layout_width="28dp"
-                                    android:layout_height="28dp"
-                                    android:background="@drawable/bg_mod_icon_emerald">
-
-                                    <ImageView
-                                        android:layout_width="16dp"
-                                        android:layout_height="16dp"
-                                        android:layout_gravity="center"
-                                        android:src="@drawable/ic_arrow_down_left"
-                                        android:tint="#059669" />
-
-                                </FrameLayout>
-
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginStart="6dp"
                                     android:text="RECHARGED"
-                                    android:textSize="10.5sp"
+                                    android:textSize="9.5sp"
                                     android:textStyle="bold"
-                                    android:textColor="#64748B"
+                                    android:textColor="#059669"
                                     android:letterSpacing="0.06" />
 
                             </LinearLayout>
 
                             <TextView
                                 android:id="@+id/txtTotalRecharged"
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:text="₹0.00"
-                                android:textSize="18sp"
+                                android:text="₹ 0.00"
+                                android:textSize="22sp"
                                 android:textStyle="bold"
-                                android:textColor="#0F172A" />
+                                android:fontFamily="sans-serif"
+                                android:textFontWeight="800"
+                                android:textColor="#064E3B"
+                                android:maxLines="1"
+                                android:singleLine="true"
+                                android:paddingEnd="4dp"
+                                app:autoSizeTextType="uniform"
+                                app:autoSizeMinTextSize="14sp"
+                                app:autoSizeMaxTextSize="22sp"
+                                app:autoSizeStepGranularity="1sp"
+                                android:autoSizeTextType="uniform"
+                                android:autoSizeMinTextSize="14sp"
+                                android:autoSizeMaxTextSize="22sp"
+                                android:autoSizeStepGranularity="1sp" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="2dp"
+                                android:layout_marginTop="3dp"
                                 android:text="Lifetime additions"
-                                android:textSize="10.5sp"
-                                android:textColor="#94A3B8" />
+                                android:textSize="11sp"
+                                android:textColor="#059669" />
 
                         </LinearLayout>
 
-                        <!-- Card 2: Total Consumed -->
+                        <!-- Card 2: Consumed (Rose) -->
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:layout_marginStart="6dp"
-                            android:background="@drawable/bg_module_card"
-                            android:padding="14dp"
+                            android:layout_marginStart="7dp"
+                            android:background="@drawable/bg_wallet_stat_rose"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp"
+                            android:paddingTop="14dp"
+                            android:paddingBottom="14dp"
                             android:elevation="1dp"
                             android:orientation="vertical">
 
+                            <!-- Sleek Tag Chip -->
                             <LinearLayout
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:background="@drawable/bg_tag_rose"
+                                android:paddingStart="8dp"
+                                android:paddingEnd="8dp"
+                                android:paddingTop="3dp"
+                                android:paddingBottom="3dp"
                                 android:orientation="horizontal"
                                 android:gravity="center_vertical"
                                 android:layout_marginBottom="8dp">
 
-                                <FrameLayout
-                                    android:layout_width="28dp"
-                                    android:layout_height="28dp"
-                                    android:background="@drawable/bg_mod_icon_rose">
-
-                                    <ImageView
-                                        android:layout_width="16dp"
-                                        android:layout_height="16dp"
-                                        android:layout_gravity="center"
-                                        android:src="@drawable/ic_arrow_up_right_vector"
-                                        android:tint="#E11D48" />
-
-                                </FrameLayout>
-
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginStart="6dp"
                                     android:text="CONSUMED"
-                                    android:textSize="10.5sp"
+                                    android:textSize="9.5sp"
                                     android:textStyle="bold"
-                                    android:textColor="#64748B"
+                                    android:textColor="#E11D48"
                                     android:letterSpacing="0.06" />
 
                             </LinearLayout>
 
                             <TextView
                                 android:id="@+id/txtTotalConsumed"
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:text="₹0.00"
-                                android:textSize="18sp"
+                                android:text="₹ 0.00"
+                                android:textSize="22sp"
                                 android:textStyle="bold"
-                                android:textColor="#0F172A" />
+                                android:fontFamily="sans-serif"
+                                android:textFontWeight="800"
+                                android:textColor="#881337"
+                                android:maxLines="1"
+                                android:singleLine="true"
+                                android:paddingEnd="4dp"
+                                app:autoSizeTextType="uniform"
+                                app:autoSizeMinTextSize="14sp"
+                                app:autoSizeMaxTextSize="22sp"
+                                app:autoSizeStepGranularity="1sp"
+                                android:autoSizeTextType="uniform"
+                                android:autoSizeMinTextSize="14sp"
+                                android:autoSizeMaxTextSize="22sp"
+                                android:autoSizeStepGranularity="1sp" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="2dp"
-                                android:text="Clinical operations"
-                                android:textSize="10.5sp"
-                                android:textColor="#94A3B8" />
+                                android:layout_marginTop="3dp"
+                                android:text="Diagnostic ops"
+                                android:textSize="11sp"
+                                android:textColor="#E11D48" />
 
                         </LinearLayout>
 
                     </LinearLayout>
 
-                    <!-- ── LEDGER & TRANSACTIONS SECTION ─────────────────────── -->
+                    <!-- ── SECTION HEADER: LEDGER ─────────────────────── -->
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="📊 LEDGER &amp; TRANSACTION HISTORY"
+                        android:text="LEDGER &amp; TRANSACTION HISTORY"
                         android:textSize="11.5sp"
                         android:textStyle="bold"
-                        android:textColor="#64748B"
-                        android:letterSpacing="0.06"
-                        android:layout_marginStart="4dp"
-                        android:layout_marginBottom="12dp" />
+                        android:textColor="#1E3A8A"
+                        android:letterSpacing="0.05"
+                        android:layout_marginBottom="14dp" />
 
-                    <!-- Search Filter Box -->
+                    <!-- ── SEARCH BAR ──────────────────────────────────── -->
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="44dp"
+                        android:layout_height="50dp"
                         android:background="@drawable/bg_module_card"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:paddingStart="12dp"
-                        android:paddingEnd="12dp"
-                        android:layout_marginBottom="12dp">
+                        android:paddingStart="14dp"
+                        android:paddingEnd="14dp"
+                        android:layout_marginBottom="14dp"
+                        android:elevation="2dp">
 
                         <ImageView
                             android:layout_width="18dp"
@@ -425,7 +446,7 @@
                             android:id="@+id/editSearchTx"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:layout_marginStart="8dp"
+                            android:layout_marginStart="10dp"
                             android:background="@null"
                             android:hint="Search transactions..."
                             android:textColor="#0F172A"
@@ -435,23 +456,24 @@
 
                     </LinearLayout>
 
-                    <!-- High-Contrast Category Tabs -->
+                    <!-- ── FILTER TABS (Dark Navy Capsule Container) ───── -->
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
+                        android:layout_height="46dp"
+                        android:background="@drawable/bg_wallet_tab_container"
                         android:orientation="horizontal"
-                        android:layout_marginBottom="14dp">
+                        android:padding="4dp"
+                        android:layout_marginBottom="16dp">
 
                         <TextView
                             android:id="@+id/tabAll"
                             android:layout_width="0dp"
-                            android:layout_height="40dp"
+                            android:layout_height="match_parent"
                             android:layout_weight="1"
-                            android:layout_marginEnd="4dp"
-                            android:background="@drawable/bg_tab_pill_active"
+                            android:background="@drawable/bg_tab_white_pill"
                             android:gravity="center"
                             android:text="All History"
-                            android:textColor="#FFFFFF"
+                            android:textColor="#1D4ED8"
                             android:textStyle="bold"
                             android:textSize="12.5sp"
                             android:clickable="true"
@@ -460,14 +482,11 @@
                         <TextView
                             android:id="@+id/tabRecharge"
                             android:layout_width="0dp"
-                            android:layout_height="40dp"
+                            android:layout_height="match_parent"
                             android:layout_weight="1"
-                            android:layout_marginStart="2dp"
-                            android:layout_marginEnd="2dp"
-                            android:background="@drawable/bg_tab_pill_inactive"
                             android:gravity="center"
                             android:text="Recharges"
-                            android:textColor="#64748B"
+                            android:textColor="#93C5FD"
                             android:textStyle="bold"
                             android:textSize="12.5sp"
                             android:clickable="true"
@@ -476,13 +495,11 @@
                         <TextView
                             android:id="@+id/tabDebit"
                             android:layout_width="0dp"
-                            android:layout_height="40dp"
+                            android:layout_height="match_parent"
                             android:layout_weight="1"
-                            android:layout_marginStart="4dp"
-                            android:background="@drawable/bg_tab_pill_inactive"
                             android:gravity="center"
                             android:text="Deductions"
-                            android:textColor="#64748B"
+                            android:textColor="#93C5FD"
                             android:textStyle="bold"
                             android:textSize="12.5sp"
                             android:clickable="true"
@@ -504,39 +521,39 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:gravity="center"
-                        android:paddingTop="36dp"
+                        android:paddingTop="48dp"
                         android:paddingBottom="36dp"
                         android:visibility="gone">
 
                         <FrameLayout
-                            android:layout_width="56dp"
-                            android:layout_height="56dp"
-                            android:background="@drawable/bg_bell_btn">
+                            android:layout_width="72dp"
+                            android:layout_height="72dp"
+                            android:background="@drawable/bg_mod_icon_blue">
 
                             <ImageView
-                                android:layout_width="28dp"
-                                android:layout_height="28dp"
+                                android:layout_width="36dp"
+                                android:layout_height="36dp"
                                 android:layout_gravity="center"
                                 android:src="@drawable/ic_mod_wallet"
-                                android:tint="#94A3B8" />
+                                android:tint="#1D4ED8" />
 
                         </FrameLayout>
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="12dp"
+                            android:layout_marginTop="16dp"
                             android:text="No Transactions Found"
-                            android:textSize="15sp"
+                            android:textSize="17sp"
                             android:textStyle="bold"
-                            android:textColor="#475569" />
+                            android:textColor="#1E3A8A" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:text="Your ledger entries and recharge history will show here"
-                            android:textSize="12sp"
+                            android:layout_marginTop="6dp"
+                            android:text="Your ledger entries and recharge history will appear here"
+                            android:textSize="13sp"
                             android:textColor="#94A3B8"
                             android:gravity="center" />
 

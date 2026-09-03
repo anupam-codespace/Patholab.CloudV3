@@ -1,0 +1,704 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ══ Clean & Professional Financial Analytics Console (Android) ══ -->
+<androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/swipeRefreshDashboard"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F8FAFC">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- ══════════════════════════════════════════════════════════════
+                 HEADER SECTION — Deep Sapphire Gradient
+                 ══════════════════════════════════════════════════════════════ -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_billing_header"
+                android:orientation="vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingTop="24dp"
+                android:paddingBottom="20dp">
+
+                <!-- Top Action Bar -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="14dp">
+
+                    <FrameLayout
+                        android:id="@+id/btnDashboardBack"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:background="@drawable/bg_glass_back_btn"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_back_arrow"
+                            android:tint="#FFFFFF"
+                            app:tint="#FFFFFF" />
+
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginStart="12dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Financial Analytics"
+                            android:textSize="18.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#FFFFFF" />
+
+                        <TextView
+                            android:id="@+id/lblDashboardUserRoleLab"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="1dp"
+                            android:text="Overview of your enterprise's financial health"
+                            android:textSize="11.5sp"
+                            android:textColor="#93C5FD" />
+
+                    </LinearLayout>
+
+                    <FrameLayout
+                        android:id="@+id/btnDashboardRefresh"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:background="@drawable/bg_glass_back_btn"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <ImageView
+                            android:id="@+id/imgDashboardRefreshIcon"
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_refresh_cw"
+                            android:tint="#FFFFFF"
+                            app:tint="#FFFFFF" />
+
+                    </FrameLayout>
+
+                </LinearLayout>
+
+                <!-- Status Pill Bar -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/bg_pill_glass"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp">
+
+                    <View
+                        android:layout_width="8dp"
+                        android:layout_height="8dp"
+                        android:background="@drawable/bg_dot_emerald"
+                        android:layout_marginEnd="8dp" />
+
+                    <TextView
+                        android:id="@+id/lblDashboardUserGreeting"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Live Sync • Pay-As-You-Go Active"
+                        android:textSize="11.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF" />
+
+                    <TextView
+                        android:id="@+id/lblDashboardStatusBadge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ENTERPRISE"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:textColor="#6EE7B7"
+                        android:background="@drawable/bg_tag_emerald"
+                        android:paddingStart="6dp"
+                        android:paddingEnd="6dp"
+                        android:paddingTop="2dp"
+                        android:paddingBottom="2dp" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- ══════════════════════════════════════════════════════════════
+                 MAIN BODY CONTENT
+                 ══════════════════════════════════════════════════════════════ -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingTop="16dp"
+                android:paddingBottom="40dp">
+
+                <!-- ── 1. PRIMARY METRICS BENTO GRID (Row 1: Revenue & Expenses) ── -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="12dp">
+
+                    <!-- Total Revenue Card -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_dashboard_bento"
+                        android:orientation="vertical"
+                        android:padding="14dp"
+                        android:elevation="1dp"
+                        android:layout_marginEnd="6dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <FrameLayout
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                android:background="@drawable/bg_mod_icon_emerald">
+                                <ImageView
+                                    android:layout_width="16dp"
+                                    android:layout_height="16dp"
+                                    android:layout_gravity="center"
+                                    android:src="@drawable/ic_chart"
+                                    android:tint="#059669"
+                                    app:tint="#059669" />
+                            </FrameLayout>
+
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="TOTAL REVENUE"
+                            android:textSize="10sp"
+                            android:textStyle="bold"
+                            android:textColor="#64748B"
+                            android:letterSpacing="0.04" />
+
+                        <TextView
+                            android:id="@+id/lblDashTotalRevenue"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="₹0"
+                            android:textSize="20sp"
+                            android:fontFamily="sans-serif-black"
+                            android:textStyle="bold"
+                            android:textColor="#059669" />
+
+                        <TextView
+                            android:id="@+id/lblDashInvoicesCount"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="Excl. cancelled"
+                            android:textSize="11sp"
+                            android:textColor="#94A3B8" />
+
+                    </LinearLayout>
+
+                    <!-- Total Expenses Card -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_dashboard_bento"
+                        android:orientation="vertical"
+                        android:padding="14dp"
+                        android:elevation="1dp"
+                        android:layout_marginStart="6dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <FrameLayout
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                android:background="@drawable/bg_mod_icon_rose">
+                                <ImageView
+                                    android:layout_width="16dp"
+                                    android:layout_height="16dp"
+                                    android:layout_gravity="center"
+                                    android:src="@drawable/ic_wallet"
+                                    android:tint="#E11D48"
+                                    app:tint="#E11D48" />
+                            </FrameLayout>
+
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="TOTAL EXPENSES"
+                            android:textSize="10sp"
+                            android:textStyle="bold"
+                            android:textColor="#64748B"
+                            android:letterSpacing="0.04" />
+
+                        <TextView
+                            android:id="@+id/lblDashTotalExpenses"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="₹0"
+                            android:textSize="20sp"
+                            android:fontFamily="sans-serif-black"
+                            android:textStyle="bold"
+                            android:textColor="#E11D48" />
+
+                        <TextView
+                            android:id="@+id/lblDashExpensesCount"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="All logged expenses"
+                            android:textSize="11sp"
+                            android:textColor="#94A3B8" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- ── 2. PRIMARY METRICS BENTO GRID (Row 2: Net Profit & Pending Collections) ── -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="18dp">
+
+                    <!-- Net Profit Card -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_dashboard_bento"
+                        android:orientation="vertical"
+                        android:padding="14dp"
+                        android:elevation="1dp"
+                        android:layout_marginEnd="6dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <FrameLayout
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                android:background="@drawable/bg_mod_icon_blue">
+                                <ImageView
+                                    android:layout_width="16dp"
+                                    android:layout_height="16dp"
+                                    android:layout_gravity="center"
+                                    android:src="@drawable/ic_trend_up"
+                                    android:tint="#0D6EFD"
+                                    app:tint="#0D6EFD" />
+                            </FrameLayout>
+
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="NET PROFIT"
+                            android:textSize="10sp"
+                            android:textStyle="bold"
+                            android:textColor="#64748B"
+                            android:letterSpacing="0.04" />
+
+                        <TextView
+                            android:id="@+id/lblDashNetProfit"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="₹0"
+                            android:textSize="20sp"
+                            android:fontFamily="sans-serif-black"
+                            android:textStyle="bold"
+                            android:textColor="#0D6EFD" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="Revenue - Expenses"
+                            android:textSize="11sp"
+                            android:textColor="#94A3B8" />
+
+                    </LinearLayout>
+
+                    <!-- Pending Collections Card -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_dashboard_bento"
+                        android:orientation="vertical"
+                        android:padding="14dp"
+                        android:elevation="1dp"
+                        android:layout_marginStart="6dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <FrameLayout
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                android:background="@drawable/bg_mod_icon_amber">
+                                <ImageView
+                                    android:layout_width="16dp"
+                                    android:layout_height="16dp"
+                                    android:layout_gravity="center"
+                                    android:src="@drawable/ic_alert_triangle"
+                                    android:tint="#D97706"
+                                    app:tint="#D97706" />
+                            </FrameLayout>
+
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="PENDING DUE"
+                            android:textSize="10sp"
+                            android:textStyle="bold"
+                            android:textColor="#64748B"
+                            android:letterSpacing="0.04" />
+
+                        <TextView
+                            android:id="@+id/lblDashPendingDue"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="₹0"
+                            android:textSize="20sp"
+                            android:fontFamily="sans-serif-black"
+                            android:textStyle="bold"
+                            android:textColor="#D97706" />
+
+                        <TextView
+                            android:id="@+id/lblDashPendingCount"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="Unpaid invoices"
+                            android:textSize="11sp"
+                            android:textColor="#94A3B8" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- ── 3. GST & DISCOUNT BREAKDOWN (4 Bento Cards) ──────── -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="TAX &amp; DISCOUNT BREAKDOWN"
+                    android:textSize="11.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#475569"
+                    android:letterSpacing="0.05"
+                    android:layout_marginBottom="10dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="10dp">
+
+                    <!-- Gross Billing -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_dashboard_bento"
+                        android:orientation="vertical"
+                        android:padding="12dp"
+                        android:elevation="1dp"
+                        android:layout_marginEnd="5dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="GROSS BILLING"
+                            android:textSize="9.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#64748B" />
+
+                        <TextView
+                            android:id="@+id/lblDashGrossBilling"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="₹0"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="#0F172A" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="1dp"
+                            android:text="Subtotal before disc."
+                            android:textSize="10sp"
+                            android:textColor="#94A3B8" />
+
+                    </LinearLayout>
+
+                    <!-- Discounts Given -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_dashboard_bento"
+                        android:orientation="vertical"
+                        android:padding="12dp"
+                        android:elevation="1dp"
+                        android:layout_marginStart="5dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="DISCOUNTS GIVEN"
+                            android:textSize="9.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#64748B" />
+
+                        <TextView
+                            android:id="@+id/lblDashDiscountsGiven"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="₹0"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="#0F172A" />
+
+                        <TextView
+                            android:id="@+id/lblDashDiscountPercent"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="1dp"
+                            android:text="0.0% of gross billing"
+                            android:textSize="10sp"
+                            android:textColor="#94A3B8" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="20dp">
+
+                    <!-- CGST Collected -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_dashboard_bento"
+                        android:orientation="vertical"
+                        android:padding="12dp"
+                        android:elevation="1dp"
+                        android:layout_marginEnd="5dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="CGST COLLECTED"
+                            android:textSize="9.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#64748B" />
+
+                        <TextView
+                            android:id="@+id/lblDashCGST"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="₹0"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="#0F172A" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="1dp"
+                            android:text="Central GST"
+                            android:textSize="10sp"
+                            android:textColor="#94A3B8" />
+
+                    </LinearLayout>
+
+                    <!-- SGST Collected -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_dashboard_bento"
+                        android:orientation="vertical"
+                        android:padding="12dp"
+                        android:elevation="1dp"
+                        android:layout_marginStart="5dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="SGST COLLECTED"
+                            android:textSize="9.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#64748B" />
+
+                        <TextView
+                            android:id="@+id/lblDashSGST"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="₹0"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="#0F172A" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="1dp"
+                            android:text="State GST"
+                            android:textSize="10sp"
+                            android:textColor="#94A3B8" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- ── 4. DETAILED LEDGERS (Interactive Tabs for Invoices & Expenses) ── -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="12dp">
+
+                    <!-- Tab Recent Invoices -->
+                    <TextView
+                        android:id="@+id/tabLedgerInvoices"
+                        android:layout_width="0dp"
+                        android:layout_height="38dp"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="Recent Invoices"
+                        android:textSize="12.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#0D6EFD"
+                        android:background="@drawable/bg_chip_toggle_active"
+                        android:layout_marginEnd="6dp"
+                        android:clickable="true"
+                        android:focusable="true" />
+
+                    <!-- Tab Recent Expenses -->
+                    <TextView
+                        android:id="@+id/tabLedgerExpenses"
+                        android:layout_width="0dp"
+                        android:layout_height="38dp"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="Recent Expenses"
+                        android:textSize="12.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#64748B"
+                        android:background="@drawable/bg_chip_toggle_inactive"
+                        android:layout_marginStart="6dp"
+                        android:clickable="true"
+                        android:focusable="true" />
+
+                </LinearLayout>
+
+                <!-- Dynamic Ledger List Container -->
+                <LinearLayout
+                    android:id="@+id/containerLedgerItems"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+
+                <!-- Empty State Message -->
+                <TextView
+                    android:id="@+id/lblLedgerEmptyState"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="No records found"
+                    android:textSize="13sp"
+                    android:textColor="#94A3B8"
+                    android:paddingTop="24dp"
+                    android:paddingBottom="24dp"
+                    android:visibility="gone" />
+
+                <!-- Quick Action: Full Invoices Button -->
+                <Button
+                    android:id="@+id/btnViewAllInvoices"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="16dp"
+                    android:background="@drawable/bg_btn_primary"
+                    android:text="View Full Invoices &amp; Billing"
+                    android:textSize="13.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:textAllCaps="false" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

@@ -84,7 +84,7 @@ public class AuthHelper {
         if (tvTerms != null) {
             tvTerms.setOnClickListener(v -> {
                 try {
-                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://patholab.cloud/terms-conditions?tab=terms"));
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://patholab.cloud/terms-and-conditions/"));
                     activity.startActivity(intent);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -95,7 +95,7 @@ public class AuthHelper {
         if (tvPrivacy != null) {
             tvPrivacy.setOnClickListener(v -> {
                 try {
-                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://patholab.cloud/terms-conditions?tab=privacy"));
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://patholab.cloud/privacy-policy/"));
                     activity.startActivity(intent);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -106,7 +106,7 @@ public class AuthHelper {
         if (tvRefunds != null) {
             tvRefunds.setOnClickListener(v -> {
                 try {
-                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://patholab.cloud/terms-conditions?tab=refunds"));
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://patholab.cloud/refund-and-cancellation/"));
                     activity.startActivity(intent);
                 } catch (Exception e) {
                     e.printStackTrace();

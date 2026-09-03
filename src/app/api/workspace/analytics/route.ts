@@ -1,9 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { getDataFromToken, getCurrentUser } from "@/lib/auth";
 
-export async function GET() {
-  const user = await getCurrentUser();
+export const dynamic = 'force-dynamic';
+
+export async function GET(req: NextRequest) {
+  const user = (await getDataFromToken(req)) || (await getCurrentUser());
   if (!user || !user.labId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

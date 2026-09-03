@@ -1,0 +1,430 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ══ Premium Billing & Invoices Console ══ -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#F0F4FF">
+
+    <!-- ══════════════════════════════════════════════════════════════
+         HEADER SECTION — Deep Navy Gradient
+         ══════════════════════════════════════════════════════════════ -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_billing_header"
+        android:orientation="vertical"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingTop="28dp"
+        android:paddingBottom="20dp">
+
+        <!-- Top Row: Back + Title + New Invoice Button -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
+
+            <FrameLayout
+                android:id="@+id/btnBillingBack"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:background="@drawable/bg_glass_back_btn"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_back_arrow"
+                    android:tint="#FFFFFF"
+                    app:tint="#FFFFFF" />
+
+            </FrameLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginStart="14dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Billing &amp; Invoices"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:letterSpacing="-0.02" />
+
+                <TextView
+                    android:id="@+id/lblBillingSubtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Financial Ledger &amp; Revenue Hub"
+                    android:textSize="12sp"
+                    android:textColor="#93C5FD" />
+
+            </LinearLayout>
+
+            <!-- New Invoice CTA -->
+            <LinearLayout
+                android:id="@+id/btnNewInvoiceHeader"
+                android:layout_width="wrap_content"
+                android:layout_height="38dp"
+                android:background="@drawable/bg_pill_white"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:layout_width="13dp"
+                    android:layout_height="13dp"
+                    android:src="@drawable/ic_plus"
+                    android:tint="#1D4ED8"
+                    app:tint="#1D4ED8"
+                    android:layout_marginEnd="5dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="New Invoice"
+                    android:textSize="12.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#1D4ED8" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- ── KPI BENTO CARDS (horizontal scroll inside header) ────── -->
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none"
+            android:clipToPadding="false">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <!-- KPI 1: Total Revenue -->
+                <LinearLayout
+                    android:layout_width="145dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_billing_kpi_card"
+                    android:padding="14dp"
+                    android:layout_marginEnd="10dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="TOTAL REVENUE"
+                        android:textSize="9.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#60A5FA"
+                        android:letterSpacing="0.08" />
+
+                    <TextView
+                        android:id="@+id/lblKpiTotalRevenue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="5dp"
+                        android:text="₹0"
+                        android:textSize="24sp"
+                        android:fontFamily="sans-serif-black"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF" />
+
+                    <TextView
+                        android:id="@+id/lblKpiTotalCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:text="All time"
+                        android:textSize="10.5sp"
+                        android:textColor="#93C5FD" />
+
+                </LinearLayout>
+
+                <!-- KPI 2: Unpaid -->
+                <LinearLayout
+                    android:layout_width="145dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_billing_kpi_card"
+                    android:padding="14dp"
+                    android:layout_marginEnd="10dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="UNPAID BALANCE"
+                        android:textSize="9.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#FCD34D"
+                        android:letterSpacing="0.08" />
+
+                    <TextView
+                        android:id="@+id/lblKpiPendingAmount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="5dp"
+                        android:text="₹0"
+                        android:textSize="24sp"
+                        android:fontFamily="sans-serif-black"
+                        android:textStyle="bold"
+                        android:textColor="#FCD34D" />
+
+                    <TextView
+                        android:id="@+id/lblKpiPendingCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:text="0 Pending Invoices"
+                        android:textSize="10.5sp"
+                        android:textColor="#93C5FD" />
+
+                </LinearLayout>
+
+                <!-- KPI 3: Monthly -->
+                <LinearLayout
+                    android:layout_width="145dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_billing_kpi_card"
+                    android:padding="14dp"
+                    android:layout_marginEnd="10dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="MONTHLY REVENUE"
+                        android:textSize="9.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#60A5FA"
+                        android:letterSpacing="0.08" />
+
+                    <TextView
+                        android:id="@+id/lblKpiMonthlyRevenue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="5dp"
+                        android:text="₹0"
+                        android:textSize="24sp"
+                        android:fontFamily="sans-serif-black"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:text="Current month"
+                        android:textSize="10.5sp"
+                        android:textColor="#93C5FD" />
+
+                </LinearLayout>
+
+                <!-- KPI 4: Overdue -->
+                <LinearLayout
+                    android:layout_width="145dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_billing_kpi_card"
+                    android:padding="14dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="OVERDUE ARREARS"
+                        android:textSize="9.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#FCA5A5"
+                        android:letterSpacing="0.08" />
+
+                    <TextView
+                        android:id="@+id/lblKpiOverdueAmount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="5dp"
+                        android:text="₹0"
+                        android:textSize="24sp"
+                        android:fontFamily="sans-serif-black"
+                        android:textStyle="bold"
+                        android:textColor="#FCA5A5" />
+
+                    <TextView
+                        android:id="@+id/lblKpiOverdueCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:text="0 Delinquent"
+                        android:textSize="10.5sp"
+                        android:textColor="#93C5FD" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </HorizontalScrollView>
+
+    </LinearLayout>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SEARCH + FILTER SECTION
+         ══════════════════════════════════════════════════════════════ -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="14dp"
+        android:paddingBottom="6dp">
+
+        <!-- Search Bar -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:background="@drawable/bg_input_field"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:elevation="2dp">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:src="@drawable/ic_search"
+                android:tint="#94A3B8" />
+
+            <EditText
+                android:id="@+id/inputSearchInvoices"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_marginStart="10dp"
+                android:background="@android:color/transparent"
+                android:hint="Search by invoice #, patient name, phone..."
+                android:inputType="text"
+                android:textSize="13.5sp"
+                android:textColor="#0F172A"
+                android:textColorHint="#94A3B8"
+                android:singleLine="true" />
+
+            <ImageView
+                android:id="@+id/btnClearSearchInvoices"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@drawable/ic_close_cross"
+                android:tint="#94A3B8"
+                android:visibility="gone"
+                android:clickable="true"
+                android:focusable="true" />
+
+        </LinearLayout>
+
+        <!-- Filter Chips Row -->
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:id="@+id/containerBillingFilterChips"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal" />
+
+        </HorizontalScrollView>
+
+    </LinearLayout>
+
+    <!-- Loading Spinner -->
+    <ProgressBar
+        android:id="@+id/progressBilling"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="24dp"
+        android:indeterminateTint="#1D4ED8"
+        android:visibility="gone" />
+
+    <!-- ══════════════════════════════════════════════════════════════
+         INVOICE LIST RECYCLER
+         ══════════════════════════════════════════════════════════════ -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerInvoicesList"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="16dp"
+        android:clipToPadding="false" />
+
+    <!-- ══════════════════════════════════════════════════════════════
+         EMPTY STATE
+         ══════════════════════════════════════════════════════════════ -->
+    <LinearLayout
+        android:id="@+id/emptyStateBilling"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="32dp"
+        android:visibility="gone">
+
+        <FrameLayout
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:background="@drawable/bg_mod_icon_blue"
+            android:layout_marginBottom="16dp">
+
+            <ImageView
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_mod_billing"
+                android:tint="#1D4ED8" />
+
+        </FrameLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="No Invoices Found"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#1E3A8A"
+            android:layout_marginBottom="6dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="No invoice transactions matched your search or status filter."
+            android:textSize="13sp"
+            android:textColor="#64748B"
+            android:gravity="center" />
+
+    </LinearLayout>
+
+</LinearLayout>

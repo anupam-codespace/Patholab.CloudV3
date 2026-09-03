@@ -3,7 +3,30 @@
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
-    <path
-        android:fillColor="#FF000000"
-        android:pathData="M14,2H6C4.9,2 4,2.9 4,4v16c0,1.1 0.9,2 2,2h12c1.1,0 2,-0.9 2,-2V8L14,2zM18,20H6V4h7v5h5V20z" />
+  <!-- Document Outer Contour with Folded Top Right Corner -->
+  <path
+      android:pathData="M14,2H6C4.9,2 4,2.9 4,4V20C4,21.1 4.9,22 6,22H18C19.1,22 20,21.1 20,20V8L14,2Z"
+      android:strokeColor="#64748B"
+      android:strokeWidth="1.8"
+      android:strokeLineCap="round"
+      android:strokeLineJoin="round"/>
+  <!-- Fold Corner Line -->
+  <path
+      android:pathData="M14,2V8H20"
+      android:strokeColor="#64748B"
+      android:strokeWidth="1.8"
+      android:strokeLineCap="round"
+      android:strokeLineJoin="round"/>
+  <!-- Report Line 1 -->
+  <path
+      android:pathData="M8,13H16"
+      android:strokeColor="#64748B"
+      android:strokeWidth="1.8"
+      android:strokeLineCap="round"/>
+  <!-- Report Line 2 -->
+  <path
+      android:pathData="M8,17H13"
+      android:strokeColor="#64748B"
+      android:strokeWidth="1.8"
+      android:strokeLineCap="round"/>
 </vector>

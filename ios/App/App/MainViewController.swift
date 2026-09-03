@@ -343,17 +343,27 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
     // ─────────────────────────────────────────────────────────────────────────
 
     private func buildBottomNavBar() {
-        // ── Floating Glassmorphic Pill Container
-        bottomNavBar.backgroundColor    = .white
+        // ── Floating Glassmorphic Pill Container with Gradient
+        bottomNavBar.backgroundColor    = UIColor(red: 0.965, green: 0.976, blue: 0.992, alpha: 1)
         bottomNavBar.layer.cornerRadius = 33
-        bottomNavBar.layer.shadowColor   = UIColor.black.cgColor
-        bottomNavBar.layer.shadowOpacity = 0.10
-        bottomNavBar.layer.shadowRadius  = 16
+        bottomNavBar.layer.shadowColor   = UIColor(red: 0.05, green: 0.15, blue: 0.30, alpha: 1).cgColor
+        bottomNavBar.layer.shadowOpacity = 0.12
+        bottomNavBar.layer.shadowRadius  = 18
         bottomNavBar.layer.shadowOffset  = CGSize(width: 0, height: 8)
         bottomNavBar.layer.borderWidth   = 1.5
-        bottomNavBar.layer.borderColor   = UIColor(red: 0.945, green: 0.961, blue: 0.976, alpha: 1).cgColor
+        bottomNavBar.layer.borderColor   = UIColor(red: 0.886, green: 0.914, blue: 0.949, alpha: 1).cgColor
         bottomNavBar.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(bottomNavBar)
+
+        let navGradient = CAGradientLayer()
+        navGradient.colors = [
+            UIColor.white.cgColor,
+            UIColor(red: 0.957, green: 0.973, blue: 0.992, alpha: 1).cgColor
+        ]
+        navGradient.startPoint = CGPoint(x: 0.5, y: 0.0)
+        navGradient.endPoint = CGPoint(x: 0.5, y: 1.0)
+        navGradient.cornerRadius = 33
+        bottomNavBar.layer.insertSublayer(navGradient, at: 0)
 
         // ── Items stack
         navStack.axis        = .horizontal
@@ -387,24 +397,34 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         container.translatesAutoresizingMaskIntoConstraints = false
 
         let circle = UIButton(type: .custom)
-        circle.backgroundColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1) // #0D6EFD
-        circle.layer.cornerRadius = 24
+        circle.layer.cornerRadius = 25
         circle.layer.shadowColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1).cgColor
-        circle.layer.shadowOpacity = 0.45
-        circle.layer.shadowRadius = 10
-        circle.layer.shadowOffset = CGSize(width: 0, height: 4)
-        circle.layer.borderWidth = 2
-        circle.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+        circle.layer.shadowOpacity = 0.50
+        circle.layer.shadowRadius = 12
+        circle.layer.shadowOffset = CGSize(width: 0, height: 6)
+        circle.layer.borderWidth = 2.5
+        circle.layer.borderColor = UIColor(red: 0.58, green: 0.77, blue: 0.99, alpha: 1).cgColor
         circle.setImage(UIImage(systemName: "creditcard.fill"), for: .normal)
         circle.tintColor = .white
         circle.tag = 99
+
+        let circleGradient = CAGradientLayer()
+        circleGradient.colors = [
+            UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1).cgColor,
+            UIColor(red: 0.310, green: 0.275, blue: 0.898, alpha: 1).cgColor
+        ]
+        circleGradient.startPoint = CGPoint(x: 0, y: 0)
+        circleGradient.endPoint = CGPoint(x: 1, y: 1)
+        circleGradient.cornerRadius = 25
+        circle.layer.insertSublayer(circleGradient, at: 0)
+
         circle.addTarget(self, action: #selector(centerActionTapped(_:)), for: .touchUpInside)
         circle.translatesAutoresizingMaskIntoConstraints = false
 
         container.addSubview(circle)
         NSLayoutConstraint.activate([
-            circle.widthAnchor.constraint(equalToConstant: 48),
-            circle.heightAnchor.constraint(equalToConstant: 48),
+            circle.widthAnchor.constraint(equalToConstant: 50),
+            circle.heightAnchor.constraint(equalToConstant: 50),
             circle.centerXAnchor.constraint(equalTo: container.centerXAnchor),
             circle.centerYAnchor.constraint(equalTo: container.centerYAnchor)
         ])
@@ -413,8 +433,9 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
     }
 
     @objc private func centerActionTapped(_ sender: UIButton) {
-        sender.transform = CGAffineTransform(scaleX: 0.85, y: 0.85)
-        UIView.animate(withDuration: 0.25, delay: 0, usingSpringWithDamping: 0.5, initialSpringVelocity: 0.8, options: .curveEaseOut) {
+        AppHaptics.medium()
+        sender.transform = CGAffineTransform(scaleX: 0.82, y: 0.82).rotated(by: 0.15)
+        UIView.animate(withDuration: 0.35, delay: 0, usingSpringWithDamping: 0.55, initialSpringVelocity: 0.8, options: .curveEaseOut) {
             sender.transform = .identity
         }
         let walletVC = WalletViewController()
@@ -429,14 +450,16 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         cfg.title            = title
         cfg.imagePlacement   = .top
         cfg.imagePadding     = 3
+        cfg.contentInsets    = NSDirectionalEdgeInsets(top: 6, leading: 8, bottom: 6, trailing: 8)
         cfg.baseForegroundColor = UIColor(red: 0.580, green: 0.639, blue: 0.722, alpha: 1)
         if #available(iOS 15, *) {
             cfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attr in
-                var a = attr; a.font = UIFont.systemFont(ofSize: 10, weight: .semibold); return a
+                var a = attr; a.font = UIFont.systemFont(ofSize: 10, weight: .bold); return a
             }
         }
         btn.configuration = cfg
         btn.tag = tag
+        btn.layer.cornerRadius = 14
         btn.addTarget(self, action: #selector(navTapped(_:)), for: .touchUpInside)
         return btn
     }
@@ -447,8 +470,13 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
             let color: UIColor
             if active {
                 color = isDarkMode ? UIColor(red: 129/255, green: 140/255, blue: 248/255, alpha: 1) : UIColor(red: 13/255, green: 110/255, blue: 253/255, alpha: 1)
+                btn.backgroundColor = isDarkMode ? UIColor(red: 30/255, green: 41/255, blue: 59/255, alpha: 1) : UIColor(red: 235/255, green: 244/255, blue: 255/255, alpha: 1)
+                btn.layer.borderWidth = 1
+                btn.layer.borderColor = (isDarkMode ? UIColor(red: 51/255, green: 65/255, blue: 85/255, alpha: 1) : UIColor(red: 191/255, green: 219/255, blue: 254/255, alpha: 1)).cgColor
             } else {
                 color = isDarkMode ? UIColor(red: 148/255, green: 163/255, blue: 184/255, alpha: 1) : UIColor(red: 148/255, green: 163/255, blue: 184/255, alpha: 1)
+                btn.backgroundColor = .clear
+                btn.layer.borderWidth = 0
             }
             btn.tintColor = color
             btn.setTitleColor(color, for: .normal)
@@ -523,13 +551,10 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
 
     @objc private func navTapped(_ sender: UIButton) {
         AppHaptics.selection()
-        // Subtle selection scale pop animation for premium micro-feedback
-        UIView.animate(withDuration: 0.12, animations: {
-            sender.transform = CGAffineTransform(scaleX: 1.1, y: 1.1)
-        }) { _ in
-            UIView.animate(withDuration: 0.12) {
-                sender.transform = .identity
-            }
+        // Spring overshoot pop animation for selected tab
+        sender.transform = CGAffineTransform(scaleX: 0.78, y: 0.78).translatedBy(x: 0, y: 3)
+        UIView.animate(withDuration: 0.35, delay: 0, usingSpringWithDamping: 0.52, initialSpringVelocity: 0.8, options: .curveEaseOut) {
+            sender.transform = .identity
         }
         selectTab(sender.tag)
     }
@@ -551,11 +576,9 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
             headerTitleLabel.text = "PATIENT WORKLIST"
             showWeb(path: "/workspace/patients")
         case 2:
-            homeNativeView.isHidden = true
-            topLayoutContainer.isHidden = false
-            headerBlurContainer.isHidden = false
-            headerTitleLabel.text = "REPORTS & ANALYTICS"
-            showWeb(path: "/workspace/reports")
+            let repVC = ReportsViewController()
+            repVC.modalPresentationStyle = .fullScreen
+            self.present(repVC, animated: true, completion: nil)
         case 3:
             showMorePanel()
         default:
@@ -572,11 +595,22 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
             homeNativeView.topAnchor.constraint(equalTo: view.topAnchor),
             homeNativeView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             homeNativeView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            homeNativeView.bottomAnchor.constraint(equalTo: bottomNavBar.topAnchor)
+            homeNativeView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
 
         homeNativeView.onNavigate = { [weak self] path in
-            guard let self = self else { return }
+            if path == "/dashboard" || path == "/workspace/dashboard" || path.starts(with: "/dashboard") {
+                let labDashVC = LabDashboardViewController()
+                labDashVC.modalPresentationStyle = .fullScreen
+                self.present(labDashVC, animated: true, completion: nil)
+                return
+            }
+            if path == "/workspace/analytics" || path.starts(with: "/workspace/analytics") {
+                let dashVC = DashboardViewController()
+                dashVC.modalPresentationStyle = .fullScreen
+                self.present(dashVC, animated: true, completion: nil)
+                return
+            }
             if path == "/workspace/settings" {
                 let settingsVC = ProfileSettingsViewController()
                 let nav = UINavigationController(rootViewController: settingsVC)
@@ -594,6 +628,42 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
                 let regVC = RegistrationViewController()
                 regVC.modalPresentationStyle = .fullScreen
                 self.present(regVC, animated: true, completion: nil)
+                return
+            }
+            if path == "/workspace/test-management" || path.starts(with: "/workspace/test-management") || path == "/workspace/tests" {
+                let testVC = TestManagementViewController()
+                testVC.modalPresentationStyle = .fullScreen
+                self.present(testVC, animated: true, completion: nil)
+                return
+            }
+            if path == "/workspace/billing" || path.starts(with: "/workspace/billing") || path == "/workspace/invoices" {
+                let billVC = BillingViewController()
+                billVC.modalPresentationStyle = .fullScreen
+                self.present(billVC, animated: true, completion: nil)
+                return
+            }
+            if path == "/workspace/reports" || path.starts(with: "/workspace/reports") {
+                let repVC = ReportsViewController()
+                repVC.modalPresentationStyle = .fullScreen
+                self.present(repVC, animated: true, completion: nil)
+                return
+            }
+            if path == "/workspace/samples" || path.starts(with: "/workspace/samples") || path == "/workspace/accession" {
+                let smpVC = SamplesViewController()
+                smpVC.modalPresentationStyle = .fullScreen
+                self.present(smpVC, animated: true, completion: nil)
+                return
+            }
+            if path == "/workspace/patients" || path.starts(with: "/workspace/patients") || path == "/workspace/results" {
+                let patVC = PatientWorklistViewController()
+                patVC.modalPresentationStyle = .fullScreen
+                self.present(patVC, animated: true, completion: nil)
+                return
+            }
+            if path == "/workspace/staff" || path.starts(with: "/workspace/staff") {
+                let staffVC = StaffManagementViewController()
+                staffVC.modalPresentationStyle = .fullScreen
+                self.present(staffVC, animated: true, completion: nil)
                 return
             }
             self.showWebView(navigatingTo: path)
@@ -684,13 +754,13 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         moreVC.dismiss(animated: true) { [weak self] in
             guard let self = self else { return }
             if path == "/legal" || path.contains("terms") || path.contains("privacy") || path.contains("refund") {
-                var urlString = "https://patholab.cloud/terms-conditions"
+                var urlString = "https://patholab.cloud/terms-and-conditions/"
                 if path.contains("privacy") {
-                    urlString = "https://patholab.cloud/terms-conditions?tab=privacy"
+                    urlString = "https://patholab.cloud/privacy-policy/"
                 } else if path.contains("refund") {
-                    urlString = "https://patholab.cloud/terms-conditions?tab=refunds"
+                    urlString = "https://patholab.cloud/refund-and-cancellation/"
                 } else if path.contains("terms") {
-                    urlString = "https://patholab.cloud/terms-conditions?tab=terms"
+                    urlString = "https://patholab.cloud/terms-and-conditions/"
                 }
                 if let url = URL(string: urlString) {
                     UIApplication.shared.open(url, options: [:], completionHandler: nil)
@@ -964,7 +1034,7 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         // Balance labels
         txtWalletBalance.text = "₹0.00"
         txtWalletBalance.textColor = .white
-        txtWalletBalance.font = .systemFont(ofSize: 18.5, weight: .bold)
+        txtWalletBalance.font = .systemFont(ofSize: 19, weight: .black)
         txtWalletBalance.adjustsFontSizeToFitWidth = true
         txtWalletBalance.minimumScaleFactor = 0.7
         txtWalletBalance.numberOfLines = 1
@@ -2509,15 +2579,6 @@ class HelpPanelViewController: UIViewController, MFMailComposeViewControllerDele
 
     @objc private func closeTapped() {
         dismiss(animated: true)
-    }
-}
-
-
-            layer.shadowColor = UIColor.black.cgColor
-            layer.shadowOpacity = 0.03
-            layer.shadowOffset = CGSize(width: 0, height: 2)
-            layer.shadowRadius = 6
-        }
     }
 }
 

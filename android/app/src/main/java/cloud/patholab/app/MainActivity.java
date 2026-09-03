@@ -29,6 +29,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.net.Uri;
+import android.util.TypedValue;
 import android.widget.Toast;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -45,6 +46,7 @@ public class MainActivity extends BridgeActivity {
     private SwipeRefreshLayout swipeRefresh;
     private androidx.cardview.widget.CardView floatingNavBarCard;
     private View navTabHome, navTabPatients, navTabCenter, navTabReports, navTabMore;
+    private View indicatorNavHome, indicatorNavPatients, indicatorNavReports, indicatorNavMore;
     private ImageView imgNavHome, imgNavPatients, imgNavReports, imgNavMore;
     private TextView txtNavHome, txtNavPatients, txtNavReports, txtNavMore;
     private View navCenterCircle;
@@ -138,6 +140,7 @@ public class MainActivity extends BridgeActivity {
             authCheckHandler.removeCallbacks(authCheckRunnable);
             walletHandler.removeCallbacks(walletRunnable);
 
+            HomeNativeManager.resetSession();
             AuthManager.clearSession(this);
             Intent intent = new Intent(this, LoginActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -156,47 +159,22 @@ public class MainActivity extends BridgeActivity {
         }
 
         // Status bar and Navigation Bar icons & colors
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-            android.view.WindowInsetsController controller = getWindow().getInsetsController();
-            if (controller != null) {
-                if (isDark) {
-                    controller.setSystemBarsAppearance(0,
-                            android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
-                                    | android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS);
-                } else {
-                    controller.setSystemBarsAppearance(
-                            android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
-                                    | android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
-                            android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
-                                    | android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS);
-                }
-            }
-        } else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-            View decor = getWindow().getDecorView();
-            int flags = decor.getSystemUiVisibility();
-            if (isDark) {
-                flags &= ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                    flags &= ~View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
-                }
-            } else {
-                flags |= View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                    flags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
-                }
-            }
-            decor.setSystemUiVisibility(flags);
+        if (isDark) {
+            StatusBarHelper.setStatusBarDark(this);
+            getWindow().setNavigationBarColor(android.graphics.Color.parseColor("#0F172A"));
+        } else {
+            StatusBarHelper.setStatusBarSapphire(this);
+            getWindow().setNavigationBarColor(android.graphics.Color.TRANSPARENT);
         }
-        getWindow().setStatusBarColor(
-                isDark ? android.graphics.Color.parseColor("#0F172A") : android.graphics.Color.parseColor("#FFFFFF"));
-        getWindow().setNavigationBarColor(
-                isDark ? android.graphics.Color.parseColor("#0F172A") : android.graphics.Color.parseColor("#FFFFFF"));
 
         // Parent root layout
         View mainParentLayout = findViewById(R.id.mainParentLayout);
         if (mainParentLayout != null) {
-            mainParentLayout.setBackgroundColor(isDark ? android.graphics.Color.parseColor("#0F172A")
-                    : android.graphics.Color.parseColor("#F8FAFC"));
+            if (isDark) {
+                mainParentLayout.setBackgroundColor(android.graphics.Color.parseColor("#0F172A"));
+            } else {
+                mainParentLayout.setBackgroundColor(android.graphics.Color.parseColor("#F8FAFC"));
+            }
         }
 
         // Header containers (Transparent to allow blurred gradient backdrop to show
@@ -357,12 +335,29 @@ public class MainActivity extends BridgeActivity {
         initModulesData();
         setupBottomNavigation();
 
-        // 7. Navigate to native Home screen (bypasses WebView for Home tab)
+        // 7. Initialize system notification channel & request permission on Android 13+
+        MobileNotificationHelper.initNotificationChannel(this);
+        requestNotificationPermission();
+
+        // 8. Navigate to native Home screen (bypasses WebView for Home tab)
         initNativeHomeScreen();
         // Start wallet details polling (for web pages, independent from native home)
         walletHandler.post(walletRunnable);
         authCheckHandler.post(authCheckRunnable);
         progressPollHandler.post(progressPollRunnable);
+    }
+
+    private void requestNotificationPermission() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS)
+                    != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                androidx.core.app.ActivityCompat.requestPermissions(
+                        this,
+                        new String[]{android.Manifest.permission.POST_NOTIFICATIONS},
+                        101
+                );
+            }
+        }
     }
 
     /** Initialise the native home screen and show it on launch */
@@ -399,6 +394,11 @@ public class MainActivity extends BridgeActivity {
 
     /** Show the native home screen and hide the WebView container */
     private void showNativeHome() {
+        if (isDarkMode) {
+            StatusBarHelper.setStatusBarDark(this);
+        } else {
+            StatusBarHelper.setStatusBarSapphire(this);
+        }
         if (homeNativeManager != null) {
             homeNativeManager.show();
             homeNativeManager.fetchWalletBalance(); // refresh on each return
@@ -573,6 +573,11 @@ public class MainActivity extends BridgeActivity {
         navTabReports = findViewById(R.id.navTabReports);
         navTabMore = findViewById(R.id.navTabMore);
 
+        indicatorNavHome = findViewById(R.id.indicatorNavHome);
+        indicatorNavPatients = findViewById(R.id.indicatorNavPatients);
+        indicatorNavReports = findViewById(R.id.indicatorNavReports);
+        indicatorNavMore = findViewById(R.id.indicatorNavMore);
+
         imgNavHome = findViewById(R.id.imgNavHome);
         imgNavPatients = findViewById(R.id.imgNavPatients);
         imgNavReports = findViewById(R.id.imgNavReports);
@@ -588,13 +593,17 @@ public class MainActivity extends BridgeActivity {
         if (navTabHome != null) navTabHome.setOnClickListener(v -> selectNavTab(0, true));
         if (navTabPatients != null) navTabPatients.setOnClickListener(v -> selectNavTab(1, true));
         if (navTabCenter != null) navTabCenter.setOnClickListener(v -> {
-            // Animate center button bounce & open native wallet
+            // Animate center button with spring rotation & bounce
             if (navCenterCircle != null) {
                 navCenterCircle.animate()
-                        .scaleX(0.85f).scaleY(0.85f).setDuration(120)
-                        .withEndAction(() -> navCenterCircle.animate().scaleX(1.0f).scaleY(1.0f).setDuration(150).start())
+                        .scaleX(0.82f).scaleY(0.82f).rotation(15f).setDuration(120)
+                        .withEndAction(() -> navCenterCircle.animate()
+                                .scaleX(1.0f).scaleY(1.0f).rotation(0f).setDuration(180)
+                                .setInterpolator(new android.view.animation.OvershootInterpolator(2.5f))
+                                .start())
                         .start();
             }
+            v.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY);
             startActivity(new Intent(MainActivity.this, WalletActivity.class));
         });
         if (navTabReports != null) navTabReports.setOnClickListener(v -> selectNavTab(2, true));
@@ -610,70 +619,132 @@ public class MainActivity extends BridgeActivity {
 
         // Tab 0: Home
         boolean isHome = (tabIndex == 0);
-        if (imgNavHome != null) {
-            imgNavHome.setColorFilter(isHome ? activeColor : inactiveColor);
-            if (isHome && animate) animateTabSelection(imgNavHome);
-        }
+        if (imgNavHome != null) imgNavHome.setColorFilter(isHome ? activeColor : inactiveColor);
         if (txtNavHome != null) {
             txtNavHome.setTextColor(isHome ? activeColor : inactiveColor);
             txtNavHome.setTypeface(null, isHome ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
         }
+        if (indicatorNavHome != null) {
+            indicatorNavHome.setBackgroundResource(isHome ? R.drawable.bg_nav_active_indicator : 0);
+            if (isHome && animate) animateTabSelection(imgNavHome, indicatorNavHome);
+            else if (!isHome) { indicatorNavHome.setScaleX(1.0f); indicatorNavHome.setScaleY(1.0f); indicatorNavHome.setAlpha(1.0f); }
+        }
 
         // Tab 1: Patients
         boolean isPatients = (tabIndex == 1);
-        if (imgNavPatients != null) {
-            imgNavPatients.setColorFilter(isPatients ? activeColor : inactiveColor);
-            if (isPatients && animate) animateTabSelection(imgNavPatients);
-        }
+        if (imgNavPatients != null) imgNavPatients.setColorFilter(isPatients ? activeColor : inactiveColor);
         if (txtNavPatients != null) {
             txtNavPatients.setTextColor(isPatients ? activeColor : inactiveColor);
             txtNavPatients.setTypeface(null, isPatients ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
         }
+        if (indicatorNavPatients != null) {
+            indicatorNavPatients.setBackgroundResource(isPatients ? R.drawable.bg_nav_active_indicator : 0);
+            if (isPatients && animate) animateTabSelection(imgNavPatients, indicatorNavPatients);
+            else if (!isPatients) { indicatorNavPatients.setScaleX(1.0f); indicatorNavPatients.setScaleY(1.0f); indicatorNavPatients.setAlpha(1.0f); }
+        }
 
         // Tab 2: Reports
         boolean isReports = (tabIndex == 2);
-        if (imgNavReports != null) {
-            imgNavReports.setColorFilter(isReports ? activeColor : inactiveColor);
-            if (isReports && animate) animateTabSelection(imgNavReports);
-        }
+        if (imgNavReports != null) imgNavReports.setColorFilter(isReports ? activeColor : inactiveColor);
         if (txtNavReports != null) {
             txtNavReports.setTextColor(isReports ? activeColor : inactiveColor);
             txtNavReports.setTypeface(null, isReports ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
         }
+        if (indicatorNavReports != null) {
+            indicatorNavReports.setBackgroundResource(isReports ? R.drawable.bg_nav_active_indicator : 0);
+            if (isReports && animate) animateTabSelection(imgNavReports, indicatorNavReports);
+            else if (!isReports) { indicatorNavReports.setScaleX(1.0f); indicatorNavReports.setScaleY(1.0f); indicatorNavReports.setAlpha(1.0f); }
+        }
 
-        // Tab 3: More (just opens sheet, not persistent selection)
+        // Tab 3: More
         if (imgNavMore != null) imgNavMore.setColorFilter(inactiveColor);
         if (txtNavMore != null) {
             txtNavMore.setTextColor(inactiveColor);
             txtNavMore.setTypeface(null, android.graphics.Typeface.NORMAL);
         }
+        if (indicatorNavMore != null) indicatorNavMore.setBackgroundResource(0);
 
         // Action execution
         if (tabIndex == 0) {
             showNativeHome();
         } else if (tabIndex == 1) {
-            showWebView();
-            navigate("/workspace/patients");
+            startActivity(new Intent(this, PatientWorklistActivity.class));
         } else if (tabIndex == 2) {
-            showWebView();
-            navigate("/workspace/reports");
+            startActivity(new Intent(this, ReportsActivity.class));
         }
     }
 
-    private void animateTabSelection(View view) {
-        if (view == null) return;
-        view.setScaleX(0.82f);
-        view.setScaleY(0.82f);
-        view.animate()
-                .scaleX(1.15f)
-                .scaleY(1.15f)
-                .setDuration(160)
-                .setInterpolator(new android.view.animation.OvershootInterpolator(2.0f))
-                .withEndAction(() -> view.animate().scaleX(1.0f).scaleY(1.0f).setDuration(100).start())
-                .start();
+    private void animateTabSelection(View icon, View indicator) {
+        if (icon != null) {
+            icon.setScaleX(0.75f);
+            icon.setScaleY(0.75f);
+            icon.setTranslationY(0f);
+            icon.animate()
+                    .scaleX(1.18f)
+                    .scaleY(1.18f)
+                    .translationY(-dp(2.5f))
+                    .setDuration(180)
+                    .setInterpolator(new android.view.animation.OvershootInterpolator(2.5f))
+                    .withEndAction(() -> icon.animate()
+                            .scaleX(1.0f)
+                            .scaleY(1.0f)
+                            .translationY(0f)
+                            .setDuration(120)
+                            .start())
+                    .start();
+        }
+        if (indicator != null) {
+            indicator.setScaleX(0.88f);
+            indicator.setScaleY(0.88f);
+            indicator.setAlpha(0.4f);
+            indicator.animate()
+                    .scaleX(1.0f)
+                    .scaleY(1.0f)
+                    .alpha(1.0f)
+                    .setDuration(220)
+                    .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                    .start();
+        }
+    }
+
+    private float dp(float value) {
+        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, value, getResources().getDisplayMetrics());
     }
 
     private void navigate(String path) {
+        if (path != null) {
+            if (path.equals("/dashboard") || path.equals("/workspace/dashboard") || path.startsWith("/dashboard")) {
+                startActivity(new Intent(this, LabDashboardActivity.class));
+                return;
+            } else if (path.equals("/workspace/analytics") || path.startsWith("/workspace/analytics")) {
+                startActivity(new Intent(this, FinancialAnalyticsActivity.class));
+                return;
+            } else if (path.equals("/workspace/wallet") || path.startsWith("/workspace/wallet")) {
+                startActivity(new Intent(this, WalletActivity.class));
+                return;
+            } else if (path.equals("/workspace/registration") || path.startsWith("/workspace/registration") || path.equals("/workspace/patients/new")) {
+                startActivity(new Intent(this, RegistrationActivity.class));
+                return;
+            } else if (path.equals("/workspace/test-management") || path.startsWith("/workspace/test-management") || path.equals("/workspace/tests")) {
+                startActivity(new Intent(this, TestManagementActivity.class));
+                return;
+            } else if (path.equals("/workspace/billing") || path.startsWith("/workspace/billing") || path.equals("/workspace/invoices")) {
+                startActivity(new Intent(this, BillingActivity.class));
+                return;
+            } else if (path.equals("/workspace/reports") || path.startsWith("/workspace/reports")) {
+                startActivity(new Intent(this, ReportsActivity.class));
+                return;
+            } else if (path.equals("/workspace/samples") || path.startsWith("/workspace/samples") || path.equals("/workspace/accession")) {
+                startActivity(new Intent(this, SamplesActivity.class));
+                return;
+            } else if (path.equals("/workspace/patients") || path.startsWith("/workspace/patients") || path.equals("/workspace/results")) {
+                startActivity(new Intent(this, PatientWorklistActivity.class));
+                return;
+            } else if (path.equals("/workspace/staff") || path.startsWith("/workspace/staff")) {
+                startActivity(new Intent(this, StaffManagementActivity.class));
+                return;
+            }
+        }
         if (offlineOverlay != null)
             offlineOverlay.setVisibility(View.GONE);
         swipeRefresh.setVisibility(View.VISIBLE);
@@ -1609,88 +1680,112 @@ public class MainActivity extends BridgeActivity {
     private void initModulesData() {
         allModules = new ArrayList<>();
 
-        // ── Radiology (RIS) (navigation.ts: Radiology Group) ─────────────────
-        allModules.add(new ModuleItem("RIS Dashboard", "/workspace/radiology/dashboard", "Radiology",
-                "Radiology Information System overview", R.drawable.ic_chart, false));
-        allModules.add(new ModuleItem("Scan Schedule", "/workspace/radiology/appointments", "Radiology",
-                "Book & manage radiology scans", R.drawable.ic_calendar, false));
-        allModules.add(new ModuleItem("PACS Viewer", "/workspace/radiology/pacs", "Radiology",
-                "View digital imaging & PACS files", R.drawable.ic_barcode, false));
-        allModules.add(new ModuleItem("Reporting Queue", "/workspace/radiology/reporting", "Radiology",
-                "Radiologist report queue & sign-off", R.drawable.ic_stethoscope, false));
-        allModules.add(new ModuleItem("Machines", "/workspace/radiology/modalities", "Radiology",
-                "Configure radiology equipment & modalities", R.drawable.ic_cpu, false));
-        allModules.add(new ModuleItem("Radiology Settings", "/workspace/radiology/settings/macros", "Radiology",
-                "Configure macros & report templates", R.drawable.ic_gear, false));
-
-        // ── Overview (navigation.ts: "Overview") ──────────────────────────────
+        // ── Overview ──────────────────────────────────────────────────────────
+        allModules.add(new ModuleItem("Home", "/workspace", "Overview",
+                "Main overview dashboard & quick statistics", R.drawable.ic_nav_dashboard, false));
+        allModules.add(new ModuleItem("Dashboard", "/workspace/analytics", "Overview",
+                "Operations overview & performance tracking", R.drawable.ic_chart, false));
         allModules.add(new ModuleItem("Financial Analytics", "/workspace/analytics", "Overview",
                 "Revenue reports & analytical charts", R.drawable.ic_chart, false));
-        allModules.add(new ModuleItem("Online Booking", "/workspace/bookings", "Overview",
+        allModules.add(new ModuleItem("Online Booking", "/workspace/online-booking", "Overview",
                 "Manage home collections & appointments", R.drawable.ic_calendar, true));
 
-        // ── Clinical Operations (navigation.ts: "Clinical Operations") ───────
-        allModules.add(new ModuleItem("Patient Registration", "/workspace/registration", "Clinical",
-                "Register patients & book new lab tests", R.drawable.ic_nav_patients, true));
+        // ── Clinical Operations ───────────────────────────────────────────────
+        allModules.add(new ModuleItem("New Registration", "/workspace/registration", "Clinical",
+                "Register patients & book new lab tests", R.drawable.ic_mod_registration, true));
         allModules.add(new ModuleItem("Patient Directory", "/workspace/patients", "Clinical",
-                "Browse & search patient records", R.drawable.ic_nav_patients, false));
-        allModules.add(new ModuleItem("Test Catalog", "/workspace/test-management", "Clinical",
-                "Manage test packages & profiles", R.drawable.ic_flask, false));
+                "Browse & search patient records", R.drawable.ic_user, false));
+        allModules.add(new ModuleItem("Test Management", "/workspace/test-management", "Clinical",
+                "Manage test packages, profiles & pricing", R.drawable.ic_mod_tests, false));
         allModules.add(new ModuleItem("Worklist & Results", "/workspace/results", "Clinical",
-                "Fill raw values & review parameters", R.drawable.ic_flask, false));
+                "Fill raw values & review parameters", R.drawable.ic_document, false));
         allModules.add(new ModuleItem("Report Dispatch", "/workspace/reports", "Clinical",
-                "Sign off & dispatch PDF reports", R.drawable.ic_document, false));
+                "Sign off & dispatch PDF reports", R.drawable.ic_mod_reports, false));
 
-        // ── Resources & Logistics (navigation.ts: "Resources & Logistics") ──
+        // ── Radiology (RIS) ───────────────────────────────────────────────────
+        allModules.add(new ModuleItem("RIS Dashboard", "/workspace/radiology/dashboard", "Radiology",
+                "Radiology Information System overview", R.drawable.ic_nav_dashboard, false));
+        allModules.add(new ModuleItem("Scan Schedule", "/workspace/radiology/dashboard/appointments", "Radiology",
+                "Book & manage radiology scans", R.drawable.ic_calendar, false));
+        allModules.add(new ModuleItem("Technician Worklist", "/workspace/radiology/worklist", "Radiology",
+                "View and complete scanning tasks", R.drawable.ic_document, false));
+        allModules.add(new ModuleItem("PACS Viewer", "/workspace/radiology/pacs", "Radiology",
+                "View digital imaging & PACS DICOM files", R.drawable.ic_cpu, false));
+        allModules.add(new ModuleItem("Media Library", "/workspace/radiology/media", "Radiology",
+                "DICOM & imaging media storage archive", R.drawable.ic_box, false));
+        allModules.add(new ModuleItem("Reporting Queue", "/workspace/radiology/reporting", "Radiology",
+                "Radiologist report queue & sign-off", R.drawable.ic_document, false));
+        allModules.add(new ModuleItem("Reports Archive", "/workspace/radiology/archive", "Radiology",
+                "Historical signed radiology reports archive", R.drawable.ic_building, false));
+        allModules.add(new ModuleItem("Machines", "/workspace/radiology/machines", "Radiology",
+                "Configure radiology equipment & modalities", R.drawable.ic_gear, false));
+        allModules.add(new ModuleItem("RIS Macros", "/workspace/radiology/macros", "Radiology",
+                "Pre-defined reporting shortcuts & macros", R.drawable.ic_edit_pen, false));
+        allModules.add(new ModuleItem("DICOM Settings", "/workspace/radiology/settings/dicom", "Radiology",
+                "PACS node configuration & AE titles", R.drawable.ic_gear, false));
+        allModules.add(new ModuleItem("RIS Letterhead", "/workspace/radiology/settings/letterhead", "Radiology",
+                "Custom report letterhead & branding", R.drawable.ic_document, false));
+
+        // ── Resources & Logistics ─────────────────────────────────────────────
         allModules.add(new ModuleItem("Inventory & Stock", "/workspace/inventory", "Logistics",
                 "Track reagents, consumables & items", R.drawable.ic_box, false));
         allModules.add(new ModuleItem("Logistics / Trips", "/workspace/logistics", "Logistics",
-                "Manage field agents & pickup trips", R.drawable.ic_box, false));
+                "Manage field agents & pickup trips", R.drawable.ic_mod_logistics, false));
+        allModules.add(new ModuleItem("Home Collection", "/workspace/home-collection", "Logistics",
+                "Assign phlebotomists & track home visits", R.drawable.ic_mod_samples, false));
 
-        // ── Machine & AI (navigation.ts: "Machine & AI") ─────────────────────
+        // ── Machine & AI ──────────────────────────────────────────────────────
         allModules.add(new ModuleItem("Analyzer", "/workspace/analyzers", "Machine",
                 "Connect analyzers & view output logs", R.drawable.ic_cpu, false));
         allModules.add(new ModuleItem("Visual Mapper", "/workspace/analyzers/mapper", "Machine",
-                "Map barcode codes visually to fields", R.drawable.ic_barcode, false));
+                "Map barcode codes visually to fields", R.drawable.ic_chart, false));
         allModules.add(new ModuleItem("Mappings", "/workspace/analyzers/mappings", "Machine",
-                "Configure machine integration parameters", R.drawable.ic_barcode, false));
-        allModules.add(new ModuleItem("AI Analysis", "/workspace/analyzers/ai", "Machine",
-                "AI models on clinical samples", R.drawable.ic_cpu, true));
+                "Configure machine integration parameters", R.drawable.ic_gear, false));
 
-        // ── B2B & Growth (navigation.ts: "B2B & Growth") ─────────────────────
+        // ── B2B & Growth ──────────────────────────────────────────────────────
         allModules.add(new ModuleItem("Referral Doctors", "/workspace/doctors", "B2B",
                 "Track referring doctors & commission profiles", R.drawable.ic_stethoscope, false));
         allModules.add(new ModuleItem("Corporate Agencies", "/workspace/agencies", "B2B",
-                "Manage corporate agency tie-ups", R.drawable.ic_stethoscope, false));
+                "Manage corporate agency tie-ups", R.drawable.ic_building, false));
         allModules.add(new ModuleItem("Commissions Payout", "/workspace/commissions", "B2B",
-                "View payout summaries for referrals", R.drawable.ic_document, false));
-        allModules.add(new ModuleItem("B2B Settings", "/workspace/settings/b2b-tiers", "B2B",
-                "Manage outsourced labs & tier pricings", R.drawable.ic_gear, false));
+                "View payout summaries for referrals", R.drawable.ic_wallet, false));
 
-        // ── Administration (navigation.ts: "Administration") ─────────────────
+        // ── Administration ───────────────────────────────────────────────────
+        allModules.add(new ModuleItem("Lab Settings", "/workspace/settings", "Admin",
+                "Configure lab profile, timings & branches", R.drawable.ic_gear, false));
         allModules.add(new ModuleItem("Report Templates", "/workspace/settings/templates", "Admin",
                 "Design & manage report layout templates", R.drawable.ic_document, false));
+        allModules.add(new ModuleItem("Invoice Branding", "/workspace/settings/branding", "Admin",
+                "Custom bill branding & header templates", R.drawable.ic_billing, false));
+        allModules.add(new ModuleItem("Service Areas", "/workspace/settings/service-areas", "Admin",
+                "Manage sample collection coverage areas", R.drawable.ic_building, false));
+        allModules.add(new ModuleItem("Payment Settings", "/workspace/settings/payments", "Admin",
+                "Configure QR codes & online payment gateways", R.drawable.ic_credit_card, false));
+        allModules.add(new ModuleItem("Notifications", "/workspace/settings/notifications", "Admin",
+                "SMS, Email & WhatsApp alert configurations", R.drawable.ic_bell, false));
+        allModules.add(new ModuleItem("B2B Settings", "/workspace/settings/b2b", "Admin",
+                "Manage outsourced labs & tier pricings", R.drawable.ic_building, false));
         allModules.add(new ModuleItem("Staff Management", "/workspace/staff", "Admin",
-                "Manage team roles, access keys & logs", R.drawable.ic_nav_patients, false));
+                "Manage team roles, access keys & logs", R.drawable.ic_user, false));
         allModules.add(new ModuleItem("Invoices & Payments", "/workspace/billing", "Admin",
-                "Track cash flow & pending invoices", R.drawable.ic_credit_card, false));
-        allModules.add(new ModuleItem("Expenses", "/workspace/expenses", "Admin", "Record & categorise lab expenses",
-                R.drawable.ic_document, false));
-        allModules.add(new ModuleItem("Lab Settings", "/workspace/settings", "Admin",
-                "Configure letterhead, templates & formats", R.drawable.ic_gear, false));
+                "Track cash flow, bills & receipts", R.drawable.ic_mod_billing, false));
+        allModules.add(new ModuleItem("Expenses", "/workspace/expenses", "Admin",
+                "Record & categorise lab expenses", R.drawable.ic_billing, false));
         allModules.add(new ModuleItem("Audit Logs", "/workspace/audit-logs", "Admin",
                 "View security access logs & trace changes", R.drawable.ic_document, false));
         allModules.add(new ModuleItem("Wallet & Billing", "/workspace/wallet", "Admin",
-                "Top-up wallet & view billing history", R.drawable.ic_credit_card, false));
+                "Top-up wallet & view billing history", R.drawable.ic_mod_wallet, false));
+        allModules.add(new ModuleItem("Wallet Recharge", "/workspace/wallet/recharge", "Admin",
+                "Add credits & instant recharge packs", R.drawable.ic_wallet, true));
         allModules.add(new ModuleItem("Help & Support", "/workspace/support", "Admin",
-                "Raise tickets & browse documentation", R.drawable.ic_support_lifebuoy, false));
+                "Raise tickets & browse documentation", R.drawable.ic_help, false));
 
         // ── Legal & Agreements ────────────────────────────────────────────────
-        allModules.add(new ModuleItem("Terms & Conditions", "/terms-conditions?tab=terms", "Legal",
+        allModules.add(new ModuleItem("Terms & Conditions", "https://patholab.cloud/terms-and-conditions/", "Legal",
                 "Platform license, SLA & customer rights", R.drawable.ic_legal, false));
-        allModules.add(new ModuleItem("Privacy & Health Data", "/terms-conditions?tab=privacy", "Legal",
+        allModules.add(new ModuleItem("Privacy & Health Data", "https://patholab.cloud/privacy-policy/", "Legal",
                 "Patient confidentiality & HIPAA/DISHA standards", R.drawable.ic_legal, false));
-        allModules.add(new ModuleItem("Refund & Cancellation", "/terms-conditions?tab=refunds", "Legal",
+        allModules.add(new ModuleItem("Refund & Cancellation", "https://patholab.cloud/refund-and-cancellation/", "Legal",
                 "Subscription renewals & pro-rata settlements", R.drawable.ic_legal, false));
     }
 
@@ -1779,15 +1874,22 @@ public class MainActivity extends BridgeActivity {
                     moreBottomSheetDialog.dismiss();
                 }
 
-                if (item.path.equals("/legal") || item.path.contains("terms") || item.path.contains("privacy")
+                if (item.path.startsWith("http://") || item.path.startsWith("https://")) {
+                    try {
+                        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(item.path));
+                        startActivity(browserIntent);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                } else if (item.path.equals("/legal") || item.path.contains("terms") || item.path.contains("privacy")
                         || item.path.contains("refund")) {
-                    String url = "https://patholab.cloud/terms-conditions";
+                    String url = "https://patholab.cloud/terms-and-conditions/";
                     if (item.path.contains("privacy")) {
-                        url = "https://patholab.cloud/terms-conditions?tab=privacy";
+                        url = "https://patholab.cloud/privacy-policy/";
                     } else if (item.path.contains("refund")) {
-                        url = "https://patholab.cloud/terms-conditions?tab=refunds";
+                        url = "https://patholab.cloud/refund-and-cancellation/";
                     } else if (item.path.contains("terms")) {
-                        url = "https://patholab.cloud/terms-conditions?tab=terms";
+                        url = "https://patholab.cloud/terms-and-conditions/";
                     }
                     try {
                         Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
@@ -1856,6 +1958,7 @@ public class MainActivity extends BridgeActivity {
                 .setTitle("Sign Out")
                 .setMessage("Are you sure you want to sign out of your account?")
                 .setPositiveButton("Sign Out", (dialog, which) -> {
+                    HomeNativeManager.resetSession();
                     AuthManager.clearSession(MainActivity.this);
                     Intent intent = new Intent(MainActivity.this, LoginActivity.class);
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -1864,6 +1967,23 @@ public class MainActivity extends BridgeActivity {
                 })
                 .setNegativeButton("Cancel", null)
                 .show();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (!AuthManager.hasToken(this)) {
+            Intent intent = new Intent(this, LoginActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
+            return;
+        }
+        if (homeNativeManager != null && homeNativeManager.isVisible()) {
+            homeNativeManager.show();
+        }
+        fetchWalletDetails();
+        fetchNotificationCount();
     }
 
     @Override
@@ -1898,6 +2018,10 @@ public class MainActivity extends BridgeActivity {
         navTabCenter = null;
         navTabReports = null;
         navTabMore = null;
+        indicatorNavHome = null;
+        indicatorNavPatients = null;
+        indicatorNavReports = null;
+        indicatorNavMore = null;
         moreScrollView = null;
         containerOverview = null;
         containerClinical = null;

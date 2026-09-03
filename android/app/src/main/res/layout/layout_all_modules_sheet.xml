@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- All Modules Bottom Sheet (85% Screen Height with Recently Used Section) -->
+<!-- All Laboratory & Radiology Modules Directory Bottom Sheet -->
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -14,7 +14,7 @@
         android:layout_width="44dp"
         android:layout_height="4dp"
         android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="14dp"
+        android:layout_marginBottom="12dp"
         android:background="#CBD5E1" />
 
     <!-- ── Header: Title, Subtitle & Cross Close Button ────────────── -->
@@ -23,9 +23,9 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:paddingStart="22dp"
+        android:paddingStart="20dp"
         android:paddingEnd="20dp"
-        android:paddingBottom="14dp">
+        android:paddingBottom="10dp">
 
         <LinearLayout
             android:layout_width="0dp"
@@ -37,7 +37,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="All Lab Modules"
-                android:textSize="20sp"
+                android:textSize="19.5sp"
                 android:textStyle="bold"
                 android:textColor="#0F172A"
                 android:letterSpacing="-0.02" />
@@ -46,8 +46,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:text="Patholab Cloud Healthcare Suite"
-                android:textSize="12.5sp"
+                android:text="Complete Clinical, RIS/PACS &amp; Enterprise Directory"
+                android:textSize="12sp"
                 android:textColor="#64748B" />
 
         </LinearLayout>
@@ -55,20 +55,53 @@
         <!-- Cross / Close Button -->
         <FrameLayout
             android:id="@+id/btnCrossClose"
-            android:layout_width="38dp"
-            android:layout_height="38dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:background="@drawable/bg_bell_btn"
             android:clickable="true"
             android:focusable="true">
 
             <ImageView
-                android:layout_width="18dp"
-                android:layout_height="18dp"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_close_cross"
                 android:tint="#475569" />
 
         </FrameLayout>
+
+    </LinearLayout>
+
+    <!-- ── Search Omnibar in Bottom Sheet ─────────────────────────── -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="42dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@drawable/bg_setting_item"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="12dp"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp">
+
+        <ImageView
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:src="@drawable/ic_search"
+            android:tint="#94A3B8" />
+
+        <EditText
+            android:id="@+id/inputSearchAllModules"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@null"
+            android:hint="Search any module (e.g. DICOM, PACS, Payout, Analyzer)..."
+            android:textColorHint="#94A3B8"
+            android:textColor="#0F172A"
+            android:textSize="13sp"
+            android:layout_marginStart="8dp"
+            android:singleLine="true" />
 
     </LinearLayout>
 
@@ -86,13 +119,14 @@
         android:scrollbars="none">
 
         <LinearLayout
+            android:id="@+id/containerAllModulesContent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
-            android:paddingTop="16dp"
-            android:paddingBottom="40dp">
+            android:paddingTop="14dp"
+            android:paddingBottom="50dp">
 
             <!-- ── SECTION 0: RECENTLY USED APPS ────────────────────────── -->
             <LinearLayout
@@ -100,34 +134,18 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:layout_marginBottom="18dp">
+                android:layout_marginBottom="14dp">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginBottom="10dp"
-                    android:layout_marginStart="4dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="RECENTLY USED"
-                        android:textSize="11.5sp"
-                        android:textStyle="bold"
-                        android:textColor="#0D6EFD"
-                        android:letterSpacing="0.06" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="6dp"
-                        android:text="• Quick Jump"
-                        android:textSize="11sp"
-                        android:textColor="#94A3B8" />
-
-                </LinearLayout>
+                    android:text="RECENTLY USED • QUICK JUMP"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="#0D6EFD"
+                    android:letterSpacing="0.06"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginBottom="8dp" />
 
                 <HorizontalScrollView
                     android:layout_width="match_parent"
@@ -144,312 +162,7 @@
 
             </LinearLayout>
 
-            <!-- ── SECTION 1: CLINICAL OPERATIONS ────────────────────────── -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="CLINICAL OPERATIONS"
-                android:textSize="11.5sp"
-                android:textStyle="bold"
-                android:textColor="#64748B"
-                android:letterSpacing="0.06"
-                android:layout_marginStart="4dp"
-                android:layout_marginBottom="10dp" />
-
-            <!-- Grid Row 1 -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:weightSum="4">
-
-                <!-- 1. Register -->
-                <LinearLayout
-                    android:id="@+id/sheetModRegister"
-                    style="@style/HomeModuleItem"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="4dp">
-                    <FrameLayout style="@style/HomeModuleIcon" android:background="@drawable/bg_mod_icon_blue">
-                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center" android:src="@drawable/ic_mod_registration" />
-                    </FrameLayout>
-                    <TextView style="@style/HomeModuleBold" android:text="Register" />
-                </LinearLayout>
-
-                <!-- 2. Tests -->
-                <LinearLayout
-                    android:id="@+id/sheetModTests"
-                    style="@style/HomeModuleItem"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="2dp"
-                    android:layout_marginEnd="2dp">
-                    <FrameLayout style="@style/HomeModuleIcon" android:background="@drawable/bg_mod_icon_purple">
-                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center" android:src="@drawable/ic_mod_tests" />
-                    </FrameLayout>
-                    <TextView style="@style/HomeModuleBold" android:text="Tests" />
-                </LinearLayout>
-
-                <!-- 3. Billing -->
-                <LinearLayout
-                    android:id="@+id/sheetModBilling"
-                    style="@style/HomeModuleItem"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="2dp"
-                    android:layout_marginEnd="2dp">
-                    <FrameLayout style="@style/HomeModuleIcon" android:background="@drawable/bg_mod_icon_emerald">
-                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center" android:src="@drawable/ic_mod_billing" />
-                    </FrameLayout>
-                    <TextView style="@style/HomeModuleBold" android:text="Billing" />
-                </LinearLayout>
-
-                <!-- 4. Reports -->
-                <LinearLayout
-                    android:id="@+id/sheetModReports"
-                    style="@style/HomeModuleItem"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="4dp">
-                    <FrameLayout style="@style/HomeModuleIcon" android:background="@drawable/bg_mod_icon_sky">
-                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center" android:src="@drawable/ic_mod_reports" />
-                    </FrameLayout>
-                    <TextView style="@style/HomeModuleBold" android:text="Reports" />
-                </LinearLayout>
-
-            </LinearLayout>
-
-            <!-- Grid Row 2 -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="8dp"
-                android:weightSum="4">
-
-                <!-- 5. Samples -->
-                <LinearLayout
-                    android:id="@+id/sheetModSamples"
-                    style="@style/HomeModuleItem"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="4dp">
-                    <FrameLayout style="@style/HomeModuleIcon" android:background="@drawable/bg_mod_icon_rose">
-                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center" android:src="@drawable/ic_mod_samples" />
-                    </FrameLayout>
-                    <TextView style="@style/HomeModuleBold" android:text="Samples" />
-                </LinearLayout>
-
-                <!-- 6. Share WhatsApp -->
-                <LinearLayout
-                    android:id="@+id/sheetModWhatsapp"
-                    style="@style/HomeModuleItem"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="2dp"
-                    android:layout_marginEnd="2dp">
-                    <FrameLayout style="@style/HomeModuleIcon" android:background="@drawable/bg_mod_icon_green">
-                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center" android:src="@drawable/ic_mod_whatsapp" />
-                    </FrameLayout>
-                    <TextView style="@style/HomeModuleBold" android:text="WhatsApp" />
-                </LinearLayout>
-
-                <!-- 7. Logistics -->
-                <LinearLayout
-                    android:id="@+id/sheetModLogistics"
-                    style="@style/HomeModuleItem"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="2dp"
-                    android:layout_marginEnd="2dp">
-                    <FrameLayout style="@style/HomeModuleIcon" android:background="@drawable/bg_mod_icon_amber">
-                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center" android:src="@drawable/ic_mod_logistics" />
-                    </FrameLayout>
-                    <TextView style="@style/HomeModuleBold" android:text="Logistics" />
-                </LinearLayout>
-
-                <!-- 8. Wallet -->
-                <LinearLayout
-                    android:id="@+id/sheetModWallet"
-                    style="@style/HomeModuleItem"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="4dp">
-                    <FrameLayout style="@style/HomeModuleIcon" android:background="@drawable/bg_mod_icon_indigo">
-                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center" android:src="@drawable/ic_mod_wallet" />
-                    </FrameLayout>
-                    <TextView style="@style/HomeModuleBold" android:text="Wallet" />
-                </LinearLayout>
-
-            </LinearLayout>
-
-            <!-- ── SECTION 2: ADVANCED DIAGNOSTICS & SUITE ────────────────── -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="ADVANCED SUITE &amp; OPERATIONS"
-                android:textSize="11.5sp"
-                android:textStyle="bold"
-                android:textColor="#64748B"
-                android:letterSpacing="0.06"
-                android:layout_marginStart="4dp"
-                android:layout_marginTop="22dp"
-                android:layout_marginBottom="10dp" />
-
-            <!-- Grid Row 3 -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:weightSum="4">
-
-                <!-- 9. Inventory -->
-                <LinearLayout
-                    android:id="@+id/sheetModInventory"
-                    style="@style/HomeModuleItem"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="4dp">
-                    <FrameLayout style="@style/HomeModuleIcon" android:background="@drawable/bg_mod_icon_teal">
-                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center" android:src="@drawable/ic_box" android:tint="#0D9488" />
-                    </FrameLayout>
-                    <TextView style="@style/HomeModuleBold" android:text="Inventory" />
-                </LinearLayout>
-
-                <!-- 10. Radiology RIS -->
-                <LinearLayout
-                    android:id="@+id/sheetModRadiology"
-                    style="@style/HomeModuleItem"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="2dp"
-                    android:layout_marginEnd="2dp">
-                    <FrameLayout style="@style/HomeModuleIcon" android:background="@drawable/bg_mod_icon_purple">
-                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center" android:src="@drawable/ic_flask" android:tint="#9333EA" />
-                    </FrameLayout>
-                    <TextView style="@style/HomeModuleBold" android:text="Radiology" />
-                </LinearLayout>
-
-                <!-- 11. Analyzers IoT -->
-                <LinearLayout
-                    android:id="@+id/sheetModAnalyzers"
-                    style="@style/HomeModuleItem"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="2dp"
-                    android:layout_marginEnd="2dp">
-                    <FrameLayout style="@style/HomeModuleIcon" android:background="@drawable/bg_mod_icon_sky">
-                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center" android:src="@drawable/ic_cpu" android:tint="#0891B2" />
-                    </FrameLayout>
-                    <TextView style="@style/HomeModuleBold" android:text="Analyzers" />
-                </LinearLayout>
-
-                <!-- 12. B2B Agencies -->
-                <LinearLayout
-                    android:id="@+id/sheetModAgencies"
-                    style="@style/HomeModuleItem"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="4dp">
-                    <FrameLayout style="@style/HomeModuleIcon" android:background="@drawable/bg_mod_icon_orange">
-                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center" android:src="@drawable/ic_card" android:tint="#EA580C" />
-                    </FrameLayout>
-                    <TextView style="@style/HomeModuleBold" android:text="Agencies" />
-                </LinearLayout>
-
-            </LinearLayout>
-
-            <!-- ── SECTION 3: MANAGEMENT & NETWORK ───────────────────────── -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="MANAGEMENT &amp; NETWORK"
-                android:textSize="11.5sp"
-                android:textStyle="bold"
-                android:textColor="#64748B"
-                android:letterSpacing="0.06"
-                android:layout_marginStart="4dp"
-                android:layout_marginTop="22dp"
-                android:layout_marginBottom="10dp" />
-
-            <!-- Grid Row 4 -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:weightSum="4">
-
-                <!-- 13. Doctors Network -->
-                <LinearLayout
-                    android:id="@+id/sheetModDoctors"
-                    style="@style/HomeModuleItem"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="4dp">
-                    <FrameLayout style="@style/HomeModuleIcon" android:background="@drawable/bg_mod_icon_blue">
-                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center" android:src="@drawable/ic_stethoscope" android:tint="#1D4ED8" />
-                    </FrameLayout>
-                    <TextView style="@style/HomeModuleBold" android:text="Doctors" />
-                </LinearLayout>
-
-                <!-- 14. Patients Directory -->
-                <LinearLayout
-                    android:id="@+id/sheetModPatients"
-                    style="@style/HomeModuleItem"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="2dp"
-                    android:layout_marginEnd="2dp">
-                    <FrameLayout style="@style/HomeModuleIcon" android:background="@drawable/bg_mod_icon_fuchsia">
-                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center" android:src="@drawable/ic_user" android:tint="#C026D3" />
-                    </FrameLayout>
-                    <TextView style="@style/HomeModuleBold" android:text="Patients" />
-                </LinearLayout>
-
-                <!-- 15. Analytics KPI -->
-                <LinearLayout
-                    android:id="@+id/sheetModAnalytics"
-                    style="@style/HomeModuleItem"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="2dp"
-                    android:layout_marginEnd="2dp">
-                    <FrameLayout style="@style/HomeModuleIcon" android:background="@drawable/bg_mod_icon_emerald">
-                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center" android:src="@drawable/ic_chart" android:tint="#10B981" />
-                    </FrameLayout>
-                    <TextView style="@style/HomeModuleBold" android:text="Analytics" />
-                </LinearLayout>
-
-                <!-- 16. Profile Settings -->
-                <LinearLayout
-                    android:id="@+id/sheetModSettings"
-                    style="@style/HomeModuleItem"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="4dp">
-                    <FrameLayout style="@style/HomeModuleIcon" android:background="@drawable/bg_mod_icon_indigo">
-                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center" android:src="@drawable/ic_gear" android:tint="#4F46E5" />
-                    </FrameLayout>
-                    <TextView style="@style/HomeModuleBold" android:text="Settings" />
-                </LinearLayout>
-
-            </LinearLayout>
+            <!-- Dynamic Category Sections will be populated here -->
 
         </LinearLayout>
 

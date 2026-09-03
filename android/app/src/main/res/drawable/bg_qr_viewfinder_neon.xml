@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Neon Lime-Green Rounded Corner Brackets for QR Scanner Viewfinder -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="280dp"
+    android:height="280dp"
+    android:viewportWidth="280"
+    android:viewportHeight="280">
+
+    <!-- Top-Left Corner Bracket -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#A3E635"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M 12,54 L 12,28 C 12,19.16 19.16,12 28,12 L 54,12" />
+
+    <!-- Top-Right Corner Bracket -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#A3E635"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M 226,12 L 252,12 C 260.84,12 268,19.16 268,28 L 268,54" />
+
+    <!-- Bottom-Left Corner Bracket -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#A3E635"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M 12,226 L 12,252 C 12,260.84 19.16,268 28,268 L 54,268" />
+
+    <!-- Bottom-Right Corner Bracket -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#A3E635"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M 226,268 L 252,268 C 260.84,268 268,260.84 268,252 L 268,226" />
+
+</vector>

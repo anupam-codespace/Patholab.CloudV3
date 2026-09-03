@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Clean Bento Item for Recent Patients in Dashboard (Android) -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:background="@drawable/bg_dashboard_bento"
+    android:padding="12dp"
+    android:elevation="1dp"
+    android:layout_marginBottom="8dp"
+    android:clickable="true"
+    android:focusable="true">
+
+    <!-- Standardized Patient Avatar -->
+    <ImageView
+        android:id="@+id/imgPatientAvatar"
+        android:layout_width="38dp"
+        android:layout_height="38dp"
+        android:src="@drawable/ic_patient_avatar"
+        android:scaleType="centerCrop" />
+
+    <TextView
+        android:id="@+id/lblPatientAvatar"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:layout_marginStart="12dp">
+
+        <TextView
+            android:id="@+id/lblPatientName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Rohan Sharma"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#0F172A" />
+
+        <TextView
+            android:id="@+id/lblPatientPhone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="1dp"
+            android:text="+91 98765 43210"
+            android:textSize="11.5sp"
+            android:textColor="#64748B" />
+
+    </LinearLayout>
+
+    <ImageView
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:src="@drawable/ic_chevron_right"
+        android:tint="#94A3B8" />
+
+</LinearLayout>

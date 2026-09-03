@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Clean Bento Card for Invoices Ledger (Android) -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_dashboard_bento"
+    android:padding="14dp"
+    android:elevation="1dp"
+    android:layout_marginBottom="8dp">
+
+    <!-- Top Row: Invoice Number, B2B tag, Status Badge -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/lblInvoiceNumber"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="INV-2026-0042"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="#0D6EFD" />
+
+        <TextView
+            android:id="@+id/lblInvoiceB2BTag"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:text="B2B"
+            android:textSize="9.5sp"
+            android:textStyle="bold"
+            android:textColor="#475569"
+            android:background="@drawable/bg_chip_inactive"
+            android:paddingStart="5dp"
+            android:paddingEnd="5dp"
+            android:paddingTop="1dp"
+            android:paddingBottom="1dp"
+            android:visibility="gone" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/lblInvoiceStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="PAID"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:textColor="#059669"
+            android:background="@drawable/bg_tag_emerald"
+            android:paddingStart="7dp"
+            android:paddingEnd="7dp"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp" />
+
+    </LinearLayout>
+
+    <!-- Middle Row: Patient / Billed To Name -->
+    <TextView
+        android:id="@+id/lblInvoiceBilledTo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:text="Rohan Sharma"
+        android:textSize="14.5sp"
+        android:textStyle="bold"
+        android:textColor="#0F172A" />
+
+    <!-- Divider -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#F1F5F9"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Bottom Row: Date & Time, Grand Total Amount -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/lblInvoiceDate"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="02 Sep 2026 • 11:30 AM"
+            android:textSize="11.5sp"
+            android:textColor="#64748B" />
+
+        <TextView
+            android:id="@+id/lblInvoiceAmount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="₹1,450.00"
+            android:textSize="15sp"
+            android:fontFamily="sans-serif-black"
+            android:textStyle="bold"
+            android:textColor="#0F172A" />
+
+    </LinearLayout>
+
+</LinearLayout>

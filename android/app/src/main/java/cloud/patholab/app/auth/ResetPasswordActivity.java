@@ -95,31 +95,8 @@ public class ResetPasswordActivity extends AppCompatActivity {
             }
         });
 
-        ivToggleNew.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                newPwdVisible = !newPwdVisible;
-                if (newPwdVisible) {
-                    etNewPassword.setInputType(InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
-                } else {
-                    etNewPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-                }
-                etNewPassword.setSelection(etNewPassword.getText().length());
-            }
-        });
-
-        ivToggleConfirm.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                confirmPwdVisible = !confirmPwdVisible;
-                if (confirmPwdVisible) {
-                    etConfirmPassword.setInputType(InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
-                } else {
-                    etConfirmPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-                }
-                etConfirmPassword.setSelection(etConfirmPassword.getText().length());
-            }
-        });
+        PasswordEyeHelper.setupPasswordToggle(etNewPassword, ivToggleNew);
+        PasswordEyeHelper.setupPasswordToggle(etConfirmPassword, ivToggleConfirm);
 
         btnReset.setOnClickListener(new View.OnClickListener() {
             @Override

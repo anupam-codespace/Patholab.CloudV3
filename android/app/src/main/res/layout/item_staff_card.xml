@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_setting_item"
+    android:layout_marginStart="14dp"
+    android:layout_marginEnd="14dp"
+    android:layout_marginTop="5dp"
+    android:layout_marginBottom="5dp"
+    android:padding="14dp"
+    android:elevation="2dp">
+
+    <!-- Top Header Row: Avatar + Name & ID + Status Badge + 3-Dots Action -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <!-- Initial Avatar Circle -->
+        <FrameLayout
+            android:id="@+id/staffAvatarBox"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/bg_mod_icon_indigo"
+            android:layout_marginEnd="12dp">
+
+            <TextView
+                android:id="@+id/txtStaffAvatarInitial"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="J"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#0D6EFD" />
+
+        </FrameLayout>
+
+        <!-- Name & Monospace Employee ID -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/txtStaffName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Dr. Jane Doe"
+                android:textSize="15.5sp"
+                android:textStyle="bold"
+                android:textColor="#0F172A"
+                android:singleLine="true" />
+
+            <!-- Monospace Employee ID Badge -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_tab_pill_inactive"
+                android:paddingStart="6dp"
+                android:paddingEnd="6dp"
+                android:paddingTop="2dp"
+                android:paddingBottom="2dp"
+                android:layout_marginTop="3dp">
+
+                <TextView
+                    android:id="@+id/txtStaffEmployeeId"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="GLX010001"
+                    android:textSize="10.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#475569"
+                    android:typeface="monospace" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Status Badge (Active / Suspended) -->
+        <TextView
+            android:id="@+id/txtStaffStatusBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="● Active"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#059669"
+            android:background="@drawable/bg_status_ready"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp"
+            android:layout_marginEnd="6dp" />
+
+        <!-- 3-Dots Action Menu -->
+        <FrameLayout
+            android:id="@+id/btnStaffMoreActions"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_ellipsis_vertical"
+                android:tint="#64748B" />
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#F1F5F9"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp" />
+
+    <!-- Role, Position & Branch Row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <!-- Position & Role -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/txtStaffPosition"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Chief Pathologist"
+                android:textSize="12.5sp"
+                android:textStyle="bold"
+                android:textColor="#334155" />
+
+            <TextView
+                android:id="@+id/txtStaffRoleBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="DOCTOR"
+                android:textSize="9.5sp"
+                android:textStyle="bold"
+                android:textColor="#64748B"
+                android:letterSpacing="0.04" />
+
+        </LinearLayout>
+
+        <!-- Branch Assignment Pill -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_pill_slate"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp">
+
+            <ImageView
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:src="@drawable/ic_building"
+                android:tint="#475569"
+                android:layout_marginEnd="4dp" />
+
+            <TextView
+                android:id="@+id/txtStaffBranch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Main Branch"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="#334155" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Email & Phone Contact Bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp"
+        android:gravity="center_vertical">
+
+        <!-- Email -->
+        <LinearLayout
+            android:id="@+id/btnStaffEmailAction"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="?attr/selectableItemBackground"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp">
+
+            <ImageView
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:src="@drawable/ic_envelope"
+                android:tint="#94A3B8"
+                android:layout_marginEnd="5dp" />
+
+            <TextView
+                android:id="@+id/txtStaffEmail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="doctor@patholab.cloud"
+                android:textSize="11.5sp"
+                android:textColor="#64748B"
+                android:singleLine="true" />
+
+        </LinearLayout>
+
+        <!-- Phone -->
+        <LinearLayout
+            android:id="@+id/btnStaffPhoneAction"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="?attr/selectableItemBackground"
+            android:paddingStart="6dp"
+            android:paddingEnd="4dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp">
+
+            <ImageView
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:src="@drawable/ic_phone"
+                android:tint="#0D6EFD"
+                android:layout_marginEnd="4dp" />
+
+            <TextView
+                android:id="@+id/txtStaffPhone"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="+91 98765 43210"
+                android:textSize="11.5sp"
+                android:textStyle="bold"
+                android:textColor="#0D6EFD" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Optional Department & Salary Footer -->
+    <TextView
+        android:id="@+id/txtStaffDeptSalary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:text="Pathology • Monthly: ₹35,000"
+        android:textSize="10.5sp"
+        android:textColor="#94A3B8" />
+
+</LinearLayout>

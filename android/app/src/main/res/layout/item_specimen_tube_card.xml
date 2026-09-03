@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modern Sapphire Bento Specimen & Vacuum Container Tube Item Card -->
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardCornerRadius="18dp"
+    app:cardElevation="3dp"
+    app:cardBackgroundColor="#FFFFFF"
+    app:cardPreventCornerOverlap="false"
+    android:layout_marginStart="4dp"
+    android:layout_marginEnd="4dp"
+    android:layout_marginTop="4dp"
+    android:layout_marginBottom="6dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="16dp">
+
+        <FrameLayout
+            android:id="@+id/frameTubeColor"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@drawable/bg_mod_icon_purple">
+
+            <View
+                android:id="@+id/tubeCapIndicator"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_circle_slate"
+                android:backgroundTint="#7C3AED" />
+
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginStart="14dp">
+
+            <TextView
+                android:id="@+id/lblTubeName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="EDTA (K2/K3) Lavender Tube"
+                android:textSize="15.5sp"
+                android:textStyle="bold"
+                android:textColor="#0F172A" />
+
+            <TextView
+                android:id="@+id/lblTubeAdditive"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Additive: Dipotassium EDTA • Anticoagulant"
+                android:textSize="12sp"
+                android:textColor="#64748B" />
+
+            <TextView
+                android:id="@+id/lblTubeUsage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Used for: CBC, HbA1c, ESR, Blood Grouping"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="#0D6EFD" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/lblTubeCodeBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_setting_item"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp"
+            android:text="EDTA"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="#334155" />
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

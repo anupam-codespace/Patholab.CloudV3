@@ -4,7 +4,9 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -82,6 +84,7 @@ public class WalletActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        StatusBarHelper.setStatusBarDeepNavy(this);
         setContentView(R.layout.activity_wallet);
 
         bindViews();
@@ -99,6 +102,12 @@ public class WalletActivity extends AppCompatActivity {
         txtDeduction      = findViewById(R.id.txtWalletDeduction);
         txtTotalRecharged = findViewById(R.id.txtTotalRecharged);
         txtTotalConsumed  = findViewById(R.id.txtTotalConsumed);
+
+        applyExtraBold(txtBalanceHero);
+        applyExtraBold(txtTotalRecharged);
+        applyExtraBold(txtTotalConsumed);
+        applyExtraBold(txtValidity);
+        applyExtraBold(txtDeduction);
         swipeRefresh      = findViewById(R.id.walletSwipeRefresh);
         txContainer       = findViewById(R.id.txContainer);
         layoutEmptyTx     = findViewById(R.id.layoutEmptyTx);
@@ -112,12 +121,12 @@ public class WalletActivity extends AppCompatActivity {
             btnBack.setOnClickListener(v -> finish());
         }
 
-        // Adjust top padding for status bar
+        // Adjust top padding for status bar - move header higher up
         View header = findViewById(R.id.walletHeader);
         if (header != null) {
             header.setOnApplyWindowInsetsListener((v, insets) -> {
                 int topInset = insets.getSystemWindowInsetTop();
-                v.setPadding(v.getPaddingStart(), Math.max(dp(50), topInset + dp(10)), v.getPaddingEnd(), dp(24));
+                v.setPadding(v.getPaddingStart(), Math.max(dp(28), topInset + dp(4)), v.getPaddingEnd(), dp(16));
                 return insets;
             });
         }
@@ -131,14 +140,15 @@ public class WalletActivity extends AppCompatActivity {
 
     private void switchTab(String tab) {
         currentTab = tab;
-        tabAll.setBackgroundResource(tab.equals("ALL") ? R.drawable.bg_tab_pill_active : R.drawable.bg_tab_pill_inactive);
-        tabAll.setTextColor(tab.equals("ALL") ? 0xFFFFFFFF : 0xFF64748B);
+        // Active: white pill + blue text | Inactive: transparent + soft blue text (on dark nav bg)
+        tabAll.setBackgroundResource(tab.equals("ALL") ? R.drawable.bg_tab_white_pill : android.R.color.transparent);
+        tabAll.setTextColor(tab.equals("ALL") ? 0xFF1D4ED8 : 0xFF93C5FD);
 
-        tabRecharge.setBackgroundResource(tab.equals("RECHARGE") ? R.drawable.bg_tab_pill_active : R.drawable.bg_tab_pill_inactive);
-        tabRecharge.setTextColor(tab.equals("RECHARGE") ? 0xFFFFFFFF : 0xFF64748B);
+        tabRecharge.setBackgroundResource(tab.equals("RECHARGE") ? R.drawable.bg_tab_white_pill : android.R.color.transparent);
+        tabRecharge.setTextColor(tab.equals("RECHARGE") ? 0xFF1D4ED8 : 0xFF93C5FD);
 
-        tabDebit.setBackgroundResource(tab.equals("DEBIT") ? R.drawable.bg_tab_pill_active : R.drawable.bg_tab_pill_inactive);
-        tabDebit.setTextColor(tab.equals("DEBIT") ? 0xFFFFFFFF : 0xFF64748B);
+        tabDebit.setBackgroundResource(tab.equals("DEBIT") ? R.drawable.bg_tab_white_pill : android.R.color.transparent);
+        tabDebit.setTextColor(tab.equals("DEBIT") ? 0xFF1D4ED8 : 0xFF93C5FD);
 
         renderTransactions();
     }
@@ -199,13 +209,13 @@ public class WalletActivity extends AppCompatActivity {
                 } else {
                     mainHandler.post(() -> {
                         swipeRefresh.setRefreshing(false);
-                        populateDemoData();
+                        applyWalletData(null, null, new JSONArray());
                     });
                 }
             } catch (Exception e) {
                 mainHandler.post(() -> {
                     swipeRefresh.setRefreshing(false);
-                    populateDemoData();
+                    applyWalletData(null, null, new JSONArray());
                 });
             }
         }).start();
@@ -239,10 +249,6 @@ public class WalletActivity extends AppCompatActivity {
                 JSONObject item = txList.optJSONObject(i);
                 if (item != null) allTransactions.add(item);
             }
-        }
-
-        if (allTransactions.isEmpty()) {
-            populateDemoTransactions();
         }
 
         renderTransactions();
@@ -317,6 +323,7 @@ public class WalletActivity extends AppCompatActivity {
             txtAmount.setText("-" + formatINR(amount));
             txtAmount.setTextColor(0xFF0F172A);
         }
+        applyExtraBold(txtAmount);
 
         txtDesc.setText(desc);
         txtDate.setText(formatDateTime(dateStr));
@@ -434,7 +441,7 @@ public class WalletActivity extends AppCompatActivity {
                 } catch (Exception ignored) {}
 
                 if (base < 100) {
-                    Toast.makeText(this, "Minimum recharge amount is ₹100", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Minimum recharge amount is ₹ 100", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -626,7 +633,7 @@ public class WalletActivity extends AppCompatActivity {
         txtTotalRecharged.setText(formatINR(5000.00));
         txtTotalConsumed.setText(formatINR(3550.00));
         txtValidity.setText("No Expiry");
-        txtDeduction.setText("₹2.50 / Patient");
+        txtDeduction.setText("₹ 2.50 / Patient");
 
         populateDemoTransactions();
         renderTransactions();
@@ -690,7 +697,7 @@ public class WalletActivity extends AppCompatActivity {
     }
 
     private String formatINR(double amt) {
-        return String.format(Locale.ENGLISH, "₹%,.2f", amt);
+        return String.format(Locale.ENGLISH, "₹ %,.2f", amt);
     }
 
     private String formatDateOnly(String iso) {
@@ -710,6 +717,15 @@ public class WalletActivity extends AppCompatActivity {
             return out.format(in.parse(iso));
         } catch (Exception e) {
             return "Today";
+        }
+    }
+
+    private void applyExtraBold(TextView tv) {
+        if (tv == null) return;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            tv.setTypeface(Typeface.create(Typeface.DEFAULT, 800, false));
+        } else {
+            tv.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
         }
     }
 

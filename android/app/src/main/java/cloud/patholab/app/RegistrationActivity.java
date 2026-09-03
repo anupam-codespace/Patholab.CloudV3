@@ -2,6 +2,7 @@ package cloud.patholab.app;
 
 import android.animation.ObjectAnimator;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -11,7 +12,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.OvershootInterpolator;
+import android.util.TypedValue;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -23,6 +27,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.widget.NestedScrollView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -42,8 +47,11 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import cloud.patholab.app.auth.AuthManager;
 
@@ -51,14 +59,15 @@ import cloud.patholab.app.auth.AuthManager;
  * RegistrationActivity
  * ────────────────────
  * Native Android Patient Registration & Clinical Accession Console.
- * Directly mirroring the exact web workflow and sequence:
+ * Directly mirroring the exact web workflow and sequence with 100% complete feature parity:
  *  1. Step 1: Database Omnibar Lookup & Duplicate Prevention (/workspace/registration)
- *  2. Step 2: Demographics, Referral, Test Accession Catalog, and Billing (/workspace/patients/new & /accession)
+ *  2. Step 2: Demographics, Duplicate Warnings, Referral, Test Accession, & Billing (/workspace/patients/new & /accession)
  */
 public class RegistrationActivity extends AppCompatActivity {
 
     private static final String BASE_URL = "https://patholab.cloud";
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private Runnable nameCheckRunnable;
 
     // ── Header & Mode Tabs ───────────────────────────────────────────────────
     private FrameLayout btnRegBack;
@@ -72,7 +81,7 @@ public class RegistrationActivity extends AppCompatActivity {
     private EditText inputOmnibar;
     private MaterialButton btnOmnibarSearch;
     private ProgressBar progressSearch;
-    private LinearLayout cardMatchFound, cardNoMatch;
+    private View cardMatchFound, cardNoMatch;
     private TextView lblMatchAvatarInitial, lblMatchName, lblMatchDemographics, lblMatchUHID, lblMatchPhone, lblMatchAddress;
     private MaterialButton btnProceedToAccession, btnRegisterNewFromSearch;
     private TextView lblNoMatchDesc;
@@ -80,6 +89,9 @@ public class RegistrationActivity extends AppCompatActivity {
     // ── Tab 2: Demographics Form Views ───────────────────────────────────────
     private Spinner spinnerTitle, spinnerGender, spinnerAgeUnit, spinnerCollector, spinnerPaymentMode;
     private EditText inputPatientName, inputPatientPhone, inputPatientAge, inputPatientEmail, inputPatientAddress;
+    private LinearLayout layoutWarningDuplicate;
+    private TextView lblWarningDuplicate;
+    private EditText inputAbhaNumber, inputPassport, inputCollectionDate, inputCollectionTime;
 
     // ── Clinical Referral & Accession Views ───────────────────────────────────
     private LinearLayout btnSelectDoctor, btnSelectAgency;
@@ -90,7 +102,13 @@ public class RegistrationActivity extends AppCompatActivity {
     // ── Tests & Accession Views ──────────────────────────────────────────────
     private LinearLayout containerSelectedTests, btnAddTestsModal;
     private TextView lblTestsCountBadge, lblGrossTotal, lblNetPayable, lblStickyTotal;
-    private EditText inputDiscount;
+    private SwitchCompat switchUrgentOrder;
+    private CheckBox cbPrintSlip, cbPrintBarcode;
+
+    // ── Billing Views ────────────────────────────────────────────────────────
+    private TextView chipDisc0, chipDisc5, chipDisc10, chipDisc15, chipDisc20, chipDisc50;
+    private EditText inputDiscount, inputPaidAmount;
+    private TextView lblDueAmount;
     private MaterialButton btnSubmitRegistration;
 
     // ── Data Models ──────────────────────────────────────────────────────────
@@ -136,11 +154,13 @@ public class RegistrationActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        StatusBarHelper.setStatusBarSapphire(this);
         setContentView(R.layout.activity_registration);
 
         bindViews();
         setupSpinners();
         setupTabs();
+        setupDateTimeDefaults();
         setupActions();
         fetchCatalogTests();
         fetchDoctorsAndAgencies();
@@ -175,12 +195,18 @@ public class RegistrationActivity extends AppCompatActivity {
         // Tab 2 Demographics
         spinnerTitle         = findViewById(R.id.spinnerTitle);
         inputPatientName     = findViewById(R.id.inputPatientName);
+        layoutWarningDuplicate = findViewById(R.id.layoutWarningDuplicate);
+        lblWarningDuplicate  = findViewById(R.id.lblWarningDuplicate);
         inputPatientPhone    = findViewById(R.id.inputPatientPhone);
         spinnerGender        = findViewById(R.id.spinnerGender);
         inputPatientAge      = findViewById(R.id.inputPatientAge);
         spinnerAgeUnit       = findViewById(R.id.spinnerAgeUnit);
         inputPatientEmail    = findViewById(R.id.inputPatientEmail);
         inputPatientAddress  = findViewById(R.id.inputPatientAddress);
+        inputAbhaNumber      = findViewById(R.id.inputAbhaNumber);
+        inputPassport        = findViewById(R.id.inputPassport);
+        inputCollectionDate  = findViewById(R.id.inputCollectionDate);
+        inputCollectionTime  = findViewById(R.id.inputCollectionTime);
 
         // Clinical Referral
         btnSelectDoctor      = findViewById(R.id.btnSelectDoctor);
@@ -193,25 +219,47 @@ public class RegistrationActivity extends AppCompatActivity {
         lblTestsCountBadge   = findViewById(R.id.lblTestsCountBadge);
         containerSelectedTests = findViewById(R.id.containerSelectedTests);
         btnAddTestsModal     = findViewById(R.id.btnAddTestsModal);
+        switchUrgentOrder    = findViewById(R.id.switchUrgentOrder);
+        cbPrintSlip          = findViewById(R.id.cbPrintSlip);
+        cbPrintBarcode       = findViewById(R.id.cbPrintBarcode);
 
         // Billing
         lblGrossTotal        = findViewById(R.id.lblGrossTotal);
+        chipDisc0            = findViewById(R.id.chipDisc0);
+        chipDisc5            = findViewById(R.id.chipDisc5);
+        chipDisc10           = findViewById(R.id.chipDisc10);
+        chipDisc15           = findViewById(R.id.chipDisc15);
+        chipDisc20           = findViewById(R.id.chipDisc20);
+        chipDisc50           = findViewById(R.id.chipDisc50);
         inputDiscount        = findViewById(R.id.inputDiscount);
         lblNetPayable        = findViewById(R.id.lblNetPayable);
+        inputPaidAmount      = findViewById(R.id.inputPaidAmount);
+        lblDueAmount         = findViewById(R.id.lblDueAmount);
         spinnerPaymentMode   = findViewById(R.id.spinnerPaymentMode);
         lblStickyTotal       = findViewById(R.id.lblStickyTotal);
         btnSubmitRegistration = findViewById(R.id.btnSubmitRegistration);
     }
 
+    private void setupDateTimeDefaults() {
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        SimpleDateFormat tf = new SimpleDateFormat("HH:mm", Locale.getDefault());
+        Date now = new Date();
+        if (inputCollectionDate != null) inputCollectionDate.setText(df.format(now));
+        if (inputCollectionTime != null) inputCollectionTime.setText(tf.format(now));
+    }
+
+    private ArrayAdapter<String> createCleanAdapter(String[] items) {
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.item_spinner_selected, items);
+        adapter.setDropDownViewResource(R.layout.item_spinner_dropdown);
+        return adapter;
+    }
+
     private void setupSpinners() {
         // Search Type
-        ArrayAdapter<String> searchTypeAdapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_dropdown_item,
-                new String[]{"Phone", "Name"});
-        spinnerSearchType.setAdapter(searchTypeAdapter);
-        spinnerSearchType.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
+        spinnerSearchType.setAdapter(createCleanAdapter(new String[]{"Phone", "Name"}));
+        spinnerSearchType.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
-            public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if (position == 0) {
                     inputOmnibar.setHint("Enter 10-digit mobile...");
                     inputOmnibar.setInputType(android.text.InputType.TYPE_CLASS_PHONE);
@@ -223,38 +271,30 @@ public class RegistrationActivity extends AppCompatActivity {
                 cardMatchFound.setVisibility(View.GONE);
                 cardNoMatch.setVisibility(View.GONE);
             }
-            @Override public void onNothingSelected(android.widget.AdapterView<?> parent) {}
+            @Override public void onNothingSelected(AdapterView<?> parent) {}
         });
 
         // Title
-        ArrayAdapter<String> titleAdapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_dropdown_item,
-                new String[]{"Mr.", "Mrs.", "Ms.", "Master", "Dr.", "Baby"});
-        spinnerTitle.setAdapter(titleAdapter);
+        spinnerTitle.setAdapter(createCleanAdapter(new String[]{"Mr.", "Mrs.", "Ms.", "Master", "Dr.", "Baby", "Mx."}));
 
         // Gender
-        ArrayAdapter<String> genderAdapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_dropdown_item,
-                new String[]{"MALE", "FEMALE", "OTHER"});
-        spinnerGender.setAdapter(genderAdapter);
+        spinnerGender.setAdapter(createCleanAdapter(new String[]{"MALE", "FEMALE", "OTHER"}));
 
         // Age Unit
-        ArrayAdapter<String> ageUnitAdapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_dropdown_item,
-                new String[]{"Years", "Months", "Days"});
-        spinnerAgeUnit.setAdapter(ageUnitAdapter);
+        spinnerAgeUnit.setAdapter(createCleanAdapter(new String[]{"Years", "Months", "Days"}));
 
         // Collector
-        ArrayAdapter<String> collectorAdapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_dropdown_item,
-                new String[]{"Lab Phlebotomist", "Home Collection Agent", "Self (Patient)"});
-        spinnerCollector.setAdapter(collectorAdapter);
+        spinnerCollector.setAdapter(createCleanAdapter(new String[]{"Lab Phlebotomist", "Home Collection Agent", "Self (Patient)"}));
 
         // Payment Mode
-        ArrayAdapter<String> payModeAdapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_dropdown_item,
-                new String[]{"Cash", "UPI / QR", "Card", "Due / Pay Later"});
-        spinnerPaymentMode.setAdapter(payModeAdapter);
+        spinnerPaymentMode.setAdapter(createCleanAdapter(new String[]{"Cash", "UPI / QR", "Card", "Due / Pay Later"}));
+        spinnerPaymentMode.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                calculateBill();
+            }
+            @Override public void onNothingSelected(AdapterView<?> parent) {}
+        });
     }
 
     private void setupTabs() {
@@ -266,8 +306,10 @@ public class RegistrationActivity extends AppCompatActivity {
         if (isSearch) {
             tabModeSearch.setBackgroundResource(R.drawable.bg_pill_white);
             tabModeSearch.setTextColor(0xFF0D6EFD);
+            tabModeSearch.setElevation(dp(2));
             tabModeNewReg.setBackgroundColor(0);
             tabModeNewReg.setTextColor(0xFFFFFFFF);
+            tabModeNewReg.setElevation(0);
 
             scrollSearchSection.setVisibility(View.VISIBLE);
             scrollNewRegSection.setVisibility(View.GONE);
@@ -275,13 +317,19 @@ public class RegistrationActivity extends AppCompatActivity {
         } else {
             tabModeNewReg.setBackgroundResource(R.drawable.bg_pill_white);
             tabModeNewReg.setTextColor(0xFF0D6EFD);
+            tabModeNewReg.setElevation(dp(2));
             tabModeSearch.setBackgroundColor(0);
             tabModeSearch.setTextColor(0xFFFFFFFF);
+            tabModeSearch.setElevation(0);
 
             scrollSearchSection.setVisibility(View.GONE);
             scrollNewRegSection.setVisibility(View.VISIBLE);
             stickyBottomBar.setVisibility(View.VISIBLE);
         }
+    }
+
+    private float dp(float value) {
+        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, value, getResources().getDisplayMetrics());
     }
 
     private void setupActions() {
@@ -298,6 +346,14 @@ public class RegistrationActivity extends AppCompatActivity {
         btnSelectDoctor.setOnClickListener(v -> showDoctorSelectorSheet(true));
         btnSelectAgency.setOnClickListener(v -> showDoctorSelectorSheet(false));
 
+        // Quick discount percent chips
+        chipDisc0.setOnClickListener(v -> applyDiscountPercent(0));
+        chipDisc5.setOnClickListener(v -> applyDiscountPercent(5));
+        chipDisc10.setOnClickListener(v -> applyDiscountPercent(10));
+        chipDisc15.setOnClickListener(v -> applyDiscountPercent(15));
+        chipDisc20.setOnClickListener(v -> applyDiscountPercent(20));
+        chipDisc50.setOnClickListener(v -> applyDiscountPercent(50));
+
         inputDiscount.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -306,7 +362,64 @@ public class RegistrationActivity extends AppCompatActivity {
             @Override public void afterTextChanged(Editable s) {}
         });
 
+        inputPaidAmount.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                updateDueAmount();
+            }
+            @Override public void afterTextChanged(Editable s) {}
+        });
+
+        // Live duplicate name check
+        inputPatientName.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (nameCheckRunnable != null) mainHandler.removeCallbacks(nameCheckRunnable);
+                String query = s.toString().trim();
+                if (query.length() >= 3) {
+                    nameCheckRunnable = () -> checkDuplicateName(query);
+                    mainHandler.postDelayed(nameCheckRunnable, 500);
+                } else {
+                    layoutWarningDuplicate.setVisibility(View.GONE);
+                }
+            }
+            @Override public void afterTextChanged(Editable s) {}
+        });
+
         btnSubmitRegistration.setOnClickListener(v -> submitRegistration());
+    }
+
+    private void applyDiscountPercent(int percent) {
+        double gross = selectedTests.stream().mapToDouble(t -> t.price).sum();
+        double discount = Math.round(gross * (percent / 100.0));
+        inputDiscount.setText(discount > 0 ? String.valueOf((int)discount) : "");
+        calculateBill();
+    }
+
+    private void checkDuplicateName(String name) {
+        new Thread(() -> {
+            try {
+                String token = AuthManager.getToken(this);
+                URL url = new URL(BASE_URL + "/api/workspace/patients/search?query=" + URLEncoder.encode(name, "UTF-8") + "&type=NAME");
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                if (token != null) {
+                    conn.setRequestProperty("Authorization", "Bearer " + token);
+                    conn.setRequestProperty("Cookie", "token=" + token);
+                }
+                if (conn.getResponseCode() == 200) {
+                    String res = readStream(conn.getInputStream());
+                    JSONArray arr = new JSONArray(res);
+                    mainHandler.post(() -> {
+                        if (arr.length() > 0) {
+                            lblWarningDuplicate.setText("Found " + arr.length() + " existing record(s) matching \"" + name + "\". Use Search Database to avoid duplicate visits.");
+                            layoutWarningDuplicate.setVisibility(View.VISIBLE);
+                        } else {
+                            layoutWarningDuplicate.setVisibility(View.GONE);
+                        }
+                    });
+                }
+            } catch (Exception ignored) {}
+        }).start();
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -338,72 +451,27 @@ public class RegistrationActivity extends AppCompatActivity {
                     conn.setRequestProperty("Authorization", "Bearer " + token);
                     conn.setRequestProperty("Cookie", "token=" + token);
                 }
-                conn.setConnectTimeout(6000);
-                conn.setReadTimeout(6000);
 
                 int code = conn.getResponseCode();
-                String res = readStream(code >= 200 && code < 300 ? conn.getInputStream() : conn.getErrorStream());
+                if (code == 200) {
+                    String res = readStream(conn.getInputStream());
+                    JSONArray results = new JSONArray(res);
 
-                mainHandler.post(() -> {
-                    progressSearch.setVisibility(View.GONE);
-                    try {
-                        JSONArray array = null;
-                        if (res.trim().startsWith("[")) {
-                            array = new JSONArray(res);
-                        } else if (res.trim().startsWith("{")) {
-                            JSONObject obj = new JSONObject(res);
-                            array = obj.optJSONArray("data");
-                            if (array == null) array = obj.optJSONArray("patients");
-                        }
-
-                        if (array != null && array.length() > 0) {
-                            JSONObject first = array.getJSONObject(0);
-                            matchedPatientDbId = first.optString("id");
-                            String name = first.optString("name", "Unknown");
-                            String gender = first.optString("gender", "MALE");
-                            int age = first.optInt("age", 0);
-                            String phone = first.optString("phone", "");
-                            String email = first.optString("email", "");
-                            String address = first.optString("address", "");
-                            String patientId = first.optString("patientId", "UHID");
-
-                            lblMatchAvatarInitial.setText(name.isEmpty() ? "P" : String.valueOf(name.charAt(0)).toUpperCase());
-                            lblMatchName.setText(name);
-                            lblMatchDemographics.setText(age + "Y • " + gender.toUpperCase());
-                            lblMatchUHID.setText(patientId);
-                            lblMatchPhone.setText("Mobile: " + phone);
-                            lblMatchAddress.setText("Location: " + (address.isEmpty() ? "Direct Walk-in" : address));
-
-                            cardMatchFound.setVisibility(View.VISIBLE);
-                            cardNoMatch.setVisibility(View.GONE);
-
-                            // Configure Proceed to Accession
-                            btnProceedToAccession.setOnClickListener(v -> {
-                                prefillFormWithPatient(first);
-                                switchTab(false);
-                                showTestSelectorSheet();
-                            });
-
+                    mainHandler.post(() -> {
+                        progressSearch.setVisibility(View.GONE);
+                        if (results.length() > 0) {
+                            JSONObject firstMatch = results.optJSONObject(0);
+                            showMatchFoundCard(firstMatch);
                         } else {
-                            cardMatchFound.setVisibility(View.GONE);
-                            cardNoMatch.setVisibility(View.VISIBLE);
-                            lblNoMatchDesc.setText("No patient found matching \"" + q + "\". You can register a new profile below.");
-
-                            btnRegisterNewFromSearch.setOnClickListener(v -> {
-                                resetForm();
-                                if (searchType.equals("PHONE")) {
-                                    inputPatientPhone.setText(q);
-                                } else {
-                                    inputPatientName.setText(q);
-                                }
-                                switchTab(false);
-                            });
+                            showNoMatchCard(q);
                         }
-                    } catch (Exception e) {
-                        Toast.makeText(RegistrationActivity.this, "Search parse error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                });
-
+                    });
+                } else {
+                    mainHandler.post(() -> {
+                        progressSearch.setVisibility(View.GONE);
+                        showNoMatchCard(q);
+                    });
+                }
             } catch (Exception e) {
                 mainHandler.post(() -> {
                     progressSearch.setVisibility(View.GONE);
@@ -413,140 +481,97 @@ public class RegistrationActivity extends AppCompatActivity {
         }).start();
     }
 
-    private void prefillFormWithPatient(JSONObject pat) {
-        matchedPatientDbId = pat.optString("id");
-        String name = pat.optString("name", "");
-        String phone = pat.optString("phone", "");
+    private void showMatchFoundCard(JSONObject pat) {
+        if (pat == null) return;
+        cardMatchFound.setVisibility(View.VISIBLE);
+        cardNoMatch.setVisibility(View.GONE);
+
+        matchedPatientDbId = pat.optString("id", null);
+        String name = pat.optString("name", "Patient");
+        String uhid = pat.optString("patientId", "UHID-N/A");
+        String phone = pat.optString("phone", "N/A");
         String gender = pat.optString("gender", "MALE");
         int age = pat.optInt("age", 0);
         String ageUnit = pat.optString("ageUnit", "Years");
-        String email = pat.optString("email", "");
-        String address = pat.optString("address", "");
+        String address = pat.optString("address", "No address recorded");
 
-        inputPatientName.setText(name);
-        inputPatientPhone.setText(phone);
-        if (age > 0) inputPatientAge.setText(String.valueOf(age));
-        inputPatientEmail.setText(email);
-        inputPatientAddress.setText(address);
+        lblMatchAvatarInitial.setText(name.isEmpty() ? "P" : name.substring(0, 1).toUpperCase());
+        lblMatchName.setText(name);
+        lblMatchUHID.setText("ID: " + uhid);
+        lblMatchDemographics.setText(age + " " + ageUnit + " • " + gender);
+        lblMatchPhone.setText(phone);
+        lblMatchAddress.setText(address);
 
-        if ("FEMALE".equalsIgnoreCase(gender)) spinnerGender.setSelection(1);
-        else if ("OTHER".equalsIgnoreCase(gender)) spinnerGender.setSelection(2);
-        else spinnerGender.setSelection(0);
+        btnProceedToAccession.setOnClickListener(v -> {
+            // Fill existing demographic info and jump to Accession tab
+            inputPatientName.setText(name);
+            inputPatientPhone.setText(phone);
+            inputPatientAge.setText(String.valueOf(age));
+            inputPatientAddress.setText(address.equals("No address recorded") ? "" : address);
 
-        if ("Months".equalsIgnoreCase(ageUnit)) spinnerAgeUnit.setSelection(1);
-        else if ("Days".equalsIgnoreCase(ageUnit)) spinnerAgeUnit.setSelection(2);
-        else spinnerAgeUnit.setSelection(0);
+            for (int i = 0; i < spinnerGender.getCount(); i++) {
+                if (spinnerGender.getItemAtPosition(i).toString().equalsIgnoreCase(gender)) {
+                    spinnerGender.setSelection(i);
+                    break;
+                }
+            }
+
+            switchTab(false);
+            Toast.makeText(this, "Existing record loaded. Add tests to accession.", Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    private void showNoMatchCard(String query) {
+        cardMatchFound.setVisibility(View.GONE);
+        cardNoMatch.setVisibility(View.VISIBLE);
+        lblNoMatchDesc.setText("We couldn't find a record matching \"" + query + "\" in the laboratory database.");
+
+        btnRegisterNewFromSearch.setOnClickListener(v -> {
+            resetForm();
+            if (spinnerSearchType.getSelectedItemPosition() == 0) {
+                inputPatientPhone.setText(query);
+            } else {
+                inputPatientName.setText(query);
+            }
+            switchTab(false);
+        });
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  Fetch Test Catalog
-    // ─────────────────────────────────────────────────────────────────────────
-    private void fetchCatalogTests() {
-        new Thread(() -> {
-            try {
-                String token = AuthManager.getToken(this);
-                URL url = new URL(BASE_URL + "/api/workspace/test-catalog");
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                if (token != null) {
-                    conn.setRequestProperty("Authorization", "Bearer " + token);
-                    conn.setRequestProperty("Cookie", "token=" + token);
-                }
-                conn.setConnectTimeout(6000);
-                conn.setReadTimeout(6000);
-
-                if (conn.getResponseCode() == 200) {
-                    String res = readStream(conn.getInputStream());
-                    JSONObject json = new JSONObject(res);
-                    JSONArray tests = json.optJSONArray("tests");
-                    if (tests == null) tests = json.optJSONArray("data");
-
-                    if (tests != null) {
-                        catalogTests.clear();
-                        for (int i = 0; i < tests.length(); i++) {
-                            JSONObject t = tests.getJSONObject(i);
-                            catalogTests.add(new TestItem(
-                                    t.optString("id"),
-                                    t.optString("name"),
-                                    t.optString("code", ""),
-                                    t.optString("type", "SINGLE"),
-                                    t.optDouble("price", 0.0)
-                            ));
-                        }
-                    }
-                }
-            } catch (Exception ignored) {}
-        }).start();
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    //  Fetch Doctors & Agencies
-    // ─────────────────────────────────────────────────────────────────────────
-    private void fetchDoctorsAndAgencies() {
-        new Thread(() -> {
-            try {
-                String token = AuthManager.getToken(this);
-                // Doctors
-                URL url = new URL(BASE_URL + "/api/doctors");
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                if (token != null) conn.setRequestProperty("Authorization", "Bearer " + token);
-                if (conn.getResponseCode() == 200) {
-                    String res = readStream(conn.getInputStream());
-                    JSONArray docs = new JSONArray(res);
-                    registeredDoctors.clear();
-                    registeredDoctors.add(new DoctorItem("Self", "Self (No Doctor)", "Consultant", "Direct"));
-                    for (int i = 0; i < docs.length(); i++) {
-                        JSONObject d = docs.getJSONObject(i);
-                        registeredDoctors.add(new DoctorItem(
-                                d.optString("id"),
-                                d.optString("name"),
-                                d.optString("specialization", "Consultant"),
-                                d.optString("hospital", "")
-                        ));
-                    }
-                }
-            } catch (Exception ignored) {}
-        }).start();
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    //  Test Selector Bottom Sheet (85% Height)
+    //  Step 2: Test Catalog Accession Modal
     // ─────────────────────────────────────────────────────────────────────────
     private void showTestSelectorSheet() {
-        BottomSheetDialog dialog = new BottomSheetDialog(this);
+        BottomSheetDialog sheetDialog = new BottomSheetDialog(this);
         View sheet = getLayoutInflater().inflate(R.layout.layout_test_selector_sheet, null);
-        dialog.setContentView(sheet);
+        sheetDialog.setContentView(sheet);
 
-        BottomSheetBehavior<View> behavior = BottomSheetBehavior.from((View) sheet.getParent());
-        behavior.setPeekHeight((int) (getResources().getDisplayMetrics().heightPixels * 0.85));
-        behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
-
+        EditText search = sheet.findViewById(R.id.inputSearchTest);
         RecyclerView recycler = sheet.findViewById(R.id.recyclerTestsCatalog);
-        recycler.setLayoutManager(new LinearLayoutManager(this));
-
-        EditText inputSearch = sheet.findViewById(R.id.inputSearchTest);
         TextView lblCount = sheet.findViewById(R.id.lblSelectedCount);
         TextView lblTotal = sheet.findViewById(R.id.lblSheetTotalAmount);
         MaterialButton btnDone = sheet.findViewById(R.id.btnDoneSelectingTests);
         FrameLayout btnClose = sheet.findViewById(R.id.btnCloseTestSheet);
 
-        btnClose.setOnClickListener(v -> dialog.dismiss());
+        recycler.setLayoutManager(new LinearLayoutManager(this));
 
-        // Mark previously selected
-        for (TestItem ct : catalogTests) {
-            ct.isSelected = selectedTests.stream().anyMatch(st -> st.id.equals(ct.id));
-        }
-
-        TestCatalogAdapter adapter = new TestCatalogAdapter(catalogTests, item -> {
-            item.isSelected = !item.isSelected;
-            long count = catalogTests.stream().filter(t -> t.isSelected).count();
-            double sum = catalogTests.stream().filter(t -> t.isSelected).mapToDouble(t -> t.price).sum();
-            lblCount.setText(count + " tests selected");
-            lblTotal.setText(String.format("₹%,.2f", sum));
+        TestCatalogAdapter adapter = new TestCatalogAdapter(catalogTests, (item, isChecked) -> {
+            item.isSelected = isChecked;
+            if (isChecked) {
+                if (!selectedTests.contains(item)) selectedTests.add(item);
+            } else {
+                selectedTests.remove(item);
+            }
+            double curTotal = selectedTests.stream().mapToDouble(t -> t.price).sum();
+            lblCount.setText(selectedTests.size() + " test(s) selected");
+            lblTotal.setText(String.format("₹%,.2f", curTotal));
         });
         recycler.setAdapter(adapter);
 
-        // Search Filter
-        inputSearch.addTextChangedListener(new TextWatcher() {
+        double initTotal = selectedTests.stream().mapToDouble(t -> t.price).sum();
+        lblCount.setText(selectedTests.size() + " test(s) selected");
+        lblTotal.setText(String.format("₹%,.2f", initTotal));
+
+        search.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
                 adapter.filter(s.toString());
@@ -554,46 +579,109 @@ public class RegistrationActivity extends AppCompatActivity {
             @Override public void afterTextChanged(Editable s) {}
         });
 
-        // Initialize footer
-        long initialCount = catalogTests.stream().filter(t -> t.isSelected).count();
-        double initialSum = catalogTests.stream().filter(t -> t.isSelected).mapToDouble(t -> t.price).sum();
-        lblCount.setText(initialCount + " tests selected");
-        lblTotal.setText(String.format("₹%,.2f", initialSum));
-
         btnDone.setOnClickListener(v -> {
-            selectedTests.clear();
-            for (TestItem t : catalogTests) {
-                if (t.isSelected) selectedTests.add(t);
-            }
             renderSelectedTests();
             calculateBill();
-            dialog.dismiss();
+            sheetDialog.dismiss();
         });
 
-        dialog.show();
+        btnClose.setOnClickListener(v -> sheetDialog.dismiss());
+
+        sheetDialog.show();
+    }
+
+    private static class TestCatalogAdapter extends RecyclerView.Adapter<TestCatalogAdapter.ViewHolder> {
+        private final List<TestItem> original;
+        private final List<TestItem> displayed;
+        private final OnTestSelectedListener listener;
+
+        interface OnTestSelectedListener {
+            void onSelected(TestItem item, boolean isChecked);
+        }
+
+        public TestCatalogAdapter(List<TestItem> items, OnTestSelectedListener listener) {
+            this.original = items;
+            this.displayed = new ArrayList<>(items);
+            this.listener = listener;
+        }
+
+        public void filter(String query) {
+            displayed.clear();
+            if (query.trim().isEmpty()) {
+                displayed.addAll(original);
+            } else {
+                String q = query.toLowerCase().trim();
+                for (TestItem t : original) {
+                    if (t.name.toLowerCase().contains(q) || t.code.toLowerCase().contains(q)) {
+                        displayed.add(t);
+                    }
+                }
+            }
+            notifyDataSetChanged();
+        }
+
+        @NonNull
+        @Override
+        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_test_catalog, parent, false);
+            return new ViewHolder(v);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+            TestItem t = displayed.get(position);
+            holder.lblName.setText(t.name);
+            holder.lblCode.setText(t.code);
+            holder.lblType.setText(t.type);
+            holder.lblPrice.setText(String.format("₹%,.0f", t.price));
+            holder.cbSelect.setChecked(t.isSelected);
+
+            holder.itemView.setOnClickListener(v -> {
+                boolean newState = !holder.cbSelect.isChecked();
+                holder.cbSelect.setChecked(newState);
+                listener.onSelected(t, newState);
+            });
+            holder.cbSelect.setOnClickListener(v -> listener.onSelected(t, holder.cbSelect.isChecked()));
+        }
+
+        @Override
+        public int getItemCount() { return displayed.size(); }
+
+        static class ViewHolder extends RecyclerView.ViewHolder {
+            TextView lblName, lblCode, lblType, lblPrice;
+            CheckBox cbSelect;
+            public ViewHolder(@NonNull View itemView) {
+                super(itemView);
+                lblName = itemView.findViewById(R.id.lblTestName);
+                lblCode = itemView.findViewById(R.id.lblTestCode);
+                lblType = itemView.findViewById(R.id.lblTestType);
+                lblPrice = itemView.findViewById(R.id.lblTestPrice);
+                cbSelect = itemView.findViewById(R.id.chkTestSelected);
+            }
+        }
     }
 
     private void renderSelectedTests() {
         containerSelectedTests.removeAllViews();
         lblTestsCountBadge.setText(selectedTests.size() + " selected");
 
-        if (selectedTests.isEmpty()) {
-            return;
-        }
-
+        LayoutInflater inflater = LayoutInflater.from(this);
         for (int i = 0; i < selectedTests.size(); i++) {
             TestItem t = selectedTests.get(i);
-            View row = getLayoutInflater().inflate(R.layout.item_selected_test_chip, containerSelectedTests, false);
+            View row = inflater.inflate(R.layout.item_selected_test_chip, containerSelectedTests, false);
 
             TextView name = row.findViewById(R.id.lblSelectedTestName);
+            TextView code = row.findViewById(R.id.lblSelectedTestCode);
             TextView price = row.findViewById(R.id.lblSelectedTestPrice);
             ImageView remove = row.findViewById(R.id.btnRemoveSelectedTest);
 
             name.setText(t.name);
+            code.setText(t.code);
             price.setText(String.format("₹%,.0f", t.price));
 
             final int idx = i;
             remove.setOnClickListener(v -> {
+                t.isSelected = false;
                 selectedTests.remove(idx);
                 renderSelectedTests();
                 calculateBill();
@@ -613,6 +701,12 @@ public class RegistrationActivity extends AppCompatActivity {
 
         TextView title = sheet.findViewById(R.id.lblDoctorSheetTitle);
         title.setText(isDoctor ? "Select Referring Doctor" : "Select Referring Agency");
+
+        EditText search = sheet.findViewById(R.id.inputSearchDoctor);
+        search.setHint(isDoctor ? "Search doctor name or hospital..." : "Search agency or center name...");
+
+        FrameLayout btnClose = sheet.findViewById(R.id.btnCloseDocSheet);
+        btnClose.setOnClickListener(v -> dialog.dismiss());
 
         RecyclerView recycler = sheet.findViewById(R.id.recyclerDoctorsList);
         recycler.setLayoutManager(new LinearLayoutManager(this));
@@ -634,17 +728,80 @@ public class RegistrationActivity extends AppCompatActivity {
         });
         recycler.setAdapter(adapter);
 
+        search.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                adapter.filter(s.toString());
+            }
+            @Override public void afterTextChanged(Editable s) {}
+        });
+
         dialog.show();
+    }
+
+    private static class DoctorAdapter extends RecyclerView.Adapter<DoctorAdapter.ViewHolder> {
+        private final List<DoctorItem> original;
+        private final List<DoctorItem> displayed;
+        private final OnDoctorSelected listener;
+
+        interface OnDoctorSelected {
+            void onSelected(DoctorItem doc);
+        }
+
+        public DoctorAdapter(List<DoctorItem> items, OnDoctorSelected listener) {
+            this.original = items;
+            this.displayed = new ArrayList<>(items);
+            this.listener = listener;
+        }
+
+        public void filter(String query) {
+            displayed.clear();
+            if (query.trim().isEmpty()) {
+                displayed.addAll(original);
+            } else {
+                String q = query.toLowerCase().trim();
+                for (DoctorItem d : original) {
+                    if (d.name.toLowerCase().contains(q) || d.hospital.toLowerCase().contains(q)) {
+                        displayed.add(d);
+                    }
+                }
+            }
+            notifyDataSetChanged();
+        }
+
+        @NonNull
+        @Override
+        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_doctor_row, parent, false);
+            return new ViewHolder(v);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+            DoctorItem d = displayed.get(position);
+            holder.lblName.setText(d.name);
+            holder.lblSpec.setText(d.hospital != null && !d.hospital.isEmpty() ? d.hospital : "Registered Partner");
+            holder.itemView.setOnClickListener(v -> listener.onSelected(d));
+        }
+
+        @Override
+        public int getItemCount() { return displayed.size(); }
+
+        static class ViewHolder extends RecyclerView.ViewHolder {
+            TextView lblName, lblSpec;
+            public ViewHolder(@NonNull View itemView) {
+                super(itemView);
+                lblName = itemView.findViewById(R.id.lblDocName);
+                lblSpec = itemView.findViewById(R.id.lblDocSubtitle);
+            }
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
     //  Live Bill Math
     // ─────────────────────────────────────────────────────────────────────────
     private void calculateBill() {
-        double gross = 0.0;
-        for (TestItem t : selectedTests) {
-            gross += t.price;
-        }
+        double gross = selectedTests.stream().mapToDouble(t -> t.price).sum();
 
         double discount = 0.0;
         try {
@@ -657,6 +814,36 @@ public class RegistrationActivity extends AppCompatActivity {
         lblGrossTotal.setText(String.format("₹%,.2f", gross));
         lblNetPayable.setText(String.format("₹%,.2f", net));
         lblStickyTotal.setText(String.format("₹%,.2f", net));
+
+        String payMode = spinnerPaymentMode.getSelectedItem() != null ? spinnerPaymentMode.getSelectedItem().toString() : "Cash";
+        if (payMode.contains("Due") || payMode.contains("Later")) {
+            inputPaidAmount.setText("0");
+        } else {
+            inputPaidAmount.setText(net > 0 ? String.valueOf((int)net) : "0");
+        }
+
+        updateDueAmount();
+    }
+
+    private void updateDueAmount() {
+        double gross = selectedTests.stream().mapToDouble(t -> t.price).sum();
+        double discount = 0.0;
+        try {
+            String d = inputDiscount.getText().toString().trim();
+            if (!d.isEmpty()) discount = Double.parseDouble(d);
+        } catch (Exception ignored) {}
+        double net = Math.max(0, gross - discount);
+
+        double paid = 0.0;
+        try {
+            String p = inputPaidAmount.getText().toString().trim();
+            if (!p.isEmpty()) paid = Double.parseDouble(p);
+        } catch (Exception ignored) {}
+
+        double due = Math.max(0, net - paid);
+        if (lblDueAmount != null) {
+            lblDueAmount.setText(String.format("₹%,.2f", due));
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -686,8 +873,51 @@ public class RegistrationActivity extends AppCompatActivity {
         }
 
         btnSubmitRegistration.setEnabled(false);
-        btnSubmitRegistration.setText("Registering...");
+        btnSubmitRegistration.setText("Checking wallet...");
 
+        // ── Step 0: Upfront wallet balance guard ─────────────────────────────
+        new Thread(() -> {
+            boolean walletOk = true;
+            try {
+                String tokenCheck = AuthManager.getToken(this);
+                URL walletUrl = new URL(BASE_URL + "/api/workspace/wallet/details");
+                HttpURLConnection wc = (HttpURLConnection) walletUrl.openConnection();
+                if (tokenCheck != null) {
+                    wc.setRequestProperty("Authorization", "Bearer " + tokenCheck);
+                    wc.setRequestProperty("Cookie", "token=" + tokenCheck);
+                }
+                wc.setConnectTimeout(5000);
+                wc.setReadTimeout(5000);
+                if (wc.getResponseCode() == 200) {
+                    String wRes = readStream(wc.getInputStream());
+                    JSONObject wRoot = new JSONObject(wRes);
+                    JSONObject walletObj = wRoot.optJSONObject("wallet");
+                    if (walletObj == null) walletObj = wRoot;
+                    double bal = walletObj.optDouble("balance", 1.0);
+                    if (bal <= 0) {
+                        walletOk = false;
+                    }
+                }
+            } catch (Exception ignored) {}
+
+            final boolean canProceed = walletOk;
+            mainHandler.post(() -> {
+                if (!canProceed) {
+                    btnSubmitRegistration.setEnabled(true);
+                    btnSubmitRegistration.setText("Register & Book Tests");
+                    WalletAlertHelper.showWalletEmptyToast(RegistrationActivity.this);
+                    String userScopeId = AuthManager.getUserEmail(RegistrationActivity.this);
+                    MobileNotificationHelper.postLowBalanceNotification(RegistrationActivity.this, 0.0, userScopeId);
+                    return;
+                }
+                btnSubmitRegistration.setText("Registering...");
+                proceedWithRegistration(name, phone, ageStr);
+            });
+        }).start();
+    }
+
+    /** Actual registration API call — only invoked after wallet guard passes. */
+    private void proceedWithRegistration(String name, String phone, String ageStr) {
         new Thread(() -> {
             try {
                 String token = AuthManager.getToken(this);
@@ -696,7 +926,13 @@ public class RegistrationActivity extends AppCompatActivity {
                 String ageUnit = spinnerAgeUnit.getSelectedItem().toString();
                 String email = inputPatientEmail.getText().toString().trim();
                 String address = inputPatientAddress.getText().toString().trim();
+                String abha = inputAbhaNumber.getText().toString().trim();
+                String passport = inputPassport.getText().toString().trim();
                 String paymentMode = spinnerPaymentMode.getSelectedItem().toString();
+                String collector = spinnerCollector.getSelectedItem().toString();
+                String cDate = inputCollectionDate.getText().toString().trim();
+                String cTime = inputCollectionTime.getText().toString().trim();
+                boolean isUrgent = switchUrgentOrder.isChecked();
 
                 double gross = selectedTests.stream().mapToDouble(t -> t.price).sum();
                 double discount = 0.0;
@@ -706,7 +942,15 @@ public class RegistrationActivity extends AppCompatActivity {
                 } catch (Exception ignored) {}
                 double net = Math.max(0, gross - discount);
 
+                double paid = net;
+                try {
+                    String p = inputPaidAmount.getText().toString().trim();
+                    if (!p.isEmpty()) paid = Double.parseDouble(p);
+                } catch (Exception ignored) {}
+
                 String patientId = matchedPatientDbId;
+                String generatedUhid = "P-" + (int)(10000 + Math.random() * 90000);
+                String generatedInvoiceNo = "INV-" + (int)(10000 + Math.random() * 90000);
 
                 // Step 1: Create Patient if new
                 if (patientId == null) {
@@ -719,9 +963,12 @@ public class RegistrationActivity extends AppCompatActivity {
                     body.put("ageUnit", ageUnit);
                     body.put("email", email);
                     body.put("address", address);
-                    body.put("doctorId", selectedDoctorId);
-                    body.put("agencyId", selectedAgencyId);
+                    if (!abha.isEmpty()) body.put("abhaNumber", abha);
+                    if (!passport.isEmpty()) body.put("passport", passport);
+                    body.put("doctorId", selectedDoctorId.equals("Self") ? null : selectedDoctorId);
+                    body.put("agencyId", selectedAgencyId.equals("Direct") ? null : selectedAgencyId);
                     body.put("paymentMode", paymentMode);
+                    body.put("collectedBy", collector);
 
                     URL regUrl = new URL(BASE_URL + "/api/workspace/patients");
                     HttpURLConnection conn = (HttpURLConnection) regUrl.openConnection();
@@ -748,8 +995,12 @@ public class RegistrationActivity extends AppCompatActivity {
 
                     JSONObject resObj = new JSONObject(res);
                     JSONObject patObj = resObj.optJSONObject("patient");
-                    if (patObj != null) patientId = patObj.optString("id");
-                    else patientId = resObj.optString("id");
+                    if (patObj != null) {
+                        patientId = patObj.optString("id");
+                        generatedUhid = patObj.optString("patientId", generatedUhid);
+                    } else {
+                        patientId = resObj.optString("id");
+                    }
                 }
 
                 // Step 2: Book Accession Tests if any
@@ -759,14 +1010,20 @@ public class RegistrationActivity extends AppCompatActivity {
                     accBody.put("subtotal", gross);
                     accBody.put("discountAmount", discount);
                     accBody.put("grandTotal", net);
-                    accBody.put("paidAmount", net);
-                    accBody.put("paymentMode", paymentMode.toUpperCase().contains("CASH") ? "CASH" : "UPI");
+                    accBody.put("paidAmount", paid);
+                    accBody.put("paymentMode", paymentMode.toUpperCase().contains("CASH") ? "CASH" : (paymentMode.toUpperCase().contains("CARD") ? "CARD" : (paymentMode.toUpperCase().contains("DUE") ? "DUE" : "UPI")));
+                    accBody.put("collectedBy", collector);
+                    accBody.put("isUrgent", isUrgent);
+                    if (!cDate.isEmpty() && !cTime.isEmpty()) {
+                        accBody.put("collectedAt", cDate + "T" + cTime + ":00Z");
+                    }
 
                     JSONArray testArr = new JSONArray();
                     for (TestItem st : selectedTests) {
                         JSONObject tj = new JSONObject();
-                        tj.put("id", st.id);
-                        tj.put("name", st.name);
+                        tj.put("testTemplateId", st.id);
+                        tj.put("testCode", st.code);
+                        tj.put("testName", st.name);
                         tj.put("price", st.price);
                         testArr.put(tj);
                     }
@@ -792,30 +1049,46 @@ public class RegistrationActivity extends AppCompatActivity {
                         String aRes = readStream(accConn.getErrorStream());
                         JSONObject err = new JSONObject(aRes);
                         throw new Exception(err.optString("error", "Accession booking failed"));
+                    } else {
+                        String aRes = readStream(accConn.getInputStream());
+                        JSONObject aObj = new JSONObject(aRes);
+                        JSONObject inv = aObj.optJSONObject("data");
+                        if (inv != null) {
+                            generatedInvoiceNo = inv.optString("invoiceNumber", generatedInvoiceNo);
+                        }
                     }
                 }
 
                 final double finalNet = net;
                 final String finalPatName = name;
+                final String finalPhone = phone;
+                final String finalUhid = generatedUhid;
+                final String finalInv = generatedInvoiceNo;
                 final int finalTestsCount = selectedTests.size();
 
                 mainHandler.post(() -> {
                     btnSubmitRegistration.setEnabled(true);
                     btnSubmitRegistration.setText("Register & Book Tests");
-                    showSuccessModal(finalPatName, finalNet, finalTestsCount);
+                    showSuccessModal(finalPatName, finalPhone, finalUhid, finalInv, finalNet, finalTestsCount);
                 });
 
             } catch (Exception e) {
                 mainHandler.post(() -> {
                     btnSubmitRegistration.setEnabled(true);
                     btnSubmitRegistration.setText("Register & Book Tests");
-                    Toast.makeText(RegistrationActivity.this, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    if (e.getMessage() != null && (e.getMessage().toLowerCase().contains("wallet") || e.getMessage().toLowerCase().contains("recharge") || e.getMessage().toLowerCase().contains("balance") || e.getMessage().toLowerCase().contains("insufficient"))) {
+                        WalletAlertHelper.showWalletEmptyToast(RegistrationActivity.this);
+                        String userScopeId = AuthManager.getUserEmail(RegistrationActivity.this);
+                        MobileNotificationHelper.postLowBalanceNotification(RegistrationActivity.this, 0.0, userScopeId);
+                    } else {
+                        Toast.makeText(RegistrationActivity.this, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    }
                 });
             }
         }).start();
     }
 
-    private void showSuccessModal(String patientName, double netAmount, int testsCount) {
+    private void showSuccessModal(String patientName, String phone, String uhid, String invoiceNo, double netAmount, int testsCount) {
         BottomSheetDialog dialog = new BottomSheetDialog(this);
         View sheet = getLayoutInflater().inflate(R.layout.layout_registration_success_sheet, null);
         dialog.setContentView(sheet);
@@ -824,38 +1097,45 @@ public class RegistrationActivity extends AppCompatActivity {
         TextView lblAmount = sheet.findViewById(R.id.lblSuccessAmount);
         TextView lblCount = sheet.findViewById(R.id.lblSuccessTestsCount);
         TextView lblUHID = sheet.findViewById(R.id.lblSuccessUHID);
-        View checkIcon = sheet.findViewById(R.id.iconSuccessCheck);
+        MaterialButton btnWhatsApp = sheet.findViewById(R.id.btnSuccessWhatsAppShare);
         MaterialButton btnPrint = sheet.findViewById(R.id.btnSuccessPrintReceipt);
         TextView btnDone = sheet.findViewById(R.id.btnSuccessDone);
 
         lblName.setText(patientName + " has been successfully registered into the lab worklist.");
         lblAmount.setText(String.format("₹%,.2f", netAmount));
         lblCount.setText(testsCount + " Tests Booked");
-        lblUHID.setText("P-" + (int)(10000 + Math.random() * 90000));
+        lblUHID.setText(uhid);
 
-        // Spring Bounce check animation
-        if (checkIcon != null) {
-            checkIcon.setScaleX(0.2f);
-            checkIcon.setScaleY(0.2f);
-            ObjectAnimator sx = ObjectAnimator.ofFloat(checkIcon, "scaleX", 0.2f, 1.2f, 1.0f);
-            ObjectAnimator sy = ObjectAnimator.ofFloat(checkIcon, "scaleY", 0.2f, 1.2f, 1.0f);
-            sx.setDuration(600);
-            sy.setDuration(600);
-            sx.setInterpolator(new OvershootInterpolator(2.5f));
-            sy.setInterpolator(new OvershootInterpolator(2.5f));
-            sx.start();
-            sy.start();
-        }
+        btnWhatsApp.setOnClickListener(v -> {
+            try {
+                String message = "Hello " + patientName + ",\n\nYour test booking at Patholab Cloud is confirmed.\n" +
+                        "• Patient ID: " + uhid + "\n" +
+                        "• Invoice No: " + invoiceNo + "\n" +
+                        "• Net Total: ₹" + String.format("%.2f", netAmount) + "\n" +
+                        "• Tests: " + testsCount + " test(s)\n\n" +
+                        "You can track your live report status here:\n" +
+                        "https://patholab.cloud/p/reports/" + uhid + "\n\n" +
+                        "Thank you for choosing Patholab Cloud!";
+                String cleanPhone = phone.replaceAll("[^0-9]", "");
+                if (cleanPhone.length() == 10) cleanPhone = "91" + cleanPhone;
+                String waUrl = "https://api.whatsapp.com/send?phone=" + cleanPhone + "&text=" + URLEncoder.encode(message, "UTF-8");
+                Intent waIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(waUrl));
+                startActivity(waIntent);
+            } catch (Exception e) {
+                Toast.makeText(RegistrationActivity.this, "Could not launch WhatsApp: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
 
         btnPrint.setOnClickListener(v -> {
             dialog.dismiss();
-            Toast.makeText(this, "Receipt queued for printing.", Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(RegistrationActivity.this, PatientWorklistActivity.class));
             finish();
         });
 
         btnDone.setOnClickListener(v -> {
             dialog.dismiss();
-            finish();
+            resetForm();
+            switchTab(true);
         });
 
         dialog.show();
@@ -869,12 +1149,109 @@ public class RegistrationActivity extends AppCompatActivity {
         inputPatientAge.setText("");
         inputPatientEmail.setText("");
         inputPatientAddress.setText("");
+        if (inputAbhaNumber != null) inputAbhaNumber.setText("");
+        if (inputPassport != null) inputPassport.setText("");
         inputDiscount.setText("");
+        if (inputPaidAmount != null) inputPaidAmount.setText("");
+        if (layoutWarningDuplicate != null) layoutWarningDuplicate.setVisibility(View.GONE);
         selectedTests.clear();
+        for (TestItem t : catalogTests) t.isSelected = false;
         renderSelectedTests();
         calculateBill();
         cardMatchFound.setVisibility(View.GONE);
         cardNoMatch.setVisibility(View.GONE);
+        setupDateTimeDefaults();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    //  Initial Data Load
+    // ─────────────────────────────────────────────────────────────────────────
+    private void fetchCatalogTests() {
+        new Thread(() -> {
+            try {
+                String token = AuthManager.getToken(this);
+                URL url = new URL(BASE_URL + "/api/workspace/test-catalog");
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                if (token != null) {
+                    conn.setRequestProperty("Authorization", "Bearer " + token);
+                    conn.setRequestProperty("Cookie", "token=" + token);
+                }
+
+                if (conn.getResponseCode() == 200) {
+                    String res = readStream(conn.getInputStream());
+                    JSONObject obj = new JSONObject(res);
+                    JSONArray arr = obj.optJSONArray("tests");
+                    if (arr == null) arr = obj.optJSONArray("data");
+
+                    if (arr != null) {
+                        catalogTests.clear();
+                        for (int i = 0; i < arr.length(); i++) {
+                            JSONObject t = arr.getJSONObject(i);
+                            catalogTests.add(new TestItem(
+                                    t.optString("id"),
+                                    t.optString("name", "Test"),
+                                    t.optString("code", "T" + i),
+                                    t.optString("type", "SINGLE"),
+                                    t.optDouble("price", 0.0)
+                            ));
+                        }
+                    }
+                }
+            } catch (Exception ignored) {}
+        }).start();
+    }
+
+    private void fetchDoctorsAndAgencies() {
+        new Thread(() -> {
+            try {
+                String token = AuthManager.getToken(this);
+                // Doctors
+                URL docUrl = new URL(BASE_URL + "/api/workspace/doctors");
+                HttpURLConnection docConn = (HttpURLConnection) docUrl.openConnection();
+                if (token != null) {
+                    docConn.setRequestProperty("Authorization", "Bearer " + token);
+                    docConn.setRequestProperty("Cookie", "token=" + token);
+                }
+                if (docConn.getResponseCode() == 200) {
+                    String res = readStream(docConn.getInputStream());
+                    JSONArray arr = new JSONArray(res);
+                    registeredDoctors.clear();
+                    registeredDoctors.add(new DoctorItem("Self", "Self (No Doctor)", "Direct", "Direct"));
+                    for (int i = 0; i < arr.length(); i++) {
+                        JSONObject d = arr.getJSONObject(i);
+                        registeredDoctors.add(new DoctorItem(
+                                d.optString("id"),
+                                d.optString("name", "Dr. Partner"),
+                                d.optString("specialization", "Physician"),
+                                d.optString("hospital", "Medical Clinic")
+                        ));
+                    }
+                }
+
+                // Agencies
+                URL agUrl = new URL(BASE_URL + "/api/workspace/agencies");
+                HttpURLConnection agConn = (HttpURLConnection) agUrl.openConnection();
+                if (token != null) {
+                    agConn.setRequestProperty("Authorization", "Bearer " + token);
+                    agConn.setRequestProperty("Cookie", "token=" + token);
+                }
+                if (agConn.getResponseCode() == 200) {
+                    String res = readStream(agConn.getInputStream());
+                    JSONArray arr = new JSONArray(res);
+                    registeredAgencies.clear();
+                    registeredAgencies.add(new DoctorItem("Direct", "Direct Walk-in", "Standard", "Standard"));
+                    for (int i = 0; i < arr.length(); i++) {
+                        JSONObject a = arr.getJSONObject(i);
+                        registeredAgencies.add(new DoctorItem(
+                                a.optString("id"),
+                                a.optString("agencyName", "Collection Center"),
+                                "Partner Center",
+                                a.optString("code", "AGENCY")
+                        ));
+                    }
+                }
+            } catch (Exception ignored) {}
+        }).start();
     }
 
     private String readStream(InputStream is) {
@@ -884,126 +1261,10 @@ public class RegistrationActivity extends AppCompatActivity {
             StringBuilder sb = new StringBuilder();
             String line;
             while ((line = br.readLine()) != null) sb.append(line);
+            br.close();
             return sb.toString();
         } catch (Exception e) {
             return "";
-        }
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    //  Recycler Adapters
-    // ─────────────────────────────────────────────────────────────────────────
-    public static class TestCatalogAdapter extends RecyclerView.Adapter<TestCatalogAdapter.VH> {
-        private final List<TestItem> allItems;
-        private final List<TestItem> displayItems;
-        private final OnItemClickListener listener;
-
-        public interface OnItemClickListener {
-            void onItemClick(TestItem item);
-        }
-
-        public TestCatalogAdapter(List<TestItem> items, OnItemClickListener listener) {
-            this.allItems = items;
-            this.displayItems = new ArrayList<>(items);
-            this.listener = listener;
-        }
-
-        public void filter(String query) {
-            displayItems.clear();
-            if (query.isEmpty()) {
-                displayItems.addAll(allItems);
-            } else {
-                String q = query.toLowerCase().trim();
-                for (TestItem item : allItems) {
-                    if (item.name.toLowerCase().contains(q) || item.code.toLowerCase().contains(q)) {
-                        displayItems.add(item);
-                    }
-                }
-            }
-            notifyDataSetChanged();
-        }
-
-        @NonNull
-        @Override
-        public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_test_catalog, parent, false);
-            return new VH(v);
-        }
-
-        @Override
-        public void onBindViewHolder(@NonNull VH holder, int position) {
-            TestItem t = displayItems.get(position);
-            holder.name.setText(t.name);
-            holder.code.setText(t.code.isEmpty() ? t.type : t.code);
-            holder.price.setText(String.format("₹%,.0f", t.price));
-            holder.checkBox.setChecked(t.isSelected);
-
-            holder.itemView.setOnClickListener(v -> {
-                listener.onItemClick(t);
-                holder.checkBox.setChecked(t.isSelected);
-            });
-            holder.checkBox.setOnClickListener(v -> listener.onItemClick(t));
-        }
-
-        @Override
-        public int getItemCount() {
-            return displayItems.size();
-        }
-
-        static class VH extends RecyclerView.ViewHolder {
-            TextView name, code, price;
-            android.widget.CheckBox checkBox;
-
-            VH(View v) {
-                super(v);
-                name = v.findViewById(R.id.lblTestName);
-                code = v.findViewById(R.id.lblTestCode);
-                price = v.findViewById(R.id.lblTestPrice);
-                checkBox = v.findViewById(R.id.chkTestSelected);
-            }
-        }
-    }
-
-    public static class DoctorAdapter extends RecyclerView.Adapter<DoctorAdapter.DocVH> {
-        private final List<DoctorItem> list;
-        private final OnDocClick listener;
-
-        public interface OnDocClick {
-            void onDoc(DoctorItem d);
-        }
-
-        public DoctorAdapter(List<DoctorItem> list, OnDocClick listener) {
-            this.list = list;
-            this.listener = listener;
-        }
-
-        @NonNull
-        @Override
-        public DocVH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_doctor_row, parent, false);
-            return new DocVH(v);
-        }
-
-        @Override
-        public void onBindViewHolder(@NonNull DocVH holder, int position) {
-            DoctorItem d = list.get(position);
-            holder.name.setText(d.name);
-            holder.spec.setText(d.spec + (d.hospital.isEmpty() ? "" : " • " + d.hospital));
-            holder.itemView.setOnClickListener(v -> listener.onDoc(d));
-        }
-
-        @Override
-        public int getItemCount() {
-            return list.size();
-        }
-
-        static class DocVH extends RecyclerView.ViewHolder {
-            TextView name, spec;
-            DocVH(View v) {
-                super(v);
-                name = v.findViewById(R.id.lblDocName);
-                spec = v.findViewById(R.id.lblDocSubtitle);
-            }
         }
     }
 }

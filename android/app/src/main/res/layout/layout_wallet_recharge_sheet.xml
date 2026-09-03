@@ -110,7 +110,7 @@
                 android:layout_marginEnd="4dp"
                 android:background="@drawable/bg_tab_pill_inactive"
                 android:gravity="center"
-                android:text="₹500"
+                android:text="₹ 500"
                 android:textColor="#334155"
                 android:textStyle="bold"
                 android:textSize="13sp"
@@ -126,7 +126,7 @@
                 android:layout_marginEnd="2dp"
                 android:background="@drawable/bg_tab_pill_active"
                 android:gravity="center"
-                android:text="₹1,000"
+                android:text="₹ 1,000"
                 android:textColor="#FFFFFF"
                 android:textStyle="bold"
                 android:textSize="13sp"
@@ -142,7 +142,7 @@
                 android:layout_marginEnd="2dp"
                 android:background="@drawable/bg_tab_pill_inactive"
                 android:gravity="center"
-                android:text="₹2,000"
+                android:text="₹ 2,000"
                 android:textColor="#334155"
                 android:textStyle="bold"
                 android:textSize="13sp"
@@ -157,7 +157,7 @@
                 android:layout_marginStart="4dp"
                 android:background="@drawable/bg_tab_pill_inactive"
                 android:gravity="center"
-                android:text="₹5,000"
+                android:text="₹ 5,000"
                 android:textColor="#334155"
                 android:textStyle="bold"
                 android:textSize="13sp"
@@ -182,7 +182,7 @@
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:background="@drawable/bg_profile_input"
-            android:hint="Minimum ₹100"
+            android:hint="Minimum ₹ 100"
             android:text="1000"
             android:textColor="#0F172A"
             android:textStyle="bold"
@@ -217,10 +217,13 @@
                     android:id="@+id/txtSummaryBase"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="₹1,000.00"
+                    android:text="₹ 1,000.00"
                     android:textSize="12.5sp"
                     android:textStyle="bold"
-                    android:textColor="#0F172A" />
+                    android:textColor="#0F172A"
+                    android:maxLines="1"
+                    android:singleLine="true"
+                    android:paddingEnd="4dp" />
             </LinearLayout>
 
             <LinearLayout
@@ -239,10 +242,13 @@
                     android:id="@+id/txtSummaryGst"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="₹180.00"
+                    android:text="₹ 180.00"
                     android:textSize="12.5sp"
                     android:textStyle="bold"
-                    android:textColor="#0F172A" />
+                    android:textColor="#0F172A"
+                    android:maxLines="1"
+                    android:singleLine="true"
+                    android:paddingEnd="4dp" />
             </LinearLayout>
 
             <View
@@ -268,10 +274,15 @@
                     android:id="@+id/txtSummaryTotal"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="₹1,180.00"
+                    android:text="₹ 1,180.00"
                     android:textSize="18sp"
                     android:textStyle="bold"
-                    android:textColor="#059669" />
+                    android:fontFamily="sans-serif"
+                    android:textFontWeight="800"
+                    android:textColor="#059669"
+                    android:maxLines="1"
+                    android:singleLine="true"
+                    android:paddingEnd="4dp" />
             </LinearLayout>
 
         </LinearLayout>

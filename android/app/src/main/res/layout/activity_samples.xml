@@ -1,0 +1,437 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Native Independent Sample Collection & Specimen Accessioning Console -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#F8FAFC">
+
+    <!-- ── TOP CURVED SAPPHIRE HEADER ─────────────────────────────── -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_home_header"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingTop="50dp"
+        android:paddingBottom="20dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Top Row: Back + Title + Action Buttons -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <FrameLayout
+                    android:id="@+id/btnSamplesBack"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/bg_bell_btn"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_back_arrow"
+                        android:tint="#0D6EFD" />
+
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="14dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Sample &amp; Specimen Tracking"
+                        android:textSize="18.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"
+                        android:letterSpacing="-0.02" />
+
+                    <TextView
+                        android:id="@+id/lblSamplesSubtitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Phlebotomy Station • Specimen Accessioning"
+                        android:textSize="12sp"
+                        android:textColor="#C7DFFF" />
+
+                </LinearLayout>
+
+                <!-- Scan Barcode Button -->
+                <FrameLayout
+                    android:id="@+id/btnScanBarcodeHeader"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:background="@drawable/bg_bell_btn"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:layout_marginEnd="8dp">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_camera_scan"
+                        android:tint="#FFFFFF" />
+
+                </FrameLayout>
+
+                <!-- Refresh Button -->
+                <FrameLayout
+                    android:id="@+id/btnRefreshSamples"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:background="@drawable/bg_bell_btn"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="🔄"
+                        android:textSize="15sp" />
+
+                </FrameLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </FrameLayout>
+
+    <!-- ── KPI STATISTICS CARDS (Horizontal Scroll) ────────────────── -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="6dp"
+        android:clipToPadding="false">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <!-- Card 1: Total Specimens Collected -->
+            <LinearLayout
+                android:layout_width="164dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_setting_item"
+                android:padding="14dp"
+                android:layout_marginEnd="10dp"
+                android:elevation="2dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="TOTAL SPECIMENS"
+                    android:textSize="10.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#64748B"
+                    android:letterSpacing="0.05" />
+
+                <TextView
+                    android:id="@+id/lblKpiTotalSamples"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="28"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:textColor="#0D6EFD" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Accessioned Today"
+                    android:textSize="11.5sp"
+                    android:textColor="#94A3B8" />
+
+            </LinearLayout>
+
+            <!-- Card 2: Phlebotomy Due / Pending -->
+            <LinearLayout
+                android:layout_width="164dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_setting_item"
+                android:padding="14dp"
+                android:layout_marginEnd="10dp"
+                android:elevation="2dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="PHLEBOTOMY DUE"
+                    android:textSize="10.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#64748B"
+                    android:letterSpacing="0.05" />
+
+                <TextView
+                    android:id="@+id/lblKpiPendingSamples"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="6"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:textColor="#D97706" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Awaiting Blood Draw"
+                    android:textSize="11.5sp"
+                    android:textColor="#94A3B8" />
+
+            </LinearLayout>
+
+            <!-- Card 3: In Analyzer / Processing -->
+            <LinearLayout
+                android:layout_width="164dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_setting_item"
+                android:padding="14dp"
+                android:layout_marginEnd="10dp"
+                android:elevation="2dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="UNDER TESTING"
+                    android:textSize="10.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#64748B"
+                    android:letterSpacing="0.05" />
+
+                <TextView
+                    android:id="@+id/lblKpiProcessingSamples"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="18"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:textColor="#059669" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="In Centrifuge / Analyzer"
+                    android:textSize="11.5sp"
+                    android:textColor="#94A3B8" />
+
+            </LinearLayout>
+
+            <!-- Card 4: Rejected / Hemolyzed -->
+            <LinearLayout
+                android:layout_width="164dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_setting_item"
+                android:padding="14dp"
+                android:elevation="2dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="REJECTED / QNS"
+                    android:textSize="10.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#64748B"
+                    android:letterSpacing="0.05" />
+
+                <TextView
+                    android:id="@+id/lblKpiRejectedSamples"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="1"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:textColor="#EF4444" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Recollection Needed"
+                    android:textSize="11.5sp"
+                    android:textColor="#94A3B8" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </HorizontalScrollView>
+
+    <!-- ── SEARCH OMNIBAR ─────────────────────────────────────────── -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@drawable/bg_setting_item"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="6dp"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp">
+
+        <ImageView
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:src="@drawable/ic_search"
+            android:tint="#94A3B8" />
+
+        <EditText
+            android:id="@+id/inputSearchSamples"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@null"
+            android:hint="Search barcode, patient, UHID, or test..."
+            android:textColorHint="#94A3B8"
+            android:textColor="#0F172A"
+            android:textSize="13.5sp"
+            android:layout_marginStart="10dp"
+            android:singleLine="true"
+            android:imeOptions="actionSearch" />
+
+        <ImageView
+            android:id="@+id/btnClearSearchSamples"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:src="@drawable/ic_back_arrow"
+            android:tint="#94A3B8"
+            android:visibility="gone"
+            android:clickable="true"
+            android:focusable="true" />
+
+    </LinearLayout>
+
+    <!-- ── STATUS FILTER CHIPS (Horizontal Scroll) ────────────────── -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="6dp"
+        android:clipToPadding="false">
+
+        <LinearLayout
+            android:id="@+id/containerSamplesFilterChips"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" />
+
+    </HorizontalScrollView>
+
+    <!-- ── LIST CONTAINER & EMPTY STATE ───────────────────────────── -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="4dp">
+
+        <!-- Progress Bar -->
+        <ProgressBar
+            android:id="@+id/progressSamples"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:indeterminateTint="#0D6EFD"
+            android:visibility="gone" />
+
+        <!-- Specimen Recycler View -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerSamplesList"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingBottom="80dp"
+            android:clipToPadding="false" />
+
+        <!-- Empty State View -->
+        <LinearLayout
+            android:id="@+id/emptyStateSamples"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="32dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🧪"
+                android:textSize="48sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="No Specimens Found"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:textColor="#0F172A" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="No laboratory samples matched your search or status criteria."
+                android:textSize="13sp"
+                android:textColor="#64748B"
+                android:gravity="center" />
+
+        </LinearLayout>
+
+        <!-- Floating + Accession Button -->
+        <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+            android:id="@+id/fabAccessionSample"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="20dp"
+            android:backgroundTint="#0D6EFD"
+            android:text="+ Accession Specimen"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            app:icon="@drawable/ic_plus"
+            app:iconTint="#FFFFFF"
+            app:elevation="6dp" />
+
+    </FrameLayout>
+
+</LinearLayout>

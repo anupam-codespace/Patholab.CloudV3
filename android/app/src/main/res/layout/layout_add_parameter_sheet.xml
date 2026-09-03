@@ -1,0 +1,696 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Full 4-Tab Comprehensive Parameter Editor / Creator Sheet -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/bg_bottom_sheet"
+    android:paddingTop="12dp">
+
+    <!-- Drag Handle -->
+    <View
+        android:layout_width="44dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="12dp"
+        android:background="#CBD5E1" />
+
+    <!-- Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="10dp">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/lblParamSheetTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Create Custom Parameter"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#0F172A"
+                android:letterSpacing="-0.01" />
+
+            <TextView
+                android:id="@+id/lblParamSheetSubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Configure reference intervals, calculations &amp; auto-reagents"
+                android:textSize="12sp"
+                android:textColor="#64748B" />
+
+        </LinearLayout>
+
+        <FrameLayout
+            android:id="@+id/btnCloseParamSheet"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@drawable/bg_bell_btn"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_close_cross"
+                android:tint="#475569" />
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+    <!-- Global Parameter Notice Box -->
+    <LinearLayout
+        android:id="@+id/boxGlobalParamNotice"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="10dp"
+        android:background="@drawable/bg_pill_indigo_soft"
+        android:orientation="horizontal"
+        android:padding="10dp"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="NOTE"
+            android:textSize="10.5sp"
+            android:textStyle="bold"
+            android:textColor="#4338CA" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:text="Editing Master Catalog Parameter. Modifying details or reference ranges will automatically generate a customized local copy specifically for your laboratory."
+            android:textSize="11.5sp"
+            android:textColor="#3730A3"
+            android:lineSpacingExtra="2dp" />
+
+    </LinearLayout>
+
+    <!-- 4-Tab Segment Selector -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="12dp"
+        android:background="@drawable/bg_setting_item"
+        android:padding="3dp"
+        android:orientation="horizontal"
+        android:weightSum="4">
+
+        <TextView
+            android:id="@+id/tabParamCore"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="Core"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="#0D6EFD"
+            android:background="@drawable/bg_pill_white"
+            android:elevation="1dp" />
+
+        <TextView
+            android:id="@+id/tabParamRanges"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="Ranges"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="#64748B" />
+
+        <TextView
+            android:id="@+id/tabParamFormula"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="Formula"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="#64748B" />
+
+        <TextView
+            android:id="@+id/tabParamInventory"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="Inventory"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="#64748B" />
+
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#F1F5F9" />
+
+    <!-- Tab Contents Scroll View -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:padding="20dp">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!-- ══════════════════════════════════════════════════ -->
+            <!-- TAB 1: CORE DETAILS                                -->
+            <!-- ══════════════════════════════════════════════════ -->
+            <LinearLayout
+                android:id="@+id/contentParamCore"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="visible">
+
+                <!-- Parameter Name & Short Code -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="14dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1.3"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Parameter Name *"
+                            android:textSize="12.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#475569"
+                            android:layout_marginBottom="6dp" />
+
+                        <EditText
+                            android:id="@+id/inputNewParamName"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:background="@drawable/bg_input_field"
+                            android:hint="e.g. Hemoglobin"
+                            android:inputType="textCapWords"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp"
+                            android:textSize="14.5sp"
+                            android:textColor="#0F172A"
+                            android:textColorHint="#94A3B8"
+                            android:singleLine="true" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.9"
+                        android:layout_marginStart="10dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Short Code *"
+                            android:textSize="12.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#475569"
+                            android:layout_marginBottom="6dp" />
+
+                        <EditText
+                            android:id="@+id/inputNewParamCode"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:background="@drawable/bg_input_field"
+                            android:hint="e.g. HGB"
+                            android:inputType="textCapCharacters"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp"
+                            android:textSize="14.5sp"
+                            android:textColor="#0F172A"
+                            android:textColorHint="#94A3B8"
+                            android:singleLine="true" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- Tube / Container Type -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Tube / Container Type"
+                    android:textSize="12.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#475569"
+                    android:layout_marginBottom="6dp" />
+
+                <Spinner
+                    android:id="@+id/spinnerParamTube"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:background="@drawable/bg_input_field"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:layout_marginBottom="14dp" />
+
+                <!-- Input Type, Unit & Standalone Price -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="14dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1.2"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Input Type *"
+                            android:textSize="12.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#475569"
+                            android:layout_marginBottom="6dp" />
+
+                        <Spinner
+                            android:id="@+id/spinnerParamInputType"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:background="@drawable/bg_input_field"
+                            android:paddingStart="8dp"
+                            android:paddingEnd="8dp" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.9"
+                        android:layout_marginStart="10dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Unit"
+                            android:textSize="12.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#475569"
+                            android:layout_marginBottom="6dp" />
+
+                        <EditText
+                            android:id="@+id/inputNewParamUnit"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:background="@drawable/bg_input_field"
+                            android:hint="e.g. g/dL"
+                            android:inputType="text"
+                            android:paddingStart="12dp"
+                            android:paddingEnd="12dp"
+                            android:textSize="14.5sp"
+                            android:textColor="#0F172A"
+                            android:textColorHint="#94A3B8"
+                            android:singleLine="true" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.9"
+                        android:layout_marginStart="10dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Price (₹)"
+                            android:textSize="12.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#475569"
+                            android:layout_marginBottom="6dp" />
+
+                        <EditText
+                            android:id="@+id/inputNewParamPrice"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:background="@drawable/bg_input_field"
+                            android:hint="0.00"
+                            android:inputType="numberDecimal"
+                            android:paddingStart="12dp"
+                            android:paddingEnd="12dp"
+                            android:textSize="14.5sp"
+                            android:textColor="#0F172A"
+                            android:textColorHint="#94A3B8"
+                            android:singleLine="true" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- Method & Decimal Places -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="14dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1.5"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Methodology (Optional)"
+                            android:textSize="12.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#475569"
+                            android:layout_marginBottom="6dp" />
+
+                        <EditText
+                            android:id="@+id/inputNewParamMethod"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:background="@drawable/bg_input_field"
+                            android:hint="e.g. SLS-Photometry"
+                            android:inputType="text"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp"
+                            android:textSize="14.5sp"
+                            android:textColor="#0F172A"
+                            android:textColorHint="#94A3B8"
+                            android:singleLine="true" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.8"
+                        android:layout_marginStart="10dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Decimals"
+                            android:textSize="12.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#475569"
+                            android:layout_marginBottom="6dp" />
+
+                        <EditText
+                            android:id="@+id/inputNewParamDecimals"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:background="@drawable/bg_input_field"
+                            android:hint="2"
+                            android:inputType="number"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp"
+                            android:textSize="14.5sp"
+                            android:textColor="#0F172A"
+                            android:textColorHint="#94A3B8"
+                            android:singleLine="true" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- ══════════════════════════════════════════════════ -->
+            <!-- TAB 2: REFERENCE RANGES                            -->
+            <!-- ══════════════════════════════════════════════════ -->
+            <LinearLayout
+                android:id="@+id/contentParamRanges"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <!-- Guide Banner -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_pill_indigo_soft"
+                    android:orientation="vertical"
+                    android:padding="10dp"
+                    android:layout_marginBottom="12dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="📊 Biological Reference Intervals"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:textColor="#3730A3" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:text="Add intervals by age and gender. Use 'Report Display Text' to customize the exact text on patient reports."
+                        android:textSize="11sp"
+                        android:textColor="#4338CA" />
+
+                </LinearLayout>
+
+                <!-- Dynamic Range Conditions Container -->
+                <LinearLayout
+                    android:id="@+id/containerRangeRows"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginBottom="12dp" />
+
+                <!-- Add Range Condition Button -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnAddParamRangeRow"
+                    android:layout_width="match_parent"
+                    android:layout_height="46dp"
+                    android:text="+ Add Biological Range Condition"
+                    android:textSize="13.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#0D6EFD"
+                    android:backgroundTint="#EFF6FF"
+                    app:cornerRadius="12dp"
+                    app:strokeColor="#BFDBFE"
+                    app:strokeWidth="1dp"
+                    android:elevation="0dp"
+                    android:textAllCaps="false" />
+
+            </LinearLayout>
+
+            <!-- ══════════════════════════════════════════════════ -->
+            <!-- TAB 3: CALCULATION FORMULA                         -->
+            <!-- ══════════════════════════════════════════════════ -->
+            <LinearLayout
+                android:id="@+id/contentParamFormula"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_pill_indigo_soft"
+                    android:orientation="vertical"
+                    android:padding="12dp"
+                    android:layout_marginBottom="14dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="💡 Calculation Formulas"
+                        android:textSize="12.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#3730A3" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="You can use parameter short codes in arithmetic formulas.\nExample: (TP - ALB) for Globulin, or (CHOL / HDL) for Cholesterol Ratio."
+                        android:textSize="11.5sp"
+                        android:textColor="#4338CA"
+                        android:lineSpacingExtra="2dp" />
+
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Formula Expression (Optional)"
+                    android:textSize="12.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#475569"
+                    android:layout_marginBottom="6dp" />
+
+                <EditText
+                    android:id="@+id/inputNewParamFormula"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:background="@drawable/bg_input_field"
+                    android:hint="e.g. (TP - ALB)"
+                    android:inputType="text"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:textSize="14.5sp"
+                    android:textColor="#0F172A"
+                    android:textColorHint="#94A3B8"
+                    android:layout_marginBottom="16dp"
+                    android:singleLine="true" />
+
+            </LinearLayout>
+
+            <!-- ══════════════════════════════════════════════════ -->
+            <!-- TAB 4: INVENTORY / AUTO-REAGENTS                   -->
+            <!-- ══════════════════════════════════════════════════ -->
+            <LinearLayout
+                android:id="@+id/contentParamInventory"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_tag_emerald"
+                    android:orientation="vertical"
+                    android:padding="12dp"
+                    android:layout_marginBottom="14dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Automatic Inventory Consumption"
+                        android:textSize="12.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#059669" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Reagents linked here will be automatically deducted from your laboratory inventory stock each time a test with this parameter is validated."
+                        android:textSize="11.5sp"
+                        android:textColor="#047857"
+                        android:lineSpacingExtra="2dp" />
+
+                </LinearLayout>
+
+                <!-- Dynamic Reagent Rows Container -->
+                <LinearLayout
+                    android:id="@+id/containerReagentRows"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginBottom="12dp" />
+
+                <!-- Link Inventory Item Button -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnAddParamReagentRow"
+                    android:layout_width="match_parent"
+                    android:layout_height="46dp"
+                    android:text="+ Link Inventory Reagent Item"
+                    android:textSize="13.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#059669"
+                    android:backgroundTint="#ECFDF5"
+                    app:cornerRadius="12dp"
+                    app:strokeColor="#A7F3D0"
+                    app:strokeWidth="1dp"
+                    android:elevation="0dp"
+                    android:textAllCaps="false" />
+
+            </LinearLayout>
+
+        </FrameLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Bottom Actions Toolbar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:background="#FFFFFF"
+        android:elevation="8dp">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCancelParamSheet"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:text="Cancel"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#64748B"
+            android:backgroundTint="#F1F5F9"
+            app:cornerRadius="14dp"
+            android:elevation="0dp"
+            android:textAllCaps="false" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSubmitParamSheet"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="2"
+            android:text="Save Parameter"
+            android:textSize="14.5sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#0D6EFD"
+            app:cornerRadius="14dp"
+            android:elevation="2dp"
+            app:icon="@drawable/ic_check_bold"
+            app:iconGravity="textStart"
+            app:iconPadding="6dp"
+            app:iconTint="#FFFFFF"
+            android:textAllCaps="false" />
+
+    </LinearLayout>
+
+</LinearLayout>

@@ -73,19 +73,15 @@ public class ForgotPasswordActivity extends AppCompatActivity {
     }
 
     private void setupListeners() {
-        findViewById(R.id.btnBack).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
+        View btnBack = findViewById(R.id.btnBack);
+        if (btnBack != null) {
+            btnBack.setOnClickListener(v -> finish());
+        }
 
-        findViewById(R.id.btnBackToLogin).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
+        View btnBackToLogin = findViewById(R.id.btnBackToLogin);
+        if (btnBackToLogin != null) {
+            btnBackToLogin.setOnClickListener(v -> finish());
+        }
 
         btnSend.setOnClickListener(new View.OnClickListener() {
             @Override

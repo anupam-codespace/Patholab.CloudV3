@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Diagnostic Report Item Card (Matching Web UI Table Exactly) -->
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardCornerRadius="18dp"
+    app:cardElevation="2dp"
+    app:cardBackgroundColor="#FFFFFF"
+    app:cardPreventCornerOverlap="false"
+    android:layout_marginTop="5dp"
+    android:layout_marginBottom="8dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Row 1: Patient Details & Status Badge -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
+
+            <!-- Standardized Patient Avatar -->
+            <ImageView
+                android:id="@+id/lblReportPatientAvatar"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:src="@drawable/ic_patient_avatar"
+                android:scaleType="centerCrop" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginStart="10dp">
+
+                <TextView
+                    android:id="@+id/lblReportPatientName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="PRATIMA GHOSH"
+                    android:textSize="15.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#0F172A"
+                    android:letterSpacing="-0.01" />
+
+                <TextView
+                    android:id="@+id/lblReportPatientUhid"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="1dp"
+                    android:text="P-00096"
+                    android:textSize="12sp"
+                    android:textColor="#64748B" />
+
+            </LinearLayout>
+
+            <!-- Status Badge - uses vector check icon set at runtime -->
+            <TextView
+                android:id="@+id/lblReportStatusBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_bento_emerald"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp"
+                android:text="Approved"
+                android:textSize="11.5sp"
+                android:textStyle="bold"
+                android:textColor="#059669"
+                android:drawablePadding="4dp"
+                android:gravity="center_vertical" />
+
+        </LinearLayout>
+
+        <!-- Row 2: Test Name & Test Code -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_pill_glass"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:layout_marginBottom="10dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/lblReportTestName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Complete Blood Count (CBC)"
+                    android:textSize="13.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#1E293B"
+                    android:singleLine="true"
+                    android:ellipsize="end" />
+
+                <TextView
+                    android:id="@+id/lblReportTestCode"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="1dp"
+                    android:text="T_CBC"
+                    android:textSize="11.5sp"
+                    android:textColor="#64748B" />
+
+            </LinearLayout>
+
+            <!-- Version Badge (e.g. v1.0) -->
+            <TextView
+                android:id="@+id/lblReportVersionBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_bento_blue"
+                android:paddingStart="9dp"
+                android:paddingEnd="9dp"
+                android:paddingTop="3dp"
+                android:paddingBottom="3dp"
+                android:text="v1.0"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="#0D6EFD" />
+
+        </LinearLayout>
+
+        <!-- Row 3: Generated Date -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
+
+            <!-- Date row with calendar icon -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:layout_width="13dp"
+                    android:layout_height="13dp"
+                    android:src="@drawable/ic_calendar_clock"
+                    android:tint="#94A3B8"
+                    android:layout_marginEnd="4dp" />
+
+                <TextView
+                    android:id="@+id/lblReportDate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="01 Sept 2026, 12:08 pm"
+                    android:textSize="12sp"
+                    android:textColor="#64748B" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <TextView
+                android:id="@+id/lblReportMetaPhone"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="+91 98765 43210"
+                android:textSize="11.5sp"
+                android:textColor="#94A3B8" />
+
+        </LinearLayout>
+
+        <!-- Optional Amendment Reason Banner -->
+        <LinearLayout
+            android:id="@+id/containerAmendmentReason"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_mod_icon_purple"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:layout_marginBottom="12dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:src="@drawable/ic_warning_triangle"
+                android:tint="#7C3AED" />
+
+            <TextView
+                android:id="@+id/lblAmendmentReason"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:text="Amended: Corrected typo in clinical notes"
+                android:textSize="11.5sp"
+                android:textColor="#6B21A8"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#F1F5F9"
+            android:layout_marginBottom="12dp" />
+
+        <!-- Row 4: Action Buttons (Print, Download, Amend, Share) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <!-- 1. Print Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnReportPrint"
+                android:layout_width="0dp"
+                android:layout_height="38dp"
+                android:layout_weight="1"
+                android:text="Print"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="#0D6EFD"
+                android:backgroundTint="#EFF6FF"
+                app:cornerRadius="10dp"
+                app:strokeColor="#BFDBFE"
+                app:strokeWidth="1dp"
+                android:elevation="0dp"
+                android:paddingStart="4dp"
+                android:paddingEnd="4dp"
+                android:textAllCaps="false"
+                android:layout_marginEnd="6dp" />
+
+            <!-- 2. Download Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnReportDownload"
+                android:layout_width="0dp"
+                android:layout_height="38dp"
+                android:layout_weight="1.2"
+                android:text="Download"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="#0D6EFD"
+                android:backgroundTint="#EFF6FF"
+                app:cornerRadius="10dp"
+                app:strokeColor="#BFDBFE"
+                app:strokeWidth="1dp"
+                android:elevation="0dp"
+                android:paddingStart="4dp"
+                android:paddingEnd="4dp"
+                android:textAllCaps="false"
+                android:layout_marginEnd="6dp" />
+
+            <!-- 3. Amend Button -->
+            <FrameLayout
+                android:id="@+id/btnReportAmend"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:background="@drawable/bg_setting_item"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_marginEnd="6dp">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_document"
+                    app:tint="#64748B" />
+            </FrameLayout>
+
+            <!-- 4. Share Button -->
+            <FrameLayout
+                android:id="@+id/btnReportShare"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:background="@drawable/bg_setting_item"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_nav_more"
+                    app:tint="#64748B" />
+            </FrameLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

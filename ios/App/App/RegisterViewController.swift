@@ -16,6 +16,10 @@ class RegisterViewController: AuthBaseViewController {
     private let passwordErrorLabel = UILabel()
     private let confirmErrorLabel  = UILabel()
 
+    private var isTermsAccepted = false
+    private let termsCheckboxBtn = UIButton(type: .custom)
+    private let termsErrorLabel  = UILabel()
+
     private let registerButton = UIButton()
     private let spinner        = UIActivityIndicatorView(style: .medium)
 
@@ -31,7 +35,7 @@ class RegisterViewController: AuthBaseViewController {
     }
 
     private func buildUI() {
-        // ── Header ──────────────────────────────────────────────────────────
+        // ── Header with balanced top/bottom spacing ──────────────────────────
         let backBtn = makeBackButton()
         backBtn.addTarget(self, action: #selector(backTapped), for: .touchUpInside)
         backBtn.translatesAutoresizingMaskIntoConstraints = false
@@ -39,12 +43,14 @@ class RegisterViewController: AuthBaseViewController {
 
         let headerStack = UIStackView()
         headerStack.axis = .vertical
-        headerStack.spacing = 6
+        headerStack.spacing = 3
         headerStack.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(headerStack)
 
-        let titleLabel = makeLabel("Create Account", size: 38, weight: .black, color: .white)
-        let subtitleLabel = makeLabel("Start your lab's digital journey today.", size: 14, weight: .regular, color: UIColor(red: 199/255, green: 210/255, blue: 254/255, alpha: 1))
+        let titleLabel = makeLabel("Create Account", size: 32, weight: .black, color: .white)
+        titleLabel.adjustsFontSizeToFitWidth = true
+        titleLabel.minimumScaleFactor = 0.8
+        let subtitleLabel = makeLabel("Start your lab's digital journey today.", size: 13.5, weight: .regular, color: UIColor(red: 199/255, green: 210/255, blue: 254/255, alpha: 1))
         headerStack.addArrangedSubview(titleLabel)
         headerStack.addArrangedSubview(subtitleLabel)
 
@@ -53,12 +59,16 @@ class RegisterViewController: AuthBaseViewController {
         view.addSubview(spacer)
 
         NSLayoutConstraint.activate([
-            backBtn.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 12),
-            backBtn.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
-            headerStack.topAnchor.constraint(equalTo: backBtn.bottomAnchor, constant: 16),
-            headerStack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 28),
-            headerStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -28),
-            spacer.topAnchor.constraint(equalTo: headerStack.bottomAnchor, constant: 24),
+            backBtn.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 14),
+            backBtn.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            backBtn.widthAnchor.constraint(equalToConstant: 40),
+            backBtn.heightAnchor.constraint(equalToConstant: 40),
+
+            headerStack.leadingAnchor.constraint(equalTo: backBtn.trailingAnchor, constant: 14),
+            headerStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            headerStack.centerYAnchor.constraint(equalTo: backBtn.centerYAnchor),
+
+            spacer.topAnchor.constraint(equalTo: headerStack.bottomAnchor, constant: 16),
             spacer.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             spacer.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             spacer.heightAnchor.constraint(equalToConstant: 0)
@@ -73,10 +83,10 @@ class RegisterViewController: AuthBaseViewController {
         cardContentView.addSubview(content)
 
         NSLayoutConstraint.activate([
-            content.topAnchor.constraint(equalTo: cardContentView.topAnchor, constant: 24),
-            content.leadingAnchor.constraint(equalTo: cardContentView.leadingAnchor, constant: 24),
-            content.trailingAnchor.constraint(equalTo: cardContentView.trailingAnchor, constant: -24),
-            content.bottomAnchor.constraint(equalTo: cardContentView.bottomAnchor, constant: -40)
+            content.topAnchor.constraint(equalTo: cardContentView.topAnchor, constant: 22),
+            content.leadingAnchor.constraint(equalTo: cardContentView.leadingAnchor, constant: 20),
+            content.trailingAnchor.constraint(equalTo: cardContentView.trailingAnchor, constant: -20),
+            content.bottomAnchor.constraint(equalTo: cardContentView.bottomAnchor, constant: -36)
         ])
 
         let (banner, label) = makeErrorBanner()
@@ -85,48 +95,44 @@ class RegisterViewController: AuthBaseViewController {
         content.addArrangedSubview(banner)
         content.setCustomSpacing(16, after: banner)
 
-        // Fields setup
-        addFieldSection("Lab / Organization Name *", field: labNameField, placeholder: "e.g. Apex Diagnostics", errorLabel: labNameErrorLabel, to: content)
-        addFieldSection("Your Full Name *", field: nameField, placeholder: "Dr. John Doe", errorLabel: nameErrorLabel, to: content)
-        addFieldSection("Phone Number *", field: phoneField, placeholder: "98765 43210", keyboardType: .phonePad, errorLabel: phoneErrorLabel, to: content)
-        addFieldSection("Email Address *", field: emailField, placeholder: "admin@apexdiagnostics.com", keyboardType: .emailAddress, errorLabel: emailErrorLabel, to: content)
+        // ── ROW 1: Lab / Organization Name & Full Name in one row ────────────
+        let labCol = makeFormField(title: "Lab / Org Name *", field: labNameField, placeholder: "Apex Diagnostics", errorLabel: labNameErrorLabel)
+        let nameCol = makeFormField(title: "Full Name *", field: nameField, placeholder: "Dr. John Doe", errorLabel: nameErrorLabel)
+        let row1 = makeTwoColumnRow(left: labCol, right: nameCol)
+        content.addArrangedSubview(row1)
+        content.setCustomSpacing(14, after: row1)
 
-        // Password field
-        content.addArrangedSubview(makeFieldLabel("Password *"))
-        content.setCustomSpacing(6, after: content.arrangedSubviews.last!)
-        passwordField.copyProperties(from: makeTextField(placeholder: "Min. 8 characters", isSecure: true))
-        let pwdContainer = createSecureContainer(tf: passwordField, identifier: "reg_password")
-        passwordField.addTarget(self, action: #selector(passwordChanged), for: .editingChanged)
-        content.addArrangedSubview(pwdContainer)
+        // ── ROW 2: Phone Number & Email Address in one row ───────────────────
+        let phoneCol = makeFormField(title: "Phone Number *", field: phoneField, placeholder: "98765 43210", keyboardType: .phonePad, errorLabel: phoneErrorLabel)
+        let emailCol = makeFormField(title: "Email Address *", field: emailField, placeholder: "admin@lab.com", keyboardType: .emailAddress, errorLabel: emailErrorLabel)
+        let row2 = makeTwoColumnRow(left: phoneCol, right: emailCol)
+        content.addArrangedSubview(row2)
+        content.setCustomSpacing(14, after: row2)
 
-        // Strength Bar
+        // ── ROW 3: Password & Confirm Password in one row ────────────────────
+        let pwdCol = makePasswordField(title: "Password *", field: passwordField, placeholder: "Min. 8 chars", identifier: "reg_password", errorLabel: passwordErrorLabel, isConfirm: false)
+        let confirmCol = makePasswordField(title: "Confirm Password *", field: confirmField, placeholder: "Re-enter", identifier: "reg_confirm", errorLabel: confirmErrorLabel, isConfirm: true)
+        let row3 = makeTwoColumnRow(left: pwdCol, right: confirmCol)
+        content.addArrangedSubview(row3)
+
+        // Password Strength Bar
         setupStrengthBar()
-        content.setCustomSpacing(6, after: pwdContainer)
+        content.setCustomSpacing(8, after: row3)
         content.addArrangedSubview(strengthBar)
         content.setCustomSpacing(4, after: strengthBar)
         strengthLabel.font = .systemFont(ofSize: 11, weight: .bold)
         strengthLabel.isHidden = true
         content.addArrangedSubview(strengthLabel)
 
-        setupErrorLabel(passwordErrorLabel, to: content)
-
-        // Confirm Password
-        content.addArrangedSubview(makeFieldLabel("Confirm Password *"))
-        content.setCustomSpacing(6, after: content.arrangedSubviews.last!)
-        confirmField.copyProperties(from: makeTextField(placeholder: "Re-enter password", isSecure: true))
-        let confirmContainer = createSecureContainer(tf: confirmField, identifier: "reg_confirm")
-        content.addArrangedSubview(confirmContainer)
-        setupErrorLabel(confirmErrorLabel, to: content)
-
-        // Legal Consent Box
-        let consentBox = makeLegalConsentBox()
-        content.setCustomSpacing(16, after: content.arrangedSubviews.last!)
-        content.addArrangedSubview(consentBox)
+        // ── Mandatory Interactive Terms & Privacy Checkbox Card ──────────────
+        let termsBox = makeInteractiveTermsBox()
+        content.setCustomSpacing(16, after: strengthLabel.isHidden ? strengthBar : strengthLabel)
+        content.addArrangedSubview(termsBox)
 
         // Register Button
         let btn = makePrimaryButton(title: "Create Account")
         btn.addTarget(self, action: #selector(registerTapped), for: .touchUpInside)
-        content.setCustomSpacing(16, after: consentBox)
+        content.setCustomSpacing(16, after: termsBox)
         content.addArrangedSubview(btn)
 
         spinner.translatesAutoresizingMaskIntoConstraints = false
@@ -135,7 +141,7 @@ class RegisterViewController: AuthBaseViewController {
         content.addArrangedSubview(spinner)
         content.setCustomSpacing(20, after: btn)
 
-        // Footer
+        // Footer Login Link
         let loginRow = makeFooterLink(text: "Already have an account? ", linkText: "Log in", action: #selector(backTapped))
         content.addArrangedSubview(loginRow)
         content.setCustomSpacing(20, after: loginRow)
@@ -150,58 +156,161 @@ class RegisterViewController: AuthBaseViewController {
         content.addArrangedSubview(copyright)
     }
 
-    private func addFieldSection(_ title: String, field: UITextField, placeholder: String, keyboardType: UIKeyboardType = .default, errorLabel: UILabel, to stack: UIStackView) {
-        stack.addArrangedSubview(makeFieldLabel(title))
-        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
+    private func makeTwoColumnRow(left: UIView, right: UIView) -> UIStackView {
+        let row = UIStackView(arrangedSubviews: [left, right])
+        row.axis = .horizontal
+        row.distribution = .fillEqually
+        row.spacing = 12
+        row.alignment = .top
+        return row
+    }
+
+    private func makeFormField(title: String, field: UITextField, placeholder: String, keyboardType: UIKeyboardType = .default, errorLabel: UILabel) -> UIView {
+        let col = UIStackView()
+        col.axis = .vertical
+        col.spacing = 6
+        col.alignment = .fill
+
+        let lbl = makeLabel(title, size: 13, weight: .bold, color: AuthBaseViewController.textPrimary)
+        col.addArrangedSubview(lbl)
+
         let tf = makeTextField(placeholder: placeholder, keyboardType: keyboardType)
         field.copyProperties(from: tf)
-        stack.addArrangedSubview(tf)
-        setupErrorLabel(errorLabel, to: stack)
+        col.addArrangedSubview(tf)
+
+        errorLabel.font = .systemFont(ofSize: 11.5, weight: .medium)
+        errorLabel.textColor = AuthBaseViewController.errorRed
+        errorLabel.isHidden = true
+        errorLabel.numberOfLines = 0
+        col.addArrangedSubview(errorLabel)
+
+        return col
     }
 
-    private func makeFieldLabel(_ text: String) -> UILabel {
-        return makeLabel(text, size: 14, weight: .semibold, color: AuthBaseViewController.textPrimary)
+    private func makePasswordField(title: String, field: UITextField, placeholder: String, identifier: String, errorLabel: UILabel, isConfirm: Bool) -> UIView {
+        let col = UIStackView()
+        col.axis = .vertical
+        col.spacing = 6
+        col.alignment = .fill
+
+        let lbl = makeLabel(title, size: 13, weight: .bold, color: AuthBaseViewController.textPrimary)
+        col.addArrangedSubview(lbl)
+
+        field.copyProperties(from: makeTextField(placeholder: placeholder, isSecure: true))
+        if !isConfirm {
+            field.addTarget(self, action: #selector(passwordChanged), for: .editingChanged)
+        }
+        let pwdContainer = createSecureContainer(tf: field, identifier: identifier)
+        col.addArrangedSubview(pwdContainer)
+
+        errorLabel.font = .systemFont(ofSize: 11.5, weight: .medium)
+        errorLabel.textColor = AuthBaseViewController.errorRed
+        errorLabel.isHidden = true
+        errorLabel.numberOfLines = 0
+        col.addArrangedSubview(errorLabel)
+
+        return col
     }
 
-    private func setupErrorLabel(_ label: UILabel, to stack: UIStackView) {
-        label.font = .systemFont(ofSize: 12, weight: .medium)
-        label.textColor = AuthBaseViewController.errorRed
-        label.isHidden = true
+    private func makeInteractiveTermsBox() -> UIView {
+        let container = UIView()
+        container.backgroundColor = UIColor(red: 248/255, green: 250/255, blue: 252/255, alpha: 1)
+        container.layer.cornerRadius = 12
+        container.layer.borderWidth = 1
+        container.layer.borderColor = UIColor(red: 226/255, green: 232/255, blue: 240/255, alpha: 1).cgColor
+        container.translatesAutoresizingMaskIntoConstraints = false
+
+        let rowStack = UIStackView()
+        rowStack.axis = .horizontal
+        rowStack.alignment = .top
+        rowStack.spacing = 10
+        rowStack.translatesAutoresizingMaskIntoConstraints = false
+
+        // Checkbox Button
+        updateCheckboxState()
+        termsCheckboxBtn.translatesAutoresizingMaskIntoConstraints = false
+        termsCheckboxBtn.addTarget(self, action: #selector(toggleTermsCheckbox), for: .touchUpInside)
+        NSLayoutConstraint.activate([
+            termsCheckboxBtn.widthAnchor.constraint(equalToConstant: 24),
+            termsCheckboxBtn.heightAnchor.constraint(equalToConstant: 24)
+        ])
+        rowStack.addArrangedSubview(termsCheckboxBtn)
+
+        let label = UILabel()
         label.numberOfLines = 0
-        stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
-        stack.addArrangedSubview(label)
-        stack.setCustomSpacing(14, after: label)
+        label.font = .systemFont(ofSize: 12, weight: .regular)
+        label.textColor = AuthBaseViewController.textSecondary
+        label.translatesAutoresizingMaskIntoConstraints = false
+
+        let fullText = "I agree to the Terms & Conditions, Privacy Policy, and Refund Policy."
+        let attr = NSMutableAttributedString(string: fullText, attributes: [
+            .foregroundColor: AuthBaseViewController.textSecondary,
+            .font: UIFont.systemFont(ofSize: 12, weight: .regular)
+        ])
+
+        if let range = fullText.range(of: "Terms & Conditions") {
+            attr.addAttribute(.foregroundColor, value: AuthBaseViewController.indigoMid, range: NSRange(range, in: fullText))
+            attr.addAttribute(.font, value: UIFont.systemFont(ofSize: 12, weight: .bold), range: NSRange(range, in: fullText))
+        }
+        if let range = fullText.range(of: "Privacy Policy") {
+            attr.addAttribute(.foregroundColor, value: AuthBaseViewController.indigoMid, range: NSRange(range, in: fullText))
+            attr.addAttribute(.font, value: UIFont.systemFont(ofSize: 12, weight: .bold), range: NSRange(range, in: fullText))
+        }
+        if let range = fullText.range(of: "Refund Policy") {
+            attr.addAttribute(.foregroundColor, value: AuthBaseViewController.indigoMid, range: NSRange(range, in: fullText))
+            attr.addAttribute(.font, value: UIFont.systemFont(ofSize: 12, weight: .bold), range: NSRange(range, in: fullText))
+        }
+        label.attributedText = attr
+        label.isUserInteractionEnabled = true
+        label.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(termsLabelTapped)))
+        rowStack.addArrangedSubview(label)
+
+        // Terms Error Label
+        termsErrorLabel.text = "Please accept the Terms & Conditions and Privacy Policy to continue"
+        termsErrorLabel.font = .systemFont(ofSize: 11.5, weight: .medium)
+        termsErrorLabel.textColor = AuthBaseViewController.errorRed
+        termsErrorLabel.isHidden = true
+        termsErrorLabel.numberOfLines = 0
+        termsErrorLabel.translatesAutoresizingMaskIntoConstraints = false
+
+        let boxStack = UIStackView(arrangedSubviews: [rowStack, termsErrorLabel])
+        boxStack.axis = .vertical
+        boxStack.spacing = 6
+        boxStack.translatesAutoresizingMaskIntoConstraints = false
+
+        container.addSubview(boxStack)
+        NSLayoutConstraint.activate([
+            boxStack.topAnchor.constraint(equalTo: container.topAnchor, constant: 12),
+            boxStack.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -12),
+            boxStack.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 12),
+            boxStack.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -12)
+        ])
+
+        return container
+    }
+
+    @objc private func toggleTermsCheckbox() {
+        isTermsAccepted.toggle()
+        updateCheckboxState()
+        if isTermsAccepted {
+            termsErrorLabel.isHidden = true
+        }
+    }
+
+    @objc private func termsLabelTapped() {
+        // Tapping label toggles checkbox
+        toggleTermsCheckbox()
+    }
+
+    private func updateCheckboxState() {
+        let symbolName = isTermsAccepted ? "checkmark.square.fill" : "square"
+        let img = UIImage(systemName: symbolName)?.withRenderingMode(.alwaysTemplate)
+        termsCheckboxBtn.setImage(img, for: .normal)
+        termsCheckboxBtn.tintColor = isTermsAccepted ? AuthBaseViewController.indigoMid : UIColor(red: 148/255, green: 163/255, blue: 184/255, alpha: 1)
     }
 
     private func createSecureContainer(tf: UITextField, identifier: String) -> UIView {
-        let container = UIView()
-        container.translatesAutoresizingMaskIntoConstraints = false
-        container.heightAnchor.constraint(equalToConstant: 52).isActive = true
-        tf.accessibilityIdentifier = identifier
-        tf.translatesAutoresizingMaskIntoConstraints = false
-        container.addSubview(tf)
-
-        let eye = UIButton(type: .system)
-        eye.setImage(UIImage(systemName: "eye.slash"), for: .normal)
-        eye.tintColor = AuthBaseViewController.textHint
-        eye.translatesAutoresizingMaskIntoConstraints = false
-        eye.addAction(UIAction { [weak tf, weak eye] _ in
-            tf?.isSecureTextEntry.toggle()
-            let img = (tf?.isSecureTextEntry ?? true) ? "eye.slash" : "eye"
-            eye?.setImage(UIImage(systemName: img), for: .normal)
-        }, for: .touchUpInside)
-        container.addSubview(eye)
-
-        NSLayoutConstraint.activate([
-            tf.topAnchor.constraint(equalTo: container.topAnchor),
-            tf.bottomAnchor.constraint(equalTo: container.bottomAnchor),
-            tf.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-            tf.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-            eye.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -12),
-            eye.centerYAnchor.constraint(equalTo: container.centerYAnchor),
-            eye.widthAnchor.constraint(equalToConstant: 32),
-            eye.heightAnchor.constraint(equalToConstant: 32)
-        ])
+        let (container, _) = makeAnimatedPasswordRow(tf: tf, identifier: identifier)
         return container
     }
 
@@ -210,7 +319,7 @@ class RegisterViewController: AuthBaseViewController {
         strengthBar.distribution = .fillEqually
         strengthBar.spacing = 4
         strengthBar.translatesAutoresizingMaskIntoConstraints = false
-        strengthBar.heightAnchor.constraint(equalToConstant: 4).isActive = true
+        strengthBar.heightAnchor.constraint(equalToConstant: 3.5).isActive = true
         strengthBar.isHidden = true
 
         bars = (0..<4).map { _ in
@@ -348,6 +457,13 @@ class RegisterViewController: AuthBaseViewController {
             confirmErrorLabel.isHidden = false
             valid = false
         } else { confirmErrorLabel.isHidden = true }
+
+        if !isTermsAccepted {
+            termsErrorLabel.isHidden = false
+            valid = false
+        } else {
+            termsErrorLabel.isHidden = true
+        }
 
         return valid
     }

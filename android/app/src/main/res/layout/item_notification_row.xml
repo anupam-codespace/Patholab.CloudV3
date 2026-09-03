@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Notification Item Row in Popup & Sheet -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rootNotificationItem"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingStart="12dp"
+    android:paddingEnd="12dp"
+    android:paddingTop="10dp"
+    android:paddingBottom="10dp"
+    android:background="@drawable/bg_popup_item_ripple"
+    android:clickable="true"
+    android:focusable="true">
+
+    <!-- Category Icon -->
+    <FrameLayout
+        android:id="@+id/containerNotifIcon"
+        android:layout_width="38dp"
+        android:layout_height="38dp"
+        android:background="@drawable/bg_mod_icon_blue">
+
+        <ImageView
+            android:id="@+id/imgNotifIcon"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_bell"
+            android:tint="#0D6EFD" />
+
+    </FrameLayout>
+
+    <!-- Content -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="6dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/lblNotifTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Test Accession"
+                android:textSize="13.5sp"
+                android:textStyle="bold"
+                android:textColor="#0F172A"
+                android:singleLine="true"
+                android:ellipsize="end" />
+
+            <TextView
+                android:id="@+id/lblNotifTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="2m ago"
+                android:textSize="11sp"
+                android:textColor="#94A3B8" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/lblNotifMessage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="Patient profile &amp; tests accessioned into worklist."
+            android:textSize="12sp"
+            android:textColor="#475569"
+            android:maxLines="2"
+            android:ellipsize="end"
+            android:lineSpacingExtra="1dp" />
+
+    </LinearLayout>
+
+    <!-- Unread Dot -->
+    <View
+        android:id="@+id/dotNotifUnread"
+        android:layout_width="7dp"
+        android:layout_height="7dp"
+        android:background="@drawable/bg_online_dot"
+        android:layout_marginStart="4dp"
+        android:visibility="gone" />
+
+</LinearLayout>
