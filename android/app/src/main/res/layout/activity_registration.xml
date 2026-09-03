@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Native Independent Patient Registration & Clinical Booking Console -->
+<!-- Native Independent Patient Registration & Clinical Accession Console (Following Exact Web Pattern) -->
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -16,98 +16,140 @@
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
         android:paddingTop="12dp"
-        android:paddingBottom="24dp">
+        android:paddingBottom="20dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:orientation="vertical">
 
-            <!-- Back Button -->
-            <FrameLayout
-                android:id="@+id/btnRegBack"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="@drawable/bg_bell_btn"
-                android:clickable="true"
-                android:focusable="true">
-
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_back_arrow"
-                    android:tint="#0D6EFD" />
-
-            </FrameLayout>
-
-            <!-- Title & Subtitle -->
+            <!-- Top Row: Back + Title + Clear -->
             <LinearLayout
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:layout_marginStart="12dp">
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <FrameLayout
+                    android:id="@+id/btnRegBack"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/bg_bell_btn"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_back_arrow"
+                        android:tint="#0D6EFD" />
+
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="12dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Patient Registration"
+                        android:textSize="19sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"
+                        android:letterSpacing="-0.02" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="1dp"
+                        android:text="Search Database &amp; Test Accession"
+                        android:textSize="12sp"
+                        android:textColor="#BAE6FD" />
+
+                </LinearLayout>
 
                 <TextView
+                    android:id="@+id/btnRegReset"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Patient Registration"
-                    android:textSize="19sp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/bg_pill_white"
+                    android:gravity="center"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:text="Clear"
+                    android:textSize="12.5sp"
                     android:textStyle="bold"
-                    android:textColor="#FFFFFF"
-                    android:letterSpacing="-0.02" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="1dp"
-                    android:text="New Patient &amp; Test Accession"
-                    android:textSize="12sp"
-                    android:textColor="#BAE6FD" />
+                    android:textColor="#0D6EFD"
+                    android:clickable="true"
+                    android:focusable="true" />
 
             </LinearLayout>
 
-            <!-- Reset Form Button -->
-            <TextView
-                android:id="@+id/btnRegReset"
-                android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:background="@drawable/bg_pill_white"
-                android:gravity="center"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
-                android:text="Clear"
-                android:textSize="12.5sp"
-                android:textStyle="bold"
-                android:textColor="#0D6EFD"
-                android:clickable="true"
-                android:focusable="true" />
+            <!-- Mode Selector Tabs: [ Search Database ] and [ New Registration ] -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:orientation="horizontal"
+                android:background="#26FFFFFF"
+                android:padding="3dp"
+                android:layout_marginTop="16dp">
+
+                <TextView
+                    android:id="@+id/tabModeSearch"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:background="@drawable/bg_pill_white"
+                    android:text="Search Database"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textColor="#0D6EFD"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <TextView
+                    android:id="@+id/tabModeNewReg"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:background="@android:color/transparent"
+                    android:text="+ New Registration"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+            </LinearLayout>
 
         </LinearLayout>
 
     </FrameLayout>
 
-    <!-- ── SCROLLABLE FORM BODY ──────────────────────────────────── -->
+    <!-- ── TAB 1: SEARCH DATABASE & ACCESSION (Web /workspace/registration) ── -->
     <androidx.core.widget.NestedScrollView
-        android:id="@+id/regScrollView"
+        android:id="@+id/scrollSearchSection"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:fillViewport="true"
-        android:scrollbars="none">
+        android:scrollbars="none"
+        android:visibility="visible">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:paddingTop="14dp"
-            android:paddingBottom="36dp">
+            android:padding="16dp">
 
-            <!-- ── CARD 1: OMNIBAR SEARCH & LOOKUP ───────────────────── -->
+            <!-- Omnibar Card -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -115,140 +157,284 @@
                 android:background="@drawable/bg_card_white"
                 android:padding="16dp"
                 android:elevation="2dp"
-                android:layout_marginBottom="14dp">
+                android:layout_marginBottom="16dp">
 
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="EXISTING PATIENT LOOKUP"
+                    android:textSize="11.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#0D6EFD"
+                    android:letterSpacing="0.06"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Search database by mobile number or patient name to find past records or book a new visit."
+                    android:textSize="13sp"
+                    android:textColor="#64748B"
+                    android:lineSpacingExtra="2dp"
+                    android:layout_marginBottom="14dp" />
+
+                <!-- Search Mode (Phone vs Name) & Input -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:layout_marginBottom="10dp">
+                    android:layout_marginBottom="12dp">
 
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="EXISTING PATIENT LOOKUP"
-                        android:textSize="11.5sp"
-                        android:textStyle="bold"
-                        android:textColor="#0D6EFD"
-                        android:letterSpacing="0.06" />
-
-                    <TextView
-                        android:id="@+id/lblSearchToggle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="By Phone"
-                        android:textSize="11.5sp"
-                        android:textStyle="bold"
-                        android:textColor="#64748B"
-                        android:background="#F1F5F9"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp"
-                        android:paddingTop="3dp"
-                        android:paddingBottom="3dp" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="46dp"
-                    android:background="@drawable/bg_input_field"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:paddingStart="12dp"
-                    android:paddingEnd="8dp">
-
-                    <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
-                        android:src="@drawable/ic_search"
-                        android:tint="#94A3B8" />
+                    <Spinner
+                        android:id="@+id/spinnerSearchType"
+                        android:layout_width="105dp"
+                        android:layout_height="48dp"
+                        android:background="@drawable/bg_input_field"
+                        android:paddingStart="6dp"
+                        android:paddingEnd="6dp" />
 
                     <EditText
                         android:id="@+id/inputOmnibar"
                         android:layout_width="0dp"
-                        android:layout_height="match_parent"
+                        android:layout_height="48dp"
                         android:layout_weight="1"
                         android:layout_marginStart="8dp"
-                        android:background="@null"
-                        android:hint="Enter 10-digit mobile number..."
+                        android:background="@drawable/bg_input_field"
+                        android:hint="Enter 10-digit mobile..."
                         android:inputType="phone"
                         android:maxLength="10"
-                        android:textSize="14sp"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="14dp"
+                        android:textSize="14.5sp"
                         android:textColor="#0F172A"
                         android:textColorHint="#94A3B8"
                         android:singleLine="true" />
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnOmnibarSearch"
-                        android:layout_width="wrap_content"
-                        android:layout_height="36dp"
-                        android:text="Search"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:textColor="#FFFFFF"
-                        android:backgroundTint="#0D6EFD"
-                        app:cornerRadius="10dp"
-                        android:paddingStart="12dp"
-                        android:paddingEnd="12dp" />
-
                 </LinearLayout>
 
-                <!-- Match Found Banner (Hidden by default) -->
-                <LinearLayout
-                    android:id="@+id/cardMatchFound"
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnOmnibarSearch"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:background="#EFF6FF"
-                    android:padding="12dp"
-                    android:layout_marginTop="10dp"
-                    android:visibility="gone">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
-
-                        <TextView
-                            android:id="@+id/lblMatchName"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="John Doe (M, 32Y)"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
-                            android:textColor="#1E40AF" />
-
-                        <TextView
-                            android:id="@+id/lblMatchUHID"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="UHID: P-00042"
-                            android:textSize="12sp"
-                            android:textStyle="bold"
-                            android:textColor="#2563EB" />
-
-                    </LinearLayout>
-
-                    <Button
-                        android:id="@+id/btnUseMatchedPatient"
-                        android:layout_width="match_parent"
-                        android:layout_height="36dp"
-                        android:layout_marginTop="8dp"
-                        android:text="Use Existing Patient Profile"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:textColor="#FFFFFF"
-                        android:backgroundTint="#2563EB" />
-
-                </LinearLayout>
+                    android:layout_height="48dp"
+                    android:text="Search Database"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:backgroundTint="#0D6EFD"
+                    app:cornerRadius="12dp" />
 
             </LinearLayout>
 
-            <!-- ── CARD 2: PATIENT DEMOGRAPHICS ──────────────────────── -->
+            <!-- Loading Spinner for Search -->
+            <ProgressBar
+                android:id="@+id/progressSearch"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="12dp"
+                android:indeterminateTint="#0D6EFD"
+                android:visibility="gone" />
+
+            <!-- Case A: Match Found Card -->
+            <LinearLayout
+                android:id="@+id/cardMatchFound"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_card_white"
+                android:padding="16dp"
+                android:elevation="3dp"
+                android:layout_marginBottom="16dp"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="12dp">
+
+                    <FrameLayout
+                        android:layout_width="48dp"
+                        android:layout_height="48dp">
+
+                        <androidx.cardview.widget.CardView
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            app:cardCornerRadius="24dp"
+                            app:cardElevation="0dp"
+                            app:cardBackgroundColor="#EFF6FF">
+
+                            <TextView
+                                android:id="@+id/lblMatchAvatarInitial"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:gravity="center"
+                                android:text="P"
+                                android:textSize="18sp"
+                                android:textStyle="bold"
+                                android:textColor="#0D6EFD" />
+
+                        </androidx.cardview.widget.CardView>
+
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginStart="12dp">
+
+                        <TextView
+                            android:id="@+id/lblMatchName"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Pooja Sharma"
+                            android:textSize="16.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#0F172A" />
+
+                        <TextView
+                            android:id="@+id/lblMatchDemographics"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="28Y • FEMALE"
+                            android:textSize="12.5sp"
+                            android:textColor="#64748B" />
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/lblMatchUHID"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_bento_blue"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
+                        android:paddingTop="4dp"
+                        android:paddingBottom="4dp"
+                        android:text="P-00142"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:textColor="#0D6EFD" />
+
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#F1F5F9"
+                    android:layout_marginBottom="12dp" />
+
+                <TextView
+                    android:id="@+id/lblMatchPhone"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Mobile: 9876543210"
+                    android:textSize="13sp"
+                    android:textColor="#475569"
+                    android:layout_marginBottom="4dp" />
+
+                <TextView
+                    android:id="@+id/lblMatchAddress"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Location: Mumbai, India"
+                    android:textSize="13sp"
+                    android:textColor="#475569"
+                    android:layout_marginBottom="16dp" />
+
+                <!-- 1-Tap Action: Proceed to Accession -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnProceedToAccession"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:text="Proceed to Accession &amp; Tests →"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:backgroundTint="#0D6EFD"
+                    app:cornerRadius="12dp" />
+
+            </LinearLayout>
+
+            <!-- Case B: No Match Found Card -->
+            <LinearLayout
+                android:id="@+id/cardNoMatch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center_horizontal"
+                android:background="@drawable/bg_card_white"
+                android:padding="24dp"
+                android:elevation="2dp"
+                android:layout_marginBottom="16dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_search"
+                    android:tint="#94A3B8"
+                    android:layout_marginBottom="12dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="No Patient Found"
+                    android:textSize="17sp"
+                    android:textStyle="bold"
+                    android:textColor="#0F172A"
+                    android:layout_marginBottom="6dp" />
+
+                <TextView
+                    android:id="@+id/lblNoMatchDesc"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="No record found matching this query in the database."
+                    android:textSize="13sp"
+                    android:textColor="#64748B"
+                    android:gravity="center"
+                    android:layout_marginBottom="18dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnRegisterNewFromSearch"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:text="+ Register New Patient Profile"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:backgroundTint="#0D6EFD"
+                    app:cornerRadius="12dp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- ── TAB 2: NEW REGISTRATION & ACCESSION (Web /workspace/patients/new & /accession) ── -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollNewRegSection"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:scrollbars="none"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- ── CARD 1: PATIENT DEMOGRAPHICS ──────────────────────── -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -275,16 +461,14 @@
                     android:orientation="horizontal"
                     android:layout_marginBottom="10dp">
 
-                    <!-- Title Spinner -->
                     <Spinner
                         android:id="@+id/spinnerTitle"
-                        android:layout_width="90dp"
+                        android:layout_width="85dp"
                         android:layout_height="46dp"
                         android:background="@drawable/bg_input_field"
                         android:paddingStart="4dp"
                         android:paddingEnd="4dp" />
 
-                    <!-- Full Name Input -->
                     <EditText
                         android:id="@+id/inputPatientName"
                         android:layout_width="0dp"
@@ -310,7 +494,6 @@
                     android:orientation="horizontal"
                     android:layout_marginBottom="10dp">
 
-                    <!-- Phone -->
                     <EditText
                         android:id="@+id/inputPatientPhone"
                         android:layout_width="0dp"
@@ -327,7 +510,6 @@
                         android:textColorHint="#94A3B8"
                         android:singleLine="true" />
 
-                    <!-- Gender Spinner -->
                     <Spinner
                         android:id="@+id/spinnerGender"
                         android:layout_width="110dp"
@@ -346,7 +528,6 @@
                     android:orientation="horizontal"
                     android:layout_marginBottom="10dp">
 
-                    <!-- Age Input -->
                     <EditText
                         android:id="@+id/inputPatientAge"
                         android:layout_width="0dp"
@@ -363,7 +544,6 @@
                         android:textColorHint="#94A3B8"
                         android:singleLine="true" />
 
-                    <!-- Age Unit Spinner -->
                     <Spinner
                         android:id="@+id/spinnerAgeUnit"
                         android:layout_width="110dp"
@@ -375,7 +555,7 @@
 
                 </LinearLayout>
 
-                <!-- Email & Address (Optional) -->
+                <!-- Email & Address -->
                 <EditText
                     android:id="@+id/inputPatientEmail"
                     android:layout_width="match_parent"
@@ -407,7 +587,7 @@
 
             </LinearLayout>
 
-            <!-- ── CARD 3: CLINICAL REFERRAL & DOCTOR ────────────────── -->
+            <!-- ── CARD 2: CLINICAL REFERRAL & COLLECTION ──────────────── -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -516,7 +696,7 @@
 
             </LinearLayout>
 
-            <!-- ── CARD 4: TESTS & PACKAGES ACCESSION ────────────────── -->
+            <!-- ── CARD 3: DIAGNOSTIC TESTS & PACKAGES ACCESSION ──────── -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -561,7 +741,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical" />
 
-                <!-- Add Tests Button -->
+                <!-- Add Tests Trigger Button -->
                 <LinearLayout
                     android:id="@+id/btnAddTestsModal"
                     android:layout_width="match_parent"
@@ -592,7 +772,7 @@
 
             </LinearLayout>
 
-            <!-- ── CARD 5: LIVE BILLING & PAYMENT ────────────────────── -->
+            <!-- ── CARD 4: LIVE BILLING & PAYMENT ────────────────────── -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -600,7 +780,7 @@
                 android:background="@drawable/bg_card_white"
                 android:padding="16dp"
                 android:elevation="2dp"
-                android:layout_marginBottom="14dp">
+                android:layout_marginBottom="80dp">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -612,7 +792,7 @@
                     android:letterSpacing="0.06"
                     android:layout_marginBottom="12dp" />
 
-                <!-- Gross Subtotal -->
+                <!-- Gross Amount -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -638,7 +818,7 @@
 
                 </LinearLayout>
 
-                <!-- Discount Input Row -->
+                <!-- Discount (₹) -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -656,14 +836,16 @@
 
                     <EditText
                         android:id="@+id/inputDiscount"
-                        android:layout_width="100dp"
-                        android:layout_height="38dp"
+                        android:layout_width="90dp"
+                        android:layout_height="40dp"
                         android:background="@drawable/bg_input_field"
                         android:hint="0"
                         android:inputType="numberDecimal"
                         android:gravity="center"
-                        android:textSize="13sp"
+                        android:textSize="13.5sp"
+                        android:textStyle="bold"
                         android:textColor="#0F172A"
+                        android:textColorHint="#94A3B8"
                         android:singleLine="true" />
 
                 </LinearLayout>
@@ -672,7 +854,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:background="#F1F5F9"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginTop="6dp"
                     android:layout_marginBottom="10dp" />
 
                 <!-- Net Payable -->
@@ -703,14 +885,6 @@
                 </LinearLayout>
 
                 <!-- Payment Mode Spinner -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Payment Method"
-                    android:textSize="12sp"
-                    android:textColor="#64748B"
-                    android:layout_marginBottom="4dp" />
-
                 <Spinner
                     android:id="@+id/spinnerPaymentMode"
                     android:layout_width="match_parent"
@@ -725,56 +899,63 @@
 
     </androidx.core.widget.NestedScrollView>
 
-    <!-- ── STICKY PRIMARY BOTTOM BAR ──────────────────────────────── -->
-    <LinearLayout
+    <!-- ── STICKY BOTTOM ACTION BAR FOR NEW REGISTRATION ─────────── -->
+    <FrameLayout
+        android:id="@+id/stickyBottomBar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        android:layout_height="76dp"
         android:background="#FFFFFF"
         android:elevation="12dp"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
-        android:paddingTop="12dp"
-        android:paddingBottom="16dp"
-        android:gravity="center_vertical">
+        android:visibility="gone">
 
         <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Total Payable"
-                android:textSize="11.5sp"
-                android:textColor="#64748B" />
+                android:layout_weight="1"
+                android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/lblStickyTotal"
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Total Payable"
+                    android:textSize="11.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#64748B" />
+
+                <TextView
+                    android:id="@+id/lblStickyTotal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="₹0.00"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="#0F172A" />
+
+            </LinearLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSubmitRegistration"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="₹0.00"
-                android:textSize="20sp"
+                android:layout_height="50dp"
+                android:text="Register &amp; Book Tests"
+                android:textSize="14.5sp"
                 android:textStyle="bold"
-                android:textColor="#0F172A" />
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#0D6EFD"
+                android:paddingStart="22dp"
+                android:paddingEnd="22dp"
+                app:cornerRadius="16dp" />
 
         </LinearLayout>
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnSubmitRegistration"
-            android:layout_width="wrap_content"
-            android:layout_height="50dp"
-            android:text="Register &amp; Book Tests"
-            android:textSize="14.5sp"
-            android:textStyle="bold"
-            android:textColor="#FFFFFF"
-            android:backgroundTint="#0D6EFD"
-            app:cornerRadius="16dp"
-            android:paddingStart="24dp"
-            android:paddingEnd="24dp" />
-
-    </LinearLayout>
+    </FrameLayout>
 
 </LinearLayout>

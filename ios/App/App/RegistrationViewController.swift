@@ -3,14 +3,10 @@ import UIKit
 /**
  * RegistrationViewController
  * ──────────────────────────
- * Native iOS Patient Registration & Clinical Booking Console.
- * Mirroring all web features:
- *  - Omnibar Quick Lookup (10-digit phone, name, UHID) with duplicate match detection
- *  - Comprehensive Patient Demographics (Title, Name, Phone, Gender, Age & Unit, Email, Address)
- *  - Live Referring Doctor & B2B Agency resolver
- *  - Full Diagnostic Test & Profile Catalog Selector (85% modal) with real-time bill calculation
- *  - Discount deduction, Payment Modes (Cash, UPI, Card, Due), and Sample Collection assignment
- *  - Seamless API accession booking & celebratory success receipt sheet
+ * Native iOS Patient Registration & Clinical Accession Console.
+ * Directly mirroring the exact web workflow and sequence:
+ *  1. Step 1: Database Omnibar Lookup & Duplicate Prevention (/workspace/registration)
+ *  2. Step 2: Demographics, Referral, Test Accession Catalog, and Billing (/workspace/patients/new & /accession)
  */
 class RegistrationViewController: UIViewController, UITextFieldDelegate {
 
@@ -23,19 +19,37 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
     private let titleLabel     = UILabel()
     private let subtitleLabel  = UILabel()
     private let clearBtn       = UIButton(type: .system)
+    private let modeSegment    = UISegmentedControl(items: ["Search Database", "+ New Registration"])
 
     // ── Scroll Content ──────────────────────────────────────────────────────
-    private let scrollView     = UIScrollView()
-    private let contentStack   = UIStackView()
+    private let searchScrollView = UIScrollView()
+    private let searchStack      = UIStackView()
 
-    // ── Omnibar Views ───────────────────────────────────────────────────────
+    private let newRegScrollView = UIScrollView()
+    private let newRegStack      = UIStackView()
+
+    // ── Tab 1: Omnibar Search Views ─────────────────────────────────────────
+    private var searchType: String = "PHONE"
+    private let searchTypeSegment = UISegmentedControl(items: ["Phone", "Name"])
     private let omnibarField   = UITextField()
     private let omnibarSearchBtn = UIButton(type: .system)
-    private let matchCard      = UIView()
-    private let matchLabel     = UILabel()
-    private let matchUhidLabel = UILabel()
+    private let searchSpinner  = UIActivityIndicatorView(style: .medium)
 
-    // ── Demographics Inputs ─────────────────────────────────────────────────
+    // Result Cards
+    private let matchCard      = UIView()
+    private let matchAvatarLabel = UILabel()
+    private let matchNameLabel = UILabel()
+    private let matchDemoLabel = UILabel()
+    private let matchUhidLabel = UILabel()
+    private let matchPhoneLabel = UILabel()
+    private let matchAddressLabel = UILabel()
+    private let proceedToAccessionBtn = UIButton(type: .system)
+
+    private let noMatchCard    = UIView()
+    private let noMatchDescLabel = UILabel()
+    private let registerFromSearchBtn = UIButton(type: .system)
+
+    // ── Tab 2: Demographics & Accession Inputs ──────────────────────────────
     private var selectedTitle  = "Mr."
     private var selectedGender = "MALE"
     private var selectedAgeUnit = "Years"
@@ -86,6 +100,7 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
     private let grossLabel     = UILabel()
     private let discountField  = UITextField()
     private let netLabel       = UILabel()
+    private let stickyBar      = UIView()
     private let stickyTotalLabel = UILabel()
     private let submitBtn      = UIButton(type: .system)
 
@@ -96,7 +111,8 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
         view.backgroundColor = UIColor(red: 0.973, green: 0.980, blue: 0.988, alpha: 1)
 
         setupHeader()
-        setupContent()
+        setupSearchSection()
+        setupNewRegSection()
         setupStickyBar()
         fetchCatalog()
         fetchDoctors()
@@ -108,7 +124,7 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // MARK: – Header
+    // MARK: – Header & Tab Bar
     // ─────────────────────────────────────────────────────────────────────────
     private func setupHeader() {
         headerView.translatesAutoresizingMaskIntoConstraints = false
@@ -142,7 +158,7 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
         titleLabel.font = .systemFont(ofSize: 19, weight: .bold)
         titleLabel.textColor = .white
 
-        subtitleLabel.text = "New Patient & Test Accession"
+        subtitleLabel.text = "Search Database & Test Accession"
         subtitleLabel.font = .systemFont(ofSize: 12, weight: .medium)
         subtitleLabel.textColor = UIColor(red: 0.729, green: 0.902, blue: 0.992, alpha: 1)
 
@@ -163,14 +179,24 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
         clearBtn.addTarget(self, action: #selector(clearForm), for: .touchUpInside)
         headerView.addSubview(clearBtn)
 
+        // Mode Segment [ Search Database | + New Registration ]
+        modeSegment.selectedSegmentIndex = 0
+        modeSegment.backgroundColor = UIColor(white: 1.0, alpha: 0.2)
+        modeSegment.selectedSegmentTintColor = .white
+        modeSegment.setTitleTextAttributes([.foregroundColor: UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1), .font: UIFont.systemFont(ofSize: 13, weight: .bold)], for: .selected)
+        modeSegment.setTitleTextAttributes([.foregroundColor: UIColor.white, .font: UIFont.systemFont(ofSize: 13, weight: .bold)], for: .normal)
+        modeSegment.translatesAutoresizingMaskIntoConstraints = false
+        modeSegment.addTarget(self, action: #selector(modeSegmentChanged), for: .valueChanged)
+        headerView.addSubview(modeSegment)
+
         NSLayoutConstraint.activate([
             headerView.topAnchor.constraint(equalTo: view.topAnchor),
             headerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             headerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            headerView.heightAnchor.constraint(equalToConstant: 125),
+            headerView.heightAnchor.constraint(equalToConstant: 180),
 
             backBtn.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 16),
-            backBtn.bottomAnchor.constraint(equalTo: headerView.bottomAnchor, constant: -16),
+            backBtn.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
             backBtn.widthAnchor.constraint(equalToConstant: 40),
             backBtn.heightAnchor.constraint(equalToConstant: 40),
 
@@ -179,46 +205,53 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
 
             clearBtn.trailingAnchor.constraint(equalTo: headerView.trailingAnchor, constant: -16),
             clearBtn.centerYAnchor.constraint(equalTo: backBtn.centerYAnchor),
+
+            modeSegment.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 16),
+            modeSegment.trailingAnchor.constraint(equalTo: headerView.trailingAnchor, constant: -16),
+            modeSegment.bottomAnchor.constraint(equalTo: headerView.bottomAnchor, constant: -14),
+            modeSegment.heightAnchor.constraint(equalToConstant: 38),
         ])
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // MARK: – Content Layout
-    // ─────────────────────────────────────────────────────────────────────────
-    private func setupContent() {
-        scrollView.showsVerticalScrollIndicator = false
-        scrollView.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(scrollView)
+    @objc private func modeSegmentChanged() {
+        let isSearch = modeSegment.selectedSegmentIndex == 0
+        searchScrollView.isHidden = !isSearch
+        newRegScrollView.isHidden = isSearch
+        stickyBar.isHidden = isSearch
+    }
 
-        contentStack.axis = .vertical
-        contentStack.spacing = 14
-        contentStack.translatesAutoresizingMaskIntoConstraints = false
-        scrollView.addSubview(contentStack)
+    // ─────────────────────────────────────────────────────────────────────────
+    // MARK: – Tab 1: Search Database Section (Web /workspace/registration)
+    // ─────────────────────────────────────────────────────────────────────────
+    private func setupSearchSection() {
+        searchScrollView.showsVerticalScrollIndicator = false
+        searchScrollView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(searchScrollView)
+
+        searchStack.axis = .vertical
+        searchStack.spacing = 16
+        searchStack.translatesAutoresizingMaskIntoConstraints = false
+        searchScrollView.addSubview(searchStack)
 
         NSLayoutConstraint.activate([
-            scrollView.topAnchor.constraint(equalTo: headerView.bottomAnchor),
-            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -76),
+            searchScrollView.topAnchor.constraint(equalTo: headerView.bottomAnchor),
+            searchScrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            searchScrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            searchScrollView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
 
-            contentStack.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 16),
-            contentStack.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor, constant: 16),
-            contentStack.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor, constant: -16),
-            contentStack.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor, constant: -30),
-            contentStack.widthAnchor.constraint(equalTo: scrollView.widthAnchor, constant: -32)
+            searchStack.topAnchor.constraint(equalTo: searchScrollView.topAnchor, constant: 16),
+            searchStack.leadingAnchor.constraint(equalTo: searchScrollView.leadingAnchor, constant: 16),
+            searchStack.trailingAnchor.constraint(equalTo: searchScrollView.trailingAnchor, constant: -16),
+            searchStack.bottomAnchor.constraint(equalTo: searchScrollView.bottomAnchor, constant: -24),
+            searchStack.widthAnchor.constraint(equalTo: searchScrollView.widthAnchor, constant: -32)
         ])
 
-        buildOmnibarCard()
-        buildDemographicsCard()
-        buildReferralCard()
-        buildTestsCard()
-        buildBillingCard()
+        buildSearchCard()
+        buildMatchResultCard()
+        buildNoMatchResultCard()
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // MARK: – Omnibar Card
-    // ─────────────────────────────────────────────────────────────────────────
-    private func buildOmnibarCard() {
+    private func buildSearchCard() {
         let card = createWhiteCard()
 
         let title = UILabel()
@@ -226,51 +259,30 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
         title.font = .systemFont(ofSize: 11.5, weight: .bold)
         title.textColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1)
 
-        let searchRow = UIStackView()
-        searchRow.axis = .horizontal
-        searchRow.spacing = 8
-        searchRow.alignment = .center
+        let desc = UILabel()
+        desc.text = "Search database by mobile number or patient name to find past records or book a new visit."
+        desc.font = .systemFont(ofSize: 13)
+        desc.textColor = UIColor(red: 0.392, green: 0.455, blue: 0.545, alpha: 1)
+        desc.numberOfLines = 0
+
+        // Search Type Selector [ Phone | Name ]
+        searchTypeSegment.selectedSegmentIndex = 0
+        searchTypeSegment.addTarget(self, action: #selector(searchTypeChanged), for: .valueChanged)
 
         omnibarField.placeholder = "Enter 10-digit mobile number..."
         omnibarField.font = .systemFont(ofSize: 14)
         omnibarField.keyboardType = .phonePad
         styleInput(omnibarField)
 
-        omnibarSearchBtn.setTitle("Search", for: .normal)
+        omnibarSearchBtn.setTitle("Search Database", for: .normal)
         omnibarSearchBtn.backgroundColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1)
         omnibarSearchBtn.setTitleColor(.white, for: .normal)
-        omnibarSearchBtn.titleLabel?.font = .systemFont(ofSize: 13, weight: .bold)
+        omnibarSearchBtn.titleLabel?.font = .systemFont(ofSize: 14, weight: .bold)
         omnibarSearchBtn.layer.cornerRadius = 12
-        omnibarSearchBtn.contentEdgeInsets = UIEdgeInsets(top: 10, left: 16, bottom: 10, right: 16)
+        omnibarSearchBtn.heightAnchor.constraint(equalToConstant: 46).isActive = true
         omnibarSearchBtn.addTarget(self, action: #selector(performSearch), for: .touchUpInside)
 
-        searchRow.addArrangedSubview(omnibarField)
-        searchRow.addArrangedSubview(omnibarSearchBtn)
-
-        matchCard.backgroundColor = UIColor(red: 0.937, green: 0.965, blue: 1.0, alpha: 1)
-        matchCard.layer.cornerRadius = 12
-        matchCard.isHidden = true
-
-        matchLabel.font = .systemFont(ofSize: 13.5, weight: .bold)
-        matchLabel.textColor = UIColor(red: 0.118, green: 0.251, blue: 0.690, alpha: 1)
-
-        matchUhidLabel.font = .systemFont(ofSize: 12, weight: .semibold)
-        matchUhidLabel.textColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1)
-
-        let matchVStack = UIStackView(arrangedSubviews: [matchLabel, matchUhidLabel])
-        matchVStack.axis = .vertical
-        matchVStack.spacing = 4
-        matchVStack.translatesAutoresizingMaskIntoConstraints = false
-        matchCard.addSubview(matchVStack)
-
-        NSLayoutConstraint.activate([
-            matchVStack.topAnchor.constraint(equalTo: matchCard.topAnchor, constant: 10),
-            matchVStack.bottomAnchor.constraint(equalTo: matchCard.bottomAnchor, constant: -10),
-            matchVStack.leadingAnchor.constraint(equalTo: matchCard.leadingAnchor, constant: 12),
-            matchVStack.trailingAnchor.constraint(equalTo: matchCard.trailingAnchor, constant: -12),
-        ])
-
-        let stack = UIStackView(arrangedSubviews: [title, searchRow, matchCard])
+        let stack = UIStackView(arrangedSubviews: [title, desc, searchTypeSegment, omnibarField, omnibarSearchBtn, searchSpinner])
         stack.axis = .vertical
         stack.spacing = 10
         card.addSubview(stack)
@@ -282,12 +294,174 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
             stack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -16),
         ])
 
-        contentStack.addArrangedSubview(card)
+        searchStack.addArrangedSubview(card)
+    }
+
+    @objc private func searchTypeChanged() {
+        if searchTypeSegment.selectedSegmentIndex == 0 {
+            searchType = "PHONE"
+            omnibarField.placeholder = "Enter 10-digit mobile number..."
+            omnibarField.keyboardType = .phonePad
+        } else {
+            searchType = "NAME"
+            omnibarField.placeholder = "Enter patient name..."
+            omnibarField.keyboardType = .default
+        }
+        omnibarField.text = ""
+        matchCard.isHidden = true
+        noMatchCard.isHidden = true
+    }
+
+    private func buildMatchResultCard() {
+        matchCard.backgroundColor = .white
+        matchCard.layer.cornerRadius = 18
+        matchCard.layer.shadowColor = UIColor.black.cgColor
+        matchCard.layer.shadowOpacity = 0.06
+        matchCard.layer.shadowRadius = 8
+        matchCard.layer.shadowOffset = CGSize(width: 0, height: 2)
+        matchCard.isHidden = true
+
+        matchAvatarLabel.font = .systemFont(ofSize: 18, weight: .bold)
+        matchAvatarLabel.textColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1)
+        matchAvatarLabel.backgroundColor = UIColor(red: 0.937, green: 0.965, blue: 1.0, alpha: 1)
+        matchAvatarLabel.textAlignment = .center
+        matchAvatarLabel.layer.cornerRadius = 24
+        matchAvatarLabel.clipsToBounds = true
+        matchAvatarLabel.widthAnchor.constraint(equalToConstant: 48).isActive = true
+        matchAvatarLabel.heightAnchor.constraint(equalToConstant: 48).isActive = true
+
+        matchNameLabel.font = .systemFont(ofSize: 16.5, weight: .bold)
+        matchNameLabel.textColor = UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1)
+
+        matchDemoLabel.font = .systemFont(ofSize: 12.5, weight: .semibold)
+        matchDemoLabel.textColor = UIColor(red: 0.392, green: 0.455, blue: 0.545, alpha: 1)
+
+        let nameVStack = UIStackView(arrangedSubviews: [matchNameLabel, matchDemoLabel])
+        nameVStack.axis = .vertical
+        nameVStack.spacing = 2
+
+        matchUhidLabel.font = .systemFont(ofSize: 12, weight: .bold)
+        matchUhidLabel.textColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1)
+        matchUhidLabel.backgroundColor = UIColor(red: 0.937, green: 0.965, blue: 1.0, alpha: 1)
+        matchUhidLabel.layer.cornerRadius = 8
+        matchUhidLabel.clipsToBounds = true
+        matchUhidLabel.textAlignment = .center
+
+        let topRow = UIStackView(arrangedSubviews: [matchAvatarLabel, nameVStack, UIView(), matchUhidLabel])
+        topRow.axis = .horizontal
+        topRow.alignment = .center
+        topRow.spacing = 10
+
+        matchPhoneLabel.font = .systemFont(ofSize: 13)
+        matchPhoneLabel.textColor = UIColor(red: 0.278, green: 0.333, blue: 0.412, alpha: 1)
+
+        matchAddressLabel.font = .systemFont(ofSize: 13)
+        matchAddressLabel.textColor = UIColor(red: 0.278, green: 0.333, blue: 0.412, alpha: 1)
+
+        proceedToAccessionBtn.setTitle("Proceed to Accession & Tests →", for: .normal)
+        proceedToAccessionBtn.backgroundColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1)
+        proceedToAccessionBtn.setTitleColor(.white, for: .normal)
+        proceedToAccessionBtn.titleLabel?.font = .systemFont(ofSize: 14, weight: .bold)
+        proceedToAccessionBtn.layer.cornerRadius = 12
+        proceedToAccessionBtn.heightAnchor.constraint(equalToConstant: 46).isActive = true
+        proceedToAccessionBtn.addTarget(self, action: #selector(proceedWithMatchedPatient), for: .touchUpInside)
+
+        let stack = UIStackView(arrangedSubviews: [topRow, matchPhoneLabel, matchAddressLabel, proceedToAccessionBtn])
+        stack.axis = .vertical
+        stack.spacing = 10
+        matchCard.addSubview(stack)
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            stack.topAnchor.constraint(equalTo: matchCard.topAnchor, constant: 16),
+            stack.bottomAnchor.constraint(equalTo: matchCard.bottomAnchor, constant: -16),
+            stack.leadingAnchor.constraint(equalTo: matchCard.leadingAnchor, constant: 16),
+            stack.trailingAnchor.constraint(equalTo: matchCard.trailingAnchor, constant: -16),
+        ])
+
+        searchStack.addArrangedSubview(matchCard)
+    }
+
+    private func buildNoMatchResultCard() {
+        noMatchCard.backgroundColor = .white
+        noMatchCard.layer.cornerRadius = 18
+        noMatchCard.layer.shadowColor = UIColor.black.cgColor
+        noMatchCard.layer.shadowOpacity = 0.04
+        noMatchCard.layer.shadowRadius = 6
+        noMatchCard.layer.shadowOffset = CGSize(width: 0, height: 2)
+        noMatchCard.isHidden = true
+
+        let icon = UIImageView(image: UIImage(systemName: "magnifyingglass"))
+        icon.tintColor = UIColor(red: 0.580, green: 0.639, blue: 0.722, alpha: 1)
+        icon.contentMode = .scaleAspectFit
+        icon.heightAnchor.constraint(equalToConstant: 36).isActive = true
+
+        let title = UILabel()
+        title.text = "No Patient Found"
+        title.font = .systemFont(ofSize: 16.5, weight: .bold)
+        title.textColor = UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1)
+        title.textAlignment = .center
+
+        noMatchDescLabel.font = .systemFont(ofSize: 13)
+        noMatchDescLabel.textColor = UIColor(red: 0.392, green: 0.455, blue: 0.545, alpha: 1)
+        noMatchDescLabel.textAlignment = .center
+        noMatchDescLabel.numberOfLines = 0
+
+        registerFromSearchBtn.setTitle("+ Register New Patient Profile", for: .normal)
+        registerFromSearchBtn.backgroundColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1)
+        registerFromSearchBtn.setTitleColor(.white, for: .normal)
+        registerFromSearchBtn.titleLabel?.font = .systemFont(ofSize: 14, weight: .bold)
+        registerFromSearchBtn.layer.cornerRadius = 12
+        registerFromSearchBtn.heightAnchor.constraint(equalToConstant: 46).isActive = true
+        registerFromSearchBtn.addTarget(self, action: #selector(registerNewFromSearchAction), for: .touchUpInside)
+
+        let stack = UIStackView(arrangedSubviews: [icon, title, noMatchDescLabel, registerFromSearchBtn])
+        stack.axis = .vertical
+        stack.spacing = 10
+        noMatchCard.addSubview(stack)
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            stack.topAnchor.constraint(equalTo: noMatchCard.topAnchor, constant: 20),
+            stack.bottomAnchor.constraint(equalTo: noMatchCard.bottomAnchor, constant: -20),
+            stack.leadingAnchor.constraint(equalTo: noMatchCard.leadingAnchor, constant: 16),
+            stack.trailingAnchor.constraint(equalTo: noMatchCard.trailingAnchor, constant: -16),
+        ])
+
+        searchStack.addArrangedSubview(noMatchCard)
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // MARK: – Patient Demographics Card
+    // MARK: – Tab 2: New Registration & Accession (Web /workspace/patients/new)
     // ─────────────────────────────────────────────────────────────────────────
+    private func setupNewRegSection() {
+        newRegScrollView.showsVerticalScrollIndicator = false
+        newRegScrollView.translatesAutoresizingMaskIntoConstraints = false
+        newRegScrollView.isHidden = true
+        view.addSubview(newRegScrollView)
+
+        newRegStack.axis = .vertical
+        newRegStack.spacing = 14
+        newRegStack.translatesAutoresizingMaskIntoConstraints = false
+        newRegScrollView.addSubview(newRegStack)
+
+        NSLayoutConstraint.activate([
+            newRegScrollView.topAnchor.constraint(equalTo: headerView.bottomAnchor),
+            newRegScrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            newRegScrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            newRegScrollView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -76),
+
+            newRegStack.topAnchor.constraint(equalTo: newRegScrollView.topAnchor, constant: 16),
+            newRegStack.leadingAnchor.constraint(equalTo: newRegScrollView.leadingAnchor, constant: 16),
+            newRegStack.trailingAnchor.constraint(equalTo: newRegScrollView.trailingAnchor, constant: -16),
+            newRegStack.bottomAnchor.constraint(equalTo: newRegScrollView.bottomAnchor, constant: -30),
+            newRegStack.widthAnchor.constraint(equalTo: newRegScrollView.widthAnchor, constant: -32)
+        ])
+
+        buildDemographicsCard()
+        buildReferralCard()
+        buildTestsCard()
+        buildBillingCard()
+    }
+
     private func buildDemographicsCard() {
         let card = createWhiteCard()
 
@@ -296,7 +470,6 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
         title.font = .systemFont(ofSize: 11.5, weight: .bold)
         title.textColor = UIColor(red: 0.392, green: 0.455, blue: 0.545, alpha: 1)
 
-        // Title & Name Row
         setupMenuButton(titleBtn, title: "Mr.", items: ["Mr.", "Mrs.", "Ms.", "Master", "Dr.", "Baby"]) { [weak self] sel in
             self?.selectedTitle = sel
         }
@@ -310,7 +483,6 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
         row1.axis = .horizontal
         row1.spacing = 8
 
-        // Phone & Gender Row
         phoneField.placeholder = "Mobile (10 Digits) *"
         phoneField.font = .systemFont(ofSize: 14)
         phoneField.keyboardType = .phonePad
@@ -325,7 +497,6 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
         row2.axis = .horizontal
         row2.spacing = 8
 
-        // Age & Unit Row
         ageField.placeholder = "Age *"
         ageField.font = .systemFont(ofSize: 14)
         ageField.keyboardType = .numberPad
@@ -340,7 +511,6 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
         row3.axis = .horizontal
         row3.spacing = 8
 
-        // Email & Address
         emailField.placeholder = "Email Address (Optional)"
         emailField.font = .systemFont(ofSize: 14)
         emailField.keyboardType = .emailAddress
@@ -362,12 +532,9 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
             stack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -16),
         ])
 
-        contentStack.addArrangedSubview(card)
+        newRegStack.addArrangedSubview(card)
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // MARK: – Referral & Collector Card
-    // ─────────────────────────────────────────────────────────────────────────
     private func buildReferralCard() {
         let card = createWhiteCard()
 
@@ -400,12 +567,9 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
             stack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -16),
         ])
 
-        contentStack.addArrangedSubview(card)
+        newRegStack.addArrangedSubview(card)
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // MARK: – Tests & Accession Card
-    // ─────────────────────────────────────────────────────────────────────────
     private func buildTestsCard() {
         let card = createWhiteCard()
 
@@ -450,12 +614,9 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
             stack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -16),
         ])
 
-        contentStack.addArrangedSubview(card)
+        newRegStack.addArrangedSubview(card)
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // MARK: – Billing Card
-    // ─────────────────────────────────────────────────────────────────────────
     private func buildBillingCard() {
         let card = createWhiteCard()
 
@@ -464,7 +625,6 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
         title.font = .systemFont(ofSize: 11.5, weight: .bold)
         title.textColor = UIColor(red: 0.392, green: 0.455, blue: 0.545, alpha: 1)
 
-        // Gross Row
         let grossTitle = UILabel()
         grossTitle.text = "Gross Amount"
         grossTitle.font = .systemFont(ofSize: 13.5)
@@ -477,7 +637,6 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
         let grossRow = UIStackView(arrangedSubviews: [grossTitle, UIView(), grossLabel])
         grossRow.axis = .horizontal
 
-        // Discount Row
         let discTitle = UILabel()
         discTitle.text = "Discount (₹)"
         discTitle.font = .systemFont(ofSize: 13.5)
@@ -499,7 +658,6 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
         div.backgroundColor = UIColor(red: 0.945, green: 0.961, blue: 0.976, alpha: 1)
         div.heightAnchor.constraint(equalToConstant: 1).isActive = true
 
-        // Net Payable Row
         let netTitle = UILabel()
         netTitle.text = "Net Payable"
         netTitle.font = .systemFont(ofSize: 15, weight: .bold)
@@ -512,7 +670,6 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
         let netRow = UIStackView(arrangedSubviews: [netTitle, UIView(), netLabel])
         netRow.axis = .horizontal
 
-        // Payment Mode
         setupMenuButton(paymentModeBtn, title: "Cash", items: ["Cash", "UPI / QR", "Card", "Due / Pay Later"]) { [weak self] sel in
             self?.selectedPaymentMode = sel
         }
@@ -529,21 +686,21 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
             stack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -16),
         ])
 
-        contentStack.addArrangedSubview(card)
+        newRegStack.addArrangedSubview(card)
     }
 
     // ─────────────────────────────────────────────────────────────────────────
     // MARK: – Sticky Bottom Bar
     // ─────────────────────────────────────────────────────────────────────────
     private func setupStickyBar() {
-        let bar = UIView()
-        bar.backgroundColor = .white
-        bar.layer.shadowColor = UIColor.black.cgColor
-        bar.layer.shadowOpacity = 0.08
-        bar.layer.shadowRadius = 8
-        bar.layer.shadowOffset = CGSize(width: 0, height: -3)
-        bar.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(bar)
+        stickyBar.backgroundColor = .white
+        stickyBar.layer.shadowColor = UIColor.black.cgColor
+        stickyBar.layer.shadowOpacity = 0.08
+        stickyBar.layer.shadowRadius = 8
+        stickyBar.layer.shadowOffset = CGSize(width: 0, height: -3)
+        stickyBar.translatesAutoresizingMaskIntoConstraints = false
+        stickyBar.isHidden = true
+        view.addSubview(stickyBar)
 
         let totalSub = UILabel()
         totalSub.text = "Total Payable"
@@ -570,29 +727,33 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
         hStack.axis = .horizontal
         hStack.alignment = .center
         hStack.translatesAutoresizingMaskIntoConstraints = false
-        bar.addSubview(hStack)
+        stickyBar.addSubview(hStack)
 
         NSLayoutConstraint.activate([
-            bar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            bar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            bar.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            bar.heightAnchor.constraint(equalToConstant: 80 + (view.safeAreaInsets.bottom > 0 ? 10 : 0)),
+            stickyBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            stickyBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            stickyBar.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            stickyBar.heightAnchor.constraint(equalToConstant: 80 + (view.safeAreaInsets.bottom > 0 ? 10 : 0)),
 
-            hStack.topAnchor.constraint(equalTo: bar.topAnchor, constant: 12),
-            hStack.leadingAnchor.constraint(equalTo: bar.leadingAnchor, constant: 16),
-            hStack.trailingAnchor.constraint(equalTo: bar.trailingAnchor, constant: -16)
+            hStack.topAnchor.constraint(equalTo: stickyBar.topAnchor, constant: 12),
+            hStack.leadingAnchor.constraint(equalTo: stickyBar.leadingAnchor, constant: 16),
+            hStack.trailingAnchor.constraint(equalTo: stickyBar.trailingAnchor, constant: -16)
         ])
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // MARK: – Actions & API
+    // MARK: – Actions & Omnibar Logic
     // ─────────────────────────────────────────────────────────────────────────
     @objc private func performSearch() {
         guard let q = omnibarField.text?.trimmingCharacters(in: .whitespacesAndNewlines), !q.isEmpty else { return }
-        let type = q.count == 10 && CharacterSet.decimalDigits.isSuperset(of: CharacterSet(charactersIn: q)) ? "PHONE" : "NAME"
+        if searchType == "PHONE" && q.count < 10 { return }
+
+        searchSpinner.startAnimating()
+        matchCard.isHidden = true
+        noMatchCard.isHidden = true
 
         Task {
-            guard let url = URL(string: "\(baseUrl)/api/workspace/patients/search?query=\(q.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&type=\(type)") else { return }
+            guard let url = URL(string: "\(baseUrl)/api/workspace/patients/search?query=\(q.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&type=\(searchType)") else { return }
             var req = URLRequest(url: url)
             if let token = KeychainManager.read(forKey: KeychainManager.tokenKey) {
                 req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
@@ -601,11 +762,15 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
 
             guard let (data, res) = try? await URLSession.shared.data(for: req),
                   (res as? HTTPURLResponse)?.statusCode == 200,
-                  let json = try? JSONSerialization.jsonObject(with: data) else { return }
+                  let json = try? JSONSerialization.jsonObject(with: data) else {
+                await MainActor.run { self.searchSpinner.stopAnimating() }
+                return
+            }
 
             let array = (json as? [[String: Any]]) ?? ((json as? [String: Any])?["data"] as? [[String: Any]]) ?? []
 
             await MainActor.run {
+                self.searchSpinner.stopAnimating()
                 if let first = array.first {
                     self.matchedPatientDbId = first["id"] as? String
                     let name = first["name"] as? String ?? ""
@@ -613,21 +778,46 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
                     let gender = first["gender"] as? String ?? "MALE"
                     let age = first["age"] as? Int ?? 0
                     let uhid = first["patientId"] as? String ?? "UHID"
+                    let address = first["address"] as? String ?? ""
 
                     self.matchCard.isHidden = false
-                    self.matchLabel.text = "\(name) (\(gender), \(age)Y)"
-                    self.matchUhidLabel.text = "UHID: \(uhid)"
+                    self.noMatchCard.isHidden = true
+
+                    self.matchAvatarLabel.text = name.isEmpty ? "P" : String(name.prefix(1)).uppercased()
+                    self.matchNameLabel.text = name
+                    self.matchDemoLabel.text = "\(age)Y • \(gender.uppercased())"
+                    self.matchUhidLabel.text = " \(uhid) "
+                    self.matchPhoneLabel.text = "Mobile: \(phone)"
+                    self.matchAddressLabel.text = "Location: \(address.isEmpty ? "Direct Walk-in" : address)"
 
                     self.nameField.text = name
                     self.phoneField.text = phone
                     if age > 0 { self.ageField.text = "\(age)" }
                 } else {
                     self.matchCard.isHidden = true
+                    self.noMatchCard.isHidden = false
+                    self.noMatchDescLabel.text = "No patient found matching \"\(q)\". You can register a new profile below."
                     self.matchedPatientDbId = nil
-                    if q.count == 10 { self.phoneField.text = q } else { self.nameField.text = q }
                 }
             }
         }
+    }
+
+    @objc private func proceedWithMatchedPatient() {
+        modeSegment.selectedSegmentIndex = 1
+        modeSegmentChanged()
+        showTestCatalogSheet()
+    }
+
+    @objc private func registerNewFromSearchAction() {
+        let q = omnibarField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if searchType == "PHONE" {
+            phoneField.text = q
+        } else {
+            nameField.text = q
+        }
+        modeSegment.selectedSegmentIndex = 1
+        modeSegmentChanged()
     }
 
     private func fetchCatalog() {
@@ -697,8 +887,8 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
     }
 
     @objc private func showTestCatalogSheet() {
-        let alert = UIAlertController(title: "Select Tests", message: "Choose tests from catalog", preferredStyle: .actionSheet)
-        for t in catalogTests.prefix(15) {
+        let alert = UIAlertController(title: "Select Tests", message: "Choose diagnostic tests from catalog", preferredStyle: .actionSheet)
+        for t in catalogTests.prefix(20) {
             let title = "\(t.name) (₹\(Int(t.price)))"
             alert.addAction(UIAlertAction(title: title, style: .default, handler: { [weak self] _ in
                 self?.selectedTests.append(t)
@@ -872,6 +1062,7 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
         addressField.text = ""
         discountField.text = ""
         matchCard.isHidden = true
+        noMatchCard.isHidden = true
         matchedPatientDbId = nil
         selectedTests.removeAll()
         renderSelectedTests()
