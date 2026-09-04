@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Share Report Link Modal Dialog (Matching Web UI Exactly) -->
+<!-- Executive Diagnostic Report Dispatch & Share Sheet -->
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -7,39 +7,32 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:background="@drawable/bg_bottom_sheet"
-    android:paddingTop="16dp"
+    android:paddingTop="12dp"
     android:paddingBottom="28dp">
 
-    <!-- Top Drag Handle / Close Row -->
-    <LinearLayout
+    <!-- Top Drag Handle & Close Button Header -->
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
         android:paddingStart="20dp"
-        android:paddingEnd="16dp"
-        android:layout_marginBottom="12dp">
-
-        <View
-            android:layout_width="0dp"
-            android:layout_height="1dp"
-            android:layout_weight="1" />
+        android:paddingEnd="20dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="8dp">
 
         <View
             android:layout_width="44dp"
-            android:layout_height="4dp"
-            android:background="#CBD5E1" />
-
-        <View
-            android:layout_width="0dp"
-            android:layout_height="1dp"
-            android:layout_weight="1" />
+            android:layout_height="4.5dp"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_pill_white"
+            android:backgroundTint="#CBD5E1" />
 
         <FrameLayout
             android:id="@+id/btnCloseShareSheet"
             android:layout_width="32dp"
             android:layout_height="32dp"
-            android:background="@drawable/bg_bell_btn"
+            android:layout_gravity="end|center_vertical"
+            android:background="@drawable/bg_pill_white"
+            android:backgroundTint="#F1F5F9"
             android:clickable="true"
             android:focusable="true">
 
@@ -48,35 +41,37 @@
                 android:layout_height="14dp"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_close_cross"
-                android:tint="#475569" />
+                app:tint="#64748B" />
         </FrameLayout>
 
-    </LinearLayout>
+    </FrameLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:gravity="center_horizontal"
-        android:paddingStart="24dp"
-        android:paddingEnd="24dp">
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingTop="6dp">
 
-        <!-- Circular Green Share Badge -->
+        <!-- Glowing Circular Hero Badge with Share Vector -->
         <FrameLayout
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:background="@drawable/bg_bento_emerald"
-            android:layout_marginBottom="16dp">
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:background="@drawable/bg_hero_share_badge"
+            android:elevation="2dp"
+            android:layout_marginBottom="14dp">
 
             <ImageView
-                android:layout_width="28dp"
-                android:layout_height="28dp"
+                android:layout_width="26dp"
+                android:layout_height="26dp"
                 android:layout_gravity="center"
-                android:src="@drawable/ic_nav_more"
-                app:tint="#059669" />
+                android:src="@drawable/ic_share_hero"
+                app:tint="#0D6EFD" />
         </FrameLayout>
 
-        <!-- Title -->
+        <!-- Main Title -->
         <TextView
             android:id="@+id/lblShareSheetTitle"
             android:layout_width="wrap_content"
@@ -85,77 +80,235 @@
             android:textSize="20sp"
             android:textStyle="bold"
             android:textColor="#0F172A"
-            android:letterSpacing="-0.01"
-            android:layout_marginBottom="6dp" />
+            android:letterSpacing="-0.02" />
 
-        <!-- Subtitle -->
-        <TextView
-            android:id="@+id/lblShareSheetPatientName"
-            android:layout_width="wrap_content"
+        <!-- Subtitle Context Pill / Card -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Send a secure verification link for v1.0 to PRATIMA GHOSH."
-            android:textSize="13.5sp"
-            android:textColor="#64748B"
-            android:textAlignment="center"
-            android:layout_marginBottom="24dp" />
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:background="@drawable/bg_interactive_row"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="18dp">
 
-        <!-- 1. Send via WhatsApp Button -->
-        <com.google.android.material.button.MaterialButton
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@drawable/ic_shield_check"
+                app:tint="#059669"
+                android:layout_marginEnd="6dp" />
+
+            <TextView
+                android:id="@+id/lblShareSheetPatientName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Send a secure verification link for v1.0 to SITA GHOSH."
+                android:textSize="12.5sp"
+                android:textStyle="bold"
+                android:textColor="#334155"
+                android:gravity="center" />
+
+        </LinearLayout>
+
+        <!-- 1. WhatsApp Instant Dispatch Card -->
+        <LinearLayout
             android:id="@+id/btnShareWhatsAppAction"
             android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:text="Send via WhatsApp"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            android:textColor="#FFFFFF"
-            android:backgroundTint="#22C55E"
-            app:cornerRadius="14dp"
-            app:icon="@drawable/ic_whatsapp_official"
-            app:iconGravity="textStart"
-            app:iconPadding="10dp"
-            app:iconTint="@null"
-            app:iconSize="22dp"
-            android:elevation="0dp"
-            android:textAllCaps="false"
-            android:layout_marginBottom="12dp" />
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_share_action_whatsapp"
+            android:padding="14dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:elevation="1dp">
 
-        <!-- 2. Send via Email Button -->
-        <com.google.android.material.button.MaterialButton
+            <!-- Authentic WhatsApp Squircle Logo -->
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_whatsapp_official"
+                android:scaleType="fitCenter" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginStart="14dp"
+                android:layout_marginEnd="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Send via WhatsApp"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="#0F172A" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="1.5dp"
+                    android:text="Direct link to patient's WhatsApp"
+                    android:textSize="12sp"
+                    android:textColor="#16A34A" />
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_pill_white"
+                android:backgroundTint="#22C55E"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingTop="5dp"
+                android:paddingBottom="5dp"
+                android:text="Send ↗"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF" />
+
+        </LinearLayout>
+
+        <!-- 2. Email Delivery Card -->
+        <LinearLayout
             android:id="@+id/btnShareEmailAction"
             android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:text="Send via Email"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            android:textColor="#0D6EFD"
-            android:backgroundTint="#EFF6FF"
-            app:cornerRadius="14dp"
-            app:strokeColor="#BFDBFE"
-            app:strokeWidth="1.2dp"
-            app:icon="@drawable/ic_gmail_official"
-            app:iconGravity="textStart"
-            app:iconPadding="10dp"
-            app:iconTint="@null"
-            app:iconSize="22dp"
-            android:elevation="0dp"
-            android:textAllCaps="false"
-            android:layout_marginBottom="12dp" />
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_share_action_email"
+            android:padding="14dp"
+            android:layout_marginTop="12dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:elevation="1dp">
 
-        <!-- 3. Copy Verification Link -->
-        <com.google.android.material.button.MaterialButton
+            <!-- Authentic Gmail Logo -->
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_gmail_official"
+                android:scaleType="fitCenter" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginStart="14dp"
+                android:layout_marginEnd="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Send via Email"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="#0F172A" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="1.5dp"
+                    android:text="Deliver encrypted PDF to email inbox"
+                    android:textSize="12sp"
+                    android:textColor="#2563EB" />
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_pill_white"
+                android:backgroundTint="#0D6EFD"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingTop="5dp"
+                android:paddingBottom="5dp"
+                android:text="Send ↗"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF" />
+
+        </LinearLayout>
+
+        <!-- 3. Copy Verification Link Card -->
+        <LinearLayout
             android:id="@+id/btnCopyReportLinkAction"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:text="Copy Secure Verification Link"
-            android:textSize="13.5sp"
-            android:textStyle="bold"
-            android:textColor="#475569"
-            android:backgroundTint="#F8FAFC"
-            app:cornerRadius="14dp"
-            app:strokeColor="#E2E8F0"
-            app:strokeWidth="1dp"
-            android:elevation="0dp"
-            android:textAllCaps="false" />
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_share_action_link"
+            android:padding="14dp"
+            android:layout_marginTop="12dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:elevation="1dp">
+
+            <FrameLayout
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_pill_white"
+                android:backgroundTint="#F1F5F9">
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_external_link"
+                    app:tint="#475569" />
+            </FrameLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginStart="14dp"
+                android:layout_marginEnd="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Copy Secure Link"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="#0F172A" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="1.5dp"
+                    android:text="Copy direct URL to clipboard"
+                    android:textSize="12sp"
+                    android:textColor="#64748B" />
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_pill_white"
+                android:backgroundTint="#F1F5F9"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingTop="5dp"
+                android:paddingBottom="5dp"
+                android:text="Copy 📋"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="#334155" />
+
+        </LinearLayout>
 
     </LinearLayout>
 

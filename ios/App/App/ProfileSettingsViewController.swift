@@ -239,11 +239,11 @@ class ProfileSettingsViewController: UIViewController {
     private func buildModulesCard() {
         let card = createCard()
         let title = createSectionHeader(title: "App Modules & Features", desc: "Enable or disable specialized workflow modules.")
-        let r1 = createSwitchRow(label: "Inventory & Stock", desc: "Reagent auto-deduction", sw: invSwitch)
-        let r2 = createSwitchRow(label: "Radiology (RIS & PACS)", desc: "DICOM viewer", sw: radSwitch)
-        let r3 = createSwitchRow(label: "Machine Interfacing (IoT)", desc: "Analyzer sync", sw: iotSwitch)
-        let r4 = createSwitchRow(label: "B2B Agencies & Referrals", desc: "Doctor commissions", sw: b2bSwitch)
-        let r5 = createSwitchRow(label: "Logistics & Phlebotomy", desc: "Rider collection trips", sw: logSwitch)
+        let r1 = createSwitchRow(label: "Inventory & Stock", desc: "Reagent auto-deduction", sw: invSwitch, iconName: "shippingbox.fill", iconTint: UIColor(red: 5/255, green: 150/255, blue: 105/255, alpha: 1), iconBg: UIColor(red: 236/255, green: 253/255, blue: 245/255, alpha: 1))
+        let r2 = createSwitchRow(label: "Radiology (RIS & PACS)", desc: "DICOM viewer", sw: radSwitch, iconName: "waveform.path.ecg", iconTint: UIColor(red: 124/255, green: 58/255, blue: 237/255, alpha: 1), iconBg: UIColor(red: 245/255, green: 243/255, blue: 255/255, alpha: 1))
+        let r3 = createSwitchRow(label: "Machine Interfacing (IoT)", desc: "Analyzer sync", sw: iotSwitch, iconName: "cpu", iconTint: UIColor(red: 2/255, green: 132/255, blue: 199/255, alpha: 1), iconBg: UIColor(red: 240/255, green: 249/255, blue: 255/255, alpha: 1))
+        let r4 = createSwitchRow(label: "B2B Agencies & Referrals", desc: "Doctor commissions", sw: b2bSwitch, iconName: "creditcard.fill", iconTint: UIColor(red: 37/255, green: 99/255, blue: 235/255, alpha: 1), iconBg: UIColor(red: 239/255, green: 246/255, blue: 255/255, alpha: 1))
+        let r5 = createSwitchRow(label: "Logistics & Phlebotomy", desc: "Rider collection trips", sw: logSwitch, iconName: "box.truck.fill", iconTint: UIColor(red: 217/255, green: 119/255, blue: 6/255, alpha: 1), iconBg: UIColor(red: 255/255, green: 251/255, blue: 235/255, alpha: 1))
 
         invSwitch.isOn = true
         b2bSwitch.isOn = true
@@ -558,24 +558,67 @@ class ProfileSettingsViewController: UIViewController {
         return s
     }
 
-    private func createSwitchRow(label: String, desc: String, sw: UISwitch) -> UIStackView {
+    private func createSwitchRow(label: String, desc: String, sw: UISwitch, iconName: String = "", iconTint: UIColor = .systemBlue, iconBg: UIColor = .systemBlue.withAlphaComponent(0.1)) -> UIView {
+        let container = UIView()
+        container.backgroundColor = UIColor(red: 248/255, green: 250/255, blue: 252/255, alpha: 1) // #F8FAFC
+        container.layer.cornerRadius = 14
+        container.layer.borderWidth = 1
+        container.layer.borderColor = UIColor(red: 226/255, green: 232/255, blue: 240/255, alpha: 1).cgColor // #E2E8F0
+        container.translatesAutoresizingMaskIntoConstraints = false
+
+        let iconBox = UIView()
+        iconBox.backgroundColor = iconBg
+        iconBox.layer.cornerRadius = 12
+        iconBox.translatesAutoresizingMaskIntoConstraints = false
+
+        let iv = UIImageView()
+        let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .bold)
+        iv.image = UIImage(systemName: iconName, withConfiguration: config)
+        iv.tintColor = iconTint
+        iv.contentMode = .scaleAspectFit
+        iv.translatesAutoresizingMaskIntoConstraints = false
+        iconBox.addSubview(iv)
+
         let l = UILabel()
         l.text = label
-        l.font = .systemFont(ofSize: 14, weight: .bold)
-        l.textColor = UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1)
+        l.font = .systemFont(ofSize: 14.5, weight: .bold)
+        l.textColor = UIColor(red: 15/255, green: 23/255, blue: 42/255, alpha: 1)
 
         let d = UILabel()
         d.text = desc
-        d.font = .systemFont(ofSize: 11.5, weight: .medium)
-        d.textColor = UIColor(red: 0.392, green: 0.455, blue: 0.545, alpha: 1)
+        d.font = .systemFont(ofSize: 12, weight: .medium)
+        d.textColor = UIColor(red: 100/255, green: 116/255, blue: 139/255, alpha: 1)
 
         let left = UIStackView(arrangedSubviews: [l, d])
         left.axis = .vertical
         left.spacing = 2
+        left.translatesAutoresizingMaskIntoConstraints = false
 
-        let row = UIStackView(arrangedSubviews: [left, UIView(), sw])
-        row.axis = .horizontal
-        row.alignment = .center
-        return row
+        sw.onTintColor = UIColor(red: 13/255, green: 110/255, blue: 253/255, alpha: 1)
+        sw.translatesAutoresizingMaskIntoConstraints = false
+
+        let hStack = UIStackView(arrangedSubviews: [iconBox, left, UIView(), sw])
+        hStack.axis = .horizontal
+        hStack.alignment = .center
+        hStack.spacing = 12
+        hStack.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(hStack)
+
+        NSLayoutConstraint.activate([
+            iconBox.widthAnchor.constraint(equalToConstant: 40),
+            iconBox.heightAnchor.constraint(equalToConstant: 40),
+            iv.centerXAnchor.constraint(equalTo: iconBox.centerXAnchor),
+            iv.centerYAnchor.constraint(equalTo: iconBox.centerYAnchor),
+            iv.widthAnchor.constraint(equalToConstant: 20),
+            iv.heightAnchor.constraint(equalToConstant: 20),
+
+            hStack.topAnchor.constraint(equalTo: container.topAnchor, constant: 10),
+            hStack.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -10),
+            hStack.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 12),
+            hStack.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -14),
+        ])
+
+        return container
     }
 }
+

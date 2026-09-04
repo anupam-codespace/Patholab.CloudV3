@@ -803,7 +803,7 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
 
         let verifyUrl = "\(baseUrl)/verify/\(report.id)"
 
-        alert.addAction(UIAlertAction(title: "Send via WhatsApp", style: .default, handler: { [weak self] _ in
+        alert.addAction(UIAlertAction(title: "💬 Send via WhatsApp", style: .default, handler: { [weak self] _ in
             guard let self = self else { return }
             let text = "Hello \(report.patientName),\n\nYour verified diagnostic laboratory report from Patholab Cloud is ready:\n• Test: \(report.testName)\n• Ref: \(report.uhid) (v\(report.version).0)\n\n📄 View & Download Report:\n\(verifyUrl)\n\nThank you for choosing our pathology laboratory!"
             let escaped = text.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
@@ -813,14 +813,14 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
             }
         }))
 
-        alert.addAction(UIAlertAction(title: "Send via Email", style: .default, handler: { _ in
+        alert.addAction(UIAlertAction(title: "✉️ Send via Email", style: .default, handler: { _ in
             let text = "mailto:\(report.patientEmail)?subject=Diagnostic%20Report%20\(report.testName)&body=Your%20report%20is%20ready%20at%20\(verifyUrl)"
             if let url = URL(string: text) {
                 UIApplication.shared.open(url, options: [:], completionHandler: nil)
             }
         }))
 
-        alert.addAction(UIAlertAction(title: "Copy Secure Link", style: .default, handler: { _ in
+        alert.addAction(UIAlertAction(title: "📋 Copy Secure Verification Link", style: .default, handler: { _ in
             UIPasteboard.general.string = verifyUrl
         }))
 

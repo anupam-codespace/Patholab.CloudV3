@@ -473,10 +473,10 @@ public class ReportsActivity extends AppCompatActivity {
         dialog.setContentView(sheet);
 
         TextView lblPatient = sheet.findViewById(R.id.lblShareSheetPatientName);
-        MaterialButton btnWhatsApp = sheet.findViewById(R.id.btnShareWhatsAppAction);
-        MaterialButton btnEmail = sheet.findViewById(R.id.btnShareEmailAction);
-        MaterialButton btnCopy = sheet.findViewById(R.id.btnCopyReportLinkAction);
-        FrameLayout btnClose = sheet.findViewById(R.id.btnCloseShareSheet);
+        View btnWhatsApp = sheet.findViewById(R.id.btnShareWhatsAppAction);
+        View btnEmail = sheet.findViewById(R.id.btnShareEmailAction);
+        View btnCopy = sheet.findViewById(R.id.btnCopyReportLinkAction);
+        View btnClose = sheet.findViewById(R.id.btnCloseShareSheet);
 
         lblPatient.setText("Send a secure verification link for v" + report.version + ".0 to " + report.patientName + ".");
 

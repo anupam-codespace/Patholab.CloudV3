@@ -870,21 +870,52 @@
                     android:orientation="vertical"
                     android:padding="20dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="App Modules &amp; Features"
-                        android:textSize="17sp"
-                        android:textStyle="bold"
-                        android:textColor="#0F172A" />
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="Enable or disable specialized workflow modules for this lab."
-                        android:textSize="12sp"
-                        android:textColor="#64748B" />
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="App Modules &amp; Features"
+                                android:textSize="17.5sp"
+                                android:textStyle="bold"
+                                android:textColor="#0F172A"
+                                android:letterSpacing="-0.02" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="3dp"
+                                android:text="Enable or disable specialized workflow modules for this lab."
+                                android:textSize="12sp"
+                                android:textColor="#64748B" />
+
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_pill_white"
+                            android:backgroundTint="#EFF6FF"
+                            android:paddingStart="10dp"
+                            android:paddingEnd="10dp"
+                            android:paddingTop="4dp"
+                            android:paddingBottom="4dp"
+                            android:text="CORE ENGINES"
+                            android:textSize="10sp"
+                            android:textStyle="bold"
+                            android:textColor="#0D6EFD" />
+
+                    </LinearLayout>
 
                     <!-- Module 1: Inventory -->
                     <LinearLayout
@@ -893,16 +924,16 @@
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
                         android:layout_marginTop="18dp"
-                        android:padding="12dp"
+                        android:padding="14dp"
                         android:background="@drawable/bg_interactive_row">
 
                         <FrameLayout
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
                             android:background="@drawable/bg_mod_icon_emerald">
                             <ImageView
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
                                 android:layout_gravity="center"
                                 android:src="@drawable/ic_box"
                                 android:tint="#059669" />
@@ -913,19 +944,21 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:orientation="vertical"
-                            android:layout_marginStart="12dp">
+                            android:layout_marginStart="14dp"
+                            android:layout_marginEnd="8dp">
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Inventory &amp; Reagents"
-                                android:textSize="14sp"
+                                android:textSize="14.5sp"
                                 android:textStyle="bold"
                                 android:textColor="#0F172A" />
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
                                 android:text="Reagent stock &amp; auto-deduction"
-                                android:textSize="11.5sp"
+                                android:textSize="12sp"
                                 android:textColor="#64748B" />
                         </LinearLayout>
 
@@ -933,6 +966,8 @@
                             android:id="@+id/switchInventory"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            app:thumbTint="@color/switch_thumb_selector"
+                            app:trackTint="@color/switch_track_selector"
                             android:checked="true" />
                     </LinearLayout>
 
@@ -942,17 +977,17 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginTop="10dp"
-                        android:padding="12dp"
+                        android:layout_marginTop="12dp"
+                        android:padding="14dp"
                         android:background="@drawable/bg_interactive_row">
 
                         <FrameLayout
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
                             android:background="@drawable/bg_mod_icon_purple">
                             <ImageView
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
                                 android:layout_gravity="center"
                                 android:src="@drawable/ic_flask"
                                 android:tint="#7C3AED" />
@@ -963,26 +998,30 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:orientation="vertical"
-                            android:layout_marginStart="12dp">
+                            android:layout_marginStart="14dp"
+                            android:layout_marginEnd="8dp">
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Radiology (RIS &amp; PACS)"
-                                android:textSize="14sp"
+                                android:textSize="14.5sp"
                                 android:textStyle="bold"
                                 android:textColor="#0F172A" />
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
                                 android:text="DICOM Viewer for X-Ray, MRI &amp; CT"
-                                android:textSize="11.5sp"
+                                android:textSize="12sp"
                                 android:textColor="#64748B" />
                         </LinearLayout>
 
                         <androidx.appcompat.widget.SwitchCompat
                             android:id="@+id/switchRadiology"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                            android:layout_height="wrap_content"
+                            app:thumbTint="@color/switch_thumb_selector"
+                            app:trackTint="@color/switch_track_selector" />
                     </LinearLayout>
 
                     <!-- Module 3: IoT Interfacing -->
@@ -991,17 +1030,17 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginTop="10dp"
-                        android:padding="12dp"
+                        android:layout_marginTop="12dp"
+                        android:padding="14dp"
                         android:background="@drawable/bg_interactive_row">
 
                         <FrameLayout
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
                             android:background="@drawable/bg_mod_icon_sky">
                             <ImageView
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
                                 android:layout_gravity="center"
                                 android:src="@drawable/ic_cpu"
                                 android:tint="#0284C7" />
@@ -1012,26 +1051,30 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:orientation="vertical"
-                            android:layout_marginStart="12dp">
+                            android:layout_marginStart="14dp"
+                            android:layout_marginEnd="8dp">
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Machine Interfacing (IoT)"
-                                android:textSize="14sp"
+                                android:textSize="14.5sp"
                                 android:textStyle="bold"
                                 android:textColor="#0F172A" />
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
                                 android:text="Bi-directional blood analyzer sync"
-                                android:textSize="11.5sp"
+                                android:textSize="12sp"
                                 android:textColor="#64748B" />
                         </LinearLayout>
 
                         <androidx.appcompat.widget.SwitchCompat
                             android:id="@+id/switchIoT"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                            android:layout_height="wrap_content"
+                            app:thumbTint="@color/switch_thumb_selector"
+                            app:trackTint="@color/switch_track_selector" />
                     </LinearLayout>
 
                     <!-- Module 4: B2B Agencies -->
@@ -1040,17 +1083,17 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginTop="10dp"
-                        android:padding="12dp"
+                        android:layout_marginTop="12dp"
+                        android:padding="14dp"
                         android:background="@drawable/bg_interactive_row">
 
                         <FrameLayout
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
                             android:background="@drawable/bg_mod_icon_blue">
                             <ImageView
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
                                 android:layout_gravity="center"
                                 android:src="@drawable/ic_card"
                                 android:tint="#2563EB" />
@@ -1061,19 +1104,21 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:orientation="vertical"
-                            android:layout_marginStart="12dp">
+                            android:layout_marginStart="14dp"
+                            android:layout_marginEnd="8dp">
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="B2B Agencies &amp; Referrals"
-                                android:textSize="14sp"
+                                android:textSize="14.5sp"
                                 android:textStyle="bold"
                                 android:textColor="#0F172A" />
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
                                 android:text="Outsourced tests &amp; doctor commission"
-                                android:textSize="11.5sp"
+                                android:textSize="12sp"
                                 android:textColor="#64748B" />
                         </LinearLayout>
 
@@ -1081,6 +1126,8 @@
                             android:id="@+id/switchB2B"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            app:thumbTint="@color/switch_thumb_selector"
+                            app:trackTint="@color/switch_track_selector"
                             android:checked="true" />
                     </LinearLayout>
 
@@ -1090,17 +1137,17 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginTop="10dp"
-                        android:padding="12dp"
+                        android:layout_marginTop="12dp"
+                        android:padding="14dp"
                         android:background="@drawable/bg_interactive_row">
 
                         <FrameLayout
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
                             android:background="@drawable/bg_mod_icon_amber">
                             <ImageView
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
                                 android:layout_gravity="center"
                                 android:src="@drawable/ic_logistics"
                                 android:tint="#D97706" />
@@ -1111,26 +1158,30 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:orientation="vertical"
-                            android:layout_marginStart="12dp">
+                            android:layout_marginStart="14dp"
+                            android:layout_marginEnd="8dp">
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Logistics &amp; Phlebotomy"
-                                android:textSize="14sp"
+                                android:textSize="14.5sp"
                                 android:textStyle="bold"
                                 android:textColor="#0F172A" />
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
                                 android:text="Home sample collection &amp; riders"
-                                android:textSize="11.5sp"
+                                android:textSize="12sp"
                                 android:textColor="#64748B" />
                         </LinearLayout>
 
                         <androidx.appcompat.widget.SwitchCompat
                             android:id="@+id/switchLogistics"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                            android:layout_height="wrap_content"
+                            app:thumbTint="@color/switch_thumb_selector"
+                            app:trackTint="@color/switch_track_selector" />
                     </LinearLayout>
 
                 </LinearLayout>
