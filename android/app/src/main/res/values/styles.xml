@@ -71,9 +71,11 @@
     </style>
 
     <style name="HomeModuleIcon">
-        <item name="android:layout_width">24dp</item>
-        <item name="android:layout_height">24dp</item>
+        <item name="android:layout_width">50dp</item>
+        <item name="android:layout_height">50dp</item>
         <item name="android:layout_gravity">center</item>
+        <item name="android:scaleType">fitCenter</item>
+        <item name="android:elevation">2dp</item>
     </style>
 
     <style name="HomeModuleBold">

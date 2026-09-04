@@ -241,25 +241,26 @@
 
                     </FrameLayout>
 
-                    <!-- Help / Assistance Support Action Button (Followed after Notifications) -->
+                    <!-- Help / Assistance Support Action Button (Small & Glassmorphism) -->
                     <FrameLayout
                         android:id="@+id/homeHelpBtn"
-                        android:layout_width="44dp"
-                        android:layout_height="44dp"
-                        android:background="@drawable/bg_bell_btn"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_marginStart="2dp"
+                        android:background="@drawable/bg_help_btn_glass"
                         android:clickable="true"
                         android:focusable="true"
-                        android:elevation="4dp"
+                        android:elevation="2dp"
                         android:contentDescription="Help &amp; Support">
 
                         <ImageView
                             android:id="@+id/homeHelpIcon"
-                            android:layout_width="22dp"
-                            android:layout_height="22dp"
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_help"
-                            android:tint="#0D6EFD"
-                            app:tint="#0D6EFD" />
+                            android:tint="#FFFFFF"
+                            app:tint="#FFFFFF" />
 
                     </FrameLayout>
 
@@ -456,12 +457,9 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:layout_marginEnd="6dp">
-                        <FrameLayout
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
-                            android:background="@drawable/bg_mod_icon_blue">
-                            <ImageView style="@style/HomeModuleIcon" android:src="@drawable/ic_mod_registration" />
-                        </FrameLayout>
+                        <ImageView style="@style/HomeModuleIcon"
+                            android:src="@drawable/ic_mod_registration"
+                            android:contentDescription="Register" />
                         <TextView style="@style/HomeModuleBold" android:text="Register" />
                     </LinearLayout>
 
@@ -472,12 +470,9 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:layout_marginEnd="6dp">
-                        <FrameLayout
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
-                            android:background="@drawable/bg_mod_icon_purple">
-                            <ImageView style="@style/HomeModuleIcon" android:src="@drawable/ic_mod_tests" />
-                        </FrameLayout>
+                        <ImageView style="@style/HomeModuleIcon"
+                            android:src="@drawable/ic_mod_tests"
+                            android:contentDescription="Tests" />
                         <TextView style="@style/HomeModuleBold" android:text="Tests" />
                     </LinearLayout>
 
@@ -488,12 +483,9 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:layout_marginEnd="6dp">
-                        <FrameLayout
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
-                            android:background="@drawable/bg_mod_icon_emerald">
-                            <ImageView style="@style/HomeModuleIcon" android:src="@drawable/ic_mod_billing" />
-                        </FrameLayout>
+                        <ImageView style="@style/HomeModuleIcon"
+                            android:src="@drawable/ic_mod_billing"
+                            android:contentDescription="Billing" />
                         <TextView style="@style/HomeModuleBold" android:text="Billing" />
                     </LinearLayout>
 
@@ -503,12 +495,9 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1">
-                        <FrameLayout
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
-                            android:background="@drawable/bg_mod_icon_sky">
-                            <ImageView style="@style/HomeModuleIcon" android:src="@drawable/ic_mod_reports" />
-                        </FrameLayout>
+                        <ImageView style="@style/HomeModuleIcon"
+                            android:src="@drawable/ic_mod_reports"
+                            android:contentDescription="Reports" />
                         <TextView style="@style/HomeModuleBold" android:text="Reports" />
                     </LinearLayout>
 
@@ -528,12 +517,9 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:layout_marginEnd="6dp">
-                        <FrameLayout
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
-                            android:background="@drawable/bg_mod_icon_rose">
-                            <ImageView style="@style/HomeModuleIcon" android:src="@drawable/ic_mod_samples" />
-                        </FrameLayout>
+                        <ImageView style="@style/HomeModuleIcon"
+                            android:src="@drawable/ic_mod_samples"
+                            android:contentDescription="Samples" />
                         <TextView style="@style/HomeModuleBold" android:text="Samples" />
                     </LinearLayout>
 
@@ -544,12 +530,9 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:layout_marginEnd="6dp">
-                        <FrameLayout
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
-                            android:background="@drawable/bg_mod_icon_green">
-                            <ImageView style="@style/HomeModuleIcon" android:src="@drawable/ic_mod_whatsapp" />
-                        </FrameLayout>
+                        <ImageView style="@style/HomeModuleIcon"
+                            android:src="@drawable/ic_mod_whatsapp"
+                            android:contentDescription="Share" />
                         <TextView style="@style/HomeModuleBold" android:text="Share" />
                     </LinearLayout>
 
@@ -560,12 +543,9 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:layout_marginEnd="6dp">
-                        <FrameLayout
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
-                            android:background="@drawable/bg_mod_icon_amber">
-                            <ImageView style="@style/HomeModuleIcon" android:src="@drawable/ic_mod_logistics" />
-                        </FrameLayout>
+                        <ImageView style="@style/HomeModuleIcon"
+                            android:src="@drawable/ic_mod_logistics"
+                            android:contentDescription="Logistics" />
                         <TextView style="@style/HomeModuleBold" android:text="Logistics" />
                     </LinearLayout>
 
@@ -575,12 +555,9 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1">
-                        <FrameLayout
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
-                            android:background="@drawable/bg_mod_icon_indigo">
-                            <ImageView style="@style/HomeModuleIcon" android:src="@drawable/ic_mod_wallet" />
-                        </FrameLayout>
+                        <ImageView style="@style/HomeModuleIcon"
+                            android:src="@drawable/ic_mod_wallet"
+                            android:contentDescription="Wallet" />
                         <TextView style="@style/HomeModuleBold" android:text="Wallet" />
                     </LinearLayout>
 

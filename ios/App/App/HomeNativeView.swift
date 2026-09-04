@@ -77,14 +77,14 @@ class HomeNativeView: UIView {
     ]
 
     static let modules: [HomeModule] = [
-        HomeModule(id: "reg",  name: "Register",  path: "/workspace/registration",   icon: "person.text.rectangle.fill", iconColor: UIColor(red: 37/255, green: 99/255, blue: 235/255, alpha: 1), bgColor: UIColor(red: 239/255, green: 246/255, blue: 255/255, alpha: 1), isWhatsApp: false),
-        HomeModule(id: "test", name: "Tests",     path: "/workspace/test-management", icon: "flask.fill", iconColor: UIColor(red: 124/255, green: 58/255, blue: 237/255, alpha: 1), bgColor: UIColor(red: 245/255, green: 243/255, blue: 255/255, alpha: 1), isWhatsApp: false),
-        HomeModule(id: "bill", name: "Billing",   path: "/workspace/billing",         icon: "doc.plaintext.fill", iconColor: UIColor(red: 5/255, green: 150/255, blue: 105/255, alpha: 1), bgColor: UIColor(red: 236/255, green: 253/255, blue: 245/255, alpha: 1), isWhatsApp: false),
-        HomeModule(id: "rep",  name: "Reports",   path: "/workspace/reports",         icon: "checkmark.seal.fill", iconColor: UIColor(red: 2/255, green: 132/255, blue: 199/255, alpha: 1), bgColor: UIColor(red: 240/255, green: 249/255, blue: 255/255, alpha: 1), isWhatsApp: false),
-        HomeModule(id: "samp", name: "Samples",   path: "/workspace/accession",       icon: "testtube.2", iconColor: UIColor(red: 225/255, green: 29/255, blue: 72/255, alpha: 1), bgColor: UIColor(red: 255/255, green: 241/255, blue: 242/255, alpha: 1), isWhatsApp: false),
-        HomeModule(id: "wa",   name: "Share",     path: "/workspace/reports",         icon: "phone.fill", iconColor: UIColor(red: 22/255, green: 163/255, blue: 74/255, alpha: 1), bgColor: UIColor(red: 240/255, green: 253/255, blue: 244/255, alpha: 1), isWhatsApp: true),
-        HomeModule(id: "logi", name: "Logistics", path: "/workspace/logistics",       icon: "box.truck.fill", iconColor: UIColor(red: 217/255, green: 119/255, blue: 6/255, alpha: 1), bgColor: UIColor(red: 255/255, green: 251/255, blue: 235/255, alpha: 1), isWhatsApp: false),
-        HomeModule(id: "wall", name: "Wallet",    path: "/workspace/wallet",          icon: "creditcard.fill", iconColor: UIColor(red: 79/255, green: 70/255, blue: 229/255, alpha: 1), bgColor: UIColor(red: 238/255, green: 242/255, blue: 255/255, alpha: 1), isWhatsApp: false),
+        HomeModule(id: "reg",  name: "Register",  path: "/workspace/registration",   icon: "ModRegister",  iconColor: UIColor(red: 37/255, green: 99/255, blue: 235/255, alpha: 1), bgColor: UIColor(red: 239/255, green: 246/255, blue: 255/255, alpha: 1), isWhatsApp: false),
+        HomeModule(id: "test", name: "Tests",     path: "/workspace/test-management", icon: "ModTests",     iconColor: UIColor(red: 124/255, green: 58/255, blue: 237/255, alpha: 1), bgColor: UIColor(red: 245/255, green: 243/255, blue: 255/255, alpha: 1), isWhatsApp: false),
+        HomeModule(id: "bill", name: "Billing",   path: "/workspace/billing",         icon: "ModBilling",   iconColor: UIColor(red: 5/255, green: 150/255, blue: 105/255, alpha: 1), bgColor: UIColor(red: 236/255, green: 253/255, blue: 245/255, alpha: 1), isWhatsApp: false),
+        HomeModule(id: "rep",  name: "Reports",   path: "/workspace/reports",         icon: "ModReports",   iconColor: UIColor(red: 2/255, green: 132/255, blue: 199/255, alpha: 1), bgColor: UIColor(red: 240/255, green: 249/255, blue: 255/255, alpha: 1), isWhatsApp: false),
+        HomeModule(id: "samp", name: "Samples",   path: "/workspace/accession",       icon: "ModSamples",   iconColor: UIColor(red: 225/255, green: 29/255, blue: 72/255, alpha: 1), bgColor: UIColor(red: 255/255, green: 241/255, blue: 242/255, alpha: 1), isWhatsApp: false),
+        HomeModule(id: "wa",   name: "Share",     path: "/workspace/reports",         icon: "ModWhatsApp", iconColor: UIColor(red: 22/255, green: 163/255, blue: 74/255, alpha: 1), bgColor: UIColor(red: 240/255, green: 253/255, blue: 244/255, alpha: 1), isWhatsApp: true),
+        HomeModule(id: "logi", name: "Logistics", path: "/workspace/logistics",       icon: "ModLogistics", iconColor: UIColor(red: 217/255, green: 119/255, blue: 6/255, alpha: 1), bgColor: UIColor(red: 255/255, green: 251/255, blue: 235/255, alpha: 1), isWhatsApp: false),
+        HomeModule(id: "wall", name: "Wallet",    path: "/workspace/wallet",          icon: "ModWallet",    iconColor: UIColor(red: 79/255, green: 70/255, blue: 229/255, alpha: 1), bgColor: UIColor(red: 238/255, green: 242/255, blue: 255/255, alpha: 1), isWhatsApp: false),
     ]
 
     // MARK: – Colours
@@ -329,16 +329,18 @@ class HomeNativeView: UIView {
         bellDot.layer.borderWidth  = 1.5
         bellDot.layer.borderColor  = UIColor.white.cgColor
 
-        // Help / Assistance Support button (Followed after Notifications)
-        helpButton.backgroundColor = .white
-        helpButton.layer.cornerRadius = 22
+        // Help / Assistance Support button (Small & Glassmorphism)
+        helpButton.backgroundColor = UIColor(white: 1.0, alpha: 0.22)
+        helpButton.layer.cornerRadius = 18
+        helpButton.layer.borderWidth = 1.2
+        helpButton.layer.borderColor = UIColor(white: 1.0, alpha: 0.50).cgColor
         helpButton.layer.shadowColor  = UIColor.black.cgColor
-        helpButton.layer.shadowOpacity = 0.12
-        helpButton.layer.shadowRadius  = 4
-        helpButton.layer.shadowOffset  = CGSize(width: 0, height: 2)
-        let helpConfig = UIImage.SymbolConfiguration(pointSize: 20, weight: .bold)
+        helpButton.layer.shadowOpacity = 0.08
+        helpButton.layer.shadowRadius  = 3
+        helpButton.layer.shadowOffset  = CGSize(width: 0, height: 1.5)
+        let helpConfig = UIImage.SymbolConfiguration(pointSize: 17, weight: .bold)
         helpButton.setImage(UIImage(systemName: "questionmark.circle", withConfiguration: helpConfig) ?? UIImage(systemName: "questionmark", withConfiguration: helpConfig), for: .normal)
-        helpButton.tintColor = Self.headerBlue2
+        helpButton.tintColor = .white
         helpButton.accessibilityLabel = "Help & Support"
         helpButton.addTarget(self, action: #selector(helpTapped), for: .touchUpInside)
 
@@ -368,8 +370,8 @@ class HomeNativeView: UIView {
         NSLayoutConstraint.activate([
             avatarContainer.widthAnchor.constraint(equalToConstant: 44),
             avatarContainer.heightAnchor.constraint(equalToConstant: 44),
-            helpButton.widthAnchor.constraint(equalToConstant: 44),
-            helpButton.heightAnchor.constraint(equalToConstant: 44),
+            helpButton.widthAnchor.constraint(equalToConstant: 36),
+            helpButton.heightAnchor.constraint(equalToConstant: 36),
             bellButton.widthAnchor.constraint(equalToConstant: 44),
             bellButton.heightAnchor.constraint(equalToConstant: 44),
             hStack.topAnchor.constraint(equalTo: headerView.safeAreaLayoutGuide.topAnchor, constant: 10),
@@ -638,29 +640,54 @@ class HomeNativeView: UIView {
         let card = UIView()
         card.backgroundColor = .clear
 
-        // Icon container with matching 15pt squircle radius & soft tint border
+        // Icon container with 50pt size & subtle elevation shadow
         let iconBg = UIView()
-        iconBg.backgroundColor    = mod.bgColor
-        iconBg.layer.cornerRadius = 15
-        iconBg.layer.borderWidth  = 1
-        iconBg.layer.borderColor  = mod.iconColor.withAlphaComponent(0.18).cgColor
         iconBg.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            iconBg.widthAnchor.constraint(equalToConstant: 48),
-            iconBg.heightAnchor.constraint(equalToConstant: 48),
+            iconBg.widthAnchor.constraint(equalToConstant: 50),
+            iconBg.heightAnchor.constraint(equalToConstant: 50),
         ])
 
-        let img = UIImageView(image: UIImage(systemName: mod.icon))
-        img.tintColor     = mod.iconColor
-        img.contentMode   = .scaleAspectFit
-        img.translatesAutoresizingMaskIntoConstraints = false
-        iconBg.addSubview(img)
-        NSLayoutConstraint.activate([
-            img.centerXAnchor.constraint(equalTo: iconBg.centerXAnchor),
-            img.centerYAnchor.constraint(equalTo: iconBg.centerYAnchor),
-            img.widthAnchor.constraint(equalToConstant: 22),
-            img.heightAnchor.constraint(equalToConstant: 22),
-        ])
+        if let customImage = UIImage(named: mod.icon) {
+            iconBg.backgroundColor = .clear
+            iconBg.layer.borderWidth = 0
+
+            // Subtle 3D elevation shadow for WOW effect
+            iconBg.layer.shadowColor = UIColor.black.cgColor
+            iconBg.layer.shadowOpacity = 0.12
+            iconBg.layer.shadowRadius = 4
+            iconBg.layer.shadowOffset = CGSize(width: 0, height: 2)
+            iconBg.clipsToBounds = false
+
+            let img = UIImageView(image: customImage)
+            img.contentMode = .scaleAspectFit
+            img.clipsToBounds = true
+            img.translatesAutoresizingMaskIntoConstraints = false
+            iconBg.addSubview(img)
+            NSLayoutConstraint.activate([
+                img.topAnchor.constraint(equalTo: iconBg.topAnchor),
+                img.bottomAnchor.constraint(equalTo: iconBg.bottomAnchor),
+                img.leadingAnchor.constraint(equalTo: iconBg.leadingAnchor),
+                img.trailingAnchor.constraint(equalTo: iconBg.trailingAnchor),
+            ])
+        } else {
+            iconBg.backgroundColor    = mod.bgColor
+            iconBg.layer.cornerRadius = 15
+            iconBg.layer.borderWidth  = 1
+            iconBg.layer.borderColor  = mod.iconColor.withAlphaComponent(0.18).cgColor
+
+            let img = UIImageView(image: UIImage(systemName: mod.icon))
+            img.tintColor     = mod.iconColor
+            img.contentMode   = .scaleAspectFit
+            img.translatesAutoresizingMaskIntoConstraints = false
+            iconBg.addSubview(img)
+            NSLayoutConstraint.activate([
+                img.centerXAnchor.constraint(equalTo: iconBg.centerXAnchor),
+                img.centerYAnchor.constraint(equalTo: iconBg.centerYAnchor),
+                img.widthAnchor.constraint(equalToConstant: 22),
+                img.heightAnchor.constraint(equalToConstant: 22),
+            ])
+        }
 
         let boldLabel = UILabel()
         boldLabel.font = .systemFont(ofSize: 12, weight: .bold)

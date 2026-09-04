@@ -232,15 +232,6 @@ export default function DashboardLayout({
     }
   }, [user, liveWalletBalance, pageTitle, unreadCount]);
 
-  // If viewing or printing a report, do not show the dashboard header or sidebar
-  if (pathname?.startsWith("/workspace/reports/print")) {
-    return (
-      <div className="w-full min-h-screen bg-slate-900 print:bg-white">
-        {children}
-      </div>
-    );
-  }
-
   return (
     <div className="flex h-screen w-full overflow-hidden bg-slate-50">
       <Sidebar

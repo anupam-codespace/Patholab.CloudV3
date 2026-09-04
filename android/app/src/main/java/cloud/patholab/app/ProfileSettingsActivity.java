@@ -210,6 +210,13 @@ public class ProfileSettingsActivity extends AppCompatActivity {
     private void setupActions() {
         btnBack.setOnClickListener(v -> finish());
         btnSaveAll.setOnClickListener(v -> saveAllSettings());
+        View btnRefresh = findViewById(R.id.btnRefreshSettings);
+        if (btnRefresh != null) {
+            btnRefresh.setOnClickListener(v -> {
+                loadAllSettings();
+                Toast.makeText(this, "Refreshing settings...", Toast.LENGTH_SHORT).show();
+            });
+        }
     }
 
     private String safeString(String s) {

@@ -1,59 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getDataFromToken, getCurrentUser } from "@/lib/auth";
+import { getDataFromToken } from "@/lib/auth"; // Assuming this is your auth method from context
 
 export async function GET(req: NextRequest) {
   try {
-    const userFromToken = await getDataFromToken(req);
-    const currentUser = await getCurrentUser();
-    const user = userFromToken || currentUser;
-
-    let labId = user?.labId;
-    if (!labId && user) {
-      const uid = user.userId || user.id;
-      if (uid) {
-        const dbUser = await prisma.user.findUnique({
-          where: { id: uid },
-          include: {
-            lab: true,
-            staffLabs: { include: { lab: true } },
-          },
-        });
-        const activeLab = dbUser?.lab || dbUser?.staffLabs?.[0]?.lab;
-        if (activeLab) labId = activeLab.id;
-      }
-    }
-
-    if (!labId || !user) {
+    const user = await getDataFromToken(req);
+    if (!user || !user.labId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // 1. Extract Query Parameters for Pagination & Filtering
     const searchParams = req.nextUrl.searchParams;
     const page = Math.max(parseInt(searchParams.get("page") || "1"), 1);
+
     const limit = Math.min(
       Math.max(parseInt(searchParams.get("limit") || "10"), 1),
       100,
     );
     const filterType = searchParams.get("type") || "ALL";
     const skip = (page - 1) * limit;
+    const labId = user.labId;
 
     // Build the dynamic WHERE clause for transactions
     const txWhere: any = { labId };
     if (filterType !== "ALL") {
-      const upper = filterType.toUpperCase();
-      if (upper === "DEBIT" || upper === "USAGE" || upper === "DEDUCTION") {
-        txWhere.type = { in: ["DEDUCTION", "SETUP_FEE"] };
-      } else if (upper === "RECHARGE" || upper === "CREDIT") {
-        txWhere.type = { in: ["RECHARGE", "REFUND"] };
-      } else {
-        txWhere.type = filterType;
-      }
+      txWhere.type = filterType;
     }
 
-    // Date range filter if provided
+    // 1. Add Date extraction
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
+
+    // 2. Add the date filter to your transaction WHERE clause
+
+    // -> NEW: Apply date range if provided
     if (startDate && endDate) {
       const from = new Date(startDate);
       const to = new Date(endDate);
@@ -66,30 +46,21 @@ export async function GET(req: NextRequest) {
       }
 
       to.setHours(23, 59, 59, 999);
+
       txWhere.createdAt = {
         gte: from,
         lte: to,
       };
     }
 
-    // Ensure wallet exists for this lab
-    let wallet = await prisma.labWallet.findUnique({
-      where: { labId },
-    });
-    if (!wallet) {
-      wallet = await prisma.labWallet.create({
-        data: {
-          labId,
-          balance: 0,
-          perPatientFee: 2.5,
-        },
-      });
-    }
-
-    // 2. Execute parallel DB queries for metrics and transactions
-    const [rechargeAgg, spentAgg, transactions, totalTransactions] =
+    // 2. Execute parallel DB queries for maximum speed
+    const [wallet, rechargeAgg, spentAgg, transactions, totalTransactions] =
       await Promise.all([
-        // Calculate Total Recharged
+        // A. Get the core wallet data
+        prisma.labWallet.findUnique({
+          where: { labId },
+        }),
+        // B. Calculate Total Recharged (DB Level Math)
         prisma.walletTransaction.aggregate({
           where: {
             labId,
@@ -98,7 +69,7 @@ export async function GET(req: NextRequest) {
           },
           _sum: { amount: true },
         }),
-        // Calculate Total Spent
+        // C. Calculate Total Spent (DB Level Math)
         prisma.walletTransaction.aggregate({
           where: {
             labId,
@@ -107,46 +78,41 @@ export async function GET(req: NextRequest) {
           },
           _sum: { amount: true },
         }),
-        // Fetch Paginated Transactions
+        // D. Fetch Paginated Transactions
         prisma.walletTransaction.findMany({
           where: txWhere,
           orderBy: { createdAt: "desc" },
           take: limit,
           skip: skip,
         }),
-        // Total count
+        // E. Get total count for pagination math
         prisma.walletTransaction.count({
           where: txWhere,
         }),
       ]);
 
-    // 3. Map transactions with numerical values and compatibility aliases
-    const safeTransactions = transactions.map((tx) => {
-      const amt = Number(tx.amount || 0);
-      const cBal = Number(tx.closingBalance || 0);
-      return {
-        ...tx,
-        amount: amt,
-        closingBalance: cBal,
-        balanceAfter: cBal, // Direct alias for mobile clients
-        referenceId: tx.id,
-      };
-    });
+    // 3. Prevent the Next.js "Decimal Warning" by mapping to numbers
+    const safeTransactions = transactions.map((tx) => ({
+      ...tx,
+      amount: Number(tx.amount),
+      closingBalance: Number(tx.closingBalance),
+    }));
 
-    const totalRec = Number(rechargeAgg._sum.amount || 0);
-    const totalSpent = Number(spentAgg._sum.amount || 0);
-
-    // 4. Return structured payload
+    // 4. Return structured, sanitized payload
     return NextResponse.json({
+      
       wallet: {
+        
         ...wallet,
         balance: Number(wallet?.balance || 0),
-        perPatientFee: Number(wallet?.perPatientFee || 2.5),
+        perPatientFee: Number(wallet?.perPatientFee || 0),
       },
       metrics: {
-        totalRecharged: totalRec,
-        totalSpent: totalSpent,
-        calculatedBalance: totalRec - totalSpent,
+        totalRecharged: Number(rechargeAgg._sum.amount || 0),
+        totalSpent: Number(spentAgg._sum.amount || 0),
+        calculatedBalance:
+          Number(rechargeAgg._sum.amount || 0) -
+          Number(spentAgg._sum.amount || 0),
       },
       transactions: safeTransactions,
       pagination: {

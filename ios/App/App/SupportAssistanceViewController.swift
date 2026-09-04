@@ -53,6 +53,8 @@ class SupportAssistanceViewController: UIViewController {
         cardContainer.backgroundColor = .clear
         cardContainer.layer.cornerRadius = 24
         cardContainer.layer.masksToBounds = true
+        cardContainer.layer.borderWidth = 1.2
+        cardContainer.layer.borderColor = UIColor(white: 1.0, alpha: 0.25).cgColor
         cardContainer.translatesAutoresizingMaskIntoConstraints = false
         shadowContainer.addSubview(cardContainer)
 
@@ -100,8 +102,8 @@ class SupportAssistanceViewController: UIViewController {
         subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
         headerView.addSubview(subtitleLabel)
 
-        // Body view
-        bodyView.backgroundColor = .white
+        // Body view (Frosted glassmorphism background)
+        bodyView.backgroundColor = UIColor(white: 1.0, alpha: 0.95)
         bodyView.translatesAutoresizingMaskIntoConstraints = false
         cardContainer.addSubview(bodyView)
 
@@ -117,21 +119,21 @@ class SupportAssistanceViewController: UIViewController {
 
         // Row 2: WhatsApp Chat
         let waRow = createContactRow(
-            iconName: "message.fill",
+            iconName: "WhatsAppLogo",
             header: "WHATSAPP CHAT",
             value: "Instant chat assistance",
             iconTint: UIColor(red: 22/255, green: 163/255, blue: 74/255, alpha: 1),
-            iconBg: UIColor(red: 220/255, green: 252/255, blue: 231/255, alpha: 1),
+            iconBg: .clear,
             action: #selector(whatsappTapped)
         )
 
         // Row 3: Email Support (Gmail)
         let emailRow = createContactRow(
-            iconName: "envelope.fill",
+            iconName: "GmailLogo",
             header: "EMAIL SUPPORT (GMAIL)",
             value: Self.supportEmail,
             iconTint: UIColor(red: 234/255, green: 67/255, blue: 53/255, alpha: 1),
-            iconBg: UIColor(red: 254/255, green: 242/255, blue: 242/255, alpha: 1),
+            iconBg: .clear,
             action: #selector(emailTapped)
         )
 
@@ -237,9 +239,13 @@ class SupportAssistanceViewController: UIViewController {
         iconBox.translatesAutoresizingMaskIntoConstraints = false
 
         let iconImageView = UIImageView()
-        let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold)
-        iconImageView.image = UIImage(systemName: iconName, withConfiguration: config)
-        iconImageView.tintColor = iconTint
+        if let custom = UIImage(named: iconName) {
+            iconImageView.image = custom
+        } else {
+            let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold)
+            iconImageView.image = UIImage(systemName: iconName, withConfiguration: config)
+            iconImageView.tintColor = iconTint
+        }
         iconImageView.contentMode = .scaleAspectFit
         iconImageView.translatesAutoresizingMaskIntoConstraints = false
         iconBox.addSubview(iconImageView)
@@ -275,6 +281,8 @@ class SupportAssistanceViewController: UIViewController {
             iconBox.heightAnchor.constraint(equalToConstant: 48),
             iconImageView.centerXAnchor.constraint(equalTo: iconBox.centerXAnchor),
             iconImageView.centerYAnchor.constraint(equalTo: iconBox.centerYAnchor),
+            iconImageView.widthAnchor.constraint(equalToConstant: 38),
+            iconImageView.heightAnchor.constraint(equalToConstant: 38),
 
             hStack.topAnchor.constraint(equalTo: container.topAnchor, constant: 4),
             hStack.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -4),

@@ -1,41 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getDataFromToken, getCurrentUser } from "@/lib/auth";
+import { getDataFromToken } from "@/lib/auth";
 import Razorpay from "razorpay";
 
 export async function POST(req: NextRequest) {
   try {
-    const userFromToken = await getDataFromToken(req);
-    const currentUser = await getCurrentUser();
-    const session = userFromToken || currentUser;
-
-    let labId = session?.labId;
-    if (!labId && session) {
-      const uid = session.userId || session.id;
-      if (uid) {
-        const dbUser = await prisma.user.findUnique({
-          where: { id: uid },
-          include: {
-            lab: true,
-            staffLabs: { include: { lab: true } },
-          },
-        });
-        const activeLab = dbUser?.lab || dbUser?.staffLabs?.[0]?.lab;
-        if (activeLab) labId = activeLab.id;
-      }
-    }
-
-    if (!labId || !session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const session = await getDataFromToken(req);
+    if (!session?.labId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { baseAmount } = await req.json();
     if (!baseAmount || baseAmount <= 0) return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
 
     // 1. SELF-HEALING: Ensure Wallet Exists
     const wallet = await prisma.labWallet.upsert({
-      where: { labId },
+      where: { labId: session.labId },
       update: {},
       create: {
-        labId,
+        labId: session.labId,
         balance: 0,
         isActive: true,
       },
@@ -56,7 +37,7 @@ export async function POST(req: NextRequest) {
     const order = await razorpay.orders.create({
       amount: Math.round(totalAmount * 100),
       currency: "INR",
-      receipt: `R_${labId.substring(0, 8)}_${Date.now()}`,
+      receipt: `R_${session.labId.substring(0, 8)}_${Date.now()}`,
     });
 
     return NextResponse.json({

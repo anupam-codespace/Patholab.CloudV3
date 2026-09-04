@@ -676,7 +676,9 @@ public class SamplesActivity extends AppCompatActivity {
         public void onBindViewHolder(@NonNull ViewHolder h, int position) {
             SpecimenItem s = list.get(position);
 
-            h.lblTubeColorIndicator.setText(s.tubeEmoji);
+            if (h.imgTubeColorIndicator != null) {
+                h.imgTubeColorIndicator.setColorFilter(s.tubeTextColor);
+            }
             h.lblTubeTypeName.setText(s.tubeTypeName);
             h.lblTubeTypeName.setTextColor(s.tubeTextColor);
             h.containerTubeTypeBadge.setBackgroundTintList(android.content.res.ColorStateList.valueOf(s.tubeBgColor));
@@ -728,7 +730,8 @@ public class SamplesActivity extends AppCompatActivity {
 
         public static class ViewHolder extends RecyclerView.ViewHolder {
             LinearLayout containerTubeTypeBadge;
-            TextView lblTubeColorIndicator, lblTubeTypeName, lblSampleBarcode, lblSampleStatusBadge;
+            ImageView imgTubeColorIndicator;
+            TextView lblTubeTypeName, lblSampleBarcode, lblSampleStatusBadge;
             TextView lblSamplePatientName, lblSamplePatientDetails, lblSampleTestsList, lblSampleDepartment, lblSampleCollectionInfo;
             TextView btnSamplePrintBarcode, btnSampleCollectAccept;
             FrameLayout btnSampleReject, btnSampleDetails;
@@ -736,7 +739,7 @@ public class SamplesActivity extends AppCompatActivity {
             public ViewHolder(@NonNull View itemView) {
                 super(itemView);
                 containerTubeTypeBadge = itemView.findViewById(R.id.containerTubeTypeBadge);
-                lblTubeColorIndicator = itemView.findViewById(R.id.lblTubeColorIndicator);
+                imgTubeColorIndicator = itemView.findViewById(R.id.lblTubeColorIndicator);
                 lblTubeTypeName = itemView.findViewById(R.id.lblTubeTypeName);
                 lblSampleBarcode = itemView.findViewById(R.id.lblSampleBarcode);
                 lblSampleStatusBadge = itemView.findViewById(R.id.lblSampleStatusBadge);

@@ -295,7 +295,11 @@ class ProfileSettingsViewController: UIViewController {
         saveButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .bold)
         saveButton.backgroundColor = Self.headerBlue
         saveButton.setTitleColor(.white, for: .normal)
-        saveButton.layer.cornerRadius = 16
+        saveButton.layer.cornerRadius = 18
+        saveButton.layer.shadowColor = Self.headerBlue.cgColor
+        saveButton.layer.shadowOpacity = 0.28
+        saveButton.layer.shadowRadius = 8
+        saveButton.layer.shadowOffset = CGSize(width: 0, height: 4)
         saveButton.translatesAutoresizingMaskIntoConstraints = false
         saveButton.heightAnchor.constraint(equalToConstant: 52).isActive = true
         saveButton.addTarget(self, action: #selector(saveTapped), for: .touchUpInside)

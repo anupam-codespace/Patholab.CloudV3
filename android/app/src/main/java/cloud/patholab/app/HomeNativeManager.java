@@ -1178,11 +1178,16 @@ public class HomeNativeManager {
         FrameLayout iconFrame = new FrameLayout(ctx);
         LinearLayout.LayoutParams frameLp = new LinearLayout.LayoutParams(dp(48), dp(48));
         iconFrame.setLayoutParams(frameLp);
-        iconFrame.setBackgroundResource(bgRes);
+        boolean is3D = mod.iconDrawable != null && mod.iconDrawable.startsWith("ic_mod_");
+        if (!is3D) {
+            iconFrame.setBackgroundResource(bgRes);
+        }
 
         ImageView iv = new ImageView(ctx);
-        FrameLayout.LayoutParams ivLp = new FrameLayout.LayoutParams(dp(22), dp(22), android.view.Gravity.CENTER);
+        int iconSize = is3D ? dp(46) : dp(22);
+        FrameLayout.LayoutParams ivLp = new FrameLayout.LayoutParams(iconSize, iconSize, android.view.Gravity.CENTER);
         iv.setLayoutParams(ivLp);
+        iv.setScaleType(ImageView.ScaleType.FIT_CENTER);
         iv.setImageResource(iconRes);
         iconFrame.addView(iv);
         card.addView(iconFrame);
@@ -1307,14 +1312,19 @@ public class HomeNativeManager {
             chip.setLayoutParams(lp);
 
             // Icon Frame
+            boolean is3D = iconName != null && iconName.startsWith("ic_mod_");
             FrameLayout iconFrame = new FrameLayout(ctx);
             iconFrame.setLayoutParams(new LinearLayout.LayoutParams(dp(32), dp(32)));
-            iconFrame.setBackgroundResource(bgRes);
+            if (!is3D) {
+                iconFrame.setBackgroundResource(bgRes);
+            }
 
             ImageView iv = new ImageView(ctx);
-            FrameLayout.LayoutParams ivLp = new FrameLayout.LayoutParams(dp(18), dp(18));
+            int iconSize = is3D ? dp(30) : dp(18);
+            FrameLayout.LayoutParams ivLp = new FrameLayout.LayoutParams(iconSize, iconSize);
             ivLp.gravity = android.view.Gravity.CENTER;
             iv.setLayoutParams(ivLp);
+            iv.setScaleType(ImageView.ScaleType.FIT_CENTER);
             iv.setImageResource(iconRes);
             iconFrame.addView(iv);
 
@@ -1423,21 +1433,21 @@ public class HomeNativeManager {
     //  Module clicks
     // ─────────────────────────────────────────────────────────────────────────
     private void setupModuleClicks() {
-        clickModule(R.id.modRegistration, "/workspace/registration");
-        clickModule(R.id.modTests,        "/workspace/test-management");
-        clickModule(R.id.modBilling,      "/workspace/billing");
-        clickModule(R.id.modReports,      "/workspace/reports");
-        clickModule(R.id.modSamples,      "/workspace/samples");
-        clickModule(R.id.modWhatsapp,     "/workspace/reports");
-        clickModule(R.id.modLogistics,    "/workspace/logistics");
-        clickModule(R.id.modWallet,       "/workspace/wallet");
+        clickModule(R.id.modRegistration, "/workspace/registration", "Registration", "ic_mod_registration", "bg_mod_icon_blue");
+        clickModule(R.id.modTests,        "/workspace/test-management", "Tests", "ic_mod_tests", "bg_mod_icon_purple");
+        clickModule(R.id.modBilling,      "/workspace/billing", "Billing", "ic_mod_billing", "bg_mod_icon_emerald");
+        clickModule(R.id.modReports,      "/workspace/reports", "Reports", "ic_mod_reports", "bg_mod_icon_sky");
+        clickModule(R.id.modSamples,      "/workspace/samples", "Samples", "ic_mod_samples", "bg_mod_icon_rose");
+        clickModule(R.id.modWhatsapp,     "/workspace/reports", "Share", "ic_mod_whatsapp", "bg_mod_icon_green");
+        clickModule(R.id.modLogistics,    "/workspace/logistics", "Logistics", "ic_mod_logistics", "bg_mod_icon_amber");
+        clickModule(R.id.modWallet,       "/workspace/wallet", "Wallet", "ic_mod_wallet", "bg_mod_icon_indigo");
     }
 
-    private void clickModule(int viewId, String path) {
+    private void clickModule(int viewId, String path, String name, String icon, String bg) {
         View v = homeRoot.findViewById(viewId);
         if (v != null) {
             v.setOnClickListener(x -> {
-                recordRecentModule(path.replace("/workspace/", ""), path, "ic_mod_registration", "bg_mod_icon_blue");
+                recordRecentModule(name, path, icon, bg);
                 if (path.equals("/workspace/wallet") || path.startsWith("/workspace/wallet")) {
                     ctx.startActivity(new Intent(ctx, WalletActivity.class));
                 } else if (path.equals("/workspace/registration") || path.startsWith("/workspace/registration") || path.equals("/workspace/patients/new")) {

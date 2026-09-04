@@ -209,10 +209,11 @@
                 android:textColor="#FFFFFF"
                 android:backgroundTint="#25D366"
                 app:cornerRadius="16dp"
-                app:icon="@drawable/ic_whatsapp"
+                app:icon="@drawable/ic_whatsapp_official"
                 app:iconGravity="textStart"
                 app:iconPadding="8dp"
-                app:iconTint="#FFFFFF"
+                app:iconTint="@null"
+                app:iconSize="22dp"
                 android:layout_marginBottom="10dp"
                 android:elevation="4dp" />
 

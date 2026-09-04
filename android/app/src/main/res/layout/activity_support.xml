@@ -755,10 +755,10 @@
                             android:focusable="true">
 
                             <ImageView
-                                android:layout_width="18dp"
-                                android:layout_height="18dp"
-                                android:src="@drawable/ic_whatsapp"
-                                android:tint="#16A34A" />
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:src="@drawable/ic_whatsapp_official"
+                                android:scaleType="fitCenter" />
 
                             <TextView
                                 android:layout_width="0dp"
@@ -792,10 +792,10 @@
                             android:focusable="true">
 
                             <ImageView
-                                android:layout_width="18dp"
-                                android:layout_height="18dp"
-                                android:src="@drawable/ic_envelope"
-                                android:tint="#4F46E5" />
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:src="@drawable/ic_gmail_official"
+                                android:scaleType="fitCenter" />
 
                             <TextView
                                 android:layout_width="0dp"

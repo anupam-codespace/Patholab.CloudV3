@@ -606,8 +606,8 @@ class SupportViewController: UIViewController, UITextFieldDelegate {
         sub.textColor = UIColor(red: 0.392, green: 0.455, blue: 0.545, alpha: 1)
 
         let callRow = createContactRow(icon: "phone.fill", iconColor: UIColor(red: 0.145, green: 0.388, blue: 0.922, alpha: 1), title: "Priority Hotline (\(Self.supportPhone))", action: #selector(callTapped))
-        let waRow = createContactRow(icon: "message.fill", iconColor: UIColor(red: 0.086, green: 0.639, blue: 0.290, alpha: 1), title: "WhatsApp Concierge Desk", action: #selector(whatsappTapped))
-        let emailRow = createContactRow(icon: "envelope.fill", iconColor: UIColor(red: 0.310, green: 0.275, blue: 0.898, alpha: 1), title: "Official Support (\(Self.supportEmail))", action: #selector(emailTapped))
+        let waRow = createContactRow(icon: "WhatsAppLogo", iconColor: .clear, title: "WhatsApp Concierge Desk", action: #selector(whatsappTapped))
+        let emailRow = createContactRow(icon: "GmailLogo", iconColor: .clear, title: "Official Support (\(Self.supportEmail))", action: #selector(emailTapped))
 
         let stack = UIStackView(arrangedSubviews: [title, sub, callRow, waRow, emailRow])
         stack.axis = .vertical
@@ -633,8 +633,13 @@ class SupportViewController: UIViewController, UITextFieldDelegate {
         row.layer.borderColor = UIColor(red: 0.941, green: 0.957, blue: 0.973, alpha: 1).cgColor
         row.translatesAutoresizingMaskIntoConstraints = false
 
-        let iv = UIImageView(image: UIImage(systemName: icon))
-        iv.tintColor = iconColor
+        let iv = UIImageView()
+        if let custom = UIImage(named: icon) {
+            iv.image = custom
+        } else {
+            iv.image = UIImage(systemName: icon)
+            iv.tintColor = iconColor
+        }
         iv.contentMode = .scaleAspectFit
         iv.translatesAutoresizingMaskIntoConstraints = false
 
@@ -654,11 +659,11 @@ class SupportViewController: UIViewController, UITextFieldDelegate {
         row.addSubview(chevron)
 
         NSLayoutConstraint.activate([
-            row.heightAnchor.constraint(equalToConstant: 44),
+            row.heightAnchor.constraint(equalToConstant: 46),
             iv.leadingAnchor.constraint(equalTo: row.leadingAnchor, constant: 12),
             iv.centerYAnchor.constraint(equalTo: row.centerYAnchor),
-            iv.widthAnchor.constraint(equalToConstant: 18),
-            iv.heightAnchor.constraint(equalToConstant: 18),
+            iv.widthAnchor.constraint(equalToConstant: 22),
+            iv.heightAnchor.constraint(equalToConstant: 22),
 
             lbl.leadingAnchor.constraint(equalTo: iv.trailingAnchor, constant: 10),
             lbl.trailingAnchor.constraint(equalTo: chevron.leadingAnchor, constant: -6),
