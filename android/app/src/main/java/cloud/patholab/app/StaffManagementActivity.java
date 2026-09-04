@@ -1151,11 +1151,11 @@ public class StaffManagementActivity extends AppCompatActivity {
             // 3-Dots Action Menu
             h.btnStaffMoreActions.setOnClickListener(v -> {
                 PopupMenu popup = new PopupMenu(StaffManagementActivity.this, v);
-                popup.getMenu().add(0, 1, 0, "✏️  Edit Details");
-                popup.getMenu().add(0, 2, 1, "📜  View Activity Log");
-                popup.getMenu().add(0, 3, 2, "🔑  Reset Password");
-                popup.getMenu().add(0, 4, 3, m.isActive ? "🚫  Suspend Access" : "✓  Restore Access");
-                popup.getMenu().add(0, 5, 4, "🗑️  Remove Staff");
+                popup.getMenu().add(0, 1, 0, "Edit Details");
+                popup.getMenu().add(0, 2, 1, "View Activity Log");
+                popup.getMenu().add(0, 3, 2, "Reset Password");
+                popup.getMenu().add(0, 4, 3, m.isActive ? "Suspend Access" : "Restore Access");
+                popup.getMenu().add(0, 5, 4, "Remove Staff");
 
                 popup.setOnMenuItemClickListener(item -> {
                     switch (item.getItemId()) {

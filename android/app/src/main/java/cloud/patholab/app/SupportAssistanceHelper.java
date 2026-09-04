@@ -41,7 +41,7 @@ public class SupportAssistanceHelper {
             }
 
             View popupView = LayoutInflater.from(context).inflate(R.layout.layout_help_popup, null);
-            int popupWidth = dp(context, 250);
+            int popupWidth = dp(context, 285);
 
             PopupWindow popup = new PopupWindow(
                     popupView,
@@ -133,7 +133,7 @@ public class SupportAssistanceHelper {
             Window window = dialog.getWindow();
             if (window != null) {
                 window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-                window.setLayout(dp(context, 280), ViewGroup.LayoutParams.WRAP_CONTENT);
+                window.setLayout(dp(context, 290), ViewGroup.LayoutParams.WRAP_CONTENT);
                 window.setDimAmount(0.45f);
                 window.getAttributes().windowAnimations = android.R.style.Animation_Dialog;
             }
@@ -218,10 +218,18 @@ public class SupportAssistanceHelper {
 
     public static void openDashboard(Context context) {
         try {
-            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(SUPPORT_DASHBOARD_URL));
+            Intent intent = new Intent(context, SupportActivity.class);
+            if (!(context instanceof android.app.Activity)) {
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            }
             context.startActivity(intent);
         } catch (Exception e) {
-            Toast.makeText(context, "Support Portal: " + SUPPORT_DASHBOARD_URL, Toast.LENGTH_SHORT).show();
+            try {
+                Intent fallback = new Intent(Intent.ACTION_VIEW, Uri.parse(SUPPORT_DASHBOARD_URL));
+                context.startActivity(fallback);
+            } catch (Exception ignored) {
+                Toast.makeText(context, "Support Portal: " + SUPPORT_DASHBOARD_URL, Toast.LENGTH_SHORT).show();
+            }
         }
     }
 

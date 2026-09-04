@@ -286,10 +286,10 @@ class SamplesViewController: UIViewController, UITableViewDataSource, UITableVie
         filterChipsStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
         let filters = [
             ("ALL", "All Specimens"),
-            ("COLLECTED", "✓ Collected"),
-            ("PENDING", "⏱ Phlebotomy Due"),
-            ("PROCESSING", "🔬 Under Testing"),
-            ("REJECTED", "⚠️ Rejected")
+            ("COLLECTED", "Collected"),
+            ("PENDING", "Phlebotomy Due"),
+            ("PROCESSING", "Under Testing"),
+            ("REJECTED", "Rejected")
         ]
 
         for (key, title) in filters {
@@ -615,7 +615,7 @@ class SamplesViewController: UIViewController, UITableViewDataSource, UITableVie
 
         let st = sample.status.uppercased()
         if st == "COLLECTED" {
-            statusBadge.text = " ✓ Collected "
+            statusBadge.text = " Collected "
             statusBadge.textColor = UIColor(red: 0.02, green: 0.59, blue: 0.41, alpha: 1)
             statusBadge.backgroundColor = UIColor(red: 0.93, green: 0.99, blue: 0.96, alpha: 1)
         } else if st == "IN_ANALYZER" || st == "PROCESSING" {
@@ -685,7 +685,7 @@ class SamplesViewController: UIViewController, UITableViewDataSource, UITableVie
 
         // Action Buttons
         let printBtn = UIButton(type: .system)
-        printBtn.setTitle("🖨️ Barcode", for: .normal)
+        printBtn.setTitle("Barcode", for: .normal)
         printBtn.setTitleColor(UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1), for: .normal)
         printBtn.titleLabel?.font = .systemFont(ofSize: 12, weight: .bold)
         printBtn.backgroundColor = UIColor(red: 0.937, green: 0.965, blue: 1.0, alpha: 1)
@@ -695,7 +695,7 @@ class SamplesViewController: UIViewController, UITableViewDataSource, UITableVie
 
         let collectBtn = UIButton(type: .system)
         let isCollected = (sample.status == "Collected")
-        collectBtn.setTitle(isCollected ? "✓ Collected" : "🩸 Collect", for: .normal)
+        collectBtn.setTitle(isCollected ? "Collected" : "Collect", for: .normal)
         collectBtn.setTitleColor(isCollected ? UIColor(red: 0.02, green: 0.59, blue: 0.41, alpha: 1) : UIColor(red: 0.85, green: 0.47, blue: 0.02, alpha: 1), for: .normal)
         collectBtn.titleLabel?.font = .systemFont(ofSize: 12, weight: .bold)
         collectBtn.backgroundColor = isCollected ? UIColor(red: 0.93, green: 0.99, blue: 0.96, alpha: 1) : UIColor(red: 1.0, green: 0.98, blue: 0.92, alpha: 1)
@@ -704,14 +704,16 @@ class SamplesViewController: UIViewController, UITableViewDataSource, UITableVie
         collectBtn.addTarget(self, action: #selector(didTapCollectSample(_:)), for: .touchUpInside)
 
         let rejectBtn = UIButton(type: .system)
-        rejectBtn.setTitle("⚠️", for: .normal)
+        rejectBtn.setImage(UIImage(systemName: "exclamationmark.triangle.fill"), for: .normal)
+        rejectBtn.tintColor = UIColor(red: 0.937, green: 0.267, blue: 0.267, alpha: 1)
         rejectBtn.backgroundColor = UIColor(red: 0.996, green: 0.949, blue: 0.949, alpha: 1)
         rejectBtn.layer.cornerRadius = 10
         rejectBtn.tag = indexPath.row
         rejectBtn.addTarget(self, action: #selector(didTapRejectSample(_:)), for: .touchUpInside)
 
         let detailsBtn = UIButton(type: .system)
-        detailsBtn.setTitle("ℹ️", for: .normal)
+        detailsBtn.setImage(UIImage(systemName: "info.circle.fill"), for: .normal)
+        detailsBtn.tintColor = UIColor(red: 0.392, green: 0.455, blue: 0.545, alpha: 1)
         detailsBtn.backgroundColor = UIColor(red: 0.945, green: 0.961, blue: 0.976, alpha: 1)
         detailsBtn.layer.cornerRadius = 10
         detailsBtn.tag = indexPath.row

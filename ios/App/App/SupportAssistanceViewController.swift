@@ -61,17 +61,17 @@ class SupportAssistanceViewController: UIViewController {
         headerView.translatesAutoresizingMaskIntoConstraints = false
         cardContainer.addSubview(headerView)
 
-        // Lifebuoy / Support Icon
+        // Support Headset Icon (Replacing Nautical Lifebuoy)
         let iconView = UIImageView()
         let config = UIImage.SymbolConfiguration(pointSize: 22, weight: .bold)
-        iconView.image = UIImage(systemName: "lifepreserver", withConfiguration: config) ?? UIImage(systemName: "questionmark.circle.fill", withConfiguration: config)
+        iconView.image = UIImage(systemName: "headphones", withConfiguration: config) ?? UIImage(systemName: "person.wave.2.fill", withConfiguration: config)
         iconView.tintColor = UIColor(red: 56/255, green: 189/255, blue: 248/255, alpha: 1) // #38BDF8
         iconView.contentMode = .scaleAspectFit
         iconView.translatesAutoresizingMaskIntoConstraints = false
 
-        // Title: Need Assistance?
+        // Title: Support Desk
         let titleLabel = UILabel()
-        titleLabel.text = "Need Assistance?"
+        titleLabel.text = "Support Concierge"
         titleLabel.textColor = .white
         titleLabel.font = .systemFont(ofSize: 20, weight: .bold)
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -93,9 +93,9 @@ class SupportAssistanceViewController: UIViewController {
 
         // Subtitle
         let subtitleLabel = UILabel()
-        subtitleLabel.text = "We are here to support your daily laboratory operations."
+        subtitleLabel.text = "24/7 Priority Assistance for your laboratory."
         subtitleLabel.textColor = UIColor(red: 148/255, green: 163/255, blue: 184/255, alpha: 1) // #94A3B8
-        subtitleLabel.font = .systemFont(ofSize: 14, weight: .regular)
+        subtitleLabel.font = .systemFont(ofSize: 13.5, weight: .regular)
         subtitleLabel.numberOfLines = 0
         subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
         headerView.addSubview(subtitleLabel)
@@ -108,31 +108,45 @@ class SupportAssistanceViewController: UIViewController {
         // Row 1: Priority Call
         let callRow = createContactRow(
             iconName: "phone.fill",
-            header: "PRIORITY CALL",
+            header: "CALL SUPPORT",
             value: Self.supportPhoneDisplay,
+            iconTint: UIColor(red: 37/255, green: 99/255, blue: 235/255, alpha: 1),
+            iconBg: UIColor(red: 239/255, green: 246/255, blue: 255/255, alpha: 1),
             action: #selector(callTapped)
         )
 
-        // Row 2: Email Support
+        // Row 2: WhatsApp Chat
+        let waRow = createContactRow(
+            iconName: "message.fill",
+            header: "WHATSAPP CHAT",
+            value: "Instant chat assistance",
+            iconTint: UIColor(red: 22/255, green: 163/255, blue: 74/255, alpha: 1),
+            iconBg: UIColor(red: 220/255, green: 252/255, blue: 231/255, alpha: 1),
+            action: #selector(whatsappTapped)
+        )
+
+        // Row 3: Email Support (Gmail)
         let emailRow = createContactRow(
             iconName: "envelope.fill",
-            header: "EMAIL SUPPORT",
+            header: "EMAIL SUPPORT (GMAIL)",
             value: Self.supportEmail,
+            iconTint: UIColor(red: 234/255, green: 67/255, blue: 53/255, alpha: 1),
+            iconBg: UIColor(red: 254/255, green: 242/255, blue: 242/255, alpha: 1),
             action: #selector(emailTapped)
         )
 
         // Button: Open Support Dashboard
         let dashboardBtn = UIButton(type: .custom)
-        dashboardBtn.backgroundColor = UIColor(red: 13/255, green: 130/255, blue: 248/255, alpha: 1) // #0D82F8
+        dashboardBtn.backgroundColor = UIColor(red: 79/255, green: 70/255, blue: 229/255, alpha: 1) // Indigo #4F46E5
         dashboardBtn.layer.cornerRadius = 14
         dashboardBtn.layer.masksToBounds = true
         dashboardBtn.translatesAutoresizingMaskIntoConstraints = false
         dashboardBtn.addTarget(self, action: #selector(dashboardTapped), for: .touchUpInside)
 
         let btnTitle = UILabel()
-        btnTitle.text = "Open Support Dashboard"
+        btnTitle.text = "Support Tickets & Helpdesk"
         btnTitle.textColor = .white
-        btnTitle.font = .systemFont(ofSize: 16, weight: .semibold)
+        btnTitle.font = .systemFont(ofSize: 15.5, weight: .semibold)
         btnTitle.translatesAutoresizingMaskIntoConstraints = false
 
         let externalIcon = UIImageView()
@@ -150,7 +164,7 @@ class SupportAssistanceViewController: UIViewController {
         btnStack.translatesAutoresizingMaskIntoConstraints = false
         dashboardBtn.addSubview(btnStack)
 
-        let bodyStack = UIStackView(arrangedSubviews: [callRow, emailRow, dashboardBtn])
+        let bodyStack = UIStackView(arrangedSubviews: [callRow, waRow, emailRow, dashboardBtn])
         bodyStack.axis = .vertical
         bodyStack.spacing = 18
         bodyStack.translatesAutoresizingMaskIntoConstraints = false
@@ -211,13 +225,13 @@ class SupportAssistanceViewController: UIViewController {
         ])
     }
 
-    private func createContactRow(iconName: String, header: String, value: String, action: Selector) -> UIView {
+    private func createContactRow(iconName: String, header: String, value: String, iconTint: UIColor = UIColor(red: 2/255, green: 132/255, blue: 199/255, alpha: 1), iconBg: UIColor = UIColor(red: 224/255, green: 242/255, blue: 254/255, alpha: 1), action: Selector) -> UIView {
         let container = UIControl()
         container.translatesAutoresizingMaskIntoConstraints = false
         container.addTarget(self, action: action, for: .touchUpInside)
 
         let iconBox = UIView()
-        iconBox.backgroundColor = UIColor(red: 224/255, green: 242/255, blue: 254/255, alpha: 1) // #E0F2FE
+        iconBox.backgroundColor = iconBg
         iconBox.layer.cornerRadius = 12
         iconBox.isUserInteractionEnabled = false
         iconBox.translatesAutoresizingMaskIntoConstraints = false
@@ -225,7 +239,7 @@ class SupportAssistanceViewController: UIViewController {
         let iconImageView = UIImageView()
         let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold)
         iconImageView.image = UIImage(systemName: iconName, withConfiguration: config)
-        iconImageView.tintColor = UIColor(red: 2/255, green: 132/255, blue: 199/255, alpha: 1) // #0284C7
+        iconImageView.tintColor = iconTint
         iconImageView.contentMode = .scaleAspectFit
         iconImageView.translatesAutoresizingMaskIntoConstraints = false
         iconBox.addSubview(iconImageView)
@@ -233,13 +247,13 @@ class SupportAssistanceViewController: UIViewController {
         let headerLabel = UILabel()
         headerLabel.text = header
         headerLabel.textColor = UIColor(red: 100/255, green: 116/255, blue: 139/255, alpha: 1) // #64748B
-        headerLabel.font = .systemFont(ofSize: 11.5, weight: .bold)
+        headerLabel.font = .systemFont(ofSize: 11, weight: .bold)
         headerLabel.isUserInteractionEnabled = false
 
         let valueLabel = UILabel()
         valueLabel.text = value
         valueLabel.textColor = UIColor(red: 15/255, green: 23/255, blue: 42/255, alpha: 1) // #0F172A
-        valueLabel.font = .systemFont(ofSize: 16.5, weight: .bold)
+        valueLabel.font = .systemFont(ofSize: 15.5, weight: .bold)
         valueLabel.isUserInteractionEnabled = false
 
         let textStack = UIStackView(arrangedSubviews: [headerLabel, valueLabel])
@@ -293,6 +307,14 @@ class SupportAssistanceViewController: UIViewController {
         }
     }
 
+    @objc private func whatsappTapped() {
+        let msg = "Hello Patholab Cloud Support, I need assistance with my laboratory."
+        let cleanPhone = Self.supportPhone.replacingOccurrences(of: "+", with: "")
+        if let url = URL(string: "https://api.whatsapp.com/send?phone=\(cleanPhone)&text=\(msg.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")") {
+            UIApplication.shared.open(url, options: [:], completionHandler: nil)
+        }
+    }
+
     @objc private func emailTapped() {
         if let url = URL(string: "mailto:\(Self.supportEmail)?subject=Patholab%20Assistance%20Request") {
             UIApplication.shared.open(url, options: [:], completionHandler: nil)
@@ -300,9 +322,12 @@ class SupportAssistanceViewController: UIViewController {
     }
 
     @objc private func dashboardTapped() {
-        if let url = URL(string: Self.supportDashboardUrl) {
-            UIApplication.shared.open(url, options: [:], completionHandler: nil)
-        }
+        let presenting = self.presentingViewController
         dismissModal()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+            let supportVC = SupportViewController()
+            supportVC.modalPresentationStyle = .fullScreen
+            presenting?.present(supportVC, animated: true, completion: nil)
+        }
     }
 }

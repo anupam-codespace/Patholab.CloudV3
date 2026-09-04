@@ -10,15 +10,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Ensure only authorized high-level staff can view global financials
-  if (
-    user.role !== "LAB_OWNER" &&
-    user.role !== "LAB_MANAGER" &&
-    user.role !== "SUPER_ADMIN"
-  ) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-
+  // Allow authorized staff and owners belonging to the lab workspace
   const labId = user.labId;
 
   // Execute all queries concurrently for performance

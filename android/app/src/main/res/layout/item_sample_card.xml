@@ -93,7 +93,7 @@
                 android:paddingEnd="8dp"
                 android:paddingTop="3dp"
                 android:paddingBottom="3dp"
-                android:text="✓ Collected"
+                android:text="Collected"
                 android:textSize="11sp"
                 android:textStyle="bold"
                 android:textColor="#059669" />
@@ -227,8 +227,8 @@
                 android:background="@drawable/bg_pill_white"
                 android:backgroundTint="#059669"
                 android:gravity="center"
-                android:text="✓ Collect"
-                android:textSize="12sp"
+                android:text="Collect"
+                android:textSize="12.5sp"
                 android:textStyle="bold"
                 android:textColor="#FFFFFF"
                 android:clickable="true"
@@ -245,12 +245,13 @@
                 android:clickable="true"
                 android:focusable="true">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
                     android:layout_gravity="center"
-                    android:text="⚠️"
-                    android:textSize="14sp" />
+                    android:src="@drawable/ic_alert_triangle"
+                    android:tint="#DC2626"
+                    app:tint="#DC2626" />
 
             </FrameLayout>
 

@@ -7,8 +7,15 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.RectF;
+import android.graphics.Typeface;
 import android.text.Editable;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
 import android.text.TextWatcher;
+import android.text.style.ReplacementSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,6 +29,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -165,8 +173,11 @@ public class PatientWorklistActivity extends AppCompatActivity {
             @Override
             public void onViewReport(PatientVisitItem visit) {
                 Intent intent = new Intent(PatientWorklistActivity.this, ReportPreviewActivity.class);
-                intent.putExtra("report_id", visit.reportId != null ? visit.reportId : "REP-1001");
+                String idToPass = (visit.invoiceId != null && !visit.invoiceId.isEmpty()) ? visit.invoiceId : (visit.reportId != null ? visit.reportId : visit.visitId);
+                intent.putExtra("report_id", idToPass);
                 intent.putExtra("patient_name", visit.patientName);
+                intent.putExtra("uhid", visit.visitId);
+                intent.putExtra("test_name", visit.testsList);
                 startActivity(intent);
             }
 
@@ -360,7 +371,11 @@ public class PatientWorklistActivity extends AppCompatActivity {
                             String doctorName = "Self Referral / Walk-in";
                             JSONObject docObj = p.optJSONObject("doctor");
                             if (docObj != null && docObj.has("name")) {
-                                doctorName = "Dr. " + docObj.optString("name");
+                                String rawDoc = docObj.optString("name", "").trim();
+                                if (!rawDoc.isEmpty()) {
+                                    String cleanDoc = rawDoc.replaceFirst("^(?i)(dr\\.?|doctor)\\s+", "").trim();
+                                    doctorName = "Dr. " + cleanDoc;
+                                }
                             }
 
                             JSONArray invoices = p.optJSONArray("invoices");
@@ -397,7 +412,7 @@ public class PatientWorklistActivity extends AppCompatActivity {
                                                 } else if (tStatus.equals("IN_PROGRESS") || tStatus.equals("TESTING") || tStatus.equals("PROCESSING")) {
                                                     statusTag = "Processing";
                                                 } else {
-                                                    statusTag = "Accepted";
+                                                    statusTag = "Pending";
                                                 }
                                                 if (testSb.length() > 0) testSb.append("  •  ");
                                                 testSb.append(tName).append(" [").append(statusTag).append("]");
@@ -718,8 +733,11 @@ public class PatientWorklistActivity extends AppCompatActivity {
         builder.setMessage(msg);
         builder.setPositiveButton("View Full Report", (d, w) -> {
             Intent intent = new Intent(PatientWorklistActivity.this, ReportPreviewActivity.class);
-            intent.putExtra("report_id", visit.reportId != null ? visit.reportId : "REP-1001");
+            String idToPass = (visit.invoiceId != null && !visit.invoiceId.isEmpty()) ? visit.invoiceId : (visit.reportId != null ? visit.reportId : visit.visitId);
+            intent.putExtra("report_id", idToPass);
             intent.putExtra("patient_name", visit.patientName);
+            intent.putExtra("uhid", visit.visitId);
+            intent.putExtra("test_name", visit.testsList);
             startActivity(intent);
         });
         builder.setNegativeButton("Close", null);
@@ -776,8 +794,26 @@ public class PatientWorklistActivity extends AppCompatActivity {
 
             h.lblWorklistPatientName.setText(v.patientName);
             h.lblWorklistPatientDetails.setText(v.patientDetails);
-            h.lblWorklistDoctor.setText(v.doctor);
-            h.lblWorklistTestsList.setText(v.testsList);
+
+            // 🌟 Doctor Badge: Highlight in Yellow (#FEF08A) with Black Text (#0F172A)
+            String doc = v.doctor != null ? v.doctor.trim() : "";
+            boolean isRealDoc = !doc.isEmpty() && !doc.equalsIgnoreCase("Self Referral / Walk-in") && !doc.equalsIgnoreCase("Self");
+            float density = h.itemView.getContext().getResources().getDisplayMetrics().density;
+            if (isRealDoc) {
+                h.lblWorklistDoctor.setText("🩺 " + doc);
+                h.lblWorklistDoctor.setTextColor(0xFF0F172A); // Black / deep slate
+                h.lblWorklistDoctor.setBackgroundResource(R.drawable.bg_pill_white);
+                h.lblWorklistDoctor.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFFEF08A)); // Yellow
+            } else {
+                h.lblWorklistDoctor.setText("👤 Self Referral / Walk-in");
+                h.lblWorklistDoctor.setTextColor(0xFF64748B);
+                h.lblWorklistDoctor.setBackgroundResource(R.drawable.bg_pill_white);
+                h.lblWorklistDoctor.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF1F5F9)); // Light gray
+            }
+            h.lblWorklistDoctor.setPadding((int)(8 * density), (int)(3 * density), (int)(8 * density), (int)(3 * density));
+
+            // 🌟 Tests List: Green box for Ready, Purple box for Pending, Blue box for Processing
+            h.lblWorklistTestsList.setText(formatTestsWithBadges(h.itemView.getContext(), v.testsList));
             h.lblWorklistFinancials.setText(v.financials);
 
             String status = v.status.toUpperCase();
@@ -811,6 +847,105 @@ public class PatientWorklistActivity extends AppCompatActivity {
             h.btnWorklistViewReport.setOnClickListener(x -> listener.onViewReport(v));
             h.btnWorklistInvoiceSlip.setOnClickListener(x -> listener.onInvoiceSlip(v));
             h.btnWorklistWhatsapp.setOnClickListener(x -> listener.onWhatsappShare(v));
+        }
+
+        public static CharSequence formatTestsWithBadges(Context context, String rawTests) {
+            if (rawTests == null || rawTests.isEmpty()) return "";
+            SpannableStringBuilder ssb = new SpannableStringBuilder();
+            String[] items = rawTests.split("\\s+•\\s+|\\s+•\\s*|•");
+            float density = context.getResources().getDisplayMetrics().density;
+            float cornerRadius = 4f * density;
+            float paddingH = 6f * density;
+            float paddingV = 2f * density;
+            float badgeTextSize = 10.5f * density;
+
+            for (int i = 0; i < items.length; i++) {
+                String item = items[i].trim();
+                if (item.isEmpty()) continue;
+
+                if (ssb.length() > 0) {
+                    ssb.append("  •  ");
+                }
+
+                java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("^(.*?)\\s*\\[(Ready|Approved|Pending|Accepted|Processing|Testing|In Testing|In Progress)\\]$", java.util.regex.Pattern.CASE_INSENSITIVE);
+                java.util.regex.Matcher matcher = pattern.matcher(item);
+
+                if (matcher.find()) {
+                    String testName = matcher.group(1).trim();
+                    String status = matcher.group(2).trim();
+
+                    ssb.append(testName);
+                    ssb.append(" ");
+
+                    int start = ssb.length();
+                    String badgeText;
+                    int bg;
+                    int fg;
+
+                    if (status.equalsIgnoreCase("Ready") || status.equalsIgnoreCase("Approved")) {
+                        badgeText = " " + status + " ";
+                        bg = 0xFFDCFCE7; // Green box
+                        fg = 0xFF15803D; // Deep green text
+                    } else if (status.equalsIgnoreCase("Pending") || status.equalsIgnoreCase("Accepted")) {
+                        badgeText = " " + status + " ";
+                        bg = 0xFFF3E8FF; // Purple box
+                        fg = 0xFF6B21A8; // Deep purple text
+                    } else {
+                        badgeText = " " + status + " ";
+                        bg = 0xFFEFF6FF; // Blue box
+                        fg = 0xFF1D4ED8; // Deep blue text
+                    }
+
+                    ssb.append(badgeText);
+                    int end = ssb.length();
+
+                    ssb.setSpan(new RoundedBadgeSpan(bg, fg, cornerRadius, paddingH, paddingV, badgeTextSize), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                } else {
+                    ssb.append(item);
+                }
+            }
+            return ssb;
+        }
+
+        public static class RoundedBadgeSpan extends ReplacementSpan {
+            private final int backgroundColor;
+            private final int textColor;
+            private final float cornerRadius;
+            private final float paddingH;
+            private final float paddingV;
+            private final float textSize;
+
+            public RoundedBadgeSpan(int backgroundColor, int textColor, float cornerRadius, float paddingH, float paddingV, float textSize) {
+                this.backgroundColor = backgroundColor;
+                this.textColor = textColor;
+                this.cornerRadius = cornerRadius;
+                this.paddingH = paddingH;
+                this.paddingV = paddingV;
+                this.textSize = textSize;
+            }
+
+            @Override
+            public int getSize(@NonNull Paint paint, CharSequence text, int start, int end, @Nullable Paint.FontMetricsInt fm) {
+                paint.setTextSize(textSize);
+                return (int) (paint.measureText(text, start, end) + paddingH * 2);
+            }
+
+            @Override
+            public void draw(@NonNull Canvas canvas, CharSequence text, int start, int end, float x, int top, int y, int bottom, @NonNull Paint paint) {
+                paint.setTextSize(textSize);
+                float textWidth = paint.measureText(text, start, end);
+                RectF rect = new RectF(x, top + paddingV, x + textWidth + paddingH * 2, bottom - paddingV);
+
+                paint.setColor(backgroundColor);
+                paint.setStyle(Paint.Style.FILL);
+                canvas.drawRoundRect(rect, cornerRadius, cornerRadius, paint);
+
+                paint.setColor(textColor);
+                paint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
+                Paint.FontMetricsInt metrics = paint.getFontMetricsInt();
+                int textY = (int) (rect.centerY() - (metrics.ascent + metrics.descent) / 2f);
+                canvas.drawText(text, start, end, x + paddingH, textY, paint);
+            }
         }
 
         @Override

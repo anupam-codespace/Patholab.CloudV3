@@ -63,40 +63,96 @@ public class MobileNotificationHelper {
     }
 
     /**
-     * Posts a device system Welcome notification for the logged-in user.
-     * Appears in status bar & lock screen even when app is backgrounded.
+     * Schedules a welcoming notification 8 seconds after login, restricted to at most once per 24 hours.
      */
-    public static void postWelcomeNotification(Context context, String userName, String userId) {
+    public static void scheduleWelcomeNotification(Context context, String userName, String userId) {
         if (context == null) return;
         initNotificationChannel(context);
 
         String effectiveId = (userId != null && !userId.trim().isEmpty()) ? userId.trim() : "default_user";
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NOTIFS, Context.MODE_PRIVATE);
-        String welcomeKey = "welcomed_user_" + effectiveId;
+        String welcomeTimestampKey = "last_welcome_ts_" + effectiveId;
 
-        // Check if welcome was already posted for this user session
-        if (prefs.getBoolean(welcomeKey, false)) {
+        long lastWelcomeTs = prefs.getLong(welcomeTimestampKey, 0L);
+        long now = System.currentTimeMillis();
+
+        // 24-hour check: only schedule if 24 hours have elapsed or first login ever
+        if (now - lastWelcomeTs < 24 * 60 * 60 * 1000L) {
             return;
         }
 
-        try {
-            String cleanName = (userName != null && !userName.trim().isEmpty()) ? userName.trim() : "Lab Partner";
-            // Get first name for friendly greeting
-            String firstName = cleanName.split("\\s+")[0];
+        // Record timestamp immediately to prevent concurrent duplicate schedules
+        prefs.edit().putLong(welcomeTimestampKey, now).apply();
 
-            Intent intent = new Intent(context, MainActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        String cleanName = (userName != null && !userName.trim().isEmpty()) ? userName.trim() : "Lab Partner";
+        String firstName = cleanName.split("\\s+")[0];
+
+        // 8-Second Delay per user requirement
+        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+            try {
+                Intent intent = new Intent(context, MainActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                PendingIntent pendingIntent = PendingIntent.getActivity(
+                        context,
+                        NOTIF_ID_WELCOME,
+                        intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
+                );
+
+                Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+
+                String title = "Welcome to PathoLab Cloud";
+                String body = "Welcome, " + firstName + ". Your laboratory workspace is ready for seamless operations and patient care.";
+
+                NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
+                        .setSmallIcon(R.mipmap.ic_launcher)
+                        .setContentTitle(title)
+                        .setContentText(body)
+                        .setStyle(new NotificationCompat.BigTextStyle().bigText(body))
+                        .setAutoCancel(true)
+                        .setSound(defaultSoundUri)
+                        .setPriority(NotificationCompat.PRIORITY_HIGH)
+                        .setDefaults(NotificationCompat.DEFAULT_ALL)
+                        .setContentIntent(pendingIntent)
+                        .setCategory(NotificationCompat.CATEGORY_EVENT)
+                        .setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+
+                NotificationManagerCompat nmc = NotificationManagerCompat.from(context);
+                nmc.notify(NOTIF_ID_WELCOME, builder.build());
+            } catch (Exception ignored) {}
+        }, 8000L);
+    }
+
+    public static void postWelcomeNotification(Context context, String userName, String userId) {
+        scheduleWelcomeNotification(context, userName, userId);
+    }
+
+    /**
+     * Posts real-time mobile notification when a patient is registered on the website or another workstation.
+     */
+    public static void postNewPatientNotification(Context context, String patientName, String uhid) {
+        if (context == null) return;
+        initNotificationChannel(context);
+
+        try {
+            String cleanName = (patientName != null && !patientName.trim().isEmpty()) ? patientName.trim() : "New Patient";
+            String cleanUhid = (uhid != null && !uhid.trim().isEmpty()) ? uhid.trim() : "";
+
+            Intent intent = new Intent(context, PatientWorklistActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            int notifId = Math.abs((cleanName + cleanUhid).hashCode()) + 2000;
+
             PendingIntent pendingIntent = PendingIntent.getActivity(
                     context,
-                    NOTIF_ID_WELCOME,
+                    notifId,
                     intent,
                     PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
             );
 
             Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 
-            String title = "Welcome to PathoLab Cloud 👋";
-            String body = "Hello " + firstName + "! Your diagnostic workspace is live and ready for patient registrations & reports.";
+            String title = "New Patient Registered";
+            String body = "Patient " + cleanName + (!cleanUhid.isEmpty() ? " (" + cleanUhid + ")" : "") + " has been added to your laboratory worklist.";
 
             NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
                     .setSmallIcon(R.mipmap.ic_launcher)
@@ -112,34 +168,27 @@ public class MobileNotificationHelper {
                     .setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
 
             NotificationManagerCompat nmc = NotificationManagerCompat.from(context);
-            nmc.notify(NOTIF_ID_WELCOME, builder.build());
-
-            // Mark welcomed in preferences
-            prefs.edit().putBoolean(welcomeKey, true).apply();
+            nmc.notify(notifId, builder.build());
 
         } catch (Exception ignored) {}
     }
 
     /**
-     * Posts a device system Low Balance / Zero Balance alert notification for the logged-in lab.
-     * Directs to WalletActivity on click and debounces repeated firings.
+     * Posts a clean, professional zero/low balance notification directing user to recharge.
+     * Strictly without emojis as requested.
      */
-    public static void postLowBalanceNotification(Context context, double balance, String userId) {
+    public static void postWalletZeroBalanceNotification(Context context, String userId) {
         if (context == null) return;
         initNotificationChannel(context);
 
-        // Condition: balance <= 0 or very low balance <= 50
-        if (balance > 50) return;
-
         String effectiveId = (userId != null && !userId.trim().isEmpty()) ? userId.trim() : "default_user";
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NOTIFS, Context.MODE_PRIVATE);
-        String lastAlertKey = "last_low_bal_alert_ts_" + effectiveId;
+        String lastAlertKey = "last_zero_bal_alert_ts_" + effectiveId;
         long lastAlertTime = prefs.getLong(lastAlertKey, 0L);
         long now = System.currentTimeMillis();
 
-        long effectiveCooldown = (balance <= 0) ? 5000L : LOW_BALANCE_COOLDOWN_MS;
-        if (now - lastAlertTime < effectiveCooldown) {
-            return; // Debounce
+        if (now - lastAlertTime < 5000L) {
+            return; // 5-second debounce
         }
 
         try {
@@ -154,13 +203,8 @@ public class MobileNotificationHelper {
 
             Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 
-            boolean isZero = balance <= 0;
-            String formatted = String.format(Locale.getDefault(), "₹%,.2f", Math.max(0.0, balance));
-
-            String title = isZero ? "⚠️ Wallet Balance Empty" : "⚠️ Low Wallet Balance (" + formatted + ")";
-            String body = isZero
-                    ? "Your lab wallet balance is ₹0.00. Recharge now to keep patient registration and reports active."
-                    : "Your lab wallet balance is only " + formatted + ". Recharge soon to avoid test report disruption.";
+            String title = "Recharge Your Wallet";
+            String body = "Your wallet balance is low. Please recharge your wallet to register new patients.";
 
             NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
                     .setSmallIcon(R.mipmap.ic_launcher)
@@ -178,10 +222,13 @@ public class MobileNotificationHelper {
             NotificationManagerCompat nmc = NotificationManagerCompat.from(context);
             nmc.notify(NOTIF_ID_LOW_BALANCE, builder.build());
 
-            // Update timestamp
             prefs.edit().putLong(lastAlertKey, now).apply();
 
         } catch (Exception ignored) {}
+    }
+
+    public static void postLowBalanceNotification(Context context, double balance, String userId) {
+        postWalletZeroBalanceNotification(context, userId);
     }
 
     /**

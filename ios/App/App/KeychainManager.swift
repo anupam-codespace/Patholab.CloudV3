@@ -70,4 +70,26 @@ struct KeychainManager {
     static let emailKey = "user_email"
     static let nameKey  = "user_name"
     static let roleKey  = "user_role"
+
+    // MARK: – Shared Instance & Accessors
+
+    static let shared = KeychainManager()
+
+    func getToken() -> String? {
+        if let token = KeychainManager.read(forKey: KeychainManager.tokenKey), !token.isEmpty {
+            return token
+        }
+        return UserDefaults.standard.string(forKey: "auth_token")
+    }
+
+    func getUserRole() -> String? {
+        if let role = KeychainManager.read(forKey: KeychainManager.roleKey), !role.isEmpty {
+            return role
+        }
+        return UserDefaults.standard.string(forKey: "user_role")
+    }
+
+    func getLabName() -> String? {
+        return UserDefaults.standard.string(forKey: "lab_name") ?? "Care Diagnostic Hub"
+    }
 }

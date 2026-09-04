@@ -226,25 +226,68 @@ const MedicalReportPDF = ({ report, test, lab, patient }: any) => (
 // --- 3. THE GET ROUTE HANDLER ---
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> | { id: string } },
 ) {
   try {
-    const reportId = params.id;
+    const resolvedParams = await params;
+    const rawId = resolvedParams?.id || "";
+    const decodedId = decodeURIComponent(rawId).trim();
+    const cleanId = decodedId.replace(/^(rep_|REP_|inv_|INV_|reg-|REG-|p-|P-)/i, '').trim();
 
-    // Fetch the deeply nested report data
-    const report = await prisma.report.findUnique({
-      where: { id: reportId },
+    // 1. Try finding Report directly
+    let report = await prisma.report.findFirst({
+      where: {
+        OR: [
+          { id: decodedId },
+          { id: cleanId },
+          { testId: decodedId },
+          { testId: cleanId },
+        ],
+      },
       include: {
         lab: true,
         patient: true,
         test: {
           include: {
-            results: { orderBy: { order: "asc" } },
+            results: { orderBy: { id: "asc" } },
             doctor: true,
           },
         },
       },
     });
+
+    // 2. If no report found, find test directly (e.g. from Test ID or Invoice ID)
+    if (!report || !report.test) {
+      const test = await prisma.test.findFirst({
+        where: {
+          OR: [
+            { id: decodedId },
+            { id: cleanId },
+            { invoiceId: decodedId },
+            { invoiceId: cleanId },
+            { invoice: { invoiceNumber: decodedId } },
+            { invoice: { invoiceNumber: cleanId } },
+          ],
+        },
+        include: {
+          lab: true,
+          patient: true,
+          results: { orderBy: { id: "asc" } },
+          doctor: true,
+        },
+      });
+
+      if (test && test.lab && test.patient) {
+        report = {
+          id: test.id,
+          version: 1,
+          createdAt: test.createdAt,
+          lab: test.lab,
+          patient: test.patient,
+          test: test,
+        } as any;
+      }
+    }
 
     if (!report || !report.test) {
       return NextResponse.json(

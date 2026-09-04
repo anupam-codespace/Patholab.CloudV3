@@ -49,7 +49,7 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
     private let noMatchDescLabel = UILabel()
     private let registerFromSearchBtn = UIButton(type: .system)
 
-    // ── Tab 2: Demographics & Accession Inputs ──────────────────────────────
+    // ── Tab 2: Demographics & Visit Routing Inputs ───────────────────────────
     private var selectedTitle  = "Mr."
     private var selectedGender = "MALE"
     private var selectedAgeUnit = "Years"
@@ -57,9 +57,6 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
     private var selectedAgency = "Direct"
     private var selectedCollector = "Lab Phlebotomist"
     private var selectedPaymentMode = "Cash"
-    private var isUrgentOrder  = false
-    private var autoPrintSlip  = true
-    private var autoPrintBarcode = true
 
     private let nameField      = UITextField()
     private let duplicateWarningCard = UIView()
@@ -69,8 +66,6 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
     private let ageField       = UITextField()
     private let emailField     = UITextField()
     private let addressField   = UITextField()
-    private let abhaField      = UITextField()
-    private let passportField  = UITextField()
     private let collectionDateField = UITextField()
     private let collectionTimeField = UITextField()
 
@@ -82,47 +77,20 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
     private let collectorBtn   = UIButton(type: .system)
     private let paymentModeBtn = UIButton(type: .system)
 
-    // ── Tests & Accession ───────────────────────────────────────────────────
-    struct TestItem: Equatable {
-        let id: String
-        let name: String
-        let code: String
-        let type: String
-        let price: Double
-        var isSelected: Bool = false
-
-        static func == (lhs: TestItem, rhs: TestItem) -> Bool {
-            return lhs.id == rhs.id
-        }
-    }
-
     struct DoctorItem {
         let id: String
         let name: String
         let hospital: String
     }
 
-    private var catalogTests: [TestItem] = []
-    private var selectedTests: [TestItem] = []
     private var registeredDoctors: [DoctorItem] = []
     private var registeredAgencies: [DoctorItem] = []
-
-    private let testsStack     = UIStackView()
-    private let testsCountBadge = UILabel()
-    private let urgentSwitch   = UISwitch()
-    private let printSlipSwitch = UISwitch()
-    private let printBarcodeSwitch = UISwitch()
-
-    // ── Billing Summary ─────────────────────────────────────────────────────
-    private let grossLabel     = UILabel()
-    private let discountField  = UITextField()
-    private let netLabel       = UILabel()
-    private let paidAmountField = UITextField()
-    private let dueLabel       = UILabel()
+    private var registeredCollectors: [DoctorItem] = []
 
     private let stickyBar      = UIView()
-    private let stickyTotalLabel = UILabel()
     private let submitBtn      = UIButton(type: .system)
+    private var clockTimer: Timer?
+    private let datePicker     = UIDatePicker()
 
     private var matchedPatientDbId: String? = nil
 
@@ -135,8 +103,18 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
         setupNewRegSection()
         setupStickyBar()
         setupDateTimeDefaults()
-        fetchCatalog()
-        fetchDoctors()
+        fetchDoctorsAndAgencies()
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        startClockTimer()
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        clockTimer?.invalidate()
+        clockTimer = nil
     }
 
     override func viewDidLayoutSubviews() {
@@ -148,10 +126,21 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
         let df = DateFormatter()
         df.dateFormat = "yyyy-MM-dd"
         collectionDateField.text = df.string(from: Date())
+        updateClock()
+        startClockTimer()
+    }
 
+    private func updateClock() {
         let tf = DateFormatter()
-        tf.dateFormat = "HH:mm"
+        tf.dateFormat = "HH:mm:ss"
         collectionTimeField.text = tf.string(from: Date())
+    }
+
+    private func startClockTimer() {
+        clockTimer?.invalidate()
+        clockTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            self?.updateClock()
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -388,7 +377,7 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
         matchAddressLabel.font = .systemFont(ofSize: 12.5)
         matchAddressLabel.textColor = UIColor(red: 0.278, green: 0.333, blue: 0.412, alpha: 1)
 
-        proceedToAccessionBtn.setTitle("Proceed to Accession & Tests →", for: .normal)
+        proceedToAccessionBtn.setTitle("Proceed to Accession & Tests", for: .normal)
         proceedToAccessionBtn.backgroundColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1)
         proceedToAccessionBtn.setTitleColor(.white, for: .normal)
         proceedToAccessionBtn.titleLabel?.font = .systemFont(ofSize: 13.5, weight: .bold)
@@ -487,9 +476,7 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
         ])
 
         buildDemographicsCard()
-        buildReferralCard()
-        buildTestsCard()
-        buildBillingCard()
+        buildVisitRoutingCard()
     }
 
     private func buildDemographicsCard() {
@@ -570,33 +557,7 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
         addressField.font = .systemFont(ofSize: 14)
         styleInput(addressField)
 
-        abhaField.placeholder = "ABHA ID (Optional)"
-        abhaField.font = .systemFont(ofSize: 13)
-        styleInput(abhaField)
-
-        passportField.placeholder = "Passport (Optional)"
-        passportField.font = .systemFont(ofSize: 13)
-        styleInput(passportField)
-
-        let row4 = UIStackView(arrangedSubviews: [abhaField, passportField])
-        row4.axis = .horizontal
-        row4.spacing = 8
-        row4.distribution = .fillEqually
-
-        collectionDateField.placeholder = "Date (YYYY-MM-DD)"
-        collectionDateField.font = .systemFont(ofSize: 13)
-        styleInput(collectionDateField)
-
-        collectionTimeField.placeholder = "Time (HH:MM)"
-        collectionTimeField.font = .systemFont(ofSize: 13)
-        styleInput(collectionTimeField)
-
-        let row5 = UIStackView(arrangedSubviews: [collectionDateField, collectionTimeField])
-        row5.axis = .horizontal
-        row5.spacing = 8
-        row5.distribution = .fillEqually
-
-        let stack = UIStackView(arrangedSubviews: [title, row1, duplicateWarningCard, row2, row3, emailField, addressField, row4, row5])
+        let stack = UIStackView(arrangedSubviews: [title, row1, duplicateWarningCard, row2, row3, emailField, addressField])
         stack.axis = .vertical
         stack.spacing = 8
         card.addSubview(stack)
@@ -609,6 +570,33 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
         ])
 
         newRegStack.addArrangedSubview(card)
+    }
+
+    private func setupDatePicker() {
+        datePicker.datePickerMode = .date
+        if #available(iOS 13.4, *) {
+            datePicker.preferredDatePickerStyle = .wheels
+        }
+        datePicker.addTarget(self, action: #selector(didPickDate(_:)), for: .valueChanged)
+
+        let toolbar = UIToolbar()
+        toolbar.sizeToFit()
+        let doneBtn = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(dismissDatePicker))
+        let flexSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
+        toolbar.setItems([flexSpace, doneBtn], animated: false)
+
+        collectionDateField.inputView = datePicker
+        collectionDateField.inputAccessoryView = toolbar
+    }
+
+    @objc private func didPickDate(_ sender: UIDatePicker) {
+        let df = DateFormatter()
+        df.dateFormat = "yyyy-MM-dd"
+        collectionDateField.text = df.string(from: sender.date)
+    }
+
+    @objc private func dismissDatePicker() {
+        view.endEditing(true)
     }
 
     @objc private func didChangeNameInput() {
@@ -637,235 +625,76 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
         }
     }
 
-    private func buildReferralCard() {
+    private func buildVisitRoutingCard() {
         let card = createWhiteCard()
 
         let title = UILabel()
-        title.text = "CLINICAL REFERRAL & COLLECTION"
+        title.text = "VISIT ROUTING"
         title.font = .systemFont(ofSize: 11.5, weight: .bold)
         title.textColor = UIColor(red: 0.02, green: 0.59, blue: 0.41, alpha: 1)
 
-        doctorBtn.setTitle("Doctor: Self (No Doctor)", for: .normal)
-        styleSelectButton(doctorBtn, icon: "stethoscope")
-        doctorBtn.addTarget(self, action: #selector(showDoctorPicker), for: .touchUpInside)
+        collectionDateField.placeholder = "Date (YYYY-MM-DD)"
+        collectionDateField.font = .systemFont(ofSize: 13, weight: .semibold)
+        styleInput(collectionDateField)
+        let calIcon = UIImageView(image: UIImage(systemName: "calendar"))
+        calIcon.tintColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1)
+        calIcon.contentMode = .scaleAspectFit
+        let calContainer = UIView(frame: CGRect(x: 0, y: 0, width: 30, height: 42))
+        calIcon.frame = CGRect(x: 8, y: 12, width: 18, height: 18)
+        calContainer.addSubview(calIcon)
+        collectionDateField.leftView = calContainer
+        collectionDateField.leftViewMode = .always
+        setupDatePicker()
 
-        agencyBtn.setTitle("Agency: Direct Walk-in", for: .normal)
-        styleSelectButton(agencyBtn, icon: "creditcard.fill")
-        agencyBtn.addTarget(self, action: #selector(showAgencyPicker), for: .touchUpInside)
+        collectionTimeField.placeholder = "Live Clock"
+        collectionTimeField.font = .systemFont(ofSize: 13, weight: .bold)
+        collectionTimeField.textColor = UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1)
+        collectionTimeField.isUserInteractionEnabled = false
+        styleInput(collectionTimeField)
+        let clockIcon = UIImageView(image: UIImage(systemName: "clock.fill"))
+        clockIcon.tintColor = UIColor(red: 0.02, green: 0.59, blue: 0.41, alpha: 1)
+        clockIcon.contentMode = .scaleAspectFit
+        let clockContainer = UIView(frame: CGRect(x: 0, y: 0, width: 30, height: 42))
+        clockIcon.frame = CGRect(x: 8, y: 12, width: 18, height: 18)
+        clockContainer.addSubview(clockIcon)
+        collectionTimeField.leftView = clockContainer
+        collectionTimeField.leftViewMode = .always
 
-        setupMenuButton(collectorBtn, title: "Lab Phlebotomist", items: ["Lab Phlebotomist", "Home Collection Agent", "Self (Patient)"]) { [weak self] sel in
-            self?.selectedCollector = sel
+        let scheduleRow = UIStackView(arrangedSubviews: [collectionDateField, collectionTimeField])
+        scheduleRow.axis = .horizontal
+        scheduleRow.spacing = 8
+        scheduleRow.distribution = .fillEqually
+
+        setupMenuButton(doctorBtn, title: "Doctor: Self (No Doctor)", items: ["Doctor: Self (No Doctor)"]) { [weak self] sel in
+            let clean = sel.replacingOccurrences(of: "Doctor: ", with: "")
+            if let doc = self?.registeredDoctors.first(where: { $0.name == clean || $0.name == sel }) {
+                self?.selectedDoctor = doc.id
+            } else {
+                self?.selectedDoctor = "Self"
+            }
         }
 
-        let stack = UIStackView(arrangedSubviews: [title, doctorBtn, agencyBtn, collectorBtn])
-        stack.axis = .vertical
-        stack.spacing = 8
-        card.addSubview(stack)
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            stack.topAnchor.constraint(equalTo: card.topAnchor, constant: 14),
-            stack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -14),
-            stack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
-            stack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14),
-        ])
-
-        newRegStack.addArrangedSubview(card)
-    }
-
-    private func buildTestsCard() {
-        let card = createWhiteCard()
-
-        let topRow = UIStackView()
-        topRow.axis = .horizontal
-        topRow.alignment = .center
-
-        let title = UILabel()
-        title.text = "DIAGNOSTIC TESTS & PROFILES"
-        title.font = .systemFont(ofSize: 11.5, weight: .bold)
-        title.textColor = UIColor(red: 0.49, green: 0.23, blue: 0.93, alpha: 1)
-
-        testsCountBadge.text = "0 selected"
-        testsCountBadge.font = .systemFont(ofSize: 11.5, weight: .bold)
-        testsCountBadge.textColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1)
-
-        topRow.addArrangedSubview(title)
-        topRow.addArrangedSubview(UIView())
-        topRow.addArrangedSubview(testsCountBadge)
-
-        testsStack.axis = .vertical
-        testsStack.spacing = 6
-
-        let addTestsBtn = UIButton(type: .system)
-        addTestsBtn.setTitle("+ Add Tests / Profiles from Catalog", for: .normal)
-        addTestsBtn.setTitleColor(UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1), for: .normal)
-        addTestsBtn.titleLabel?.font = .systemFont(ofSize: 13.5, weight: .bold)
-        addTestsBtn.backgroundColor = UIColor(red: 0.945, green: 0.961, blue: 0.976, alpha: 1)
-        addTestsBtn.layer.cornerRadius = 12
-        addTestsBtn.heightAnchor.constraint(equalToConstant: 44).isActive = true
-        addTestsBtn.addTarget(self, action: #selector(showTestCatalogSheet), for: .touchUpInside)
-
-        // Urgent / STAT Switch Row
-        let urgentLabel = UILabel()
-        urgentLabel.text = "⚡ Urgent / STAT Priority Order"
-        urgentLabel.font = .systemFont(ofSize: 13, weight: .bold)
-        urgentLabel.textColor = UIColor(red: 0.86, green: 0.15, blue: 0.15, alpha: 1)
-
-        urgentSwitch.isOn = false
-        urgentSwitch.onTintColor = UIColor(red: 0.86, green: 0.15, blue: 0.15, alpha: 1)
-        urgentSwitch.addTarget(self, action: #selector(didToggleUrgent), for: .valueChanged)
-
-        let urgentRow = UIStackView(arrangedSubviews: [urgentLabel, UIView(), urgentSwitch])
-        urgentRow.axis = .horizontal
-        urgentRow.alignment = .center
-
-        // Print Flags
-        let printSlipLbl = UILabel()
-        printSlipLbl.text = "Auto Print Slip"
-        printSlipLbl.font = .systemFont(ofSize: 12, weight: .medium)
-        printSlipLbl.textColor = UIColor(red: 0.39, green: 0.45, blue: 0.55, alpha: 1)
-        printSlipSwitch.isOn = true
-        printSlipSwitch.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
-
-        let printBarLbl = UILabel()
-        printBarLbl.text = "Auto Print Barcode"
-        printBarLbl.font = .systemFont(ofSize: 12, weight: .medium)
-        printBarLbl.textColor = UIColor(red: 0.39, green: 0.45, blue: 0.55, alpha: 1)
-        printBarcodeSwitch.isOn = true
-        printBarcodeSwitch.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
-
-        let printRow = UIStackView(arrangedSubviews: [printSlipLbl, printSlipSwitch, UIView(), printBarLbl, printBarcodeSwitch])
-        printRow.axis = .horizontal
-        printRow.alignment = .center
-        printRow.spacing = 6
-
-        let stack = UIStackView(arrangedSubviews: [topRow, testsStack, addTestsBtn, urgentRow, printRow])
-        stack.axis = .vertical
-        stack.spacing = 10
-        card.addSubview(stack)
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            stack.topAnchor.constraint(equalTo: card.topAnchor, constant: 14),
-            stack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -14),
-            stack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
-            stack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14),
-        ])
-
-        newRegStack.addArrangedSubview(card)
-    }
-
-    @objc private func didToggleUrgent() {
-        isUrgentOrder = urgentSwitch.isOn
-    }
-
-    private func buildBillingCard() {
-        let card = createWhiteCard()
-
-        let title = UILabel()
-        title.text = "BILLING & PAYMENT METHOD"
-        title.font = .systemFont(ofSize: 11.5, weight: .bold)
-        title.textColor = UIColor(red: 0.85, green: 0.47, blue: 0.02, alpha: 1)
-
-        let grossTitle = UILabel()
-        grossTitle.text = "Gross Amount"
-        grossTitle.font = .systemFont(ofSize: 13)
-        grossTitle.textColor = UIColor(red: 0.392, green: 0.455, blue: 0.545, alpha: 1)
-
-        grossLabel.text = "₹0.00"
-        grossLabel.font = .systemFont(ofSize: 14, weight: .bold)
-        grossLabel.textColor = UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1)
-
-        let grossRow = UIStackView(arrangedSubviews: [grossTitle, UIView(), grossLabel])
-        grossRow.axis = .horizontal
-
-        // Quick discount percent chips
-        let chipsStack = UIStackView()
-        chipsStack.axis = .horizontal
-        chipsStack.spacing = 4
-        chipsStack.distribution = .fillEqually
-
-        [0, 5, 10, 15, 20, 50].forEach { pct in
-            let b = UIButton(type: .system)
-            b.setTitle("\(pct)%", for: .normal)
-            b.titleLabel?.font = .systemFont(ofSize: 11, weight: .bold)
-            b.backgroundColor = UIColor(red: 0.94, green: 0.96, blue: 0.98, alpha: 1)
-            b.setTitleColor(UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1), for: .normal)
-            b.layer.cornerRadius = 6
-            b.heightAnchor.constraint(equalToConstant: 26).isActive = true
-            b.addAction(UIAction { [weak self] _ in
-                self?.applyDiscountPercent(pct)
-            }, for: .touchUpInside)
-            chipsStack.addArrangedSubview(b)
+        setupMenuButton(agencyBtn, title: "Agency: Direct Walk-in", items: ["Agency: Direct Walk-in"]) { [weak self] sel in
+            let clean = sel.replacingOccurrences(of: "Agency: ", with: "")
+            if let ag = self?.registeredAgencies.first(where: { $0.name == clean || $0.name == sel }) {
+                self?.selectedAgency = ag.id
+            } else {
+                self?.selectedAgency = "Direct"
+            }
         }
 
-        let discTitle = UILabel()
-        discTitle.text = "Discount Amount (₹)"
-        discTitle.font = .systemFont(ofSize: 13)
-        discTitle.textColor = UIColor(red: 0.392, green: 0.455, blue: 0.545, alpha: 1)
+        setupMenuButton(collectorBtn, title: "Collector: Lab Phlebotomist", items: ["Lab Phlebotomist", "Home Collection Agent", "Self (Patient)"]) { [weak self] sel in
+            let clean = sel.replacingOccurrences(of: "Collector: ", with: "")
+            self?.selectedCollector = clean
+            self?.collectorBtn.setTitle("Collector: \(clean)", for: .normal)
+        }
 
-        discountField.placeholder = "0"
-        discountField.font = .systemFont(ofSize: 13.5, weight: .bold)
-        discountField.textAlignment = .center
-        discountField.keyboardType = .decimalPad
-        styleInput(discountField)
-        discountField.widthAnchor.constraint(equalToConstant: 100).isActive = true
-        discountField.addTarget(self, action: #selector(calculateBill), for: .editingChanged)
-
-        let discRow = UIStackView(arrangedSubviews: [discTitle, UIView(), discountField])
-        discRow.axis = .horizontal
-        discRow.alignment = .center
-
-        let div = UIView()
-        div.backgroundColor = UIColor(red: 0.945, green: 0.961, blue: 0.976, alpha: 1)
-        div.heightAnchor.constraint(equalToConstant: 1).isActive = true
-
-        let netTitle = UILabel()
-        netTitle.text = "Net Payable"
-        netTitle.font = .systemFont(ofSize: 14.5, weight: .bold)
-        netTitle.textColor = UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1)
-
-        netLabel.text = "₹0.00"
-        netLabel.font = .systemFont(ofSize: 17, weight: .bold)
-        netLabel.textColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1)
-
-        let netRow = UIStackView(arrangedSubviews: [netTitle, UIView(), netLabel])
-        netRow.axis = .horizontal
-
-        let paidTitle = UILabel()
-        paidTitle.text = "Paid Amount (₹)"
-        paidTitle.font = .systemFont(ofSize: 13)
-        paidTitle.textColor = UIColor(red: 0.392, green: 0.455, blue: 0.545, alpha: 1)
-
-        paidAmountField.placeholder = "0"
-        paidAmountField.font = .systemFont(ofSize: 13.5, weight: .bold)
-        paidAmountField.textColor = UIColor(red: 0.02, green: 0.59, blue: 0.41, alpha: 1)
-        paidAmountField.textAlignment = .center
-        paidAmountField.keyboardType = .decimalPad
-        styleInput(paidAmountField)
-        paidAmountField.widthAnchor.constraint(equalToConstant: 100).isActive = true
-        paidAmountField.addTarget(self, action: #selector(updateDue), for: .editingChanged)
-
-        let paidRow = UIStackView(arrangedSubviews: [paidTitle, UIView(), paidAmountField])
-        paidRow.axis = .horizontal
-        paidRow.alignment = .center
-
-        let dueTitle = UILabel()
-        dueTitle.text = "Balance Due"
-        dueTitle.font = .systemFont(ofSize: 13, weight: .bold)
-        dueTitle.textColor = UIColor(red: 0.86, green: 0.15, blue: 0.15, alpha: 1)
-
-        dueLabel.text = "₹0.00"
-        dueLabel.font = .systemFont(ofSize: 14, weight: .bold)
-        dueLabel.textColor = UIColor(red: 0.86, green: 0.15, blue: 0.15, alpha: 1)
-
-        let dueRow = UIStackView(arrangedSubviews: [dueTitle, UIView(), dueLabel])
-        dueRow.axis = .horizontal
-
-        setupMenuButton(paymentModeBtn, title: "Cash", items: ["Cash", "UPI / QR", "Card", "Due / Pay Later"]) { [weak self] sel in
+        setupMenuButton(paymentModeBtn, title: "Cash", items: ["Cash", "UPI / QR", "Card", "Credit (Due)"]) { [weak self] sel in
             self?.selectedPaymentMode = sel
-            self?.calculateBill()
+            self?.paymentModeBtn.setTitle(sel, for: .normal)
         }
 
-        let stack = UIStackView(arrangedSubviews: [title, grossRow, chipsStack, discRow, div, netRow, paidRow, dueRow, paymentModeBtn])
+        let stack = UIStackView(arrangedSubviews: [title, scheduleRow, doctorBtn, agencyBtn, collectorBtn, paymentModeBtn])
         stack.axis = .vertical
         stack.spacing = 8
         card.addSubview(stack)
@@ -878,13 +707,6 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
         ])
 
         newRegStack.addArrangedSubview(card)
-    }
-
-    private func applyDiscountPercent(_ pct: Int) {
-        let gross = selectedTests.reduce(0) { $0 + $1.price }
-        let disc = Double(round(gross * Double(pct) / 100.0))
-        discountField.text = disc > 0 ? "\(Int(disc))" : ""
-        calculateBill()
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -900,32 +722,18 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
         stickyBar.isHidden = true
         view.addSubview(stickyBar)
 
-        let totalSub = UILabel()
-        totalSub.text = "Total Payable"
-        totalSub.font = .systemFont(ofSize: 11, weight: .medium)
-        totalSub.textColor = UIColor(red: 0.392, green: 0.455, blue: 0.545, alpha: 1)
-
-        stickyTotalLabel.text = "₹0.00"
-        stickyTotalLabel.font = .systemFont(ofSize: 19, weight: .bold)
-        stickyTotalLabel.textColor = UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1)
-
-        let totalVStack = UIStackView(arrangedSubviews: [totalSub, stickyTotalLabel])
-        totalVStack.axis = .vertical
-        totalVStack.spacing = 1
-
-        submitBtn.setTitle("Register & Book Tests", for: .normal)
+        submitBtn.setTitle("Register Patient", for: .normal)
         submitBtn.setTitleColor(.white, for: .normal)
-        submitBtn.titleLabel?.font = .systemFont(ofSize: 14, weight: .bold)
+        submitBtn.titleLabel?.font = .systemFont(ofSize: 15.5, weight: .bold)
         submitBtn.backgroundColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1)
-        submitBtn.layer.cornerRadius = 14
-        submitBtn.contentEdgeInsets = UIEdgeInsets(top: 12, left: 18, bottom: 12, right: 18)
-        submitBtn.addTarget(self, action: #selector(submitRegistration), for: .touchUpInside)
-
-        let hStack = UIStackView(arrangedSubviews: [totalVStack, UIView(), submitBtn])
-        hStack.axis = .horizontal
-        hStack.alignment = .center
-        hStack.translatesAutoresizingMaskIntoConstraints = false
-        stickyBar.addSubview(hStack)
+        submitBtn.layer.cornerRadius = 16
+        submitBtn.layer.shadowColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 0.3).cgColor
+        submitBtn.layer.shadowOffset = CGSize(width: 0, height: 4)
+        submitBtn.layer.shadowRadius = 8
+        submitBtn.layer.shadowOpacity = 1
+        submitBtn.translatesAutoresizingMaskIntoConstraints = false
+        submitBtn.addTarget(self, action: #selector(submitRegistrationAction), for: .touchUpInside)
+        stickyBar.addSubview(submitBtn)
 
         NSLayoutConstraint.activate([
             stickyBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -933,9 +741,10 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
             stickyBar.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             stickyBar.heightAnchor.constraint(equalToConstant: 76 + (view.safeAreaInsets.bottom > 0 ? 10 : 0)),
 
-            hStack.topAnchor.constraint(equalTo: stickyBar.topAnchor, constant: 10),
-            hStack.leadingAnchor.constraint(equalTo: stickyBar.leadingAnchor, constant: 14),
-            hStack.trailingAnchor.constraint(equalTo: stickyBar.trailingAnchor, constant: -14)
+            submitBtn.topAnchor.constraint(equalTo: stickyBar.topAnchor, constant: 12),
+            submitBtn.leadingAnchor.constraint(equalTo: stickyBar.leadingAnchor, constant: 16),
+            submitBtn.trailingAnchor.constraint(equalTo: stickyBar.trailingAnchor, constant: -16),
+            submitBtn.heightAnchor.constraint(equalToConstant: 52)
         ])
     }
 
@@ -1004,7 +813,6 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
     @objc private func proceedWithMatchedPatient() {
         modeSegment.selectedSegmentIndex = 1
         modeSegmentChanged()
-        showTestCatalogSheet()
     }
 
     @objc private func registerNewFromSearchAction() {
@@ -1018,177 +826,114 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
         modeSegmentChanged()
     }
 
-    private func fetchCatalog() {
+    private func fetchDoctorsAndAgencies() {
         Task {
-            guard let url = URL(string: "\(baseUrl)/api/workspace/test-catalog") else { return }
-            var req = URLRequest(url: url)
-            if let token = KeychainManager.read(forKey: KeychainManager.tokenKey) ?? UserDefaults.standard.string(forKey: "auth_token") {
-                req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-                req.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
-            }
+            let token = KeychainManager.read(forKey: KeychainManager.tokenKey) ?? UserDefaults.standard.string(forKey: "auth_token")
 
-            guard let (data, res) = try? await URLSession.shared.data(for: req),
-                  (res as? HTTPURLResponse)?.statusCode == 200,
-                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let list = (json["tests"] as? [[String: Any]]) ?? (json["data"] as? [[String: Any]]) else { return }
-
-            var items: [TestItem] = []
-            for t in list {
-                let id = t["id"] as? String ?? ""
-                let name = t["name"] as? String ?? ""
-                let code = t["code"] as? String ?? ""
-                let type = t["type"] as? String ?? "SINGLE"
-                let price = (t["price"] as? NSNumber)?.doubleValue ?? 0.0
-                items.append(TestItem(id: id, name: name, code: code, type: type, price: price))
-            }
-
-            await MainActor.run {
-                self.catalogTests = items
-            }
-        }
-    }
-
-    private func fetchDoctors() {
-        Task {
-            guard let url = URL(string: "\(baseUrl)/api/workspace/doctors") else { return }
-            var req = URLRequest(url: url)
-            if let token = KeychainManager.read(forKey: KeychainManager.tokenKey) ?? UserDefaults.standard.string(forKey: "auth_token") {
-                req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-                req.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
-            }
-
-            guard let (data, res) = try? await URLSession.shared.data(for: req),
-                  (res as? HTTPURLResponse)?.statusCode == 200,
-                  let list = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else { return }
-
-            var docs: [DoctorItem] = [DoctorItem(id: "Self", name: "Self (No Doctor)", hospital: "Direct")]
-            for d in list {
-                let id = d["id"] as? String ?? ""
-                let name = d["name"] as? String ?? ""
-                let hosp = d["hospital"] as? String ?? ""
-                docs.append(DoctorItem(id: id, name: name, hospital: hosp))
-            }
-
-            await MainActor.run {
-                self.registeredDoctors = docs
-            }
-        }
-    }
-
-    @objc private func calculateBill() {
-        let gross = selectedTests.reduce(0) { $0 + $1.price }
-        let discount = Double(discountField.text?.trimmingCharacters(in: .whitespaces) ?? "0") ?? 0.0
-        let net = max(0, gross - discount)
-
-        grossLabel.text = String(format: "₹%,.2f", gross)
-        netLabel.text = String(format: "₹%,.2f", net)
-        stickyTotalLabel.text = String(format: "₹%,.2f", net)
-
-        if selectedPaymentMode.contains("Due") || selectedPaymentMode.contains("Later") {
-            paidAmountField.text = "0"
-        } else {
-            paidAmountField.text = net > 0 ? "\(Int(net))" : "0"
-        }
-
-        updateDue()
-    }
-
-    @objc private func updateDue() {
-        let gross = selectedTests.reduce(0) { $0 + $1.price }
-        let discount = Double(discountField.text?.trimmingCharacters(in: .whitespaces) ?? "0") ?? 0.0
-        let net = max(0, gross - discount)
-        let paid = Double(paidAmountField.text?.trimmingCharacters(in: .whitespaces) ?? "0") ?? 0.0
-        let due = max(0, net - paid)
-
-        dueLabel.text = String(format: "₹%,.2f", due)
-    }
-
-    @objc private func showTestCatalogSheet() {
-        let alert = UIAlertController(title: "Select Diagnostic Tests", message: "Choose tests & packages from catalog", preferredStyle: .actionSheet)
-        for t in catalogTests {
-            let isSel = selectedTests.contains(t)
-            let check = isSel ? "✓ " : "+ "
-            let title = "\(check)\(t.name) (₹\(Int(t.price)))"
-            alert.addAction(UIAlertAction(title: title, style: isSel ? .destructive : .default, handler: { [weak self] _ in
-                guard let self = self else { return }
-                if isSel {
-                    self.selectedTests.removeAll(where: { $0.id == t.id })
-                } else {
-                    self.selectedTests.append(t)
+            // 1. Doctors (Added by this user / lab ID)
+            if let docUrl = URL(string: "\(baseUrl)/api/workspace/doctors") {
+                var req = URLRequest(url: docUrl)
+                if let token = token {
+                    req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+                    req.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
                 }
-                self.renderSelectedTests()
-                self.calculateBill()
-            }))
+                if let (data, res) = try? await URLSession.shared.data(for: req),
+                   (res as? HTTPURLResponse)?.statusCode == 200,
+                   let list = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] {
+                    var docs: [DoctorItem] = [DoctorItem(id: "Self", name: "Self (No Doctor)", hospital: "Direct")]
+                    var docLabels = ["Doctor: Self (No Doctor)"]
+                    for d in list {
+                        let id = d["id"] as? String ?? ""
+                        let name = d["name"] as? String ?? ""
+                        let hosp = d["hospital"] as? String ?? ""
+                        docs.append(DoctorItem(id: id, name: name, hospital: hosp))
+                        docLabels.append(name)
+                    }
+                    await MainActor.run {
+                        self.registeredDoctors = docs
+                        self.setupMenuButton(self.doctorBtn, title: self.doctorBtn.title(for: .normal) ?? "Doctor: Self (No Doctor)", items: docLabels) { [weak self] sel in
+                            let clean = sel.replacingOccurrences(of: "Doctor: ", with: "")
+                            if let doc = self?.registeredDoctors.first(where: { $0.name == clean || $0.name == sel }) {
+                                self?.selectedDoctor = doc.id
+                                self?.doctorBtn.setTitle("Doctor: \(doc.name)", for: .normal)
+                            } else {
+                                self?.selectedDoctor = "Self"
+                                self?.doctorBtn.setTitle("Doctor: Self (No Doctor)", for: .normal)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 2. Agencies (Added by this user / lab ID)
+            if let agUrl = URL(string: "\(baseUrl)/api/workspace/agencies") {
+                var req = URLRequest(url: agUrl)
+                if let token = token {
+                    req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+                    req.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
+                }
+                if let (data, res) = try? await URLSession.shared.data(for: req),
+                   (res as? HTTPURLResponse)?.statusCode == 200,
+                   let list = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] {
+                    var ags: [DoctorItem] = [DoctorItem(id: "Direct", name: "Direct Walk-in", hospital: "Standard")]
+                    var agLabels = ["Agency: Direct Walk-in"]
+                    for a in list {
+                        let id = a["id"] as? String ?? ""
+                        let name = a["agencyName"] as? String ?? "Partner Center"
+                        let code = a["code"] as? String ?? "AGENCY"
+                        ags.append(DoctorItem(id: id, name: name, hospital: code))
+                        agLabels.append(name)
+                    }
+                    await MainActor.run {
+                        self.registeredAgencies = ags
+                        self.setupMenuButton(self.agencyBtn, title: self.agencyBtn.title(for: .normal) ?? "Agency: Direct Walk-in", items: agLabels) { [weak self] sel in
+                            let clean = sel.replacingOccurrences(of: "Agency: ", with: "")
+                            if let ag = self?.registeredAgencies.first(where: { $0.name == clean || $0.name == sel }) {
+                                self?.selectedAgency = ag.id
+                                self?.agencyBtn.setTitle("Agency: \(ag.name)", for: .normal)
+                            } else {
+                                self?.selectedAgency = "Direct"
+                                self?.agencyBtn.setTitle("Agency: Direct Walk-in", for: .normal)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 3. Collectors (From user account & staff)
+            if let colUrl = URL(string: "\(baseUrl)/api/workspace/collectors") {
+                var req = URLRequest(url: colUrl)
+                if let token = token {
+                    req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+                    req.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
+                }
+                if let (data, res) = try? await URLSession.shared.data(for: req),
+                   (res as? HTTPURLResponse)?.statusCode == 200,
+                   let list = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] {
+                    var cols: [DoctorItem] = []
+                    var colLabels: [String] = []
+                    for c in list {
+                        let id = c["id"] as? String ?? ""
+                        let name = c["name"] as? String ?? id
+                        cols.append(DoctorItem(id: id, name: name, hospital: ""))
+                        colLabels.append(name)
+                    }
+                    if !cols.isEmpty {
+                        await MainActor.run {
+                            self.registeredCollectors = cols
+                            self.setupMenuButton(self.collectorBtn, title: "Collector: \(colLabels.first ?? "Lab Phlebotomist")", items: colLabels) { [weak self] sel in
+                                let clean = sel.replacingOccurrences(of: "Collector: ", with: "")
+                                self?.selectedCollector = clean
+                                self?.collectorBtn.setTitle("Collector: \(clean)", for: .normal)
+                            }
+                        }
+                    }
+                }
+            }
         }
-        alert.addAction(UIAlertAction(title: "Done", style: .cancel))
-        present(alert, animated: true)
     }
 
-    private func renderSelectedTests() {
-        testsStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
-        testsCountBadge.text = "\(selectedTests.count) selected"
-
-        for (idx, t) in selectedTests.enumerated() {
-            let row = UIStackView()
-            row.axis = .horizontal
-            row.alignment = .center
-            row.spacing = 8
-            row.backgroundColor = UIColor(red: 0.945, green: 0.961, blue: 0.976, alpha: 1)
-            row.layer.cornerRadius = 10
-            row.layoutMargins = UIEdgeInsets(top: 8, left: 10, bottom: 8, right: 10)
-            row.isLayoutMarginsRelativeArrangement = true
-
-            let nameLbl = UILabel()
-            nameLbl.text = t.name
-            nameLbl.font = .systemFont(ofSize: 13, weight: .bold)
-
-            let priceLbl = UILabel()
-            priceLbl.text = "₹\(Int(t.price))"
-            priceLbl.font = .systemFont(ofSize: 13, weight: .bold)
-            priceLbl.textColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1)
-
-            let removeBtn = UIButton(type: .system)
-            removeBtn.setImage(UIImage(systemName: "xmark.circle.fill"), for: .normal)
-            removeBtn.tintColor = .systemRed
-            removeBtn.tag = idx
-            removeBtn.addAction(UIAction { [weak self] _ in
-                self?.selectedTests.remove(at: idx)
-                self?.renderSelectedTests()
-                self?.calculateBill()
-            }, for: .touchUpInside)
-
-            row.addArrangedSubview(nameLbl)
-            row.addArrangedSubview(UIView())
-            row.addArrangedSubview(priceLbl)
-            row.addArrangedSubview(removeBtn)
-
-            testsStack.addArrangedSubview(row)
-        }
-    }
-
-    @objc private func showDoctorPicker() {
-        let alert = UIAlertController(title: "Select Referring Doctor", message: nil, preferredStyle: .actionSheet)
-        for d in registeredDoctors {
-            alert.addAction(UIAlertAction(title: d.name, style: .default, handler: { [weak self] _ in
-                self?.selectedDoctor = d.id
-                self?.doctorBtn.setTitle("Doctor: \(d.name)", for: .normal)
-            }))
-        }
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        present(alert, animated: true)
-    }
-
-    @objc private func showAgencyPicker() {
-        let alert = UIAlertController(title: "Select Referring Agency", message: nil, preferredStyle: .actionSheet)
-        alert.addAction(UIAlertAction(title: "Direct Walk-in", style: .default, handler: { [weak self] _ in
-            self?.selectedAgency = "Direct"
-            self?.agencyBtn.setTitle("Agency: Direct Walk-in", for: .normal)
-        }))
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        present(alert, animated: true)
-    }
-
-    @objc private func submitRegistration() {
+    @objc private func submitRegistrationAction() {
         guard let name = nameField.text?.trimmingCharacters(in: .whitespaces), !name.isEmpty else {
             nameField.becomeFirstResponder()
             return
@@ -1197,9 +942,13 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
             phoneField.becomeFirstResponder()
             return
         }
+        guard let ageText = ageField.text?.trimmingCharacters(in: .whitespaces), !ageText.isEmpty else {
+            ageField.becomeFirstResponder()
+            return
+        }
 
         submitBtn.isEnabled = false
-        submitBtn.setTitle("Registering...", for: .normal)
+        submitBtn.setTitle("Checking wallet...", for: .normal)
 
         Task {
             let userScopeId = UserDefaults.standard.string(forKey: "user_email") ?? "default_user"
@@ -1226,122 +975,129 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
             if !walletOk {
                 await MainActor.run {
                     self.submitBtn.isEnabled = true
-                    self.submitBtn.setTitle("Register & Book Tests", for: .normal)
-                    MobileNotificationHelper.shared.postLowBalanceNotification(balance: 0.0, userId: userScopeId)
-                    WalletAlertHelper.showWalletEmptyToast(on: self)
+                    self.submitBtn.setTitle("Register Patient", for: .normal)
+                    MobileNotificationHelper.shared.postWalletZeroBalanceNotification(userId: userScopeId)
+                    let alert = UIAlertController(
+                        title: "Recharge Your Wallet",
+                        message: "Your wallet balance is low or zero. Please recharge your wallet to register new patients.",
+                        preferredStyle: .alert
+                    )
+                    alert.addAction(UIAlertAction(title: "Recharge Wallet", style: .default, handler: { [weak self] _ in
+                        let walletVC = WalletViewController()
+                        walletVC.modalPresentationStyle = .fullScreen
+                        self?.present(walletVC, animated: true, completion: nil)
+                    }))
+                    alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+                    self.present(alert, animated: true)
                 }
                 return
             }
 
-            let gross = selectedTests.reduce(0) { $0 + $1.price }
-            let discount = Double(discountField.text?.trimmingCharacters(in: .whitespaces) ?? "0") ?? 0.0
-            let net = max(0, gross - discount)
-            let paid = Double(paidAmountField.text?.trimmingCharacters(in: .whitespaces) ?? "\(net)") ?? net
+            await MainActor.run {
+                self.submitBtn.setTitle("Registering Patient...", for: .normal)
+            }
 
-            var patId = matchedPatientDbId
             var generatedUhid = "P-\(Int.random(in: 10000...99999))"
-            var generatedInvoice = "INV-\(Int.random(in: 10000...99999))"
 
-            if patId == nil {
-                var patBody: [String: Any] = [
-                    "title": selectedTitle,
-                    "name": name,
-                    "phone": phone,
-                    "gender": selectedGender,
-                    "age": Int(ageField.text ?? "0") ?? 0,
-                    "ageUnit": selectedAgeUnit,
-                    "email": emailField.text ?? "",
-                    "address": addressField.text ?? "",
-                    "paymentMode": selectedPaymentMode,
-                    "collectedBy": selectedCollector
-                ]
-                if let abha = abhaField.text?.trimmingCharacters(in: .whitespaces), !abha.isEmpty {
-                    patBody["abhaNumber"] = abha
-                }
-                if let passport = passportField.text?.trimmingCharacters(in: .whitespaces), !passport.isEmpty {
-                    patBody["passport"] = passport
-                }
-                if selectedDoctor != "Self" { patBody["doctorId"] = selectedDoctor }
-                if selectedAgency != "Direct" { patBody["agencyId"] = selectedAgency }
+            var patBody: [String: Any] = [
+                "title": selectedTitle,
+                "name": name,
+                "phone": phone,
+                "gender": selectedGender,
+                "age": Int(ageText) ?? 0,
+                "ageUnit": selectedAgeUnit,
+                "email": emailField.text ?? "",
+                "address": addressField.text ?? "",
+                "paymentMode": selectedPaymentMode,
+                "collectionDate": collectionDateField.text ?? "",
+                "collectionTime": collectionTimeField.text ?? "",
+                "collectedBy": selectedCollector
+            ]
+            if selectedDoctor != "Self" { patBody["doctorId"] = selectedDoctor }
+            if selectedAgency != "Direct" { patBody["agencyId"] = selectedAgency }
 
-                if let url = URL(string: "\(baseUrl)/api/workspace/patients") {
-                    var req = URLRequest(url: url)
-                    req.httpMethod = "POST"
-                    req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-                    if let token = KeychainManager.read(forKey: KeychainManager.tokenKey) ?? UserDefaults.standard.string(forKey: "auth_token") {
-                        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-                        req.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
+            if let url = URL(string: "\(baseUrl)/api/workspace/patients") {
+                var req = URLRequest(url: url)
+                req.httpMethod = "POST"
+                req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                if let token = KeychainManager.read(forKey: KeychainManager.tokenKey) ?? UserDefaults.standard.string(forKey: "auth_token") {
+                    req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+                    req.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
+                }
+                req.httpBody = try? JSONSerialization.data(withJSONObject: patBody)
+
+                if let (data, res) = try? await URLSession.shared.data(for: req) {
+                    let httpCode = (res as? HTTPURLResponse)?.statusCode ?? 0
+                    if httpCode == 402 {
+                        await MainActor.run {
+                            self.submitBtn.isEnabled = true
+                            self.submitBtn.setTitle("Register Patient", for: .normal)
+                            MobileNotificationHelper.shared.postWalletZeroBalanceNotification(userId: userScopeId)
+                            let alert = UIAlertController(
+                                title: "Recharge Your Wallet",
+                                message: "Your wallet balance is low or zero. Please recharge your wallet to register new patients.",
+                                preferredStyle: .alert
+                            )
+                            alert.addAction(UIAlertAction(title: "Recharge Wallet", style: .default, handler: { [weak self] _ in
+                                let walletVC = WalletViewController()
+                                walletVC.modalPresentationStyle = .fullScreen
+                                self?.present(walletVC, animated: true, completion: nil)
+                            }))
+                            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+                            self.present(alert, animated: true)
+                        }
+                        return
                     }
-                    req.httpBody = try? JSONSerialization.data(withJSONObject: patBody)
 
-                    if let (data, res) = try? await URLSession.shared.data(for: req),
-                       (res as? HTTPURLResponse)?.statusCode == 200 || (res as? HTTPURLResponse)?.statusCode == 201,
+                    if (httpCode == 200 || httpCode == 201),
                        let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
                         let pObj = json["patient"] as? [String: Any] ?? json
-                        patId = pObj["id"] as? String
                         generatedUhid = pObj["patientId"] as? String ?? generatedUhid
                     }
                 }
             }
 
-            // Accession booking
-            if let pid = patId, !selectedTests.isEmpty, let accUrl = URL(string: "\(baseUrl)/api/workspace/accession") {
-                let accBody: [String: Any] = [
-                    "patientId": pid,
-                    "subtotal": gross,
-                    "discountAmount": discount,
-                    "grandTotal": net,
-                    "paidAmount": paid,
-                    "paymentMode": selectedPaymentMode.uppercased().contains("CASH") ? "CASH" : (selectedPaymentMode.uppercased().contains("CARD") ? "CARD" : (selectedPaymentMode.uppercased().contains("DUE") ? "DUE" : "UPI")),
-                    "collectedBy": selectedCollector,
-                    "isUrgent": isUrgentOrder,
-                    "tests": selectedTests.map { ["testTemplateId": $0.id, "testCode": $0.code, "testName": $0.name, "price": $0.price] }
-                ]
-                var accReq = URLRequest(url: accUrl)
-                accReq.httpMethod = "POST"
-                accReq.setValue("application/json", forHTTPHeaderField: "Content-Type")
-                if let token = KeychainManager.read(forKey: KeychainManager.tokenKey) ?? UserDefaults.standard.string(forKey: "auth_token") {
-                    accReq.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-                    accReq.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
-                }
-                accReq.httpBody = try? JSONSerialization.data(withJSONObject: accBody)
-                if let (accData, accRes) = try? await URLSession.shared.data(for: accReq),
-                   (accRes as? HTTPURLResponse)?.statusCode == 200 || (accRes as? HTTPURLResponse)?.statusCode == 201 {
-                    if let accJson = try? JSONSerialization.jsonObject(with: accData) as? [String: Any],
-                       let inv = accJson["data"] as? [String: Any] {
-                        generatedInvoice = inv["invoiceNumber"] as? String ?? generatedInvoice
-                    }
-                }
-            }
+            // Register this ID in sync cache to prevent notifying for patients created on this device
+            let syncUserEmail = userScopeId
+            let knownKey = "known_patient_ids_\(syncUserEmail)"
+            var knownIds = Set(UserDefaults.standard.stringArray(forKey: knownKey) ?? [])
+            knownIds.insert(generatedUhid)
+            UserDefaults.standard.set(Array(knownIds), forKey: knownKey)
+
+            let finalPayMode = selectedPaymentMode
 
             await MainActor.run {
                 self.submitBtn.isEnabled = true
-                self.submitBtn.setTitle("Register & Book Tests", for: .normal)
-                self.showSuccessSheet(name: name, phone: phone, uhid: generatedUhid, invoiceNo: generatedInvoice, net: net, count: selectedTests.count)
+                self.submitBtn.setTitle("Register Patient", for: .normal)
+                self.showSuccessSheet(name: name, phone: phone, uhid: generatedUhid, paymentMode: finalPayMode)
             }
         }
     }
 
-    private func showSuccessSheet(name: String, phone: String, uhid: String, invoiceNo: String, net: Double, count: Int) {
+    private func showSuccessSheet(name: String, phone: String, uhid: String, paymentMode: String) {
         let alert = UIAlertController(
             title: "🎉 Registration Successful!",
-            message: "\(name) has been registered into the worklist.\n\n• UHID: \(uhid)\n• Invoice: \(invoiceNo)\n• Net Amount: ₹\(String(format: "%.2f", net))\n• Tests Booked: \(count)",
+            message: "\(name) has been registered into the workspace.\n\n• Patient ID: \(uhid)\n• Visit Routing: \(paymentMode)",
             preferredStyle: .alert
         )
 
         alert.addAction(UIAlertAction(title: "📲 Send WhatsApp Receipt", style: .default, handler: { [weak self] _ in
-            let msg = "Hello \(name),\n\nYour test booking at Patholab Cloud is confirmed.\n• UHID: \(uhid)\n• Invoice No: \(invoiceNo)\n• Net Amount: ₹\(String(format: "%.2f", net))\n\nTrack report online: https://patholab.cloud/p/reports/\(uhid)\n\nThank you!"
+            let msg = "Hello \(name),\n\nYour patient registration at Patholab Cloud is confirmed.\n• Patient ID: \(uhid)\n• Payment Routing: \(paymentMode)\n\nTrack report online: https://patholab.cloud/p/reports/\(uhid)\n\nThank you!"
             var clean = phone.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
             if clean.count == 10 { clean = "91" + clean }
             if let enc = msg.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
                let url = URL(string: "https://api.whatsapp.com/send?phone=\(clean)&text=\(enc)") {
                 UIApplication.shared.open(url)
             }
+            self?.clearForm()
+        }))
+
+        alert.addAction(UIAlertAction(title: "View in Patients Worklist", style: .default, handler: { [weak self] _ in
             self?.dismiss(animated: true)
         }))
 
-        alert.addAction(UIAlertAction(title: "Done / Back to Dashboard", style: .cancel, handler: { [weak self] _ in
-            self?.dismiss(animated: true)
+        alert.addAction(UIAlertAction(title: "Register Another Patient", style: .cancel, handler: { [weak self] _ in
+            self?.clearForm()
         }))
 
         present(alert, animated: true)
@@ -1354,18 +1110,19 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
         ageField.text = ""
         emailField.text = ""
         addressField.text = ""
-        abhaField.text = ""
-        passportField.text = ""
-        discountField.text = ""
-        paidAmountField.text = ""
         duplicateWarningCard.isHidden = true
         matchCard.isHidden = true
         noMatchCard.isHidden = true
         matchedPatientDbId = nil
-        selectedTests.removeAll()
-        renderSelectedTests()
-        calculateBill()
-        setupDateTimeDefaults()
+        selectedDoctor = "Self"
+        doctorBtn.setTitle("Doctor: Self (No Doctor)", for: .normal)
+        selectedAgency = "Direct"
+        agencyBtn.setTitle("Agency: Direct Walk-in", for: .normal)
+        selectedCollector = "Lab Phlebotomist"
+        collectorBtn.setTitle("Collector: Lab Phlebotomist", for: .normal)
+        selectedPaymentMode = "Cash"
+        paymentModeBtn.setTitle("Cash", for: .normal)
+        setupDateTimeDefaults();
     }
 
     @objc private func backTapped() {
@@ -1417,8 +1174,10 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
         btn.layer.borderColor = UIColor(red: 0.886, green: 0.910, blue: 0.941, alpha: 1).cgColor
         btn.setTitle(title, for: .normal)
         btn.setTitleColor(UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1), for: .normal)
-        btn.titleLabel?.font = .systemFont(ofSize: 12.5, weight: .bold)
-        btn.heightAnchor.constraint(equalToConstant: 42).isActive = true
+        btn.titleLabel?.font = .systemFont(ofSize: 13, weight: .bold)
+        btn.contentHorizontalAlignment = .leading
+        btn.contentEdgeInsets = UIEdgeInsets(top: 0, left: 14, bottom: 0, right: 14)
+        btn.heightAnchor.constraint(equalToConstant: 44).isActive = true
 
         if #available(iOS 14.0, *) {
             let actions = items.map { item in

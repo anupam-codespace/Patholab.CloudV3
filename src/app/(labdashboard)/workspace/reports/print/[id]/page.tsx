@@ -150,8 +150,9 @@ export default function ClinicalReportPage() {
 
   const [isDownloading, setIsDownloading] = useState<string | null>(null);
   const [verificationUrl, setVerificationUrl] = useState("");
+  const [isAppMode, setIsAppMode] = useState(false);
 
-  // 🌟 NEW STATE: Toggle Clinical Flags
+  // 🌟 Toggle Clinical Flags
   const [showFlags, setShowFlags] = useState(false);
 
   const { data: patient, isLoading } = useQuery({
@@ -161,16 +162,23 @@ export default function ClinicalReportPage() {
 
   useEffect(() => {
     setVerificationUrl(`${window.location.origin}/verify/${id}`);
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const appFlag = params.get("app") === "true" || params.get("hideNav") === "true";
+      const uaApp = window.navigator.userAgent.includes("PatholabCloudMobileApp") || !!(window as any).Capacitor;
+      setIsAppMode(appFlag || uaApp);
+    }
   }, [id]);
 
   // =======================================================================
-  // 🧠 SMART GROUPING: Group tests by Invoice/Visit and find the Latest
+  // 🧠 SMART GROUPING: Group tests by Invoice/Visit and prioritize match
   // =======================================================================
   const groupedVisits = useMemo(() => {
     if (!patient || !patient.tests) return [];
 
+    // Include all non-cancelled tests (Completed, Approved, Pending, Processing)
     const validTests = patient.tests.filter(
-      (t: any) => t.status !== "PENDING" && t.status !== "CANCELLED",
+      (t: any) => t.status !== "CANCELLED",
     );
     const visitsMap: Record<string, any> = {};
 
@@ -191,11 +199,17 @@ export default function ClinicalReportPage() {
       visitsMap[invId].tests.push(test);
     });
 
-    return Object.values(visitsMap).sort(
-      (a: any, b: any) =>
-        new Date(b.date).getTime() - new Date(a.date).getTime(),
-    );
-  }, [patient]);
+    const visitsList = Object.values(visitsMap);
+    const targetClean = (id || "").replace(/^(rep_|REP_|inv_|INV_|reg-|REG-)/i, "").trim().toLowerCase();
+
+    return visitsList.sort((a: any, b: any) => {
+      const aMatches = a.invoiceNumber.toLowerCase().includes(targetClean) || a.invoiceId.toLowerCase().includes(targetClean);
+      const bMatches = b.invoiceNumber.toLowerCase().includes(targetClean) || b.invoiceId.toLowerCase().includes(targetClean);
+      if (aMatches && !bMatches) return -1;
+      if (!aMatches && bMatches) return 1;
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
+  }, [patient, id]);
 
   // ==========================================
   // 🚀 SHARING LOGIC
@@ -231,14 +245,46 @@ export default function ClinicalReportPage() {
 
   if (isLoading)
     return (
-      <div className="h-screen flex items-center justify-center">
+      <div className="h-screen flex items-center justify-center bg-slate-50">
         <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
       </div>
     );
-  if (!patient || groupedVisits.length === 0)
+
+  if (!patient)
     return (
-      <div className="p-10 text-center text-slate-500">
-        No completed tests available for this patient.
+      <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50">
+        <div className="max-w-md w-full bg-white rounded-2xl p-8 shadow-sm border border-slate-200 text-center">
+          <h2 className="text-lg font-bold text-slate-900 mb-2">Patient Record Not Found</h2>
+          <p className="text-xs text-slate-500 mb-4">The requested patient or visit report identifier could not be resolved.</p>
+          <button onClick={() => window.history.back()} className="px-5 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold">Go Back</button>
+        </div>
+      </div>
+    );
+
+  if (groupedVisits.length === 0)
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50">
+        <div className="max-w-md w-full bg-white rounded-2xl p-8 shadow-sm border border-slate-200 text-center">
+          <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <FileCheck2 size={28} />
+          </div>
+          <h2 className="text-lg font-black text-slate-900 mb-1">{patient.name}</h2>
+          <p className="text-xs font-semibold text-slate-500 mb-4">
+            UHID: {patient.patientId} • {patient.age} {patient.ageUnit} / {patient.gender}
+          </p>
+          <div className="p-4 bg-amber-50 rounded-xl border border-amber-200 text-amber-800 text-xs mb-6 text-left">
+            <p className="font-bold mb-1">Awaiting Test Assignment</p>
+            <p className="text-amber-700 leading-relaxed">
+              This patient visit does not have any active diagnostic tests recorded. Once investigations are accessioned or results entered, the printable laboratory report will display here automatically.
+            </p>
+          </div>
+          <button 
+            onClick={() => window.location.reload()}
+            className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition-all shadow-md shadow-blue-500/20"
+          >
+            Refresh Data
+          </button>
+        </div>
       </div>
     );
 
@@ -414,74 +460,76 @@ export default function ClinicalReportPage() {
   const m = config.layout.margins;
 
   return (
-    <div className="flex flex-col items-center py-10 bg-slate-900 min-h-screen print:bg-white print:py-0 print:block">
+    <div className={`flex flex-col items-center min-h-screen print:bg-white print:py-0 print:block ${isAppMode ? "bg-slate-50 py-2 sm:py-6" : "bg-slate-900 py-10"}`}>
       {/* ============================================================== */}
-      {/* TOP ACTION BAR (Latest Report) - 🚫 Hidden on Print */}
+      {/* TOP ACTION BAR (Latest Report) - 🚫 Hidden on Print & App */}
       {/* ============================================================== */}
-      <div className="w-[210mm] print:hidden flex flex-col md:flex-row justify-between items-center mb-6 sticky top-4 z-50 bg-white/95 backdrop-blur-md p-4 rounded-xl shadow-xl border border-blue-200 gap-4">
-        <div className="flex items-center gap-4">
-          <div className="bg-blue-600 p-3 rounded-lg text-white shadow-inner hidden md:block">
-            <FileCheck2 size={28} />
+      {!isAppMode && (
+        <div className="w-[210mm] print:hidden flex flex-col md:flex-row justify-between items-center mb-6 sticky top-4 z-50 bg-white/95 backdrop-blur-md p-4 rounded-xl shadow-xl border border-blue-200 gap-4">
+          <div className="flex items-center gap-4">
+            <div className="bg-blue-600 p-3 rounded-lg text-white shadow-inner hidden md:block">
+              <FileCheck2 size={28} />
+            </div>
+            <div>
+              <h1 className="text-xl font-black text-slate-800 flex items-center gap-2">
+                Latest Report{" "}
+                <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full uppercase tracking-wider">
+                  {latestVisit.invoiceNumber}
+                </span>
+              </h1>
+              <p className="text-sm font-medium text-slate-500 mt-1 flex items-center gap-1.5">
+                <Calendar className="w-4 h-4" /> {latestVisit.formattedDate}
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl font-black text-slate-800 flex items-center gap-2">
-              Latest Report{" "}
-              <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full uppercase tracking-wider">
-                {latestVisit.invoiceNumber}
+
+          <div className="flex flex-wrap items-center gap-2">
+            {/* 🌟 NEW: CLINICAL FLAGS TOGGLE */}
+            <Button
+              variant="outline"
+              onClick={() => setShowFlags(!showFlags)}
+              className={`h-11 rounded-lg font-bold border-2 transition-all mr-2 ${showFlags ? "bg-indigo-50 text-indigo-700 border-indigo-200" : "text-slate-600 border-slate-200"}`}>
+              <Activity className="w-4 h-4 md:mr-2" />
+              <span className="hidden md:inline">
+                {showFlags ? "Flags: ON" : "Flags: OFF"}
               </span>
-            </h1>
-            <p className="text-sm font-medium text-slate-500 mt-1 flex items-center gap-1.5">
-              <Calendar className="w-4 h-4" /> {latestVisit.formattedDate}
-            </p>
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={() => handleWhatsAppShare(latestVisit)}
+              className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 h-11 rounded-lg">
+              <MessageCircle className="w-4 h-4 md:mr-2" />
+              <span className="hidden md:inline">WhatsApp</span>
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={() => handleEmailShare(latestVisit)}
+              className="text-blue-600 border-blue-200 hover:bg-blue-50 h-11 rounded-lg">
+              <Mail className="w-4 h-4 md:mr-2" />
+              <span className="hidden md:inline">Email</span>
+            </Button>
+
+            <Button
+              className="bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all h-11 rounded-lg font-bold"
+              onClick={() => handleDownload(latestVisit)}
+              disabled={isDownloading === latestVisit.invoiceId}>
+              {isDownloading === latestVisit.invoiceId ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Download className="h-4 w-4 mr-2" />
+              )}
+              Download PDF
+            </Button>
           </div>
         </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          {/* 🌟 NEW: CLINICAL FLAGS TOGGLE */}
-          <Button
-            variant="outline"
-            onClick={() => setShowFlags(!showFlags)}
-            className={`h-11 rounded-lg font-bold border-2 transition-all mr-2 ${showFlags ? "bg-indigo-50 text-indigo-700 border-indigo-200" : "text-slate-600 border-slate-200"}`}>
-            <Activity className="w-4 h-4 md:mr-2" />
-            <span className="hidden md:inline">
-              {showFlags ? "Flags: ON" : "Flags: OFF"}
-            </span>
-          </Button>
-
-          <Button
-            variant="outline"
-            onClick={() => handleWhatsAppShare(latestVisit)}
-            className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 h-11 rounded-lg">
-            <MessageCircle className="w-4 h-4 md:mr-2" />
-            <span className="hidden md:inline">WhatsApp</span>
-          </Button>
-
-          <Button
-            variant="outline"
-            onClick={() => handleEmailShare(latestVisit)}
-            className="text-blue-600 border-blue-200 hover:bg-blue-50 h-11 rounded-lg">
-            <Mail className="w-4 h-4 md:mr-2" />
-            <span className="hidden md:inline">Email</span>
-          </Button>
-
-          <Button
-            className="bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all h-11 rounded-lg font-bold"
-            onClick={() => handleDownload(latestVisit)}
-            disabled={isDownloading === latestVisit.invoiceId}>
-            {isDownloading === latestVisit.invoiceId ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-            ) : (
-              <Download className="h-4 w-4 mr-2" />
-            )}
-            Download PDF
-          </Button>
-        </div>
-      </div>
+      )}
 
       {/* ============================================================== */}
-      {/* HISTORICAL REPORTS SECTION - 🚫 Hidden on Print */}
+      {/* HISTORICAL REPORTS SECTION - 🚫 Hidden on Print & App */}
       {/* ============================================================== */}
-      {pastVisits.length > 0 && (
+      {!isAppMode && pastVisits.length > 0 && (
         <div className="w-[210mm] print:hidden bg-slate-800 border border-slate-700 p-4 rounded-xl mb-6 shadow-md">
           <h3 className="text-slate-300 font-bold uppercase tracking-wider text-xs mb-3 flex items-center gap-2">
             <History className="w-4 h-4" /> Previous Lab Visits
@@ -524,13 +572,16 @@ export default function ClinicalReportPage() {
         style={{
           fontFamily: fontFamily,
           fontSize: `${globalFontSize}px`,
-          width: "210mm",
+          width: isAppMode ? "100%" : "210mm",
+          maxWidth: "210mm",
           minHeight: "297mm",
           padding: `${m.top}mm ${m.right}mm ${m.bottom}mm ${m.left}mm`,
           color: "#1e293b",
           boxSizing: "border-box",
         }}
-        className="bg-white shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative flex flex-col mx-auto overflow-hidden rounded-sm print:shadow-none print:m-0">
+        className={`bg-white relative flex flex-col mx-auto overflow-hidden rounded-sm print:shadow-none print:m-0 print:w-[210mm] ${
+          isAppMode ? "shadow-sm border border-slate-200" : "shadow-[0_20px_50px_rgba(0,0,0,0.3)]"
+        }`}>
         {config.layout.border.show && (
           <div
             className="absolute pointer-events-none"
@@ -760,8 +811,27 @@ export default function ClinicalReportPage() {
                 return (
                   <div key={block.id}>
                     {latestVisit.tests.map((test: any) => {
-                      if (!test.results || test.results.length === 0)
-                        return null;
+                      if (!test.results || test.results.length === 0) {
+                        return (
+                          <div key={test.id} className="mb-6 w-full">
+                            {config.bodyOptions?.groupDepartmentWise &&
+                              test.testTemplate?.department?.name && (
+                                <div className="bg-slate-100 font-bold py-1.5 px-3 mb-4 text-[12px] uppercase text-center border-y border-slate-300 tracking-wider">
+                                  {test.testTemplate.department.name}
+                                </div>
+                              )}
+                            <h2
+                              className="text-center font-bold text-lg mb-2 underline uppercase tracking-wide"
+                              style={{ color: primaryColor }}>
+                              {test.testName}
+                            </h2>
+                            <div className="my-2 py-3 px-4 bg-amber-50/80 border border-amber-200/80 rounded-lg text-amber-800 text-xs font-semibold flex items-center justify-between">
+                              <span>Status: {test.status || "Pending Analysis"}</span>
+                              <span className="text-amber-600 font-normal">Results awaiting laboratory entry / verification</span>
+                            </div>
+                          </div>
+                        );
+                      }
                       return (
                         <div key={test.id} className="mb-6 w-full">
                           {config.bodyOptions?.groupDepartmentWise &&

@@ -74,6 +74,11 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
         fetchReports()
     }
 
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        fetchReports()
+    }
+
     override var preferredStatusBarStyle: UIStatusBarStyle {
         return .lightContent
     }
@@ -96,7 +101,7 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
         backBtn.setImage(UIImage(systemName: "chevron.left"), for: .normal)
         backBtn.tintColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1)
         backBtn.backgroundColor = .white
-        backBtn.layer.cornerRadius = 20
+        backBtn.layer.cornerRadius = 19
         backBtn.addTarget(self, action: #selector(didTapBack), for: .touchUpInside)
         backBtn.translatesAutoresizingMaskIntoConstraints = false
         topHeaderView.addSubview(backBtn)
@@ -128,15 +133,15 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
             topHeaderView.topAnchor.constraint(equalTo: view.topAnchor),
             topHeaderView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             topHeaderView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            topHeaderView.heightAnchor.constraint(equalToConstant: 116),
+            topHeaderView.heightAnchor.constraint(equalToConstant: 104),
 
             backBtn.leadingAnchor.constraint(equalTo: topHeaderView.leadingAnchor, constant: 16),
-            backBtn.bottomAnchor.constraint(equalTo: topHeaderView.bottomAnchor, constant: -14),
-            backBtn.widthAnchor.constraint(equalToConstant: 40),
-            backBtn.heightAnchor.constraint(equalToConstant: 40),
+            backBtn.bottomAnchor.constraint(equalTo: topHeaderView.bottomAnchor, constant: -10),
+            backBtn.widthAnchor.constraint(equalToConstant: 38),
+            backBtn.heightAnchor.constraint(equalToConstant: 38),
 
             titleLbl.leadingAnchor.constraint(equalTo: backBtn.trailingAnchor, constant: 12),
-            titleLbl.topAnchor.constraint(equalTo: backBtn.topAnchor, constant: -1),
+            titleLbl.topAnchor.constraint(equalTo: backBtn.topAnchor, constant: -2),
             titleLbl.trailingAnchor.constraint(lessThanOrEqualTo: refreshBtn.leadingAnchor, constant: -8),
 
             subLbl.leadingAnchor.constraint(equalTo: titleLbl.leadingAnchor),
@@ -445,12 +450,15 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
                     let pName = patient?["name"] as? String ?? "Patient"
                     let pPhone = patient?["phone"] as? String ?? ""
                     let pEmail = patient?["email"] as? String ?? ""
-                    let pAge = patient?["age"] as? String ?? ""
+                    let pAge = "\(patient?["age"] ?? "")"
                     let pGender = patient?["gender"] as? String ?? ""
-                    let pUhid = patient?["uhid"] as? String ?? ""
+                    let pUhid = patient?["patientId"] as? String ?? patient?["uhid"] as? String ?? "P-00001"
 
+                    let test = r["test"] as? [String: Any]
+                    let tName = test?["testName"] as? String ?? test?["name"] as? String ?? "Diagnostic Investigation"
+                    let tCode = test?["testCode"] as? String ?? test?["testNumber"] as? String ?? "LAB-001"
                     let dept = test?["department"] as? [String: Any]
-                    let dName = dept?["name"] as? String ?? "General"
+                    let dName = dept?["name"] as? String ?? "General Pathology"
 
                     let path = r["pathologist"] as? [String: Any]
                     let pathName = path?["name"] as? String ?? "Pathologist"
@@ -568,13 +576,18 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
 
         let nameLbl = UILabel()
         nameLbl.text = report.patientName
-        nameLbl.font = .systemFont(ofSize: 16, weight: .bold)
+        nameLbl.font = .systemFont(ofSize: 15.5, weight: .bold)
         nameLbl.textColor = UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1)
 
         let uhidLbl = UILabel()
-        uhidLbl.text = report.uhid
-        uhidLbl.font = .systemFont(ofSize: 12, weight: .medium)
-        uhidLbl.textColor = UIColor(red: 0.392, green: 0.451, blue: 0.549, alpha: 1)
+        uhidLbl.text = "  \(report.uhid)  "
+        uhidLbl.font = .systemFont(ofSize: 11.5, weight: .bold)
+        uhidLbl.textColor = UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1) // Pure dark slate / black
+        uhidLbl.backgroundColor = UIColor(red: 0.996, green: 0.941, blue: 0.541, alpha: 1) // #FEF08A Yellow Box Badge
+        uhidLbl.layer.cornerRadius = 6
+        uhidLbl.layer.borderWidth = 1
+        uhidLbl.layer.borderColor = UIColor(red: 0.992, green: 0.878, blue: 0.278, alpha: 1).cgColor // #FDE047
+        uhidLbl.clipsToBounds = true
 
         let statusBadge = UILabel()
         statusBadge.font = .systemFont(ofSize: 11.5, weight: .bold)
@@ -583,21 +596,29 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
 
         let s = report.status.uppercased()
         if s == "FINAL" || s == "APPROVED" {
-            statusBadge.text = " ✓ Approved "
-            statusBadge.textColor = UIColor(red: 0.02, green: 0.59, blue: 0.41, alpha: 1)
-            statusBadge.backgroundColor = UIColor(red: 0.93, green: 0.98, blue: 0.95, alpha: 1)
+            statusBadge.text = "  Approved  "
+            statusBadge.textColor = UIColor(red: 0.078, green: 0.325, blue: 0.176, alpha: 1) // Deep Forest Green #14532D
+            statusBadge.backgroundColor = UIColor(red: 0.863, green: 0.988, blue: 0.906, alpha: 1) // Soft Mint #DCFCE7
+            statusBadge.layer.borderWidth = 1
+            statusBadge.layer.borderColor = UIColor(red: 0.525, green: 0.937, blue: 0.675, alpha: 1).cgColor // #86EFAC
         } else if s == "SENT" || s == "SENT_TO_PATIENT" {
-            statusBadge.text = " 📱 Sent "
+            statusBadge.text = "  Sent  "
             statusBadge.textColor = UIColor(red: 0.05, green: 0.43, blue: 0.99, alpha: 1)
             statusBadge.backgroundColor = UIColor(red: 0.93, green: 0.96, blue: 1.0, alpha: 1)
+            statusBadge.layer.borderWidth = 1
+            statusBadge.layer.borderColor = UIColor(red: 0.75, green: 0.86, blue: 1.0, alpha: 1).cgColor
         } else if s == "AMENDED" || report.isAmended {
-            statusBadge.text = " ⚠️ Amended (v\(report.version)) "
+            statusBadge.text = "  Amended (V\(report.version))  "
             statusBadge.textColor = UIColor(red: 0.49, green: 0.23, blue: 0.93, alpha: 1)
             statusBadge.backgroundColor = UIColor(red: 0.96, green: 0.94, blue: 1.0, alpha: 1)
+            statusBadge.layer.borderWidth = 1
+            statusBadge.layer.borderColor = UIColor(red: 0.82, green: 0.74, blue: 0.98, alpha: 1).cgColor
         } else {
-            statusBadge.text = " ⏱ Draft "
+            statusBadge.text = "  Draft  "
             statusBadge.textColor = UIColor(red: 0.85, green: 0.47, blue: 0.02, alpha: 1)
             statusBadge.backgroundColor = UIColor(red: 1.0, green: 0.95, blue: 0.88, alpha: 1)
+            statusBadge.layer.borderWidth = 1
+            statusBadge.layer.borderColor = UIColor(red: 0.99, green: 0.82, blue: 0.64, alpha: 1).cgColor
         }
 
         // Test Pill View
@@ -618,10 +639,10 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
         testCodeLbl.textColor = UIColor(red: 0.39, green: 0.45, blue: 0.55, alpha: 1)
 
         let verBadge = UILabel()
-        verBadge.text = " v\(report.version).0 "
+        verBadge.text = String(format: "  V%02d  ", report.version)
         verBadge.font = .systemFont(ofSize: 11, weight: .bold)
-        verBadge.textColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1)
-        verBadge.backgroundColor = UIColor(red: 0.937, green: 0.965, blue: 1.0, alpha: 1)
+        verBadge.textColor = .white // Pure White text
+        verBadge.backgroundColor = UIColor(red: 0.114, green: 0.306, blue: 0.847, alpha: 1.0) // Solid Sapphire #1D4ED8
         verBadge.layer.cornerRadius = 6
         verBadge.clipsToBounds = true
 
@@ -648,53 +669,63 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
         dateLbl.font = .systemFont(ofSize: 12, weight: .medium)
         dateLbl.textColor = UIColor(red: 0.392, green: 0.451, blue: 0.549, alpha: 1)
 
-        // Action Buttons
-        let printBtn = UIButton(type: .system)
-        printBtn.setTitle("Print", for: .normal)
-        printBtn.setTitleColor(UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1), for: .normal)
-        printBtn.titleLabel?.font = .systemFont(ofSize: 12, weight: .bold)
-        printBtn.backgroundColor = UIColor(red: 0.937, green: 0.965, blue: 1.0, alpha: 1)
-        printBtn.layer.cornerRadius = 10
-        printBtn.layer.borderWidth = 1
-        printBtn.layer.borderColor = UIColor(red: 0.75, green: 0.86, blue: 1.0, alpha: 1).cgColor
-        printBtn.tag = indexPath.row
-        printBtn.addTarget(self, action: #selector(didTapPrintAction(_:)), for: .touchUpInside)
-
+        // Modern Elevated Action Buttons
         let downloadBtn = UIButton(type: .system)
-        downloadBtn.setTitle("Download", for: .normal)
-        downloadBtn.setTitleColor(UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1), for: .normal)
-        downloadBtn.titleLabel?.font = .systemFont(ofSize: 12, weight: .bold)
-        downloadBtn.backgroundColor = UIColor(red: 0.937, green: 0.965, blue: 1.0, alpha: 1)
-        downloadBtn.layer.cornerRadius = 10
-        downloadBtn.layer.borderWidth = 1
-        downloadBtn.layer.borderColor = UIColor(red: 0.75, green: 0.86, blue: 1.0, alpha: 1).cgColor
+        downloadBtn.setTitle("  Download", for: .normal)
+        downloadBtn.setImage(UIImage(systemName: "arrow.down.to.line"), for: .normal)
+        downloadBtn.setTitleColor(.white, for: .normal)
+        downloadBtn.tintColor = .white
+        downloadBtn.titleLabel?.font = .systemFont(ofSize: 12.5, weight: .bold)
+        downloadBtn.backgroundColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1) // Sapphire Primary #0D6EFD
+        downloadBtn.layer.cornerRadius = 12
+        downloadBtn.layer.shadowColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1).cgColor
+        downloadBtn.layer.shadowOpacity = 0.22
+        downloadBtn.layer.shadowOffset = CGSize(width: 0, height: 2)
+        downloadBtn.layer.shadowRadius = 4
         downloadBtn.tag = indexPath.row
         downloadBtn.addTarget(self, action: #selector(didTapDownloadAction(_:)), for: .touchUpInside)
 
+        let printBtn = UIButton(type: .system)
+        printBtn.setTitle("  Print", for: .normal)
+        printBtn.setImage(UIImage(systemName: "printer.fill"), for: .normal)
+        printBtn.setTitleColor(UIColor(red: 0.039, green: 0.345, blue: 0.792, alpha: 1), for: .normal)
+        printBtn.tintColor = UIColor(red: 0.039, green: 0.345, blue: 0.792, alpha: 1)
+        printBtn.titleLabel?.font = .systemFont(ofSize: 12.5, weight: .bold)
+        printBtn.backgroundColor = UIColor(red: 0.937, green: 0.965, blue: 1.0, alpha: 1) // Ice Blue #EFF6FF
+        printBtn.layer.cornerRadius = 12
+        printBtn.layer.borderWidth = 1
+        printBtn.layer.borderColor = UIColor(red: 0.749, green: 0.859, blue: 0.996, alpha: 1).cgColor // #BFDBFE
+        printBtn.tag = indexPath.row
+        printBtn.addTarget(self, action: #selector(didTapPrintAction(_:)), for: .touchUpInside)
+
         let amendBtn = UIButton(type: .system)
         amendBtn.setImage(UIImage(systemName: "doc.text.fill"), for: .normal)
-        amendBtn.tintColor = UIColor(red: 0.39, green: 0.45, blue: 0.55, alpha: 1)
+        amendBtn.tintColor = UIColor(red: 0.28, green: 0.33, blue: 0.41, alpha: 1)
         amendBtn.backgroundColor = UIColor(red: 0.945, green: 0.961, blue: 0.976, alpha: 1)
-        amendBtn.layer.cornerRadius = 10
+        amendBtn.layer.cornerRadius = 12
+        amendBtn.layer.borderWidth = 1
+        amendBtn.layer.borderColor = UIColor(red: 0.89, green: 0.91, blue: 0.95, alpha: 1).cgColor
         amendBtn.tag = indexPath.row
         amendBtn.addTarget(self, action: #selector(didTapAmendAction(_:)), for: .touchUpInside)
 
         let shareBtn = UIButton(type: .system)
         shareBtn.setImage(UIImage(systemName: "square.and.arrow.up"), for: .normal)
-        shareBtn.tintColor = UIColor(red: 0.39, green: 0.45, blue: 0.55, alpha: 1)
+        shareBtn.tintColor = UIColor(red: 0.28, green: 0.33, blue: 0.41, alpha: 1)
         shareBtn.backgroundColor = UIColor(red: 0.945, green: 0.961, blue: 0.976, alpha: 1)
-        shareBtn.layer.cornerRadius = 10
+        shareBtn.layer.cornerRadius = 12
+        shareBtn.layer.borderWidth = 1
+        shareBtn.layer.borderColor = UIColor(red: 0.89, green: 0.91, blue: 0.95, alpha: 1).cgColor
         shareBtn.tag = indexPath.row
         shareBtn.addTarget(self, action: #selector(didTapShareAction(_:)), for: .touchUpInside)
 
-        let btnStack = UIStackView(arrangedSubviews: [printBtn, downloadBtn, amendBtn, shareBtn])
+        let btnStack = UIStackView(arrangedSubviews: [downloadBtn, printBtn, amendBtn, shareBtn])
         btnStack.axis = .horizontal
-        btnStack.spacing = 6
+        btnStack.spacing = 8
         btnStack.distribution = .fillProportionally
 
         NSLayoutConstraint.activate([
-            amendBtn.widthAnchor.constraint(equalToConstant: 38),
-            shareBtn.widthAnchor.constraint(equalToConstant: 38),
+            amendBtn.widthAnchor.constraint(equalToConstant: 40),
+            shareBtn.widthAnchor.constraint(equalToConstant: 40),
         ])
 
         [avatarIV, nameLbl, uhidLbl, statusBadge, testBox, dateLbl, btnStack].forEach {
@@ -732,7 +763,7 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
             btnStack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
             btnStack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14),
             btnStack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -14),
-            btnStack.heightAnchor.constraint(equalToConstant: 38),
+            btnStack.heightAnchor.constraint(equalToConstant: 40),
         ])
 
         return cell

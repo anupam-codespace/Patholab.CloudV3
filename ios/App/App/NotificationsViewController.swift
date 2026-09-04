@@ -77,9 +77,9 @@ class NotificationsViewController: UIViewController {
         scrollView.addSubview(stackView)
 
         // Mark All As Read button
-        btnMarkAllRead.setTitle("✓ Mark all as read", for: .normal)
+        btnMarkAllRead.setTitle("Mark All as Read", for: .normal)
         btnMarkAllRead.setTitleColor(UIColor(red: 59/255, green: 130/255, blue: 246/255, alpha: 1), for: .normal)
-        btnMarkAllRead.titleLabel?.font = .systemFont(ofSize: 12, weight: .bold)
+        btnMarkAllRead.titleLabel?.font = .systemFont(ofSize: 13, weight: .bold)
         btnMarkAllRead.translatesAutoresizingMaskIntoConstraints = false
         btnMarkAllRead.addTarget(self, action: #selector(markAllReadTapped), for: .touchUpInside)
         view.addSubview(btnMarkAllRead)

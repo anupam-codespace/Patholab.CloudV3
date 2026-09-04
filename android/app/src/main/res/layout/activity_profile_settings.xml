@@ -1304,11 +1304,9 @@
             android:textStyle="bold"
             android:backgroundTint="#0D6EFD"
             app:cornerRadius="16dp"
-            android:elevation="4dp"
-            app:icon="@drawable/ic_check_bold"
-            app:iconGravity="textStart"
-            app:iconPadding="8dp"
-            app:iconTint="#FFFFFF"
+            app:elevation="4dp"
+            app:rippleColor="#33FFFFFF"
+            android:letterSpacing="0.01"
             android:textAllCaps="false" />
 
         <ProgressBar

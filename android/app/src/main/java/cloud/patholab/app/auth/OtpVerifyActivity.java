@@ -167,7 +167,7 @@ public class OtpVerifyActivity extends AppCompatActivity {
                         tvResend.setEnabled(true);
                         tvResend.setText("Resend Code");
                         if (success) {
-                            tvError.setText("✓ A new code was sent");
+                            tvError.setText("A new code was sent");
                             tvError.setTextColor(getResources().getColor(R.color.successGreen));
                             errorBanner.setBackgroundResource(R.drawable.bg_success_banner);
                             errorBanner.setVisibility(View.VISIBLE);

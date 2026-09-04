@@ -55,7 +55,6 @@ class DashboardViewController: UIViewController {
         setupHeader()
         setupScrollView()
         setupPrimaryKPIGrid()
-        setupTaxBreakdownGrid()
         setupLedgersSection()
         setupQuickActions()
 
@@ -124,43 +123,11 @@ class DashboardViewController: UIViewController {
         userRoleLabLbl.translatesAutoresizingMaskIntoConstraints = false
         topHeaderView.addSubview(userRoleLabLbl)
 
-        // Status Pill
-        let statusPill = UIView()
-        statusPill.backgroundColor = UIColor.white.withAlphaComponent(0.14)
-        statusPill.layer.cornerRadius = 14
-        statusPill.layer.borderWidth = 1
-        statusPill.layer.borderColor = UIColor.white.withAlphaComponent(0.2).cgColor
-        statusPill.translatesAutoresizingMaskIntoConstraints = false
-        topHeaderView.addSubview(statusPill)
-
-        let dot = UIView()
-        dot.backgroundColor = UIColor(red: 0.05, green: 0.75, blue: 0.45, alpha: 1)
-        dot.layer.cornerRadius = 4
-        dot.translatesAutoresizingMaskIntoConstraints = false
-        statusPill.addSubview(dot)
-
-        userGreetingLbl.text = "Live Sync • Pay-As-You-Go Active"
-        userGreetingLbl.font = .systemFont(ofSize: 11.5, weight: .bold)
-        userGreetingLbl.textColor = .white
-        userGreetingLbl.translatesAutoresizingMaskIntoConstraints = false
-        statusPill.addSubview(userGreetingLbl)
-
-        let badgeLbl = UILabel()
-        badgeLbl.text = "ENTERPRISE"
-        badgeLbl.font = .systemFont(ofSize: 9.5, weight: .black)
-        badgeLbl.textColor = UIColor(red: 0.43, green: 0.91, blue: 0.72, alpha: 1)
-        badgeLbl.backgroundColor = UIColor(red: 0.02, green: 0.59, blue: 0.41, alpha: 0.3)
-        badgeLbl.layer.cornerRadius = 6
-        badgeLbl.clipsToBounds = true
-        badgeLbl.textAlignment = .center
-        badgeLbl.translatesAutoresizingMaskIntoConstraints = false
-        statusPill.addSubview(badgeLbl)
-
         NSLayoutConstraint.activate([
             topHeaderView.topAnchor.constraint(equalTo: view.topAnchor),
             topHeaderView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             topHeaderView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            topHeaderView.heightAnchor.constraint(equalToConstant: 195),
+            topHeaderView.bottomAnchor.constraint(equalTo: userRoleLabLbl.bottomAnchor, constant: 18),
 
             backBtn.leadingAnchor.constraint(equalTo: topHeaderView.leadingAnchor, constant: 16),
             backBtn.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 4),
@@ -182,24 +149,6 @@ class DashboardViewController: UIViewController {
             refreshIconView.centerYAnchor.constraint(equalTo: refreshBtn.centerYAnchor),
             refreshIconView.widthAnchor.constraint(equalToConstant: 16),
             refreshIconView.heightAnchor.constraint(equalToConstant: 16),
-
-            statusPill.leadingAnchor.constraint(equalTo: topHeaderView.leadingAnchor, constant: 16),
-            statusPill.trailingAnchor.constraint(equalTo: topHeaderView.trailingAnchor, constant: -16),
-            statusPill.bottomAnchor.constraint(equalTo: topHeaderView.bottomAnchor, constant: -14),
-            statusPill.heightAnchor.constraint(equalToConstant: 34),
-
-            dot.leadingAnchor.constraint(equalTo: statusPill.leadingAnchor, constant: 12),
-            dot.centerYAnchor.constraint(equalTo: statusPill.centerYAnchor),
-            dot.widthAnchor.constraint(equalToConstant: 8),
-            dot.heightAnchor.constraint(equalToConstant: 8),
-
-            userGreetingLbl.leadingAnchor.constraint(equalTo: dot.trailingAnchor, constant: 8),
-            userGreetingLbl.centerYAnchor.constraint(equalTo: statusPill.centerYAnchor),
-
-            badgeLbl.trailingAnchor.constraint(equalTo: statusPill.trailingAnchor, constant: -8),
-            badgeLbl.centerYAnchor.constraint(equalTo: statusPill.centerYAnchor),
-            badgeLbl.heightAnchor.constraint(equalToConstant: 20),
-            badgeLbl.widthAnchor.constraint(greaterThanOrEqualToConstant: 72)
         ])
     }
 
@@ -269,8 +218,8 @@ class DashboardViewController: UIViewController {
         row1.distribution = .fillEqually
         row1.spacing = 12
 
-        let cardRev = makeBentoCard(title: "TOTAL REVENUE", valueLbl: lblTotalRevenue, subLbl: lblInvoicesCount, defaultVal: "₹0", defaultSub: "Excl. cancelled", icon: "chart.bar.fill", iconBg: "ECFDF5", iconTint: "059669", valColor: UIColor(red: 0.02, green: 0.59, blue: 0.41, alpha: 1))
-        let cardExp = makeBentoCard(title: "TOTAL EXPENSES", valueLbl: lblTotalExpenses, subLbl: lblExpensesCount, defaultVal: "₹0", defaultSub: "All logged expenses", icon: "wallet.pass.fill", iconBg: "FFF1F2", iconTint: "E11D48", valColor: UIColor(red: 0.88, green: 0.11, blue: 0.28, alpha: 1))
+        let cardRev = makeBentoCard(title: "TOTAL REVENUE", valueLbl: lblTotalRevenue, defaultVal: "₹0", valColor: UIColor(red: 0.02, green: 0.59, blue: 0.41, alpha: 1))
+        let cardExp = makeBentoCard(title: "TOTAL EXPENSES", valueLbl: lblTotalExpenses, defaultVal: "₹0", valColor: UIColor(red: 0.88, green: 0.11, blue: 0.28, alpha: 1))
         row1.addArrangedSubview(cardRev)
         row1.addArrangedSubview(cardExp)
         contentStack.addArrangedSubview(row1)
@@ -281,14 +230,14 @@ class DashboardViewController: UIViewController {
         row2.distribution = .fillEqually
         row2.spacing = 12
 
-        let cardNet = makeBentoCard(title: "NET PROFIT", valueLbl: lblNetProfit, subLbl: UILabel(), defaultVal: "₹0", defaultSub: "Revenue - Expenses", icon: "arrow.up.right.circle.fill", iconBg: "EFF6FF", iconTint: "0D6EFD", valColor: UIColor(red: 0.05, green: 0.43, blue: 0.99, alpha: 1))
-        let cardPending = makeBentoCard(title: "PENDING DUE", valueLbl: lblPendingDue, subLbl: lblPendingCount, defaultVal: "₹0", defaultSub: "Unpaid invoices", icon: "exclamationmark.triangle.fill", iconBg: "FEF3C7", iconTint: "D97706", valColor: UIColor(red: 0.85, green: 0.47, blue: 0.02, alpha: 1))
+        let cardNet = makeBentoCard(title: "NET PROFIT", valueLbl: lblNetProfit, defaultVal: "₹0", valColor: UIColor(red: 0.05, green: 0.43, blue: 0.99, alpha: 1))
+        let cardPending = makeBentoCard(title: "PENDING DUE", valueLbl: lblPendingDue, defaultVal: "₹0", valColor: UIColor(red: 0.85, green: 0.47, blue: 0.02, alpha: 1))
         row2.addArrangedSubview(cardNet)
         row2.addArrangedSubview(cardPending)
         contentStack.addArrangedSubview(row2)
     }
 
-    private func makeBentoCard(title: String, valueLbl: UILabel, subLbl: UILabel, defaultVal: String, defaultSub: String, icon: String, iconBg: String, iconTint: String, valColor: UIColor) -> UIView {
+    private func makeBentoCard(title: String, valueLbl: UILabel, defaultVal: String, valColor: UIColor) -> UIView {
         let card = UIView()
         card.backgroundColor = .white
         card.layer.cornerRadius = 16
@@ -299,134 +248,35 @@ class DashboardViewController: UIViewController {
         card.layer.shadowRadius = 4
         card.layer.shadowOffset = CGSize(width: 0, height: 2)
 
-        let iconFrame = UIView()
-        iconFrame.backgroundColor = UIColor(hex: iconBg)
-        iconFrame.layer.cornerRadius = 10
-        iconFrame.translatesAutoresizingMaskIntoConstraints = false
-
-        let iconView = UIImageView(image: UIImage(systemName: icon))
-        iconView.tintColor = UIColor(hex: iconTint)
-        iconView.contentMode = .scaleAspectFit
-        iconView.translatesAutoresizingMaskIntoConstraints = false
-        iconFrame.addSubview(iconView)
-
         let titleLabel = UILabel()
         titleLabel.text = title
-        titleLabel.font = .systemFont(ofSize: 9.5, weight: .bold)
+        titleLabel.font = .systemFont(ofSize: 10, weight: .bold)
         titleLabel.textColor = UIColor(red: 0.392, green: 0.455, blue: 0.545, alpha: 1)
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
 
         valueLbl.text = defaultVal
-        valueLbl.font = .systemFont(ofSize: 19, weight: .black)
+        valueLbl.font = .systemFont(ofSize: 21, weight: .black)
         valueLbl.textColor = valColor
         valueLbl.translatesAutoresizingMaskIntoConstraints = false
 
-        subLbl.text = defaultSub
-        subLbl.font = .systemFont(ofSize: 11, weight: .medium)
-        subLbl.textColor = UIColor(red: 0.58, green: 0.64, blue: 0.72, alpha: 1)
-        subLbl.translatesAutoresizingMaskIntoConstraints = false
-
-        [iconFrame, titleLabel, valueLbl, subLbl].forEach { card.addSubview($0) }
+        card.addSubview(titleLabel)
+        card.addSubview(valueLbl)
 
         NSLayoutConstraint.activate([
-            iconFrame.topAnchor.constraint(equalTo: card.topAnchor, constant: 12),
-            iconFrame.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 12),
-            iconFrame.widthAnchor.constraint(equalToConstant: 30),
-            iconFrame.heightAnchor.constraint(equalToConstant: 30),
+            titleLabel.topAnchor.constraint(equalTo: card.topAnchor, constant: 16),
+            titleLabel.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 16),
+            titleLabel.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -16),
 
-            iconView.centerXAnchor.constraint(equalTo: iconFrame.centerXAnchor),
-            iconView.centerYAnchor.constraint(equalTo: iconFrame.centerYAnchor),
-            iconView.widthAnchor.constraint(equalToConstant: 15),
-            iconView.heightAnchor.constraint(equalToConstant: 15),
-
-            titleLabel.topAnchor.constraint(equalTo: iconFrame.bottomAnchor, constant: 8),
-            titleLabel.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 12),
-            titleLabel.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -12),
-
-            valueLbl.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 2),
+            valueLbl.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 6),
             valueLbl.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
-
-            subLbl.topAnchor.constraint(equalTo: valueLbl.bottomAnchor, constant: 2),
-            subLbl.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
-            subLbl.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -12),
+            valueLbl.trailingAnchor.constraint(equalTo: titleLabel.trailingAnchor),
+            valueLbl.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -16),
         ])
 
         return card
     }
 
-    // ── Tax & Discount Breakdown Grid ────────────────────────────────────────
-    private func setupTaxBreakdownGrid() {
-        let sectionTitle = UILabel()
-        sectionTitle.text = "TAX & DISCOUNT BREAKDOWN"
-        sectionTitle.font = .systemFont(ofSize: 11.5, weight: .bold)
-        sectionTitle.textColor = UIColor(red: 0.28, green: 0.33, blue: 0.41, alpha: 1)
-        contentStack.addArrangedSubview(sectionTitle)
-
-        // Row 1: Gross Billing & Discounts
-        let row1 = UIStackView()
-        row1.axis = .horizontal
-        row1.distribution = .fillEqually
-        row1.spacing = 10
-
-        let cardGross = makeMiniBentoCard(title: "GROSS BILLING", valueLbl: lblGrossBilling, subLbl: UILabel(), defaultVal: "₹0", defaultSub: "Subtotal before disc.")
-        let cardDisc = makeMiniBentoCard(title: "DISCOUNTS GIVEN", valueLbl: lblDiscountsGiven, subLbl: lblDiscountPercent, defaultVal: "₹0", defaultSub: "0.0% of gross billing")
-        row1.addArrangedSubview(cardGross)
-        row1.addArrangedSubview(cardDisc)
-        contentStack.addArrangedSubview(row1)
-
-        // Row 2: CGST & SGST
-        let row2 = UIStackView()
-        row2.axis = .horizontal
-        row2.distribution = .fillEqually
-        row2.spacing = 10
-
-        let cardCGST = makeMiniBentoCard(title: "CGST COLLECTED", valueLbl: lblCGST, subLbl: UILabel(), defaultVal: "₹0", defaultSub: "Central GST")
-        let cardSGST = makeMiniBentoCard(title: "SGST COLLECTED", valueLbl: lblSGST, subLbl: UILabel(), defaultVal: "₹0", defaultSub: "State GST")
-        row2.addArrangedSubview(cardCGST)
-        row2.addArrangedSubview(cardSGST)
-        contentStack.addArrangedSubview(row2)
-    }
-
-    private func makeMiniBentoCard(title: String, valueLbl: UILabel, subLbl: UILabel, defaultVal: String, defaultSub: String) -> UIView {
-        let card = UIView()
-        card.backgroundColor = .white
-        card.layer.cornerRadius = 14
-        card.layer.borderWidth = 1
-        card.layer.borderColor = UIColor(red: 0.89, green: 0.91, blue: 0.95, alpha: 1).cgColor
-
-        let titleLabel = UILabel()
-        titleLabel.text = title
-        titleLabel.font = .systemFont(ofSize: 9.5, weight: .bold)
-        titleLabel.textColor = UIColor(red: 0.392, green: 0.455, blue: 0.545, alpha: 1)
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-
-        valueLbl.text = defaultVal
-        valueLbl.font = .systemFont(ofSize: 16, weight: .bold)
-        valueLbl.textColor = UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1)
-        valueLbl.translatesAutoresizingMaskIntoConstraints = false
-
-        subLbl.text = defaultSub
-        subLbl.font = .systemFont(ofSize: 10, weight: .medium)
-        subLbl.textColor = UIColor(red: 0.58, green: 0.64, blue: 0.72, alpha: 1)
-        subLbl.translatesAutoresizingMaskIntoConstraints = false
-
-        [titleLabel, valueLbl, subLbl].forEach { card.addSubview($0) }
-
-        NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: card.topAnchor, constant: 10),
-            titleLabel.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 10),
-            titleLabel.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -10),
-
-            valueLbl.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 2),
-            valueLbl.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
-
-            subLbl.topAnchor.constraint(equalTo: valueLbl.bottomAnchor, constant: 1),
-            subLbl.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
-            subLbl.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -10),
-        ])
-
-        return card
-    }
+    private func setupTaxBreakdownGrid() {}
 
     // ── Detailed Ledgers Section (Recent Invoices & Recent Expenses) ──────────
     private func setupLedgersSection() {
@@ -498,8 +348,12 @@ class DashboardViewController: UIViewController {
         btnViewAll.setTitleColor(.white, for: .normal)
         btnViewAll.titleLabel?.font = .systemFont(ofSize: 14, weight: .bold)
         btnViewAll.backgroundColor = UIColor(red: 0.05, green: 0.43, blue: 0.99, alpha: 1)
-        btnViewAll.layer.cornerRadius = 14
-        btnViewAll.heightAnchor.constraint(equalToConstant: 48).isActive = true
+        btnViewAll.layer.cornerRadius = 15
+        btnViewAll.layer.shadowColor = UIColor(red: 0.05, green: 0.43, blue: 0.99, alpha: 0.35).cgColor
+        btnViewAll.layer.shadowOpacity = 1
+        btnViewAll.layer.shadowRadius = 8
+        btnViewAll.layer.shadowOffset = CGSize(width: 0, height: 4)
+        btnViewAll.heightAnchor.constraint(equalToConstant: 52).isActive = true
         btnViewAll.addTarget(self, action: #selector(didTapViewAllInvoices), for: .touchUpInside)
         contentStack.addArrangedSubview(btnViewAll)
     }
@@ -525,7 +379,6 @@ class DashboardViewController: UIViewController {
         else if role.caseInsensitiveCompare("SUPER_ADMIN") == .orderedSame { displayRole = "System Admin" }
 
         userRoleLabLbl.text = "\(displayRole) • \(lab)"
-        userGreetingLbl.text = "Live Sync • Pay-As-You-Go Active"
     }
 
     // ── Network Fetch ────────────────────────────────────────────────────────
@@ -567,32 +420,11 @@ class DashboardViewController: UIViewController {
         let netProfit = json["netProfit"] as? Double ?? 0.0
         let pendingDue = json["pendingCollections"] as? Double ?? 0.0
 
-        let grossBilling = json["grossBilling"] as? Double ?? 0.0
-        let totalDiscounts = json["totalDiscounts"] as? Double ?? 0.0
-        let totalCGST = json["totalCGST"] as? Double ?? 0.0
-        let totalSGST = json["totalSGST"] as? Double ?? 0.0
-
-        let invoicesCount = json["invoicesCount"] as? Int ?? 0
-
         // Bind Primary KPIs
         lblTotalRevenue.text = formatINR(totalRev)
         lblTotalExpenses.text = formatINR(totalExp)
         lblNetProfit.text = formatINR(netProfit)
         lblPendingDue.text = formatINR(pendingDue)
-
-        lblInvoicesCount.text = invoicesCount > 0 ? "\(invoicesCount) Invoices Generated" : "Excl. cancelled"
-        lblExpensesCount.text = "All logged expenses"
-        lblPendingCount.text = "Unpaid invoices"
-
-        // Bind Tax & Discounts
-        lblGrossBilling.text = formatINR(grossBilling)
-        lblDiscountsGiven.text = formatINR(totalDiscounts)
-
-        let discPercent = grossBilling > 0 ? ((totalDiscounts / grossBilling) * 100.0) : 0.0
-        lblDiscountPercent.text = String(format: "%.1f%% of gross billing", discPercent)
-
-        lblCGST.text = formatINR(totalCGST)
-        lblSGST.text = formatINR(totalSGST)
 
         // Bind Ledgers
         cachedInvoices = json["recentInvoices"] as? [[String: Any]] ?? []

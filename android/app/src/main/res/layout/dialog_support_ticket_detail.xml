@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/bg_bottom_sheet"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:paddingTop="12dp"
+    android:paddingBottom="16dp">
+
+    <!-- Bottom sheet drag pill -->
+    <View
+        android:layout_width="40dp"
+        android:layout_height="4dp"
+        android:background="#CBD5E1"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="12dp" />
+
+    <!-- Header Row: Ticket Number + Chips + Close -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/tvDetailTicketNumber"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_ticket_number"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp"
+            android:text="TKT-1001"
+            android:fontFamily="monospace"
+            android:textColor="#334155"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvDetailCategory"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:background="@drawable/bg_ticket_number"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp"
+            android:text="TECHNICAL"
+            android:textColor="#475569"
+            android:textSize="10sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvDetailPriority"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:background="@drawable/bg_ticket_number"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp"
+            android:text="HIGH"
+            android:textColor="#D97706"
+            android:textSize="10sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvDetailStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:background="@drawable/bg_ticket_badge_open"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp"
+            android:text="OPEN"
+            android:textColor="#DC2626"
+            android:textSize="10sp"
+            android:textStyle="bold" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <FrameLayout
+            android:id="@+id/btnCloseDetail"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="@drawable/bg_circle_slate"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_close_cross"
+                android:tint="#64748B" />
+        </FrameLayout>
+    </LinearLayout>
+
+    <!-- Subject Title -->
+    <TextView
+        android:id="@+id/tvDetailSubject"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="Report Generation Failure on OPD"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="#0F172A" />
+
+    <!-- Original Issue Callout Description -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#F1F5F9"
+        android:orientation="vertical"
+        android:padding="10dp"
+        android:layout_marginTop="8dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Initial Description:"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#475569" />
+
+        <TextView
+            android:id="@+id/tvDetailDescription"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="When clicking the print button on patient page..."
+            android:textSize="12sp"
+            android:textColor="#334155"
+            android:lineSpacingExtra="2dp" />
+    </LinearLayout>
+
+    <!-- Divider -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#E2E8F0"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Conversation Thread Title & Live Polling Status -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="6dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Conversation Thread"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="#334155" />
+
+        <TextView
+            android:id="@+id/tvLiveSyncIndicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Real-time Synced"
+            android:textSize="11sp"
+            android:textColor="#10B981"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- Messages Scroll View (Takes remaining vertical space) -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/scrollMessages"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true">
+
+            <LinearLayout
+                android:id="@+id/containerMessagesList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </androidx.core.widget.NestedScrollView>
+
+        <ProgressBar
+            android:id="@+id/pbDetailLoading"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tvNoMessages"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="No messages yet in this ticket."
+            android:textSize="12sp"
+            android:textColor="#94A3B8"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <!-- Reply Composer Section -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="8dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@drawable/bg_search_input_field"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="12dp"
+            android:paddingEnd="6dp">
+
+            <EditText
+                android:id="@+id/etDetailReply"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@null"
+                android:hint="Type your reply or follow-up..."
+                android:textColor="#0F172A"
+                android:textColorHint="#94A3B8"
+                android:textSize="13sp"
+                android:inputType="textCapSentences|textMultiLine"
+                android:maxLines="3" />
+
+            <FrameLayout
+                android:id="@+id/btnSendReply"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="@drawable/bg_btn_primary"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_send"
+                    android:tint="#FFFFFF" />
+
+                <ProgressBar
+                    android:id="@+id/pbSendingReply"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_gravity="center"
+                    android:indeterminateTint="#FFFFFF"
+                    android:visibility="gone" />
+            </FrameLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>

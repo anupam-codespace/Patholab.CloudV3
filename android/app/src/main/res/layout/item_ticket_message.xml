@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingStart="4dp"
+    android:paddingEnd="4dp"
+    android:paddingTop="6dp"
+    android:paddingBottom="6dp">
+
+    <!-- Container for Staff/Agent Message (Left aligned) -->
+    <LinearLayout
+        android:id="@+id/layoutStaffMsg"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="start"
+        android:visibility="gone">
+
+        <!-- Staff Badge & Name -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="4dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_ticket_badge_progress"
+                android:text="Support Desk"
+                android:textColor="#B45309"
+                android:textSize="9sp"
+                android:textStyle="bold"
+                android:paddingStart="6dp"
+                android:paddingEnd="6dp"
+                android:paddingTop="2dp"
+                android:paddingBottom="2dp" />
+
+            <TextView
+                android:id="@+id/tvStaffSenderName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:text="Support Agent"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="#334155" />
+        </LinearLayout>
+
+        <!-- Bubble -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_chat_bubble_staff"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:maxWidth="280dp">
+
+            <TextView
+                android:id="@+id/tvStaffMsgBody"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Hello! We are looking into this report now."
+                android:textColor="#1E293B"
+                android:textSize="13sp"
+                android:lineSpacingExtra="2dp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvStaffMsgTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:text="10:45 AM"
+            android:textSize="10sp"
+            android:textColor="#94A3B8" />
+    </LinearLayout>
+
+    <!-- Container for User/Client Message (Right aligned) -->
+    <LinearLayout
+        android:id="@+id/layoutUserMsg"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="end"
+        android:visibility="gone">
+
+        <!-- Bubble -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_chat_bubble_user"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:maxWidth="280dp">
+
+            <TextView
+                android:id="@+id/tvUserMsgBody"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Here is the error screenshot."
+                android:textColor="#FFFFFF"
+                android:textSize="13sp"
+                android:lineSpacingExtra="2dp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvUserMsgTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:text="10:47 AM"
+            android:textSize="10sp"
+            android:textColor="#94A3B8" />
+    </LinearLayout>
+
+</LinearLayout>

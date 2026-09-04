@@ -28,7 +28,7 @@ function getMatchingRange(parameter: any, patient: any) {
 }
 
 // =========================================================================
-// GET: Fetch Worksheet / Report Data (With Unit Injection)
+// GET: Fetch Worksheet / Report Data (With Unit Injection & Multi-ID Support)
 // =========================================================================
 export async function GET(
   req: NextRequest, 
@@ -38,45 +38,124 @@ export async function GET(
     const user = await getDataFromToken(req);
     if (!user || !user.labId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { id } = await params;
+    const { id: rawId } = await params;
+    const decodedId = decodeURIComponent(rawId).trim();
+    // Normalize cleanId by stripping common prefixes such as rep_, REP_, inv_, INV_, reg-, REG-
+    const cleanId = decodedId.replace(/^(rep_|REP_|inv_|INV_|reg-|REG-|p-|P-)/i, '').trim();
 
-    const whereCondition = id.startsWith('P-') 
-      ? { patientId: id, labId: user.labId } 
-      : { id: id, labId: user.labId };
-
-    const patientData = await prisma.patient.findFirst({
-      where: whereCondition,
-      include: {
-        lab: {
+    const patientInclude = {
+      lab: {
+        include: {
+          reportTemplates: { where: { isActive: true }, take: 1 }
+        }
+      }, 
+      tests: {
+        where: { status: { not: 'CANCELLED' } },
+        orderBy: { createdAt: 'desc' as const }, 
+        include: {
+          doctor: { include: { user: true } },
+          agency: true,
+          sample: true,
+          invoice: true,
+          results: { orderBy: { id: 'asc' as const } },
+          customResults: true, 
+          testTemplate: {
             include: {
-                reportTemplates: { where: { isActive: true }, take: 1 }
+              Department: true,
+              SampleType: true,
+              parameters: {
+                include: { parameter: { include: { referenceRanges: true } } },
+                orderBy: { order: 'asc' as const }
+              },
+              customFields: { include: { field: true }, orderBy: { order: 'asc' as const } }
             }
-        }, 
-        tests: {
-          where: { status: { not: 'CANCELLED' } },
-          orderBy: { createdAt: 'desc' }, 
-          include: {
-            doctor: { include: { user: true } },
-            agency: true,
-            sample: true,
-            invoice: true,
-            results: { orderBy: { id: 'asc' } },
-            customResults: true, 
-            testTemplate: {
-              include: {
-                Department: true,
-                SampleType: true,
-                parameters: {
-                  include: { parameter: { include: { referenceRanges: true } } },
-                  orderBy: { order: 'asc' }
-                },
-                customFields: { include: { field: true }, orderBy: { order: 'asc' } }
-              }
-            },
-          }
+          },
         }
       }
+    };
+
+    // 1. Try finding patient directly by id, patientId, or clean variants
+    let patientData = await prisma.patient.findFirst({
+      where: {
+        OR: [
+          { id: decodedId },
+          { id: cleanId },
+          { patientId: decodedId },
+          { patientId: cleanId },
+          { patientId: `P-${cleanId}` },
+          { patientId: `PAT-${cleanId}` },
+        ],
+        labId: user.labId
+      },
+      include: patientInclude
     });
+
+    // 2. Try through Invoice if not found
+    if (!patientData) {
+      const matchingInvoice = await prisma.invoice.findFirst({
+        where: {
+          OR: [
+            { invoiceNumber: decodedId },
+            { invoiceNumber: cleanId },
+            { id: decodedId },
+            { id: cleanId },
+          ],
+          labId: user.labId
+        },
+        select: { patientId: true }
+      });
+
+      if (matchingInvoice?.patientId) {
+        patientData = await prisma.patient.findFirst({
+          where: { id: matchingInvoice.patientId, labId: user.labId },
+          include: patientInclude
+        });
+      }
+    }
+
+    // 3. Try through Test if not found
+    if (!patientData) {
+      const matchingTest = await prisma.test.findFirst({
+        where: {
+          OR: [
+            { id: decodedId },
+            { id: cleanId },
+            { testNumber: decodedId },
+            { testNumber: cleanId },
+          ],
+          labId: user.labId
+        },
+        select: { patientId: true }
+      });
+
+      if (matchingTest?.patientId) {
+        patientData = await prisma.patient.findFirst({
+          where: { id: matchingTest.patientId, labId: user.labId },
+          include: patientInclude
+        });
+      }
+    }
+
+    // 4. Try through Report if not found
+    if (!patientData) {
+      const matchingReport = await prisma.report.findFirst({
+        where: {
+          OR: [
+            { id: decodedId },
+            { id: cleanId },
+          ],
+          labId: user.labId
+        },
+        select: { patientId: true }
+      });
+
+      if (matchingReport?.patientId) {
+        patientData = await prisma.patient.findFirst({
+          where: { id: matchingReport.patientId, labId: user.labId },
+          include: patientInclude
+        });
+      }
+    }
 
     if (!patientData) return NextResponse.json({ error: "Patient not found" }, { status: 404 });
 
@@ -96,17 +175,36 @@ export async function GET(
     masterParams.forEach(p => paramUnitMap.set(p.code, p.unit));
 
     // --- MAP TESTS FOR FRONTEND ---
-    const mappedTests = patientData.tests.map(t => ({
-      ...t,
-      results: t.results.map(r => ({
+    const mappedTests = patientData.tests.map(t => {
+      let formattedResults = t.results.map(r => ({
          ...r,
          // The frontend maps data using "parameterName" and "value"
          parameterName: r.printName || r.parameterCode,
          value: r.textValue || (r.numericValue !== null ? r.numericValue.toString() : ""),
          // Inject the missing unit so the PDF Report displays it!
          unit: paramUnitMap.get(r.parameterCode) || "" 
-      }))
-    }));
+      }));
+
+      // If test has no results entered yet, populate default rows from template so report is not empty
+      if (formattedResults.length === 0 && t.testTemplate?.parameters?.length) {
+        formattedResults = t.testTemplate.parameters.map((tp: any) => ({
+          id: `tpl-${tp.id}`,
+          parameterCode: tp.parameter?.code || `param_${tp.id}`,
+          parameterName: tp.parameter?.name || tp.parameter?.code || "Investigation",
+          value: t.status === "APPROVED" || t.status === "COMPLETED" ? "-" : "Pending",
+          unit: tp.parameter?.unit || "",
+          refRangeMin: tp.parameter?.referenceRanges?.[0]?.minAge ?? null,
+          refRangeMax: tp.parameter?.referenceRanges?.[0]?.maxAge ?? null,
+          referenceRangeText: tp.parameter?.referenceRanges?.[0] ? 
+            `${tp.parameter.referenceRanges[0].minAge ?? ''} - ${tp.parameter.referenceRanges[0].maxAge ?? ''}` : "-"
+        }));
+      }
+
+      return {
+        ...t,
+        results: formattedResults
+      };
+    });
     patientData.tests = mappedTests as any;
 
     return NextResponse.json(patientData);

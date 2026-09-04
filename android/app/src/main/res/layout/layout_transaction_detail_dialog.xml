@@ -97,7 +97,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="✓ Successfully Settled"
+                android:text="Successfully Settled"
                 android:textSize="12.5sp"
                 android:textStyle="bold"
                 android:textColor="#059669" />

@@ -132,16 +132,36 @@ public class HomeNativeManager {
     private static final String[][] BANNERS = {
             {"₹ 2.5 Per\nRegistration",
                     "Cloud reporting, instant WhatsApp sharing & B2B automation at the lowest cost.",
-                    "Recharge Now →",
+                    "Recharge Wallet",
                     "/workspace/wallet?action=topup"},
             {"Instant WhatsApp\nDelivery",
-                    "Send diagnostic reports directly to patients on WhatsApp with one tap.",
-                    "Explore Now →",
+                    "Deliver diagnostic test reports directly to patients on WhatsApp with one click.",
+                    "Share Reports",
                     "/workspace/reports"},
             {"Automated\nLab Billing",
-                    "Generate GST-compliant invoices and track pending dues effortlessly.",
-                    "View Billing →",
+                    "Generate GST-compliant invoices, track pending dues & settle payments easily.",
+                    "Manage Billing",
                     "/workspace/billing"},
+            {"1,000+ Pathology\nTest Catalogs",
+                    "Pre-configured test parameters, biological reference ranges and custom pricing.",
+                    "Explore Catalog",
+                    "/workspace/test-management"},
+            {"NABL & ISO\nQR Verification",
+                    "Tamper-proof digital verification QR codes embedded in every printed report.",
+                    "Verify Reports",
+                    "/workspace/reports"},
+            {"Sample Accession\n& Barcodes",
+                    "Automated tube color-coding, specimen barcoding and rapid accessioning.",
+                    "Accession Samples",
+                    "/workspace/samples"},
+            {"Phlebotomy &\nHome Collection",
+                    "Assign field technicians, track collection runs and dispatch runners live.",
+                    "Track Logistics",
+                    "/workspace/logistics"},
+            {"Executive Financial\nAnalytics",
+                    "Monitor lab revenue, expense breakdown, net margins and clinical throughput.",
+                    "View Analytics",
+                    "/workspace/analytics"}
     };
 
     // ── Polling handlers ──────────────────────────────────────────────────────
@@ -222,6 +242,23 @@ public class HomeNativeManager {
                 v.setPadding(v.getPaddingStart(), targetTop, v.getPaddingEnd(), dp(36));
                 return insets;
             });
+            if (homeHeader instanceof ViewGroup) {
+                ((ViewGroup) homeHeader).setClipChildren(false);
+                ((ViewGroup) homeHeader).setClipToPadding(false);
+            }
+        }
+        if (homeRoot instanceof ViewGroup) {
+            ((ViewGroup) homeRoot).setClipChildren(false);
+            ((ViewGroup) homeRoot).setClipToPadding(false);
+        }
+        if (avatarContainer instanceof ViewGroup) {
+            ((ViewGroup) avatarContainer).setClipChildren(false);
+            ((ViewGroup) avatarContainer).setClipToPadding(false);
+        }
+        View statusContainer = homeRoot.findViewById(R.id.homeStatusContainer);
+        if (statusContainer instanceof ViewGroup) {
+            ((ViewGroup) statusContainer).setClipChildren(false);
+            ((ViewGroup) statusContainer).setClipToPadding(false);
         }
 
         // Profile Avatar tap → Show modern popup menu (Profile Settings & Sign Out)
@@ -680,7 +717,12 @@ public class HomeNativeManager {
     }
 
     private void triggerWelcomeNotificationIfEligible() {
-        // Welcoming popups, floating banners, and notifications removed per user request.
+        if (ctx == null) return;
+        String token = getAuthToken();
+        String userId = extractNameFromJwt(token);
+        if (userId == null || userId.isEmpty()) userId = AuthManager.getUserEmail(ctx);
+        if (userId == null || userId.isEmpty()) userId = currentFullName;
+        MobileNotificationHelper.scheduleWelcomeNotification(ctx, currentFullName, userId);
     }
 
     private void triggerLowBalanceAlertIfEligible(double balance) {
@@ -974,7 +1016,7 @@ public class HomeNativeManager {
                 // 1. OVERVIEW
                 List<SheetModDef> overviewList = Arrays.asList(
                         new SheetModDef("Home", "/workspace", "ic_nav_dashboard", "bg_mod_icon_blue"),
-                        new SheetModDef("Dashboard", "/workspace/analytics", "ic_nav_categories", "bg_mod_icon_sky"),
+                        new SheetModDef("Dashboard", "/dashboard", "ic_nav_categories", "bg_mod_icon_sky"),
                         new SheetModDef("Financial Analytics", "/workspace/analytics", "ic_chart", "bg_mod_icon_emerald"),
                         new SheetModDef("Online Booking", "/workspace/online-booking", "ic_calendar", "bg_mod_icon_purple")
                 );
@@ -1190,6 +1232,8 @@ public class HomeNativeManager {
             ctx.startActivity(new Intent(ctx, PatientWorklistActivity.class));
         } else if (path.equals("/workspace/staff") || path.startsWith("/workspace/staff")) {
             ctx.startActivity(new Intent(ctx, StaffManagementActivity.class));
+        } else if (path.equals("/workspace/support") || path.startsWith("/workspace/support")) {
+            ctx.startActivity(new Intent(ctx, SupportActivity.class));
         } else if (navListener != null) {
             navListener.onNavigateTo(path);
         }
@@ -1436,10 +1480,10 @@ public class HomeNativeManager {
         if (bannerDots == null) return;
         for (int i = 0; i < bannerDots.getChildCount(); i++) {
             View dot = bannerDots.getChildAt(i);
-            int dpW = i == currentBannerIdx ? 22 : 7;
-            int dpH = 7;
+            int dpW = i == currentBannerIdx ? 18 : 6;
+            int dpH = 6;
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(dp(dpW), dp(dpH));
-            lp.setMargins(dp(3), 0, dp(3), 0);
+            lp.setMargins(dp(2), 0, dp(2), 0);
             dot.setLayoutParams(lp);
             dot.setBackground(ctx.getDrawable(
                     i == currentBannerIdx
@@ -1460,6 +1504,16 @@ public class HomeNativeManager {
             bannerCta.setOnClickListener(v -> {
                 if (path.contains("/workspace/wallet")) {
                     ctx.startActivity(new Intent(ctx, WalletActivity.class));
+                } else if (path.equals("/workspace/reports") || path.startsWith("/workspace/reports")) {
+                    ctx.startActivity(new Intent(ctx, ReportsActivity.class));
+                } else if (path.equals("/workspace/billing") || path.startsWith("/workspace/billing")) {
+                    ctx.startActivity(new Intent(ctx, BillingActivity.class));
+                } else if (path.equals("/workspace/test-management") || path.startsWith("/workspace/test-management")) {
+                    ctx.startActivity(new Intent(ctx, TestManagementActivity.class));
+                } else if (path.equals("/workspace/samples") || path.startsWith("/workspace/samples") || path.contains("accession")) {
+                    ctx.startActivity(new Intent(ctx, SamplesActivity.class));
+                } else if (path.equals("/workspace/analytics") || path.startsWith("/workspace/analytics")) {
+                    ctx.startActivity(new Intent(ctx, FinancialAnalyticsActivity.class));
                 } else if (navListener != null) {
                     navListener.onNavigateTo(path);
                 }
@@ -1474,10 +1528,10 @@ public class HomeNativeManager {
             public void run() {
                 currentBannerIdx = (currentBannerIdx + 1) % BANNERS.length;
                 showBanner(currentBannerIdx);
-                carouselHandler.postDelayed(this, 2800);
+                carouselHandler.postDelayed(this, 3600);
             }
         };
-        carouselHandler.postDelayed(carouselRunnable, 2800);
+        carouselHandler.postDelayed(carouselRunnable, 3600);
         showBanner(0);
     }
 
@@ -1639,74 +1693,188 @@ public class HomeNativeManager {
     // ─────────────────────────────────────────────────────────────────────────
     //  Network Connectivity Monitoring & Status Dot Pulse Animation
     // ─────────────────────────────────────────────────────────────────────────
+    public enum ConnectionState {
+        ONLINE,      // Green = Online
+        CONNECTING,  // Yellow = Connecting/Waiting (checks connectivity for 2-4s)
+        OFFLINE      // Red = Offline
+    }
+
+    private ConnectionState currentConnectionState = ConnectionState.ONLINE;
+    private Runnable pendingOfflineVerificationRunnable = null;
+    private static final int NETWORK_LOSS_VERIFICATION_DELAY_MS = 3000; // 3 seconds (in 2-4s range)
+
     private void initConnectivityMonitor() {
         try {
             ConnectivityManager cm = (ConnectivityManager) ctx.getSystemService(Context.CONNECTIVITY_SERVICE);
             if (cm != null) {
-                Network activeNetwork = cm.getActiveNetwork();
-                NetworkCapabilities caps = cm.getNetworkCapabilities(activeNetwork);
-                isNetworkOnline = caps != null && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
-                updateStatusDot(isNetworkOnline);
+                boolean initialConnected = checkActiveNetworkConnected(cm);
+                setConnectionState(initialConnected ? ConnectionState.ONLINE : ConnectionState.OFFLINE);
 
                 NetworkRequest req = new NetworkRequest.Builder()
                         .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
                         .build();
                 cm.registerNetworkCallback(req, new ConnectivityManager.NetworkCallback() {
                     @Override
-                    public void onAvailable(Network network) {
-                        mainHandler.post(() -> updateStatusDot(true));
+                    public void onAvailable(@NonNull Network network) {
+                        mainHandler.post(() -> {
+                            if (pendingOfflineVerificationRunnable != null) {
+                                mainHandler.removeCallbacks(pendingOfflineVerificationRunnable);
+                                pendingOfflineVerificationRunnable = null;
+                            }
+                            if (currentConnectionState != ConnectionState.ONLINE) {
+                                setConnectionState(ConnectionState.CONNECTING);
+                                mainHandler.postDelayed(() -> {
+                                    if (checkActiveNetworkConnected(cm)) {
+                                        setConnectionState(ConnectionState.ONLINE);
+                                    }
+                                }, 1200);
+                            } else {
+                                setConnectionState(ConnectionState.ONLINE);
+                            }
+                        });
                     }
 
                     @Override
-                    public void onLost(Network network) {
-                        mainHandler.post(() -> updateStatusDot(false));
+                    public void onLost(@NonNull Network network) {
+                        mainHandler.post(() -> {
+                            if (pendingOfflineVerificationRunnable != null) {
+                                mainHandler.removeCallbacks(pendingOfflineVerificationRunnable);
+                            }
+                            // Immediately switch status to Yellow while checking for Wi-Fi / mobile data / internet
+                            setConnectionState(ConnectionState.CONNECTING);
+
+                            pendingOfflineVerificationRunnable = () -> {
+                                boolean stillConnected = checkActiveNetworkConnected(cm);
+                                if (stillConnected) {
+                                    setConnectionState(ConnectionState.ONLINE);
+                                } else {
+                                    // Deep background socket / HTTP reachability probe
+                                    new Thread(() -> {
+                                        boolean probeSuccess = probeInternetReachability();
+                                        mainHandler.post(() -> {
+                                            if (probeSuccess) {
+                                                setConnectionState(ConnectionState.ONLINE);
+                                            } else {
+                                                setConnectionState(ConnectionState.OFFLINE);
+                                            }
+                                        });
+                                    }).start();
+                                }
+                            };
+                            mainHandler.postDelayed(pendingOfflineVerificationRunnable, NETWORK_LOSS_VERIFICATION_DELAY_MS);
+                        });
+                    }
+
+                    @Override
+                    public void onCapabilitiesChanged(@NonNull Network network, @NonNull NetworkCapabilities caps) {
+                        if (caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                                && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)) {
+                            mainHandler.post(() -> {
+                                if (pendingOfflineVerificationRunnable != null) {
+                                    mainHandler.removeCallbacks(pendingOfflineVerificationRunnable);
+                                    pendingOfflineVerificationRunnable = null;
+                                }
+                                setConnectionState(ConnectionState.ONLINE);
+                            });
+                        }
                     }
                 });
             }
         } catch (Exception e) {
-            updateStatusDot(true);
+            setConnectionState(ConnectionState.ONLINE);
         }
     }
 
+    private boolean checkActiveNetworkConnected(ConnectivityManager cm) {
+        if (cm == null) return false;
+        try {
+            Network activeNetwork = cm.getActiveNetwork();
+            if (activeNetwork == null) return false;
+            NetworkCapabilities caps = cm.getNetworkCapabilities(activeNetwork);
+            return caps != null && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private boolean probeInternetReachability() {
+        try {
+            java.net.Socket socket = new java.net.Socket();
+            java.net.SocketAddress socketAddress = new java.net.InetSocketAddress("8.8.8.8", 53);
+            socket.connect(socketAddress, 1500);
+            socket.close();
+            return true;
+        } catch (Exception e) {
+            try {
+                java.net.HttpURLConnection urlc = (java.net.HttpURLConnection)
+                        (new java.net.URL("https://clients3.google.com/generate_204").openConnection());
+                urlc.setRequestProperty("User-Agent", "Android");
+                urlc.setRequestProperty("Connection", "close");
+                urlc.setConnectTimeout(1500);
+                urlc.setReadTimeout(1500);
+                urlc.connect();
+                return (urlc.getResponseCode() == 204 || urlc.getResponseCode() == 200);
+            } catch (Exception ignored) {
+                return false;
+            }
+        }
+    }
+
+    public void setConnectionState(ConnectionState state) {
+        currentConnectionState = state;
+        isNetworkOnline = (state == ConnectionState.ONLINE);
+        if (statusDot == null || statusWave == null) return;
+
+        int dotRes;
+        int waveRes;
+        switch (state) {
+            case ONLINE:
+                dotRes = R.drawable.bg_online_dot;
+                waveRes = R.drawable.bg_status_wave_green;
+                break;
+            case CONNECTING:
+                dotRes = R.drawable.bg_connecting_dot;
+                waveRes = R.drawable.bg_status_wave_yellow;
+                break;
+            case OFFLINE:
+            default:
+                dotRes = R.drawable.bg_offline_dot;
+                waveRes = R.drawable.bg_status_wave_red;
+                break;
+        }
+
+        statusDot.setBackgroundResource(dotRes);
+        statusWave.setBackgroundResource(waveRes);
+        ensureWaveAnimation();
+    }
+
+    private void ensureWaveAnimation() {
+        if (statusWave == null) return;
+        statusWave.setVisibility(View.VISIBLE);
+        if (statusDotPulseAnim != null && statusDotPulseAnim.isStarted()) {
+            return; // Smoothly running continuous animation, without interruption!
+        }
+
+        statusWave.setScaleX(1.0f);
+        statusWave.setScaleY(1.0f);
+        statusWave.setAlpha(0.75f);
+
+        ObjectAnimator waveScaleX = ObjectAnimator.ofFloat(statusWave, "scaleX", 1.0f, 2.2f);
+        ObjectAnimator waveScaleY = ObjectAnimator.ofFloat(statusWave, "scaleY", 1.0f, 2.2f);
+        ObjectAnimator waveAlpha = ObjectAnimator.ofFloat(statusWave, "alpha", 0.75f, 0.0f);
+        waveScaleX.setRepeatCount(ValueAnimator.INFINITE);
+        waveScaleY.setRepeatCount(ValueAnimator.INFINITE);
+        waveAlpha.setRepeatCount(ValueAnimator.INFINITE);
+
+        statusDotPulseAnim = new AnimatorSet();
+        statusDotPulseAnim.playTogether(waveScaleX, waveScaleY, waveAlpha);
+        statusDotPulseAnim.setDuration(1600);
+        statusDotPulseAnim.setInterpolator(new android.view.animation.DecelerateInterpolator());
+        statusDotPulseAnim.start();
+    }
+
     private void updateStatusDot(boolean online) {
-        isNetworkOnline = online;
-        if (statusDot == null) return;
-
-        if (statusDotPulseAnim != null) {
-            statusDotPulseAnim.cancel();
-            statusDotPulseAnim = null;
-        }
-
-        statusDot.setScaleX(1.0f);
-        statusDot.setScaleY(1.0f);
-        statusDot.setAlpha(1.0f);
-
-        if (online) {
-            statusDot.setBackgroundResource(R.drawable.bg_online_dot);
-            if (statusWave != null) {
-                statusWave.setVisibility(View.VISIBLE);
-                statusWave.setBackgroundResource(R.drawable.bg_status_wave_white);
-
-                // Smooth expanding wave ripple emitting from behind the dot
-                ObjectAnimator waveScaleX = ObjectAnimator.ofFloat(statusWave, "scaleX", 1.0f, 2.5f);
-                ObjectAnimator waveScaleY = ObjectAnimator.ofFloat(statusWave, "scaleY", 1.0f, 2.5f);
-                ObjectAnimator waveAlpha = ObjectAnimator.ofFloat(statusWave, "alpha", 0.85f, 0.0f);
-                waveScaleX.setRepeatCount(ValueAnimator.INFINITE);
-                waveScaleY.setRepeatCount(ValueAnimator.INFINITE);
-                waveAlpha.setRepeatCount(ValueAnimator.INFINITE);
-
-                statusDotPulseAnim = new AnimatorSet();
-                statusDotPulseAnim.playTogether(waveScaleX, waveScaleY, waveAlpha);
-                statusDotPulseAnim.setDuration(1500);
-                statusDotPulseAnim.setInterpolator(new android.view.animation.DecelerateInterpolator());
-                statusDotPulseAnim.start();
-            }
-        } else {
-            statusDot.setBackgroundResource(R.drawable.bg_offline_dot);
-            if (statusWave != null) {
-                statusWave.setVisibility(View.GONE);
-            }
-        }
+        setConnectionState(online ? ConnectionState.ONLINE : ConnectionState.OFFLINE);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -1969,6 +2137,29 @@ public class HomeNativeManager {
                     mainHandler.post(this::hideWorklistSection); 
                     return; 
                 }
+
+                // 1. Primary: /api/workspace/patients?limit=10 (Contains complete age, gender, tests, and invoices)
+                try {
+                    URL patientsUrl = new URL(BASE_URL + "/api/workspace/patients?limit=10");
+                    HttpURLConnection pConn = (HttpURLConnection) patientsUrl.openConnection();
+                    pConn.setRequestProperty("Authorization", "Bearer " + token);
+                    pConn.setRequestProperty("Cookie", "token=" + token);
+                    pConn.setConnectTimeout(8000);
+                    pConn.setReadTimeout(8000);
+                    if (pConn.getResponseCode() == 200) {
+                        String json = readStream(pConn.getInputStream());
+                        JSONObject root = new JSONObject(json);
+                        JSONArray dataArr = root.optJSONArray("data");
+                        if (dataArr == null && root.has("patients")) dataArr = root.optJSONArray("patients");
+                        if (dataArr != null && dataArr.length() > 0) {
+                            JSONArray finalData = dataArr;
+                            mainHandler.post(() -> buildWorklistCards(finalData));
+                            return;
+                        }
+                    }
+                } catch (Exception ignored) {}
+
+                // 2. Fallback: /api/labs/dashboard?range=TODAY
                 URL url = new URL(BASE_URL + "/api/labs/dashboard?range=TODAY");
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestProperty("Authorization", "Bearer " + token);
@@ -2002,11 +2193,60 @@ public class HomeNativeManager {
         }
     }
 
+    private void detectAndNotifyNewPatientsFromWeb(JSONArray patients) {
+        if (patients == null || patients.length() == 0 || ctx == null) return;
+        try {
+            SharedPreferences notifPrefs = ctx.getSharedPreferences("patholab_patient_sync", Context.MODE_PRIVATE);
+            String userEmail = AuthManager.getUserEmail(ctx);
+            if (userEmail == null || userEmail.trim().isEmpty()) {
+                userEmail = "default_user";
+            }
+            String syncDoneKey = "initial_sync_done_" + userEmail;
+            String knownKey = "known_patient_ids_" + userEmail;
+
+            java.util.Set<String> knownIds = new java.util.HashSet<>(notifPrefs.getStringSet(knownKey, new java.util.HashSet<>()));
+            boolean isInitialSyncDone = notifPrefs.getBoolean(syncDoneKey, false);
+
+            if (!isInitialSyncDone) {
+                // Populate existing patient IDs on first sync without sending noisy notifications
+                for (int i = 0; i < patients.length(); i++) {
+                    JSONObject p = patients.getJSONObject(i);
+                    String pid = p.optString("id", p.optString("patientId", ""));
+                    if (!pid.isEmpty()) knownIds.add(pid);
+                }
+                notifPrefs.edit().putBoolean(syncDoneKey, true).putStringSet(knownKey, knownIds).apply();
+                return;
+            }
+
+            // Subsequent polls: detect newly added patients from website or other devices
+            boolean hasNew = false;
+            for (int i = 0; i < patients.length(); i++) {
+                JSONObject p = patients.getJSONObject(i);
+                String pid = p.optString("id", p.optString("patientId", ""));
+                if (pid.isEmpty()) continue;
+
+                if (!knownIds.contains(pid)) {
+                    knownIds.add(pid);
+                    hasNew = true;
+                    String pName = p.optString("name", "New Patient");
+                    String pUhid = p.optString("patientId", p.optString("code", ""));
+                    MobileNotificationHelper.postNewPatientNotification(ctx, pName, pUhid);
+                }
+            }
+            if (hasNew) {
+                notifPrefs.edit().putStringSet(knownKey, knownIds).apply();
+            }
+        } catch (Exception ignored) {}
+    }
+
     private void buildWorklistCards(JSONArray patients) {
         if (patients == null || patients.length() == 0) {
             hideWorklistSection();
             return;
         }
+
+        // Real-time synchronization: notify app when user/staff registers a patient on the web app
+        detectAndNotifyNewPatientsFromWeb(patients);
 
         if (sectionWorklistWrapper != null) {
             sectionWorklistWrapper.setVisibility(View.VISIBLE);
@@ -2028,7 +2268,7 @@ public class HomeNativeManager {
 
                 // Status & Test Name
                 JSONArray tests = p.optJSONArray("tests");
-                String status   = "Pending";
+                String status   = "Accepted";
                 String testName = "Routine Diagnostics";
                 int testCount   = (tests != null) ? tests.length() : 0;
                 if (tests != null && tests.length() > 0) {
@@ -2037,18 +2277,7 @@ public class HomeNativeManager {
                     String s = t.optString("status", "PENDING");
                     if ("COMPLETED".equalsIgnoreCase(s) || "APPROVED".equalsIgnoreCase(s) || "READY".equalsIgnoreCase(s)) status = "Ready";
                     else if ("IN_PROGRESS".equalsIgnoreCase(s) || "TESTING".equalsIgnoreCase(s) || "COLLECTED".equalsIgnoreCase(s)) status = "Processing";
-                }
-
-                // Invoices & Billing
-                JSONArray invs = p.optJSONArray("invoices");
-                double total   = 0;
-                double paidAmount = 0;
-                boolean paid   = false;
-                if (invs != null && invs.length() > 0) {
-                    JSONObject inv = invs.getJSONObject(0);
-                    total = inv.optDouble("grandTotal", inv.optDouble("totalAmount", 0));
-                    paidAmount = inv.optDouble("paidAmount", 0);
-                    paid  = "PAID".equalsIgnoreCase(inv.optString("paymentStatus", "")) || (total > 0 && paidAmount >= total);
+                    else status = "Accepted";
                 }
 
                 View card = inflater.inflate(R.layout.item_patient_card, worklistContainer, false);
@@ -2059,12 +2288,10 @@ public class HomeNativeManager {
                 TextView tvName           = card.findViewById(R.id.cardPatientName);
                 TextView tvDetails        = card.findViewById(R.id.cardPatientDetails);
                 View     cardTestBox      = card.findViewById(R.id.cardTestBox);
+                ImageView cardTestIcon    = card.findViewById(R.id.cardTestIcon);
                 TextView tvTest           = card.findViewById(R.id.cardTestName);
-                TextView tvTestStatusPill = card.findViewById(R.id.cardTestStatusPill);
                 TextView tvTestCount      = card.findViewById(R.id.cardTestCount);
-                TextView tvPrice          = card.findViewById(R.id.cardPrice);
-                TextView tvPaid           = card.findViewById(R.id.cardPaidLabel);
-                TextView tvDue            = card.findViewById(R.id.cardDueLabel);
+                TextView tvDemographics   = card.findViewById(R.id.cardPatientDemographics);
                 View     btnWA            = card.findViewById(R.id.cardWhatsappBtn);
 
                 if (tvInitial != null) {
@@ -2073,49 +2300,42 @@ public class HomeNativeManager {
                 }
                 if (tvCode != null) tvCode.setText(patientId);
                 if (tvName != null) tvName.setText(name);
+                if (tvDetails != null) tvDetails.setText("Registered Patient");
 
-                // Build demographics (NO patient phone number)
-                StringBuilder demo = new StringBuilder();
-                if (age > 0) demo.append(age).append(" Yrs");
-                if (!gender.isEmpty()) {
-                    if (demo.length() > 0) demo.append(" • ");
-                    demo.append(gender);
+                // Replace ₹0 Due bottom row with Patient Age & Gender
+                if (tvDemographics != null) {
+                    StringBuilder demoSb = new StringBuilder();
+                    if (age > 0) {
+                        demoSb.append(age).append(" Yrs");
+                    }
+                    if (!gender.isEmpty()) {
+                        String capGender = gender.substring(0, 1).toUpperCase() + (gender.length() > 1 ? gender.substring(1).toLowerCase() : "");
+                        if (demoSb.length() > 0) demoSb.append(" • ");
+                        demoSb.append(capGender);
+                    }
+                    if (demoSb.length() == 0) {
+                        demoSb.append("General Patient");
+                    }
+                    tvDemographics.setText(demoSb.toString());
                 }
-                if (demo.length() == 0) demo.append("Registered Patient");
-                if (tvDetails != null) tvDetails.setText(demo.toString());
 
                 if (tvTest != null) tvTest.setText(testName);
                 if (tvTestCount != null) {
                     if (testCount > 1) {
                         tvTestCount.setVisibility(View.VISIBLE);
                         tvTestCount.setText(testCount + " Tests");
+                        tvTestCount.setTextColor(Color.WHITE);
                     } else {
                         tvTestCount.setVisibility(View.GONE);
                     }
                 }
-                if (tvPrice != null) tvPrice.setText(String.format(Locale.getDefault(), "₹ %,.0f", total));
 
-                if (paid) {
-                    if (tvPaid != null) tvPaid.setVisibility(View.VISIBLE);
-                    if (tvDue != null) tvDue.setVisibility(View.GONE);
-                } else {
-                    if (tvPaid != null) tvPaid.setVisibility(View.GONE);
-                    if (tvDue != null) {
-                        tvDue.setVisibility(View.VISIBLE);
-                        double due = Math.max(0, total - paidAmount);
-                        if (due > 0) tvDue.setText(String.format(Locale.getDefault(), "Due: ₹ %,.0f", due));
-                    }
-                }
-
-                // 3-State Test Status Styling: Red = Accepted, Blue = Processing, Green = Report Ready / Finished
+                // 3-State Test Status Styling: Deep Green = Accepted, Blue = Processing, Emerald = Report Ready / Finished
                 if ("Ready".equalsIgnoreCase(status)) {
                     // GREEN STATE: Finished & Report Generated
                     if (cardTestBox != null) cardTestBox.setBackground(ctx.getDrawable(R.drawable.bg_test_box_ready));
+                    if (cardTestIcon != null) cardTestIcon.setColorFilter(Color.parseColor("#059669"));
                     if (tvTest != null) tvTest.setTextColor(Color.parseColor("#059669"));
-                    if (tvTestStatusPill != null) {
-                        tvTestStatusPill.setText("● Ready");
-                        tvTestStatusPill.setTextColor(Color.parseColor("#059669"));
-                    }
                     if (tvStatus != null) {
                         tvStatus.setText("Report Ready");
                         tvStatus.setTextColor(Color.parseColor("#059669"));
@@ -2124,28 +2344,22 @@ public class HomeNativeManager {
                 } else if ("Processing".equalsIgnoreCase(status)) {
                     // BLUE STATE: In Testing / Processing
                     if (cardTestBox != null) cardTestBox.setBackground(ctx.getDrawable(R.drawable.bg_test_box_processing));
+                    if (cardTestIcon != null) cardTestIcon.setColorFilter(Color.parseColor("#0D6EFD"));
                     if (tvTest != null) tvTest.setTextColor(Color.parseColor("#0D6EFD"));
-                    if (tvTestStatusPill != null) {
-                        tvTestStatusPill.setText("● Processing");
-                        tvTestStatusPill.setTextColor(Color.parseColor("#0D6EFD"));
-                    }
                     if (tvStatus != null) {
                         tvStatus.setText("Processing");
                         tvStatus.setTextColor(Color.parseColor("#0D6EFD"));
                         tvStatus.setBackground(ctx.getDrawable(R.drawable.bg_status_processing));
                     }
                 } else {
-                    // RED STATE: Accepted / Sample Received / Pending
+                    // DEEP GREEN ACCEPTED STATE: Top status badge deep green (#047857) for high visibility
                     if (cardTestBox != null) cardTestBox.setBackground(ctx.getDrawable(R.drawable.bg_test_box_accepted));
-                    if (tvTest != null) tvTest.setTextColor(Color.parseColor("#DC2626"));
-                    if (tvTestStatusPill != null) {
-                        tvTestStatusPill.setText("● Accepted");
-                        tvTestStatusPill.setTextColor(Color.parseColor("#DC2626"));
-                    }
+                    if (cardTestIcon != null) cardTestIcon.setColorFilter(Color.parseColor("#047857"));
+                    if (tvTest != null) tvTest.setTextColor(Color.parseColor("#047857"));
                     if (tvStatus != null) {
                         tvStatus.setText("Accepted");
-                        tvStatus.setTextColor(Color.parseColor("#DC2626"));
-                        tvStatus.setBackground(ctx.getDrawable(R.drawable.bg_status_pending));
+                        tvStatus.setTextColor(Color.parseColor("#047857")); // Deep Green
+                        tvStatus.setBackground(ctx.getDrawable(R.drawable.bg_status_accepted));
                     }
                 }
 

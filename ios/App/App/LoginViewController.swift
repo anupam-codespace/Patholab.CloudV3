@@ -264,6 +264,7 @@ class LoginViewController: AuthBaseViewController {
                 self.setLoading(false)
                 if success {
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    MobileNotificationHelper.shared.scheduleWelcomeNotification(userName: "User", userId: email)
                     if let onLoginSuccess = self.onLoginSuccess {
                         onLoginSuccess()
                     } else if let app = UIApplication.shared.delegate as? AppDelegate {

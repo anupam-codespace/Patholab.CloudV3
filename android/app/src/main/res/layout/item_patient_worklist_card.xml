@@ -94,7 +94,7 @@
                 android:paddingEnd="8dp"
                 android:paddingTop="3dp"
                 android:paddingBottom="3dp"
-                android:text="✓ Ready &amp; Approved"
+                android:text="Ready &amp; Approved"
                 android:textSize="11sp"
                 android:textStyle="bold"
                 android:textColor="#059669" />
@@ -158,10 +158,16 @@
                 android:id="@+id/lblWorklistDoctor"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Dr. Sarah Jenkins (Cardiology)"
-                android:textSize="11.5sp"
+                android:background="@drawable/bg_pill_white"
+                android:backgroundTint="#FEF08A"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:paddingTop="3dp"
+                android:paddingBottom="3dp"
+                android:text="Dr. Subhajit Mondal"
+                android:textSize="11sp"
                 android:textStyle="bold"
-                android:textColor="#475569" />
+                android:textColor="#0F172A" />
 
         </LinearLayout>
 
@@ -178,7 +184,8 @@
                 android:id="@+id/lblWorklistTestsList"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Complete Blood Count (CBC) [Approved] • Vitamin D (25-OH) [Approved] • Thyroid TSH [In Testing]"
+                android:lineSpacingExtra="5dp"
+                android:text="Complete Blood Count (CBC) [Ready] • Vitamin D (25-OH) [Ready]"
                 android:textSize="12.5sp"
                 android:textStyle="bold"
                 android:textColor="#1E293B" />

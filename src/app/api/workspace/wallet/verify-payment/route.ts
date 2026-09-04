@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth"; // Using your secure session helper
+import { getDataFromToken, getCurrentUser } from "@/lib/auth";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
 import { jsPDF } from "jspdf";
@@ -10,8 +10,27 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await getCurrentUser();
-    if (!user || !user.labId) {
+    const userFromToken = await getDataFromToken(req);
+    const currentUser = await getCurrentUser();
+    const user = userFromToken || currentUser;
+
+    let labId = user?.labId;
+    if (!labId && user) {
+      const uid = user.userId || user.id;
+      if (uid) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: uid },
+          include: {
+            lab: true,
+            staffLabs: { include: { lab: true } },
+          },
+        });
+        const activeLab = dbUser?.lab || dbUser?.staffLabs?.[0]?.lab;
+        if (activeLab) labId = activeLab.id;
+      }
+    }
+
+    if (!labId || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -42,31 +61,38 @@ export async function POST(req: NextRequest) {
 
     // 3. Update Wallet & Create Ledger Entry atomically
     const newTx = await prisma.$transaction(async (tx) => {
-      const wallet = await tx.labWallet.findUnique({ where: { labId: user.labId as string } });
-      if (!wallet) throw new Error("Wallet not found");
-
-      const newBalance = Number(wallet.balance) + Number(baseAmount);
+      let wallet = await tx.labWallet.findUnique({ where: { labId } });
+      if (!wallet) {
+        wallet = await tx.labWallet.create({
+          data: {
+            labId,
+            balance: 0,
+            perPatientFee: 2.5,
+          },
+        });
+      }
 
       // Extend validity by 1 year from today
       const oneYearFromNow = new Date();
       oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
 
-      await tx.labWallet.update({
-        where: { labId: user.labId as string },
+      const updatedWallet = await tx.labWallet.update({
+        where: { labId },
         data: {
-          balance: newBalance,
+          balance: { increment: Number(baseAmount) },
           validityEndDate: oneYearFromNow,
           isActive: true,
         },
+        select: { balance: true }
       });
 
       // Create and return the transaction record
       return await tx.walletTransaction.create({
         data: {
-          labId: user.labId as string,
+          labId,
           type: "RECHARGE",
-          amount: baseAmount,
-          closingBalance: newBalance,
+          amount: Number(baseAmount),
+          closingBalance: Number(updatedWallet.balance),
           description: `Wallet Recharge (Payment ID: ${razorpay_payment_id})`,
         },
         include: {

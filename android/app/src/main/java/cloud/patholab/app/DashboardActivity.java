@@ -47,21 +47,16 @@ public class DashboardActivity extends AppCompatActivity {
     private SwipeRefreshLayout swipeRefreshDashboard;
     private FrameLayout btnDashboardBack, btnDashboardRefresh;
     private ImageView imgDashboardRefreshIcon;
-    private TextView lblDashboardUserGreeting, lblDashboardUserRoleLab;
+    private TextView lblDashboardUserRoleLab;
 
     // Top-Level KPI Metric Labels
     private TextView lblDashTotalRevenue, lblDashTotalExpenses, lblDashNetProfit, lblDashPendingDue;
-    private TextView lblDashInvoicesCount, lblDashExpensesCount, lblDashPendingCount;
-
-    // Tax & Discount Breakdown Labels
-    private TextView lblDashGrossBilling, lblDashDiscountsGiven, lblDashDiscountPercent;
-    private TextView lblDashCGST, lblDashSGST;
 
     // Ledger Tabs & Containers
     private TextView tabLedgerInvoices, tabLedgerExpenses;
     private LinearLayout containerLedgerItems;
     private TextView lblLedgerEmptyState;
-    private Button btnViewAllInvoices;
+    private com.google.android.material.button.MaterialButton btnViewAllInvoices;
 
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private JSONArray cachedInvoices = new JSONArray();
@@ -85,23 +80,12 @@ public class DashboardActivity extends AppCompatActivity {
         btnDashboardBack = findViewById(R.id.btnDashboardBack);
         btnDashboardRefresh = findViewById(R.id.btnDashboardRefresh);
         imgDashboardRefreshIcon = findViewById(R.id.imgDashboardRefreshIcon);
-        lblDashboardUserGreeting = findViewById(R.id.lblDashboardUserGreeting);
         lblDashboardUserRoleLab = findViewById(R.id.lblDashboardUserRoleLab);
 
         lblDashTotalRevenue = findViewById(R.id.lblDashTotalRevenue);
         lblDashTotalExpenses = findViewById(R.id.lblDashTotalExpenses);
         lblDashNetProfit = findViewById(R.id.lblDashNetProfit);
         lblDashPendingDue = findViewById(R.id.lblDashPendingDue);
-
-        lblDashInvoicesCount = findViewById(R.id.lblDashInvoicesCount);
-        lblDashExpensesCount = findViewById(R.id.lblDashExpensesCount);
-        lblDashPendingCount = findViewById(R.id.lblDashPendingCount);
-
-        lblDashGrossBilling = findViewById(R.id.lblDashGrossBilling);
-        lblDashDiscountsGiven = findViewById(R.id.lblDashDiscountsGiven);
-        lblDashDiscountPercent = findViewById(R.id.lblDashDiscountPercent);
-        lblDashCGST = findViewById(R.id.lblDashCGST);
-        lblDashSGST = findViewById(R.id.lblDashSGST);
 
         tabLedgerInvoices = findViewById(R.id.tabLedgerInvoices);
         tabLedgerExpenses = findViewById(R.id.tabLedgerExpenses);
@@ -180,7 +164,6 @@ public class DashboardActivity extends AppCompatActivity {
         else if (role.equalsIgnoreCase("SUPER_ADMIN")) role = "System Admin";
 
         lblDashboardUserRoleLab.setText(role + " • " + lab);
-        lblDashboardUserGreeting.setText("Live Sync • Pay-As-You-Go Active");
     }
 
     private void fetchDashboardMetrics() {
@@ -231,32 +214,11 @@ public class DashboardActivity extends AppCompatActivity {
             double netProfit = json.optDouble("netProfit", 0.0);
             double pendingCollections = json.optDouble("pendingCollections", 0.0);
 
-            double grossBilling = json.optDouble("grossBilling", 0.0);
-            double totalDiscounts = json.optDouble("totalDiscounts", 0.0);
-            double totalCGST = json.optDouble("totalCGST", 0.0);
-            double totalSGST = json.optDouble("totalSGST", 0.0);
-
-            int invoicesCount = json.optInt("invoicesCount", 0);
-
             // Primary KPIs
             lblDashTotalRevenue.setText(formatINR(totalRevenue));
             lblDashTotalExpenses.setText(formatINR(totalExpense));
             lblDashNetProfit.setText(formatINR(netProfit));
             lblDashPendingDue.setText(formatINR(pendingCollections));
-
-            lblDashInvoicesCount.setText(invoicesCount > 0 ? (invoicesCount + " Invoices Generated") : "Excl. cancelled");
-            lblDashExpensesCount.setText("All recorded expenses");
-            lblDashPendingCount.setText("Unsettled invoices due");
-
-            // Tax & Discounts
-            lblDashGrossBilling.setText(formatINR(grossBilling));
-            lblDashDiscountsGiven.setText(formatINR(totalDiscounts));
-
-            double discPercent = grossBilling > 0 ? ((totalDiscounts / grossBilling) * 100.0) : 0.0;
-            lblDashDiscountPercent.setText(String.format(Locale.getDefault(), "%.1f%% of gross billing", discPercent));
-
-            lblDashCGST.setText(formatINR(totalCGST));
-            lblDashSGST.setText(formatINR(totalSGST));
 
             // Ledgers
             cachedInvoices = json.optJSONArray("recentInvoices");

@@ -1,22 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Modern Help & Support Popup Menu matching Profile Menu Aesthetic -->
+<!-- Ultra-Premium Customer Support Concierge Card (Android) -->
 <androidx.cardview.widget.CardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="250dp"
+    android:layout_width="285dp"
     android:layout_height="wrap_content"
-    app:cardCornerRadius="20dp"
-    app:cardElevation="14dp"
-    app:cardBackgroundColor="#FFFFFF">
+    app:cardCornerRadius="22dp"
+    app:cardElevation="18dp"
+    app:cardBackgroundColor="#FFFFFF"
+    app:cardPreventCornerOverlap="false">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="10dp"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="10dp"
         android:background="#FFFFFF">
 
-        <!-- Top Header row: Lifebuoy icon + Help & Support title + subtitle -->
+        <!-- Top Header: Customer Care Concierge with Online Pulse -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -24,26 +28,26 @@
             android:gravity="center_vertical"
             android:paddingStart="4dp"
             android:paddingEnd="4dp"
-            android:paddingTop="6dp"
-            android:paddingBottom="10dp">
+            android:paddingTop="2dp"
+            android:paddingBottom="8dp">
 
-            <!-- Support lifebuoy icon badge -->
+            <!-- Modern Headset Icon (Replacing Nautical Lifebuoy) -->
             <FrameLayout
                 android:layout_width="38dp"
                 android:layout_height="38dp"
-                android:background="@drawable/bg_mod_icon_blue">
+                android:background="@drawable/bg_mod_icon_indigo">
 
                 <ImageView
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:layout_gravity="center"
-                    android:src="@drawable/ic_support_lifebuoy"
-                    android:tint="#2563EB"
-                    app:tint="#2563EB" />
+                    android:src="@drawable/ic_headset_modern"
+                    android:tint="#4F46E5"
+                    app:tint="#4F46E5" />
 
             </FrameLayout>
 
-            <!-- Title and Subtitle -->
+            <!-- Title & Online Status Badge -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -51,42 +55,64 @@
                 android:orientation="vertical"
                 android:layout_marginStart="10dp">
 
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Help &amp; Support"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:textColor="#0F172A"
-                    android:singleLine="true"
-                    android:ellipsize="end" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Support Desk"
+                        android:textSize="14.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#0F172A"
+                        android:singleLine="true" />
+
+                    <!-- Live Online Status Pill -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_status_ready"
+                        android:paddingStart="6dp"
+                        android:paddingEnd="6dp"
+                        android:paddingTop="1.5dp"
+                        android:paddingBottom="1.5dp"
+                        android:text="● Online"
+                        android:textSize="9.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#059669" />
+
+                </LinearLayout>
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="1dp"
-                    android:text="24/7 Priority Support"
+                    android:text="24/7 Priority Laboratory Concierge"
                     android:textSize="11sp"
                     android:textColor="#64748B"
-                    android:singleLine="true"
-                    android:ellipsize="end" />
+                    android:singleLine="true" />
 
             </LinearLayout>
 
         </LinearLayout>
 
-        <!-- Divider -->
+        <!-- Elegant Subtle Divider -->
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:layout_marginBottom="4dp"
+            android:layout_marginTop="2dp"
+            android:layout_marginBottom="6dp"
             android:background="#F1F5F9" />
 
-        <!-- Option 1: Priority Call -->
+        <!-- 1. Direct Phone Call Option -->
         <LinearLayout
             android:id="@+id/helpBtnCall"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="52dp"
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:paddingStart="8dp"
@@ -96,15 +122,15 @@
             android:focusable="true">
 
             <FrameLayout
-                android:layout_width="34dp"
-                android:layout_height="34dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:background="@drawable/bg_mod_icon_blue">
 
                 <ImageView
-                    android:layout_width="17dp"
-                    android:layout_height="17dp"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
                     android:layout_gravity="center"
-                    android:src="@drawable/ic_phone"
+                    android:src="@drawable/ic_phone_call_modern"
                     android:tint="#2563EB"
                     app:tint="#2563EB" />
 
@@ -121,18 +147,34 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Call Support"
-                    android:textSize="13sp"
+                    android:textSize="13.5sp"
                     android:textStyle="bold"
-                    android:textColor="#1E293B" />
+                    android:textColor="#0F172A" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="+91 8402010207"
-                    android:textSize="10.5sp"
-                    android:textColor="#64748B" />
+                    android:textSize="11sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:textColor="#2563EB" />
 
             </LinearLayout>
+
+            <!-- Toll-Free Tag + Chevron -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_status_processing"
+                android:paddingStart="6dp"
+                android:paddingEnd="6dp"
+                android:paddingTop="2dp"
+                android:paddingBottom="2dp"
+                android:text="Direct"
+                android:textSize="9.5sp"
+                android:textStyle="bold"
+                android:textColor="#2563EB"
+                android:layout_marginEnd="6dp" />
 
             <ImageView
                 android:layout_width="14dp"
@@ -143,11 +185,11 @@
 
         </LinearLayout>
 
-        <!-- Option 2: WhatsApp Chat -->
+        <!-- 2. Authentic WhatsApp Chat Option -->
         <LinearLayout
             android:id="@+id/helpBtnWhatsApp"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="52dp"
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:paddingStart="8dp"
@@ -157,20 +199,12 @@
             android:clickable="true"
             android:focusable="true">
 
-            <FrameLayout
-                android:layout_width="34dp"
-                android:layout_height="34dp"
-                android:background="@drawable/bg_mod_icon_emerald">
-
-                <ImageView
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_whatsapp"
-                    android:tint="#16A34A"
-                    app:tint="#16A34A" />
-
-            </FrameLayout>
+            <!-- Official WhatsApp Logo -->
+            <ImageView
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:src="@drawable/ic_whatsapp_official"
+                android:scaleType="fitCenter" />
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -182,19 +216,34 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="WhatsApp Chat"
-                    android:textSize="13sp"
+                    android:text="WhatsApp Support"
+                    android:textSize="13.5sp"
                     android:textStyle="bold"
-                    android:textColor="#1E293B" />
+                    android:textColor="#0F172A" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Instant assistance"
-                    android:textSize="10.5sp"
+                    android:text="Instant assistance on chat"
+                    android:textSize="11sp"
                     android:textColor="#64748B" />
 
             </LinearLayout>
+
+            <!-- Fastest Pill + Chevron -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_status_ready"
+                android:paddingStart="6dp"
+                android:paddingEnd="6dp"
+                android:paddingTop="2dp"
+                android:paddingBottom="2dp"
+                android:text="Fastest"
+                android:textSize="9.5sp"
+                android:textStyle="bold"
+                android:textColor="#16A34A"
+                android:layout_marginEnd="6dp" />
 
             <ImageView
                 android:layout_width="14dp"
@@ -205,11 +254,11 @@
 
         </LinearLayout>
 
-        <!-- Option 3: Email Support -->
+        <!-- 3. Official Gmail / Email Option -->
         <LinearLayout
             android:id="@+id/helpBtnEmail"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="52dp"
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:paddingStart="8dp"
@@ -219,20 +268,12 @@
             android:clickable="true"
             android:focusable="true">
 
-            <FrameLayout
-                android:layout_width="34dp"
-                android:layout_height="34dp"
-                android:background="@drawable/bg_mod_icon_purple">
-
-                <ImageView
-                    android:layout_width="17dp"
-                    android:layout_height="17dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_envelope"
-                    android:tint="#7C3AED"
-                    app:tint="#7C3AED" />
-
-            </FrameLayout>
+            <!-- Official Google Gmail Logo -->
+            <ImageView
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:src="@drawable/ic_gmail_official"
+                android:scaleType="fitCenter" />
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -245,20 +286,35 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Email Support"
-                    android:textSize="13sp"
+                    android:textSize="13.5sp"
                     android:textStyle="bold"
-                    android:textColor="#1E293B" />
+                    android:textColor="#0F172A" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="support@patholab.cloud"
-                    android:textSize="10.5sp"
+                    android:textSize="11sp"
                     android:textColor="#64748B"
                     android:singleLine="true"
                     android:ellipsize="end" />
 
             </LinearLayout>
+
+            <!-- Official Tag + Chevron -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_setting_item"
+                android:paddingStart="6dp"
+                android:paddingEnd="6dp"
+                android:paddingTop="2dp"
+                android:paddingBottom="2dp"
+                android:text="Official"
+                android:textSize="9.5sp"
+                android:textStyle="bold"
+                android:textColor="#64748B"
+                android:layout_marginEnd="6dp" />
 
             <ImageView
                 android:layout_width="14dp"
@@ -269,11 +325,11 @@
 
         </LinearLayout>
 
-        <!-- Option 4: Support Portal -->
+        <!-- 4. Support Tickets & Helpdesk (Distinct, non-repetitive) -->
         <LinearLayout
             android:id="@+id/helpBtnDashboard"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="52dp"
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:paddingStart="8dp"
@@ -284,17 +340,17 @@
             android:focusable="true">
 
             <FrameLayout
-                android:layout_width="34dp"
-                android:layout_height="34dp"
-                android:background="@drawable/bg_mod_icon_amber">
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="@drawable/bg_mod_icon_indigo">
 
                 <ImageView
-                    android:layout_width="17dp"
-                    android:layout_height="17dp"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
                     android:layout_gravity="center"
-                    android:src="@drawable/ic_external_link"
-                    android:tint="#D97706"
-                    app:tint="#D97706" />
+                    android:src="@drawable/ic_ticket_portal"
+                    android:tint="#4F46E5"
+                    app:tint="#4F46E5" />
 
             </FrameLayout>
 
@@ -308,19 +364,34 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Support Portal"
-                    android:textSize="13sp"
+                    android:text="Support Tickets"
+                    android:textSize="13.5sp"
                     android:textStyle="bold"
-                    android:textColor="#1E293B" />
+                    android:textColor="#0F172A" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Guides &amp; FAQs"
-                    android:textSize="10.5sp"
+                    android:text="Track issues &amp; knowledge base"
+                    android:textSize="11sp"
                     android:textColor="#64748B" />
 
             </LinearLayout>
+
+            <!-- Portal Tag + Chevron -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_mod_icon_indigo"
+                android:paddingStart="6dp"
+                android:paddingEnd="6dp"
+                android:paddingTop="2dp"
+                android:paddingBottom="2dp"
+                android:text="Portal"
+                android:textSize="9.5sp"
+                android:textStyle="bold"
+                android:textColor="#4F46E5"
+                android:layout_marginEnd="6dp" />
 
             <ImageView
                 android:layout_width="14dp"

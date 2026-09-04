@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getDataFromToken } from '@/lib/auth';
+import { getDataFromToken, getCurrentUser } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -169,8 +169,26 @@ export async function GET(req: NextRequest) {
 // =========================================================================
 export async function POST(req: NextRequest) {
   try {
-    const user = await getDataFromToken(req);
-    if (!user || !user.labId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const userFromToken = await getDataFromToken(req);
+    const currentUser = await getCurrentUser();
+    const user = userFromToken || currentUser;
+
+    let labId = user?.labId;
+    if (!labId && user && (user.userId || user.id)) {
+      const uid = user.userId || user.id;
+      const dbUser = await prisma.user.findUnique({
+        where: { id: uid },
+        include: {
+          lab: true,
+          staffLabs: { include: { lab: true } }
+        }
+      });
+      const activeLab = dbUser?.lab || dbUser?.staffLabs?.[0]?.lab;
+      if (activeLab) labId = activeLab.id;
+    }
+
+    if (!labId || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const effectiveLabId = labId;
 
     const body = await req.json();
 
@@ -184,7 +202,7 @@ export async function POST(req: NextRequest) {
 
     // 1. Check Duplicates (Phone)
     const existing = await prisma.patient.findFirst({
-        where: { labId: user.labId, phone: safePhone }
+        where: { labId: effectiveLabId, phone: safePhone }
     });
 
     if (existing) {
@@ -192,7 +210,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. WALLET CHECK & REGISTRATION FEE CALCULATION
-    const wallet = await prisma.labWallet.findUnique({ where: { labId: user.labId } });
+    const wallet = await prisma.labWallet.findUnique({ where: { labId: effectiveLabId } });
     if (!wallet) return NextResponse.json({ error: "Wallet not initialized. Please contact support." }, { status: 400 });
 
     const fee = Number(wallet.perPatientFee || 2.5);
@@ -207,7 +225,7 @@ export async function POST(req: NextRequest) {
 
     // 3. GENERATE ID (P-0001 Format)
     const lastPatient = await prisma.patient.findFirst({
-        where: { labId: user.labId },
+        where: { labId: effectiveLabId },
         orderBy: { createdAt: 'desc' }, 
         select: { patientId: true }
     });
@@ -233,7 +251,7 @@ export async function POST(req: NextRequest) {
     if (incomingDoctor && incomingDoctor !== "Self") {
         if (isDbId(incomingDoctor)) finalDoctorId = incomingDoctor;
         else {
-            const doc = await prisma.doctor.findFirst({ where: { labId: user.labId, name: { equals: incomingDoctor, mode: 'insensitive' } } });
+            const doc = await prisma.doctor.findFirst({ where: { labId: effectiveLabId, name: { equals: incomingDoctor, mode: 'insensitive' } } });
             if (doc) finalDoctorId = doc.id;
         }
     }
@@ -241,7 +259,7 @@ export async function POST(req: NextRequest) {
     if (incomingAgency && incomingAgency !== "Direct") {
         if (isDbId(incomingAgency)) finalAgencyId = incomingAgency;
         else {
-            const ag = await prisma.agency.findFirst({ where: { labId: user.labId, agencyName: { equals: incomingAgency, mode: 'insensitive' } } });
+            const ag = await prisma.agency.findFirst({ where: { labId: effectiveLabId, agencyName: { equals: incomingAgency, mode: 'insensitive' } } });
             if (ag) finalAgencyId = ag.id;
         }
     }
@@ -263,7 +281,7 @@ export async function POST(req: NextRequest) {
         // A. Create Patient
         const patient = await tx.patient.create({
             data: {
-                labId: user.labId,
+                labId: effectiveLabId,
                 branchId: isGlobal ? null : user.branchId,
                 userId: user.id,
                 patientId: nextId, 
@@ -280,23 +298,25 @@ export async function POST(req: NextRequest) {
                 passportNumber: body.passport?.trim() || null,
                 abhaNumber: body.abhaNumber?.trim() || null, 
                 doctorId: finalDoctorId,
-                agencyId: finalAgencyId
+                agencyId: finalAgencyId,
+                medicalHistory: body.medicalHistory || (body.collectedBy ? { collectedBy: body.collectedBy, paymentMode: body.paymentMode } : undefined)
             }
         });
 
         // B. Wallet Deduction
-        await tx.labWallet.update({
-            where: { labId: user.labId },
-            data: { balance: { decrement: totalDeduction } }
+        const updatedWallet = await tx.labWallet.update({
+            where: { labId: effectiveLabId },
+            data: { balance: { decrement: totalDeduction } },
+            select: { balance: true }
         });
 
         // C. Record the Transaction
         await tx.walletTransaction.create({
             data: {
-                labId: user.labId,
+                labId: effectiveLabId,
                 type: 'DEDUCTION',
                 amount: totalDeduction,
-                closingBalance: Number(wallet.balance) - totalDeduction,
+                closingBalance: Number(updatedWallet.balance),
                 description: `Registration fee for: ${patient.name} [ID: ${patient.id}]`
             }
         });
@@ -304,8 +324,8 @@ export async function POST(req: NextRequest) {
         // D. Detailed Activity Log
         await tx.activityLog.create({
           data: {
-            labId: user.labId,
-            userId: user.id,
+            labId: effectiveLabId,
+            userId: (user.id || user.userId || "") as string,
             action: 'PATIENT_CREATED',
             entityType: 'PATIENT',
             entity: 'PATIENT',           
@@ -371,8 +391,8 @@ export async function PATCH(req: NextRequest) {
       // 4. AUDIT LOG
       await tx.activityLog.create({
         data: {
-          labId: user.labId,
-          userId: user.id,
+          labId: user.labId!,
+          userId: (user.id || user.userId || "") as string,
           action: 'PATIENT_MERGED',
           entityType: 'PATIENT',
           entityId: primaryId,

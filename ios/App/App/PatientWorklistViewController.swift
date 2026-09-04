@@ -292,9 +292,9 @@ class PatientWorklistViewController: UIViewController, UITableViewDataSource, UI
         filterChipsStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
         let filters = [
             ("ALL", "All Visits"),
-            ("IN_PROGRESS", "⏱ In Progress"),
-            ("COMPLETED", "✓ Completed & Ready"),
-            ("NO_TESTS", "📝 Registered Only")
+            ("IN_PROGRESS", "In Progress"),
+            ("COMPLETED", "Completed & Ready"),
+            ("NO_TESTS", "Registered Only")
         ]
 
         for (key, title) in filters {
@@ -449,9 +449,14 @@ class PatientWorklistViewController: UIViewController, UITableViewDataSource, UI
                     let uhid = p["patientId"] as? String ?? "P-\(pId.prefix(6))"
                     let gender = p["gender"] as? String ?? "MALE"
                     let age = p["age"] as? Int ?? 0
+                    let ageUnit = p["ageUnit"] as? String ?? "Yrs"
                     let pDetails = "\(age) \(ageUnit.prefix(1)) • \(gender) • UHID: \(uhid)"
                     let doctor = p["doctor"] as? [String: Any]
-                    let doctorName = (doctor?["name"] as? String) ?? "Self / Walk-in"
+                    var doctorName = "Self Referral / Walk-in"
+                    if let dName = doctor?["name"] as? String, !dName.trimmingCharacters(in: .whitespaces).isEmpty {
+                        let clean = dName.replacingOccurrences(of: "^(?i)(dr\\.?|doctor)\\s+", with: "", options: .regularExpression).trimmingCharacters(in: .whitespaces)
+                        doctorName = "Dr. \(clean)"
+                    }
 
                     let invoices = p["invoices"] as? [[String: Any]] ?? []
 
@@ -477,11 +482,11 @@ class PatientWorklistViewController: UIViewController, UITableViewDataSource, UI
                                 }
                                 let statusTag: String
                                 if isApproved {
-                                    statusTag = "🟢 Ready"
+                                    statusTag = "Ready"
                                 } else if tStatus == "IN_PROGRESS" || tStatus == "TESTING" || tStatus == "PROCESSING" {
-                                    statusTag = "🔵 Processing"
+                                    statusTag = "Processing"
                                 } else {
-                                    statusTag = "🔴 Accepted"
+                                    statusTag = "Pending"
                                 }
                                 testStrings.append("\(tName) [\(statusTag)]")
                             }
@@ -567,7 +572,7 @@ class PatientWorklistViewController: UIViewController, UITableViewDataSource, UI
     }
 
     private func updateKpiStats() {
-        var total = allVisits.count
+        let total = allVisits.count
         var inProgress = 0, completed = 0, registered = 0
         for v in allVisits {
             let st = v.status.uppercased()
@@ -692,9 +697,19 @@ class PatientWorklistViewController: UIViewController, UITableViewDataSource, UI
         detailsLbl.textColor = UIColor(red: 0.392, green: 0.451, blue: 0.549, alpha: 1)
 
         let doctorLbl = UILabel()
-        doctorLbl.text = visit.doctor
+        let isRealDoctor = !visit.doctor.isEmpty && !visit.doctor.lowercased().contains("self")
+        if isRealDoctor {
+            doctorLbl.text = "  🩺 \(visit.doctor)  "
+            doctorLbl.textColor = UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1) // Black / Deep slate #0F172A
+            doctorLbl.backgroundColor = UIColor(red: 0.996, green: 0.941, blue: 0.541, alpha: 1) // Yellow #FEF08A
+        } else {
+            doctorLbl.text = "  👤 \(visit.doctor)  "
+            doctorLbl.textColor = UIColor(red: 0.392, green: 0.455, blue: 0.545, alpha: 1)
+            doctorLbl.backgroundColor = UIColor(red: 0.945, green: 0.961, blue: 0.976, alpha: 1)
+        }
         doctorLbl.font = .systemFont(ofSize: 11.5, weight: .bold)
-        doctorLbl.textColor = UIColor(red: 0.28, green: 0.33, blue: 0.41, alpha: 1)
+        doctorLbl.layer.cornerRadius = 6
+        doctorLbl.layer.masksToBounds = true
 
         // Tests Box
         let testsBox = UIView()
@@ -704,9 +719,7 @@ class PatientWorklistViewController: UIViewController, UITableViewDataSource, UI
         testsBox.layer.borderColor = UIColor(red: 0.91, green: 0.93, blue: 0.96, alpha: 1).cgColor
 
         let testsLbl = UILabel()
-        testsLbl.text = visit.testsList
-        testsLbl.font = .systemFont(ofSize: 12.5, weight: .bold)
-        testsLbl.textColor = UIColor(red: 0.12, green: 0.16, blue: 0.23, alpha: 1)
+        testsLbl.attributedText = formatTestsAttributed(visit.testsList)
         testsLbl.numberOfLines = 0
 
         let finLbl = UILabel()
@@ -844,7 +857,7 @@ class PatientWorklistViewController: UIViewController, UITableViewDataSource, UI
             tf.text = "2.45"
         }
 
-        alert.addAction(UIAlertAction(title: "✓ Authorize Report", style: .default, handler: { [weak self] _ in
+        alert.addAction(UIAlertAction(title: "Authorize Report", style: .default, handler: { [weak self] _ in
             guard let self = self else { return }
             if let idx = self.allVisits.firstIndex(where: { $0.id == visit.id }) {
                 self.allVisits[idx].status = "COMPLETED"
@@ -860,10 +873,71 @@ class PatientWorklistViewController: UIViewController, UITableViewDataSource, UI
     @objc private func didTapViewReport(_ sender: UIButton) {
         let visit = filteredVisits[sender.tag]
         let previewVC = ReportPreviewViewController()
-        previewVC.reportId = visit.reportId ?? "rep_001"
+        let targetId = (visit.invoiceId != nil && !visit.invoiceId!.isEmpty) ? visit.invoiceId! : (visit.reportId ?? visit.visitId)
+        previewVC.reportId = targetId
         previewVC.patientName = visit.patientName
         previewVC.modalPresentationStyle = .fullScreen
         present(previewVC, animated: true, completion: nil)
+    }
+
+    private func formatTestsAttributed(_ rawTests: String) -> NSAttributedString {
+        guard !rawTests.isEmpty else { return NSAttributedString(string: "") }
+        let result = NSMutableAttributedString()
+        let items = rawTests.components(separatedBy: "  •  ")
+        
+        let bulletAttr: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: 12, weight: .regular),
+            .foregroundColor: UIColor(red: 0.6, green: 0.65, blue: 0.7, alpha: 1)
+        ]
+        let nameAttr: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: 12.5, weight: .semibold),
+            .foregroundColor: UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1)
+        ]
+
+        let pattern = try? NSRegularExpression(pattern: #"^(.*?)\s*\[(Ready|Approved|Pending|Accepted|Processing|Testing|In Testing|In Progress)\]$"#, options: .caseInsensitive)
+
+        for item in items {
+            let trimmed = item.trimmingCharacters(in: .whitespacesAndNewlines)
+            if trimmed.isEmpty { continue }
+
+            if result.length > 0 {
+                result.append(NSAttributedString(string: "  •  ", attributes: bulletAttr))
+            }
+
+            let nsItem = trimmed as NSString
+            let match = pattern?.firstMatch(in: trimmed, options: [], range: NSRange(location: 0, length: nsItem.length))
+
+            if let match = match, match.numberOfRanges >= 3 {
+                let testName = nsItem.substring(with: match.range(at: 1)).trimmingCharacters(in: .whitespaces)
+                let status = nsItem.substring(with: match.range(at: 2)).trimmingCharacters(in: .whitespaces)
+
+                result.append(NSAttributedString(string: "\(testName) ", attributes: nameAttr))
+
+                let bg: UIColor
+                let fg: UIColor
+                let stLower = status.lowercased()
+                if stLower == "ready" || stLower == "approved" {
+                    bg = UIColor(red: 0.863, green: 0.988, blue: 0.906, alpha: 1) // #DCFCE7 Green
+                    fg = UIColor(red: 0.082, green: 0.502, blue: 0.239, alpha: 1) // #15803D Deep Green
+                } else if stLower == "pending" || stLower == "accepted" {
+                    bg = UIColor(red: 0.953, green: 0.910, blue: 1.0, alpha: 1)   // #F3E8FF Purple
+                    fg = UIColor(red: 0.420, green: 0.129, blue: 0.659, alpha: 1) // #6B21A8 Deep Purple
+                } else {
+                    bg = UIColor(red: 0.937, green: 0.965, blue: 1.0, alpha: 1)   // #EFF6FF Blue
+                    fg = UIColor(red: 0.114, green: 0.306, blue: 0.847, alpha: 1) // #1D4ED8 Deep Blue
+                }
+
+                let badgeAttr: [NSAttributedString.Key: Any] = [
+                    .font: UIFont.systemFont(ofSize: 10.5, weight: .bold),
+                    .foregroundColor: fg,
+                    .backgroundColor: bg
+                ]
+                result.append(NSAttributedString(string: " \(status) ", attributes: badgeAttr))
+            } else {
+                result.append(NSAttributedString(string: trimmed, attributes: nameAttr))
+            }
+        }
+        return result
     }
 
     @objc private func didTapInvoiceSlip(_ sender: UIButton) {

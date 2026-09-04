@@ -1,0 +1,827 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F8FAFC">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <!-- ══════════════════════════════════════════════════════════════
+             HERO HEADER — Deep Navy Gradient with Support Title & CTA
+             ══════════════════════════════════════════════════════════════ -->
+        <LinearLayout
+            android:id="@+id/supportHeader"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_support_hero_card"
+            android:orientation="vertical"
+            android:paddingStart="18dp"
+            android:paddingEnd="18dp"
+            android:paddingTop="36dp"
+            android:paddingBottom="20dp">
+
+            <!-- Top Row: Back Button + Title + New Ticket CTA -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <FrameLayout
+                    android:id="@+id/btnSupportBack"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:background="@drawable/bg_glass_back_btn"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_back_arrow"
+                        android:tint="#FFFFFF" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="14dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Help &amp; Support"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"
+                        android:letterSpacing="-0.02" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="24/7 Dedicated Assistance Desk"
+                        android:textSize="12sp"
+                        android:textColor="#93C5FD" />
+                </LinearLayout>
+
+                <!-- New Ticket Action Button -->
+                <LinearLayout
+                    android:id="@+id/btnHeaderNewTicket"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:background="@drawable/bg_btn_primary"
+                    android:gravity="center"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="14dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageView
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
+                        android:src="@drawable/ic_plus"
+                        android:tint="#FFFFFF"
+                        android:layout_marginEnd="6dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="New Ticket"
+                        android:textColor="#FFFFFF"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- Real-time KPI Stat Cards Row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="18dp">
+
+                <!-- Card 1: Open Requests -->
+                <LinearLayout
+                    android:id="@+id/cardKpiOpen"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_bento_white"
+                    android:orientation="vertical"
+                    android:padding="12dp"
+                    android:layout_marginEnd="6dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="OPEN"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:textColor="#EF4444"
+                        android:letterSpacing="0.05" />
+
+                    <TextView
+                        android:id="@+id/tvKpiOpenCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="0"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="#0F172A" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="1dp"
+                        android:text="Awaiting review"
+                        android:textSize="10sp"
+                        android:textColor="#64748B" />
+                </LinearLayout>
+
+                <!-- Card 2: In Progress -->
+                <LinearLayout
+                    android:id="@+id/cardKpiProgress"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_bento_white"
+                    android:orientation="vertical"
+                    android:padding="12dp"
+                    android:layout_marginEnd="6dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="IN PROGRESS"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:textColor="#F59E0B"
+                        android:letterSpacing="0.05" />
+
+                    <TextView
+                        android:id="@+id/tvKpiProgressCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="0"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="#0F172A" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="1dp"
+                        android:text="Being handled"
+                        android:textSize="10sp"
+                        android:textColor="#64748B" />
+                </LinearLayout>
+
+                <!-- Card 3: Resolved -->
+                <LinearLayout
+                    android:id="@+id/cardKpiResolved"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_bento_white"
+                    android:orientation="vertical"
+                    android:padding="12dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="RESOLVED"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:textColor="#10B981"
+                        android:letterSpacing="0.05" />
+
+                    <TextView
+                        android:id="@+id/tvKpiResolvedCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="0"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="#0F172A" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="1dp"
+                        android:text="Completed issues"
+                        android:textSize="10sp"
+                        android:textColor="#64748B" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Main Scrollable Body wrapped in SwipeRefreshLayout -->
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/swipeRefreshLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <androidx.core.widget.NestedScrollView
+                android:id="@+id/nestedScrollView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:fillViewport="true">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <!-- Search Box -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:background="@drawable/bg_search_input_field"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:src="@drawable/ic_search"
+                            android:tint="#94A3B8" />
+
+                        <EditText
+                            android:id="@+id/etSearchTickets"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:background="@null"
+                            android:hint="Search tickets by subject or ID..."
+                            android:textColor="#0F172A"
+                            android:textColorHint="#94A3B8"
+                            android:textSize="13sp"
+                            android:paddingStart="10dp"
+                            android:paddingEnd="8dp"
+                            android:imeOptions="actionSearch"
+                            android:inputType="text" />
+
+                        <ImageView
+                            android:id="@+id/btnClearSearch"
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:src="@drawable/ic_close_cross"
+                            android:tint="#94A3B8"
+                            android:visibility="gone"
+                            android:clickable="true"
+                            android:focusable="true" />
+                    </LinearLayout>
+
+                    <!-- Filter Chips / Tabs -->
+                    <HorizontalScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:scrollbars="none">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <!-- Tab All -->
+                            <TextView
+                                android:id="@+id/tabAll"
+                                android:layout_width="wrap_content"
+                                android:layout_height="32dp"
+                                android:background="@drawable/bg_chip_active"
+                                android:gravity="center"
+                                android:paddingStart="14dp"
+                                android:paddingEnd="14dp"
+                                android:text="All Tickets"
+                                android:textColor="#FFFFFF"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:clickable="true"
+                                android:focusable="true" />
+
+                            <!-- Tab Open -->
+                            <TextView
+                                android:id="@+id/tabOpen"
+                                android:layout_width="wrap_content"
+                                android:layout_height="32dp"
+                                android:layout_marginStart="8dp"
+                                android:background="@drawable/bg_chip_inactive"
+                                android:gravity="center"
+                                android:paddingStart="14dp"
+                                android:paddingEnd="14dp"
+                                android:text="Open"
+                                android:textColor="#475569"
+                                android:textSize="12sp"
+                                android:clickable="true"
+                                android:focusable="true" />
+
+                            <!-- Tab In Progress -->
+                            <TextView
+                                android:id="@+id/tabProgress"
+                                android:layout_width="wrap_content"
+                                android:layout_height="32dp"
+                                android:layout_marginStart="8dp"
+                                android:background="@drawable/bg_chip_inactive"
+                                android:gravity="center"
+                                android:paddingStart="14dp"
+                                android:paddingEnd="14dp"
+                                android:text="In Progress"
+                                android:textColor="#475569"
+                                android:textSize="12sp"
+                                android:clickable="true"
+                                android:focusable="true" />
+
+                            <!-- Tab Resolved -->
+                            <TextView
+                                android:id="@+id/tabResolved"
+                                android:layout_width="wrap_content"
+                                android:layout_height="32dp"
+                                android:layout_marginStart="8dp"
+                                android:background="@drawable/bg_chip_inactive"
+                                android:gravity="center"
+                                android:paddingStart="14dp"
+                                android:paddingEnd="14dp"
+                                android:text="Resolved"
+                                android:textColor="#475569"
+                                android:textSize="12sp"
+                                android:clickable="true"
+                                android:focusable="true" />
+
+                        </LinearLayout>
+                    </HorizontalScrollView>
+
+                    <!-- Section Header: My Tickets & Count -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginTop="16dp"
+                        android:layout_marginBottom="8dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="My Tickets"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="#0F172A" />
+
+                        <TextView
+                            android:id="@+id/tvTicketsTotalLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0 tickets"
+                            android:textSize="12sp"
+                            android:textColor="#64748B" />
+                    </LinearLayout>
+
+                    <!-- Loading State Indicator -->
+                    <ProgressBar
+                        android:id="@+id/pbTicketsLoading"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="24dp"
+                        android:visibility="gone" />
+
+                    <!-- Empty State View -->
+                    <LinearLayout
+                        android:id="@+id/layoutEmptyState"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="32dp"
+                        android:background="@drawable/bg_card_white"
+                        android:visibility="gone">
+
+                        <ImageView
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:src="@drawable/ic_support_lifebuoy"
+                            android:tint="#94A3B8" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:text="No Tickets Found"
+                            android:textSize="15sp"
+                            android:textStyle="bold"
+                            android:textColor="#0F172A" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="You have no open support requests in this view. Need assistance? Create a ticket below."
+                            android:textSize="12sp"
+                            android:textColor="#64748B"
+                            android:textAlignment="center" />
+
+                        <Button
+                            android:id="@+id/btnEmptyCreateTicket"
+                            android:layout_width="wrap_content"
+                            android:layout_height="40dp"
+                            android:layout_marginTop="16dp"
+                            android:background="@drawable/bg_btn_primary"
+                            android:text="Create New Ticket"
+                            android:textColor="#FFFFFF"
+                            android:textSize="13sp"
+                            android:textAllCaps="false"
+                            android:paddingStart="20dp"
+                            android:paddingEnd="20dp" />
+                    </LinearLayout>
+
+                    <!-- Tickets Container (Dynamic List) -->
+                    <LinearLayout
+                        android:id="@+id/containerTicketsList"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" />
+
+                    <!-- ══════════════════════════════════════════════════════════
+                         FREQUENTLY ASKED QUESTIONS SECTION
+                         ══════════════════════════════════════════════════════════ -->
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="24dp"
+                        android:text="Frequently Asked Questions"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#0F172A" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:layout_marginBottom="12dp"
+                        android:text="Quick solutions to standard workflow and system questions"
+                        android:textSize="12sp"
+                        android:textColor="#64748B" />
+
+                    <!-- FAQ Item 1 -->
+                    <LinearLayout
+                        android:id="@+id/faqItem1"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:background="@drawable/bg_card_white"
+                        android:padding="14dp"
+                        android:layout_marginBottom="8dp"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="How do I add new test parameters to inventory?"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                android:textColor="#1E293B" />
+
+                            <ImageView
+                                android:id="@+id/faqArrow1"
+                                android:layout_width="16dp"
+                                android:layout_height="16dp"
+                                android:src="@drawable/ic_chevron_down"
+                                android:tint="#64748B" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/faqAnswer1"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="Navigate to Laboratory Settings > Tests Catalog. Click 'Add Parameter' to configure reference ranges, units, specimen type, and pricing."
+                            android:textSize="12sp"
+                            android:textColor="#475569"
+                            android:lineSpacingExtra="3dp"
+                            android:visibility="gone" />
+                    </LinearLayout>
+
+                    <!-- FAQ Item 2 -->
+                    <LinearLayout
+                        android:id="@+id/faqItem2"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:background="@drawable/bg_card_white"
+                        android:padding="14dp"
+                        android:layout_marginBottom="8dp"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Why is my WhatsApp messaging balance decreasing?"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                android:textColor="#1E293B" />
+
+                            <ImageView
+                                android:id="@+id/faqArrow2"
+                                android:layout_width="16dp"
+                                android:layout_height="16dp"
+                                android:src="@drawable/ic_chevron_down"
+                                android:tint="#64748B" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/faqAnswer2"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="Each automated WhatsApp report delivery and OTP notification consumes 1 WhatsApp credit. Recharge credits seamlessly in the Wallet &amp; Billing screen."
+                            android:textSize="12sp"
+                            android:textColor="#475569"
+                            android:lineSpacingExtra="3dp"
+                            android:visibility="gone" />
+                    </LinearLayout>
+
+                    <!-- FAQ Item 3 -->
+                    <LinearLayout
+                        android:id="@+id/faqItem3"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:background="@drawable/bg_card_white"
+                        android:padding="14dp"
+                        android:layout_marginBottom="8dp"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="How do I print barcoded patient sample labels?"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                android:textColor="#1E293B" />
+
+                            <ImageView
+                                android:id="@+id/faqArrow3"
+                                android:layout_width="16dp"
+                                android:layout_height="16dp"
+                                android:src="@drawable/ic_chevron_down"
+                                android:tint="#64748B" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/faqAnswer3"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="On the Patient Registration confirmation or Sample Logistics screen, tap 'Print Label' to send the 50x25mm barcode to any paired Bluetooth thermal printer."
+                            android:textSize="12sp"
+                            android:textColor="#475569"
+                            android:lineSpacingExtra="3dp"
+                            android:visibility="gone" />
+                    </LinearLayout>
+
+                    <!-- FAQ Item 4 -->
+                    <LinearLayout
+                        android:id="@+id/faqItem4"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:background="@drawable/bg_card_white"
+                        android:padding="14dp"
+                        android:layout_marginBottom="16dp"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="How to configure thermal Bluetooth receipt printers?"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                android:textColor="#1E293B" />
+
+                            <ImageView
+                                android:id="@+id/faqArrow4"
+                                android:layout_width="16dp"
+                                android:layout_height="16dp"
+                                android:src="@drawable/ic_chevron_down"
+                                android:tint="#64748B" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/faqAnswer4"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="Go to Settings > Printer Setup. Ensure Bluetooth is enabled, choose ESC/POS 58mm or 80mm mode, and perform a test print."
+                            android:textSize="12sp"
+                            android:textColor="#475569"
+                            android:lineSpacingExtra="3dp"
+                            android:visibility="gone" />
+                    </LinearLayout>
+
+                    <!-- ══════════════════════════════════════════════════════════
+                         DIRECT ASSISTANCE CHANNELS CARD
+                         ══════════════════════════════════════════════════════════ -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_card_white"
+                        android:orientation="vertical"
+                        android:padding="16dp"
+                        android:layout_marginBottom="24dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Direct Assistance Channels"
+                            android:textSize="15sp"
+                            android:textStyle="bold"
+                            android:textColor="#0F172A" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:layout_marginBottom="12dp"
+                            android:text="Reach our dedicated clinical technical team immediately"
+                            android:textSize="12sp"
+                            android:textColor="#64748B" />
+
+                        <!-- Action 1: Priority Phone Line -->
+                        <LinearLayout
+                            android:id="@+id/btnCallSupport"
+                            android:layout_width="match_parent"
+                            android:layout_height="44dp"
+                            android:background="@drawable/bg_interactive_row"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:paddingStart="12dp"
+                            android:paddingEnd="12dp"
+                            android:clickable="true"
+                            android:focusable="true">
+
+                            <ImageView
+                                android:layout_width="18dp"
+                                android:layout_height="18dp"
+                                android:src="@drawable/ic_phone"
+                                android:tint="#2563EB" />
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:layout_marginStart="12dp"
+                                android:text="Priority Hotline (+91 98765 43210)"
+                                android:textSize="13sp"
+                                android:textColor="#0F172A"
+                                android:textStyle="bold" />
+
+                            <ImageView
+                                android:layout_width="14dp"
+                                android:layout_height="14dp"
+                                android:src="@drawable/ic_chevron_right"
+                                android:tint="#94A3B8" />
+                        </LinearLayout>
+
+                        <!-- Action 2: WhatsApp Concierge -->
+                        <LinearLayout
+                            android:id="@+id/btnWhatsAppSupport"
+                            android:layout_width="match_parent"
+                            android:layout_height="44dp"
+                            android:background="@drawable/bg_interactive_row"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:paddingStart="12dp"
+                            android:paddingEnd="12dp"
+                            android:layout_marginTop="6dp"
+                            android:clickable="true"
+                            android:focusable="true">
+
+                            <ImageView
+                                android:layout_width="18dp"
+                                android:layout_height="18dp"
+                                android:src="@drawable/ic_whatsapp"
+                                android:tint="#16A34A" />
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:layout_marginStart="12dp"
+                                android:text="WhatsApp Concierge"
+                                android:textSize="13sp"
+                                android:textColor="#0F172A"
+                                android:textStyle="bold" />
+
+                            <ImageView
+                                android:layout_width="14dp"
+                                android:layout_height="14dp"
+                                android:src="@drawable/ic_chevron_right"
+                                android:tint="#94A3B8" />
+                        </LinearLayout>
+
+                        <!-- Action 3: Email Desk -->
+                        <LinearLayout
+                            android:id="@+id/btnEmailSupport"
+                            android:layout_width="match_parent"
+                            android:layout_height="44dp"
+                            android:background="@drawable/bg_interactive_row"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:paddingStart="12dp"
+                            android:paddingEnd="12dp"
+                            android:layout_marginTop="6dp"
+                            android:clickable="true"
+                            android:focusable="true">
+
+                            <ImageView
+                                android:layout_width="18dp"
+                                android:layout_height="18dp"
+                                android:src="@drawable/ic_envelope"
+                                android:tint="#4F46E5" />
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:layout_marginStart="12dp"
+                                android:text="Official Support Desk (support@patholab.cloud)"
+                                android:textSize="13sp"
+                                android:textColor="#0F172A"
+                                android:textStyle="bold" />
+
+                            <ImageView
+                                android:layout_width="14dp"
+                                android:layout_height="14dp"
+                                android:src="@drawable/ic_chevron_right"
+                                android:tint="#94A3B8" />
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </androidx.core.widget.NestedScrollView>
+
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    </LinearLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

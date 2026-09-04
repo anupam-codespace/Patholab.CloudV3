@@ -206,11 +206,21 @@ class ReportPreviewViewController: UIViewController, WKNavigationDelegate {
     }
 
     private func loadReportCanvas() {
-        guard let url = URL(string: "\(baseUrl)/workspace/reports/print/\(reportId)") else { return }
+        let cleanId = reportId.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? reportId
+        guard let url = URL(string: "\(baseUrl)/workspace/reports/print/\(cleanId)?app=true&hideNav=true") else { return }
         var req = URLRequest(url: url)
         if let token = KeychainManager.read(forKey: KeychainManager.tokenKey) ?? UserDefaults.standard.string(forKey: "auth_token") {
             req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
             req.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
+            if let cookie = HTTPCookie(properties: [
+                .domain: "app.patholab.cloud",
+                .path: "/",
+                .name: "token",
+                .value: token,
+                .secure: "TRUE"
+            ]) {
+                webView.configuration.websiteDataStore.httpCookieStore.setCookie(cookie)
+            }
         }
         webView.load(req)
     }

@@ -63,6 +63,11 @@ class WalletViewController: UIViewController, UITextFieldDelegate {
         fetchWalletDetails()
     }
 
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        fetchWalletDetails()
+    }
+
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         heroGradientLayer.frame = heroHeaderView.bounds
@@ -516,7 +521,7 @@ class WalletViewController: UIViewController, UITextFieldDelegate {
                 return
             }
 
-            guard let url = URL(string: "https://app.patholab.cloud/api/workspace/wallet/details?limit=50") else { return }
+            guard let url = URL(string: "https://app.patholab.cloud/api/workspace/wallet/details?limit=100") else { return }
             var req = URLRequest(url: url)
             req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
             req.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
@@ -567,8 +572,8 @@ class WalletViewController: UIViewController, UITextFieldDelegate {
             let type = (tx["type"] as? String ?? "USAGE").uppercased()
             let desc = (tx["description"] as? String ?? "").lowercased()
 
-            if currentTab == "RECHARGE" && !type.contains("RECHARGE") && !type.contains("CREDIT") { return false }
-            if currentTab == "DEBIT" && !type.contains("USAGE") && !type.contains("DEBIT") { return false }
+            if currentTab == "RECHARGE" && !type.contains("RECHARGE") && !type.contains("CREDIT") && !type.contains("REFUND") { return false }
+            if currentTab == "DEBIT" && !type.contains("USAGE") && !type.contains("DEBIT") && !type.contains("DEDUCTION") && !type.contains("SETUP") { return false }
             if !searchQuery.isEmpty && !desc.contains(searchQuery) { return false }
             return true
         }
@@ -593,8 +598,8 @@ class WalletViewController: UIViewController, UITextFieldDelegate {
         let desc = tx["description"] as? String ?? "Wallet Entry"
         let dateStr = tx["createdAt"] as? String ?? ""
         let refId = tx["referenceId"] as? String ?? tx["id"] as? String ?? "TX"
-        let balAfter = tx["balanceAfter"] as? Double ?? currentBalance
-        let isCredit = type.contains("RECHARGE") || type.contains("CREDIT")
+        let balAfter = (tx["closingBalance"] as? Double) ?? (tx["balanceAfter"] as? Double) ?? currentBalance
+        let isCredit = type.contains("RECHARGE") || type.contains("CREDIT") || type.contains("REFUND")
 
         let iconBadge = UIView()
         iconBadge.backgroundColor = colorFromHex(isCredit ? "ECFDF5" : "FFF1F2")
@@ -626,7 +631,7 @@ class WalletViewController: UIViewController, UITextFieldDelegate {
         let amountLabel = UILabel()
         amountLabel.text = (isCredit ? "+" : "-") + formatINR(amount)
         amountLabel.font = .systemFont(ofSize: 15, weight: .bold)
-        amountLabel.textColor = isCredit ? UIColor(red: 0.020, green: 0.588, blue: 0.412, alpha: 1) : UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1)
+        amountLabel.textColor = isCredit ? UIColor(red: 0.020, green: 0.588, blue: 0.412, alpha: 1) : UIColor(red: 0.882, green: 0.114, blue: 0.282, alpha: 1)
         amountLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
 
         let row1 = UIStackView(arrangedSubviews: [descLabel, amountLabel])
@@ -678,7 +683,34 @@ class WalletViewController: UIViewController, UITextFieldDelegate {
             mainRow.trailingAnchor.constraint(equalTo: btn.trailingAnchor, constant: -14)
         ])
 
+        btn.addAction(UIAction { [weak self] _ in
+            self?.showTransactionReceipt(tx)
+        }, for: .touchUpInside)
+
         return btn
+    }
+
+    private func showTransactionReceipt(_ tx: [String: Any]) {
+        let type = (tx["type"] as? String ?? "USAGE").uppercased()
+        let isCredit = type.contains("RECHARGE") || type.contains("CREDIT") || type.contains("REFUND")
+        let amount = tx["amount"] as? Double ?? 0.0
+        let desc = tx["description"] as? String ?? "Wallet Transaction"
+        let refId = tx["id"] as? String ?? tx["referenceId"] as? String ?? "TX"
+        let dateStr = tx["createdAt"] as? String ?? ""
+        let balAfter = (tx["closingBalance"] as? Double) ?? (tx["balanceAfter"] as? Double) ?? currentBalance
+
+        let sign = isCredit ? "+" : "-"
+        let msg = """
+        Type: \(isCredit ? "Recharge / Credit" : "Usage / Deduction")
+        Amount: \(sign)\(formatINR(amount))
+        Reference: \(refId)
+        Date: \(formatDateTime(dateStr))
+        Balance After: \(formatINR(balAfter))
+        """
+
+        let alert = UIAlertController(title: desc, message: msg, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Dismiss", style: .default, handler: nil))
+        present(alert, animated: true)
     }
 
     // MARK: – Actions & Tabs
@@ -780,6 +812,7 @@ class WalletViewController: UIViewController, UITextFieldDelegate {
 
     // MARK: – Helpers
     private func getToken() -> String? {
+        if let token = KeychainManager.shared.getToken(), !token.isEmpty { return token }
         return KeychainManager.read(forKey: KeychainManager.tokenKey) ??
                UserDefaults.standard.string(forKey: "auth_token") ??
                UserDefaults.standard.string(forKey: "token")

@@ -135,6 +135,12 @@ public class ReportsActivity extends AppCompatActivity {
         fetchReports();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        fetchReports();
+    }
+
     private void initViews() {
         btnReportsBack = findViewById(R.id.btnReportsBack);
         btnRefreshReports = findViewById(R.id.btnRefreshReports);
@@ -337,11 +343,22 @@ public class ReportsActivity extends AppCompatActivity {
                             String pEmail = p != null ? p.optString("email", "") : "";
                             String pAge = p != null ? p.optString("age", "—") : "—";
                             String pGender = p != null ? p.optString("gender", "—") : "—";
-                            String pUhid = p != null ? p.optString("uhid", "P-" + (1000 + i)) : "P-" + (1000 + i);
+                            String pUhid = "P-" + (1000 + i);
+                            if (p != null) {
+                                if (p.has("patientId") && !p.isNull("patientId")) {
+                                    pUhid = p.optString("patientId");
+                                } else if (p.has("uhid") && !p.isNull("uhid")) {
+                                    pUhid = p.optString("uhid");
+                                }
+                            }
 
                             JSONObject t = r.optJSONObject("test");
-                            String tName = t != null ? t.optString("name", "Diagnostic Test") : "Diagnostic Test";
-                            String tCode = t != null ? t.optString("testCode", "TEST") : "TEST";
+                            String tName = "Diagnostic Investigation";
+                            String tCode = "TEST";
+                            if (t != null) {
+                                tName = t.has("testName") ? t.optString("testName") : t.optString("name", "Diagnostic Investigation");
+                                tCode = t.has("testCode") ? t.optString("testCode") : t.optString("code", "TEST");
+                            }
                             JSONObject dept = t != null ? t.optJSONObject("department") : null;
                             String dName = dept != null ? dept.optString("name", "General") : "General";
 
@@ -603,29 +620,39 @@ public class ReportsActivity extends AppCompatActivity {
         public void onBindViewHolder(@NonNull ReportViewHolder holder, int position) {
             ReportItem r = reports.get(position);
             holder.lblPatientName.setText(r.patientName);
+
+            // Patient Number: Highlighted in Yellow box with black text
             holder.lblPatientUhid.setText(r.uhid);
+            holder.lblPatientUhid.setBackgroundResource(R.drawable.bg_badge_yellow);
+            holder.lblPatientUhid.setTextColor(0xFF0F172A);
+
             holder.lblTestName.setText(r.testName);
             holder.lblTestCode.setText(r.testCode);
-            holder.lblVersionBadge.setText("v" + r.version + ".0");
+
+            // Version Badge: V01 with pure white text on sapphire background
+            holder.lblVersionBadge.setText(String.format(Locale.ROOT, "V%02d", r.version));
+            holder.lblVersionBadge.setBackgroundResource(R.drawable.bg_badge_version_sapphire);
+            holder.lblVersionBadge.setTextColor(0xFFFFFFFF);
+
             holder.lblDate.setText("" + r.createdAt);
             holder.lblMetaPhone.setText(r.patientPhone.isEmpty() ? "" : "+91 " + r.patientPhone);
 
-            // Status Badge
+            // Status Badge: Soft Mint + Deep Forest Green for Approved
             String s = r.status.toUpperCase();
             if (s.equals("FINAL") || s.equals("APPROVED")) {
                 holder.lblStatusBadge.setText("Approved");
-                holder.lblStatusBadge.setBackgroundResource(R.drawable.bg_bento_emerald);
-                holder.lblStatusBadge.setTextColor(0xFF059669);
+                holder.lblStatusBadge.setBackgroundResource(R.drawable.bg_badge_approved_mint);
+                holder.lblStatusBadge.setTextColor(0xFF14532D); // Deep forest green
             } else if (s.equals("SENT") || s.equals("SENT_TO_PATIENT")) {
                 holder.lblStatusBadge.setText("Sent");
                 holder.lblStatusBadge.setBackgroundResource(R.drawable.bg_bento_blue);
                 holder.lblStatusBadge.setTextColor(0xFF0D6EFD);
             } else if (s.equals("AMENDED") || r.isAmended) {
-                holder.lblStatusBadge.setText("Amended (v" + r.version + ")");
+                holder.lblStatusBadge.setText("Amended (V" + String.format(Locale.ROOT, "%02d", r.version) + ")");
                 holder.lblStatusBadge.setBackgroundResource(R.drawable.bg_mod_icon_purple);
                 holder.lblStatusBadge.setTextColor(0xFF7C3AED);
             } else {
-                holder.lblStatusBadge.setText("⏱ Draft");
+                holder.lblStatusBadge.setText("Draft");
                 holder.lblStatusBadge.setBackgroundResource(R.drawable.bg_bento_amber);
                 holder.lblStatusBadge.setTextColor(0xFFD97706);
             }

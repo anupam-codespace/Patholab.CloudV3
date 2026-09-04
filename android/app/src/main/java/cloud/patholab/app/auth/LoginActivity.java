@@ -49,7 +49,7 @@ public class LoginActivity extends AppCompatActivity {
         setupListeners();
 
         if (getIntent().getBooleanExtra("verified", false)) {
-            showError("✓ Email verified! Please sign in.", true);
+            showError("Email verified! Please sign in.", true);
         }
     }
 

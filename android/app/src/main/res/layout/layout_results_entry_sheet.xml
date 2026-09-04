@@ -144,13 +144,15 @@
             android:text="Save Draft"
             android:textAllCaps="false"
             android:textColor="#334155"
-            android:textSize="14sp"
+            android:textSize="14.5sp"
             android:textStyle="bold"
+            android:letterSpacing="0.01"
             android:singleLine="true"
             android:insetTop="0dp"
             android:insetBottom="0dp"
             app:cornerRadius="14dp"
-            app:elevation="0dp" />
+            app:elevation="0dp"
+            app:rippleColor="#200F172A" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnApproveAndAuthorize"
@@ -162,17 +164,15 @@
             android:text="Authorize Report"
             android:textAllCaps="false"
             android:textColor="#FFFFFF"
-            android:textSize="14sp"
+            android:textSize="14.5sp"
             android:textStyle="bold"
+            android:letterSpacing="0.01"
             android:singleLine="true"
             android:insetTop="0dp"
             android:insetBottom="0dp"
-            app:icon="@drawable/ic_check_bold"
-            app:iconGravity="textStart"
-            app:iconPadding="6dp"
-            app:iconTint="#FFFFFF"
             app:cornerRadius="14dp"
-            app:elevation="1dp" />
+            app:elevation="3dp"
+            app:rippleColor="#33FFFFFF" />
 
     </LinearLayout>
 

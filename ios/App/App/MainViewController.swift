@@ -666,6 +666,12 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
                 self.present(staffVC, animated: true, completion: nil)
                 return
             }
+            if path == "/workspace/support" || path.starts(with: "/workspace/support") {
+                let supportVC = SupportViewController()
+                supportVC.modalPresentationStyle = .fullScreen
+                self.present(supportVC, animated: true, completion: nil)
+                return
+            }
             self.showWebView(navigatingTo: path)
         }
 
@@ -765,6 +771,10 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
                 if let url = URL(string: urlString) {
                     UIApplication.shared.open(url, options: [:], completionHandler: nil)
                 }
+            } else if path == "/workspace/support" || path.starts(with: "/workspace/support") {
+                let supportVC = SupportViewController()
+                supportVC.modalPresentationStyle = .fullScreen
+                self.present(supportVC, animated: true, completion: nil)
             } else {
                 self.currentPath = nil          // force reload even if same path
                 self.selectedTab = 0
@@ -2501,8 +2511,11 @@ class HelpPanelViewController: UIViewController, MFMailComposeViewControllerDele
         case .email(let to, let subject, let body):
             openEmail(to: to, subject: subject, body: body)
         case .bugReport(let path):
-            dismiss(animated: true) { [weak self] in
-                self?.onOpenWeb?(path)
+            let presenting = self.presentingViewController
+            dismiss(animated: true) {
+                let supportVC = SupportViewController()
+                supportVC.modalPresentationStyle = .fullScreen
+                presenting?.present(supportVC, animated: true, completion: nil)
             }
         }
     }

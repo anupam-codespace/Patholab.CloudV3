@@ -37,13 +37,17 @@
                 android:paddingStart="20dp"
                 android:paddingTop="54dp"
                 android:paddingEnd="20dp"
-                android:paddingBottom="36dp">
+                android:paddingBottom="36dp"
+                android:clipChildren="false"
+                android:clipToPadding="false">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                    android:gravity="center_vertical"
+                    android:clipChildren="false"
+                    android:clipToPadding="false">
 
                     <!-- User Avatar & Online Wave Status Dot -->
                     <FrameLayout
@@ -92,13 +96,14 @@
 
                         </androidx.cardview.widget.CardView>
 
-                        <!-- Top-Right Status Dot with Smooth Emitting Wave behind -->
+                        <!-- Top-Right Status Dot with Smooth Emitting Wave behind (Unclipped 32dp container) -->
                         <FrameLayout
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
+                            android:id="@+id/homeStatusContainer"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
                             android:layout_gravity="top|end"
-                            android:layout_marginEnd="-2dp"
-                            android:layout_marginTop="-2dp"
+                            android:layout_marginEnd="-6dp"
+                            android:layout_marginTop="-6dp"
                             android:clipChildren="false"
                             android:clipToPadding="false">
 
@@ -108,10 +113,10 @@
                                 android:layout_width="12dp"
                                 android:layout_height="12dp"
                                 android:layout_gravity="center"
-                                android:background="@drawable/bg_status_wave_white"
-                                android:alpha="0.8" />
+                                android:background="@drawable/bg_status_wave_green"
+                                android:alpha="0.75" />
 
-                            <!-- Solid Foreground Status Dot (Green = Online, Red = Offline) -->
+                            <!-- Solid Foreground Status Dot (Green = Online, Yellow = Connecting, Red = Offline) -->
                             <View
                                 android:id="@+id/homeStatusDot"
                                 android:layout_width="12dp"
@@ -202,9 +207,9 @@
 
                     </LinearLayout>
 
-                    <!-- Help / Assistance Support Action Button -->
+                    <!-- Notification Bell (First) -->
                     <FrameLayout
-                        android:id="@+id/homeHelpBtn"
+                        android:id="@+id/homeBellBtn"
                         android:layout_width="44dp"
                         android:layout_height="44dp"
                         android:layout_marginEnd="10dp"
@@ -212,27 +217,7 @@
                         android:clickable="true"
                         android:focusable="true"
                         android:elevation="4dp"
-                        android:contentDescription="Need Assistance Support">
-
-                        <ImageView
-                            android:id="@+id/homeHelpIcon"
-                            android:layout_width="22dp"
-                            android:layout_height="22dp"
-                            android:layout_gravity="center"
-                            android:src="@drawable/ic_support_lifebuoy"
-                            app:tint="#0D6EFD" />
-
-                    </FrameLayout>
-
-                    <!-- Notification Bell -->
-                    <FrameLayout
-                        android:id="@+id/homeBellBtn"
-                        android:layout_width="44dp"
-                        android:layout_height="44dp"
-                        android:background="@drawable/bg_bell_btn"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:elevation="4dp">
+                        android:contentDescription="Notifications">
 
                         <ImageView
                             android:id="@+id/homeBellIcon"
@@ -240,7 +225,8 @@
                             android:layout_height="22dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_bell"
-                            android:tint="#0D6EFD" />
+                            android:tint="#0D6EFD"
+                            app:tint="#0D6EFD" />
 
                         <!-- Red unread dot -->
                         <View
@@ -252,6 +238,28 @@
                             android:layout_marginEnd="9dp"
                             android:background="@drawable/bg_notif_dot"
                             android:visibility="visible" />
+
+                    </FrameLayout>
+
+                    <!-- Help / Assistance Support Action Button (Followed after Notifications) -->
+                    <FrameLayout
+                        android:id="@+id/homeHelpBtn"
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:background="@drawable/bg_bell_btn"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:elevation="4dp"
+                        android:contentDescription="Help &amp; Support">
+
+                        <ImageView
+                            android:id="@+id/homeHelpIcon"
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_help"
+                            android:tint="#0D6EFD"
+                            app:tint="#0D6EFD" />
 
                     </FrameLayout>
 
@@ -333,21 +341,24 @@
                                 android:ellipsize="end"
                                 android:lineSpacingMultiplier="1.25" />
 
-                            <Button
+                            <com.google.android.material.button.MaterialButton
                                 android:id="@+id/homeBannerCta"
                                 android:layout_width="wrap_content"
-                                android:layout_height="36dp"
+                                android:layout_height="38dp"
                                 android:layout_marginTop="10dp"
-                                android:text="Recharge Now →"
+                                android:text="Recharge Wallet"
                                 android:textSize="12.5sp"
                                 android:textStyle="bold"
-                                android:textColor="#0D6EFD"
+                                android:textColor="#0A58CA"
                                 android:backgroundTint="#FFFFFF"
-                                android:paddingStart="14dp"
-                                android:paddingEnd="14dp"
-                                style="?attr/materialButtonStyle"
-                                app:cornerRadius="18dp"
-                                app:elevation="2dp" />
+                                android:paddingStart="18dp"
+                                android:paddingEnd="18dp"
+                                android:letterSpacing="0.02"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                app:cornerRadius="19dp"
+                                app:elevation="4dp"
+                                app:rippleColor="#200A58CA" />
 
                         </LinearLayout>
 

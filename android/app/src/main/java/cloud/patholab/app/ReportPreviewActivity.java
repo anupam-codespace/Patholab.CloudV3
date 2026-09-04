@@ -119,6 +119,7 @@ public class ReportPreviewActivity extends AppCompatActivity {
         s.setBuiltInZoomControls(true);
         s.setDisplayZoomControls(false);
         s.setSupportZoom(true);
+        s.setDatabaseEnabled(true);
         s.setUserAgentString(s.getUserAgentString() + " PatholabCloudMobileApp");
 
         // Sync authentication cookies
@@ -126,8 +127,10 @@ public class ReportPreviewActivity extends AppCompatActivity {
         if (token != null) {
             CookieManager cm = CookieManager.getInstance();
             cm.setAcceptCookie(true);
-            cm.setCookie("https://app.patholab.cloud", "token=" + token + "; path=/; domain=patholab.cloud; Secure");
+            cm.setAcceptThirdPartyCookies(webViewReportPreview, true);
+            cm.setCookie("https://app.patholab.cloud", "token=" + token + "; path=/; domain=app.patholab.cloud; Secure");
             cm.setCookie("https://patholab.cloud", "token=" + token + "; path=/; domain=patholab.cloud; Secure");
+            cm.flush();
         }
 
         webViewReportPreview.setWebChromeClient(new WebChromeClient() {
@@ -159,8 +162,12 @@ public class ReportPreviewActivity extends AppCompatActivity {
             }
         });
 
-        // Load report print canvas / verify URL
-        String targetUrl = BASE_URL + "/workspace/reports/print/" + reportId;
+        // Load report print canvas with hideNav and app flags
+        String encodedId = reportId;
+        try {
+            encodedId = URLEncoder.encode(reportId, "UTF-8");
+        } catch (Exception ignored) {}
+        String targetUrl = BASE_URL + "/workspace/reports/print/" + encodedId + "?app=true&hideNav=true";
         webViewReportPreview.loadUrl(targetUrl);
     }
 
@@ -189,7 +196,27 @@ public class ReportPreviewActivity extends AppCompatActivity {
         progressPreviewLoading.setVisibility(View.VISIBLE);
         Toast.makeText(this, "Preparing high-resolution PDF download...", Toast.LENGTH_SHORT).show();
 
-        // Simulate seamless download completion & present high-tier success popup
+        try {
+            String cleanId = reportId.replaceFirst("^(?i)(rep_|inv_)", "").trim();
+            String downloadUrl = BASE_URL + "/api/workspace/reports/" + URLEncoder.encode(cleanId, "UTF-8") + "/pdf";
+            android.app.DownloadManager dm = (android.app.DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+            if (dm != null) {
+                Uri downloadUri = Uri.parse(downloadUrl);
+                android.app.DownloadManager.Request request = new android.app.DownloadManager.Request(downloadUri);
+                request.setTitle("Report - " + patientName);
+                request.setDescription("Clinical Pathology Report");
+                request.setNotificationVisibility(android.app.DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+                String token = AuthManager.getToken(this);
+                if (token != null) {
+                    request.addRequestHeader("Authorization", "Bearer " + token);
+                    request.addRequestHeader("Cookie", "token=" + token);
+                }
+                String fileName = "Report_" + patientName.replaceAll("[^a-zA-Z0-9]", "_") + "_" + (uhid.isEmpty() ? "visit" : uhid) + ".pdf";
+                request.setDestinationInExternalPublicDir(android.os.Environment.DIRECTORY_DOWNLOADS, fileName);
+                dm.enqueue(request);
+            }
+        } catch (Exception ignored) {}
+
         mainHandler.postDelayed(() -> {
             progressPreviewLoading.setVisibility(View.GONE);
             showDownloadSuccessDialog();

@@ -743,6 +743,9 @@ public class MainActivity extends BridgeActivity {
             } else if (path.equals("/workspace/staff") || path.startsWith("/workspace/staff")) {
                 startActivity(new Intent(this, StaffManagementActivity.class));
                 return;
+            } else if (path.equals("/workspace/support") || path.startsWith("/workspace/support")) {
+                startActivity(new Intent(this, SupportActivity.class));
+                return;
             }
         }
         if (offlineOverlay != null)

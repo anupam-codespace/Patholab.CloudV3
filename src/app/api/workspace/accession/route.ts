@@ -34,13 +34,28 @@ function getMatchingRange(parameter: any, patient: any) {
 export async function GET(req: NextRequest) {
   try {
     const user = await getDataFromToken(req);
-    if (!user || !user.labId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    let labId = user?.labId;
+    if (!labId && user) {
+      const uid = user.userId || user.id;
+      if (uid) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: uid },
+          include: {
+            lab: true,
+            staffLabs: { include: { lab: true } },
+          },
+        });
+        const activeLab = dbUser?.lab || dbUser?.staffLabs?.[0]?.lab;
+        if (activeLab) labId = activeLab.id;
+      }
+    }
+    if (!user || !labId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { searchParams } = new URL(req.url);
     const patientId = searchParams.get('patientId');
     const limit = parseInt(searchParams.get('limit') || '50');
 
-    let where: any = { labId: user.labId };
+    let where: any = { labId };
     
     // Enterprise Branch Scoping: Managers only see their branch's accessions
     if (user.role !== 'LAB_OWNER' && user.role !== 'SUPER_ADMIN' && user.branchId) {
@@ -76,7 +91,22 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const user = await getDataFromToken(req);
-    if (!user?.labId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    let labId = user?.labId;
+    if (!labId && user) {
+      const uid = user.userId || user.id;
+      if (uid) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: uid },
+          include: {
+            lab: true,
+            staffLabs: { include: { lab: true } },
+          },
+        });
+        const activeLab = dbUser?.lab || dbUser?.staffLabs?.[0]?.lab;
+        if (activeLab) labId = activeLab.id;
+      }
+    }
+    if (!labId || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
     const { patientId, tests, subtotal, discountAmount, grandTotal } = body;
@@ -94,11 +124,14 @@ export async function POST(req: NextRequest) {
         const readablePatientId = patientData.patientId || patientData.id.substring(0, 8);
         
         // --- A. WALLET DEDUCTION & LEDGER LOGIC ---
-        const wallet = await tx.labWallet.findUnique({ where: { labId: user.labId } });
-        if (!wallet) throw new Error("INSUFFICIENT_FUNDS");
+        let wallet = await tx.labWallet.findUnique({ where: { labId } });
+        if (!wallet) {
+            wallet = await tx.labWallet.create({
+                data: { labId, balance: 0, perPatientFee: 2.5 }
+            });
+        }
 
         const visitFee = Number(wallet.perPatientFee || 2.5);
-        let newBalance = Number(wallet.balance);
 
         const startOfToday = new Date();
         startOfToday.setHours(0, 0, 0, 0);
@@ -106,7 +139,7 @@ export async function POST(req: NextRequest) {
         // SAFETY: Check if we already charged for this patient today
         const alreadyChargedToday = await tx.walletTransaction.findFirst({
             where: { 
-                labId: user.labId,
+                labId,
                 type: 'DEDUCTION',
                 createdAt: { gte: startOfToday },
                 description: { contains: `[ID: ${patientId}]` } // We still keep the hidden ID here for exact computer matching
@@ -114,23 +147,22 @@ export async function POST(req: NextRequest) {
         });
 
         if (!alreadyChargedToday) {
-            if (newBalance < visitFee) throw new Error("INSUFFICIENT_FUNDS");
-            
-            newBalance -= visitFee;
+            if (Number(wallet.balance) < visitFee) throw new Error("INSUFFICIENT_FUNDS");
 
-            // 1. Update Wallet Balance
-            await tx.labWallet.update({
-                where: { labId: user.labId },
-                data: { balance: newBalance }
+            // 1. Update Wallet Balance atomically
+            const updatedWallet = await tx.labWallet.update({
+                where: { labId },
+                data: { balance: { decrement: visitFee } },
+                select: { balance: true }
             });
 
-            // 2. Create Ledger Transaction (✅ NOW WITH REAL NAME)
+            // 2. Create Ledger Transaction (✅ NOW WITH REAL NAME & ACCURATE CLOSING BALANCE)
             await tx.walletTransaction.create({
                 data: {
-                    labId: user.labId,
+                    labId,
                     type: 'DEDUCTION',
                     amount: visitFee,
-                    closingBalance: newBalance,
+                    closingBalance: Number(updatedWallet.balance),
                     description: `Daily Visit Fee: ${patientData.name} [ID: ${patientId}]`,
                 }
             });
@@ -140,7 +172,7 @@ export async function POST(req: NextRequest) {
         const datePrefix = `${String(startOfToday.getDate()).padStart(2, '0')}${String(startOfToday.getMonth() + 1).padStart(2, '0')}${String(startOfToday.getFullYear()).slice(2)}`;
         
         const countToday = await tx.invoice.count({ 
-            where: { labId: user.labId, createdAt: { gte: startOfToday } } 
+            where: { labId, createdAt: { gte: startOfToday } } 
         });
         const invoiceNumber = `${datePrefix}-${(countToday + 1).toString().padStart(4, '0')}`;
 
@@ -149,7 +181,7 @@ export async function POST(req: NextRequest) {
         
         const invoice = await tx.invoice.create({
             data: {
-                labId: user.labId,
+                labId,
                 branchId: user.branchId,
                 patientId,
                 invoiceNumber,
@@ -195,7 +227,7 @@ export async function POST(req: NextRequest) {
 
             const createdTest = await tx.test.create({
                 data: {
-                    labId: user.labId,
+                    labId,
                     branchId: user.branchId,
                     patientId,
                     invoiceId: invoice.id,
@@ -234,7 +266,7 @@ export async function POST(req: NextRequest) {
             
             await tx.sample.create({
                 data: {
-                    labId: user.labId,
+                    labId,
                     branchId: user.branchId,
                     sampleId: `${invoiceNumber}-${sampleSuffix}`,
                     patientId,

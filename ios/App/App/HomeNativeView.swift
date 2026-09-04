@@ -1,4 +1,5 @@
 import UIKit
+import Network
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HomeNativeView.swift
@@ -35,6 +36,7 @@ struct HomePatient {
     let age: Int
     let gender: String
     let testName: String
+    let testCount: Int
     let status: String   // "Ready" | "Processing" | "Pending"
     let total: Double
     let paidAmount: Double
@@ -50,13 +52,28 @@ class HomeNativeView: UIView {
     static let banners: [HomeBanner] = [
         HomeBanner(title: "₹ 2.5 Per\nRegistration",
                    subtitle: "Cloud reporting, instant WhatsApp sharing & B2B automation at the lowest cost.",
-                   cta: "Recharge Now →", path: "/workspace/wallet?action=topup"),
+                   cta: "Recharge Wallet", path: "/workspace/wallet?action=topup"),
         HomeBanner(title: "Instant WhatsApp\nDelivery",
-                   subtitle: "Send diagnostic reports directly to patients on WhatsApp with one tap.",
-                   cta: "Explore Now →", path: "/workspace/reports"),
+                   subtitle: "Deliver diagnostic test reports directly to patients on WhatsApp with one click.",
+                   cta: "Share Reports", path: "/workspace/reports"),
         HomeBanner(title: "Automated\nLab Billing",
-                   subtitle: "Generate GST-compliant invoices and track pending dues effortlessly.",
-                   cta: "View Billing →", path: "/workspace/billing"),
+                   subtitle: "Generate GST-compliant invoices, track pending dues & settle payments easily.",
+                   cta: "Manage Billing", path: "/workspace/billing"),
+        HomeBanner(title: "1,000+ Pathology\nTest Catalogs",
+                   subtitle: "Pre-configured test parameters, biological reference ranges and custom pricing.",
+                   cta: "Explore Catalog", path: "/workspace/test-management"),
+        HomeBanner(title: "NABL & ISO\nQR Verification",
+                   subtitle: "Tamper-proof digital verification QR codes embedded in every printed report.",
+                   cta: "Verify Reports", path: "/workspace/reports"),
+        HomeBanner(title: "Sample Accession\n& Barcodes",
+                   subtitle: "Automated tube color-coding, specimen barcoding and rapid accessioning.",
+                   cta: "Accession Samples", path: "/workspace/samples"),
+        HomeBanner(title: "Phlebotomy &\nHome Collection",
+                   subtitle: "Assign field technicians, track collection runs and dispatch runners live.",
+                   cta: "Track Logistics", path: "/workspace/logistics"),
+        HomeBanner(title: "Executive Financial\nAnalytics",
+                   subtitle: "Monitor lab revenue, expense breakdown, net margins and clinical throughput.",
+                   cta: "View Analytics", path: "/workspace/analytics"),
     ]
 
     static let modules: [HomeModule] = [
@@ -95,6 +112,17 @@ class HomeNativeView: UIView {
     private let helpButton       = UIButton(type: .custom)
     private let bellButton       = UIButton(type: .custom)
     private let bellDot          = UIView()
+
+    // Connection state monitoring & continuous wave pulse
+    enum ConnectionState {
+        case online      // Green = Online
+        case connecting  // Yellow = Connecting/Waiting (checks connectivity for 2-4s)
+        case offline     // Red = Offline
+    }
+    private var currentConnectionState: ConnectionState = .online
+    private var pendingOfflineWorkItem: DispatchWorkItem?
+    private let pathMonitor = NWPathMonitor()
+    private let monitorQueue = DispatchQueue(label: "cloud.patholab.networkMonitor")
 
     // Scroll
     private let scrollView       = UIScrollView()
@@ -218,14 +246,15 @@ class HomeNativeView: UIView {
         avatarImageView.frame = CGRect(x: 0, y: 0, width: 44, height: 44)
         avatarContainer.clipsToBounds = false
 
-        statusWaveView.backgroundColor = .white
+        statusWaveView.backgroundColor = UIColor(red: 16/255, green: 185/255, blue: 129/255, alpha: 0.70)
         statusWaveView.layer.cornerRadius = 6
+        statusWaveView.clipsToBounds = false
         statusWaveView.translatesAutoresizingMaskIntoConstraints = false
         avatarContainer.addSubview(statusWaveView)
 
-        statusDotView.backgroundColor    = UIColor(red: 0.063, green: 0.725, blue: 0.506, alpha: 1)
+        statusDotView.backgroundColor    = UIColor(red: 16/255, green: 185/255, blue: 129/255, alpha: 1)
         statusDotView.layer.cornerRadius = 5.5
-        statusDotView.layer.borderWidth  = 1.5
+        statusDotView.layer.borderWidth  = 2.0
         statusDotView.layer.borderColor  = UIColor.white.cgColor
         statusDotView.translatesAutoresizingMaskIntoConstraints = false
         avatarContainer.addSubview(statusDotView)
@@ -241,7 +270,9 @@ class HomeNativeView: UIView {
             statusWaveView.widthAnchor.constraint(equalToConstant: 12),
             statusWaveView.heightAnchor.constraint(equalToConstant: 12),
         ])
-        startStatusWaveAnimation()
+        ensureStatusWaveAnimation()
+        setupNetworkMonitor()
+        NotificationCenter.default.addObserver(self, selector: #selector(appWillEnterForeground), name: UIApplication.willEnterForegroundNotification, object: nil)
 
         // Greeting
         greetingLabel.font = .systemFont(ofSize: 19.5, weight: .bold)
@@ -280,19 +311,7 @@ class HomeNativeView: UIView {
         walletRow.isUserInteractionEnabled = false
         walletPill.addSubview(walletRow)
 
-        // Help / Assistance Support button
-        helpButton.backgroundColor = .white
-        helpButton.layer.cornerRadius = 22
-        helpButton.layer.shadowColor  = UIColor.black.cgColor
-        helpButton.layer.shadowOpacity = 0.12
-        helpButton.layer.shadowRadius  = 4
-        helpButton.layer.shadowOffset  = CGSize(width: 0, height: 2)
-        let helpConfig = UIImage.SymbolConfiguration(pointSize: 20, weight: .bold)
-        helpButton.setImage(UIImage(systemName: "lifepreserver", withConfiguration: helpConfig) ?? UIImage(systemName: "questionmark.circle.fill", withConfiguration: helpConfig), for: .normal)
-        helpButton.tintColor = Self.headerBlue2
-        helpButton.addTarget(self, action: #selector(helpTapped), for: .touchUpInside)
-
-        // Bell button
+        // Notification Bell button (First)
         bellButton.backgroundColor = .white
         bellButton.layer.cornerRadius = 22
         bellButton.layer.shadowColor  = UIColor.black.cgColor
@@ -301,6 +320,7 @@ class HomeNativeView: UIView {
         bellButton.layer.shadowOffset  = CGSize(width: 0, height: 2)
         bellButton.setImage(UIImage(systemName: "bell.fill"), for: .normal)
         bellButton.tintColor = Self.headerBlue2
+        bellButton.accessibilityLabel = "Notifications"
         bellButton.addTarget(self, action: #selector(bellTapped), for: .touchUpInside)
 
         // Bell unread dot
@@ -309,13 +329,26 @@ class HomeNativeView: UIView {
         bellDot.layer.borderWidth  = 1.5
         bellDot.layer.borderColor  = UIColor.white.cgColor
 
+        // Help / Assistance Support button (Followed after Notifications)
+        helpButton.backgroundColor = .white
+        helpButton.layer.cornerRadius = 22
+        helpButton.layer.shadowColor  = UIColor.black.cgColor
+        helpButton.layer.shadowOpacity = 0.12
+        helpButton.layer.shadowRadius  = 4
+        helpButton.layer.shadowOffset  = CGSize(width: 0, height: 2)
+        let helpConfig = UIImage.SymbolConfiguration(pointSize: 20, weight: .bold)
+        helpButton.setImage(UIImage(systemName: "questionmark.circle", withConfiguration: helpConfig) ?? UIImage(systemName: "questionmark", withConfiguration: helpConfig), for: .normal)
+        helpButton.tintColor = Self.headerBlue2
+        helpButton.accessibilityLabel = "Help & Support"
+        helpButton.addTarget(self, action: #selector(helpTapped), for: .touchUpInside)
+
         // Layout in header using Auto Layout
         let leftVStack = UIStackView(arrangedSubviews: [greetingRow, walletPill])
         leftVStack.axis    = .vertical
         leftVStack.spacing = 6
         leftVStack.alignment = .leading
 
-        let hStack = UIStackView(arrangedSubviews: [avatarContainer, leftVStack, UIView(), helpButton, bellButton])
+        let hStack = UIStackView(arrangedSubviews: [avatarContainer, leftVStack, UIView(), bellButton, helpButton])
         hStack.axis    = .horizontal
         hStack.spacing = 10
         hStack.alignment = .center
@@ -323,6 +356,8 @@ class HomeNativeView: UIView {
 
         headerView.addSubview(hStack)
         headerView.addSubview(bellDot)
+        headerView.clipsToBounds = false
+        hStack.clipsToBounds = false
         hStack.translatesAutoresizingMaskIntoConstraints = false
         bellDot.translatesAutoresizingMaskIntoConstraints = false
         avatarContainer.translatesAutoresizingMaskIntoConstraints = false
@@ -436,15 +471,15 @@ class HomeNativeView: UIView {
         bannerSubLabel.text          = "Cloud reporting, instant WhatsApp sharing & B2B automation at the lowest cost."
 
         // CTA Button
-        bannerCtaBtn.setTitle("Recharge Now →", for: .normal)
-        bannerCtaBtn.setTitleColor(UIColor(red: 0.118, green: 0.251, blue: 0.690, alpha: 1), for: .normal)
-        bannerCtaBtn.titleLabel?.font = .systemFont(ofSize: 13, weight: .bold)
+        bannerCtaBtn.setTitle("Recharge Wallet", for: .normal)
+        bannerCtaBtn.setTitleColor(UIColor(red: 10/255, green: 88/255, blue: 202/255, alpha: 1), for: .normal)
+        bannerCtaBtn.titleLabel?.font = .systemFont(ofSize: 12.5, weight: .bold)
         bannerCtaBtn.backgroundColor  = .white
-        bannerCtaBtn.layer.cornerRadius = 20
-        bannerCtaBtn.contentEdgeInsets  = UIEdgeInsets(top: 9, left: 18, bottom: 9, right: 18)
+        bannerCtaBtn.layer.cornerRadius = 19
+        bannerCtaBtn.contentEdgeInsets  = UIEdgeInsets(top: 8, left: 18, bottom: 8, right: 18)
         bannerCtaBtn.layer.shadowColor   = UIColor.black.cgColor
-        bannerCtaBtn.layer.shadowOpacity = 0.12
-        bannerCtaBtn.layer.shadowRadius  = 4
+        bannerCtaBtn.layer.shadowOpacity = 0.15
+        bannerCtaBtn.layer.shadowRadius  = 5
         bannerCtaBtn.layer.shadowOffset  = CGSize(width: 0, height: 2)
         bannerCtaBtn.addTarget(self, action: #selector(bannerCtaTapped), for: .touchUpInside)
 
@@ -479,16 +514,16 @@ class HomeNativeView: UIView {
 
         // Pagination dots
         bannerDotsStack.axis      = .horizontal
-        bannerDotsStack.spacing   = 6
+        bannerDotsStack.spacing   = 5
         bannerDotsStack.alignment = .center
         for i in 0..<Self.banners.count {
             let dot = UIView()
-            dot.layer.cornerRadius = 3.5
+            dot.layer.cornerRadius = 3
             dot.translatesAutoresizingMaskIntoConstraints = false
-            let w: CGFloat = i == 0 ? 20 : 7
+            let w: CGFloat = i == 0 ? 18 : 6
             NSLayoutConstraint.activate([
                 dot.widthAnchor.constraint(equalToConstant: w),
-                dot.heightAnchor.constraint(equalToConstant: 7),
+                dot.heightAnchor.constraint(equalToConstant: 6),
             ])
             dot.backgroundColor = i == 0
                 ? UIColor(red: 0.118, green: 0.533, blue: 0.898, alpha: 1)
@@ -782,10 +817,11 @@ class HomeNativeView: UIView {
         codeBadge.layer.cornerRadius = 6
         codeBadge.layer.masksToBounds = true
 
-        // Status badge
-        let (bgColor, textColor, borderColor) = statusStyle(p.status)
+        // Status badge (Top Accepted badge in deep green)
+        let displayStatus = (p.status == "Pending" || p.status == "Accepted") ? "Accepted" : p.status
+        let (bgColor, textColor, borderColor) = statusStyle(displayStatus)
         let statusBadge = UILabel()
-        statusBadge.text = " \(p.status) "
+        statusBadge.text = " \(displayStatus) "
         statusBadge.font = .systemFont(ofSize: 11, weight: .bold)
         statusBadge.textColor = textColor
         statusBadge.backgroundColor = bgColor
@@ -804,19 +840,13 @@ class HomeNativeView: UIView {
         nameLabel.textColor = Self.textPrimary
         nameLabel.lineBreakMode = .byTruncatingTail
 
-        // Demographics (NO phone number)
-        var demoParts: [String] = []
-        if p.age > 0 { demoParts.append("\(p.age) Yrs") }
-        if !p.gender.isEmpty { demoParts.append(p.gender) }
-        let demoText = demoParts.isEmpty ? "Registered Patient" : demoParts.joined(separator: " • ")
-
         let demoLabel = UILabel()
-        demoLabel.text = demoText
+        demoLabel.text = "Registered Patient"
         demoLabel.font = .systemFont(ofSize: 12, weight: .medium)
         demoLabel.textColor = Self.textSecondary
         demoLabel.lineBreakMode = .byTruncatingTail
 
-        // Test Container Box (Dynamic 3-state colors: Red = Accepted, Blue = Processing, Green = Report Ready)
+        // Test Container Box (Only test name, second accepted status pill removed)
         let testBox = UIView()
         testBox.backgroundColor = bgColor
         testBox.layer.cornerRadius = 10
@@ -838,62 +868,74 @@ class HomeNativeView: UIView {
         testLabel.translatesAutoresizingMaskIntoConstraints = false
         testBox.addSubview(testLabel)
 
-        let testStatusPill = UILabel()
-        let statusTag = (p.status == "Ready") ? "● Ready" : ((p.status == "Processing") ? "● Processing" : "● Accepted")
-        testStatusPill.text = " \(statusTag) "
-        testStatusPill.font = .systemFont(ofSize: 10, weight: .bold)
-        testStatusPill.textColor = textColor
-        testStatusPill.translatesAutoresizingMaskIntoConstraints = false
-        testBox.addSubview(testStatusPill)
+        if p.testCount > 1 {
+            let countBadge = UILabel()
+            countBadge.text = " \(p.testCount) Tests "
+            countBadge.font = .systemFont(ofSize: 10.5, weight: .bold)
+            countBadge.textColor = .white
+            countBadge.backgroundColor = UIColor(red: 0.145, green: 0.510, blue: 0.965, alpha: 1) // #2563EB
+            countBadge.layer.cornerRadius = 8
+            countBadge.layer.masksToBounds = true
+            countBadge.translatesAutoresizingMaskIntoConstraints = false
+            testBox.addSubview(countBadge)
 
-        NSLayoutConstraint.activate([
-            testIcon.leadingAnchor.constraint(equalTo: testBox.leadingAnchor, constant: 10),
-            testIcon.centerYAnchor.constraint(equalTo: testBox.centerYAnchor),
+            NSLayoutConstraint.activate([
+                testIcon.leadingAnchor.constraint(equalTo: testBox.leadingAnchor, constant: 10),
+                testIcon.centerYAnchor.constraint(equalTo: testBox.centerYAnchor),
 
-            testLabel.topAnchor.constraint(equalTo: testBox.topAnchor, constant: 6),
-            testLabel.bottomAnchor.constraint(equalTo: testBox.bottomAnchor, constant: -6),
-            testLabel.leadingAnchor.constraint(equalTo: testIcon.trailingAnchor, constant: 6),
-            testLabel.trailingAnchor.constraint(lessThanOrEqualTo: testStatusPill.leadingAnchor, constant: -6),
+                testLabel.topAnchor.constraint(equalTo: testBox.topAnchor, constant: 6),
+                testLabel.bottomAnchor.constraint(equalTo: testBox.bottomAnchor, constant: -6),
+                testLabel.leadingAnchor.constraint(equalTo: testIcon.trailingAnchor, constant: 6),
+                testLabel.trailingAnchor.constraint(lessThanOrEqualTo: countBadge.leadingAnchor, constant: -6),
 
-            testStatusPill.trailingAnchor.constraint(equalTo: testBox.trailingAnchor, constant: -8),
-            testStatusPill.centerYAnchor.constraint(equalTo: testBox.centerYAnchor),
-        ])
+                countBadge.trailingAnchor.constraint(equalTo: testBox.trailingAnchor, constant: -8),
+                countBadge.centerYAnchor.constraint(equalTo: testBox.centerYAnchor),
+            ])
+        } else {
+            NSLayoutConstraint.activate([
+                testIcon.leadingAnchor.constraint(equalTo: testBox.leadingAnchor, constant: 10),
+                testIcon.centerYAnchor.constraint(equalTo: testBox.centerYAnchor),
+
+                testLabel.topAnchor.constraint(equalTo: testBox.topAnchor, constant: 6),
+                testLabel.bottomAnchor.constraint(equalTo: testBox.bottomAnchor, constant: -6),
+                testLabel.leadingAnchor.constraint(equalTo: testIcon.trailingAnchor, constant: 6),
+                testLabel.trailingAnchor.constraint(lessThanOrEqualTo: testBox.trailingAnchor, constant: -10),
+            ])
+        }
 
         // Divider
         let divider = UIView()
         divider.backgroundColor = UIColor(red: 0.945, green: 0.961, blue: 0.980, alpha: 1)
         divider.heightAnchor.constraint(equalToConstant: 1).isActive = true
 
-        // Price row
-        let priceLabel = UILabel()
-        priceLabel.text = String(format: "₹ %,.0f", p.total)
-        priceLabel.font = .systemFont(ofSize: 15, weight: .bold)
-        priceLabel.textColor = Self.textPrimary
+        // Bottom row: Patient Demographics (Replaces ₹0 Due)
+        let personConfig = UIImage.SymbolConfiguration(pointSize: 13, weight: .semibold)
+        let personImg = UIImageView(image: UIImage(systemName: "person.fill", withConfiguration: personConfig))
+        personImg.tintColor = UIColor(red: 100/255, green: 116/255, blue: 139/255, alpha: 1)
+        personImg.contentMode = .scaleAspectFit
+        personImg.translatesAutoresizingMaskIntoConstraints = false
+        personImg.widthAnchor.constraint(equalToConstant: 14).isActive = true
+        personImg.heightAnchor.constraint(equalToConstant: 14).isActive = true
 
-        let paidBadge = UILabel()
-        paidBadge.text = " Paid "
-        paidBadge.font = .systemFont(ofSize: 10.5, weight: .bold)
-        paidBadge.textColor = UIColor(red: 0.02, green: 0.59, blue: 0.41, alpha: 1)
-        paidBadge.backgroundColor = UIColor(red: 0.93, green: 0.99, blue: 0.96, alpha: 1)
-        paidBadge.layer.cornerRadius = 6
-        paidBadge.layer.masksToBounds = true
-        paidBadge.isHidden = !p.paid
+        var demoParts: [String] = []
+        if p.age > 0 { demoParts.append("\(p.age) Yrs") }
+        if !p.gender.isEmpty {
+            let capGender = p.gender.lowercased().capitalized
+            demoParts.append(capGender)
+        }
+        let demoStr = demoParts.isEmpty ? "General Patient" : demoParts.joined(separator: " • ")
 
-        let dueBadge = UILabel()
-        let dueAmount = max(0, p.total - p.paidAmount)
-        dueBadge.text = String(format: " Due: ₹ %,.0f ", dueAmount)
-        dueBadge.font = .systemFont(ofSize: 10.5, weight: .bold)
-        dueBadge.textColor = UIColor(red: 0.88, green: 0.11, blue: 0.28, alpha: 1)
-        dueBadge.backgroundColor = UIColor(red: 1.0, green: 0.95, blue: 0.95, alpha: 1)
-        dueBadge.layer.cornerRadius = 6
-        dueBadge.layer.masksToBounds = true
-        dueBadge.isHidden = p.paid
+        let demoTextLabel = UILabel()
+        demoTextLabel.text = demoStr
+        demoTextLabel.font = .systemFont(ofSize: 13, weight: .bold)
+        demoTextLabel.textColor = UIColor(red: 51/255, green: 65/255, blue: 85/255, alpha: 1)
+        demoTextLabel.lineBreakMode = .byTruncatingTail
 
-        let priceRow = makeHStack([priceLabel, paidBadge, dueBadge, UIView()])
-        priceRow.spacing = 6
+        let bottomRow = makeHStack([personImg, demoTextLabel, UIView()])
+        bottomRow.spacing = 6
 
         // WhatsApp button
-        if p.status != "Pending" && !p.phone.isEmpty {
+        if p.status != "Pending" && p.status != "Accepted" && !p.phone.isEmpty {
             let waBtn = UIButton(type: .custom)
             waBtn.backgroundColor = UIColor(red: 0.145, green: 0.831, blue: 0.400, alpha: 1)
             waBtn.layer.cornerRadius = 16
@@ -907,7 +949,7 @@ class HomeNativeView: UIView {
                 guard let url = URL(string: "https://wa.me/91\(phone)?text=Hello \(name), your diagnostic report is ready.") else { return }
                 UIApplication.shared.open(url)
             }, for: .touchUpInside)
-            priceRow.addArrangedSubview(waBtn)
+            bottomRow.addArrangedSubview(waBtn)
         }
 
         let chevron = UIImageView(image: UIImage(systemName: "chevron.right"))
@@ -916,7 +958,7 @@ class HomeNativeView: UIView {
         chevron.translatesAutoresizingMaskIntoConstraints = false
         chevron.widthAnchor.constraint(equalToConstant: 14).isActive = true
         chevron.heightAnchor.constraint(equalToConstant: 14).isActive = true
-        priceRow.addArrangedSubview(chevron)
+        bottomRow.addArrangedSubview(chevron)
 
         let patientAvatar = PatientAvatarHelper.createAvatar(size: 36)
         let nameDemoStack = UIStackView(arrangedSubviews: [nameLabel, demoLabel])
@@ -929,7 +971,7 @@ class HomeNativeView: UIView {
         patientInfoRow.alignment = .center
         patientInfoRow.spacing = 10
 
-        let vStack = UIStackView(arrangedSubviews: [patientTopRow, patientInfoRow, testBox, divider, priceRow])
+        let vStack = UIStackView(arrangedSubviews: [patientTopRow, patientInfoRow, testBox, divider, bottomRow])
         vStack.axis    = .vertical
         vStack.spacing = 6
         vStack.setCustomSpacing(6, after: patientInfoRow)
@@ -1002,16 +1044,16 @@ class HomeNativeView: UIView {
                     UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1),
                     UIColor(red: 0.749, green: 0.859, blue: 0.996, alpha: 1))
         default:
-            // Red: Accepted / Sample Received / Pending
-            return (UIColor(red: 0.996, green: 0.949, blue: 0.949, alpha: 1),
-                    UIColor(red: 0.863, green: 0.149, blue: 0.149, alpha: 1),
-                    UIColor(red: 0.996, green: 0.804, blue: 0.827, alpha: 1))
+            // Deep Green: Accepted (High Visibility)
+            return (UIColor(red: 209/255, green: 250/255, blue: 229/255, alpha: 1), // #D1FAE5 Soft Mint
+                    UIColor(red: 4/255, green: 120/255, blue: 87/255, alpha: 1),     // #047857 Deep Green
+                    UIColor(red: 110/255, green: 231/255, blue: 183/255, alpha: 1)) // #6EE7B7 Emerald Border
         }
     }
 
     // MARK: – Banner carousel
     private func startCarousel() {
-        bannerTimer = Timer.scheduledTimer(withTimeInterval: 2.8, repeats: true) { [weak self] _ in
+        bannerTimer = Timer.scheduledTimer(withTimeInterval: 3.6, repeats: true) { [weak self] _ in
             guard let self = self else { return }
             self.currentBannerIdx = (self.currentBannerIdx + 1) % Self.banners.count
             self.showBanner(self.currentBannerIdx)
@@ -1035,7 +1077,7 @@ class HomeNativeView: UIView {
                 ? UIColor(red: 0.118, green: 0.533, blue: 0.898, alpha: 1)
                 : UIColor(red: 0.773, green: 0.824, blue: 0.910, alpha: 1)
             if let wConstraint = dot.constraints.first(where: { $0.firstAttribute == .width }) {
-                wConstraint.constant = isActive ? 20 : 7
+                wConstraint.constant = isActive ? 18 : 6
             }
             UIView.animate(withDuration: 0.3) { dot.layoutIfNeeded() }
         }
@@ -1259,7 +1301,8 @@ class HomeNativeView: UIView {
     }
 
     private func triggerWelcomeNotificationIfEligible() {
-        // Welcoming popups, floating banners, and notifications removed per user request.
+        let userEmail = UserDefaults.standard.string(forKey: "user_email") ?? currentFullName
+        MobileNotificationHelper.shared.scheduleWelcomeNotification(userName: currentFullName, userId: userEmail)
     }
 
     private func triggerLowBalanceAlertIfEligible(_ balance: Double) {
@@ -1270,22 +1313,117 @@ class HomeNativeView: UIView {
         }
     }
 
-    private func startStatusWaveAnimation() {
+    // MARK: – Connection Status & Continuous Wave Animation
+    private func setupNetworkMonitor() {
+        pathMonitor.pathUpdateHandler = { [weak self] path in
+            guard let self = self else { return }
+            DispatchQueue.main.async {
+                if path.status == .satisfied {
+                    self.pendingOfflineWorkItem?.cancel()
+                    self.pendingOfflineWorkItem = nil
+
+                    if self.currentConnectionState != .online {
+                        self.setConnectionState(.connecting)
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+                            if self.pathMonitor.currentPath.status == .satisfied {
+                                self.setConnectionState(.online)
+                            }
+                        }
+                    } else {
+                        self.setConnectionState(.online)
+                    }
+                } else {
+                    // Connection lost: keep wave visible, switch immediately to Yellow while checking for 2-4 seconds
+                    self.pendingOfflineWorkItem?.cancel()
+                    self.setConnectionState(.connecting)
+
+                    let workItem = DispatchWorkItem { [weak self] in
+                        guard let self = self else { return }
+                        if self.pathMonitor.currentPath.status == .satisfied {
+                            self.setConnectionState(.online)
+                        } else {
+                            self.verifyInternetReachability { isReachable in
+                                DispatchQueue.main.async {
+                                    self.setConnectionState(isReachable ? .online : .offline)
+                                }
+                            }
+                        }
+                    }
+                    self.pendingOfflineWorkItem = workItem
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 3.0, execute: workItem)
+                }
+            }
+        }
+        pathMonitor.start(queue: monitorQueue)
+    }
+
+    private func verifyInternetReachability(completion: @escaping (Bool) -> Void) {
+        guard let url = URL(string: "https://clients3.google.com/generate_204") else {
+            completion(false)
+            return
+        }
+        var req = URLRequest(url: url)
+        req.timeoutInterval = 1.5
+        req.httpMethod = "HEAD"
+        let task = URLSession.shared.dataTask(with: req) { _, response, _ in
+            if let http = response as? HTTPURLResponse, http.statusCode == 204 || http.statusCode == 200 {
+                completion(true)
+            } else {
+                completion(false)
+            }
+        }
+        task.resume()
+    }
+
+    func setConnectionState(_ state: ConnectionState) {
+        currentConnectionState = state
+        let dotColor: UIColor
+        let waveColor: UIColor
+
+        switch state {
+        case .online:
+            dotColor  = UIColor(red: 16/255, green: 185/255, blue: 129/255, alpha: 1.0)
+            waveColor = UIColor(red: 16/255, green: 185/255, blue: 129/255, alpha: 0.70)
+        case .connecting:
+            dotColor  = UIColor(red: 245/255, green: 158/255, blue: 11/255, alpha: 1.0)
+            waveColor = UIColor(red: 245/255, green: 158/255, blue: 11/255, alpha: 0.70)
+        case .offline:
+            dotColor  = UIColor(red: 239/255, green: 68/255, blue: 68/255, alpha: 1.0)
+            waveColor = UIColor(red: 239/255, green: 68/255, blue: 68/255, alpha: 0.70)
+        }
+
+        UIView.animate(withDuration: 0.3) {
+            self.statusDotView.backgroundColor = dotColor
+            self.statusWaveView.backgroundColor = waveColor
+        }
+        ensureStatusWaveAnimation()
+    }
+
+    private func ensureStatusWaveAnimation() {
+        statusWaveView.isHidden = false
+        if statusWaveView.layer.animation(forKey: "smoothWave") != nil {
+            return // Continuously playing, uninterrupted
+        }
         let scaleAnim = CABasicAnimation(keyPath: "transform.scale")
         scaleAnim.fromValue = 1.0
-        scaleAnim.toValue = 2.6
+        scaleAnim.toValue = 2.4
         scaleAnim.timingFunction = CAMediaTimingFunction(name: .easeOut)
 
         let opacityAnim = CABasicAnimation(keyPath: "opacity")
-        opacityAnim.fromValue = 0.85
+        opacityAnim.fromValue = 0.75
         opacityAnim.toValue = 0.0
         opacityAnim.timingFunction = CAMediaTimingFunction(name: .easeOut)
 
         let group = CAAnimationGroup()
         group.animations = [scaleAnim, opacityAnim]
-        group.duration = 1.5
+        group.duration = 1.6
         group.repeatCount = .infinity
+        group.isRemovedOnCompletion = false
         statusWaveView.layer.add(group, forKey: "smoothWave")
+    }
+
+    @objc private func appWillEnterForeground() {
+        ensureStatusWaveAnimation()
     }
 
     func getDefaultAvatarImage() -> UIImage? {
@@ -1435,6 +1573,32 @@ class HomeNativeView: UIView {
                 await MainActor.run { self.hideWorklistSection() }
                 return
             }
+
+            // 1. Primary: /api/workspace/patients?limit=10 (Contains full demographics: age, gender, tests)
+            if let pUrl = URL(string: "https://app.patholab.cloud/api/workspace/patients?limit=10") {
+                var pReq = URLRequest(url: pUrl)
+                pReq.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+                pReq.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
+                if let (data, resp) = try? await URLSession.shared.data(for: pReq),
+                   let http = resp as? HTTPURLResponse, http.statusCode == 200,
+                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                    let patients = (json["data"] as? [[String: Any]]) ?? (json["patients"] as? [[String: Any]]) ?? []
+                    if !patients.isEmpty {
+                        self.detectAndNotifyNewPatientsFromWeb(patients)
+                        let cards = patients.compactMap { self.parsePatient($0) }
+                        if !cards.isEmpty {
+                            await MainActor.run {
+                                self.worklistSection.isHidden = false
+                                self.worklistCountBadge.text = " \(cards.count) \(cards.count == 1 ? "Patient" : "Patients") "
+                                self.populateWorklist(cards)
+                            }
+                            return
+                        }
+                    }
+                }
+            }
+
+            // 2. Fallback: /api/labs/dashboard?range=TODAY
             guard let url = URL(string: "https://app.patholab.cloud/api/labs/dashboard?range=TODAY") else { return }
             var req = URLRequest(url: url)
             req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
@@ -1442,7 +1606,8 @@ class HomeNativeView: UIView {
             if let (data, _) = try? await URLSession.shared.data(for: req),
                let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                let patients = json["recentPatients"] as? [[String: Any]], !patients.isEmpty {
-                let cards = patients.compactMap { parsePatient($0) }
+                self.detectAndNotifyNewPatientsFromWeb(patients)
+                let cards = patients.compactMap { self.parsePatient($0) }
                 await MainActor.run {
                     if cards.isEmpty {
                         self.hideWorklistSection()
@@ -1458,6 +1623,44 @@ class HomeNativeView: UIView {
         }
     }
 
+    private func detectAndNotifyNewPatientsFromWeb(_ patients: [[String: Any]]) {
+        guard !patients.isEmpty else { return }
+        let userEmail = UserDefaults.standard.string(forKey: "user_email") ?? "default_user"
+        let syncDoneKey = "initial_sync_done_\(userEmail)"
+        let knownKey = "known_patient_ids_\(userEmail)"
+
+        var knownIds = Set(UserDefaults.standard.stringArray(forKey: knownKey) ?? [])
+        let isInitialSyncDone = UserDefaults.standard.bool(forKey: syncDoneKey)
+
+        if !isInitialSyncDone {
+            for p in patients {
+                let pid = (p["id"] as? String) ?? (p["patientId"] as? String) ?? ""
+                if !pid.isEmpty { knownIds.insert(pid) }
+            }
+            UserDefaults.standard.set(true, forKey: syncDoneKey)
+            UserDefaults.standard.set(Array(knownIds), forKey: knownKey)
+            return
+        }
+
+        var hasNew = false
+        for p in patients {
+            let pid = (p["id"] as? String) ?? (p["patientId"] as? String) ?? ""
+            guard !pid.isEmpty else { continue }
+
+            if !knownIds.contains(pid) {
+                knownIds.insert(pid)
+                hasNew = true
+                let pName = (p["name"] as? String) ?? "New Patient"
+                let pUhid = (p["patientId"] as? String) ?? (p["code"] as? String) ?? ""
+                MobileNotificationHelper.shared.postNewPatientNotification(patientName: pName, uhid: pUhid)
+            }
+        }
+
+        if hasNew {
+            UserDefaults.standard.set(Array(knownIds), forKey: knownKey)
+        }
+    }
+
     private func hideWorklistSection() {
         worklistSection.isHidden = true
         worklistStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
@@ -1468,8 +1671,8 @@ class HomeNativeView: UIView {
         let id        = p["id"] as? String ?? ""
         let phone     = p["phone"] as? String ?? ""
         let patientId = (p["patientId"] as? String) ?? (p["code"] as? String) ?? "PAT"
-        let age       = p["age"] as? Int ?? 0
-        let gender    = p["gender"] as? String ?? ""
+        let age       = (p["age"] as? Int) ?? Int(p["age"] as? String ?? "") ?? ((p["patient"] as? [String: Any])?["age"] as? Int ?? 0)
+        let gender    = (p["gender"] as? String) ?? ((p["patient"] as? [String: Any])?["gender"] as? String ?? "")
         let tests     = p["tests"] as? [[String: Any]] ?? []
         let invs      = p["invoices"] as? [[String: Any]] ?? []
         let testName  = tests.first?["testName"] as? String ?? tests.first?["name"] as? String ?? "Routine Diagnostics"
@@ -1481,19 +1684,21 @@ class HomeNativeView: UIView {
         case "IN_PROGRESS", "TESTING", "COLLECTED":
             status = "Processing"
         default:
-            status = "Pending"
+            status = "Accepted"
         }
         let total      = invs.first?["grandTotal"] as? Double ?? (invs.first?["totalAmount"] as? Double ?? 0)
         let paidAmount = invs.first?["paidAmount"] as? Double ?? 0
         let paid       = (invs.first?["paymentStatus"] as? String ?? "").uppercased() == "PAID" || (total > 0 && paidAmount >= total)
+        let testCount  = max(1, tests.count)
         return HomePatient(id: id, name: name, phone: phone, patientId: patientId,
-                           age: age, gender: gender, testName: testName,
+                           age: age, gender: gender, testName: testName, testCount: testCount,
                            status: status, total: total, paidAmount: paidAmount, paid: paid)
     }
 
     private func startWalletPolling() {
         walletPollTimer = Timer.scheduledTimer(withTimeInterval: 15, repeats: true) { [weak self] _ in
             self?.fetchWalletBalance()
+            self?.fetchTodaysWorklist()
         }
     }
 
@@ -1647,10 +1852,22 @@ class HomeNativeView: UIView {
             parentVC.present(staffVC, animated: true, completion: nil)
             return
         }
-        if (path == "/workspace/dashboard" || path == "/dashboard" || path == "/workspace/analytics" || path == "/analytics"), let parentVC = self.findViewController() {
+        if (path == "/workspace/dashboard" || path == "/dashboard"), let parentVC = self.findViewController() {
             let dashVC = LabDashboardViewController()
             dashVC.modalPresentationStyle = .fullScreen
             parentVC.present(dashVC, animated: true, completion: nil)
+            return
+        }
+        if (path == "/workspace/analytics" || path == "/analytics"), let parentVC = self.findViewController() {
+            let analyticsVC = DashboardViewController()
+            analyticsVC.modalPresentationStyle = .fullScreen
+            parentVC.present(analyticsVC, animated: true, completion: nil)
+            return
+        }
+        if (path == "/workspace/support" || path.starts(with: "/workspace/support")), let parentVC = self.findViewController() {
+            let supportVC = SupportViewController()
+            supportVC.modalPresentationStyle = .fullScreen
+            parentVC.present(supportVC, animated: true, completion: nil)
             return
         }
         onNavigate?(path)
@@ -1658,9 +1875,12 @@ class HomeNativeView: UIView {
 
     // MARK: – Cleanup
     deinit {
+        NotificationCenter.default.removeObserver(self)
         bannerTimer?.invalidate()
         walletPollTimer?.invalidate()
         bellLoopTimer?.invalidate()
+        pathMonitor.cancel()
+        pendingOfflineWorkItem?.cancel()
     }
 }
 

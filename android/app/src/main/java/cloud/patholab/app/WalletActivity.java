@@ -96,6 +96,12 @@ public class WalletActivity extends AppCompatActivity {
         fetchWalletDetails();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        fetchWalletDetails();
+    }
+
     private void bindViews() {
         txtBalanceHero    = findViewById(R.id.txtWalletBalanceHero);
         txtValidity       = findViewById(R.id.txtWalletValidity);
@@ -187,7 +193,7 @@ public class WalletActivity extends AppCompatActivity {
                     return;
                 }
 
-                URL url = new URL(BASE_URL + "/api/workspace/wallet/details?limit=50");
+                URL url = new URL(BASE_URL + "/api/workspace/wallet/details?limit=100");
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestProperty("Authorization", "Bearer " + token);
                 conn.setRequestProperty("Cookie", "token=" + token);
@@ -306,7 +312,12 @@ public class WalletActivity extends AppCompatActivity {
         String dateStr = tx.optString("createdAt", "");
         String refId = tx.optString("referenceId", tx.optString("id", ""));
         if (refId.length() > 8) refId = refId.substring(0, 8).toUpperCase(Locale.ROOT);
-        double balAfter = tx.optDouble("balanceAfter", currentBalance);
+        double balAfter = currentBalance;
+        if (tx.has("closingBalance") && !tx.isNull("closingBalance")) {
+            balAfter = tx.optDouble("closingBalance", currentBalance);
+        } else if (tx.has("balanceAfter") && !tx.isNull("balanceAfter")) {
+            balAfter = tx.optDouble("balanceAfter", currentBalance);
+        }
 
         boolean isCredit = type.contains("RECHARGE") || type.contains("CREDIT") || type.contains("REFUND");
 
@@ -321,7 +332,7 @@ public class WalletActivity extends AppCompatActivity {
             icon.setImageResource(R.drawable.ic_arrow_up_right_vector);
             icon.setColorFilter(0xFFE11D48);
             txtAmount.setText("-" + formatINR(amount));
-            txtAmount.setTextColor(0xFF0F172A);
+            txtAmount.setTextColor(0xFFE11D48);
         }
         applyExtraBold(txtAmount);
 
@@ -352,14 +363,21 @@ public class WalletActivity extends AppCompatActivity {
 
             double amount = tx.optDouble("amount", 0.0);
             String type = tx.optString("type", "USAGE");
-            boolean isCredit = type.toUpperCase(Locale.ROOT).contains("RECHARGE") || type.toUpperCase(Locale.ROOT).contains("CREDIT");
+            boolean isCredit = type.toUpperCase(Locale.ROOT).contains("RECHARGE") || type.toUpperCase(Locale.ROOT).contains("CREDIT") || type.toUpperCase(Locale.ROOT).contains("REFUND");
+
+            double balAfter = currentBalance;
+            if (tx.has("closingBalance") && !tx.isNull("closingBalance")) {
+                balAfter = tx.optDouble("closingBalance", currentBalance);
+            } else if (tx.has("balanceAfter") && !tx.isNull("balanceAfter")) {
+                balAfter = tx.optDouble("balanceAfter", currentBalance);
+            }
 
             rAmount.setText((isCredit ? "+" : "-") + formatINR(amount));
-            rAmount.setTextColor(isCredit ? 0xFF059669 : 0xFF0F172A);
+            rAmount.setTextColor(isCredit ? 0xFF059669 : 0xFFE11D48);
             rDesc.setText(tx.optString("description", "Wallet Transaction"));
-            rTxId.setText(tx.optString("referenceId", tx.optString("id", "TX-109283")));
+            rTxId.setText(tx.optString("id", tx.optString("referenceId", "TX-109283")));
             rDate.setText(formatDateTime(tx.optString("createdAt", "")));
-            rBalAfter.setText(formatINR(tx.optDouble("balanceAfter", currentBalance)));
+            rBalAfter.setText(formatINR(balAfter));
 
             if (btnClose != null) btnClose.setOnClickListener(v -> sheet.dismiss());
             sheet.show();
@@ -681,11 +699,31 @@ public class WalletActivity extends AppCompatActivity {
     // ─────────────────────────────────────────────────────────────────────────
     private String getAuthToken() {
         String token = AuthManager.getToken(this);
-        if (token == null || token.isEmpty()) {
-            SharedPreferences prefs = getSharedPreferences("patholab_prefs", Context.MODE_PRIVATE);
-            token = prefs.getString("auth_token", "");
-        }
-        return token;
+        if (token != null && !token.isEmpty()) return token;
+
+        SharedPreferences prefs = getSharedPreferences("patholab_prefs", Context.MODE_PRIVATE);
+        token = prefs.getString("auth_token", "");
+        if (token != null && !token.isEmpty()) return token;
+
+        try {
+            android.webkit.CookieManager cm = android.webkit.CookieManager.getInstance();
+            String cookies = cm.getCookie(BASE_URL);
+            if (cookies != null) {
+                String[] parts = cookies.split(";");
+                for (String part : parts) {
+                    String trimmed = part.trim();
+                    if (trimmed.startsWith("token=")) {
+                        String cookieToken = trimmed.substring(6).trim();
+                        if (!cookieToken.isEmpty()) {
+                            AuthManager.saveToken(this, cookieToken);
+                            return cookieToken;
+                        }
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+
+        return null;
     }
 
     private String readStream(InputStream is) throws Exception {

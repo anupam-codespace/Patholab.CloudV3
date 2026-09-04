@@ -103,6 +103,14 @@
         />
 
         <activity
+            android:name=".SupportActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustResize"
+            android:screenOrientation="portrait"
+            android:exported="false"
+        />
+
+        <activity
             android:name=".QRScannerActivity"
             android:theme="@style/AppTheme.NoActionBar"
             android:screenOrientation="portrait"

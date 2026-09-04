@@ -67,15 +67,15 @@
                 android:id="@+id/cardStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Ready"
+                android:text="Accepted"
                 android:textSize="11sp"
                 android:textStyle="bold"
-                android:textColor="#059669"
+                android:textColor="#047857"
                 android:paddingStart="9dp"
                 android:paddingEnd="9dp"
                 android:paddingTop="3.5dp"
                 android:paddingBottom="3.5dp"
-                android:background="@drawable/bg_status_ready" />
+                android:background="@drawable/bg_status_accepted" />
 
         </LinearLayout>
 
@@ -167,34 +167,19 @@
                 android:ellipsize="end" />
 
             <TextView
-                android:id="@+id/cardTestStatusPill"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:paddingStart="6dp"
-                android:paddingEnd="6dp"
-                android:paddingTop="1.5dp"
-                android:paddingBottom="1.5dp"
-                android:text="Accepted"
-                android:textSize="10sp"
-                android:textStyle="bold"
-                android:textColor="#DC2626"
-                android:visibility="visible" />
-
-            <TextView
                 android:id="@+id/cardTestCount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
+                android:layout_marginStart="6dp"
                 android:background="@drawable/bg_bento_blue"
-                android:paddingStart="6dp"
-                android:paddingEnd="6dp"
-                android:paddingTop="1.5dp"
-                android:paddingBottom="1.5dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:paddingTop="2.5dp"
+                android:paddingBottom="2.5dp"
                 android:text="2 Tests"
-                android:textSize="10sp"
+                android:textSize="10.5sp"
                 android:textStyle="bold"
-                android:textColor="#0D6EFD"
+                android:textColor="#FFFFFF"
                 android:visibility="gone" />
 
         </LinearLayout>
@@ -206,7 +191,7 @@
             android:layout_marginTop="12dp"
             android:background="#F1F5F9" />
 
-        <!-- Bottom Row: Price + Paid/Due Badge + Action Buttons -->
+        <!-- Bottom Row: Patient Demographics (Age & Gender) + Action Buttons -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -214,52 +199,33 @@
             android:gravity="center_vertical"
             android:layout_marginTop="10dp">
 
+            <!-- Demographics: Age & Gender (Replaced ₹0 Due) -->
             <LinearLayout
+                android:id="@+id/cardDemographicsContainer"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:orientation="horizontal"
                 android:gravity="center_vertical">
 
-                <TextView
-                    android:id="@+id/cardPrice"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="₹450"
-                    android:textSize="15.5sp"
-                    android:textStyle="bold"
-                    android:textColor="#0F172A" />
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:src="@drawable/ic_user"
+                    android:tint="#64748B"
+                    app:tint="#64748B" />
 
                 <TextView
-                    android:id="@+id/cardPaidLabel"
+                    android:id="@+id/cardPatientDemographics"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="6dp"
-                    android:text="Paid"
-                    android:textSize="11sp"
+                    android:text="34 Yrs • Female"
+                    android:textSize="13sp"
                     android:textStyle="bold"
-                    android:textColor="#059669"
-                    android:background="@drawable/bg_tag_emerald"
-                    android:paddingStart="7dp"
-                    android:paddingEnd="7dp"
-                    android:paddingTop="2dp"
-                    android:paddingBottom="2dp" />
-
-                <TextView
-                    android:id="@+id/cardDueLabel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
-                    android:text="Due"
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:textColor="#E11D48"
-                    android:background="@drawable/bg_tag_rose"
-                    android:paddingStart="7dp"
-                    android:paddingEnd="7dp"
-                    android:paddingTop="2dp"
-                    android:paddingBottom="2dp"
-                    android:visibility="gone" />
+                    android:textColor="#334155"
+                    android:singleLine="true"
+                    android:ellipsize="end" />
 
             </LinearLayout>
 

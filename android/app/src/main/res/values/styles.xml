@@ -86,4 +86,12 @@
         <item name="android:gravity">center</item>
     </style>
 
+    <!-- Clean Sapphire Date Picker Theme -->
+    <style name="DatePickerTheme" parent="Theme.MaterialComponents.Light.Dialog">
+        <item name="colorPrimary">#0D6EFD</item>
+        <item name="colorPrimaryDark">#0B5ED7</item>
+        <item name="colorAccent">#0D6EFD</item>
+        <item name="android:textColorPrimary">#0F172A</item>
+    </style>
+
 </resources>

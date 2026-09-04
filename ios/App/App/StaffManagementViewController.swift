@@ -837,24 +837,24 @@ class StaffManagementViewController: UIViewController, UITableViewDataSource, UI
     private func showActionSheet(for staff: StaffItem, sourceView: UIView) {
         let sheet = UIAlertController(title: staff.name, message: "\(staff.employeeId) • \(staff.position)", preferredStyle: .actionSheet)
 
-        sheet.addAction(UIAlertAction(title: "✏️  Edit Details", style: .default, handler: { [weak self] _ in
+        sheet.addAction(UIAlertAction(title: "Edit Details", style: .default, handler: { [weak self] _ in
             self?.didTapEditStaff(staff)
         }))
 
-        sheet.addAction(UIAlertAction(title: "📜  View Activity Log", style: .default, handler: { [weak self] _ in
+        sheet.addAction(UIAlertAction(title: "View Activity Log", style: .default, handler: { [weak self] _ in
             self?.didTapViewActivity(staff)
         }))
 
-        sheet.addAction(UIAlertAction(title: "🔑  Reset Password", style: .default, handler: { [weak self] _ in
+        sheet.addAction(UIAlertAction(title: "Reset Password", style: .default, handler: { [weak self] _ in
             self?.didTapResetPassword(staff)
         }))
 
-        let toggleTitle = staff.isActive ? "🚫  Suspend Access" : "✓  Restore Access"
+        let toggleTitle = staff.isActive ? "Suspend Access" : "Restore Access"
         sheet.addAction(UIAlertAction(title: toggleTitle, style: staff.isActive ? .destructive : .default, handler: { [weak self] _ in
             self?.didTapToggleStatus(staff)
         }))
 
-        sheet.addAction(UIAlertAction(title: "🗑️  Remove Staff", style: .destructive, handler: { [weak self] _ in
+        sheet.addAction(UIAlertAction(title: "Remove Staff", style: .destructive, handler: { [weak self] _ in
             self?.didTapRemoveStaff(staff)
         }))
 
