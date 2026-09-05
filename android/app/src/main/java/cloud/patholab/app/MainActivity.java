@@ -414,6 +414,7 @@ public class MainActivity extends BridgeActivity {
             homeNativeManager.show();
             homeNativeManager.fetchWalletBalance(); // refresh on each return
         }
+        selectNavTab(0, false, false);
     }
 
     // ── Setup helpers ──────────────────────────────────────────────────────────
@@ -634,6 +635,10 @@ public class MainActivity extends BridgeActivity {
     }
 
     public void selectNavTab(int tabIndex, boolean animate) {
+        selectNavTab(tabIndex, animate, true);
+    }
+
+    public void selectNavTab(int tabIndex, boolean animate, boolean executeAction) {
         currentSelectedTabIndex = tabIndex;
         int activeColor = isDarkMode ? 0xFF818CF8 : 0xFF0D6EFD;
         int inactiveColor = 0xFF94A3B8;
@@ -685,6 +690,8 @@ public class MainActivity extends BridgeActivity {
         }
         if (indicatorNavMore != null) indicatorNavMore.setBackgroundResource(0);
 
+        if (!executeAction) return;
+
         // Action execution
         if (tabIndex == 0) {
             showNativeHome();
@@ -692,6 +699,25 @@ public class MainActivity extends BridgeActivity {
             startActivity(new Intent(this, PatientWorklistActivity.class));
         } else if (tabIndex == 2) {
             startActivity(new Intent(this, ReportsActivity.class));
+        }
+    }
+
+    /**
+     * Synchronizes the bottom navigation bar active tab state strictly to what is currently visible on screen.
+     */
+    public void syncNavigationState() {
+        if (homeNativeManager != null && homeNativeManager.isVisible()) {
+            selectNavTab(0, false, false);
+        } else if (currentPath != null) {
+            if (currentPath.contains("patients") || currentPath.contains("registration")) {
+                selectNavTab(1, false, false);
+            } else if (currentPath.contains("reports")) {
+                selectNavTab(2, false, false);
+            } else {
+                selectNavTab(0, false, false);
+            }
+        } else {
+            selectNavTab(0, false, false);
         }
     }
 
@@ -2030,13 +2056,18 @@ public class MainActivity extends BridgeActivity {
         progressPollHandler.removeCallbacks(progressPollRunnable);
         progressPollHandler.post(progressPollRunnable);
 
-        if (currentSelectedTabIndex == 0) {
-            showNativeHome();
-        } else if (homeNativeManager != null && homeNativeManager.isVisible()) {
-            homeNativeManager.show();
-        }
+        // Always synchronize navigation bar state to the screen currently visible
+        syncNavigationState();
+
         fetchWalletDetails();
         fetchNotificationCount();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        syncNavigationState();
     }
 
     @Override
@@ -2052,6 +2083,9 @@ public class MainActivity extends BridgeActivity {
     public void onBackPressed() {
         if (webView != null && webView.canGoBack()) {
             webView.goBack();
+            new Handler(Looper.getMainLooper()).postDelayed(this::syncNavigationState, 250);
+        } else if (homeNativeManager != null && !homeNativeManager.isVisible()) {
+            showNativeHome();
         } else {
             super.onBackPressed();
         }

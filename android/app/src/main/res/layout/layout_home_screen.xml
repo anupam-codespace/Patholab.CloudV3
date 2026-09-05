@@ -210,19 +210,19 @@
                     <!-- Notification Bell (First) -->
                     <FrameLayout
                         android:id="@+id/homeBellBtn"
-                        android:layout_width="44dp"
-                        android:layout_height="44dp"
-                        android:layout_marginEnd="10dp"
-                        android:background="@drawable/bg_bell_btn"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/bg_white_circle_btn"
                         android:clickable="true"
                         android:focusable="true"
-                        android:elevation="4dp"
+                        android:elevation="3dp"
                         android:contentDescription="Notifications">
 
                         <ImageView
                             android:id="@+id/homeBellIcon"
-                            android:layout_width="22dp"
-                            android:layout_height="22dp"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_bell"
                             android:tint="#0D6EFD"
@@ -231,36 +231,35 @@
                         <!-- Red unread dot -->
                         <View
                             android:id="@+id/homeBellDot"
-                            android:layout_width="9dp"
-                            android:layout_height="9dp"
+                            android:layout_width="8dp"
+                            android:layout_height="8dp"
                             android:layout_gravity="top|end"
-                            android:layout_marginTop="8dp"
-                            android:layout_marginEnd="9dp"
+                            android:layout_marginTop="6dp"
+                            android:layout_marginEnd="7dp"
                             android:background="@drawable/bg_notif_dot"
                             android:visibility="visible" />
 
                     </FrameLayout>
 
-                    <!-- Help / Assistance Support Action Button (Small & Glassmorphism) -->
+                    <!-- Help / Assistance Support Action Button -->
                     <FrameLayout
                         android:id="@+id/homeHelpBtn"
-                        android:layout_width="36dp"
-                        android:layout_height="36dp"
-                        android:layout_marginStart="2dp"
-                        android:background="@drawable/bg_help_btn_glass"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_white_circle_btn"
                         android:clickable="true"
                         android:focusable="true"
-                        android:elevation="2dp"
+                        android:elevation="3dp"
                         android:contentDescription="Help &amp; Support">
 
                         <ImageView
                             android:id="@+id/homeHelpIcon"
-                            android:layout_width="18dp"
-                            android:layout_height="18dp"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_help"
-                            android:tint="#FFFFFF"
-                            app:tint="#FFFFFF" />
+                            android:tint="#0D6EFD"
+                            app:tint="#0D6EFD" />
 
                     </FrameLayout>
 
@@ -343,21 +342,29 @@
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/homeBannerCta"
                                 android:layout_width="wrap_content"
-                                android:layout_height="38dp"
-                                android:layout_marginTop="10dp"
+                                android:layout_height="40dp"
+                                android:layout_marginTop="12dp"
                                 android:text="Recharge Wallet"
                                 android:textSize="12.5sp"
                                 android:textStyle="bold"
                                 android:textColor="#0A58CA"
+                                android:textAllCaps="false"
                                 android:backgroundTint="#FFFFFF"
-                                android:paddingStart="18dp"
-                                android:paddingEnd="18dp"
-                                android:letterSpacing="0.02"
+                                android:paddingStart="16dp"
+                                android:paddingEnd="14dp"
+                                android:letterSpacing="0.01"
                                 android:insetTop="0dp"
                                 android:insetBottom="0dp"
-                                app:cornerRadius="19dp"
-                                app:elevation="4dp"
-                                app:rippleColor="#200A58CA" />
+                                app:cornerRadius="20dp"
+                                app:elevation="3dp"
+                                app:strokeWidth="1dp"
+                                app:strokeColor="#DBEAFE"
+                                app:icon="@drawable/ic_arrow_forward_rounded"
+                                app:iconGravity="textEnd"
+                                app:iconSize="14dp"
+                                app:iconPadding="6dp"
+                                app:iconTint="#0A58CA"
+                                app:rippleColor="#250A58CA" />
 
                         </LinearLayout>
 

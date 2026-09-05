@@ -181,6 +181,7 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        syncNavigationState()
         startWalletPolling()
     }
 
@@ -697,8 +698,28 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         headerBlurContainer.isHidden = true
         skeletonView.isHidden = true
         offlineView.isHidden = true
+        selectedTab = 0
+        updateNavTints()
         homeNativeView.fetchWalletBalance()
         homeNativeView.fetchTodaysWorklist()
+    }
+
+    /// Ensures bottom navigation bar active tab accurately reflects the currently visible screen.
+    private func syncNavigationState() {
+        if !homeNativeView.isHidden {
+            selectedTab = 0
+        } else if let path = currentPath {
+            if path.contains("patients") || path.contains("registration") {
+                selectedTab = 1
+            } else if path.contains("reports") {
+                selectedTab = 2
+            } else {
+                selectedTab = 0
+            }
+        } else {
+            selectedTab = 0
+        }
+        updateNavTints()
     }
 
     private func showWebView(navigatingTo path: String) {

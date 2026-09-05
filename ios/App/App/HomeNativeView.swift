@@ -313,34 +313,37 @@ class HomeNativeView: UIView {
 
         // Notification Bell button (First)
         bellButton.backgroundColor = .white
-        bellButton.layer.cornerRadius = 22
+        bellButton.layer.cornerRadius = 20
+        bellButton.layer.borderWidth = 1
+        bellButton.layer.borderColor = UIColor(white: 1.0, alpha: 0.35).cgColor
         bellButton.layer.shadowColor  = UIColor.black.cgColor
-        bellButton.layer.shadowOpacity = 0.12
+        bellButton.layer.shadowOpacity = 0.10
         bellButton.layer.shadowRadius  = 4
         bellButton.layer.shadowOffset  = CGSize(width: 0, height: 2)
-        bellButton.setImage(UIImage(systemName: "bell.fill"), for: .normal)
+        let bellConfig = UIImage.SymbolConfiguration(pointSize: 16, weight: .bold)
+        bellButton.setImage(UIImage(systemName: "bell.fill", withConfiguration: bellConfig), for: .normal)
         bellButton.tintColor = Self.headerBlue2
         bellButton.accessibilityLabel = "Notifications"
         bellButton.addTarget(self, action: #selector(bellTapped), for: .touchUpInside)
 
         // Bell unread dot
         bellDot.backgroundColor   = UIColor(red: 1, green: 0.231, blue: 0.188, alpha: 1)
-        bellDot.layer.cornerRadius = 4.5
+        bellDot.layer.cornerRadius = 4
         bellDot.layer.borderWidth  = 1.5
         bellDot.layer.borderColor  = UIColor.white.cgColor
 
-        // Help / Assistance Support button (Small & Glassmorphism)
-        helpButton.backgroundColor = UIColor(white: 1.0, alpha: 0.22)
-        helpButton.layer.cornerRadius = 18
-        helpButton.layer.borderWidth = 1.2
-        helpButton.layer.borderColor = UIColor(white: 1.0, alpha: 0.50).cgColor
+        // Help / Assistance Support button
+        helpButton.backgroundColor = .white
+        helpButton.layer.cornerRadius = 20
+        helpButton.layer.borderWidth = 1
+        helpButton.layer.borderColor = UIColor(white: 1.0, alpha: 0.35).cgColor
         helpButton.layer.shadowColor  = UIColor.black.cgColor
-        helpButton.layer.shadowOpacity = 0.08
-        helpButton.layer.shadowRadius  = 3
-        helpButton.layer.shadowOffset  = CGSize(width: 0, height: 1.5)
-        let helpConfig = UIImage.SymbolConfiguration(pointSize: 17, weight: .bold)
-        helpButton.setImage(UIImage(systemName: "questionmark.circle", withConfiguration: helpConfig) ?? UIImage(systemName: "questionmark", withConfiguration: helpConfig), for: .normal)
-        helpButton.tintColor = .white
+        helpButton.layer.shadowOpacity = 0.10
+        helpButton.layer.shadowRadius  = 4
+        helpButton.layer.shadowOffset  = CGSize(width: 0, height: 2)
+        let helpConfig = UIImage.SymbolConfiguration(pointSize: 16, weight: .bold)
+        helpButton.setImage(UIImage(systemName: "questionmark.circle.fill", withConfiguration: helpConfig) ?? UIImage(systemName: "questionmark", withConfiguration: helpConfig), for: .normal)
+        helpButton.tintColor = Self.headerBlue2
         helpButton.accessibilityLabel = "Help & Support"
         helpButton.addTarget(self, action: #selector(helpTapped), for: .touchUpInside)
 
@@ -352,7 +355,7 @@ class HomeNativeView: UIView {
 
         let hStack = UIStackView(arrangedSubviews: [avatarContainer, leftVStack, UIView(), bellButton, helpButton])
         hStack.axis    = .horizontal
-        hStack.spacing = 10
+        hStack.spacing = 8
         hStack.alignment = .center
         hStack.setCustomSpacing(8, after: leftVStack)
 
@@ -370,10 +373,10 @@ class HomeNativeView: UIView {
         NSLayoutConstraint.activate([
             avatarContainer.widthAnchor.constraint(equalToConstant: 44),
             avatarContainer.heightAnchor.constraint(equalToConstant: 44),
-            helpButton.widthAnchor.constraint(equalToConstant: 36),
-            helpButton.heightAnchor.constraint(equalToConstant: 36),
-            bellButton.widthAnchor.constraint(equalToConstant: 44),
-            bellButton.heightAnchor.constraint(equalToConstant: 44),
+            helpButton.widthAnchor.constraint(equalToConstant: 40),
+            helpButton.heightAnchor.constraint(equalToConstant: 40),
+            bellButton.widthAnchor.constraint(equalToConstant: 40),
+            bellButton.heightAnchor.constraint(equalToConstant: 40),
             hStack.topAnchor.constraint(equalTo: headerView.safeAreaLayoutGuide.topAnchor, constant: 10),
             hStack.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 18),
             hStack.trailingAnchor.constraint(equalTo: headerView.trailingAnchor, constant: -18),
@@ -382,10 +385,10 @@ class HomeNativeView: UIView {
             walletRow.centerYAnchor.constraint(equalTo: walletPill.centerYAnchor),
             walletIcon.widthAnchor.constraint(equalToConstant: 14),
             walletIcon.heightAnchor.constraint(equalToConstant: 14),
-            bellDot.widthAnchor.constraint(equalToConstant: 9),
-            bellDot.heightAnchor.constraint(equalToConstant: 9),
-            bellDot.topAnchor.constraint(equalTo: bellButton.topAnchor, constant: 9),
-            bellDot.trailingAnchor.constraint(equalTo: bellButton.trailingAnchor, constant: -9),
+            bellDot.widthAnchor.constraint(equalToConstant: 8),
+            bellDot.heightAnchor.constraint(equalToConstant: 8),
+            bellDot.topAnchor.constraint(equalTo: bellButton.topAnchor, constant: 6),
+            bellDot.trailingAnchor.constraint(equalTo: bellButton.trailingAnchor, constant: -6),
         ])
     }
 
@@ -475,14 +478,21 @@ class HomeNativeView: UIView {
         // CTA Button
         bannerCtaBtn.setTitle("Recharge Wallet", for: .normal)
         bannerCtaBtn.setTitleColor(UIColor(red: 10/255, green: 88/255, blue: 202/255, alpha: 1), for: .normal)
-        bannerCtaBtn.titleLabel?.font = .systemFont(ofSize: 12.5, weight: .bold)
+        bannerCtaBtn.titleLabel?.font = .systemFont(ofSize: 13, weight: .bold)
         bannerCtaBtn.backgroundColor  = .white
-        bannerCtaBtn.layer.cornerRadius = 19
-        bannerCtaBtn.contentEdgeInsets  = UIEdgeInsets(top: 8, left: 18, bottom: 8, right: 18)
+        bannerCtaBtn.layer.cornerRadius = 20
+        bannerCtaBtn.layer.borderWidth = 1
+        bannerCtaBtn.layer.borderColor = UIColor(red: 219/255, green: 234/255, blue: 254/255, alpha: 1).cgColor
+        bannerCtaBtn.contentEdgeInsets  = UIEdgeInsets(top: 9, left: 16, bottom: 9, right: 14)
         bannerCtaBtn.layer.shadowColor   = UIColor.black.cgColor
-        bannerCtaBtn.layer.shadowOpacity = 0.15
-        bannerCtaBtn.layer.shadowRadius  = 5
+        bannerCtaBtn.layer.shadowOpacity = 0.12
+        bannerCtaBtn.layer.shadowRadius  = 4
         bannerCtaBtn.layer.shadowOffset  = CGSize(width: 0, height: 2)
+        let arrowCfg = UIImage.SymbolConfiguration(pointSize: 11, weight: .bold)
+        bannerCtaBtn.setImage(UIImage(systemName: "arrow.right", withConfiguration: arrowCfg), for: .normal)
+        bannerCtaBtn.tintColor = UIColor(red: 10/255, green: 88/255, blue: 202/255, alpha: 1)
+        bannerCtaBtn.semanticContentAttribute = .forceRightToLeft
+        bannerCtaBtn.imageEdgeInsets = UIEdgeInsets(top: 0, left: 6, bottom: 0, right: -6)
         bannerCtaBtn.addTarget(self, action: #selector(bannerCtaTapped), for: .touchUpInside)
 
         let textStack = UIStackView(arrangedSubviews: [bannerTitleLabel, bannerSubLabel, bannerCtaBtn])
