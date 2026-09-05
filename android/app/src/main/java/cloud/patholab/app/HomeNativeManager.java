@@ -83,7 +83,7 @@ public class HomeNativeManager {
 
     // ── Views ─────────────────────────────────────────────────────────────────
     private TextView txtGreeting;
-    private ImageView homeWaveEmoji;
+    private TextView homeWaveEmoji;
     private TextView txtWalletBalance;
     private FrameLayout walletPill;
     private FrameLayout bellBtn;
@@ -159,7 +159,7 @@ public class HomeNativeManager {
                     "Track Logistics",
                     "/workspace/logistics"},
             {"Executive Financial\nAnalytics",
-                    "Monitor lab revenue, expense breakdown, net margins and clinical throughput.",
+                    "Monitor lab revenue, expense breakdown, net margins & clinical throughput.",
                     "View Analytics",
                     "/workspace/analytics"}
     };
@@ -1454,11 +1454,11 @@ public class HomeNativeManager {
         if (homeWaveEmoji == null) return;
         mainHandler.postDelayed(() -> {
             if (homeWaveEmoji == null) return;
-            homeWaveEmoji.setPivotX(homeWaveEmoji.getWidth() > 0 ? homeWaveEmoji.getWidth() * 0.75f : dp(14));
-            homeWaveEmoji.setPivotY(homeWaveEmoji.getHeight() > 0 ? homeWaveEmoji.getHeight() * 0.90f : dp(17));
+            homeWaveEmoji.setPivotX(homeWaveEmoji.getWidth() > 0 ? homeWaveEmoji.getWidth() * 0.70f : dp(12));
+            homeWaveEmoji.setPivotY(homeWaveEmoji.getHeight() > 0 ? homeWaveEmoji.getHeight() * 0.85f : dp(16));
 
             ObjectAnimator wave = ObjectAnimator.ofFloat(homeWaveEmoji, "rotation",
-                    0f, 24f, -16f, 22f, -12f, 18f, -6f, 10f, 0f);
+                    0f, 20f, -14f, 17f, -9f, 11f, -5f, 6f, 0f);
             wave.setDuration(1200);
             wave.setInterpolator(new AccelerateDecelerateInterpolator());
             wave.start();
@@ -1521,7 +1521,7 @@ public class HomeNativeManager {
         for (int i = 0; i < BANNERS.length; i++) {
             View dot = new View(ctx);
             int finalI = i;
-            dot.setOnClickListener(v -> showBanner(finalI));
+            dot.setOnClickListener(v -> showBanner(finalI, true));
             bannerDots.addView(dot);
         }
         refreshDotStyles();
@@ -1545,12 +1545,39 @@ public class HomeNativeManager {
     }
 
     private void showBanner(int idx) {
+        showBanner(idx, false);
+    }
+
+    private void showBanner(int idx, boolean animate) {
         currentBannerIdx = idx;
         String[] b = BANNERS[idx];
-        if (bannerTitle    != null) bannerTitle.setText(b[0]);
-        if (bannerSubtitle != null) bannerSubtitle.setText(b[1]);
-        if (bannerCta      != null) {
-            bannerCta.setText(b[2]);
+        if (bannerTitle == null) return;
+
+        if (animate && bannerTitle.getAlpha() > 0.5f) {
+            bannerTitle.animate().alpha(0f).setDuration(120).withEndAction(() -> {
+                bannerTitle.setText(b[0]);
+                if (bannerSubtitle != null) bannerSubtitle.setText(b[1]);
+                if (bannerCta != null) bannerCta.setText(b[2]);
+                bannerTitle.animate().alpha(1f).setDuration(160).start();
+                if (bannerSubtitle != null) bannerSubtitle.animate().alpha(1f).setDuration(160).start();
+                if (bannerCta != null) bannerCta.animate().alpha(1f).setDuration(160).start();
+            }).start();
+            if (bannerSubtitle != null) bannerSubtitle.animate().alpha(0f).setDuration(120).start();
+            if (bannerCta != null) bannerCta.animate().alpha(0f).setDuration(120).start();
+        } else {
+            bannerTitle.setAlpha(1f);
+            bannerTitle.setText(b[0]);
+            if (bannerSubtitle != null) {
+                bannerSubtitle.setAlpha(1f);
+                bannerSubtitle.setText(b[1]);
+            }
+            if (bannerCta != null) {
+                bannerCta.setAlpha(1f);
+                bannerCta.setText(b[2]);
+            }
+        }
+
+        if (bannerCta != null) {
             String path = b[3];
             bannerCta.setOnClickListener(v -> {
                 if (path.contains("/workspace/wallet")) {
@@ -1578,12 +1605,12 @@ public class HomeNativeManager {
             @Override
             public void run() {
                 currentBannerIdx = (currentBannerIdx + 1) % BANNERS.length;
-                showBanner(currentBannerIdx);
+                showBanner(currentBannerIdx, true);
                 carouselHandler.postDelayed(this, 3600);
             }
         };
         carouselHandler.postDelayed(carouselRunnable, 3600);
-        showBanner(0);
+        showBanner(0, false);
     }
 
     // ─────────────────────────────────────────────────────────────────────────

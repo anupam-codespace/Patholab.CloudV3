@@ -1,28 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Primary sapphire gradient blend: solid vibrant blue on left for text legibility, smooth fade across photo -->
+    <!-- Smooth horizontal fade: 100% sapphire on left edge seamlessly dissolving into the card background, clear over the scientist -->
     <item>
         <shape>
             <gradient
                 android:type="linear"
                 android:angle="0"
-                android:startColor="#FF0A58CA"
-                android:centerColor="#FF0D6EFD"
+                android:startColor="#FF0D6EFD"
+                android:centerColor="#550D6EFD"
                 android:endColor="#000D6EFD"
-                android:centerX="0.42" />
+                android:centerX="0.32" />
         </shape>
     </item>
 
-    <!-- Secondary softening layer for butter-smooth natural transition with zero visible edges -->
+    <!-- Subtle atmospheric sapphire tint across the photo to tie it harmoniously into the sapphire card theme -->
     <item>
         <shape>
             <gradient
                 android:type="linear"
                 android:angle="0"
-                android:startColor="#FF0A58CA"
-                android:centerColor="#A60B5ED7"
-                android:endColor="#000B5ED7"
-                android:centerX="0.35" />
+                android:startColor="#400A58CA"
+                android:endColor="#080A58CA" />
         </shape>
     </item>
 </layer-list>

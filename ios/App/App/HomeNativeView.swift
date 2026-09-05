@@ -72,7 +72,7 @@ class HomeNativeView: UIView {
                    subtitle: "Assign field technicians, track collection runs and dispatch runners live.",
                    cta: "Track Logistics", path: "/workspace/logistics"),
         HomeBanner(title: "Executive Financial\nAnalytics",
-                   subtitle: "Monitor lab revenue, expense breakdown, net margins and clinical throughput.",
+                   subtitle: "Monitor lab revenue, expense breakdown, net margins & clinical throughput.",
                    cta: "View Analytics", path: "/workspace/analytics"),
     ]
 
@@ -464,10 +464,12 @@ class HomeNativeView: UIView {
         bannerCard.layer.insertSublayer(bannerGradient, at: 0)
 
         // Title
-        bannerTitleLabel.font          = .systemFont(ofSize: 24, weight: .heavy)
-        bannerTitleLabel.textColor     = .white
-        bannerTitleLabel.numberOfLines = 2
-        bannerTitleLabel.text          = "₹ 2.5 Per\nRegistration"
+        bannerTitleLabel.font                      = .systemFont(ofSize: 21, weight: .heavy)
+        bannerTitleLabel.textColor                 = .white
+        bannerTitleLabel.numberOfLines             = 2
+        bannerTitleLabel.adjustsFontSizeToFitWidth = true
+        bannerTitleLabel.minimumScaleFactor        = 0.8
+        bannerTitleLabel.text                      = "₹ 2.5 Per\nRegistration"
 
         // Subtitle
         bannerSubLabel.font          = .systemFont(ofSize: 12, weight: .regular)
@@ -480,10 +482,10 @@ class HomeNativeView: UIView {
         bannerCtaBtn.setTitleColor(UIColor(red: 10/255, green: 88/255, blue: 202/255, alpha: 1), for: .normal)
         bannerCtaBtn.titleLabel?.font = .systemFont(ofSize: 13, weight: .bold)
         bannerCtaBtn.backgroundColor  = .white
-        bannerCtaBtn.layer.cornerRadius = 20
+        bannerCtaBtn.layer.cornerRadius = 18
         bannerCtaBtn.layer.borderWidth = 1
         bannerCtaBtn.layer.borderColor = UIColor(red: 219/255, green: 234/255, blue: 254/255, alpha: 1).cgColor
-        bannerCtaBtn.contentEdgeInsets  = UIEdgeInsets(top: 9, left: 16, bottom: 9, right: 14)
+        bannerCtaBtn.contentEdgeInsets  = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 14)
         bannerCtaBtn.layer.shadowColor   = UIColor.black.cgColor
         bannerCtaBtn.layer.shadowOpacity = 0.12
         bannerCtaBtn.layer.shadowRadius  = 4
@@ -499,7 +501,7 @@ class HomeNativeView: UIView {
         textStack.axis    = .vertical
         textStack.spacing = 0
         textStack.setCustomSpacing(8, after: bannerTitleLabel)
-        textStack.setCustomSpacing(16, after: bannerSubLabel)
+        textStack.setCustomSpacing(14, after: bannerSubLabel)
         textStack.alignment = .leading
         textStack.translatesAutoresizingMaskIntoConstraints = false
 
@@ -508,10 +510,10 @@ class HomeNativeView: UIView {
         innerView.addSubview(textStack)
         textStack.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            textStack.topAnchor.constraint(equalTo: innerView.topAnchor, constant: 22),
+            textStack.topAnchor.constraint(equalTo: innerView.topAnchor, constant: 20),
             textStack.leadingAnchor.constraint(equalTo: innerView.leadingAnchor, constant: 20),
             textStack.bottomAnchor.constraint(lessThanOrEqualTo: innerView.bottomAnchor, constant: -20),
-            textStack.widthAnchor.constraint(lessThanOrEqualTo: innerView.widthAnchor, multiplier: 0.55),
+            textStack.widthAnchor.constraint(lessThanOrEqualTo: innerView.widthAnchor, multiplier: 0.65),
         ])
         innerView.heightAnchor.constraint(equalToConstant: 170).isActive = true
 
