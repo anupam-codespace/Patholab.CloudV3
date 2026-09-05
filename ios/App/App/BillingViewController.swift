@@ -26,11 +26,9 @@ struct BillingTestLine {
 
 struct BillingKpiStats {
     var totalRevenue: Double = 0
-    var pendingAmount: Double = 0
-    var pendingCount: Int = 0
     var monthlyRevenue: Double = 0
-    var overdueAmount: Double = 0
-    var overdueCount: Int = 0
+    var settledCount: Int = 0
+    var totalCount: Int = 0
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -60,11 +58,9 @@ class BillingViewController: UIViewController, UITableViewDataSource, UITableVie
 
     // KPI Labels
     private let lblTotalRev   = UILabel()
-    private let lblPendingAmt = UILabel()
-    private let lblPendingCnt = UILabel()
     private let lblMonthRev   = UILabel()
-    private let lblOverdueAmt = UILabel()
-    private let lblOverdueCnt = UILabel()
+    private let lblSettledCnt = UILabel()
+    private let lblTotalCnt   = UILabel()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -192,9 +188,9 @@ class BillingViewController: UIViewController, UITableViewDataSource, UITableVie
         ])
 
         kpiStack.addArrangedSubview(makeKpiCard(title: "TOTAL REVENUE", valueLbl: lblTotalRev, valueColor: UIColor(red: 0.02, green: 0.59, blue: 0.41, alpha: 1), subText: "All Time Collections"))
-        kpiStack.addArrangedSubview(makeKpiCard(title: "UNPAID BALANCE", valueLbl: lblPendingAmt, valueColor: UIColor(red: 0.85, green: 0.47, blue: 0.02, alpha: 1), subLbl: lblPendingCnt))
         kpiStack.addArrangedSubview(makeKpiCard(title: "MONTHLY REVENUE", valueLbl: lblMonthRev, valueColor: UIColor(red: 0.05, green: 0.43, blue: 0.99, alpha: 1), subText: "Current Month"))
-        kpiStack.addArrangedSubview(makeKpiCard(title: "OVERDUE ARREARS", valueLbl: lblOverdueAmt, valueColor: UIColor(red: 0.88, green: 0.11, blue: 0.28, alpha: 1), subLbl: lblOverdueCnt))
+        kpiStack.addArrangedSubview(makeKpiCard(title: "SETTLED INVOICES", valueLbl: lblSettledCnt, valueColor: UIColor(red: 0.02, green: 0.59, blue: 0.41, alpha: 1), subText: "Fully Paid"))
+        kpiStack.addArrangedSubview(makeKpiCard(title: "TOTAL INVOICES", valueLbl: lblTotalCnt, valueColor: UIColor(red: 0.39, green: 0.45, blue: 0.55, alpha: 1), subText: "All Generated"))
     }
 
     private func makeKpiCard(title: String, valueLbl: UILabel, valueColor: UIColor, subText: String? = nil, subLbl: UILabel? = nil) -> UIView {
@@ -453,15 +449,9 @@ class BillingViewController: UIViewController, UITableViewDataSource, UITableVie
                 // Parse Stats
                 if let stats = json["stats"] as? [String: Any] {
                     self.kpiStats.totalRevenue = (stats["totalRevenue"] as? NSNumber)?.doubleValue ?? 0
-                    self.kpiStats.pendingAmount = (stats["pendingAmount"] as? NSNumber)?.doubleValue ?? 0
-                    self.kpiStats.pendingCount = (stats["pendingCount"] as? Int) ?? 0
                     self.kpiStats.monthlyRevenue = (stats["monthlyRevenue"] as? NSNumber)?.doubleValue ?? 0
-                    self.kpiStats.overdueAmount = (stats["overdueAmount"] as? NSNumber)?.doubleValue ?? 0
-                    self.kpiStats.overdueCount = (stats["overdueCount"] as? Int) ?? 0
-
-                    DispatchQueue.main.async {
-                        self.updateKpiLabels()
-                    }
+                    self.kpiStats.settledCount = (stats["settledCount"] as? Int) ?? ((stats["paidCount"] as? Int) ?? 0)
+                    self.kpiStats.totalCount = (stats["totalCount"] as? Int) ?? ((stats["invoiceCount"] as? Int) ?? 0)
                 }
 
                 // Parse Invoices
@@ -529,42 +519,43 @@ class BillingViewController: UIViewController, UITableViewDataSource, UITableVie
 
     private func computeAndApplyKpis() {
         var totalRev: Double = 0
-        var pendingAmt: Double = 0
-        var pendingCnt: Int = 0
-        var overdueAmt: Double = 0
-        var overdueCnt: Int = 0
+        var monthlyRev: Double = 0
+        var settledCnt: Int = 0
+        let totalCnt: Int = allInvoices.count
+
+        if kpiStats.totalRevenue > 0 || kpiStats.monthlyRevenue > 0 {
+            totalRev = kpiStats.totalRevenue
+            monthlyRev = kpiStats.monthlyRevenue
+            if kpiStats.settledCount > 0 { settledCnt = kpiStats.settledCount }
+        }
 
         for inv in allInvoices {
-            totalRev += inv.paidAmount
-            if inv.balanceDue > 0 {
-                if inv.paymentStatus.uppercased() == "OVERDUE" {
-                    overdueAmt += inv.balanceDue
-                    overdueCnt += 1
-                } else {
-                    pendingAmt += inv.balanceDue
-                    pendingCnt += 1
-                }
+            if kpiStats.totalRevenue == 0 {
+                totalRev += inv.paidAmount
             }
+            if inv.paymentStatus.uppercased() == "PAID" {
+                settledCnt += 1
+            }
+        }
+
+        if monthlyRev == 0 {
+            monthlyRev = totalRev
         }
 
         kpiStats = BillingKpiStats(
             totalRevenue: totalRev,
-            pendingAmount: pendingAmt,
-            pendingCount: pendingCnt,
-            monthlyRevenue: totalRev,
-            overdueAmount: overdueAmt,
-            overdueCount: overdueCnt
+            monthlyRevenue: monthlyRev,
+            settledCount: settledCnt,
+            totalCount: totalCnt
         )
         updateKpiLabels()
     }
 
     private func updateKpiLabels() {
         lblTotalRev.text = String(format: "₹%.0f", kpiStats.totalRevenue)
-        lblPendingAmt.text = String(format: "₹%.0f", kpiStats.pendingAmount)
-        lblPendingCnt.text = "\(kpiStats.pendingCount) Pending Invoices"
         lblMonthRev.text = String(format: "₹%.0f", kpiStats.monthlyRevenue)
-        lblOverdueAmt.text = String(format: "₹%.0f", kpiStats.overdueAmount)
-        lblOverdueCnt.text = "\(kpiStats.overdueCount) Delinquent"
+        lblSettledCnt.text = "\(kpiStats.settledCount)"
+        lblTotalCnt.text = "\(kpiStats.totalCount)"
     }
 
     private func applyInvoicesFilter() {

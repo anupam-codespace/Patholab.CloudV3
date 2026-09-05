@@ -1125,7 +1125,10 @@ class HomeNativeView: UIView {
             req.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
             if let (data, _) = try? await URLSession.shared.data(for: req),
                let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                let serverName = (json["name"] as? String) ?? (json["email"] as? String) ?? ""
+                let rawServerName = (json["name"] as? String) ?? ""
+                let serverName = (!rawServerName.isEmpty && !rawServerName.contains("@") && rawServerName.lowercased() != "null")
+                    ? rawServerName
+                    : Self.formatSmartFirstName((json["email"] as? String) ?? "")
                 let role = (json["role"] as? String ?? "Lab Owner").replacingOccurrences(of: "_", with: " ")
                 self.currentRole = role
                 if !serverName.isEmpty {
@@ -1534,12 +1537,25 @@ class HomeNativeView: UIView {
         var str = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         if str.isEmpty { return "Doctor" }
 
-        // Remove email domain
+        // 1. Remove email domain if present
         if let atIdx = str.firstIndex(of: "@") {
             str = String(str[..<atIdx])
         }
 
-        // Split on separators, skipping title prefixes like Dr, Mr
+        // 2. Strip common domain extensions & service mentions
+        let domainPatterns = ["\\.com", "\\.in", "\\.org", "\\.net", "\\.co", "\\.io", "\\.gov", "\\.edu"]
+        for pat in domainPatterns {
+            str = str.replacingOccurrences(of: pat, with: "", options: .regularExpression)
+        }
+        str = str.replacingOccurrences(of: "(?i)[._\\-](gmail|yahoo|hotmail|outlook|icloud|mail|email)\\b", with: "", options: .regularExpression)
+        str = str.replacingOccurrences(of: "(?i)\\b(gmail|yahoo|hotmail|outlook|icloud|mail|email)[._\\-]", with: "", options: .regularExpression)
+
+        // If string ends with "gmail" without separator (e.g. monowargmail), strip it
+        if str.lowercased().hasSuffix("gmail") && str.count > 5 {
+            str = String(str.dropLast(5))
+        }
+
+        // 3. Split on separators, skipping title prefixes like Dr, Mr
         let tokens = str.components(separatedBy: CharacterSet(charactersIn: " ._-"))
         if let firstToken = tokens.first, !firstToken.isEmpty {
             let lowerToken = firstToken.lowercased()
@@ -1550,7 +1566,7 @@ class HomeNativeView: UIView {
             }
         }
 
-        // Handle CamelCase
+        // 4. Handle CamelCase
         var result = ""
         for char in str {
             if char.isUppercase && !result.isEmpty {
@@ -1560,15 +1576,25 @@ class HomeNativeView: UIView {
         }
         if !result.isEmpty { str = result }
 
-        // Filter letters only
+        // 5. Filter letters only
         str = str.filter { $0.isLetter }
-        if str.isEmpty || str.lowercased() == "user" || str.lowercased() == "admin" { return "Doctor" }
 
-        // Capitalize
+        // Strict blacklist check: fallback to "Doctor"
+        let lower = str.lowercased()
+        let blacklist = [
+            "user", "admin", "gmail", "email", "mail", "workmail", "testmail",
+            "doctor", "doc", "dr", "owner", "labowner", "patholab",
+            "info", "support", "contact", "test", "demo", "default",
+            "workspace", "account", "login", "null", "undefined"
+        ]
+        if str.isEmpty || str.count < 2 || blacklist.contains(lower) {
+            return "Doctor"
+        }
+
+        // 6. Capitalize first letter, lowercase rest
         str = str.prefix(1).uppercased() + str.dropFirst().lowercased()
 
-        // Known prefixes
-        let lower = str.lowercased()
+        // 7. Known prefixes
         let prefixes = ["monowar", "manohar", "mohammad", "anupam", "shahid", "abhishek", "rahul", "amit", "priya", "rohit", "vikram", "rajesh", "suresh", "deepak", "sanjay"]
         for p in prefixes {
             if lower.hasPrefix(p) && lower.count > p.count + 2 {
@@ -1576,12 +1602,41 @@ class HomeNativeView: UIView {
             }
         }
 
-        // Cap at 7 characters if still longer than 8
+        // 8. Cap at 7 characters if still longer than 8
         if str.count > 8 {
             str = String(str.prefix(7))
         }
 
+        // Final safety check: never return any string containing "gmail"
+        if str.lowercased().contains("gmail") || str.count < 2 {
+            return "Doctor"
+        }
+
         return str
+    }
+
+    /**
+     * Sanitizes strings destined for notification dialogs or popups, replacing any email addresses with clean smart first names.
+     */
+    static func stripEmailFromString(_ text: String) -> String {
+        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return "" }
+        var result = text
+        let emailRegex = "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}"
+        if let regex = try? NSRegularExpression(pattern: emailRegex) {
+            let nsString = result as NSString
+            let matches = regex.matches(in: result, range: NSRange(location: 0, length: nsString.length))
+            for match in matches.reversed() {
+                let email = nsString.substring(with: match.range)
+                let name = formatSmartFirstName(email)
+                result = (result as NSString).replacingCharacters(in: match.range, with: name)
+            }
+        }
+        result = result.replacingOccurrences(of: "(?i)@[a-zA-Z0-9.-]+", with: "", options: .regularExpression)
+        result = result.replacingOccurrences(of: "(?i)\\b(gmail|yahoo|hotmail|outlook|icloud)(\\.com|\\.in|\\.org)?\\b", with: "", options: .regularExpression)
+        result = result.replacingOccurrences(of: ",\\s*\\.", with: ".", options: .regularExpression)
+        result = result.replacingOccurrences(of: ",\\s*,", with: ",", options: .regularExpression)
+        result = result.replacingOccurrences(of: "\\s{2,}", with: " ", options: .regularExpression)
+        return result.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     func fetchWalletBalance() {

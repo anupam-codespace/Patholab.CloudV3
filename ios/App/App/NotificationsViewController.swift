@@ -184,7 +184,7 @@ class NotificationsViewController: UIViewController {
             }
 
             let titleLabel = UILabel()
-            titleLabel.text = title
+            titleLabel.text = HomeNativeView.stripEmailFromString(title)
             titleLabel.numberOfLines = 0
             titleLabel.font = isRead
                 ? .systemFont(ofSize: 13.5)
@@ -236,7 +236,7 @@ class NotificationsViewController: UIViewController {
             let constraints: [NSLayoutConstraint]
             if !body.isEmpty {
                 let bodyLabel = UILabel()
-                bodyLabel.text = body
+                bodyLabel.text = HomeNativeView.stripEmailFromString(body)
                 bodyLabel.numberOfLines = 0
                 bodyLabel.font = .systemFont(ofSize: 11.5)
                 bodyLabel.textColor = isDarkMode

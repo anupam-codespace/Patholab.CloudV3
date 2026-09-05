@@ -1675,10 +1675,10 @@ public class HomeNativeManager {
                 if (conn.getResponseCode() == 200) {
                     String json = readStream(conn.getInputStream());
                     JSONObject obj = new JSONObject(json);
-                    String serverName = obj.optString("name", "");
-                    if (serverName.isEmpty()) {
-                        serverName = obj.optString("email", "");
-                    }
+                    String rawServerName = obj.optString("name", "");
+                    String serverName = (!rawServerName.isEmpty() && !"null".equalsIgnoreCase(rawServerName.trim()) && !rawServerName.contains("@"))
+                            ? rawServerName
+                            : formatSmartFirstName(obj.optString("email", ""));
                     String role = obj.optString("role", "Lab Owner");
                     currentRole = role.replace("_", " ");
 
@@ -2049,7 +2049,17 @@ public class HomeNativeManager {
             str = str.substring(0, str.indexOf('@'));
         }
 
-        // 2. If contains space, underscore, dot, or dash, take first token (skipping title prefixes like Dr, Mr)
+        // 2. Strip common domain extensions & service mentions
+        str = str.replaceAll("(?i)(\\.com|\\.in|\\.org|\\.net|\\.co|\\.io|\\.gov|\\.edu)", "");
+        str = str.replaceAll("(?i)[._\\-](gmail|yahoo|hotmail|outlook|icloud|mail|email)\\b", "");
+        str = str.replaceAll("(?i)\\b(gmail|yahoo|hotmail|outlook|icloud|mail|email)[._\\-]", "");
+
+        // If string ends with "gmail" without separator (e.g. monowargmail), strip it
+        if (str.toLowerCase().endsWith("gmail") && str.length() > 5) {
+            str = str.substring(0, str.length() - 5);
+        }
+
+        // 3. If contains space, underscore, dot, or dash, take first token (skipping title prefixes like Dr, Mr)
         String[] tokens = str.split("[\\s._\\-]+");
         if (tokens.length > 0 && !tokens[0].isEmpty()) {
             String firstToken = tokens[0];
@@ -2062,7 +2072,7 @@ public class HomeNativeManager {
             }
         }
 
-        // 3. Handle CamelCase / PascalCase without spaces (e.g. "MonowarHussainSafi" -> "Monowar")
+        // 4. Handle CamelCase / PascalCase without spaces (e.g. "MonowarHussainSafi" -> "Monowar")
         String[] camelParts = str.split("(?=[A-Z])");
         if (camelParts.length > 1 && !camelParts[0].isEmpty()) {
             str = camelParts[0];
@@ -2070,14 +2080,28 @@ public class HomeNativeManager {
             str = camelParts[1];
         }
 
-        // 4. Clean up non-alphabetic chars
+        // 5. Clean up non-alphabetic chars
         str = str.replaceAll("[^a-zA-Z]", "");
-        if (str.isEmpty() || "user".equalsIgnoreCase(str) || "admin".equalsIgnoreCase(str)) return "Doctor";
+        
+        // Strict blacklist check: fallback to "Doctor"
+        String lowerCaseStr = str.toLowerCase();
+        if (str.isEmpty() || str.length() < 2 ||
+            "user".equals(lowerCaseStr) || "admin".equals(lowerCaseStr) ||
+            "gmail".equals(lowerCaseStr) || "email".equals(lowerCaseStr) || "mail".equals(lowerCaseStr) ||
+            "workmail".equals(lowerCaseStr) || "testmail".equals(lowerCaseStr) ||
+            "doctor".equals(lowerCaseStr) || "doc".equals(lowerCaseStr) || "dr".equals(lowerCaseStr) ||
+            "owner".equals(lowerCaseStr) || "labowner".equals(lowerCaseStr) || "patholab".equals(lowerCaseStr) ||
+            "info".equals(lowerCaseStr) || "support".equals(lowerCaseStr) || "contact".equals(lowerCaseStr) ||
+            "test".equals(lowerCaseStr) || "demo".equals(lowerCaseStr) || "default".equals(lowerCaseStr) ||
+            "workspace".equals(lowerCaseStr) || "account".equals(lowerCaseStr) || "login".equals(lowerCaseStr) ||
+            "null".equals(lowerCaseStr) || "undefined".equals(lowerCaseStr)) {
+            return "Doctor";
+        }
 
-        // 5. Capitalize first letter, lowercase rest
+        // 6. Capitalize first letter, lowercase rest
         str = Character.toUpperCase(str.charAt(0)) + str.substring(1).toLowerCase();
 
-        // 6. Check common compound prefixes if concatenated without spaces (e.g. monowarhussain... -> Monowar)
+        // 7. Check common compound prefixes if concatenated without spaces (e.g. monowarhussain... -> Monowar)
         String lower = str.toLowerCase();
         String[] knownPrefixes = {"monowar", "manohar", "mohammad", "anupam", "shahid", "abhishek", "rahul", "amit", "priya", "rohit", "vikram", "rajesh", "suresh", "deepak", "sanjay"};
         for (String p : knownPrefixes) {
@@ -2086,9 +2110,14 @@ public class HomeNativeManager {
             }
         }
 
-        // 7. If still longer than 8 characters, cap cleanly at 7 characters
+        // 8. If still longer than 8 characters, cap cleanly at 7 characters
         if (str.length() > 8) {
             str = str.substring(0, 7);
+        }
+
+        // Final safety check: never return any string containing "gmail"
+        if (str.toLowerCase().contains("gmail") || str.length() < 2) {
+            return "Doctor";
         }
 
         return str;
@@ -2098,7 +2127,7 @@ public class HomeNativeManager {
      * Sanitizes strings destined for notification dialogs or popups, replacing any email addresses with clean smart first names.
      */
     public static String stripEmailFromString(String text) {
-        if (text == null || text.isEmpty()) return "";
+        if (text == null || text.trim().isEmpty()) return "";
         java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}");
         java.util.regex.Matcher matcher = pattern.matcher(text);
         StringBuffer sb = new StringBuffer();
@@ -2108,7 +2137,20 @@ public class HomeNativeManager {
             matcher.appendReplacement(sb, java.util.regex.Matcher.quoteReplacement(name));
         }
         matcher.appendTail(sb);
-        return sb.toString();
+        String res = sb.toString();
+
+        // Strip any residual email domains or @ handles
+        res = res.replaceAll("(?i)@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}", "");
+        res = res.replaceAll("(?i)@[a-zA-Z0-9.-]+", "");
+
+        // Strip standalone email provider names like 'gmail', 'gmail.com', 'email'
+        res = res.replaceAll("(?i)\\b(gmail|yahoo|hotmail|outlook|icloud)(\\.com|\\.in|\\.org)?\\b", "");
+
+        // Clean up punctuation artifacts & double spaces
+        res = res.replaceAll(",\\s*\\.", ".");
+        res = res.replaceAll(",\\s*,", ",");
+        res = res.replaceAll("\\s{2,}", " ").trim();
+        return res;
     }
 
     private String extractNameFromJwt(String jwtToken) {
@@ -2119,8 +2161,13 @@ public class HomeNativeManager {
                 String jsonStr = new String(bytes, "UTF-8");
                 JSONObject jwt = new JSONObject(jsonStr);
                 String name = jwt.optString("name", "");
-                if (name.isEmpty()) name = jwt.optString("email", "");
-                return name;
+                if (!name.isEmpty() && !"null".equalsIgnoreCase(name.trim()) && !name.contains("@")) {
+                    return name;
+                }
+                String email = jwt.optString("email", "");
+                if (!email.isEmpty()) {
+                    return formatSmartFirstName(email);
+                }
             }
         } catch (Exception ignored) {}
         return null;

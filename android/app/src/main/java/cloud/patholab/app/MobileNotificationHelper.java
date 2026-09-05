@@ -85,9 +85,9 @@ public class MobileNotificationHelper {
         prefs.edit().putLong(welcomeTimestampKey, now).apply();
 
         String rawName = userName;
-        if (rawName == null || rawName.trim().isEmpty() || "User".equalsIgnoreCase(rawName.trim()) || rawName.contains("@")) {
+        if (rawName == null || rawName.trim().isEmpty() || "User".equalsIgnoreCase(rawName.trim()) || rawName.contains("@") || rawName.toLowerCase().contains("gmail")) {
             String storedName = cloud.patholab.app.auth.AuthManager.getUserName(context);
-            if (storedName != null && !storedName.trim().isEmpty() && !"User".equalsIgnoreCase(storedName.trim()) && !storedName.contains("@")) {
+            if (storedName != null && !storedName.trim().isEmpty() && !"User".equalsIgnoreCase(storedName.trim()) && !storedName.contains("@") && !storedName.toLowerCase().contains("gmail")) {
                 rawName = storedName;
             } else {
                 String storedEmail = cloud.patholab.app.auth.AuthManager.getUserEmail(context);
@@ -98,7 +98,7 @@ public class MobileNotificationHelper {
         }
 
         String firstName = HomeNativeManager.formatSmartFirstName(rawName);
-        if (firstName == null || firstName.trim().isEmpty() || "User".equalsIgnoreCase(firstName.trim())) {
+        if (firstName == null || firstName.trim().isEmpty() || "User".equalsIgnoreCase(firstName.trim()) || firstName.toLowerCase().contains("gmail")) {
             firstName = "Doctor";
         }
 
@@ -118,7 +118,7 @@ public class MobileNotificationHelper {
                 Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 
                 String title = "Welcome to PathoLab Cloud";
-                String body = "Welcome, " + finalFirstName + ". Your laboratory workspace is ready for seamless operations and patient care.";
+                String body = HomeNativeManager.stripEmailFromString("Welcome, " + finalFirstName + ". Your laboratory workspace is ready for seamless operations and patient care.");
 
                 NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
                         .setSmallIcon(R.mipmap.ic_launcher)
@@ -151,7 +151,10 @@ public class MobileNotificationHelper {
         initNotificationChannel(context);
 
         try {
-            String cleanName = (patientName != null && !patientName.trim().isEmpty()) ? patientName.trim() : "New Patient";
+            String cleanName = HomeNativeManager.stripEmailFromString(HomeNativeManager.formatSmartFirstName(patientName));
+            if (cleanName.isEmpty() || "Doctor".equalsIgnoreCase(cleanName)) {
+                cleanName = (patientName != null && !patientName.trim().isEmpty() && !patientName.contains("@")) ? patientName.trim() : "Patient";
+            }
             String cleanUhid = (uhid != null && !uhid.trim().isEmpty()) ? uhid.trim() : "";
 
             Intent intent = new Intent(context, PatientWorklistActivity.class);
@@ -168,7 +171,7 @@ public class MobileNotificationHelper {
             Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 
             String title = "New Patient Registered";
-            String body = "Patient " + cleanName + (!cleanUhid.isEmpty() ? " (" + cleanUhid + ")" : "") + " has been added to your laboratory worklist.";
+            String body = HomeNativeManager.stripEmailFromString("Patient " + cleanName + (!cleanUhid.isEmpty() ? " (" + cleanUhid + ")" : "") + " has been added to your laboratory worklist.");
 
             NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
                     .setSmallIcon(R.mipmap.ic_launcher)

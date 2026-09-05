@@ -54,8 +54,8 @@ class MobileNotificationHelper: NSObject, UNUserNotificationCenterDelegate {
         userDefaults.set(now, forKey: welcomeTimestampKey)
 
         var candidate = userName.trimmingCharacters(in: .whitespacesAndNewlines)
-        if candidate.isEmpty || candidate.lowercased() == "user" || candidate.contains("@") {
-            if let storedName = UserDefaults.standard.string(forKey: "user_name"), !storedName.isEmpty, storedName.lowercased() != "user", !storedName.contains("@") {
+        if candidate.isEmpty || candidate.lowercased() == "user" || candidate.contains("@") || candidate.lowercased().contains("gmail") {
+            if let storedName = UserDefaults.standard.string(forKey: "user_name"), !storedName.isEmpty, storedName.lowercased() != "user", !storedName.contains("@"), !storedName.lowercased().contains("gmail") {
                 candidate = storedName
             } else if let storedEmail = UserDefaults.standard.string(forKey: "user_email"), !storedEmail.isEmpty {
                 candidate = storedEmail
@@ -65,13 +65,13 @@ class MobileNotificationHelper: NSObject, UNUserNotificationCenterDelegate {
         }
 
         var firstName = HomeNativeView.formatSmartFirstName(candidate)
-        if firstName.isEmpty || firstName.lowercased() == "user" {
+        if firstName.isEmpty || firstName.lowercased() == "user" || firstName.lowercased().contains("gmail") {
             firstName = "Doctor"
         }
 
         let content = UNMutableNotificationContent()
         content.title = "Welcome to PathoLab Cloud"
-        content.body = "Welcome, \(firstName). Your laboratory workspace is ready for seamless operations and patient care."
+        content.body = HomeNativeView.stripEmailFromString("Welcome, \(firstName). Your laboratory workspace is ready for seamless operations and patient care.")
         content.sound = .default
         content.userInfo = ["type": "WELCOME_NOTIFICATION", "userId": effectiveId]
 
@@ -95,14 +95,20 @@ class MobileNotificationHelper: NSObject, UNUserNotificationCenterDelegate {
      * or another device, keeping mobile app users synced in real-time.
      */
     func postNewPatientNotification(patientName: String, uhid: String) {
-        let cleanName = patientName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "New Patient" : patientName.trimmingCharacters(in: .whitespacesAndNewlines)
+        var cleanName = HomeNativeView.stripEmailFromString(HomeNativeView.formatSmartFirstName(patientName))
+        if cleanName.isEmpty || cleanName.lowercased() == "doctor" {
+            cleanName = (!patientName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !patientName.contains("@"))
+                ? patientName.trimmingCharacters(in: .whitespacesAndNewlines)
+                : "Patient"
+        }
         let cleanUhid = uhid.trimmingCharacters(in: .whitespacesAndNewlines)
 
         let content = UNMutableNotificationContent()
         content.title = "New Patient Registered"
-        content.body = cleanUhid.isEmpty
+        let rawBody = cleanUhid.isEmpty
             ? "Patient \(cleanName) has been added to your laboratory worklist."
             : "Patient \(cleanName) (\(cleanUhid)) has been added to your laboratory worklist."
+        content.body = HomeNativeView.stripEmailFromString(rawBody)
         content.sound = .default
         content.userInfo = ["type": "NEW_PATIENT_NOTIFICATION", "route": "/workspace/patients"]
 
