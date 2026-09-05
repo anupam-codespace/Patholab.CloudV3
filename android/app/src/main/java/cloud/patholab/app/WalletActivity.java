@@ -129,20 +129,6 @@ public class WalletActivity extends AppCompatActivity {
             btnBack.setOnClickListener(v -> finish());
         }
 
-        View btnRefresh = findViewById(R.id.btnRefreshWallet);
-        ImageView imgRefreshIcon = findViewById(R.id.imgRefreshWalletIcon);
-        if (btnRefresh != null) {
-            btnRefresh.setOnClickListener(v -> {
-                if (imgRefreshIcon != null) {
-                    RotateAnimation rotate = new RotateAnimation(0, 360,
-                            Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
-                    rotate.setDuration(600);
-                    imgRefreshIcon.startAnimation(rotate);
-                }
-                fetchWalletDetails();
-            });
-        }
-
         // Adjust top padding for status bar - move header higher up
         View header = findViewById(R.id.walletHeader);
         if (header != null) {
