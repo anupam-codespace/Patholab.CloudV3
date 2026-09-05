@@ -19,7 +19,6 @@ class DashboardViewController: UIViewController {
     private let topHeaderView = UIView()
     private let userGreetingLbl = UILabel()
     private let userRoleLabLbl = UILabel()
-    private let refreshIconView = UIImageView()
 
     // Top-Level KPI Metric Labels
     private let lblTotalRevenue = UILabel()
@@ -102,21 +101,6 @@ class DashboardViewController: UIViewController {
         titleLbl.translatesAutoresizingMaskIntoConstraints = false
         topHeaderView.addSubview(titleLbl)
 
-        let refreshBtn = UIButton(type: .system)
-        refreshBtn.backgroundColor = UIColor.white.withAlphaComponent(0.18)
-        refreshBtn.layer.cornerRadius = 19
-        refreshBtn.layer.borderWidth = 1
-        refreshBtn.layer.borderColor = UIColor.white.withAlphaComponent(0.25).cgColor
-        refreshBtn.addTarget(self, action: #selector(didTapRefresh), for: .touchUpInside)
-        refreshBtn.translatesAutoresizingMaskIntoConstraints = false
-        topHeaderView.addSubview(refreshBtn)
-
-        refreshIconView.image = UIImage(systemName: "arrow.clockwise")
-        refreshIconView.tintColor = .white
-        refreshIconView.contentMode = .scaleAspectFit
-        refreshIconView.translatesAutoresizingMaskIntoConstraints = false
-        refreshBtn.addSubview(refreshIconView)
-
         userRoleLabLbl.text = "Overview of your enterprise's financial health"
         userRoleLabLbl.font = .systemFont(ofSize: 11.5, weight: .medium)
         userRoleLabLbl.textColor = UIColor(red: 0.576, green: 0.773, blue: 0.992, alpha: 1)
@@ -139,16 +123,6 @@ class DashboardViewController: UIViewController {
 
             userRoleLabLbl.leadingAnchor.constraint(equalTo: titleLbl.leadingAnchor),
             userRoleLabLbl.topAnchor.constraint(equalTo: titleLbl.bottomAnchor, constant: 2),
-
-            refreshBtn.trailingAnchor.constraint(equalTo: topHeaderView.trailingAnchor, constant: -16),
-            refreshBtn.centerYAnchor.constraint(equalTo: backBtn.centerYAnchor),
-            refreshBtn.widthAnchor.constraint(equalToConstant: 38),
-            refreshBtn.heightAnchor.constraint(equalToConstant: 38),
-
-            refreshIconView.centerXAnchor.constraint(equalTo: refreshBtn.centerXAnchor),
-            refreshIconView.centerYAnchor.constraint(equalTo: refreshBtn.centerYAnchor),
-            refreshIconView.widthAnchor.constraint(equalToConstant: 16),
-            refreshIconView.heightAnchor.constraint(equalToConstant: 16),
         ])
     }
 
@@ -165,16 +139,6 @@ class DashboardViewController: UIViewController {
         } else {
             dismiss(animated: true)
         }
-    }
-
-    @objc private func didTapRefresh() {
-        let rotation = CABasicAnimation(keyPath: "transform.rotation.z")
-        rotation.toValue = NSNumber(value: Double.pi * 2)
-        rotation.duration = 0.6
-        rotation.isCumulative = true
-        rotation.repeatCount = 1
-        refreshIconView.layer.add(rotation, forKey: "rotationAnimation")
-        fetchDashboardMetrics()
     }
 
     @objc private func didPullRefresh() {

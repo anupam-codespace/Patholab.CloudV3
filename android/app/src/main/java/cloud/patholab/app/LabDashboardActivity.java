@@ -159,7 +159,8 @@ public class LabDashboardActivity extends AppCompatActivity {
             LayoutInflater inflater = LayoutInflater.from(this);
             View popupView = inflater.inflate(R.layout.layout_range_dropdown_menu, null);
 
-            int width = (int) dp(260);
+            View targetAnchor = btnRangeDropdown != null ? btnRangeDropdown : anchor;
+            int width = (targetAnchor != null && targetAnchor.getWidth() > 0) ? targetAnchor.getWidth() : (int) dp(280);
             PopupWindow popup = new PopupWindow(
                     popupView,
                     width,
@@ -177,9 +178,7 @@ public class LabDashboardActivity extends AppCompatActivity {
             setupDropdownOption(popupView, popup, R.id.itemRangeMonth, R.id.imgCheckMonth, R.id.lblTitleMonth, "MONTH");
             setupDropdownOption(popupView, popup, R.id.itemRangeYear, R.id.imgCheckYear, R.id.lblTitleYear, "YEAR");
 
-            View targetAnchor = btnRangeDropdown != null ? btnRangeDropdown : anchor;
-            int xOffset = targetAnchor.getWidth() - width;
-            popup.showAsDropDown(targetAnchor, xOffset, (int) dp(6));
+            popup.showAsDropDown(targetAnchor, 0, (int) dp(6));
         } catch (Exception e) {
             e.printStackTrace();
         }
