@@ -160,8 +160,17 @@ export default function ReportsDispatchPage() {
     const message = `Hello ${report.patient.name},\n\nYour lab test report is ready. You can securely view and download it here:\n${verifyUrl}\n\nThank you,\nPatholab Cloud`;
     const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 
+    // Sync dispatch status to server
+    fetch(`/api/workspace/reports/${report.id}/dispatch`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ method: "WHATSAPP" }),
+    }).then(() => {
+      queryClient.invalidateQueries({ queryKey: ["lab-reports"] });
+    }).catch(() => {});
+
     window.open(whatsappUrl, "_blank");
-    toast.success("Opening WhatsApp...");
+    toast.success("Opening WhatsApp & Dispatched!");
     setShareReport(null);
   };
 
@@ -174,12 +183,22 @@ export default function ReportsDispatchPage() {
     const subject = `Your Lab Test Report - Patholab Cloud`;
     const body = `Hello ${report.patient.name},\n\nYour lab test report is ready. You can securely view and download it using the link below:\n\n${verifyUrl}\n\nThank you,\nPatholab Cloud`;
 
+    // Sync dispatch status to server
+    fetch(`/api/workspace/reports/${report.id}/dispatch`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ method: "EMAIL" }),
+    }).then(() => {
+      queryClient.invalidateQueries({ queryKey: ["lab-reports"] });
+    }).catch(() => {});
+
     // Explicit Gmail URL
     const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
       report.patient.email,
     )}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
     window.open(gmailUrl, "_blank");
+    toast.success("Opening Email & Dispatched!");
     setShareReport(null);
   };
 

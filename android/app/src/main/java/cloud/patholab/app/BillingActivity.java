@@ -478,7 +478,6 @@ public class BillingActivity extends AppCompatActivity {
         TextView lblDiscount = sheet.findViewById(R.id.lblSheetDiscount);
         TextView lblGrandTotal = sheet.findViewById(R.id.lblSheetGrandTotal);
         TextView lblPaid = sheet.findViewById(R.id.lblSheetPaidAmount);
-        TextView lblDue = sheet.findViewById(R.id.lblSheetBalanceDue);
         MaterialButton btnDone = sheet.findViewById(R.id.btnDoneInvoiceDetail);
         FrameLayout btnClose = sheet.findViewById(R.id.btnCloseInvoiceSheet);
 
@@ -523,14 +522,6 @@ public class BillingActivity extends AppCompatActivity {
 
         lblGrandTotal.setText(String.format(Locale.getDefault(), "₹ %,.2f", item.grandTotal));
         lblPaid.setText(String.format(Locale.getDefault(), "Paid: ₹ %,.2f", item.paidAmount));
-
-        if (item.balanceDue > 0) {
-            lblDue.setText(String.format(Locale.getDefault(), "Balance: ₹ %,.2f", item.balanceDue));
-            lblDue.setTextColor(0xFFD97706);
-        } else {
-            lblDue.setText("Settled in Full");
-            lblDue.setTextColor(0xFF059669);
-        }
 
         btnClose.setOnClickListener(v -> dialog.dismiss());
         btnDone.setOnClickListener(v -> dialog.dismiss());

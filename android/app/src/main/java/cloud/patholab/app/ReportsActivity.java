@@ -78,7 +78,7 @@ public class ReportsActivity extends AppCompatActivity {
     private final List<ReportItem> filteredReports = new ArrayList<>();
     private ReportsAdapter reportsAdapter;
 
-    private String selectedStatusFilter = "PRINT_READY";
+    private String selectedStatusFilter = "ALL";
     private String currentLabName = "PathoLab Cloud";
     private String currentUserName = "Medical Officer";
 
@@ -116,8 +116,8 @@ public class ReportsActivity extends AppCompatActivity {
             this.patientName = patientName;
             this.patientPhone = patientPhone;
             this.patientEmail = patientEmail;
-            this.patientAge = patientAge != null && !patientAge.isEmpty() ? patientAge : "42 Yrs";
-            this.patientGender = patientGender != null && !patientGender.isEmpty() ? patientGender : "Male";
+            this.patientAge = patientAge != null && !patientAge.isEmpty() ? patientAge : "—";
+            this.patientGender = patientGender != null && !patientGender.isEmpty() ? patientGender : "—";
             this.uhid = uhid != null && !uhid.isEmpty() ? uhid : "P-" + (id.length() > 5 ? id.substring(id.length() - 5).toUpperCase() : id.toUpperCase());
             this.testName = testName != null && !testName.isEmpty() ? testName : "Diagnostic Investigation";
             this.testCode = testCode != null && !testCode.isEmpty() ? testCode : "T_" + (testName.length() > 3 ? testName.substring(0, 3).toUpperCase() : "TEST");
@@ -219,8 +219,8 @@ public class ReportsActivity extends AppCompatActivity {
 
     private void setupFilterChips() {
         containerReportsFilterChips.removeAllViews();
-        String[] filters = {"PRINT_READY", "ALL", "DRAFT", "SENT", "AMENDED"};
-        String[] labels = {"Print Ready", "All", "Draft", "Sent", "Amended"};
+        String[] filters = {"ALL", "PRINT_READY", "DRAFT", "SENT", "AMENDED"};
+        String[] labels = {"All", "Print Ready", "Draft", "Sent", "Amended"};
 
         for (int i = 0; i < filters.length; i++) {
             final String filterKey = filters[i];
@@ -337,8 +337,8 @@ public class ReportsActivity extends AppCompatActivity {
                     String cookie = cm.getCookie(BASE_URL);
                     if (cookie != null) conn.setRequestProperty("Cookie", cookie);
                 }
-                conn.setConnectTimeout(8000);
-                conn.setReadTimeout(8000);
+                conn.setConnectTimeout(15000);
+                conn.setReadTimeout(15000);
 
                 if (conn.getResponseCode() == 200) {
                     String res = readStream(conn.getInputStream());
@@ -353,29 +353,49 @@ public class ReportsActivity extends AppCompatActivity {
                             String pName = p != null ? p.optString("name", "Patient") : "Patient";
                             String pPhone = p != null ? p.optString("phone", "") : "";
                             String pEmail = p != null ? p.optString("email", "") : "";
-                            String pAge = p != null ? p.optString("age", "—") : "—";
+                            
+                            String pAge = "—";
+                            if (p != null) {
+                                if (p.has("age") && !p.isNull("age")) {
+                                    int ageNum = p.optInt("age", 0);
+                                    String ageUnit = p.optString("ageUnit", "Yrs");
+                                    pAge = ageNum > 0 ? (ageNum + " " + ageUnit) : p.optString("age", "—");
+                                }
+                            }
                             String pGender = p != null ? p.optString("gender", "—") : "—";
                             String pUhid = "P-" + (1000 + i);
                             if (p != null) {
-                                if (p.has("patientId") && !p.isNull("patientId")) {
+                                if (p.has("patientId") && !p.isNull("patientId") && !p.optString("patientId").isEmpty()) {
                                     pUhid = p.optString("patientId");
-                                } else if (p.has("uhid") && !p.isNull("uhid")) {
+                                } else if (p.has("uhid") && !p.isNull("uhid") && !p.optString("uhid").isEmpty()) {
                                     pUhid = p.optString("uhid");
+                                } else if (p.has("id") && !p.isNull("id")) {
+                                    String pid = p.optString("id");
+                                    pUhid = pid.length() > 8 ? pid.substring(0, 8).toUpperCase() : pid;
                                 }
                             }
 
                             JSONObject t = r.optJSONObject("test");
                             String tName = "Diagnostic Investigation";
                             String tCode = "TEST";
+                            String dName = "Clinical Pathology";
                             if (t != null) {
-                                tName = t.has("testName") ? t.optString("testName") : t.optString("name", "Diagnostic Investigation");
-                                tCode = t.has("testCode") ? t.optString("testCode") : t.optString("code", "TEST");
+                                tName = t.has("testName") && !t.isNull("testName") ? t.optString("testName") : t.optString("name", "Diagnostic Investigation");
+                                tCode = t.has("testCode") && !t.isNull("testCode") ? t.optString("testCode") : t.optString("code", "TEST");
+
+                                JSONObject cat = t.optJSONObject("category");
+                                if (cat != null && cat.has("name") && !cat.isNull("name")) {
+                                    dName = cat.optString("name");
+                                } else {
+                                    JSONObject dept = t.optJSONObject("department");
+                                    if (dept != null && dept.has("name") && !dept.isNull("name")) {
+                                        dName = dept.optString("name");
+                                    }
+                                }
                             }
-                            JSONObject dept = t != null ? t.optJSONObject("department") : null;
-                            String dName = dept != null ? dept.optString("name", "General") : "General";
 
                             JSONObject path = r.optJSONObject("pathologist");
-                            String pathName = path != null ? path.optString("name", "Authorized Signatory") : "Authorized Signatory";
+                            String pathName = path != null && path.has("name") && !path.isNull("name") ? path.optString("name") : "Authorized Signatory";
 
                             String dateStr = r.optString("createdAt", "");
                             String formattedDate = formatDate(dateStr);
@@ -509,7 +529,8 @@ public class ReportsActivity extends AppCompatActivity {
                 Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                 startActivity(intent);
 
-                report.status = "SENT";
+                markReportDispatchedOnServer(report.id);
+                report.status = "SENT_TO_PATIENT";
                 reportsAdapter.notifyDataSetChanged();
                 updateKpiStats();
             } catch (Exception e) {
@@ -525,6 +546,11 @@ public class ReportsActivity extends AppCompatActivity {
                 emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Your Diagnostic Report: " + report.testName + " (" + report.uhid + ")");
                 emailIntent.putExtra(Intent.EXTRA_TEXT, "Dear " + report.patientName + ",\n\nYour diagnostic test report for " + report.testName + " is ready.\n\nAccess your secure verified report here:\n" + verifyUrl + "\n\nRegards,\nPatholab Cloud");
                 startActivity(Intent.createChooser(emailIntent, "Send Report Email"));
+
+                markReportDispatchedOnServer(report.id);
+                report.status = "SENT_TO_PATIENT";
+                reportsAdapter.notifyDataSetChanged();
+                updateKpiStats();
             } catch (Exception e) {
                 Toast.makeText(this, "Could not open email client", Toast.LENGTH_SHORT).show();
             }
@@ -731,16 +757,68 @@ public class ReportsActivity extends AppCompatActivity {
         return (int) (value * getResources().getDisplayMetrics().density + 0.5f);
     }
 
+    private void markReportDispatchedOnServer(String reportId) {
+        new Thread(() -> {
+            try {
+                String token = getAuthToken();
+                URL url = new URL(BASE_URL + "/api/workspace/reports/" + reportId + "/dispatch");
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Content-Type", "application/json");
+                if (token != null) {
+                    conn.setRequestProperty("Authorization", "Bearer " + token);
+                    conn.setRequestProperty("Cookie", "token=" + token);
+                } else {
+                    android.webkit.CookieManager cm = android.webkit.CookieManager.getInstance();
+                    String cookie = cm.getCookie(BASE_URL);
+                    if (cookie != null) conn.setRequestProperty("Cookie", cookie);
+                }
+                conn.setConnectTimeout(8000);
+                conn.setReadTimeout(8000);
+                conn.setDoOutput(true);
+                byte[] body = "{\"method\":\"DISPATCH\"}".getBytes("UTF-8");
+                try (OutputStream os = conn.getOutputStream()) {
+                    os.write(body);
+                }
+                conn.getResponseCode();
+            } catch (Exception ignored) {}
+        }).start();
+    }
+
     private String formatDate(String iso) {
+        if (iso == null || iso.isEmpty()) return "Today";
         try {
             SimpleDateFormat inFmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
+            inFmt.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
             Date d = inFmt.parse(iso);
             if (d != null) {
                 SimpleDateFormat outFmt = new SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault());
                 return outFmt.format(d);
             }
         } catch (Exception ignored) {}
-        return "01 Sept 2026, 12:08 pm";
+
+        try {
+            SimpleDateFormat inFmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US);
+            inFmt.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+            Date d = inFmt.parse(iso);
+            if (d != null) {
+                SimpleDateFormat outFmt = new SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault());
+                return outFmt.format(d);
+            }
+        } catch (Exception ignored) {}
+
+        try {
+            if (iso.length() >= 10) {
+                SimpleDateFormat inFmt = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+                Date d = inFmt.parse(iso.substring(0, 10));
+                if (d != null) {
+                    SimpleDateFormat outFmt = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());
+                    return outFmt.format(d);
+                }
+            }
+        } catch (Exception ignored) {}
+
+        return "Recent";
     }
 
     private String readStream(InputStream is) throws Exception {

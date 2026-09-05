@@ -87,7 +87,6 @@ export async function POST(req: NextRequest) {
     // Execute the entire booking in a single, safe transaction
     const result = await prisma.$transaction(async (tx) => {
         
-        // 🌟 FETCH PATIENT FIRST: So we can use their name in the Ledger
         const patientData = await tx.patient.findUnique({ where: { id: patientId } });
         if (!patientData) throw new Error("PATIENT_NOT_FOUND");
         

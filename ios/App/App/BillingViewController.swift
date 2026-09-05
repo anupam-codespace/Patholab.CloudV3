@@ -762,7 +762,6 @@ class BillingViewController: UIViewController, UITableViewDataSource, UITableVie
         Discount: - ₹\(String(format: "%.2f", item.discount))
         Grand Total: ₹\(String(format: "%.2f", item.grandTotal))
         Paid: ₹\(String(format: "%.2f", item.paidAmount))
-        Balance Due: ₹\(String(format: "%.2f", item.balanceDue))
         """, preferredStyle: .actionSheet)
 
         alert.addAction(UIAlertAction(title: "Close", style: .cancel, handler: nil))
