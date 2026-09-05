@@ -57,7 +57,7 @@ public class BillingActivity extends AppCompatActivity {
     private FrameLayout btnBillingBack;
     private LinearLayout btnNewInvoiceHeader;
     private TextView lblBillingSubtitle;
-    private TextView lblKpiTotalRevenue, lblKpiPendingAmount, lblKpiPendingCount, lblKpiMonthlyRevenue, lblKpiOverdueAmount, lblKpiOverdueCount;
+    private TextView lblKpiTotalRevenue, lblKpiMonthlyRevenue, lblKpiSettledCount, lblKpiTotalInvoicesCount;
     private EditText inputSearchInvoices;
     private ImageView btnClearSearchInvoices;
     private LinearLayout containerBillingFilterChips;
@@ -73,8 +73,8 @@ public class BillingActivity extends AppCompatActivity {
     private String selectedStatusFilter = "ALL";
 
     private boolean hasServerStats = false;
-    private double sTotalRev, sPendingAmt, sMonthlyRev, sOverdueAmt;
-    private int sPendingCnt, sOverdueCnt;
+    private double sTotalRev, sMonthlyRev;
+    private int sSettledCnt, sTotalInvoicesCnt;
 
     public static class InvoiceItem {
         public String id;
@@ -137,11 +137,9 @@ public class BillingActivity extends AppCompatActivity {
         btnNewInvoiceHeader = (LinearLayout) findViewById(R.id.btnNewInvoiceHeader);
         lblBillingSubtitle = findViewById(R.id.lblBillingSubtitle);
         lblKpiTotalRevenue = findViewById(R.id.lblKpiTotalRevenue);
-        lblKpiPendingAmount = findViewById(R.id.lblKpiPendingAmount);
-        lblKpiPendingCount = findViewById(R.id.lblKpiPendingCount);
         lblKpiMonthlyRevenue = findViewById(R.id.lblKpiMonthlyRevenue);
-        lblKpiOverdueAmount = findViewById(R.id.lblKpiOverdueAmount);
-        lblKpiOverdueCount = findViewById(R.id.lblKpiOverdueCount);
+        lblKpiSettledCount = findViewById(R.id.lblKpiSettledCount);
+        lblKpiTotalInvoicesCount = findViewById(R.id.lblKpiTotalInvoicesCount);
         inputSearchInvoices = findViewById(R.id.inputSearchInvoices);
         btnClearSearchInvoices = findViewById(R.id.btnClearSearchInvoices);
         containerBillingFilterChips = findViewById(R.id.containerBillingFilterChips);
@@ -151,9 +149,9 @@ public class BillingActivity extends AppCompatActivity {
 
         Typeface boldTf = Typeface.create("sans-serif-black", Typeface.BOLD);
         if (lblKpiTotalRevenue != null) lblKpiTotalRevenue.setTypeface(boldTf);
-        if (lblKpiPendingAmount != null) lblKpiPendingAmount.setTypeface(boldTf);
         if (lblKpiMonthlyRevenue != null) lblKpiMonthlyRevenue.setTypeface(boldTf);
-        if (lblKpiOverdueAmount != null) lblKpiOverdueAmount.setTypeface(boldTf);
+        if (lblKpiSettledCount != null) lblKpiSettledCount.setTypeface(boldTf);
+        if (lblKpiTotalInvoicesCount != null) lblKpiTotalInvoicesCount.setTypeface(boldTf);
 
         recyclerInvoicesList.setLayoutManager(new LinearLayoutManager(this));
         invoicesAdapter = new InvoicesAdapter(filteredInvoices, this::showInvoiceDetailModal);
@@ -321,14 +319,10 @@ public class BillingActivity extends AppCompatActivity {
                     JSONObject stats = obj.optJSONObject("stats");
                     if (stats != null) {
                         sTotalRev = stats.optDouble("totalRevenue", 0);
-                        sPendingAmt = stats.optDouble("pendingAmount", 0);
-                        sPendingCnt = stats.optInt("pendingCount", 0);
                         sMonthlyRev = stats.optDouble("monthlyRevenue", 0);
-                        sOverdueAmt = stats.optDouble("overdueAmount", 0);
-                        sOverdueCnt = stats.optInt("overdueCount", 0);
+                        sSettledCnt = stats.optInt("settledCount", stats.optInt("paidCount", 0));
+                        sTotalInvoicesCnt = stats.optInt("totalCount", stats.optInt("invoiceCount", 0));
                         hasServerStats = true;
-
-                        mainHandler.post(() -> updateKpiCards(sTotalRev, sPendingAmt, sPendingCnt, sMonthlyRev, sOverdueAmt, sOverdueCnt));
                     }
 
                     // Parse Invoices
@@ -407,34 +401,37 @@ public class BillingActivity extends AppCompatActivity {
     }
 
     private void computeAndApplyKpis() {
+        double totalRev = 0;
+        double monthlyRev = 0;
+        int settledCnt = 0;
+        int totalCnt = allInvoices.size();
+
         if (hasServerStats) {
-            updateKpiCards(sTotalRev, sPendingAmt, sPendingCnt, sMonthlyRev, sOverdueAmt, sOverdueCnt);
-            return;
+            totalRev = sTotalRev;
+            monthlyRev = sMonthlyRev;
+            if (sSettledCnt > 0) settledCnt = sSettledCnt;
+            if (sTotalInvoicesCnt > 0) totalCnt = sTotalInvoicesCnt;
         }
-        double totalRev = 0, pendingAmt = 0, overdueAmt = 0;
-        int pendingCnt = 0, overdueCnt = 0;
+
         for (InvoiceItem inv : allInvoices) {
-            totalRev += inv.paidAmount;
-            if (inv.balanceDue > 0) {
-                if ("OVERDUE".equalsIgnoreCase(inv.paymentStatus)) {
-                    overdueAmt += inv.balanceDue;
-                    overdueCnt++;
-                } else {
-                    pendingAmt += inv.balanceDue;
-                    pendingCnt++;
-                }
+            if (!hasServerStats) {
+                totalRev += inv.paidAmount;
+            }
+            if (!hasServerStats && "PAID".equalsIgnoreCase(inv.paymentStatus)) {
+                settledCnt++;
             }
         }
-        updateKpiCards(totalRev, pendingAmt, pendingCnt, totalRev, overdueAmt, overdueCnt);
+        if (!hasServerStats) {
+            monthlyRev = totalRev;
+        }
+        updateKpiCards(totalRev, monthlyRev, settledCnt, totalCnt);
     }
 
-    private void updateKpiCards(double totalRev, double pendingAmt, int pendingCnt, double monthlyRev, double overdueAmt, int overdueCnt) {
-        lblKpiTotalRevenue.setText(String.format(Locale.getDefault(), "₹ %,.0f", totalRev));
-        lblKpiPendingAmount.setText(String.format(Locale.getDefault(), "₹ %,.0f", pendingAmt));
-        lblKpiPendingCount.setText(pendingCnt + " Pending Invoices");
-        lblKpiMonthlyRevenue.setText(String.format(Locale.getDefault(), "₹ %,.0f", monthlyRev));
-        lblKpiOverdueAmount.setText(String.format(Locale.getDefault(), "₹ %,.0f", overdueAmt));
-        lblKpiOverdueCount.setText(overdueCnt + " Delinquent");
+    private void updateKpiCards(double totalRev, double monthlyRev, int settledCnt, int totalCnt) {
+        if (lblKpiTotalRevenue != null) lblKpiTotalRevenue.setText(String.format(Locale.getDefault(), "₹ %,.0f", totalRev));
+        if (lblKpiMonthlyRevenue != null) lblKpiMonthlyRevenue.setText(String.format(Locale.getDefault(), "₹ %,.0f", monthlyRev));
+        if (lblKpiSettledCount != null) lblKpiSettledCount.setText(String.valueOf(settledCnt));
+        if (lblKpiTotalInvoicesCount != null) lblKpiTotalInvoicesCount.setText(String.valueOf(totalCnt));
     }
 
     private void applyInvoicesFilter() {

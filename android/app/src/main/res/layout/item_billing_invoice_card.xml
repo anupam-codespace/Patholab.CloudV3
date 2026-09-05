@@ -228,34 +228,33 @@
 
                 </LinearLayout>
 
-                <!-- View Receipt Button -->
+                <!-- View Receipt Button (Polished Material 3 Pill style matching reference) -->
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnViewInvoiceReceipt"
                     android:layout_width="wrap_content"
-                    android:layout_height="36dp"
+                    android:layout_height="38dp"
                     android:minHeight="0dp"
                     android:minWidth="0dp"
                     android:text="Receipt"
-                    android:textSize="12.5sp"
+                    android:textSize="13sp"
                     android:textStyle="bold"
-                    android:textColor="#0D6EFD"
-                    android:backgroundTint="#EFF6FF"
-                    app:cornerRadius="10dp"
-                    app:strokeColor="#BFDBFE"
-                    app:strokeWidth="1dp"
+                    android:textColor="#041E49"
+                    android:backgroundTint="#D3E3FD"
+                    app:cornerRadius="19dp"
+                    app:strokeWidth="0dp"
                     app:icon="@drawable/ic_receipt_vector"
-                    app:iconTint="#0D6EFD"
-                    app:iconSize="15dp"
+                    app:iconTint="#041E49"
+                    app:iconSize="16dp"
                     app:iconPadding="6dp"
                     app:iconGravity="textStart"
                     android:insetTop="0dp"
                     android:insetBottom="0dp"
                     android:insetLeft="0dp"
                     android:insetRight="0dp"
-                    android:elevation="0dp"
+                    android:elevation="1dp"
                     android:stateListAnimator="@null"
-                    android:paddingStart="12dp"
-                    android:paddingEnd="14dp"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="16dp"
                     android:textAllCaps="false" />
 
             </LinearLayout>

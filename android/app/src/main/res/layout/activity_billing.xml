@@ -161,47 +161,7 @@
 
                 </LinearLayout>
 
-                <!-- KPI 2: Unpaid -->
-                <LinearLayout
-                    android:layout_width="145dp"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:background="@drawable/bg_billing_kpi_card"
-                    android:padding="14dp"
-                    android:layout_marginEnd="10dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="UNPAID BALANCE"
-                        android:textSize="9.5sp"
-                        android:textStyle="bold"
-                        android:textColor="#FCD34D"
-                        android:letterSpacing="0.08" />
-
-                    <TextView
-                        android:id="@+id/lblKpiPendingAmount"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="5dp"
-                        android:text="₹0"
-                        android:textSize="24sp"
-                        android:fontFamily="sans-serif-black"
-                        android:textStyle="bold"
-                        android:textColor="#FCD34D" />
-
-                    <TextView
-                        android:id="@+id/lblKpiPendingCount"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="3dp"
-                        android:text="0 Pending Invoices"
-                        android:textSize="10.5sp"
-                        android:textColor="#93C5FD" />
-
-                </LinearLayout>
-
-                <!-- KPI 3: Monthly -->
+                <!-- KPI 2: Monthly Revenue -->
                 <LinearLayout
                     android:layout_width="145dp"
                     android:layout_height="wrap_content"
@@ -240,7 +200,46 @@
 
                 </LinearLayout>
 
-                <!-- KPI 4: Overdue -->
+                <!-- KPI 3: Settled Invoices -->
+                <LinearLayout
+                    android:layout_width="145dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_billing_kpi_card"
+                    android:padding="14dp"
+                    android:layout_marginEnd="10dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="SETTLED INVOICES"
+                        android:textSize="9.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#34D399"
+                        android:letterSpacing="0.08" />
+
+                    <TextView
+                        android:id="@+id/lblKpiSettledCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="5dp"
+                        android:text="0"
+                        android:textSize="24sp"
+                        android:fontFamily="sans-serif-black"
+                        android:textStyle="bold"
+                        android:textColor="#34D399" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:text="Fully paid"
+                        android:textSize="10.5sp"
+                        android:textColor="#93C5FD" />
+
+                </LinearLayout>
+
+                <!-- KPI 4: Total Invoices -->
                 <LinearLayout
                     android:layout_width="145dp"
                     android:layout_height="wrap_content"
@@ -251,29 +250,28 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="OVERDUE ARREARS"
+                        android:text="TOTAL INVOICES"
                         android:textSize="9.5sp"
                         android:textStyle="bold"
-                        android:textColor="#FCA5A5"
+                        android:textColor="#A5B4FC"
                         android:letterSpacing="0.08" />
 
                     <TextView
-                        android:id="@+id/lblKpiOverdueAmount"
+                        android:id="@+id/lblKpiTotalInvoicesCount"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="5dp"
-                        android:text="₹0"
+                        android:text="0"
                         android:textSize="24sp"
                         android:fontFamily="sans-serif-black"
                         android:textStyle="bold"
-                        android:textColor="#FCA5A5" />
+                        android:textColor="#FFFFFF" />
 
                     <TextView
-                        android:id="@+id/lblKpiOverdueCount"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="3dp"
-                        android:text="0 Delinquent"
+                        android:text="All generated"
                         android:textSize="10.5sp"
                         android:textColor="#93C5FD" />
 

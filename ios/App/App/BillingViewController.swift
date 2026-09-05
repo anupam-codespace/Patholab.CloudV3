@@ -676,25 +676,30 @@ class BillingViewController: UIViewController, UITableViewDataSource, UITableVie
             config.title = "Receipt"
             config.image = UIImage(systemName: "doc.text.fill")
             config.imagePadding = 6
-            config.baseForegroundColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1)
-            config.baseBackgroundColor = UIColor(red: 0.937, green: 0.965, blue: 1.0, alpha: 1)
-            config.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 14)
+            config.baseForegroundColor = UIColor(red: 4/255, green: 30/255, blue: 73/255, alpha: 1) // #041E49
+            config.baseBackgroundColor = UIColor(red: 211/255, green: 227/255, blue: 253/255, alpha: 1) // #D3E3FD
+            config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 14, bottom: 8, trailing: 16)
             config.cornerStyle = .capsule
+            var titleAttr = AttributeContainer()
+            titleAttr.font = .systemFont(ofSize: 13, weight: .bold)
+            config.attributedTitle = AttributedString("Receipt", attributes: titleAttr)
             viewBtn.configuration = config
         } else {
             viewBtn.setTitle(" Receipt", for: .normal)
             viewBtn.setImage(UIImage(systemName: "doc.text.fill"), for: .normal)
-            viewBtn.tintColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1)
-            viewBtn.setTitleColor(UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1), for: .normal)
-            viewBtn.titleLabel?.font = .systemFont(ofSize: 12.5, weight: .bold)
-            viewBtn.backgroundColor = UIColor(red: 0.937, green: 0.965, blue: 1.0, alpha: 1)
-            viewBtn.layer.cornerRadius = 11
-            viewBtn.contentEdgeInsets = UIEdgeInsets(top: 6, left: 12, bottom: 6, right: 12)
+            viewBtn.tintColor = UIColor(red: 4/255, green: 30/255, blue: 73/255, alpha: 1)
+            viewBtn.setTitleColor(UIColor(red: 4/255, green: 30/255, blue: 73/255, alpha: 1), for: .normal)
+            viewBtn.titleLabel?.font = .systemFont(ofSize: 13, weight: .bold)
+            viewBtn.backgroundColor = UIColor(red: 211/255, green: 227/255, blue: 253/255, alpha: 1)
+            viewBtn.layer.cornerRadius = 18
+            viewBtn.contentEdgeInsets = UIEdgeInsets(top: 8, left: 14, bottom: 8, right: 16)
         }
-        viewBtn.layer.borderWidth = 1.2
-        viewBtn.layer.borderColor = UIColor(red: 0.749, green: 0.859, blue: 0.996, alpha: 1).cgColor // #BFDBFE
-        viewBtn.layer.cornerRadius = 11
-        viewBtn.clipsToBounds = true
+        viewBtn.layer.cornerRadius = 18
+        viewBtn.layer.borderWidth = 0
+        viewBtn.layer.shadowColor = UIColor.black.cgColor
+        viewBtn.layer.shadowOpacity = 0.06
+        viewBtn.layer.shadowRadius = 3
+        viewBtn.layer.shadowOffset = CGSize(width: 0, height: 1)
         viewBtn.tag = indexPath.row
         viewBtn.addTarget(self, action: #selector(didTapReceiptDetail(_:)), for: .touchUpInside)
 

@@ -107,13 +107,17 @@ public class DashboardActivity extends AppCompatActivity {
         swipeRefreshDashboard.setColorSchemeColors(0xFF0D6EFD);
         swipeRefreshDashboard.setOnRefreshListener(this::fetchDashboardMetrics);
 
-        btnDashboardRefresh.setOnClickListener(v -> {
-            RotateAnimation rotate = new RotateAnimation(0, 360,
-                    Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
-            rotate.setDuration(600);
-            imgDashboardRefreshIcon.startAnimation(rotate);
-            fetchDashboardMetrics();
-        });
+        if (btnDashboardRefresh != null) {
+            btnDashboardRefresh.setOnClickListener(v -> {
+                if (imgDashboardRefreshIcon != null) {
+                    RotateAnimation rotate = new RotateAnimation(0, 360,
+                            Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+                    rotate.setDuration(600);
+                    imgDashboardRefreshIcon.startAnimation(rotate);
+                }
+                fetchDashboardMetrics();
+            });
+        }
 
         // Tab Switching
         tabLedgerInvoices.setOnClickListener(v -> {
