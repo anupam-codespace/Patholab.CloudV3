@@ -224,22 +224,6 @@
                             android:textStyle="bold"
                             android:textColor="#0F172A" />
 
-                        <TextView
-                            android:id="@+id/lblInvoiceBalanceDue"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
-                            android:background="@drawable/bg_badge_balance_due"
-                            android:paddingStart="7dp"
-                            android:paddingEnd="7dp"
-                            android:paddingTop="2dp"
-                            android:paddingBottom="2dp"
-                            android:text="Due: ₹450"
-                            android:textSize="11sp"
-                            android:textStyle="bold"
-                            android:textColor="#B45309"
-                            android:visibility="gone" />
-
                     </LinearLayout>
 
                 </LinearLayout>
@@ -248,18 +232,25 @@
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnViewInvoiceReceipt"
                     android:layout_width="wrap_content"
-                    android:layout_height="34dp"
+                    android:layout_height="38dp"
                     android:text="Receipt"
-                    android:textSize="12sp"
+                    android:textSize="12.5sp"
                     android:textStyle="bold"
-                    android:textColor="#1D4ED8"
+                    android:textColor="#0D6EFD"
                     android:backgroundTint="#EFF6FF"
-                    app:cornerRadius="9dp"
+                    app:cornerRadius="12dp"
                     app:strokeColor="#BFDBFE"
-                    app:strokeWidth="1dp"
+                    app:strokeWidth="1.2dp"
+                    app:icon="@drawable/ic_receipt_vector"
+                    app:iconTint="#0D6EFD"
+                    app:iconSize="16dp"
+                    app:iconPadding="6dp"
+                    app:iconGravity="textStart"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
                     android:elevation="0dp"
                     android:paddingStart="14dp"
-                    android:paddingEnd="14dp"
+                    android:paddingEnd="16dp"
                     android:textAllCaps="false" />
 
             </LinearLayout>

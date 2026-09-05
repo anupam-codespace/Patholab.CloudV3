@@ -54,8 +54,7 @@ public class BillingActivity extends AppCompatActivity {
 
     private static final String BASE_URL = "https://app.patholab.cloud";
 
-    private FrameLayout btnBillingBack, btnRefreshBilling;
-    private ImageView imgRefreshBillingIcon;
+    private FrameLayout btnBillingBack;
     private LinearLayout btnNewInvoiceHeader;
     private TextView lblBillingSubtitle;
     private TextView lblKpiTotalRevenue, lblKpiPendingAmount, lblKpiPendingCount, lblKpiMonthlyRevenue, lblKpiOverdueAmount, lblKpiOverdueCount;
@@ -123,7 +122,7 @@ public class BillingActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        StatusBarHelper.setStatusBarDeepNavy(this);
+        StatusBarHelper.setStatusBarSapphire(this);
         setContentView(R.layout.activity_billing);
 
         initViews();
@@ -135,8 +134,6 @@ public class BillingActivity extends AppCompatActivity {
 
     private void initViews() {
         btnBillingBack = findViewById(R.id.btnBillingBack);
-        btnRefreshBilling = findViewById(R.id.btnRefreshBilling);
-        imgRefreshBillingIcon = findViewById(R.id.imgRefreshBillingIcon);
         btnNewInvoiceHeader = (LinearLayout) findViewById(R.id.btnNewInvoiceHeader);
         lblBillingSubtitle = findViewById(R.id.lblBillingSubtitle);
         lblKpiTotalRevenue = findViewById(R.id.lblKpiTotalRevenue);
@@ -165,19 +162,6 @@ public class BillingActivity extends AppCompatActivity {
 
     private void setupEvents() {
         btnBillingBack.setOnClickListener(v -> finish());
-
-        if (btnRefreshBilling != null) {
-            btnRefreshBilling.setOnClickListener(v -> {
-                if (imgRefreshBillingIcon != null) {
-                    RotateAnimation rotate = new RotateAnimation(0, 360,
-                            Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
-                    rotate.setDuration(600);
-                    imgRefreshBillingIcon.startAnimation(rotate);
-                }
-                fetchInvoices();
-                fetchLoggedInUserInfo();
-            });
-        }
 
         btnNewInvoiceHeader.setOnClickListener(v -> {
             // Launch Native Registration
@@ -590,28 +574,18 @@ public class BillingActivity extends AppCompatActivity {
             // Status Badge & Accent styling
             holder.lblStatusBadge.setText(item.paymentStatus);
             holder.lblStatusBadge.setBackgroundTintList(null);
-            holder.lblBalanceDue.setBackgroundTintList(null);
 
             if ("PAID".equalsIgnoreCase(item.paymentStatus)) {
                 holder.lblStatusBadge.setBackgroundResource(R.drawable.bg_badge_status_paid);
                 holder.lblStatusBadge.setTextColor(0xFF047857);
-                holder.lblBalanceDue.setVisibility(View.GONE);
                 if (holder.accentStrip != null) holder.accentStrip.setBackgroundColor(0xFF10B981);
             } else if ("OVERDUE".equalsIgnoreCase(item.paymentStatus)) {
                 holder.lblStatusBadge.setBackgroundResource(R.drawable.bg_badge_status_overdue);
                 holder.lblStatusBadge.setTextColor(0xFFBE123C);
-                holder.lblBalanceDue.setVisibility(View.VISIBLE);
-                holder.lblBalanceDue.setBackgroundResource(R.drawable.bg_badge_balance_overdue);
-                holder.lblBalanceDue.setText(String.format(Locale.getDefault(), "Due: ₹ %,.0f", item.balanceDue));
-                holder.lblBalanceDue.setTextColor(0xFFBE123C);
                 if (holder.accentStrip != null) holder.accentStrip.setBackgroundColor(0xFFEF4444);
             } else {
                 holder.lblStatusBadge.setBackgroundResource(R.drawable.bg_badge_status_pending);
                 holder.lblStatusBadge.setTextColor(0xFFB45309);
-                holder.lblBalanceDue.setVisibility(View.VISIBLE);
-                holder.lblBalanceDue.setBackgroundResource(R.drawable.bg_badge_balance_due);
-                holder.lblBalanceDue.setText(String.format(Locale.getDefault(), "Due: ₹ %,.0f", item.balanceDue));
-                holder.lblBalanceDue.setTextColor(0xFFB45309);
                 if (holder.accentStrip != null) holder.accentStrip.setBackgroundColor(0xFFF59E0B);
             }
 
@@ -631,7 +605,7 @@ public class BillingActivity extends AppCompatActivity {
 
         static class InvoiceViewHolder extends RecyclerView.ViewHolder {
             View accentStrip;
-            TextView lblPatientName, lblPatientDetails, lblInvoiceNumber, lblDate, lblPaymentMethod, lblStatusBadge, lblTotal, lblBalanceDue;
+            TextView lblPatientName, lblPatientDetails, lblInvoiceNumber, lblDate, lblPaymentMethod, lblStatusBadge, lblTotal;
             MaterialButton btnViewReceipt;
 
             InvoiceViewHolder(@NonNull View itemView) {
@@ -644,7 +618,6 @@ public class BillingActivity extends AppCompatActivity {
                 lblPaymentMethod = itemView.findViewById(R.id.lblInvoicePaymentMethod);
                 lblStatusBadge = itemView.findViewById(R.id.lblInvoiceStatusBadge);
                 lblTotal = itemView.findViewById(R.id.lblInvoiceTotal);
-                lblBalanceDue = itemView.findViewById(R.id.lblInvoiceBalanceDue);
                 btnViewReceipt = itemView.findViewById(R.id.btnViewInvoiceReceipt);
             }
         }

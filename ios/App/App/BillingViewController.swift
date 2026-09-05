@@ -90,24 +90,25 @@ class BillingViewController: UIViewController, UITableViewDataSource, UITableVie
 
         let gradient = CAGradientLayer()
         gradient.colors = [
-            UIColor(red: 0.043, green: 0.118, blue: 0.302, alpha: 1).cgColor, // #0B1E4D
-            UIColor(red: 0.051, green: 0.165, blue: 0.439, alpha: 1).cgColor, // #0D2A70
-            UIColor(red: 0.063, green: 0.212, blue: 0.549, alpha: 1).cgColor  // #10368C
+            UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1).cgColor, // #0D6EFD
+            UIColor(red: 0.114, green: 0.306, blue: 0.847, alpha: 1).cgColor  // #1D4ED8
         ]
         gradient.startPoint = CGPoint(x: 0, y: 0)
         gradient.endPoint = CGPoint(x: 1, y: 1)
         topHeaderView.layer.insertSublayer(gradient, at: 0)
-        topHeaderView.layer.cornerRadius = 24
+        topHeaderView.layer.cornerRadius = 20
         topHeaderView.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
         topHeaderView.clipsToBounds = true
 
         let backBtn = UIButton(type: .system)
         backBtn.setImage(UIImage(systemName: "chevron.left"), for: .normal)
-        backBtn.tintColor = .white
-        backBtn.backgroundColor = UIColor.white.withAlphaComponent(0.18)
+        backBtn.tintColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1)
+        backBtn.backgroundColor = .white
         backBtn.layer.cornerRadius = 19
-        backBtn.layer.borderWidth = 1
-        backBtn.layer.borderColor = UIColor.white.withAlphaComponent(0.25).cgColor
+        backBtn.layer.shadowColor = UIColor.black.cgColor
+        backBtn.layer.shadowOpacity = 0.08
+        backBtn.layer.shadowRadius = 4
+        backBtn.layer.shadowOffset = CGSize(width: 0, height: 2)
         backBtn.addTarget(self, action: #selector(didTapBack), for: .touchUpInside)
         backBtn.translatesAutoresizingMaskIntoConstraints = false
         topHeaderView.addSubview(backBtn)
@@ -121,14 +122,14 @@ class BillingViewController: UIViewController, UITableViewDataSource, UITableVie
 
         let subLbl = UILabel()
         subLbl.text = "Financial Ledger & Revenue Hub"
-        subLbl.font = .systemFont(ofSize: 12, weight: .medium)
-        subLbl.textColor = UIColor(red: 0.576, green: 0.773, blue: 0.992, alpha: 1) // #93C5FD
+        subLbl.font = .systemFont(ofSize: 11.5, weight: .medium)
+        subLbl.textColor = UIColor(red: 0.780, green: 0.880, blue: 1.0, alpha: 1) // #C7DFFF
         subLbl.translatesAutoresizingMaskIntoConstraints = false
         topHeaderView.addSubview(subLbl)
 
         let newInvBtn = UIButton(type: .system)
         newInvBtn.setTitle("+ New Invoice", for: .normal)
-        newInvBtn.setTitleColor(UIColor(red: 0.114, green: 0.306, blue: 0.847, alpha: 1), for: .normal)
+        newInvBtn.setTitleColor(UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1), for: .normal)
         newInvBtn.titleLabel?.font = .systemFont(ofSize: 12.5, weight: .bold)
         newInvBtn.backgroundColor = .white
         newInvBtn.layer.cornerRadius = 17
@@ -669,28 +670,35 @@ class BillingViewController: UIViewController, UITableViewDataSource, UITableVie
         totalLbl.font = .systemFont(ofSize: 18.5, weight: .bold)
         totalLbl.textColor = UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1)
 
-        let dueLbl = UILabel()
-        if item.balanceDue > 0 {
-            dueLbl.text = String(format: "Due: ₹%.2f", item.balanceDue)
-            dueLbl.font = .systemFont(ofSize: 12, weight: .bold)
-            dueLbl.textColor = UIColor(red: 0.88, green: 0.11, blue: 0.28, alpha: 1)
-        } else {
-            dueLbl.text = "Settled"
-            dueLbl.font = .systemFont(ofSize: 12, weight: .bold)
-            dueLbl.textColor = UIColor(red: 0.02, green: 0.59, blue: 0.41, alpha: 1)
-        }
-
         let viewBtn = UIButton(type: .system)
-        viewBtn.setTitle("View Receipt", for: .normal)
-        viewBtn.setTitleColor(UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1), for: .normal)
-        viewBtn.titleLabel?.font = .systemFont(ofSize: 12, weight: .bold)
-        viewBtn.backgroundColor = UIColor(red: 0.937, green: 0.965, blue: 1.0, alpha: 1)
-        viewBtn.layer.cornerRadius = 8
-        viewBtn.contentEdgeInsets = UIEdgeInsets(top: 6, left: 12, bottom: 6, right: 12)
+        if #available(iOS 15.0, *) {
+            var config = UIButton.Configuration.filled()
+            config.title = "Receipt"
+            config.image = UIImage(systemName: "doc.text.fill")
+            config.imagePadding = 6
+            config.baseForegroundColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1)
+            config.baseBackgroundColor = UIColor(red: 0.937, green: 0.965, blue: 1.0, alpha: 1)
+            config.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 14)
+            config.cornerStyle = .capsule
+            viewBtn.configuration = config
+        } else {
+            viewBtn.setTitle(" Receipt", for: .normal)
+            viewBtn.setImage(UIImage(systemName: "doc.text.fill"), for: .normal)
+            viewBtn.tintColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1)
+            viewBtn.setTitleColor(UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1), for: .normal)
+            viewBtn.titleLabel?.font = .systemFont(ofSize: 12.5, weight: .bold)
+            viewBtn.backgroundColor = UIColor(red: 0.937, green: 0.965, blue: 1.0, alpha: 1)
+            viewBtn.layer.cornerRadius = 11
+            viewBtn.contentEdgeInsets = UIEdgeInsets(top: 6, left: 12, bottom: 6, right: 12)
+        }
+        viewBtn.layer.borderWidth = 1.2
+        viewBtn.layer.borderColor = UIColor(red: 0.749, green: 0.859, blue: 0.996, alpha: 1).cgColor // #BFDBFE
+        viewBtn.layer.cornerRadius = 11
+        viewBtn.clipsToBounds = true
         viewBtn.tag = indexPath.row
         viewBtn.addTarget(self, action: #selector(didTapReceiptDetail(_:)), for: .touchUpInside)
 
-        [avatarIV, nameLbl, detailsLbl, numBadge, dateLbl, statusBadge, totalLbl, dueLbl, viewBtn].forEach {
+        [avatarIV, nameLbl, detailsLbl, numBadge, dateLbl, statusBadge, totalLbl, viewBtn].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
             card.addSubview($0)
         }
@@ -724,11 +732,9 @@ class BillingViewController: UIViewController, UITableViewDataSource, UITableVie
             totalLbl.leadingAnchor.constraint(equalTo: nameLbl.leadingAnchor),
             totalLbl.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -14),
 
-            dueLbl.centerYAnchor.constraint(equalTo: totalLbl.centerYAnchor),
-            dueLbl.leadingAnchor.constraint(equalTo: totalLbl.trailingAnchor, constant: 8),
-
             viewBtn.centerYAnchor.constraint(equalTo: totalLbl.centerYAnchor),
             viewBtn.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14),
+            viewBtn.heightAnchor.constraint(equalToConstant: 36),
         ])
 
         return cell
