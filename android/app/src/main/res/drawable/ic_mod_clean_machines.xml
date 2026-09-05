@@ -1,0 +1,22 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="26dp"
+    android:height="26dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- CT / MRI Scanner Outer Torus Gantry -->
+    <path
+        android:fillColor="#99F6E4"
+        android:pathData="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2zm0,16c-3.31,0 -6,-2.69 -6,-6s2.69,-6 6,-6 6,2.69 6,6 -2.69,6 -6,6z" />
+    <!-- Center Gantry Tunnel (Teal Dark) -->
+    <path
+        android:fillColor="#0D9488"
+        android:pathData="M12,6c-3.31,0 -6,2.69 -6,6s2.69,6 6,6 6,-2.69 6,-6 -2.69,-6 -6,-6zm0,9c-1.66,0 -3,-1.34 -3,-3s1.34,-3 3,-3 3,1.34 3,3 -1.34,3 -3,3z" />
+    <!-- Sliding Examination Couch Bed -->
+    <path
+        android:fillColor="#0F766E"
+        android:pathData="M1,14h22v2.5H1z" />
+    <!-- Scanner LED Beam -->
+    <path
+        android:fillColor="#5EEAD4"
+        android:pathData="M11,3.5h2v2.5h-2z" />
+</vector>

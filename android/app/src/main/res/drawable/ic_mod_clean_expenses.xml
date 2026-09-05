@@ -1,0 +1,25 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="26dp"
+    android:height="26dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Expense Bill / Voucher -->
+    <path
+        android:fillColor="#FECDD3"
+        android:pathData="M19,2H5C3.9,2 3,2.9 3,4v18l3,-2 3,2 3,-2 3,2 3,-2 3,2V4c0,-1.1 -0.9,-2 -2,-2z" />
+    <!-- Top Expense Header -->
+    <path
+        android:fillColor="#F43F5E"
+        android:pathData="M5,4h14v3H5z" />
+    <!-- Voucher Lines -->
+    <path
+        android:fillColor="#BE123C"
+        android:pathData="M6,9h8v1.5H6zM6,12h6v1.5H6zM6,15h4v1.5H6z" />
+    <!-- Expense Minus Coin Badge -->
+    <path
+        android:fillColor="#E11D48"
+        android:pathData="M16.5,15.5m-3.5,0a3.5,3.5 0,1,0 7,0a3.5,3.5 0,1,0 -7,0" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M14.5,15h4v1h-4z" />
+</vector>

@@ -11,6 +11,8 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.RotateAnimation;
 import android.webkit.CookieManager;
 import android.widget.Button;
 import android.widget.EditText;
@@ -112,6 +114,22 @@ public class SupportActivity extends AppCompatActivity {
         FrameLayout btnBack = findViewById(R.id.btnSupportBack);
         if (btnBack != null) {
             btnBack.setOnClickListener(v -> finish());
+        }
+
+        // Refresh button in header
+        View btnRefresh = findViewById(R.id.btnRefreshSupport);
+        ImageView imgRefreshIcon = findViewById(R.id.imgRefreshSupportIcon);
+        if (btnRefresh != null) {
+            btnRefresh.setOnClickListener(v -> {
+                if (imgRefreshIcon != null) {
+                    RotateAnimation rotate = new RotateAnimation(0, 360,
+                            Animation.RELATIVE_TO_SELF, 0.5f,
+                            Animation.RELATIVE_TO_SELF, 0.5f);
+                    rotate.setDuration(600);
+                    imgRefreshIcon.startAnimation(rotate);
+                }
+                fetchTickets();
+            });
         }
 
         // New Ticket button in header

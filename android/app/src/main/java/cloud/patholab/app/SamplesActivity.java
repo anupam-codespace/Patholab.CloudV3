@@ -11,6 +11,8 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.RotateAnimation;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -58,6 +60,7 @@ public class SamplesActivity extends AppCompatActivity {
     private static final String BASE_URL = "https://app.patholab.cloud";
 
     private FrameLayout btnSamplesBack, btnRefreshSamples, btnScanBarcodeHeader;
+    private ImageView imgRefreshSamplesIcon;
     private TextView lblSamplesSubtitle;
     private TextView lblKpiTotalSamples, lblKpiPendingSamples, lblKpiProcessingSamples, lblKpiRejectedSamples;
     private EditText inputSearchSamples;
@@ -130,6 +133,7 @@ public class SamplesActivity extends AppCompatActivity {
     private void initViews() {
         btnSamplesBack = findViewById(R.id.btnSamplesBack);
         btnRefreshSamples = findViewById(R.id.btnRefreshSamples);
+        imgRefreshSamplesIcon = findViewById(R.id.imgRefreshSamplesIcon);
         btnScanBarcodeHeader = findViewById(R.id.btnScanBarcodeHeader);
         lblSamplesSubtitle = findViewById(R.id.lblSamplesSubtitle);
         lblKpiTotalSamples = findViewById(R.id.lblKpiTotalSamples);
@@ -180,7 +184,15 @@ public class SamplesActivity extends AppCompatActivity {
 
     private void setupEvents() {
         btnSamplesBack.setOnClickListener(v -> finish());
-        btnRefreshSamples.setOnClickListener(v -> fetchSamples());
+        btnRefreshSamples.setOnClickListener(v -> {
+            if (imgRefreshSamplesIcon != null) {
+                RotateAnimation rotate = new RotateAnimation(0, 360,
+                        Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+                rotate.setDuration(600);
+                imgRefreshSamplesIcon.startAnimation(rotate);
+            }
+            fetchSamples();
+        });
 
         btnScanBarcodeHeader.setOnClickListener(v -> {
             Toast.makeText(this, "Barcode Scanner Active. Point camera at vacutainer tube.", Toast.LENGTH_SHORT).show();

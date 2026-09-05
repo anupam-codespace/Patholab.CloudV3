@@ -82,14 +82,14 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="6dp"
                 android:background="@drawable/bg_bento_blue"
-                android:paddingStart="7dp"
-                android:paddingEnd="7dp"
-                android:paddingTop="2.5dp"
-                android:paddingBottom="2.5dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:paddingTop="3dp"
+                android:paddingBottom="3dp"
                 android:text="Custom Price"
-                android:textSize="10.5sp"
+                android:textSize="11sp"
                 android:textStyle="bold"
-                android:textColor="#0D6EFD"
+                android:textColor="#FFFFFF"
                 android:visibility="gone" />
 
             <!-- Spacer -->
@@ -220,21 +220,6 @@
                 android:textStyle="bold"
                 android:textColor="#475569" />
 
-            <!-- Turnaround Time Pill (No Emoji) -->
-            <TextView
-                android:id="@+id/lblTestTat"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
-                android:background="@drawable/bg_setting_item"
-                android:paddingStart="8dp"
-                android:paddingEnd="8dp"
-                android:paddingTop="3dp"
-                android:paddingBottom="3dp"
-                android:text="24 Hours"
-                android:textSize="11.5sp"
-                android:textStyle="bold"
-                android:textColor="#475569" />
 
             <!-- Auto-Reagents Deduction Badge (No Emoji) -->
             <TextView

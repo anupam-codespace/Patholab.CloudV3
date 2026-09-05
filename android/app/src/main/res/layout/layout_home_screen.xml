@@ -292,20 +292,18 @@
                         android:layout_height="match_parent"
                         android:background="@drawable/bg_banner_gradient">
 
-                        <!-- Scientist image on right -->
+                        <!-- Scientist image spanning full card with centerCrop so no vertical edge exists -->
                         <ImageView
                             android:id="@+id/homeBannerImage"
-                            android:layout_width="210dp"
+                            android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:layout_gravity="end"
                             android:scaleType="centerCrop"
                             android:src="@drawable/img_scientist_banner" />
 
-                        <!-- Gradient fade overlay on image from left to right -->
+                        <!-- Full-width gradient fade overlay on image from left to right -->
                         <View
-                            android:layout_width="210dp"
+                            android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:layout_gravity="end"
                             android:background="@drawable/bg_banner_image_fade" />
 
                         <!-- Text content on left -->
@@ -442,7 +440,7 @@
                     android:paddingEnd="16dp"
                     android:paddingBottom="18dp">
 
-                <!-- Row 1 -->
+                <!-- Row 1: Dashboard, Patient Directory, New Registration, Reports -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -450,115 +448,187 @@
                     android:weightSum="4"
                     android:layout_marginBottom="12dp">
 
-                    <!-- Register -->
+                    <!-- 1. Dashboard -->
+                    <LinearLayout android:id="@+id/modDashboard"
+                        style="@style/HomeModuleItem"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="6dp">
+                        <FrameLayout
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:layout_gravity="center_horizontal"
+                            android:background="@drawable/bg_mod_icon_sky">
+                            <ImageView
+                                android:layout_width="26dp"
+                                android:layout_height="26dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_mod_clean_dashboard"
+                                android:contentDescription="Dashboard" />
+                        </FrameLayout>
+                        <TextView style="@style/HomeModuleBold" android:text="Dashboard" />
+                    </LinearLayout>
+
+                    <!-- 2. Patient Directory -->
+                    <LinearLayout android:id="@+id/modPatients"
+                        style="@style/HomeModuleItem"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="6dp">
+                        <FrameLayout
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:layout_gravity="center_horizontal"
+                            android:background="@drawable/bg_mod_icon_purple">
+                            <ImageView
+                                android:layout_width="26dp"
+                                android:layout_height="26dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_mod_clean_patients"
+                                android:contentDescription="Patient Directory" />
+                        </FrameLayout>
+                        <TextView style="@style/HomeModuleBold" android:text="Patient Directory" />
+                    </LinearLayout>
+
+                    <!-- 3. New Registration -->
                     <LinearLayout android:id="@+id/modRegistration"
                         style="@style/HomeModuleItem"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:layout_marginEnd="6dp">
-                        <ImageView style="@style/HomeModuleIcon"
-                            android:src="@drawable/ic_mod_registration"
-                            android:contentDescription="Register" />
-                        <TextView style="@style/HomeModuleBold" android:text="Register" />
+                        <FrameLayout
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:layout_gravity="center_horizontal"
+                            android:background="@drawable/bg_mod_icon_blue">
+                            <ImageView
+                                android:layout_width="26dp"
+                                android:layout_height="26dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_mod_clean_register"
+                                android:contentDescription="New Registration" />
+                        </FrameLayout>
+                        <TextView style="@style/HomeModuleBold" android:text="New Registration" />
                     </LinearLayout>
 
-                    <!-- Tests -->
-                    <LinearLayout android:id="@+id/modTests"
-                        style="@style/HomeModuleItem"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginEnd="6dp">
-                        <ImageView style="@style/HomeModuleIcon"
-                            android:src="@drawable/ic_mod_tests"
-                            android:contentDescription="Tests" />
-                        <TextView style="@style/HomeModuleBold" android:text="Tests" />
-                    </LinearLayout>
-
-                    <!-- Billing -->
-                    <LinearLayout android:id="@+id/modBilling"
-                        style="@style/HomeModuleItem"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginEnd="6dp">
-                        <ImageView style="@style/HomeModuleIcon"
-                            android:src="@drawable/ic_mod_billing"
-                            android:contentDescription="Billing" />
-                        <TextView style="@style/HomeModuleBold" android:text="Billing" />
-                    </LinearLayout>
-
-                    <!-- Reports -->
+                    <!-- 4. Reports -->
                     <LinearLayout android:id="@+id/modReports"
                         style="@style/HomeModuleItem"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1">
-                        <ImageView style="@style/HomeModuleIcon"
-                            android:src="@drawable/ic_mod_reports"
-                            android:contentDescription="Reports" />
+                        <FrameLayout
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:layout_gravity="center_horizontal"
+                            android:background="@drawable/bg_mod_icon_amber">
+                            <ImageView
+                                android:layout_width="26dp"
+                                android:layout_height="26dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_mod_clean_reports"
+                                android:contentDescription="Reports" />
+                        </FrameLayout>
                         <TextView style="@style/HomeModuleBold" android:text="Reports" />
                     </LinearLayout>
 
                 </LinearLayout>
 
-                <!-- Row 2 -->
+                <!-- Row 2: Test Management, Wallet, Invoice, B2B -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:weightSum="4">
 
-                    <!-- Samples -->
-                    <LinearLayout android:id="@+id/modSamples"
+                    <!-- 5. Test Management -->
+                    <LinearLayout android:id="@+id/modTests"
                         style="@style/HomeModuleItem"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:layout_marginEnd="6dp">
-                        <ImageView style="@style/HomeModuleIcon"
-                            android:src="@drawable/ic_mod_samples"
-                            android:contentDescription="Samples" />
-                        <TextView style="@style/HomeModuleBold" android:text="Samples" />
+                        <FrameLayout
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:layout_gravity="center_horizontal"
+                            android:background="@drawable/bg_mod_icon_indigo">
+                            <ImageView
+                                android:layout_width="26dp"
+                                android:layout_height="26dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_mod_clean_tests"
+                                android:contentDescription="Test Management" />
+                        </FrameLayout>
+                        <TextView style="@style/HomeModuleBold" android:text="Test Management" />
                     </LinearLayout>
 
-                    <!-- Share (WhatsApp) -->
-                    <LinearLayout android:id="@+id/modWhatsapp"
-                        style="@style/HomeModuleItem"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginEnd="6dp">
-                        <ImageView style="@style/HomeModuleIcon"
-                            android:src="@drawable/ic_mod_whatsapp"
-                            android:contentDescription="Share" />
-                        <TextView style="@style/HomeModuleBold" android:text="Share" />
-                    </LinearLayout>
-
-                    <!-- Logistics -->
-                    <LinearLayout android:id="@+id/modLogistics"
-                        style="@style/HomeModuleItem"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginEnd="6dp">
-                        <ImageView style="@style/HomeModuleIcon"
-                            android:src="@drawable/ic_mod_logistics"
-                            android:contentDescription="Logistics" />
-                        <TextView style="@style/HomeModuleBold" android:text="Logistics" />
-                    </LinearLayout>
-
-                    <!-- Wallet -->
+                    <!-- 6. Wallet -->
                     <LinearLayout android:id="@+id/modWallet"
                         style="@style/HomeModuleItem"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1">
-                        <ImageView style="@style/HomeModuleIcon"
-                            android:src="@drawable/ic_mod_wallet"
-                            android:contentDescription="Wallet" />
+                        android:layout_weight="1"
+                        android:layout_marginEnd="6dp">
+                        <FrameLayout
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:layout_gravity="center_horizontal"
+                            android:background="@drawable/bg_mod_icon_rose">
+                            <ImageView
+                                android:layout_width="26dp"
+                                android:layout_height="26dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_mod_clean_wallet"
+                                android:contentDescription="Wallet" />
+                        </FrameLayout>
                         <TextView style="@style/HomeModuleBold" android:text="Wallet" />
+                    </LinearLayout>
+
+                    <!-- 7. Invoice -->
+                    <LinearLayout android:id="@+id/modBilling"
+                        style="@style/HomeModuleItem"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="6dp">
+                        <FrameLayout
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:layout_gravity="center_horizontal"
+                            android:background="@drawable/bg_mod_icon_emerald">
+                            <ImageView
+                                android:layout_width="26dp"
+                                android:layout_height="26dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_mod_clean_billing"
+                                android:contentDescription="Invoice" />
+                        </FrameLayout>
+                        <TextView style="@style/HomeModuleBold" android:text="Invoice" />
+                    </LinearLayout>
+
+                    <!-- 8. B2B -->
+                    <LinearLayout android:id="@+id/modB2B"
+                        style="@style/HomeModuleItem"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1">
+                        <FrameLayout
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:layout_gravity="center_horizontal"
+                            android:background="@drawable/bg_mod_icon_teal">
+                            <ImageView
+                                android:layout_width="26dp"
+                                android:layout_height="26dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_mod_clean_agencies"
+                                android:contentDescription="B2B" />
+                        </FrameLayout>
+                        <TextView style="@style/HomeModuleBold" android:text="B2B" />
                     </LinearLayout>
 
                 </LinearLayout>

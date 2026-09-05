@@ -763,7 +763,7 @@ public class HomeNativeManager {
 
             if ("LOW_BALANCE".equalsIgnoreCase(item.type)) {
                 holder.iconContainer.setBackgroundResource(R.drawable.bg_mod_icon_rose);
-                holder.icon.setImageResource(R.drawable.ic_mod_wallet);
+                holder.icon.setImageResource(R.drawable.ic_wallet);
                 holder.icon.setColorFilter(0xFFE11D48);
             } else if ("WELCOME".equalsIgnoreCase(item.type)) {
                 holder.iconContainer.setBackgroundResource(R.drawable.bg_mod_icon_blue);
@@ -978,7 +978,7 @@ public class HomeNativeManager {
         }
     }
 
-    private void showAllModulesBottomSheet() {
+    public void showAllModulesBottomSheet() {
         try {
             com.google.android.material.bottomsheet.BottomSheetDialog sheet =
                     new com.google.android.material.bottomsheet.BottomSheetDialog(ctx);
@@ -1015,79 +1015,79 @@ public class HomeNativeManager {
             if (contentContainer != null) {
                 // 1. OVERVIEW
                 List<SheetModDef> overviewList = Arrays.asList(
-                        new SheetModDef("Home", "/workspace", "ic_nav_dashboard", "bg_mod_icon_blue"),
-                        new SheetModDef("Dashboard", "/dashboard", "ic_nav_categories", "bg_mod_icon_sky"),
-                        new SheetModDef("Financial Analytics", "/workspace/analytics", "ic_chart", "bg_mod_icon_emerald"),
-                        new SheetModDef("Online Booking", "/workspace/online-booking", "ic_calendar", "bg_mod_icon_purple")
+                        new SheetModDef("Home", "/dashboard", "ic_mod_clean_home", "bg_mod_icon_blue"),
+                        new SheetModDef("Dashboard", "/dashboard", "ic_mod_clean_dashboard", "bg_mod_icon_sky"),
+                        new SheetModDef("Financial Analytics", "/workspace/analytics", "ic_mod_clean_analytics", "bg_mod_icon_emerald"),
+                        new SheetModDef("Online Booking", "/workspace/online-booking", "ic_mod_clean_booking", "bg_mod_icon_purple")
                 );
                 buildCategorySection(sheet, contentContainer, "OVERVIEW", overviewList);
 
                 // 2. CLINICAL OPERATIONS
                 List<SheetModDef> clinicalList = Arrays.asList(
-                        new SheetModDef("New Registration", "/workspace/registration", "ic_mod_registration", "bg_mod_icon_blue"),
-                        new SheetModDef("Patient Directory", "/workspace/patients", "ic_user", "bg_mod_icon_fuchsia"),
-                        new SheetModDef("Test Management", "/workspace/test-management", "ic_mod_tests", "bg_mod_icon_purple"),
-                        new SheetModDef("Worklist & Results", "/workspace/results", "ic_document", "bg_mod_icon_indigo"),
-                        new SheetModDef("Report Dispatch", "/workspace/reports", "ic_mod_reports", "bg_mod_icon_teal")
+                        new SheetModDef("New Registration", "/workspace/registration", "ic_mod_clean_register", "bg_mod_icon_blue"),
+                        new SheetModDef("Patient Directory", "/workspace/patients", "ic_mod_clean_patients", "bg_mod_icon_fuchsia"),
+                        new SheetModDef("Test Management", "/workspace/test-management", "ic_mod_clean_tests", "bg_mod_icon_purple"),
+                        new SheetModDef("Worklist & Results", "/workspace/results", "ic_mod_clean_worklist", "bg_mod_icon_indigo"),
+                        new SheetModDef("Report Dispatch", "/workspace/reports", "ic_mod_clean_reports", "bg_mod_icon_amber")
                 );
                 buildCategorySection(sheet, contentContainer, "CLINICAL OPERATIONS", clinicalList);
 
                 // 3. RADIOLOGY
                 List<SheetModDef> radiologyList = Arrays.asList(
-                        new SheetModDef("RIS Dashboard", "/workspace/radiology/dashboard", "ic_nav_dashboard", "bg_mod_icon_purple"),
-                        new SheetModDef("Scan Schedule", "/workspace/radiology/dashboard/appointments", "ic_calendar", "bg_mod_icon_blue"),
-                        new SheetModDef("Technician Worklist", "/workspace/radiology/worklist", "ic_document", "bg_mod_icon_teal"),
-                        new SheetModDef("PACS Viewer", "/workspace/radiology/pacs", "ic_cpu", "bg_mod_icon_purple"),
-                        new SheetModDef("Media Library", "/workspace/radiology/media", "ic_box", "bg_mod_icon_rose"),
-                        new SheetModDef("Reporting Queue", "/workspace/radiology/reporting", "ic_document", "bg_mod_icon_emerald"),
-                        new SheetModDef("Reports Archive", "/workspace/radiology/archive", "ic_building", "bg_mod_icon_amber"),
-                        new SheetModDef("Machines", "/workspace/radiology/machines", "ic_gear", "bg_mod_icon_teal"),
-                        new SheetModDef("RIS Macros", "/workspace/radiology/macros", "ic_edit_pen", "bg_mod_icon_orange"),
-                        new SheetModDef("DICOM Settings", "/workspace/radiology/settings/dicom", "ic_gear", "bg_mod_icon_blue"),
-                        new SheetModDef("RIS Letterhead", "/workspace/radiology/settings/letterhead", "ic_document", "bg_mod_icon_purple")
+                        new SheetModDef("RIS Dashboard", "/workspace/radiology/dashboard", "ic_mod_clean_ris", "bg_mod_icon_purple"),
+                        new SheetModDef("Scan Schedule", "/workspace/radiology/dashboard/appointments", "ic_mod_clean_scan_schedule", "bg_mod_icon_blue"),
+                        new SheetModDef("Technician Worklist", "/workspace/radiology/worklist", "ic_mod_clean_tech_worklist", "bg_mod_icon_teal"),
+                        new SheetModDef("PACS Viewer", "/workspace/radiology/pacs", "ic_mod_clean_pacs", "bg_mod_icon_indigo"),
+                        new SheetModDef("Media Library", "/workspace/radiology/media", "ic_mod_clean_media", "bg_mod_icon_rose"),
+                        new SheetModDef("Reporting Queue", "/workspace/radiology/reporting", "ic_mod_clean_rad_reporting", "bg_mod_icon_emerald"),
+                        new SheetModDef("Reports Archive", "/workspace/radiology/archive", "ic_mod_clean_archive", "bg_mod_icon_amber"),
+                        new SheetModDef("Machines", "/workspace/radiology/machines", "ic_mod_clean_machines", "bg_mod_icon_teal"),
+                        new SheetModDef("RIS Macros", "/workspace/radiology/macros", "ic_mod_clean_macros", "bg_mod_icon_orange"),
+                        new SheetModDef("DICOM Settings", "/workspace/radiology/settings/dicom", "ic_mod_clean_dicom", "bg_mod_icon_blue"),
+                        new SheetModDef("RIS Letterhead", "/workspace/radiology/settings/letterhead", "ic_mod_clean_letterhead", "bg_mod_icon_purple")
                 );
                 buildCategorySection(sheet, contentContainer, "RADIOLOGY", radiologyList);
 
                 // 4. RESOURCES & LOGISTICS
                 List<SheetModDef> resourcesList = Arrays.asList(
-                        new SheetModDef("Inventory & Stock", "/workspace/inventory", "ic_box", "bg_mod_icon_teal"),
-                        new SheetModDef("Logistics / Trips", "/workspace/logistics", "ic_mod_logistics", "bg_mod_icon_amber"),
-                        new SheetModDef("Home Collection", "/workspace/home-collection", "ic_mod_samples", "bg_mod_icon_emerald")
+                        new SheetModDef("Inventory & Stock", "/workspace/inventory", "ic_mod_clean_inventory", "bg_mod_icon_teal"),
+                        new SheetModDef("Logistics / Trips", "/workspace/logistics", "ic_mod_clean_logistics", "bg_mod_icon_sky"),
+                        new SheetModDef("Home Collection", "/workspace/home-collection", "ic_mod_clean_samples", "bg_mod_icon_rose")
                 );
                 buildCategorySection(sheet, contentContainer, "RESOURCES & LOGISTICS", resourcesList);
 
                 // 5. MACHINE & AI
                 List<SheetModDef> machineAiList = Arrays.asList(
-                        new SheetModDef("Analyzer", "/workspace/analyzers", "ic_cpu", "bg_mod_icon_sky"),
-                        new SheetModDef("Visual Mapper", "/workspace/analyzers/mapper", "ic_chart", "bg_mod_icon_indigo"),
-                        new SheetModDef("Mappings", "/workspace/analyzers/mappings", "ic_gear", "bg_mod_icon_purple")
+                        new SheetModDef("Analyzer", "/workspace/analyzers", "ic_mod_clean_analyzer", "bg_mod_icon_sky"),
+                        new SheetModDef("Visual Mapper", "/workspace/analyzers/mapper", "ic_mod_clean_mapper", "bg_mod_icon_indigo"),
+                        new SheetModDef("Mappings", "/workspace/analyzers/mappings", "ic_mod_clean_mappings", "bg_mod_icon_purple")
                 );
                 buildCategorySection(sheet, contentContainer, "MACHINE & AI", machineAiList);
 
                 // 6. B2B & GROWTH
                 List<SheetModDef> b2bGrowthList = Arrays.asList(
-                        new SheetModDef("Referral Doctors", "/workspace/doctors", "ic_stethoscope", "bg_mod_icon_blue"),
-                        new SheetModDef("Corporate Agencies", "/workspace/agencies", "ic_building", "bg_mod_icon_orange"),
-                        new SheetModDef("Commissions Payout", "/workspace/commissions", "ic_wallet", "bg_mod_icon_purple")
+                        new SheetModDef("Referral Doctors", "/workspace/doctors", "ic_mod_clean_doctors", "bg_mod_icon_blue"),
+                        new SheetModDef("Corporate Agencies", "/workspace/agencies", "ic_mod_clean_agencies", "bg_mod_icon_orange"),
+                        new SheetModDef("Commissions Payout", "/workspace/commissions", "ic_mod_clean_payout", "bg_mod_icon_purple")
                 );
                 buildCategorySection(sheet, contentContainer, "B2B & GROWTH", b2bGrowthList);
 
                 // 7. ADMINISTRATION
                 List<SheetModDef> adminList = Arrays.asList(
-                        new SheetModDef("Lab Settings", "/workspace/settings", "ic_gear", "bg_mod_icon_indigo"),
-                        new SheetModDef("Report Templates", "/workspace/settings/templates", "ic_document", "bg_mod_icon_purple"),
-                        new SheetModDef("Invoice Branding", "/workspace/settings/branding", "ic_billing", "bg_mod_icon_sky"),
-                        new SheetModDef("Service Areas", "/workspace/settings/service-areas", "ic_building", "bg_mod_icon_amber"),
-                        new SheetModDef("Payment Settings", "/workspace/settings/payments", "ic_credit_card", "bg_mod_icon_emerald"),
-                        new SheetModDef("Notifications", "/workspace/settings/notifications", "ic_bell", "bg_mod_icon_rose"),
-                        new SheetModDef("B2B Settings", "/workspace/settings/b2b", "ic_building", "bg_mod_icon_blue"),
-                        new SheetModDef("Staff Management", "/workspace/staff", "ic_user", "bg_mod_icon_fuchsia"),
-                        new SheetModDef("Invoices & Payments", "/workspace/billing", "ic_mod_billing", "bg_mod_icon_emerald"),
-                        new SheetModDef("Expenses", "/workspace/expenses", "ic_billing", "bg_mod_icon_rose"),
-                        new SheetModDef("Audit Logs", "/workspace/audit-logs", "ic_document", "bg_mod_icon_teal"),
-                        new SheetModDef("Wallet & Billing", "/workspace/wallet", "ic_mod_wallet", "bg_mod_icon_indigo"),
-                        new SheetModDef("Wallet Recharge", "/workspace/wallet/recharge", "ic_wallet", "bg_mod_icon_emerald"),
-                        new SheetModDef("Help & Support", "/workspace/support", "ic_help", "bg_mod_icon_orange")
+                        new SheetModDef("Lab Settings", "/workspace/settings", "ic_mod_clean_settings", "bg_mod_icon_indigo"),
+                        new SheetModDef("Report Templates", "/workspace/settings/templates", "ic_mod_clean_templates", "bg_mod_icon_purple"),
+                        new SheetModDef("Invoice Branding", "/workspace/settings/branding", "ic_mod_clean_branding", "bg_mod_icon_sky"),
+                        new SheetModDef("Service Areas", "/workspace/settings/service-areas", "ic_mod_clean_service_areas", "bg_mod_icon_amber"),
+                        new SheetModDef("Payment Settings", "/workspace/settings/payments", "ic_mod_clean_payment_settings", "bg_mod_icon_emerald"),
+                        new SheetModDef("Notifications", "/workspace/settings/notifications", "ic_mod_clean_notifications", "bg_mod_icon_rose"),
+                        new SheetModDef("B2B Settings", "/workspace/settings/b2b", "ic_mod_clean_b2b_settings", "bg_mod_icon_blue"),
+                        new SheetModDef("Staff Management", "/workspace/staff", "ic_mod_clean_staff", "bg_mod_icon_fuchsia"),
+                        new SheetModDef("Invoices & Payments", "/workspace/billing", "ic_mod_clean_billing", "bg_mod_icon_emerald"),
+                        new SheetModDef("Expenses", "/workspace/expenses", "ic_mod_clean_expenses", "bg_mod_icon_rose"),
+                        new SheetModDef("Audit Logs", "/workspace/audit-logs", "ic_mod_clean_audit", "bg_mod_icon_teal"),
+                        new SheetModDef("Wallet & Billing", "/workspace/wallet", "ic_mod_clean_wallet", "bg_mod_icon_indigo"),
+                        new SheetModDef("Wallet Recharge", "/workspace/wallet/recharge", "ic_mod_clean_recharge", "bg_mod_icon_emerald"),
+                        new SheetModDef("Help & Support", "/workspace/support", "ic_mod_clean_support", "bg_mod_icon_orange")
                 );
                 buildCategorySection(sheet, contentContainer, "ADMINISTRATION", adminList);
             }
@@ -1170,21 +1170,28 @@ public class HomeNativeManager {
         cardLp.setMargins(dp(2), 0, dp(2), 0);
         card.setLayoutParams(cardLp);
 
+        String iconName = mod.iconDrawable;
+        // Migrate legacy 3D names
+        if ("ic_mod_registration".equals(iconName)) iconName = "ic_mod_clean_register";
+        else if ("ic_mod_tests".equals(iconName)) iconName = "ic_mod_clean_tests";
+        else if ("ic_mod_billing".equals(iconName)) iconName = "ic_mod_clean_billing";
+        else if ("ic_mod_reports".equals(iconName)) iconName = "ic_mod_clean_reports";
+        else if ("ic_mod_samples".equals(iconName)) iconName = "ic_mod_clean_samples";
+        else if ("ic_mod_logistics".equals(iconName)) iconName = "ic_mod_clean_logistics";
+        else if ("ic_mod_wallet".equals(iconName)) iconName = "ic_mod_clean_wallet";
+
         int bgRes = ctx.getResources().getIdentifier(mod.bgDrawable, "drawable", ctx.getPackageName());
         if (bgRes == 0) bgRes = R.drawable.bg_mod_icon_blue;
-        int iconRes = ctx.getResources().getIdentifier(mod.iconDrawable, "drawable", ctx.getPackageName());
-        if (iconRes == 0) iconRes = R.drawable.ic_mod_registration;
+        int iconRes = ctx.getResources().getIdentifier(iconName, "drawable", ctx.getPackageName());
+        if (iconRes == 0) iconRes = R.drawable.ic_mod_clean_register;
 
         FrameLayout iconFrame = new FrameLayout(ctx);
         LinearLayout.LayoutParams frameLp = new LinearLayout.LayoutParams(dp(48), dp(48));
         iconFrame.setLayoutParams(frameLp);
-        boolean is3D = mod.iconDrawable != null && mod.iconDrawable.startsWith("ic_mod_");
-        if (!is3D) {
-            iconFrame.setBackgroundResource(bgRes);
-        }
+        iconFrame.setBackgroundResource(bgRes);
 
         ImageView iv = new ImageView(ctx);
-        int iconSize = is3D ? dp(46) : dp(22);
+        int iconSize = dp(26);
         FrameLayout.LayoutParams ivLp = new FrameLayout.LayoutParams(iconSize, iconSize, android.view.Gravity.CENTER);
         iv.setLayoutParams(ivLp);
         iv.setScaleType(ImageView.ScaleType.FIT_CENTER);
@@ -1206,8 +1213,9 @@ public class HomeNativeManager {
         tv.setLayoutParams(tvLp);
         card.addView(tv);
 
+        final String finalIconName = iconName;
         card.setOnClickListener(v -> {
-            recordRecentModule(mod.name, mod.path, mod.iconDrawable, mod.bgDrawable);
+            recordRecentModule(mod.name, mod.path, finalIconName, mod.bgDrawable);
             sheet.dismiss();
             navigateToModule(mod.path);
         });
@@ -1217,8 +1225,10 @@ public class HomeNativeManager {
 
     private void navigateToModule(String path) {
         if (path == null) return;
-        if (path.equals("/dashboard") || path.equals("/workspace/dashboard") || path.startsWith("/dashboard")) {
+        if (path.equals("/dashboard") || path.equals("/workspace/dashboard") || path.startsWith("/dashboard")
+                || path.equals("/workspace") || path.equals("/home") || path.equals("/")) {
             ctx.startActivity(new Intent(ctx, LabDashboardActivity.class));
+            return;
         } else if (path.equals("/workspace/analytics") || path.startsWith("/workspace/analytics")) {
             ctx.startActivity(new Intent(ctx, FinancialAnalyticsActivity.class));
         } else if (path.equals("/workspace/wallet") || path.startsWith("/workspace/wallet")) {
@@ -1289,12 +1299,21 @@ public class HomeNativeManager {
             if (item == null) continue;
             final String name = item.optString("name", "");
             final String path = item.optString("path", "");
-            final String iconName = item.optString("icon", "ic_mod_registration");
+            String iconName = item.optString("icon", "ic_mod_clean_register");
             final String bgName = item.optString("bg", "bg_mod_icon_blue");
+
+            // Migrate legacy 3D names
+            if ("ic_mod_registration".equals(iconName)) iconName = "ic_mod_clean_register";
+            else if ("ic_mod_tests".equals(iconName)) iconName = "ic_mod_clean_tests";
+            else if ("ic_mod_billing".equals(iconName)) iconName = "ic_mod_clean_billing";
+            else if ("ic_mod_reports".equals(iconName)) iconName = "ic_mod_clean_reports";
+            else if ("ic_mod_samples".equals(iconName)) iconName = "ic_mod_clean_samples";
+            else if ("ic_mod_logistics".equals(iconName)) iconName = "ic_mod_clean_logistics";
+            else if ("ic_mod_wallet".equals(iconName)) iconName = "ic_mod_clean_wallet";
 
             int iconRes = ctx.getResources().getIdentifier(iconName, "drawable", ctx.getPackageName());
             int bgRes = ctx.getResources().getIdentifier(bgName, "drawable", ctx.getPackageName());
-            if (iconRes == 0) iconRes = R.drawable.ic_mod_registration;
+            if (iconRes == 0) iconRes = R.drawable.ic_mod_clean_register;
             if (bgRes == 0) bgRes = R.drawable.bg_mod_icon_blue;
 
             // Compact Chip Card
@@ -1311,16 +1330,13 @@ public class HomeNativeManager {
             lp.setMarginEnd(dp(8));
             chip.setLayoutParams(lp);
 
-            // Icon Frame
-            boolean is3D = iconName != null && iconName.startsWith("ic_mod_");
+            // Icon Frame (Always 32dp squircle with tinted background)
             FrameLayout iconFrame = new FrameLayout(ctx);
             iconFrame.setLayoutParams(new LinearLayout.LayoutParams(dp(32), dp(32)));
-            if (!is3D) {
-                iconFrame.setBackgroundResource(bgRes);
-            }
+            iconFrame.setBackgroundResource(bgRes);
 
             ImageView iv = new ImageView(ctx);
-            int iconSize = is3D ? dp(30) : dp(18);
+            int iconSize = dp(20);
             FrameLayout.LayoutParams ivLp = new FrameLayout.LayoutParams(iconSize, iconSize);
             ivLp.gravity = android.view.Gravity.CENTER;
             iv.setLayoutParams(ivLp);
@@ -1344,8 +1360,9 @@ public class HomeNativeManager {
             chip.addView(iconFrame);
             chip.addView(tv);
 
+            final String finalIconName = iconName;
             chip.setOnClickListener(v -> {
-                recordRecentModule(name, path, iconName, bgName);
+                recordRecentModule(name, path, finalIconName, bgName);
                 sheet.dismiss();
                 navigateToModule(path);
             });
@@ -1369,21 +1386,21 @@ public class HomeNativeManager {
             JSONObject m1 = new JSONObject();
             m1.put("name", "Registration");
             m1.put("path", "/workspace/registration");
-            m1.put("icon", "ic_mod_registration");
+            m1.put("icon", "ic_mod_clean_register");
             m1.put("bg", "bg_mod_icon_blue");
             arr.put(m1);
 
             JSONObject m2 = new JSONObject();
             m2.put("name", "Tests");
             m2.put("path", "/workspace/test-management");
-            m2.put("icon", "ic_mod_tests");
+            m2.put("icon", "ic_mod_clean_tests");
             m2.put("bg", "bg_mod_icon_purple");
             arr.put(m2);
 
             JSONObject m3 = new JSONObject();
             m3.put("name", "Billing");
             m3.put("path", "/workspace/billing");
-            m3.put("icon", "ic_mod_billing");
+            m3.put("icon", "ic_mod_clean_billing");
             m3.put("bg", "bg_mod_icon_emerald");
             arr.put(m3);
         } catch (Exception ignored) {}
@@ -1433,14 +1450,14 @@ public class HomeNativeManager {
     //  Module clicks
     // ─────────────────────────────────────────────────────────────────────────
     private void setupModuleClicks() {
-        clickModule(R.id.modRegistration, "/workspace/registration", "Registration", "ic_mod_registration", "bg_mod_icon_blue");
-        clickModule(R.id.modTests,        "/workspace/test-management", "Tests", "ic_mod_tests", "bg_mod_icon_purple");
-        clickModule(R.id.modBilling,      "/workspace/billing", "Billing", "ic_mod_billing", "bg_mod_icon_emerald");
-        clickModule(R.id.modReports,      "/workspace/reports", "Reports", "ic_mod_reports", "bg_mod_icon_sky");
-        clickModule(R.id.modSamples,      "/workspace/samples", "Samples", "ic_mod_samples", "bg_mod_icon_rose");
-        clickModule(R.id.modWhatsapp,     "/workspace/reports", "Share", "ic_mod_whatsapp", "bg_mod_icon_green");
-        clickModule(R.id.modLogistics,    "/workspace/logistics", "Logistics", "ic_mod_logistics", "bg_mod_icon_amber");
-        clickModule(R.id.modWallet,       "/workspace/wallet", "Wallet", "ic_mod_wallet", "bg_mod_icon_indigo");
+        clickModule(R.id.modDashboard,    "/workspace/dashboard",       "Dashboard",         "ic_mod_clean_dashboard", "bg_mod_icon_sky");
+        clickModule(R.id.modPatients,     "/workspace/patients",        "Patient Directory", "ic_mod_clean_patients",  "bg_mod_icon_purple");
+        clickModule(R.id.modRegistration, "/workspace/registration",    "New Registration",  "ic_mod_clean_register",  "bg_mod_icon_blue");
+        clickModule(R.id.modReports,      "/workspace/reports",         "Reports",           "ic_mod_clean_reports",   "bg_mod_icon_amber");
+        clickModule(R.id.modTests,        "/workspace/test-management", "Test Management",   "ic_mod_clean_tests",     "bg_mod_icon_indigo");
+        clickModule(R.id.modWallet,       "/workspace/wallet",          "Wallet",            "ic_mod_clean_wallet",    "bg_mod_icon_rose");
+        clickModule(R.id.modBilling,      "/workspace/billing",         "Invoice",           "ic_mod_clean_billing",   "bg_mod_icon_emerald");
+        clickModule(R.id.modB2B,          "/workspace/agencies",        "B2B",               "ic_mod_clean_agencies",  "bg_mod_icon_teal");
     }
 
     private void clickModule(int viewId, String path, String name, String icon, String bg) {
@@ -1464,6 +1481,11 @@ public class HomeNativeManager {
                     ctx.startActivity(new Intent(ctx, PatientWorklistActivity.class));
                 } else if (path.equals("/workspace/staff") || path.startsWith("/workspace/staff")) {
                     ctx.startActivity(new Intent(ctx, StaffManagementActivity.class));
+                } else if (path.equals("/workspace/analytics") || path.startsWith("/workspace/analytics") || path.equals("/analytics") || path.startsWith("/analytics")) {
+                    ctx.startActivity(new Intent(ctx, FinancialAnalyticsActivity.class));
+                } else if (path.equals("/dashboard") || path.equals("/workspace/dashboard") || path.startsWith("/dashboard")
+                        || path.equals("/workspace") || path.equals("/home") || path.equals("/")) {
+                    ctx.startActivity(new Intent(ctx, LabDashboardActivity.class));
                 } else if (navListener != null) {
                     navListener.onNavigateTo(path);
                 }

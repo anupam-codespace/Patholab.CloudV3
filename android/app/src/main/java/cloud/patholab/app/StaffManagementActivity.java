@@ -18,6 +18,8 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.RotateAnimation;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -140,6 +142,7 @@ public class StaffManagementActivity extends AppCompatActivity {
     private FrameLayout btnStaffBack;
     private TextView lblStaffCountBadge;
     private FrameLayout btnRefreshStaff;
+    private ImageView imgRefreshStaffIcon;
     private LinearLayout btnAddStaffHeader;
     private TextView lblKpiTotalStaff, lblKpiActiveStaff, lblKpiSuspendedStaff;
     private TextView lblKpiTechnicians, lblKpiDoctors, lblKpiReceptionists;
@@ -160,7 +163,7 @@ public class StaffManagementActivity extends AppCompatActivity {
     private StaffAdapter staffAdapter;
     private String selectedFilter = "ALL";
     private String currentAdminUserId = "";
-    private String baseUrl = "https://patholab.cloud";
+    private String baseUrl = "https://app.patholab.cloud";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -178,6 +181,7 @@ public class StaffManagementActivity extends AppCompatActivity {
         btnStaffBack = findViewById(R.id.btnStaffBack);
         lblStaffCountBadge = findViewById(R.id.lblStaffCountBadge);
         btnRefreshStaff = findViewById(R.id.btnRefreshStaff);
+        imgRefreshStaffIcon = findViewById(R.id.imgRefreshStaffIcon);
         btnAddStaffHeader = findViewById(R.id.btnAddStaffHeader);
 
         lblKpiTotalStaff = findViewById(R.id.lblKpiTotalStaff);
@@ -286,7 +290,15 @@ public class StaffManagementActivity extends AppCompatActivity {
 
     private void setupEvents() {
         btnStaffBack.setOnClickListener(v -> finish());
-        btnRefreshStaff.setOnClickListener(v -> fetchStaffDirectory(true));
+        btnRefreshStaff.setOnClickListener(v -> {
+            if (imgRefreshStaffIcon != null) {
+                RotateAnimation rotate = new RotateAnimation(0, 360,
+                        Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+                rotate.setDuration(600);
+                imgRefreshStaffIcon.startAnimation(rotate);
+            }
+            fetchStaffDirectory(true);
+        });
         btnAddStaffHeader.setOnClickListener(v -> showAddEditStaffDialog(null));
         btnAddStaffEmpty.setOnClickListener(v -> showAddEditStaffDialog(null));
 

@@ -10,6 +10,8 @@ import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.RotateAnimation;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -98,6 +100,7 @@ public class TestManagementActivity extends AppCompatActivity {
     private SpecimenTubeAdapter containerAdapter;
     private SampleTypeAdapter sampleTypeAdapter;
     private DepartmentAdapter departmentAdapter;
+    private List<String> cachedDepartmentNames = new ArrayList<>();
 
     // ── Data Models ──────────────────────────────────────────────────────────
     public static class ParameterComponent {
@@ -234,11 +237,12 @@ public class TestManagementActivity extends AppCompatActivity {
         public String getReferenceRangeSummary() {
             if (ranges.isEmpty()) return "Ref: Biological Interval Standard";
             ParameterRange r = ranges.get(0);
+            String u = (unit != null && !unit.trim().isEmpty() && !"null".equalsIgnoreCase(unit.trim())) ? (" " + unit.trim()) : "";
             if (r.lowValue != null && r.highValue != null) {
-                return String.format(Locale.getDefault(), "Ref: %.1f - %.1f %s (%s)", r.lowValue, r.highValue, unit, r.gender);
+                return String.format(Locale.getDefault(), "Ref: %.1f - %.1f%s (%s)", r.lowValue, r.highValue, u, r.gender);
             }
-            if (r.lowValue != null) return String.format(Locale.getDefault(), "Ref: > %.1f %s", r.lowValue, unit);
-            if (r.highValue != null) return String.format(Locale.getDefault(), "Ref: < %.1f %s", r.highValue, unit);
+            if (r.lowValue != null) return String.format(Locale.getDefault(), "Ref: > %.1f%s", r.lowValue, u);
+            if (r.highValue != null) return String.format(Locale.getDefault(), "Ref: < %.1f%s", r.highValue, u);
             if (!r.textValue.isEmpty()) return "Ref: " + r.textValue;
             return "Ref: Biological Interval Standard";
         }
@@ -469,7 +473,7 @@ public class TestManagementActivity extends AppCompatActivity {
         // Tab 7: Departments
         recyclerDepartmentsList     = findViewById(R.id.recyclerDepartmentsList);
         recyclerDepartmentsList.setLayoutManager(new LinearLayoutManager(this));
-        departmentAdapter = new DepartmentAdapter(allDepartments);
+        departmentAdapter = new DepartmentAdapter(allDepartments, this::onDepartmentCardClicked);
         recyclerDepartmentsList.setAdapter(departmentAdapter);
 
         btnTestBack.setOnClickListener(v -> finish());
@@ -484,6 +488,47 @@ public class TestManagementActivity extends AppCompatActivity {
                 case 6: showAddDepartmentModal(null); break;
             }
         });
+
+        View btnRefresh = findViewById(R.id.btnRefreshTestCatalog);
+        ImageView imgRefresh = findViewById(R.id.imgRefreshTestCatalogIcon);
+        if (btnRefresh != null) {
+            btnRefresh.setOnClickListener(v -> {
+                if (imgRefresh != null) {
+                    RotateAnimation rotate = new RotateAnimation(0, 360,
+                            Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+                    rotate.setDuration(600);
+                    imgRefresh.startAnimation(rotate);
+                }
+                refreshActiveTabData();
+                Toast.makeText(this, "Refreshing catalog data...", Toast.LENGTH_SHORT).show();
+            });
+        }
+    }
+
+    private void refreshActiveTabData() {
+        switch (currentTabIndex) {
+            case 0:
+                fetchTestCatalog();
+                break;
+            case 1:
+                fetchParameters();
+                break;
+            case 2:
+                fetchCustomFields();
+                break;
+            case 3:
+                fetchHeadings();
+                break;
+            case 4:
+                fetchContainers();
+                break;
+            case 5:
+                fetchSampleTypes();
+                break;
+            case 6:
+                fetchDepartments();
+                break;
+        }
     }
 
     private void setupTabs() {
@@ -729,6 +774,7 @@ public class TestManagementActivity extends AppCompatActivity {
 
                         mainHandler.post(() -> {
                             progressTests.setVisibility(View.GONE);
+                            cachedDepartmentNames = new ArrayList<>(departmentsSet);
                             buildDepartmentFilterChips(new ArrayList<>(departmentsSet));
                             applyTestFilters();
                             if (currentTabIndex == 0) {
@@ -2550,7 +2596,6 @@ public class TestManagementActivity extends AppCompatActivity {
             holder.lblDept.setText(t.deptName);
             holder.lblSpecimen.setText(t.sampleType);
             holder.lblParamsCount.setText(t.paramsCount + (t.paramsCount > 1 ? " Params" : " Param"));
-            holder.lblTat.setText(t.tat);
             holder.lblPrice.setText(String.format(Locale.getDefault(), "₹%,.2f", t.price));
             holder.lblB2BPrice.setText(String.format(Locale.getDefault(), "B2B: ₹%,.0f", t.b2bPrice));
 
@@ -2568,6 +2613,8 @@ public class TestManagementActivity extends AppCompatActivity {
             // Inactive & Custom Price tags
             holder.lblInactive.setVisibility(t.isActive ? View.GONE : View.VISIBLE);
             holder.lblCustomPriceTag.setVisibility(t.hasOverride ? View.VISIBLE : View.GONE);
+            holder.lblCustomPriceTag.setTextColor(0xFFFFFFFF);
+            holder.lblCustomPriceTag.setBackgroundResource(R.drawable.bg_bento_blue);
             holder.lblReagents.setVisibility(t.hasAutoReagents ? View.VISIBLE : View.GONE);
             holder.lblReagents.setText("Auto Reagents");
 
@@ -2599,7 +2646,7 @@ public class TestManagementActivity extends AppCompatActivity {
         }
 
         static class TestViewHolder extends RecyclerView.ViewHolder {
-            TextView lblName, lblCode, lblScope, lblInactive, lblCustomPriceTag, lblDept, lblSpecimen, lblParamsCount, lblReagents, lblTat, lblPrice, lblB2BPrice;
+            TextView lblName, lblCode, lblScope, lblInactive, lblCustomPriceTag, lblDept, lblSpecimen, lblParamsCount, lblReagents, lblPrice, lblB2BPrice;
             View dotCapColor;
             MaterialButton btnQuickPrice, btnFullEdit, btnDelete;
 
@@ -2614,7 +2661,6 @@ public class TestManagementActivity extends AppCompatActivity {
                 lblSpecimen       = itemView.findViewById(R.id.lblTestSpecimen);
                 lblParamsCount    = itemView.findViewById(R.id.lblTestParamsCount);
                 lblReagents       = itemView.findViewById(R.id.lblTestReagents);
-                lblTat            = itemView.findViewById(R.id.lblTestTat);
                 lblPrice          = itemView.findViewById(R.id.lblTestPrice);
                 lblB2BPrice       = itemView.findViewById(R.id.lblTestB2BPrice);
                 dotCapColor       = itemView.findViewById(R.id.dotTubeCapColor);
@@ -2693,8 +2739,11 @@ public class TestManagementActivity extends AppCompatActivity {
             ParameterItem p = params.get(position);
             holder.lblName.setText(p.name);
             holder.lblCode.setText(p.code);
-            holder.lblMethod.setText("Method: " + p.method);
-            holder.lblUnit.setText(p.unit);
+            if (p.method == null || p.method.trim().isEmpty() || "null".equalsIgnoreCase(p.method.trim())) {
+                holder.lblMethod.setText("Method: Standard");
+            } else {
+                holder.lblMethod.setText("Method: " + p.method.trim());
+            }
             holder.lblInputType.setText(p.inputType);
 
             // Scope pill: Global vs Local (No Emojis)
@@ -2728,6 +2777,7 @@ public class TestManagementActivity extends AppCompatActivity {
 
             // Reference Ranges & Panic Previews
             holder.lblRefRange.setText(p.getReferenceRangeSummary());
+            holder.lblRefRange.setTextColor(0xFFFFFFFF);
             String panicSummary = p.getPanicRangeSummary();
             if (panicSummary != null) {
                 holder.lblPanicRange.setText(panicSummary);
@@ -2753,7 +2803,7 @@ public class TestManagementActivity extends AppCompatActivity {
         }
 
         static class ParamViewHolder extends RecyclerView.ViewHolder {
-            TextView lblName, lblCode, lblScope, lblInputType, lblMethod, lblUnit, lblTubeCode, lblReagents, lblPrice, lblRefRange, lblPanicRange;
+            TextView lblName, lblCode, lblScope, lblInputType, lblMethod, lblTubeCode, lblReagents, lblPrice, lblRefRange, lblPanicRange;
             View dotCapColor;
             MaterialButton btnEdit, btnDelete;
 
@@ -2764,7 +2814,6 @@ public class TestManagementActivity extends AppCompatActivity {
                 lblScope      = itemView.findViewById(R.id.lblParamScope);
                 lblInputType  = itemView.findViewById(R.id.lblParamInputType);
                 lblMethod     = itemView.findViewById(R.id.lblParamMethod);
-                lblUnit       = itemView.findViewById(R.id.lblParamUnit);
                 lblTubeCode   = itemView.findViewById(R.id.lblParamTubeCode);
                 lblReagents   = itemView.findViewById(R.id.lblParamReagents);
                 lblPrice      = itemView.findViewById(R.id.lblParamPrice);
@@ -2959,7 +3008,12 @@ public class TestManagementActivity extends AppCompatActivity {
         public void onBindViewHolder(@NonNull SampleTypeViewHolder holder, int position) {
             SampleTypeItem item = items.get(position);
             holder.lblName.setText(item.name);
-            holder.lblCode.setText(item.code);
+            if (item.code == null || item.code.trim().isEmpty() || "null".equalsIgnoreCase(item.code.trim())) {
+                holder.lblCode.setVisibility(View.GONE);
+            } else {
+                holder.lblCode.setVisibility(View.VISIBLE);
+                holder.lblCode.setText(item.code.trim());
+            }
             holder.lblScope.setText(item.isGlobal ? "Global" : "Local");
             holder.lblDesc.setText(item.description.isEmpty() ? "Diagnostic sample container type for pathology laboratory investigations" : item.description);
 
@@ -2988,11 +3042,29 @@ public class TestManagementActivity extends AppCompatActivity {
         }
     }
 
+    private void onDepartmentCardClicked(DepartmentItem dept) {
+        if (dept == null) return;
+        selectedDeptFilter = dept.name;
+        selectedScopeFilter = "All";
+        switchTab(0);
+        if (!cachedDepartmentNames.isEmpty()) {
+            buildDepartmentFilterChips(cachedDepartmentNames);
+        }
+        applyTestFilters();
+        Toast.makeText(this, "Showing tests for " + dept.name, Toast.LENGTH_SHORT).show();
+    }
+
     public static class DepartmentAdapter extends RecyclerView.Adapter<DepartmentAdapter.DeptViewHolder> {
         private final List<DepartmentItem> depts;
+        private final java.util.function.Consumer<DepartmentItem> onCardClick;
 
         public DepartmentAdapter(List<DepartmentItem> depts) {
+            this(depts, null);
+        }
+
+        public DepartmentAdapter(List<DepartmentItem> depts, java.util.function.Consumer<DepartmentItem> onCardClick) {
             this.depts = depts;
+            this.onCardClick = onCardClick;
         }
 
         @NonNull
@@ -3006,8 +3078,78 @@ public class TestManagementActivity extends AppCompatActivity {
         public void onBindViewHolder(@NonNull DeptViewHolder holder, int position) {
             DepartmentItem d = depts.get(position);
             holder.lblName.setText(d.name);
-            holder.lblDesc.setText(d.description);
-            holder.lblCount.setText(d.testCount + " Tests");
+
+            String desc = d.description;
+            if (desc == null || desc.trim().isEmpty()) {
+                desc = getDepartmentDescription(d.name);
+            }
+            holder.lblDesc.setText(desc);
+
+            String countText = d.testCount == 1 ? "1 Test" : d.testCount + " Tests";
+            holder.lblCount.setText(countText);
+
+            // Dynamic colorful icon and squircle based on department specialty
+            int iconRes = R.drawable.ic_mod_clean_tests;
+            int bgRes = R.drawable.bg_mod_icon_blue;
+            String nameLower = d.name != null ? d.name.toLowerCase() : "";
+
+            if (nameLower.contains("biochem")) {
+                iconRes = R.drawable.ic_mod_clean_tests;
+                bgRes = R.drawable.bg_mod_icon_blue;
+            } else if (nameLower.contains("hemat") || nameLower.contains("haemat")) {
+                iconRes = R.drawable.ic_mod_clean_samples;
+                bgRes = R.drawable.bg_mod_icon_rose;
+            } else if (nameLower.contains("patholog")) {
+                iconRes = R.drawable.ic_mod_clean_worklist;
+                bgRes = R.drawable.bg_mod_icon_indigo;
+            } else if (nameLower.contains("coagul")) {
+                iconRes = R.drawable.ic_mod_clean_samples;
+                bgRes = R.drawable.bg_mod_icon_rose;
+            } else if (nameLower.contains("cyto")) {
+                iconRes = R.drawable.ic_mod_clean_media;
+                bgRes = R.drawable.bg_mod_icon_purple;
+            } else if (nameLower.contains("endo")) {
+                iconRes = R.drawable.ic_mod_clean_analyzer;
+                bgRes = R.drawable.bg_mod_icon_sky;
+            } else if (nameLower.contains("immuno") || nameLower.contains("sero")) {
+                iconRes = R.drawable.ic_mod_clean_branding;
+                bgRes = R.drawable.bg_mod_icon_emerald;
+            } else if (nameLower.contains("microbio")) {
+                iconRes = R.drawable.ic_mod_clean_inventory;
+                bgRes = R.drawable.bg_mod_icon_teal;
+            } else if (nameLower.contains("histo")) {
+                iconRes = R.drawable.ic_mod_clean_reports;
+                bgRes = R.drawable.bg_mod_icon_amber;
+            } else if (nameLower.contains("radio") || nameLower.contains("x-ray") || nameLower.contains("mri") || nameLower.contains("scan")) {
+                iconRes = R.drawable.ic_mod_clean_ris;
+                bgRes = R.drawable.bg_mod_icon_purple;
+            } else if (nameLower.contains("molecul") || nameLower.contains("genet")) {
+                iconRes = R.drawable.ic_mod_clean_mapper;
+                bgRes = R.drawable.bg_mod_icon_indigo;
+            }
+
+            holder.imgIcon.setImageResource(iconRes);
+            holder.frameIcon.setBackgroundResource(bgRes);
+
+            holder.itemView.setOnClickListener(v -> {
+                if (onCardClick != null) onCardClick.accept(d);
+            });
+        }
+
+        private static String getDepartmentDescription(String name) {
+            String lower = name != null ? name.toLowerCase() : "";
+            if (lower.contains("biochem")) return "Electrolytes, liver, renal, enzymes & diabetes profiles";
+            if (lower.contains("hemat") || lower.contains("haemat")) return "Cell counts, coagulation & peripheral blood smears";
+            if (lower.contains("patholog")) return "Urine routine, body fluids & routine clinical microscopy";
+            if (lower.contains("coagul")) return "PT/INR, APTT, D-Dimer & bleeding disorder profiles";
+            if (lower.contains("cyto")) return "FNAC, Pap smears & fluid cell morphology examination";
+            if (lower.contains("endo")) return "Thyroid, metabolic hormones & endocrine panels";
+            if (lower.contains("immuno") || lower.contains("sero")) return "Infectious serology, viral markers & antibodies";
+            if (lower.contains("microbio")) return "Cultures, antibiotic sensitivity (AST) & gram stains";
+            if (lower.contains("histo")) return "Tissue biopsies, grossing & histopathology reporting";
+            if (lower.contains("radio") || lower.contains("x-ray") || lower.contains("mri")) return "Diagnostic medical imaging, scans & radiography";
+            if (lower.contains("molecul") || lower.contains("genet")) return "PCR amplification, DNA sequencing & molecular genetics";
+            return "Diagnostic laboratory testing & clinical investigations";
         }
 
         @Override
@@ -3016,10 +3158,14 @@ public class TestManagementActivity extends AppCompatActivity {
         }
 
         static class DeptViewHolder extends RecyclerView.ViewHolder {
+            FrameLayout frameIcon;
+            ImageView imgIcon;
             TextView lblName, lblDesc, lblCount;
 
             DeptViewHolder(@NonNull View itemView) {
                 super(itemView);
+                frameIcon= itemView.findViewById(R.id.frameDeptIcon);
+                imgIcon  = itemView.findViewById(R.id.imgDeptIcon);
                 lblName  = itemView.findViewById(R.id.lblDeptName);
                 lblDesc  = itemView.findViewById(R.id.lblDeptDesc);
                 lblCount = itemView.findViewById(R.id.lblDeptTestCount);

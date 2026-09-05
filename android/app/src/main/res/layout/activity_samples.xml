@@ -79,7 +79,7 @@
                     android:id="@+id/btnScanBarcodeHeader"
                     android:layout_width="38dp"
                     android:layout_height="38dp"
-                    android:background="@drawable/bg_bell_btn"
+                    android:background="@drawable/bg_wallet_pill"
                     android:clickable="true"
                     android:focusable="true"
                     android:layout_marginEnd="8dp">
@@ -98,16 +98,18 @@
                     android:id="@+id/btnRefreshSamples"
                     android:layout_width="38dp"
                     android:layout_height="38dp"
-                    android:background="@drawable/bg_bell_btn"
+                    android:background="@drawable/bg_wallet_pill"
                     android:clickable="true"
                     android:focusable="true">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                    <ImageView
+                        android:id="@+id/imgRefreshSamplesIcon"
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
                         android:layout_gravity="center"
-                        android:text="🔄"
-                        android:textSize="15sp" />
+                        android:src="@drawable/ic_refresh_cw"
+                        android:tint="#FFFFFF"
+                        app:tint="#FFFFFF" />
 
                 </FrameLayout>
 

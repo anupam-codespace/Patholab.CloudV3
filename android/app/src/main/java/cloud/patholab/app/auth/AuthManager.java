@@ -37,24 +37,28 @@ public class AuthManager {
 
     public static void saveToken(Context context, String token) {
         if (context == null || token == null) return;
-        getPrefs(context).edit().putString(KEY_TOKEN, token).apply();
-        // Also save in standard backup prefs to guarantee all sub-activities get it
-        context.getSharedPreferences("PatholabPrefs", Context.MODE_PRIVATE).edit().putString(KEY_TOKEN, token).apply();
-        context.getSharedPreferences("patholab_prefs", Context.MODE_PRIVATE).edit().putString(KEY_TOKEN, token).apply();
+        try {
+            getPrefs(context).edit().putString(KEY_TOKEN, token).commit();
+        } catch (Exception ignored) {}
+        // Also save in standard backup prefs to guarantee all sub-activities get it immediately
+        context.getSharedPreferences("PatholabPrefs", Context.MODE_PRIVATE).edit().putString(KEY_TOKEN, token).commit();
+        context.getSharedPreferences("patholab_prefs", Context.MODE_PRIVATE).edit().putString(KEY_TOKEN, token).commit();
         syncWebViewCookie(token);
     }
 
     public static String getToken(Context context) {
         if (context == null) return null;
-        String token = getPrefs(context).getString(KEY_TOKEN, null);
-        if (token != null && !token.isEmpty()) return token;
+        try {
+            String token = getPrefs(context).getString(KEY_TOKEN, null);
+            if (token != null && !token.trim().isEmpty()) return token.trim();
+        } catch (Exception ignored) {}
 
         // Check fallback prefs
-        token = context.getSharedPreferences("PatholabPrefs", Context.MODE_PRIVATE).getString(KEY_TOKEN, null);
-        if (token != null && !token.isEmpty()) return token;
+        String token = context.getSharedPreferences("PatholabPrefs", Context.MODE_PRIVATE).getString(KEY_TOKEN, null);
+        if (token != null && !token.trim().isEmpty()) return token.trim();
 
         token = context.getSharedPreferences("patholab_prefs", Context.MODE_PRIVATE).getString(KEY_TOKEN, null);
-        if (token != null && !token.isEmpty()) return token;
+        if (token != null && !token.trim().isEmpty()) return token.trim();
 
         // Fallback: check CookieManager
         try {
@@ -89,16 +93,18 @@ public class AuthManager {
 
     public static void saveUserInfo(Context context, String userId, String email, String name, String role, String labId, String labName) {
         if (context == null) return;
-        SharedPreferences.Editor editor = getPrefs(context).edit();
-        if (userId != null) editor.putString(KEY_USER_ID, userId);
-        if (email != null) editor.putString(KEY_USER_EMAIL, email);
-        if (name != null) editor.putString(KEY_USER_NAME, name);
-        if (role != null) editor.putString(KEY_USER_ROLE, role);
-        if (labId != null) editor.putString(KEY_LAB_ID, labId);
-        if (labName != null) editor.putString(KEY_LAB_NAME, labName);
-        editor.apply();
+        try {
+            SharedPreferences.Editor editor = getPrefs(context).edit();
+            if (userId != null) editor.putString(KEY_USER_ID, userId);
+            if (email != null) editor.putString(KEY_USER_EMAIL, email);
+            if (name != null) editor.putString(KEY_USER_NAME, name);
+            if (role != null) editor.putString(KEY_USER_ROLE, role);
+            if (labId != null) editor.putString(KEY_LAB_ID, labId);
+            if (labName != null) editor.putString(KEY_LAB_NAME, labName);
+            editor.commit();
+        } catch (Exception ignored) {}
 
-        // Also update standard prefs
+        // Also update standard prefs synchronously
         SharedPreferences.Editor backupEditor = context.getSharedPreferences("PatholabPrefs", Context.MODE_PRIVATE).edit();
         if (userId != null) backupEditor.putString(KEY_USER_ID, userId);
         if (name != null) backupEditor.putString("user_name", name);
@@ -106,7 +112,7 @@ public class AuthManager {
         if (role != null) backupEditor.putString("user_role", role);
         if (labId != null) backupEditor.putString("lab_id", labId);
         if (labName != null) backupEditor.putString("lab_name", labName);
-        backupEditor.apply();
+        backupEditor.commit();
     }
 
     public static String getUserId(Context context) {
@@ -191,13 +197,14 @@ public class AuthManager {
     }
 
     public static void syncWebViewCookie(String token) {
+        if (token == null || token.trim().isEmpty()) return;
         try {
             CookieManager cm = CookieManager.getInstance();
             cm.setAcceptCookie(true);
-            // Set cookie for both explicit domain and HTTPS URLs
-            cm.setCookie("https://app.patholab.cloud", "token=" + token + "; Path=/; Domain=app.patholab.cloud; Secure; SameSite=Lax");
-            cm.setCookie("https://patholab.cloud", "token=" + token + "; Path=/; Domain=patholab.cloud; Secure; SameSite=Lax");
-            cm.setCookie("https://app.patholab.cloud", "token=" + token + "; Path=/; Secure; SameSite=Lax");
+            cm.setCookie("https://app.patholab.cloud", "token=" + token + "; Path=/; Domain=app.patholab.cloud; Secure");
+            cm.setCookie("https://app.patholab.cloud", "token=" + token + "; Path=/; Secure");
+            cm.setCookie("https://patholab.cloud", "token=" + token + "; Path=/; Domain=patholab.cloud; Secure");
+            cm.setCookie("https://patholab.cloud", "token=" + token + "; Path=/; Secure");
             cm.flush();
         } catch (Exception ignored) {}
     }

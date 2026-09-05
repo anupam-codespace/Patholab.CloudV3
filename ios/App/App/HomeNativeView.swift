@@ -77,14 +77,14 @@ class HomeNativeView: UIView {
     ]
 
     static let modules: [HomeModule] = [
-        HomeModule(id: "reg",  name: "Register",  path: "/workspace/registration",   icon: "ModRegister",  iconColor: UIColor(red: 37/255, green: 99/255, blue: 235/255, alpha: 1), bgColor: UIColor(red: 239/255, green: 246/255, blue: 255/255, alpha: 1), isWhatsApp: false),
-        HomeModule(id: "test", name: "Tests",     path: "/workspace/test-management", icon: "ModTests",     iconColor: UIColor(red: 124/255, green: 58/255, blue: 237/255, alpha: 1), bgColor: UIColor(red: 245/255, green: 243/255, blue: 255/255, alpha: 1), isWhatsApp: false),
-        HomeModule(id: "bill", name: "Billing",   path: "/workspace/billing",         icon: "ModBilling",   iconColor: UIColor(red: 5/255, green: 150/255, blue: 105/255, alpha: 1), bgColor: UIColor(red: 236/255, green: 253/255, blue: 245/255, alpha: 1), isWhatsApp: false),
-        HomeModule(id: "rep",  name: "Reports",   path: "/workspace/reports",         icon: "ModReports",   iconColor: UIColor(red: 2/255, green: 132/255, blue: 199/255, alpha: 1), bgColor: UIColor(red: 240/255, green: 249/255, blue: 255/255, alpha: 1), isWhatsApp: false),
-        HomeModule(id: "samp", name: "Samples",   path: "/workspace/accession",       icon: "ModSamples",   iconColor: UIColor(red: 225/255, green: 29/255, blue: 72/255, alpha: 1), bgColor: UIColor(red: 255/255, green: 241/255, blue: 242/255, alpha: 1), isWhatsApp: false),
-        HomeModule(id: "wa",   name: "Share",     path: "/workspace/reports",         icon: "ModWhatsApp", iconColor: UIColor(red: 22/255, green: 163/255, blue: 74/255, alpha: 1), bgColor: UIColor(red: 240/255, green: 253/255, blue: 244/255, alpha: 1), isWhatsApp: true),
-        HomeModule(id: "logi", name: "Logistics", path: "/workspace/logistics",       icon: "ModLogistics", iconColor: UIColor(red: 217/255, green: 119/255, blue: 6/255, alpha: 1), bgColor: UIColor(red: 255/255, green: 251/255, blue: 235/255, alpha: 1), isWhatsApp: false),
-        HomeModule(id: "wall", name: "Wallet",    path: "/workspace/wallet",          icon: "ModWallet",    iconColor: UIColor(red: 79/255, green: 70/255, blue: 229/255, alpha: 1), bgColor: UIColor(red: 238/255, green: 242/255, blue: 255/255, alpha: 1), isWhatsApp: false),
+        HomeModule(id: "dash", name: "Dashboard",         path: "/workspace/dashboard",       icon: "chart.pie.fill",                iconColor: UIColor(red: 2/255, green: 132/255, blue: 199/255, alpha: 1), bgColor: UIColor(red: 224/255, green: 242/255, blue: 254/255, alpha: 1), isWhatsApp: false),
+        HomeModule(id: "pat",  name: "Patient Directory", path: "/workspace/patients",        icon: "person.2.fill",                 iconColor: UIColor(red: 147/255, green: 51/255, blue: 234/255, alpha: 1), bgColor: UIColor(red: 243/255, green: 232/255, blue: 255/255, alpha: 1), isWhatsApp: false),
+        HomeModule(id: "reg",  name: "New Registration",  path: "/workspace/registration",    icon: "person.crop.circle.badge.plus", iconColor: UIColor(red: 37/255, green: 99/255, blue: 235/255, alpha: 1), bgColor: UIColor(red: 239/255, green: 246/255, blue: 255/255, alpha: 1), isWhatsApp: false),
+        HomeModule(id: "rep",  name: "Reports",           path: "/workspace/reports",         icon: "chart.bar.doc.horizontal.fill", iconColor: UIColor(red: 217/255, green: 119/255, blue: 6/255, alpha: 1), bgColor: UIColor(red: 254/255, green: 243/255, blue: 199/255, alpha: 1), isWhatsApp: false),
+        HomeModule(id: "test", name: "Test Management",   path: "/workspace/test-management", icon: "flask.fill",                    iconColor: UIColor(red: 99/255, green: 102/255, blue: 241/255, alpha: 1), bgColor: UIColor(red: 238/255, green: 242/255, blue: 255/255, alpha: 1), isWhatsApp: false),
+        HomeModule(id: "wall", name: "Wallet",            path: "/workspace/wallet",          icon: "creditcard.fill",               iconColor: UIColor(red: 225/255, green: 29/255, blue: 72/255, alpha: 1), bgColor: UIColor(red: 255/255, green: 241/255, blue: 242/255, alpha: 1), isWhatsApp: false),
+        HomeModule(id: "bill", name: "Invoice",           path: "/workspace/billing",         icon: "doc.text.fill",                 iconColor: UIColor(red: 5/255, green: 150/255, blue: 105/255, alpha: 1), bgColor: UIColor(red: 236/255, green: 253/255, blue: 245/255, alpha: 1), isWhatsApp: false),
+        HomeModule(id: "b2b",  name: "B2B",               path: "/workspace/agencies",        icon: "building.2.fill",               iconColor: UIColor(red: 13/255, green: 148/255, blue: 136/255, alpha: 1), bgColor: UIColor(red: 204/255, green: 251/255, blue: 241/255, alpha: 1), isWhatsApp: false),
     ]
 
     // MARK: – Colours
@@ -648,54 +648,41 @@ class HomeNativeView: UIView {
             iconBg.heightAnchor.constraint(equalToConstant: 50),
         ])
 
-        if let customImage = UIImage(named: mod.icon) {
-            iconBg.backgroundColor = .clear
-            iconBg.layer.borderWidth = 0
+        iconBg.backgroundColor    = mod.bgColor
+        iconBg.layer.cornerRadius = 15
+        iconBg.layer.borderWidth  = 1
+        iconBg.layer.borderColor  = mod.iconColor.withAlphaComponent(0.18).cgColor
 
-            // Subtle 3D elevation shadow for WOW effect
-            iconBg.layer.shadowColor = UIColor.black.cgColor
-            iconBg.layer.shadowOpacity = 0.12
-            iconBg.layer.shadowRadius = 4
-            iconBg.layer.shadowOffset = CGSize(width: 0, height: 2)
-            iconBg.clipsToBounds = false
-
-            let img = UIImageView(image: customImage)
-            img.contentMode = .scaleAspectFit
-            img.clipsToBounds = true
-            img.translatesAutoresizingMaskIntoConstraints = false
-            iconBg.addSubview(img)
-            NSLayoutConstraint.activate([
-                img.topAnchor.constraint(equalTo: iconBg.topAnchor),
-                img.bottomAnchor.constraint(equalTo: iconBg.bottomAnchor),
-                img.leadingAnchor.constraint(equalTo: iconBg.leadingAnchor),
-                img.trailingAnchor.constraint(equalTo: iconBg.trailingAnchor),
-            ])
+        let img: UIImageView
+        if mod.isWhatsApp, let waImg = UIImage(named: "ModWhatsApp") {
+            img = UIImageView(image: waImg)
+        } else if let sfImg = UIImage(systemName: mod.icon) {
+            img = UIImageView(image: sfImg)
+            img.tintColor = mod.iconColor
+        } else if let customImage = UIImage(named: mod.icon) {
+            img = UIImageView(image: customImage)
         } else {
-            iconBg.backgroundColor    = mod.bgColor
-            iconBg.layer.cornerRadius = 15
-            iconBg.layer.borderWidth  = 1
-            iconBg.layer.borderColor  = mod.iconColor.withAlphaComponent(0.18).cgColor
-
-            let img = UIImageView(image: UIImage(systemName: mod.icon))
-            img.tintColor     = mod.iconColor
-            img.contentMode   = .scaleAspectFit
-            img.translatesAutoresizingMaskIntoConstraints = false
-            iconBg.addSubview(img)
-            NSLayoutConstraint.activate([
-                img.centerXAnchor.constraint(equalTo: iconBg.centerXAnchor),
-                img.centerYAnchor.constraint(equalTo: iconBg.centerYAnchor),
-                img.widthAnchor.constraint(equalToConstant: 22),
-                img.heightAnchor.constraint(equalToConstant: 22),
-            ])
+            img = UIImageView(image: UIImage(systemName: "square.grid.2x2.fill"))
+            img.tintColor = mod.iconColor
         }
+        img.contentMode   = .scaleAspectFit
+        img.translatesAutoresizingMaskIntoConstraints = false
+        iconBg.addSubview(img)
+        NSLayoutConstraint.activate([
+            img.centerXAnchor.constraint(equalTo: iconBg.centerXAnchor),
+            img.centerYAnchor.constraint(equalTo: iconBg.centerYAnchor),
+            img.widthAnchor.constraint(equalToConstant: 24),
+            img.heightAnchor.constraint(equalToConstant: 24),
+        ])
 
         let boldLabel = UILabel()
-        boldLabel.font = .systemFont(ofSize: 12, weight: .bold)
+        boldLabel.font = .systemFont(ofSize: 11, weight: .bold)
         boldLabel.textColor = UIColor(red: 30/255, green: 41/255, blue: 59/255, alpha: 1)
         boldLabel.text = mod.name
         boldLabel.textAlignment = .center
+        boldLabel.numberOfLines = 2
         boldLabel.adjustsFontSizeToFitWidth = true
-        boldLabel.minimumScaleFactor = 0.85
+        boldLabel.minimumScaleFactor = 0.75
 
         let vStack = UIStackView(arrangedSubviews: [iconBg, boldLabel])
         vStack.axis      = .vertical
@@ -1843,6 +1830,18 @@ class HomeNativeView: UIView {
     @objc private func bannerCtaTapped()  { onNavigate?(Self.banners[currentBannerIdx].path) }
     @objc private func moduleTapped(_ gr: UITapGestureRecognizer) {
         guard let path = gr.view?.accessibilityIdentifier else { return }
+        if (path == "/workspace/registration" || path == "/workspace/patients/new"), let parentVC = self.findViewController() {
+            let regVC = RegistrationViewController()
+            regVC.modalPresentationStyle = .fullScreen
+            parentVC.present(regVC, animated: true, completion: nil)
+            return
+        }
+        if (path == "/workspace/wallet" || path.starts(with: "/workspace/wallet")), let parentVC = self.findViewController() {
+            let walletVC = WalletViewController()
+            walletVC.modalPresentationStyle = .fullScreen
+            parentVC.present(walletVC, animated: true, completion: nil)
+            return
+        }
         if path == "/workspace/test-management", let parentVC = self.findViewController() {
             let testVC = TestManagementViewController()
             testVC.modalPresentationStyle = .fullScreen
@@ -1879,7 +1878,7 @@ class HomeNativeView: UIView {
             parentVC.present(staffVC, animated: true, completion: nil)
             return
         }
-        if (path == "/workspace/dashboard" || path == "/dashboard"), let parentVC = self.findViewController() {
+        if (path == "/workspace/dashboard" || path == "/dashboard" || path == "/workspace" || path == "/home" || path == "/"), let parentVC = self.findViewController() {
             let dashVC = LabDashboardViewController()
             dashVC.modalPresentationStyle = .fullScreen
             parentVC.present(dashVC, animated: true, completion: nil)

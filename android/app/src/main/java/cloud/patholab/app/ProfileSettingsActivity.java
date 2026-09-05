@@ -9,10 +9,13 @@ import android.os.Looper;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.RotateAnimation;
 import android.webkit.CookieManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -211,10 +214,17 @@ public class ProfileSettingsActivity extends AppCompatActivity {
         btnBack.setOnClickListener(v -> finish());
         btnSaveAll.setOnClickListener(v -> saveAllSettings());
         View btnRefresh = findViewById(R.id.btnRefreshSettings);
+        ImageView imgRefreshIcon = findViewById(R.id.imgRefreshSettingsIcon);
         if (btnRefresh != null) {
             btnRefresh.setOnClickListener(v -> {
+                if (imgRefreshIcon != null) {
+                    RotateAnimation rotate = new RotateAnimation(0, 360,
+                            Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+                    rotate.setDuration(600);
+                    imgRefreshIcon.startAnimation(rotate);
+                }
                 loadAllSettings();
-                Toast.makeText(this, "Refreshing settings...", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Refreshing workspace settings...", Toast.LENGTH_SHORT).show();
             });
         }
     }

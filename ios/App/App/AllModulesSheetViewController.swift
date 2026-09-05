@@ -29,7 +29,7 @@ class AllModulesSheetViewController: UIViewController, UITextFieldDelegate {
 
     // ── 1. Overview ──
     private let overviewModules: [SheetModule] = [
-        SheetModule(name: "Home",                path: "/workspace",                 icon: "house.fill",            bgHex: "EFF6FF", tintHex: "2563EB"),
+        SheetModule(name: "Home",                path: "/dashboard",                  icon: "house.fill",            bgHex: "EFF6FF", tintHex: "2563EB"),
         SheetModule(name: "Dashboard",           path: "/dashboard",                 icon: "square.grid.2x2.fill",  bgHex: "F0F9FF", tintHex: "0284C7"),
         SheetModule(name: "Financial Analytics", path: "/workspace/analytics",       icon: "chart.bar.xaxis",       bgHex: "ECFDF5", tintHex: "059669"),
         SheetModule(name: "Online Booking",      path: "/workspace/online-booking",  icon: "calendar",              bgHex: "FAF5FF", tintHex: "9333EA"),

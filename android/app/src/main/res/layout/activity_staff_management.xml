@@ -34,7 +34,7 @@
                     android:id="@+id/btnStaffBack"
                     android:layout_width="38dp"
                     android:layout_height="38dp"
-                    android:background="@drawable/bg_bell_btn"
+                    android:background="@drawable/bg_glass_back_btn"
                     android:clickable="true"
                     android:focusable="true">
 
@@ -43,7 +43,8 @@
                         android:layout_height="18dp"
                         android:layout_gravity="center"
                         android:src="@drawable/ic_back_arrow"
-                        android:tint="#0D6EFD" />
+                        android:tint="#FFFFFF"
+                        app:tint="#FFFFFF" />
 
                 </FrameLayout>
 
@@ -54,37 +55,20 @@
                     android:orientation="vertical"
                     android:layout_marginStart="12dp">
 
-                    <LinearLayout
+                    <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
+                        android:text="Staff Directory"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"
+                        android:letterSpacing="-0.02" />
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Staff Directory"
-                            android:textSize="18sp"
-                            android:textStyle="bold"
-                            android:textColor="#FFFFFF"
-                            android:letterSpacing="-0.02" />
-
-                        <TextView
-                            android:id="@+id/lblStaffCountBadge"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
-                            android:text="0 Members"
-                            android:textSize="10.5sp"
-                            android:textStyle="bold"
-                            android:textColor="#0D6EFD"
-                            android:background="@drawable/bg_pill_white"
-                            android:paddingStart="8dp"
-                            android:paddingEnd="8dp"
-                            android:paddingTop="2dp"
-                            android:paddingBottom="2dp" />
-
-                    </LinearLayout>
+                    <TextView
+                        android:id="@+id/lblStaffCountBadge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:visibility="gone" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -99,19 +83,21 @@
                 <!-- Refresh Button -->
                 <FrameLayout
                     android:id="@+id/btnRefreshStaff"
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:background="@drawable/bg_bell_btn"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:background="@drawable/bg_wallet_pill"
                     android:layout_marginEnd="8dp"
                     android:clickable="true"
                     android:focusable="true">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                    <ImageView
+                        android:id="@+id/imgRefreshStaffIcon"
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
                         android:layout_gravity="center"
-                        android:text="🔄"
-                        android:textSize="14sp" />
+                        android:src="@drawable/ic_refresh_cw"
+                        android:tint="#FFFFFF"
+                        app:tint="#FFFFFF" />
 
                 </FrameLayout>
 

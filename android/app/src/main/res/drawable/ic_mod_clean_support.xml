@@ -1,0 +1,18 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="26dp"
+    android:height="26dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Lifebuoy / Support Ring (Orange) -->
+    <path
+        android:fillColor="#FED7AA"
+        android:pathData="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2zm0,15c-2.76,0 -5,-2.24 -5,-5s2.24,-5 5,-5 5,2.24 5,5 -2.24,5 -5,5z" />
+    <!-- Lifebuoy Straps (Vibrant Orange) -->
+    <path
+        android:fillColor="#F97316"
+        android:pathData="M11,2.05v5.03c0.32,-0.05 0.66,-0.08 1,-0.08s0.68,0.03 1,0.08V2.05C12.67,2.02 12.34,2 12,2s-0.67,0.02 -1,0.05zM11,16.92v5.03c0.33,0.03 0.67,0.05 1,0.05s0.67,-0.02 1,-0.05v-5.03c-0.32,0.05 -0.66,0.08 -1,0.08s-0.68,-0.03 -1,-0.08zM2.05,13h5.03c-0.05,-0.32 -0.08,-0.66 -0.08,-1s0.03,-0.68 0.08,-1H2.05C2.02,11.33 2,11.66 2,12s0.02,0.67 0.05,1zM16.92,13h5.03c0.03,-0.33 0.05,-0.67 0.05,-1s-0.02,-0.67 -0.05,-1h-5.03c0.05,0.32 0.08,0.66 0.08,1s-0.03,0.68 -0.08,1z" />
+    <!-- Customer Support Headset inside Ring -->
+    <path
+        android:fillColor="#EA580C"
+        android:pathData="M12,8.5c-1.93,0 -3.5,1.57 -3.5,3.5v2h1v-2c0,-1.38 1.12,-2.5 2.5,-2.5s2.5,1.12 2.5,2.5v2h1v-2c0,-1.93 -1.57,-3.5 -3.5,-3.5z" />
+</vector>

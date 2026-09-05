@@ -41,7 +41,8 @@
                 android:textSize="11sp"
                 android:fontFamily="monospace"
                 android:textStyle="bold"
-                android:textColor="#E11D48" />
+                android:textColor="#E11D48"
+                android:visibility="gone" />
 
             <!-- Scope Pill -->
             <TextView

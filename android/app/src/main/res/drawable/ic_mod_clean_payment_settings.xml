@@ -1,0 +1,22 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="26dp"
+    android:height="26dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Payment Card Base -->
+    <path
+        android:fillColor="#A7F3D0"
+        android:pathData="M20,4H4C2.89,4 2,4.89 2,6v12c0,1.11 0.89,2 2,2h16c1.11,0 2,-0.89 2,-2V6c0,-1.11 -0.89,-2 -2,-2z" />
+    <!-- Magnetic Stripe -->
+    <path
+        android:fillColor="#059669"
+        android:pathData="M2,8h20v3H2z" />
+    <!-- Smart EMV Chip -->
+    <path
+        android:fillColor="#F59E0B"
+        android:pathData="M5,13h4v4H5z" />
+    <!-- QR Code Mini Badge on Bottom Right -->
+    <path
+        android:fillColor="#047857"
+        android:pathData="M14,13h2v2h-2zM17,13h2v2h-2zM14,16h2v2h-2zM17,16h2v2h-2z" />
+</vector>

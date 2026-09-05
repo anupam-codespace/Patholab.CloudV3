@@ -12,9 +12,11 @@ import android.os.Handler;
 import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.HapticFeedbackConstants;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.view.animation.OvershootInterpolator;
 import android.util.TypedValue;
 import android.widget.AdapterView;
@@ -71,7 +73,7 @@ import cloud.patholab.app.auth.AuthManager;
  */
 public class RegistrationActivity extends AppCompatActivity {
 
-    private static final String BASE_URL = "https://patholab.cloud";
+    private static final String BASE_URL = "https://app.patholab.cloud";
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private Runnable nameCheckRunnable;
 
@@ -333,7 +335,7 @@ public class RegistrationActivity extends AppCompatActivity {
 
     private void switchTab(boolean isSearch) {
         if (isSearch) {
-            tabModeSearch.setBackgroundResource(R.drawable.bg_pill_white);
+            tabModeSearch.setBackgroundResource(R.drawable.bg_capsule_active_pill);
             tabModeSearch.setTextColor(0xFF0D6EFD);
             tabModeSearch.setElevation(dp(2));
             tabModeNewReg.setBackgroundColor(0);
@@ -344,7 +346,7 @@ public class RegistrationActivity extends AppCompatActivity {
             scrollNewRegSection.setVisibility(View.GONE);
             stickyBottomBar.setVisibility(View.GONE);
         } else {
-            tabModeNewReg.setBackgroundResource(R.drawable.bg_pill_white);
+            tabModeNewReg.setBackgroundResource(R.drawable.bg_capsule_active_pill);
             tabModeNewReg.setTextColor(0xFF0D6EFD);
             tabModeNewReg.setElevation(dp(2));
             tabModeSearch.setBackgroundColor(0);
@@ -365,7 +367,13 @@ public class RegistrationActivity extends AppCompatActivity {
         btnRegBack.setOnClickListener(v -> finish());
         btnRegReset.setOnClickListener(v -> resetForm());
 
-        btnOmnibarSearch.setOnClickListener(v -> performOmnibarSearch());
+        btnOmnibarSearch.setOnClickListener(v -> {
+            v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
+            v.animate().scaleX(0.96f).scaleY(0.96f).setDuration(80)
+                .withEndAction(() -> v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(100).start())
+                .start();
+            performOmnibarSearch();
+        });
         inputOmnibar.setOnEditorActionListener((v, actionId, event) -> {
             performOmnibarSearch();
             return true;
@@ -429,26 +437,47 @@ public class RegistrationActivity extends AppCompatActivity {
     //  Step 1: Omnibar Database Search
     // ─────────────────────────────────────────────────────────────────────────
     private void performOmnibarSearch() {
-        String q = inputOmnibar.getText().toString().trim();
-        if (q.isEmpty()) {
-            Toast.makeText(this, "Please enter a search query", Toast.LENGTH_SHORT).show();
+        String raw = inputOmnibar.getText().toString().trim();
+        if (raw.isEmpty()) {
+            Toast.makeText(this, "Please enter mobile number or patient name", Toast.LENGTH_SHORT).show();
+            inputOmnibar.requestFocus();
             return;
         }
 
         String searchType = spinnerSearchType.getSelectedItemPosition() == 0 ? "PHONE" : "NAME";
-        if (searchType.equals("PHONE") && q.length() < 10) {
-            Toast.makeText(this, "Please enter a valid 10-digit mobile number", Toast.LENGTH_SHORT).show();
-            return;
+        String q = raw;
+        if (searchType.equals("PHONE")) {
+            String cleanPhone = raw.replaceAll("[^0-9]", "");
+            if (cleanPhone.length() == 12 && cleanPhone.startsWith("91")) {
+                cleanPhone = cleanPhone.substring(2);
+            }
+            if (cleanPhone.length() < 10) {
+                Toast.makeText(this, "Please enter a valid 10-digit mobile number", Toast.LENGTH_SHORT).show();
+                inputOmnibar.requestFocus();
+                return;
+            }
+            q = cleanPhone;
         }
 
+        // Dismiss soft keyboard so user sees results clearly
+        try {
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (imm != null && getCurrentFocus() != null) {
+                imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+            }
+        } catch (Exception ignored) {}
+
+        btnOmnibarSearch.setEnabled(false);
+        btnOmnibarSearch.setText("Searching Database...");
         progressSearch.setVisibility(View.VISIBLE);
         cardMatchFound.setVisibility(View.GONE);
         cardNoMatch.setVisibility(View.GONE);
 
+        final String finalQ = q;
         new Thread(() -> {
             try {
                 String token = AuthManager.getToken(this);
-                URL url = new URL(BASE_URL + "/api/workspace/patients/search?query=" + URLEncoder.encode(q, "UTF-8") + "&type=" + searchType);
+                URL url = new URL(BASE_URL + "/api/workspace/patients/search?query=" + URLEncoder.encode(finalQ, "UTF-8") + "&type=" + searchType);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 if (token != null) {
                     conn.setRequestProperty("Authorization", "Bearer " + token);
@@ -461,22 +490,28 @@ public class RegistrationActivity extends AppCompatActivity {
                     JSONArray results = new JSONArray(res);
 
                     mainHandler.post(() -> {
+                        btnOmnibarSearch.setEnabled(true);
+                        btnOmnibarSearch.setText("Search Patient Database");
                         progressSearch.setVisibility(View.GONE);
                         if (results.length() > 0) {
                             JSONObject firstMatch = results.optJSONObject(0);
                             showMatchFoundCard(firstMatch);
                         } else {
-                            showNoMatchCard(q);
+                            showNoMatchCard(finalQ);
                         }
                     });
                 } else {
                     mainHandler.post(() -> {
+                        btnOmnibarSearch.setEnabled(true);
+                        btnOmnibarSearch.setText("Search Patient Database");
                         progressSearch.setVisibility(View.GONE);
-                        showNoMatchCard(q);
+                        showNoMatchCard(finalQ);
                     });
                 }
             } catch (Exception e) {
                 mainHandler.post(() -> {
+                    btnOmnibarSearch.setEnabled(true);
+                    btnOmnibarSearch.setText("Search Patient Database");
                     progressSearch.setVisibility(View.GONE);
                     Toast.makeText(RegistrationActivity.this, "Search error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
@@ -486,7 +521,9 @@ public class RegistrationActivity extends AppCompatActivity {
 
     private void showMatchFoundCard(JSONObject pat) {
         if (pat == null) return;
+        cardMatchFound.setAlpha(0f);
         cardMatchFound.setVisibility(View.VISIBLE);
+        cardMatchFound.animate().alpha(1f).setDuration(220).start();
         cardNoMatch.setVisibility(View.GONE);
 
         matchedPatientDbId = pat.optString("id", null);
@@ -504,6 +541,8 @@ public class RegistrationActivity extends AppCompatActivity {
         lblMatchDemographics.setText(age + " " + ageUnit + " • " + gender);
         lblMatchPhone.setText(phone);
         lblMatchAddress.setText(address);
+
+        scrollSearchSection.post(() -> scrollSearchSection.smoothScrollTo(0, cardMatchFound.getTop()));
 
         btnProceedToAccession.setOnClickListener(v -> {
             // Fill existing demographic info and jump to Accession tab
@@ -526,8 +565,12 @@ public class RegistrationActivity extends AppCompatActivity {
 
     private void showNoMatchCard(String query) {
         cardMatchFound.setVisibility(View.GONE);
+        cardNoMatch.setAlpha(0f);
         cardNoMatch.setVisibility(View.VISIBLE);
+        cardNoMatch.animate().alpha(1f).setDuration(220).start();
         lblNoMatchDesc.setText("We couldn't find a record matching \"" + query + "\" in the laboratory database.");
+
+        scrollSearchSection.post(() -> scrollSearchSection.smoothScrollTo(0, cardNoMatch.getTop()));
 
         btnRegisterNewFromSearch.setOnClickListener(v -> {
             resetForm();
@@ -690,8 +733,18 @@ public class RegistrationActivity extends AppCompatActivity {
                 String res = readStream(code >= 200 && code < 300 ? conn.getInputStream() : conn.getErrorStream());
 
                 if (code != 200 && code != 201) {
-                    JSONObject err = new JSONObject(res);
-                    throw new Exception(err.optString("error", "Registration failed"));
+                    String errorMsg = "Registration failed (HTTP " + code + ")";
+                    if (res != null && res.trim().startsWith("{")) {
+                        try {
+                            JSONObject err = new JSONObject(res);
+                            errorMsg = err.optString("error", err.optString("message", errorMsg));
+                        } catch (Exception ignored) {}
+                    }
+                    throw new Exception(errorMsg);
+                }
+
+                if (res == null || !res.trim().startsWith("{")) {
+                    throw new Exception("Unexpected server response format (HTTP " + code + ")");
                 }
 
                 JSONObject resObj = new JSONObject(res);
@@ -894,33 +947,52 @@ public class RegistrationActivity extends AppCompatActivity {
 
                 // 3. Collectors (From user account & staff)
                 try {
-                    URL colUrl = new URL(BASE_URL + "/api/workspace/collectors");
-                    HttpURLConnection colConn = (HttpURLConnection) colUrl.openConnection();
-                    if (token != null) {
-                        colConn.setRequestProperty("Authorization", "Bearer " + token);
-                        colConn.setRequestProperty("Cookie", "token=" + token);
-                    }
-                    if (colConn.getResponseCode() == 200) {
-                        String res = readStream(colConn.getInputStream());
-                        JSONArray arr = new JSONArray(res);
-                        List<DoctorItem> newCols = new ArrayList<>();
-                        List<String> newColLabels = new ArrayList<>();
-                        for (int i = 0; i < arr.length(); i++) {
-                            JSONObject c = arr.getJSONObject(i);
-                            String id = c.optString("id");
-                            String colName = c.optString("name", id);
-                            newCols.add(new DoctorItem(id, colName, "", ""));
-                            newColLabels.add(colName);
-                        }
-                        if (!newCols.isEmpty()) {
-                            mainHandler.post(() -> {
-                                registeredCollectors.clear();
-                                registeredCollectors.addAll(newCols);
-                                collectorLabels.clear();
-                                collectorLabels.addAll(newColLabels);
-                                adapterCollector.notifyDataSetChanged();
-                            });
-                        }
+                    String[] colEndpoints = new String[]{
+                        BASE_URL + "/api/workspace/collectors",
+                        BASE_URL + "/api/workspace/staff"
+                    };
+                    for (String ep : colEndpoints) {
+                        try {
+                            URL colUrl = new URL(ep);
+                            HttpURLConnection colConn = (HttpURLConnection) colUrl.openConnection();
+                            if (token != null) {
+                                colConn.setRequestProperty("Authorization", "Bearer " + token);
+                                colConn.setRequestProperty("Cookie", "token=" + token);
+                            }
+                            if (colConn.getResponseCode() == 200) {
+                                String res = readStream(colConn.getInputStream());
+                                if (res != null && res.trim().startsWith("[")) {
+                                    JSONArray arr = new JSONArray(res);
+                                    List<DoctorItem> newCols = new ArrayList<>();
+                                    List<String> newColLabels = new ArrayList<>();
+                                    for (int i = 0; i < arr.length(); i++) {
+                                        JSONObject c = arr.getJSONObject(i);
+                                        String id = c.optString("id");
+                                        String colName = c.optString("name", "");
+                                        if (colName.isEmpty() && c.has("user")) {
+                                            JSONObject u = c.optJSONObject("user");
+                                            if (u != null) {
+                                                colName = u.optString("name", "");
+                                            }
+                                        }
+                                        if (!colName.isEmpty()) {
+                                            newCols.add(new DoctorItem(id, colName, "", ""));
+                                            newColLabels.add(colName);
+                                        }
+                                    }
+                                    if (!newCols.isEmpty()) {
+                                        mainHandler.post(() -> {
+                                            registeredCollectors.clear();
+                                            registeredCollectors.addAll(newCols);
+                                            collectorLabels.clear();
+                                            collectorLabels.addAll(newColLabels);
+                                            adapterCollector.notifyDataSetChanged();
+                                        });
+                                        break;
+                                    }
+                                }
+                            }
+                        } catch (Exception ignored) {}
                     }
                 } catch (Exception ignored) {}
 

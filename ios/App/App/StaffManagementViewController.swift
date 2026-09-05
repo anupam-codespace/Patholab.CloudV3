@@ -1370,7 +1370,7 @@ class StaffAddEditViewController: UIViewController, UIPickerViewDataSource, UIPi
             if !password.isEmpty { payload["password"] = password }
         }
 
-        guard let url = URL(string: "https://patholab.cloud/api/workspace/staff") else { return }
+        guard let url = URL(string: "https://app.patholab.cloud/api/workspace/staff") else { return }
         var req = URLRequest(url: url)
         req.httpMethod = isEdit ? "PATCH" : "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -1491,7 +1491,7 @@ class StaffActivityLogViewController: UIViewController, UITableViewDataSource, U
 
     private func fetchActivityLogs() {
         spinner.startAnimating()
-        guard let url = URL(string: "https://patholab.cloud/api/workspace/staff/\(staff.userId)/activity") else { return }
+        guard let url = URL(string: "https://app.patholab.cloud/api/workspace/staff/\(staff.userId)/activity") else { return }
         var req = URLRequest(url: url)
         req.httpMethod = "GET"
         if let token = UserDefaults.standard.string(forKey: "auth_token") {

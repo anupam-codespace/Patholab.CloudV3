@@ -1,17 +1,22 @@
 package cloud.patholab.app;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.Typeface;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.RotateAnimation;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -50,8 +55,9 @@ public class LabDashboardActivity extends AppCompatActivity {
     private ImageView imgDashboardRefreshIcon;
     private TextView lblDashboardBranch;
 
-    // Range selector tabs
-    private TextView tabRangeToday, tabRange7D, tabRange30D, tabRangeMonth, tabRangeYear;
+    // Range selector dropdown
+    private LinearLayout containerRangeDropdownRow, btnRangeDropdown;
+    private TextView lblSelectedRangeName;
     private String currentRange = "30D";
 
     // Primary KPIs
@@ -91,11 +97,9 @@ public class LabDashboardActivity extends AppCompatActivity {
         imgDashboardRefreshIcon = findViewById(R.id.imgDashboardRefreshIcon);
         lblDashboardBranch = findViewById(R.id.lblDashboardBranch);
 
-        tabRangeToday = findViewById(R.id.tabRangeToday);
-        tabRange7D = findViewById(R.id.tabRange7D);
-        tabRange30D = findViewById(R.id.tabRange30D);
-        tabRangeMonth = findViewById(R.id.tabRangeMonth);
-        tabRangeYear = findViewById(R.id.tabRangeYear);
+        containerRangeDropdownRow = findViewById(R.id.containerRangeDropdownRow);
+        btnRangeDropdown = findViewById(R.id.btnRangeDropdown);
+        lblSelectedRangeName = findViewById(R.id.lblSelectedRangeName);
 
         cardWalletBalance = findViewById(R.id.cardWalletBalance);
         lblDashWalletBal = findViewById(R.id.lblDashWalletBal);
@@ -141,12 +145,13 @@ public class LabDashboardActivity extends AppCompatActivity {
             fetchDashboardData(currentRange);
         });
 
-        // Date Range Tabs
-        tabRangeToday.setOnClickListener(v -> selectRange("TODAY"));
-        tabRange7D.setOnClickListener(v -> selectRange("7D"));
-        tabRange30D.setOnClickListener(v -> selectRange("30D"));
-        tabRangeMonth.setOnClickListener(v -> selectRange("MONTH"));
-        tabRangeYear.setOnClickListener(v -> selectRange("YEAR"));
+        // Timeframe Dropdown Events
+        if (btnRangeDropdown != null) {
+            btnRangeDropdown.setOnClickListener(this::showRangeDropdownMenu);
+        }
+        if (containerRangeDropdownRow != null) {
+            containerRangeDropdownRow.setOnClickListener(this::showRangeDropdownMenu);
+        }
 
         // Actions
         btnRechargeWallet.setOnClickListener(v -> startActivity(new Intent(this, WalletActivity.class)));
@@ -155,24 +160,81 @@ public class LabDashboardActivity extends AppCompatActivity {
         btnViewAllPatients.setOnClickListener(v -> startActivity(new Intent(this, PatientWorklistActivity.class)));
     }
 
+    private void showRangeDropdownMenu(View anchor) {
+        try {
+            LayoutInflater inflater = LayoutInflater.from(this);
+            View popupView = inflater.inflate(R.layout.layout_range_dropdown_menu, null);
+
+            int width = (int) dp(260);
+            PopupWindow popup = new PopupWindow(
+                    popupView,
+                    width,
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    true
+            );
+            popup.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            popup.setElevation(dp(14));
+            popup.setOutsideTouchable(true);
+
+            // Bind each range option
+            setupDropdownOption(popupView, popup, R.id.itemRangeToday, R.id.imgCheckToday, R.id.lblTitleToday, "TODAY");
+            setupDropdownOption(popupView, popup, R.id.itemRange7D, R.id.imgCheck7D, R.id.lblTitle7D, "7D");
+            setupDropdownOption(popupView, popup, R.id.itemRange30D, R.id.imgCheck30D, R.id.lblTitle30D, "30D");
+            setupDropdownOption(popupView, popup, R.id.itemRangeMonth, R.id.imgCheckMonth, R.id.lblTitleMonth, "MONTH");
+            setupDropdownOption(popupView, popup, R.id.itemRangeYear, R.id.imgCheckYear, R.id.lblTitleYear, "YEAR");
+
+            View targetAnchor = btnRangeDropdown != null ? btnRangeDropdown : anchor;
+            int xOffset = targetAnchor.getWidth() - width;
+            popup.showAsDropDown(targetAnchor, xOffset, (int) dp(6));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void setupDropdownOption(View root, PopupWindow popup, int containerId, int checkImgId, int titleId, String rangeKey) {
+        View item = root.findViewById(containerId);
+        ImageView check = root.findViewById(checkImgId);
+        TextView title = root.findViewById(titleId);
+        if (item == null) return;
+
+        boolean isSelected = currentRange != null && currentRange.equalsIgnoreCase(rangeKey);
+        if (isSelected) {
+            item.setBackgroundResource(R.drawable.bg_range_item_selected);
+            if (check != null) check.setVisibility(View.VISIBLE);
+            if (title != null) title.setTextColor(0xFF1D4ED8);
+        } else {
+            item.setBackgroundResource(android.R.color.transparent);
+            if (check != null) check.setVisibility(View.GONE);
+            if (title != null) title.setTextColor(0xFF0F172A);
+        }
+
+        item.setOnClickListener(v -> {
+            popup.dismiss();
+            if (!rangeKey.equalsIgnoreCase(currentRange)) {
+                selectRange(rangeKey);
+            }
+        });
+    }
+
     private void selectRange(String range) {
         currentRange = range;
-        tabRangeToday.setBackgroundResource(range.equals("TODAY") ? R.drawable.bg_chip_toggle_active : R.drawable.bg_chip_toggle_inactive);
-        tabRangeToday.setTextColor(range.equals("TODAY") ? 0xFF0F172A : 0xFF93C5FD);
-
-        tabRange7D.setBackgroundResource(range.equals("7D") ? R.drawable.bg_chip_toggle_active : R.drawable.bg_chip_toggle_inactive);
-        tabRange7D.setTextColor(range.equals("7D") ? 0xFF0F172A : 0xFF93C5FD);
-
-        tabRange30D.setBackgroundResource(range.equals("30D") ? R.drawable.bg_chip_toggle_active : R.drawable.bg_chip_toggle_inactive);
-        tabRange30D.setTextColor(range.equals("30D") ? 0xFF0F172A : 0xFF93C5FD);
-
-        tabRangeMonth.setBackgroundResource(range.equals("MONTH") ? R.drawable.bg_chip_toggle_active : R.drawable.bg_chip_toggle_inactive);
-        tabRangeMonth.setTextColor(range.equals("MONTH") ? 0xFF0F172A : 0xFF93C5FD);
-
-        tabRangeYear.setBackgroundResource(range.equals("YEAR") ? R.drawable.bg_chip_toggle_active : R.drawable.bg_chip_toggle_inactive);
-        tabRangeYear.setTextColor(range.equals("YEAR") ? 0xFF0F172A : 0xFF93C5FD);
-
+        if (lblSelectedRangeName != null) {
+            lblSelectedRangeName.setText(getRangeDisplayName(range));
+        }
         fetchDashboardData(currentRange);
+    }
+
+    private String getRangeDisplayName(String range) {
+        if ("TODAY".equalsIgnoreCase(range)) return "Today";
+        if ("7D".equalsIgnoreCase(range)) return "Last 7 Days";
+        if ("30D".equalsIgnoreCase(range)) return "Last 30 Days";
+        if ("MONTH".equalsIgnoreCase(range)) return "This Month";
+        if ("YEAR".equalsIgnoreCase(range)) return "This Year";
+        return "Last 30 Days";
+    }
+
+    private float dp(float val) {
+        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, val, getResources().getDisplayMetrics());
     }
 
     private void syncLabDetails() {
@@ -191,6 +253,7 @@ public class LabDashboardActivity extends AppCompatActivity {
                 "https://app.patholab.cloud/api/labs/dashboard?range=" + range
             };
 
+            JSONObject json = null;
             for (String urlStr : endpoints) {
                 try {
                     URL url = new URL(urlStr);
@@ -212,18 +275,54 @@ public class LabDashboardActivity extends AppCompatActivity {
                         while ((line = reader.readLine()) != null) sb.append(line);
                         reader.close();
 
-                        JSONObject json = new JSONObject(sb.toString());
-                        mainHandler.post(() -> {
-                            bindDashboardData(json);
-                            swipeRefreshDashboard.setRefreshing(false);
-                        });
-                        return;
+                        json = new JSONObject(sb.toString());
+                        break;
                     }
                 } catch (Exception ignored) {}
             }
 
+            if (json == null) json = new JSONObject();
+
+            // Fetch richer patient demographic details (gender, age) from /api/workspace/patients
+            try {
+                String[] pEndpoints = new String[]{
+                    "https://patholab.cloud/api/workspace/patients?limit=6",
+                    "https://app.patholab.cloud/api/workspace/patients?limit=6"
+                };
+                for (String pUrlStr : pEndpoints) {
+                    try {
+                        URL pUrl = new URL(pUrlStr);
+                        HttpURLConnection pConn = (HttpURLConnection) pUrl.openConnection();
+                        pConn.setRequestMethod("GET");
+                        pConn.setConnectTimeout(6000);
+                        pConn.setReadTimeout(6000);
+                        if (token != null && !token.isEmpty()) {
+                            pConn.setRequestProperty("Cookie", "token=" + token);
+                            pConn.setRequestProperty("Authorization", "Bearer " + token);
+                        }
+                        if (pConn.getResponseCode() == 200) {
+                            InputStream is = pConn.getInputStream();
+                            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+                            StringBuilder sb = new StringBuilder();
+                            String line;
+                            while ((line = reader.readLine()) != null) sb.append(line);
+                            reader.close();
+
+                            JSONObject pRoot = new JSONObject(sb.toString());
+                            JSONArray dataArr = pRoot.optJSONArray("data");
+                            if (dataArr == null && pRoot.has("patients")) dataArr = pRoot.optJSONArray("patients");
+                            if (dataArr != null && dataArr.length() > 0) {
+                                json.put("recentPatients", dataArr);
+                                break;
+                            }
+                        }
+                    } catch (Exception ignored) {}
+                }
+            } catch (Exception ignored) {}
+
+            final JSONObject finalJson = json;
             mainHandler.post(() -> {
-                bindDashboardData(new JSONObject());
+                bindDashboardData(finalJson);
                 swipeRefreshDashboard.setRefreshing(false);
             });
         }).start();
@@ -338,15 +437,60 @@ public class LabDashboardActivity extends AppCompatActivity {
             View itemView = inflater.inflate(R.layout.item_dashboard_patient, containerRecentPatients, false);
             TextView lblAvatar = itemView.findViewById(R.id.lblPatientAvatar);
             TextView lblName = itemView.findViewById(R.id.lblPatientName);
-            TextView lblPhone = itemView.findViewById(R.id.lblPatientPhone);
+            TextView lblDetail = itemView.findViewById(R.id.lblPatientPhone);
 
             String name = p.optString("name", "Unknown Patient");
-            String phone = p.optString("phone", "—");
+            if (name == null || name.equalsIgnoreCase("null") || name.trim().isEmpty()) {
+                name = "Unknown Patient";
+            }
 
-            String initial = name.length() > 0 ? name.substring(0, 1).toUpperCase() : "P";
-            lblAvatar.setText(initial);
-            lblName.setText(name);
-            lblPhone.setText(phone);
+            // Extract Gender
+            String rawGender = p.optString("gender", "");
+            if (rawGender.equalsIgnoreCase("null")) rawGender = "";
+            String formattedGender = "";
+            if (!rawGender.trim().isEmpty()) {
+                String g = rawGender.trim();
+                formattedGender = g.substring(0, 1).toUpperCase(Locale.ROOT) + (g.length() > 1 ? g.substring(1).toLowerCase(Locale.ROOT) : "");
+            }
+
+            // Extract Age
+            int age = p.optInt("age", 0);
+            if (age == 0) {
+                String ageStr = p.optString("age", "");
+                if (!ageStr.equalsIgnoreCase("null") && !ageStr.trim().isEmpty()) {
+                    try { age = Integer.parseInt(ageStr.trim()); } catch (Exception ignored) {}
+                }
+            }
+            String ageUnit = p.optString("ageUnit", "Yrs");
+            if (ageUnit.equalsIgnoreCase("null") || ageUnit.trim().isEmpty()) ageUnit = "Yrs";
+            if (ageUnit.equalsIgnoreCase("Years")) ageUnit = "Yrs";
+
+            // Format patient detail: gender and age ("just 2")
+            StringBuilder detailSb = new StringBuilder();
+            if (!formattedGender.isEmpty()) {
+                detailSb.append(formattedGender);
+            }
+            if (age > 0) {
+                if (detailSb.length() > 0) {
+                    detailSb.append(" • ");
+                }
+                detailSb.append(age).append(" ").append(ageUnit);
+            }
+
+            // Fallback if neither gender nor age is available
+            if (detailSb.length() == 0) {
+                String phone = p.optString("phone", "");
+                if (!phone.equalsIgnoreCase("null") && !phone.trim().isEmpty()) {
+                    detailSb.append(phone);
+                } else {
+                    detailSb.append("Registered Patient");
+                }
+            }
+
+            String initial = name.length() > 0 ? name.substring(0, 1).toUpperCase(Locale.ROOT) : "P";
+            if (lblAvatar != null) lblAvatar.setText(initial);
+            if (lblName != null) lblName.setText(name);
+            if (lblDetail != null) lblDetail.setText(detailSb.toString());
 
             itemView.setOnClickListener(v -> {
                 startActivity(new Intent(this, PatientWorklistActivity.class));

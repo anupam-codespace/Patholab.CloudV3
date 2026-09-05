@@ -5,12 +5,15 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    app:cardCornerRadius="18dp"
-    app:cardElevation="2dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="1.5dp"
     app:cardBackgroundColor="#FFFFFF"
     app:cardPreventCornerOverlap="false"
-    android:layout_marginStart="4dp"
-    android:layout_marginEnd="4dp"
+    android:foreground="?attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true"
+    android:layout_marginStart="6dp"
+    android:layout_marginEnd="6dp"
     android:layout_marginTop="4dp"
     android:layout_marginBottom="6dp">
 
@@ -19,21 +22,23 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:padding="14dp">
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp">
 
         <FrameLayout
             android:id="@+id/frameDeptIcon"
-            android:layout_width="46dp"
-            android:layout_height="46dp"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
             android:background="@drawable/bg_mod_icon_blue">
 
             <ImageView
                 android:id="@+id/imgDeptIcon"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
                 android:layout_gravity="center"
-                android:src="@drawable/ic_flask"
-                android:tint="#0D6EFD" />
+                android:src="@drawable/ic_mod_clean_tests" />
 
         </FrameLayout>
 
@@ -58,28 +63,45 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:text="Serum electrolytes, enzymes, glucose, lipid and renal profiles"
+                android:text="Electrolytes, liver, renal, enzymes &amp; diabetes profiles"
                 android:textSize="12sp"
-                android:textColor="#64748B" />
+                android:textColor="#64748B"
+                android:maxLines="2"
+                android:ellipsize="end" />
 
         </LinearLayout>
 
-        <!-- Tests Count Badge with Crisp Pure White Text -->
-        <TextView
-            android:id="@+id/lblDeptTestCount"
+        <!-- Right Side: Tests Count Badge + Sleek Chevron -->
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:background="@drawable/bg_wallet_pill"
-            android:backgroundTint="#0D6EFD"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:paddingTop="5dp"
-            android:paddingBottom="5dp"
-            android:text="38 Tests"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            android:textColor="#FFFFFF" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginStart="8dp">
+
+            <TextView
+                android:id="@+id/lblDeptTestCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_dept_test_badge"
+                android:paddingStart="11dp"
+                android:paddingEnd="11dp"
+                android:paddingTop="5dp"
+                android:paddingBottom="5dp"
+                android:text="109 Tests"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="#1D4ED8"
+                android:letterSpacing="0.01" />
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_marginStart="6dp"
+                android:src="@drawable/ic_chevron_right"
+                android:tint="#94A3B8" />
+
+        </LinearLayout>
 
     </LinearLayout>
 

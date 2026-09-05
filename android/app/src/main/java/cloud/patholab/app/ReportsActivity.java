@@ -16,6 +16,8 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.RotateAnimation;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -61,6 +63,7 @@ public class ReportsActivity extends AppCompatActivity {
     private static final String BASE_URL = "https://app.patholab.cloud";
 
     private FrameLayout btnReportsBack, btnRefreshReports;
+    private ImageView imgRefreshReportsIcon;
     private TextView lblKpiReadyCount, lblKpiSentCount, lblKpiDraftCount, lblKpiAmendedCount;
     private TextView lblReportsSubtitle;
     private EditText inputSearchReports;
@@ -144,6 +147,7 @@ public class ReportsActivity extends AppCompatActivity {
     private void initViews() {
         btnReportsBack = findViewById(R.id.btnReportsBack);
         btnRefreshReports = findViewById(R.id.btnRefreshReports);
+        imgRefreshReportsIcon = findViewById(R.id.imgRefreshReportsIcon);
         lblKpiReadyCount = findViewById(R.id.lblKpiReadyCount);
         lblKpiSentCount = findViewById(R.id.lblKpiSentCount);
         lblKpiDraftCount = findViewById(R.id.lblKpiDraftCount);
@@ -182,7 +186,15 @@ public class ReportsActivity extends AppCompatActivity {
 
     private void setupEvents() {
         btnReportsBack.setOnClickListener(v -> finish());
-        btnRefreshReports.setOnClickListener(v -> fetchReports());
+        btnRefreshReports.setOnClickListener(v -> {
+            if (imgRefreshReportsIcon != null) {
+                RotateAnimation rotate = new RotateAnimation(0, 360,
+                        Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+                rotate.setDuration(600);
+                imgRefreshReportsIcon.startAnimation(rotate);
+            }
+            fetchReports();
+        });
 
         btnClearSearchReports.setOnClickListener(v -> {
             inputSearchReports.setText("");

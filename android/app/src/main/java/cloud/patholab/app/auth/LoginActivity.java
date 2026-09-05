@@ -141,7 +141,6 @@ public class LoginActivity extends AppCompatActivity {
                     public void run() {
                         setLoading(false);
                         if (success && token != null) {
-                            AuthManager.clearSession(LoginActivity.this);
                             AuthManager.saveToken(LoginActivity.this, token);
                             AuthManager.saveUserInfo(LoginActivity.this, email, "User", "Lab Owner");
                             try {

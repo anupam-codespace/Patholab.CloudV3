@@ -20,6 +20,8 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.view.animation.Animation;
+import android.view.animation.RotateAnimation;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -125,6 +127,20 @@ public class WalletActivity extends AppCompatActivity {
         View btnBack = findViewById(R.id.btnWalletBack);
         if (btnBack != null) {
             btnBack.setOnClickListener(v -> finish());
+        }
+
+        View btnRefresh = findViewById(R.id.btnRefreshWallet);
+        ImageView imgRefreshIcon = findViewById(R.id.imgRefreshWalletIcon);
+        if (btnRefresh != null) {
+            btnRefresh.setOnClickListener(v -> {
+                if (imgRefreshIcon != null) {
+                    RotateAnimation rotate = new RotateAnimation(0, 360,
+                            Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+                    rotate.setDuration(600);
+                    imgRefreshIcon.startAnimation(rotate);
+                }
+                fetchWalletDetails();
+            });
         }
 
         // Adjust top padding for status bar - move header higher up

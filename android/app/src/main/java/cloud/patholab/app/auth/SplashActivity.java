@@ -12,19 +12,23 @@ import cloud.patholab.app.api.ApiClient;
 
 public class SplashActivity extends AppCompatActivity {
 
-    private static final int MIN_SPLASH_TIME_MS = 2500; // 2.5 seconds
-    private static final int SESSION_CHECK_TIMEOUT_MS = 5000;
+    private static final int MIN_SPLASH_TIME_MS = 1200; // Snappy 1.2s splash
     private final Handler handler = new Handler(Looper.getMainLooper());
-    
-    private boolean apiCompleted = false;
-    private boolean apiSuccess = false;
-    private String apiToken = null;
-    private boolean minTimeElapsed = false;
     private boolean routed = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // If an instance of MainActivity already exists in background, resume it and finish immediately
+        if (!isTaskRoot()) {
+            Intent intent = getIntent();
+            if (intent != null && intent.hasCategory(Intent.CATEGORY_LAUNCHER) && Intent.ACTION_MAIN.equals(intent.getAction())) {
+                finish();
+                return;
+            }
+        }
+
         setContentView(R.layout.activity_splash);
 
         // White immersive status & navigation bars with dark icons
@@ -36,67 +40,34 @@ public class SplashActivity extends AppCompatActivity {
 
         final String token = AuthManager.getToken(this);
 
-        // Start timer for minimum splash display
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                minTimeElapsed = true;
-                checkRouting();
-            }
-        }, MIN_SPLASH_TIME_MS);
+        if (token != null && !token.trim().isEmpty()) {
+            // User is authenticated! Pre-sync webview cookie immediately
+            AuthManager.syncWebViewCookie(token);
 
-        if (token == null || token.isEmpty()) {
-            apiCompleted = true;
-            apiSuccess = false;
-            // The handler will trigger routing once the minimum splash time finishes
-            return;
-        }
+            // Fetch latest user info in background (non-blocking, never log out on network hiccup)
+            ApiClient.getMe(token, (success, error, data) -> {
+                // Background profile sync complete
+            });
 
-        // Safety timeout for API check
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (!apiCompleted) {
-                    apiCompleted = true;
-                    apiSuccess = false;
-                    AuthManager.clearSession(SplashActivity.this);
-                    checkRouting();
+            // Route to main after brief splash animation
+            handler.postDelayed(() -> {
+                if (!routed && !isFinishing()) {
+                    routed = true;
+                    goToMain();
                 }
-            }
-        }, SESSION_CHECK_TIMEOUT_MS);
-
-        ApiClient.getMe(token, new ApiClient.ApiCallback() {
-            @Override
-            public void onResult(final boolean success, String error, String data) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (apiCompleted) return;
-                        apiCompleted = true;
-                        apiSuccess = success;
-                        apiToken = token;
-                        if (!success) {
-                            AuthManager.clearSession(SplashActivity.this);
-                        }
-                        checkRouting();
-                    }
-                });
-            }
-        });
-    }
-
-    private void checkRouting() {
-        if (!minTimeElapsed || !apiCompleted || routed || isFinishing()) {
-            return;
-        }
-        routed = true;
-        handler.removeCallbacksAndMessages(null);
-
-        if (apiSuccess && apiToken != null) {
-            AuthManager.syncWebViewCookie(apiToken);
-            goToMain();
+            }, MIN_SPLASH_TIME_MS);
         } else {
-            goToOnboarding();
+            // Not authenticated: Route to Onboarding or Login after splash
+            handler.postDelayed(() -> {
+                if (!routed && !isFinishing()) {
+                    routed = true;
+                    if (AuthManager.isOnboardingCompleted(this)) {
+                        goToLogin();
+                    } else {
+                        goToOnboarding();
+                    }
+                }
+            }, MIN_SPLASH_TIME_MS);
         }
     }
 

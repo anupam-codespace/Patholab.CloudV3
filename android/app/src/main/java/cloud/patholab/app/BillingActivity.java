@@ -10,6 +10,8 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.RotateAnimation;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -52,7 +54,8 @@ public class BillingActivity extends AppCompatActivity {
 
     private static final String BASE_URL = "https://app.patholab.cloud";
 
-    private FrameLayout btnBillingBack;
+    private FrameLayout btnBillingBack, btnRefreshBilling;
+    private ImageView imgRefreshBillingIcon;
     private LinearLayout btnNewInvoiceHeader;
     private TextView lblBillingSubtitle;
     private TextView lblKpiTotalRevenue, lblKpiPendingAmount, lblKpiPendingCount, lblKpiMonthlyRevenue, lblKpiOverdueAmount, lblKpiOverdueCount;
@@ -69,6 +72,10 @@ public class BillingActivity extends AppCompatActivity {
     private InvoicesAdapter invoicesAdapter;
 
     private String selectedStatusFilter = "ALL";
+
+    private boolean hasServerStats = false;
+    private double sTotalRev, sPendingAmt, sMonthlyRev, sOverdueAmt;
+    private int sPendingCnt, sOverdueCnt;
 
     public static class InvoiceItem {
         public String id;
@@ -128,6 +135,8 @@ public class BillingActivity extends AppCompatActivity {
 
     private void initViews() {
         btnBillingBack = findViewById(R.id.btnBillingBack);
+        btnRefreshBilling = findViewById(R.id.btnRefreshBilling);
+        imgRefreshBillingIcon = findViewById(R.id.imgRefreshBillingIcon);
         btnNewInvoiceHeader = (LinearLayout) findViewById(R.id.btnNewInvoiceHeader);
         lblBillingSubtitle = findViewById(R.id.lblBillingSubtitle);
         lblKpiTotalRevenue = findViewById(R.id.lblKpiTotalRevenue);
@@ -156,6 +165,19 @@ public class BillingActivity extends AppCompatActivity {
 
     private void setupEvents() {
         btnBillingBack.setOnClickListener(v -> finish());
+
+        if (btnRefreshBilling != null) {
+            btnRefreshBilling.setOnClickListener(v -> {
+                if (imgRefreshBillingIcon != null) {
+                    RotateAnimation rotate = new RotateAnimation(0, 360,
+                            Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+                    rotate.setDuration(600);
+                    imgRefreshBillingIcon.startAnimation(rotate);
+                }
+                fetchInvoices();
+                fetchLoggedInUserInfo();
+            });
+        }
 
         btnNewInvoiceHeader.setOnClickListener(v -> {
             // Launch Native Registration
@@ -314,14 +336,15 @@ public class BillingActivity extends AppCompatActivity {
                     // Parse Stats
                     JSONObject stats = obj.optJSONObject("stats");
                     if (stats != null) {
-                        double totalRev = stats.optDouble("totalRevenue", 0);
-                        double pendingAmt = stats.optDouble("pendingAmount", 0);
-                        int pendingCnt = stats.optInt("pendingCount", 0);
-                        double monthlyRev = stats.optDouble("monthlyRevenue", 0);
-                        double overdueAmt = stats.optDouble("overdueAmount", 0);
-                        int overdueCnt = stats.optInt("overdueCount", 0);
+                        sTotalRev = stats.optDouble("totalRevenue", 0);
+                        sPendingAmt = stats.optDouble("pendingAmount", 0);
+                        sPendingCnt = stats.optInt("pendingCount", 0);
+                        sMonthlyRev = stats.optDouble("monthlyRevenue", 0);
+                        sOverdueAmt = stats.optDouble("overdueAmount", 0);
+                        sOverdueCnt = stats.optInt("overdueCount", 0);
+                        hasServerStats = true;
 
-                        mainHandler.post(() -> updateKpiCards(totalRev, pendingAmt, pendingCnt, monthlyRev, overdueAmt, overdueCnt));
+                        mainHandler.post(() -> updateKpiCards(sTotalRev, sPendingAmt, sPendingCnt, sMonthlyRev, sOverdueAmt, sOverdueCnt));
                     }
 
                     // Parse Invoices
@@ -336,7 +359,16 @@ public class BillingActivity extends AppCompatActivity {
                             int pAge = p != null ? p.optInt("age", 0) : 0;
                             String pGender = p != null ? p.optString("gender", "") : "";
 
-                            String details = (pAge > 0 ? pAge + "Y" : "") + (pGender.isEmpty() ? "" : " • " + pGender) + (pPhone.isEmpty() ? "" : " • " + pPhone);
+                            String details = (pAge > 0 ? pAge + "Y" : "");
+                            if (!pGender.isEmpty()) {
+                                details = details.isEmpty() ? pGender : (details + " • " + pGender);
+                            }
+                            if (!pPhone.isEmpty()) {
+                                details = details.isEmpty() ? pPhone : (details + " • " + pPhone);
+                            }
+                            if (details.isEmpty()) {
+                                details = "General Patient";
+                            }
 
                             String dateStr = inv.optString("createdAt", "");
                             String formattedDate = formatDate(dateStr);
@@ -366,10 +398,9 @@ public class BillingActivity extends AppCompatActivity {
                             if (itemsArr != null) {
                                 for (int j = 0; j < itemsArr.length(); j++) {
                                     JSONObject it = itemsArr.getJSONObject(j);
-                                    item.items.add(new InvoiceTestLine(
-                                            it.optString("name", it.optString("testName", "Diagnostic Test")),
-                                            it.optDouble("price", 0)
-                                    ));
+                                    String lineName = it.optString("description", it.optString("name", it.optString("testName", "Diagnostic Test")));
+                                    double linePrice = it.optDouble("total", it.optDouble("unitPrice", it.optDouble("price", 0)));
+                                    item.items.add(new InvoiceTestLine(lineName, linePrice));
                                 }
                             }
 
@@ -392,6 +423,10 @@ public class BillingActivity extends AppCompatActivity {
     }
 
     private void computeAndApplyKpis() {
+        if (hasServerStats) {
+            updateKpiCards(sTotalRev, sPendingAmt, sPendingCnt, sMonthlyRev, sOverdueAmt, sOverdueCnt);
+            return;
+        }
         double totalRev = 0, pendingAmt = 0, overdueAmt = 0;
         int pendingCnt = 0, overdueCnt = 0;
         for (InvoiceItem inv : allInvoices) {
@@ -552,25 +587,32 @@ public class BillingActivity extends AppCompatActivity {
             holder.lblPaymentMethod.setText("💳 " + item.paymentMethod);
             holder.lblTotal.setText(String.format(Locale.getDefault(), "₹ %,.2f", item.grandTotal));
 
-            // Status Badge styling
+            // Status Badge & Accent styling
             holder.lblStatusBadge.setText(item.paymentStatus);
+            holder.lblStatusBadge.setBackgroundTintList(null);
+            holder.lblBalanceDue.setBackgroundTintList(null);
+
             if ("PAID".equalsIgnoreCase(item.paymentStatus)) {
-                holder.lblStatusBadge.setBackgroundResource(R.drawable.bg_bento_emerald);
-                holder.lblStatusBadge.setTextColor(0xFF059669);
+                holder.lblStatusBadge.setBackgroundResource(R.drawable.bg_badge_status_paid);
+                holder.lblStatusBadge.setTextColor(0xFF047857);
                 holder.lblBalanceDue.setVisibility(View.GONE);
+                if (holder.accentStrip != null) holder.accentStrip.setBackgroundColor(0xFF10B981);
             } else if ("OVERDUE".equalsIgnoreCase(item.paymentStatus)) {
-                holder.lblStatusBadge.setBackgroundResource(R.drawable.bg_bento_amber);
-                holder.lblStatusBadge.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFFFE4E6));
-                holder.lblStatusBadge.setTextColor(0xFFE11D48);
+                holder.lblStatusBadge.setBackgroundResource(R.drawable.bg_badge_status_overdue);
+                holder.lblStatusBadge.setTextColor(0xFFBE123C);
                 holder.lblBalanceDue.setVisibility(View.VISIBLE);
+                holder.lblBalanceDue.setBackgroundResource(R.drawable.bg_badge_balance_overdue);
                 holder.lblBalanceDue.setText(String.format(Locale.getDefault(), "Due: ₹ %,.0f", item.balanceDue));
-                holder.lblBalanceDue.setTextColor(0xFFE11D48);
+                holder.lblBalanceDue.setTextColor(0xFFBE123C);
+                if (holder.accentStrip != null) holder.accentStrip.setBackgroundColor(0xFFEF4444);
             } else {
-                holder.lblStatusBadge.setBackgroundResource(R.drawable.bg_bento_amber);
-                holder.lblStatusBadge.setTextColor(0xFFD97706);
+                holder.lblStatusBadge.setBackgroundResource(R.drawable.bg_badge_status_pending);
+                holder.lblStatusBadge.setTextColor(0xFFB45309);
                 holder.lblBalanceDue.setVisibility(View.VISIBLE);
+                holder.lblBalanceDue.setBackgroundResource(R.drawable.bg_badge_balance_due);
                 holder.lblBalanceDue.setText(String.format(Locale.getDefault(), "Due: ₹ %,.0f", item.balanceDue));
-                holder.lblBalanceDue.setTextColor(0xFFD97706);
+                holder.lblBalanceDue.setTextColor(0xFFB45309);
+                if (holder.accentStrip != null) holder.accentStrip.setBackgroundColor(0xFFF59E0B);
             }
 
             holder.btnViewReceipt.setOnClickListener(v -> {
@@ -588,11 +630,13 @@ public class BillingActivity extends AppCompatActivity {
         }
 
         static class InvoiceViewHolder extends RecyclerView.ViewHolder {
+            View accentStrip;
             TextView lblPatientName, lblPatientDetails, lblInvoiceNumber, lblDate, lblPaymentMethod, lblStatusBadge, lblTotal, lblBalanceDue;
             MaterialButton btnViewReceipt;
 
             InvoiceViewHolder(@NonNull View itemView) {
                 super(itemView);
+                accentStrip = itemView.findViewById(R.id.invoiceAccentStrip);
                 lblPatientName = itemView.findViewById(R.id.lblInvoicePatientName);
                 lblPatientDetails = itemView.findViewById(R.id.lblInvoicePatientDetails);
                 lblInvoiceNumber = itemView.findViewById(R.id.lblInvoiceNumber);

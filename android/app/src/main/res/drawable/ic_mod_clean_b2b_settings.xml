@@ -1,0 +1,18 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="26dp"
+    android:height="26dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Partnership Shield Body -->
+    <path
+        android:fillColor="#BFDBFE"
+        android:pathData="M12,1L3,5v6c0,5.55 3.84,10.74 9,12 5.16,-1.26 9,-6.45 9,-12V5l-9,-4z" />
+    <!-- Center Partnership Badge (Royal Blue) -->
+    <path
+        android:fillColor="#2563EB"
+        android:pathData="M12,3.19L19,6.3v4.7c0,4.52 -3.13,8.74 -7,9.81 -3.87,-1.07 -7,-5.29 -7,-9.81V6.3l7,-3.11z" />
+    <!-- Two Hands Shaking / B2B Link Emblem -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M10,8.5h4v2h-4zM8.5,12h7v2h-7zM10.5,15.5h3v1.5h-3z" />
+</vector>

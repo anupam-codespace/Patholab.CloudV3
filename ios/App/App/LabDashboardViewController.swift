@@ -670,6 +670,42 @@ class LabDashboardViewController: UIViewController {
             "https://app.patholab.cloud/api/labs/dashboard?range=\(range)"
         ]
 
+        func fetchRichPatients(completion: @escaping ([[String: Any]]?) -> Void) {
+            let patientEndpoints = [
+                "https://patholab.cloud/api/workspace/patients?limit=6",
+                "https://app.patholab.cloud/api/workspace/patients?limit=6"
+            ]
+            func attemptPatientFetch(at pIndex: Int) {
+                guard pIndex < patientEndpoints.count, let pUrl = URL(string: patientEndpoints[pIndex]) else {
+                    completion(nil)
+                    return
+                }
+                var pReq = URLRequest(url: pUrl)
+                pReq.httpMethod = "GET"
+                pReq.timeoutInterval = 6
+                if let t = token, !t.isEmpty {
+                    pReq.setValue("Bearer \(t)", forHTTPHeaderField: "Authorization")
+                    pReq.setValue("token=\(t)", forHTTPHeaderField: "Cookie")
+                }
+                URLSession.shared.dataTask(with: pReq) { pData, pResp, _ in
+                    if let http = pResp as? HTTPURLResponse, http.statusCode == 200, let pData = pData {
+                        if let pRoot = try? JSONSerialization.jsonObject(with: pData) as? [String: Any] {
+                            if let arr = pRoot["data"] as? [[String: Any]], !arr.isEmpty {
+                                completion(arr)
+                                return
+                            }
+                            if let arr = pRoot["patients"] as? [[String: Any]], !arr.isEmpty {
+                                completion(arr)
+                                return
+                            }
+                        }
+                    }
+                    attemptPatientFetch(at: pIndex + 1)
+                }.resume()
+            }
+            attemptPatientFetch(at: 0)
+        }
+
         func attemptFetch(at index: Int) {
             guard index < endpoints.count, let url = URL(string: endpoints[index]) else {
                 DispatchQueue.main.async {
@@ -691,10 +727,15 @@ class LabDashboardViewController: UIViewController {
                 guard let self = self else { return }
                 if let http = response as? HTTPURLResponse, http.statusCode == 200, let data = data {
                     do {
-                        if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                            DispatchQueue.main.async {
-                                self.bindDashboardData(json)
-                                self.refreshControl.endRefreshing()
+                        if var json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                            fetchRichPatients { richPatients in
+                                if let richPatients = richPatients, !richPatients.isEmpty {
+                                    json["recentPatients"] = richPatients
+                                }
+                                DispatchQueue.main.async {
+                                    self.bindDashboardData(json)
+                                    self.refreshControl.endRefreshing()
+                                }
                             }
                             return
                         }
@@ -802,8 +843,59 @@ class LabDashboardViewController: UIViewController {
             card.layer.borderWidth = 1
             card.layer.borderColor = UIColor(red: 0.89, green: 0.91, blue: 0.95, alpha: 1).cgColor
 
-            let name = p["name"] as? String ?? "Unknown Patient"
-            let phone = p["phone"] as? String ?? "—"
+            var name = (p["name"] as? String) ?? "Unknown Patient"
+            if name.caseInsensitiveCompare("null") == .orderedSame || name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                name = "Unknown Patient"
+            }
+
+            // Extract Gender
+            var formattedGender = ""
+            if let rawGender = p["gender"] as? String,
+               rawGender.caseInsensitiveCompare("null") != .orderedSame,
+               !rawGender.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                let trimmed = rawGender.trimmingCharacters(in: .whitespacesAndNewlines)
+                formattedGender = trimmed.prefix(1).uppercased() + trimmed.dropFirst().lowercased()
+            }
+
+            // Extract Age
+            var age = 0
+            if let numAge = p["age"] as? Int {
+                age = numAge
+            } else if let numAge = p["age"] as? Double {
+                age = Int(numAge)
+            } else if let strAge = p["age"] as? String,
+                      strAge.caseInsensitiveCompare("null") != .orderedSame {
+                age = Int(strAge.trimmingCharacters(in: .whitespacesAndNewlines)) ?? 0
+            }
+
+            var ageUnit = (p["ageUnit"] as? String) ?? "Yrs"
+            if ageUnit.caseInsensitiveCompare("null") == .orderedSame || ageUnit.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                ageUnit = "Yrs"
+            }
+            if ageUnit.caseInsensitiveCompare("Years") == .orderedSame {
+                ageUnit = "Yrs"
+            }
+
+            // Format patient detail: gender and age ("just 2")
+            var detailParts: [String] = []
+            if !formattedGender.isEmpty {
+                detailParts.append(formattedGender)
+            }
+            if age > 0 {
+                detailParts.append("\(age) \(ageUnit)")
+            }
+
+            var detailText = detailParts.joined(separator: " • ")
+            if detailText.isEmpty {
+                if let phone = p["phone"] as? String,
+                   phone.caseInsensitiveCompare("null") != .orderedSame,
+                   !phone.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    detailText = phone
+                } else {
+                    detailText = "Registered Patient"
+                }
+            }
+
             let initial = name.isEmpty ? "P" : String(name.prefix(1)).uppercased()
 
             let avatarLbl = UILabel()
@@ -821,12 +913,12 @@ class LabDashboardViewController: UIViewController {
             nameLbl.font = .systemFont(ofSize: 14, weight: .bold)
             nameLbl.textColor = UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1)
 
-            let phoneLbl = UILabel()
-            phoneLbl.text = phone
-            phoneLbl.font = .systemFont(ofSize: 11.5, weight: .medium)
-            phoneLbl.textColor = UIColor(red: 0.392, green: 0.455, blue: 0.545, alpha: 1)
+            let detailLbl = UILabel()
+            detailLbl.text = detailText
+            detailLbl.font = .systemFont(ofSize: 11.5, weight: .medium)
+            detailLbl.textColor = UIColor(red: 0.392, green: 0.455, blue: 0.545, alpha: 1)
 
-            let textStack = UIStackView(arrangedSubviews: [nameLbl, phoneLbl])
+            let textStack = UIStackView(arrangedSubviews: [nameLbl, detailLbl])
             textStack.axis = .vertical
             textStack.spacing = 1
             textStack.translatesAutoresizingMaskIntoConstraints = false

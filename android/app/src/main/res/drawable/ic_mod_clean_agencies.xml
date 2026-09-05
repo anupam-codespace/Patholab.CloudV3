@@ -1,0 +1,22 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="26dp"
+    android:height="26dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Secondary Building (Back/Left) -->
+    <path
+        android:fillColor="#FED7AA"
+        android:pathData="M3,7v14h6v-5h2v5h2V7L7.5,3 3,7z" />
+    <!-- Primary Corporate Tower (Front/Right) -->
+    <path
+        android:fillColor="#F97316"
+        android:pathData="M11,5v16h10V5c0,-1.1 -0.9,-2 -2,-2h-6c-1.1,0 -2,0.9 -2,2z" />
+    <!-- Corporate Windows -->
+    <path
+        android:fillColor="#FFF7ED"
+        android:pathData="M13,7h2v2h-2zM17,7h2v2h-2zM13,11h2v2h-2zM17,11h2v2h-2zM13,15h2v2h-2zM17,15h2v2h-2z" />
+    <!-- Main Entrance Door -->
+    <path
+        android:fillColor="#C2410C"
+        android:pathData="M14.5,19h3v2h-3z" />
+</vector>

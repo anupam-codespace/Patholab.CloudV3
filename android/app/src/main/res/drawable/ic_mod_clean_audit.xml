@@ -1,0 +1,22 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="26dp"
+    android:height="26dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Audit Shield Outer Layer -->
+    <path
+        android:fillColor="#99F6E4"
+        android:pathData="M12,1L3,5v6c0,5.55 3.84,10.74 9,12 5.16,-1.26 9,-6.45 9,-12V5l-9,-4z" />
+    <!-- Shield Core -->
+    <path
+        android:fillColor="#0D9488"
+        android:pathData="M12,3.19L19,6.3v4.7c0,4.52 -3.13,8.74 -7,9.81 -3.87,-1.07 -7,-5.29 -7,-9.81V6.3l7,-3.11z" />
+    <!-- Audit Activity Log Rows inside Shield -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M8.5,8.5h7v1.5h-7zM8.5,11.5h7v1.5h-7zM8.5,14.5h4v1.5h-4z" />
+    <!-- Security Checkmark -->
+    <path
+        android:fillColor="#CCFBF1"
+        android:pathData="M14.5,15.2l-1.2,-1.2 -0.8,0.8 2,2 4,-4 -0.8,-0.8z" />
+</vector>

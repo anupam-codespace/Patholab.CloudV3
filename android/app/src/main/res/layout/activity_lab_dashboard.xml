@@ -105,86 +105,58 @@
 
                 </LinearLayout>
 
-                <!-- Date Range Selector Tabs -->
+                <!-- Modern Date Range Dropdown Selector -->
                 <LinearLayout
+                    android:id="@+id/containerRangeDropdownRow"
                     android:layout_width="match_parent"
-                    android:layout_height="34dp"
+                    android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                    android:gravity="end|center_vertical"
+                    android:layout_marginTop="6dp"
+                    android:paddingTop="2dp"
+                    android:paddingBottom="2dp">
 
-                    <TextView
-                        android:id="@+id/tabRangeToday"
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:text="Today"
-                        android:textSize="11.5sp"
-                        android:textStyle="bold"
-                        android:textColor="#93C5FD"
-                        android:background="@drawable/bg_chip_toggle_inactive"
-                        android:layout_marginEnd="3dp"
+                    <!-- The Dropdown Capsule Button -->
+                    <LinearLayout
+                        android:id="@+id/btnRangeDropdown"
+                        android:layout_width="wrap_content"
+                        android:layout_height="38dp"
+                        android:background="@drawable/bg_dashboard_dropdown_capsule"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="12dp"
+                        android:elevation="3dp"
                         android:clickable="true"
-                        android:focusable="true" />
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground">
 
-                    <TextView
-                        android:id="@+id/tabRange7D"
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:text="7D"
-                        android:textSize="11.5sp"
-                        android:textStyle="bold"
-                        android:textColor="#93C5FD"
-                        android:background="@drawable/bg_chip_toggle_inactive"
-                        android:layout_marginEnd="3dp"
-                        android:clickable="true"
-                        android:focusable="true" />
+                        <ImageView
+                            android:layout_width="14dp"
+                            android:layout_height="14dp"
+                            android:src="@drawable/ic_calendar_clock"
+                            android:tint="#2563EB"
+                            app:tint="#2563EB"
+                            android:layout_marginEnd="6dp" />
 
-                    <TextView
-                        android:id="@+id/tabRange30D"
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1.1"
-                        android:gravity="center"
-                        android:text="30D"
-                        android:textSize="11.5sp"
-                        android:textStyle="bold"
-                        android:textColor="#0F172A"
-                        android:background="@drawable/bg_chip_toggle_active"
-                        android:layout_marginEnd="3dp"
-                        android:clickable="true"
-                        android:focusable="true" />
+                        <TextView
+                            android:id="@+id/lblSelectedRangeName"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Last 30 Days"
+                            android:textColor="#0F172A"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
 
-                    <TextView
-                        android:id="@+id/tabRangeMonth"
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1.3"
-                        android:gravity="center"
-                        android:text="Month"
-                        android:textSize="11.5sp"
-                        android:textStyle="bold"
-                        android:textColor="#93C5FD"
-                        android:background="@drawable/bg_chip_toggle_inactive"
-                        android:layout_marginEnd="3dp"
-                        android:clickable="true"
-                        android:focusable="true" />
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:layout_marginStart="5dp"
+                            android:src="@drawable/ic_chevron_down"
+                            android:tint="#2563EB"
+                            app:tint="#2563EB" />
 
-                    <TextView
-                        android:id="@+id/tabRangeYear"
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1.2"
-                        android:gravity="center"
-                        android:text="Year"
-                        android:textSize="11.5sp"
-                        android:textStyle="bold"
-                        android:textColor="#93C5FD"
-                        android:background="@drawable/bg_chip_toggle_inactive"
-                        android:clickable="true"
-                        android:focusable="true" />
+                    </LinearLayout>
 
                 </LinearLayout>
 

@@ -106,9 +106,16 @@ public class MainActivity extends BridgeActivity {
                                                                                                                                                                                                                                                                                                                                                     // 1s
     }};
 
+    private long activityLaunchTime = System.currentTimeMillis();
+
     private void checkAuthRedirect() {
         if (webView == null)
             return;
+
+        // Startup grace period to prevent temporary initial webview handshake from triggering false logout
+        if (System.currentTimeMillis() - activityLaunchTime < 5000) {
+            return;
+        }
 
         int topPaddingPx = (walletCard != null && walletCard.getVisibility() == View.VISIBLE) ? 118 : 60;
         webView.evaluateJavascript(
@@ -135,17 +142,22 @@ public class MainActivity extends BridgeActivity {
         if (url == null)
             return;
 
+        // Never allow Financial Analytics or Dashboard web page to be displayed in WebView
+        if (url.contains("/workspace/analytics") || url.contains("/analytics")
+                || url.contains("/workspace/dashboard") || url.contains("/dashboard")) {
+            startActivity(new Intent(this, FinancialAnalyticsActivity.class));
+            showNativeHome();
+            return;
+        }
+
         if (url.contains("/login") || url.contains("/register") || url.contains("/forgot-password")
                 || url.contains("/verify") || url.contains("/reset-password")) {
-            authCheckHandler.removeCallbacks(authCheckRunnable);
-            walletHandler.removeCallbacks(walletRunnable);
-
-            HomeNativeManager.resetSession();
-            AuthManager.clearSession(this);
-            Intent intent = new Intent(this, LoginActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(intent);
-            finish();
+            String token = AuthManager.getToken(this);
+            if (token != null && !token.trim().isEmpty()) {
+                // Native session is active! Re-sync cookie and re-route webview to workspace without kicking user out
+                AuthManager.syncWebViewCookie(token);
+                webView.loadUrl(BASE_URL + "/workspace");
+            }
         }
     }
 
@@ -364,8 +376,6 @@ public class MainActivity extends BridgeActivity {
     private void initNativeHomeScreen() {
         View homeRoot = findViewById(R.id.nativeHomeScreen);
         if (homeRoot == null) {
-            // Fallback: load web dashboard
-            loadUrl("/workspace/analytics");
             return;
         }
         homeNativeManager = new HomeNativeManager(
@@ -373,22 +383,20 @@ public class MainActivity extends BridgeActivity {
                 homeRoot,
                 prefs,
                 path -> {
-                    // When a module/button on native home is tapped, navigate in WebView
-                    showWebView();
+                    // Navigate directly - navigate() opens native activity if available,
+                    // and only falls back to WebView for web-only pages
                     navigate(path);
                 }
         );
-        // Show native home, hide WebView
-        homeNativeManager.show();
-        swipeRefresh.setVisibility(View.GONE);
-        // Pre-load the web app silently in background so switching tabs is instant
-        loadUrl("/workspace/analytics");
-        swipeRefresh.setVisibility(View.GONE); // keep hidden
+        // Show native home, ensure top header and WebView remain hidden
+        showNativeHome();
     }
 
     /** Show the WebView container and hide native home screen */
     private void showWebView() {
         if (homeNativeManager != null) homeNativeManager.hide();
+        if (topLayoutContainer != null) topLayoutContainer.setVisibility(View.VISIBLE);
+        if (headerBlurGradientView != null) headerBlurGradientView.setVisibility(View.VISIBLE);
         swipeRefresh.setVisibility(View.VISIBLE);
     }
 
@@ -399,11 +407,13 @@ public class MainActivity extends BridgeActivity {
         } else {
             StatusBarHelper.setStatusBarSapphire(this);
         }
+        if (topLayoutContainer != null) topLayoutContainer.setVisibility(View.GONE);
+        if (headerBlurGradientView != null) headerBlurGradientView.setVisibility(View.GONE);
+        swipeRefresh.setVisibility(View.GONE);
         if (homeNativeManager != null) {
             homeNativeManager.show();
             homeNativeManager.fetchWalletBalance(); // refresh on each return
         }
-        swipeRefresh.setVisibility(View.GONE);
     }
 
     // ── Setup helpers ──────────────────────────────────────────────────────────
@@ -425,6 +435,10 @@ public class MainActivity extends BridgeActivity {
         webView.setNestedScrollingEnabled(true);
         webView.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
         webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+
+        try {
+            android.webkit.CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true);
+        } catch (Exception ignored) {}
     }
 
     private void bindViews() {
@@ -461,9 +475,16 @@ public class MainActivity extends BridgeActivity {
         if (btnRetry != null) {
             btnRetry.setOnClickListener(v -> {
                 offlineOverlay.setVisibility(View.GONE);
-                swipeRefresh.setVisibility(View.VISIBLE);
-                currentPath = null;
-                loadUrl("/workspace/analytics");
+                if (currentSelectedTabIndex == 0) {
+                    showNativeHome();
+                } else if (currentPath != null && !currentPath.isEmpty()) {
+                    swipeRefresh.setVisibility(View.VISIBLE);
+                    String retryPath = currentPath;
+                    currentPath = null;
+                    loadUrl(retryPath);
+                } else {
+                    showNativeHome();
+                }
             });
         }
 
@@ -713,10 +734,11 @@ public class MainActivity extends BridgeActivity {
 
     private void navigate(String path) {
         if (path != null) {
-            if (path.equals("/dashboard") || path.equals("/workspace/dashboard") || path.startsWith("/dashboard")) {
+            if (path.equals("/dashboard") || path.equals("/workspace/dashboard") || path.startsWith("/dashboard")
+                    || path.equals("/workspace") || path.equals("/home") || path.equals("/")) {
                 startActivity(new Intent(this, LabDashboardActivity.class));
                 return;
-            } else if (path.equals("/workspace/analytics") || path.startsWith("/workspace/analytics")) {
+            } else if (path.equals("/workspace/analytics") || path.startsWith("/workspace/analytics") || path.equals("/analytics") || path.startsWith("/analytics")) {
                 startActivity(new Intent(this, FinancialAnalyticsActivity.class));
                 return;
             } else if (path.equals("/workspace/wallet") || path.startsWith("/workspace/wallet")) {
@@ -750,11 +772,15 @@ public class MainActivity extends BridgeActivity {
         }
         if (offlineOverlay != null)
             offlineOverlay.setVisibility(View.GONE);
-        swipeRefresh.setVisibility(View.VISIBLE);
+        showWebView();
         loadUrl(path);
     }
 
     private void showMorePanel() {
+        if (homeNativeManager != null) {
+            homeNativeManager.showAllModulesBottomSheet();
+            return;
+        }
         // Always recreate the panel so new modules from web are reflected each time
         if (moreBottomSheetDialog != null && moreBottomSheetDialog.isShowing()) {
             moreBottomSheetDialog.dismiss();
@@ -1388,8 +1414,21 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void loadUrl(String path) {
-        if (webView == null)
+        if (webView == null || path == null)
             return;
+
+        // Never load Financial Analytics or Dashboard web page inside WebView
+        if (path.equals("/workspace/analytics") || path.startsWith("/workspace/analytics")
+                || path.equals("/analytics") || path.startsWith("/analytics")
+                || path.equals("/dashboard") || path.startsWith("/dashboard")
+                || path.equals("/workspace/dashboard") || path.startsWith("/workspace/dashboard")) {
+            startActivity(new Intent(this, FinancialAnalyticsActivity.class));
+            if (currentSelectedTabIndex == 0) {
+                showNativeHome();
+            }
+            return;
+        }
+
         if (lblHeaderTitle != null) {
             lblHeaderTitle.setText(getHeaderTitle(path));
         }
@@ -1684,104 +1723,104 @@ public class MainActivity extends BridgeActivity {
         allModules = new ArrayList<>();
 
         // ── Overview ──────────────────────────────────────────────────────────
-        allModules.add(new ModuleItem("Home", "/workspace", "Overview",
-                "Main overview dashboard & quick statistics", R.drawable.ic_nav_dashboard, false));
+        allModules.add(new ModuleItem("Home", "/dashboard", "Overview",
+                "Main overview dashboard & quick statistics", R.drawable.ic_mod_clean_home, false));
         allModules.add(new ModuleItem("Dashboard", "/workspace/analytics", "Overview",
-                "Operations overview & performance tracking", R.drawable.ic_chart, false));
+                "Operations overview & performance tracking", R.drawable.ic_mod_clean_dashboard, false));
         allModules.add(new ModuleItem("Financial Analytics", "/workspace/analytics", "Overview",
-                "Revenue reports & analytical charts", R.drawable.ic_chart, false));
+                "Revenue reports & analytical charts", R.drawable.ic_mod_clean_analytics, false));
         allModules.add(new ModuleItem("Online Booking", "/workspace/online-booking", "Overview",
-                "Manage home collections & appointments", R.drawable.ic_calendar, true));
+                "Manage home collections & appointments", R.drawable.ic_mod_clean_booking, true));
 
         // ── Clinical Operations ───────────────────────────────────────────────
         allModules.add(new ModuleItem("New Registration", "/workspace/registration", "Clinical",
-                "Register patients & book new lab tests", R.drawable.ic_mod_registration, true));
+                "Register patients & book new lab tests", R.drawable.ic_mod_clean_register, true));
         allModules.add(new ModuleItem("Patient Directory", "/workspace/patients", "Clinical",
-                "Browse & search patient records", R.drawable.ic_user, false));
+                "Browse & search patient records", R.drawable.ic_mod_clean_patients, false));
         allModules.add(new ModuleItem("Test Management", "/workspace/test-management", "Clinical",
-                "Manage test packages, profiles & pricing", R.drawable.ic_mod_tests, false));
+                "Manage test packages, profiles & pricing", R.drawable.ic_mod_clean_tests, false));
         allModules.add(new ModuleItem("Worklist & Results", "/workspace/results", "Clinical",
-                "Fill raw values & review parameters", R.drawable.ic_document, false));
+                "Fill raw values & review parameters", R.drawable.ic_mod_clean_worklist, false));
         allModules.add(new ModuleItem("Report Dispatch", "/workspace/reports", "Clinical",
-                "Sign off & dispatch PDF reports", R.drawable.ic_mod_reports, false));
+                "Sign off & dispatch PDF reports", R.drawable.ic_mod_clean_reports, false));
 
         // ── Radiology (RIS) ───────────────────────────────────────────────────
         allModules.add(new ModuleItem("RIS Dashboard", "/workspace/radiology/dashboard", "Radiology",
-                "Radiology Information System overview", R.drawable.ic_nav_dashboard, false));
+                "Radiology Information System overview", R.drawable.ic_mod_clean_ris, false));
         allModules.add(new ModuleItem("Scan Schedule", "/workspace/radiology/dashboard/appointments", "Radiology",
-                "Book & manage radiology scans", R.drawable.ic_calendar, false));
+                "Book & manage radiology scans", R.drawable.ic_mod_clean_scan_schedule, false));
         allModules.add(new ModuleItem("Technician Worklist", "/workspace/radiology/worklist", "Radiology",
-                "View and complete scanning tasks", R.drawable.ic_document, false));
+                "View and complete scanning tasks", R.drawable.ic_mod_clean_tech_worklist, false));
         allModules.add(new ModuleItem("PACS Viewer", "/workspace/radiology/pacs", "Radiology",
-                "View digital imaging & PACS DICOM files", R.drawable.ic_cpu, false));
+                "View digital imaging & PACS DICOM files", R.drawable.ic_mod_clean_pacs, false));
         allModules.add(new ModuleItem("Media Library", "/workspace/radiology/media", "Radiology",
-                "DICOM & imaging media storage archive", R.drawable.ic_box, false));
+                "DICOM & imaging media storage archive", R.drawable.ic_mod_clean_media, false));
         allModules.add(new ModuleItem("Reporting Queue", "/workspace/radiology/reporting", "Radiology",
-                "Radiologist report queue & sign-off", R.drawable.ic_document, false));
+                "Radiologist report queue & sign-off", R.drawable.ic_mod_clean_rad_reporting, false));
         allModules.add(new ModuleItem("Reports Archive", "/workspace/radiology/archive", "Radiology",
-                "Historical signed radiology reports archive", R.drawable.ic_building, false));
+                "Historical signed radiology reports archive", R.drawable.ic_mod_clean_archive, false));
         allModules.add(new ModuleItem("Machines", "/workspace/radiology/machines", "Radiology",
-                "Configure radiology equipment & modalities", R.drawable.ic_gear, false));
+                "Configure radiology equipment & modalities", R.drawable.ic_mod_clean_machines, false));
         allModules.add(new ModuleItem("RIS Macros", "/workspace/radiology/macros", "Radiology",
-                "Pre-defined reporting shortcuts & macros", R.drawable.ic_edit_pen, false));
+                "Pre-defined reporting shortcuts & macros", R.drawable.ic_mod_clean_macros, false));
         allModules.add(new ModuleItem("DICOM Settings", "/workspace/radiology/settings/dicom", "Radiology",
-                "PACS node configuration & AE titles", R.drawable.ic_gear, false));
+                "PACS node configuration & AE titles", R.drawable.ic_mod_clean_dicom, false));
         allModules.add(new ModuleItem("RIS Letterhead", "/workspace/radiology/settings/letterhead", "Radiology",
-                "Custom report letterhead & branding", R.drawable.ic_document, false));
+                "Custom report letterhead & branding", R.drawable.ic_mod_clean_letterhead, false));
 
         // ── Resources & Logistics ─────────────────────────────────────────────
         allModules.add(new ModuleItem("Inventory & Stock", "/workspace/inventory", "Logistics",
-                "Track reagents, consumables & items", R.drawable.ic_box, false));
+                "Track reagents, consumables & items", R.drawable.ic_mod_clean_inventory, false));
         allModules.add(new ModuleItem("Logistics / Trips", "/workspace/logistics", "Logistics",
-                "Manage field agents & pickup trips", R.drawable.ic_mod_logistics, false));
+                "Manage field agents & pickup trips", R.drawable.ic_mod_clean_logistics, false));
         allModules.add(new ModuleItem("Home Collection", "/workspace/home-collection", "Logistics",
-                "Assign phlebotomists & track home visits", R.drawable.ic_mod_samples, false));
+                "Assign phlebotomists & track home visits", R.drawable.ic_mod_clean_samples, false));
 
         // ── Machine & AI ──────────────────────────────────────────────────────
         allModules.add(new ModuleItem("Analyzer", "/workspace/analyzers", "Machine",
-                "Connect analyzers & view output logs", R.drawable.ic_cpu, false));
+                "Connect analyzers & view output logs", R.drawable.ic_mod_clean_analyzer, false));
         allModules.add(new ModuleItem("Visual Mapper", "/workspace/analyzers/mapper", "Machine",
-                "Map barcode codes visually to fields", R.drawable.ic_chart, false));
+                "Map barcode codes visually to fields", R.drawable.ic_mod_clean_mapper, false));
         allModules.add(new ModuleItem("Mappings", "/workspace/analyzers/mappings", "Machine",
-                "Configure machine integration parameters", R.drawable.ic_gear, false));
+                "Configure machine integration parameters", R.drawable.ic_mod_clean_mappings, false));
 
         // ── B2B & Growth ──────────────────────────────────────────────────────
         allModules.add(new ModuleItem("Referral Doctors", "/workspace/doctors", "B2B",
-                "Track referring doctors & commission profiles", R.drawable.ic_stethoscope, false));
+                "Track referring doctors & commission profiles", R.drawable.ic_mod_clean_doctors, false));
         allModules.add(new ModuleItem("Corporate Agencies", "/workspace/agencies", "B2B",
-                "Manage corporate agency tie-ups", R.drawable.ic_building, false));
+                "Manage corporate agency tie-ups", R.drawable.ic_mod_clean_agencies, false));
         allModules.add(new ModuleItem("Commissions Payout", "/workspace/commissions", "B2B",
-                "View payout summaries for referrals", R.drawable.ic_wallet, false));
+                "View payout summaries for referrals", R.drawable.ic_mod_clean_payout, false));
 
         // ── Administration ───────────────────────────────────────────────────
         allModules.add(new ModuleItem("Lab Settings", "/workspace/settings", "Admin",
-                "Configure lab profile, timings & branches", R.drawable.ic_gear, false));
+                "Configure lab profile, timings & branches", R.drawable.ic_mod_clean_settings, false));
         allModules.add(new ModuleItem("Report Templates", "/workspace/settings/templates", "Admin",
-                "Design & manage report layout templates", R.drawable.ic_document, false));
+                "Design & manage report layout templates", R.drawable.ic_mod_clean_templates, false));
         allModules.add(new ModuleItem("Invoice Branding", "/workspace/settings/branding", "Admin",
-                "Custom bill branding & header templates", R.drawable.ic_billing, false));
+                "Custom bill branding & header templates", R.drawable.ic_mod_clean_branding, false));
         allModules.add(new ModuleItem("Service Areas", "/workspace/settings/service-areas", "Admin",
-                "Manage sample collection coverage areas", R.drawable.ic_building, false));
+                "Manage sample collection coverage areas", R.drawable.ic_mod_clean_service_areas, false));
         allModules.add(new ModuleItem("Payment Settings", "/workspace/settings/payments", "Admin",
-                "Configure QR codes & online payment gateways", R.drawable.ic_credit_card, false));
+                "Configure QR codes & online payment gateways", R.drawable.ic_mod_clean_payment_settings, false));
         allModules.add(new ModuleItem("Notifications", "/workspace/settings/notifications", "Admin",
-                "SMS, Email & WhatsApp alert configurations", R.drawable.ic_bell, false));
+                "SMS, Email & WhatsApp alert configurations", R.drawable.ic_mod_clean_notifications, false));
         allModules.add(new ModuleItem("B2B Settings", "/workspace/settings/b2b", "Admin",
-                "Manage outsourced labs & tier pricings", R.drawable.ic_building, false));
+                "Manage outsourced labs & tier pricings", R.drawable.ic_mod_clean_b2b_settings, false));
         allModules.add(new ModuleItem("Staff Management", "/workspace/staff", "Admin",
-                "Manage team roles, access keys & logs", R.drawable.ic_user, false));
+                "Manage team roles, access keys & logs", R.drawable.ic_mod_clean_staff, false));
         allModules.add(new ModuleItem("Invoices & Payments", "/workspace/billing", "Admin",
-                "Track cash flow, bills & receipts", R.drawable.ic_mod_billing, false));
+                "Track cash flow, bills & receipts", R.drawable.ic_mod_clean_billing, false));
         allModules.add(new ModuleItem("Expenses", "/workspace/expenses", "Admin",
-                "Record & categorise lab expenses", R.drawable.ic_billing, false));
+                "Record & categorise lab expenses", R.drawable.ic_mod_clean_expenses, false));
         allModules.add(new ModuleItem("Audit Logs", "/workspace/audit-logs", "Admin",
-                "View security access logs & trace changes", R.drawable.ic_document, false));
+                "View security access logs & trace changes", R.drawable.ic_mod_clean_audit, false));
         allModules.add(new ModuleItem("Wallet & Billing", "/workspace/wallet", "Admin",
-                "Top-up wallet & view billing history", R.drawable.ic_mod_wallet, false));
+                "Top-up wallet & view billing history", R.drawable.ic_mod_clean_wallet, false));
         allModules.add(new ModuleItem("Wallet Recharge", "/workspace/wallet/recharge", "Admin",
-                "Add credits & instant recharge packs", R.drawable.ic_wallet, true));
+                "Add credits & instant recharge packs", R.drawable.ic_mod_clean_recharge, true));
         allModules.add(new ModuleItem("Help & Support", "/workspace/support", "Admin",
-                "Raise tickets & browse documentation", R.drawable.ic_help, false));
+                "Raise tickets & browse documentation", R.drawable.ic_mod_clean_support, false));
 
         // ── Legal & Agreements ────────────────────────────────────────────────
         allModules.add(new ModuleItem("Terms & Conditions", "https://patholab.cloud/terms-and-conditions/", "Legal",
@@ -1982,11 +2021,31 @@ public class MainActivity extends BridgeActivity {
             finish();
             return;
         }
-        if (homeNativeManager != null && homeNativeManager.isVisible()) {
+
+        // Resume handlers only when foregrounded
+        authCheckHandler.removeCallbacks(authCheckRunnable);
+        authCheckHandler.post(authCheckRunnable);
+        walletHandler.removeCallbacks(walletRunnable);
+        walletHandler.post(walletRunnable);
+        progressPollHandler.removeCallbacks(progressPollRunnable);
+        progressPollHandler.post(progressPollRunnable);
+
+        if (currentSelectedTabIndex == 0) {
+            showNativeHome();
+        } else if (homeNativeManager != null && homeNativeManager.isVisible()) {
             homeNativeManager.show();
         }
         fetchWalletDetails();
         fetchNotificationCount();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        // Crucial: Stop all background polling when app is paused/backgrounded so it never pops up LoginActivity
+        authCheckHandler.removeCallbacksAndMessages(null);
+        walletHandler.removeCallbacksAndMessages(null);
+        progressPollHandler.removeCallbacksAndMessages(null);
     }
 
     @Override

@@ -91,7 +91,7 @@
             android:theme="@style/AppTheme.NoActionBar"
             android:windowSoftInputMode="adjustResize"
             android:screenOrientation="portrait"
-            android:exported="false"
+            android:exported="true"
         />
 
         <activity
@@ -99,7 +99,7 @@
             android:theme="@style/AppTheme.NoActionBar"
             android:windowSoftInputMode="adjustResize"
             android:screenOrientation="portrait"
-            android:exported="false"
+            android:exported="true"
         />
 
         <activity
@@ -107,7 +107,7 @@
             android:theme="@style/AppTheme.NoActionBar"
             android:windowSoftInputMode="adjustResize"
             android:screenOrientation="portrait"
-            android:exported="false"
+            android:exported="true"
         />
 
         <activity
@@ -122,7 +122,7 @@
             android:theme="@style/AppTheme.NoActionBar"
             android:windowSoftInputMode="adjustResize"
             android:screenOrientation="portrait"
-            android:exported="false"
+            android:exported="true"
         />
 
         <activity
@@ -130,7 +130,7 @@
             android:theme="@style/AppTheme.NoActionBar"
             android:windowSoftInputMode="adjustResize"
             android:screenOrientation="portrait"
-            android:exported="false"
+            android:exported="true"
         />
 
         <activity
@@ -154,7 +154,7 @@
             android:theme="@style/AppTheme.NoActionBar"
             android:windowSoftInputMode="adjustResize"
             android:screenOrientation="portrait"
-            android:exported="false"
+            android:exported="true"
         />
 
         <activity
@@ -162,7 +162,7 @@
             android:theme="@style/AppTheme.NoActionBar"
             android:windowSoftInputMode="adjustResize"
             android:screenOrientation="portrait"
-            android:exported="false"
+            android:exported="true"
         />
 
         <activity
@@ -170,7 +170,7 @@
             android:theme="@style/AppTheme.NoActionBar"
             android:windowSoftInputMode="adjustResize"
             android:screenOrientation="portrait"
-            android:exported="false"
+            android:exported="true"
         />
 
         <activity
@@ -202,7 +202,7 @@
             android:theme="@style/AppTheme.NoActionBar"
             android:windowSoftInputMode="adjustResize"
             android:screenOrientation="portrait"
-            android:exported="false"
+            android:exported="true"
         />
 
 

@@ -62,28 +62,13 @@
                     android:gravity="center_vertical">
 
                     <TextView
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
                         android:text="Support Desk"
                         android:textSize="14.5sp"
                         android:textStyle="bold"
                         android:textColor="#0F172A"
                         android:singleLine="true" />
-
-                    <!-- Live Online Status Pill -->
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/bg_status_ready"
-                        android:paddingStart="6dp"
-                        android:paddingEnd="6dp"
-                        android:paddingTop="1.5dp"
-                        android:paddingBottom="1.5dp"
-                        android:text="● Online"
-                        android:textSize="9.5sp"
-                        android:textStyle="bold"
-                        android:textColor="#059669" />
 
                 </LinearLayout>
 
@@ -161,21 +146,6 @@
 
             </LinearLayout>
 
-            <!-- Toll-Free Tag + Chevron -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_status_processing"
-                android:paddingStart="6dp"
-                android:paddingEnd="6dp"
-                android:paddingTop="2dp"
-                android:paddingBottom="2dp"
-                android:text="Direct"
-                android:textSize="9.5sp"
-                android:textStyle="bold"
-                android:textColor="#2563EB"
-                android:layout_marginEnd="6dp" />
-
             <ImageView
                 android:layout_width="14dp"
                 android:layout_height="14dp"
@@ -229,21 +199,6 @@
                     android:textColor="#64748B" />
 
             </LinearLayout>
-
-            <!-- Fastest Pill + Chevron -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_status_ready"
-                android:paddingStart="6dp"
-                android:paddingEnd="6dp"
-                android:paddingTop="2dp"
-                android:paddingBottom="2dp"
-                android:text="Fastest"
-                android:textSize="9.5sp"
-                android:textStyle="bold"
-                android:textColor="#16A34A"
-                android:layout_marginEnd="6dp" />
 
             <ImageView
                 android:layout_width="14dp"
@@ -300,21 +255,6 @@
                     android:ellipsize="end" />
 
             </LinearLayout>
-
-            <!-- Official Tag + Chevron -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_setting_item"
-                android:paddingStart="6dp"
-                android:paddingEnd="6dp"
-                android:paddingTop="2dp"
-                android:paddingBottom="2dp"
-                android:text="Official"
-                android:textSize="9.5sp"
-                android:textStyle="bold"
-                android:textColor="#64748B"
-                android:layout_marginEnd="6dp" />
 
             <ImageView
                 android:layout_width="14dp"
@@ -377,21 +317,6 @@
                     android:textColor="#64748B" />
 
             </LinearLayout>
-
-            <!-- Portal Tag + Chevron -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_mod_icon_indigo"
-                android:paddingStart="6dp"
-                android:paddingEnd="6dp"
-                android:paddingTop="2dp"
-                android:paddingBottom="2dp"
-                android:text="Portal"
-                android:textSize="9.5sp"
-                android:textStyle="bold"
-                android:textColor="#4F46E5"
-                android:layout_marginEnd="6dp" />
 
             <ImageView
                 android:layout_width="14dp"

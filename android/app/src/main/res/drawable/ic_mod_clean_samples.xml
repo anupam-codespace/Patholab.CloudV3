@@ -1,0 +1,25 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="26dp"
+    android:height="26dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Test Tube Outer Body & Rim -->
+    <path
+        android:fillColor="#FEE2E2"
+        android:pathData="M7,2h6c0.55,0 1,0.45 1,1s-0.45,1 -1,1h-0.5v12.5c0,2.48 -2.02,4.5 -4.5,4.5s-4.5,-2.02 -4.5,-4.5V4H6c-0.55,0 -1,-0.45 -1,-1s0.45,-1 1,-1h1z" />
+    <!-- Tube Liquid (Blood Red / Crimson) -->
+    <path
+        android:fillColor="#EF4444"
+        android:pathData="M5.5,10v6.5c0,1.93 1.57,3.5 3.5,3.5s3.5,-1.57 3.5,-3.5V10H5.5z" />
+    <!-- Graduation Marks on Tube -->
+    <path
+        android:fillColor="#DC2626"
+        android:pathData="M9,7h2v1H9z" />
+    <path
+        android:fillColor="#DC2626"
+        android:pathData="M9,9h2v1H9z" />
+    <!-- Blood Specimen Droplet (Floating Next to Tube) -->
+    <path
+        android:fillColor="#B91C1C"
+        android:pathData="M17.5,6c-1.93,2.67 -3.5,5.2 -3.5,7.3 0,1.93 1.57,3.5 3.5,3.5s3.5,-1.57 3.5,-3.5C21,11.2 19.43,8.67 17.5,6z" />
+</vector>

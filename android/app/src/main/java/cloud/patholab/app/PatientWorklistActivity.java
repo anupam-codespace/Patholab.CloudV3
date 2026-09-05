@@ -19,6 +19,8 @@ import android.text.style.ReplacementSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.RotateAnimation;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -65,6 +67,7 @@ public class PatientWorklistActivity extends AppCompatActivity {
     private static final String BASE_URL = "https://app.patholab.cloud";
 
     private FrameLayout btnWorklistBack, btnRefreshWorklist;
+    private ImageView imgRefreshWorklistIcon;
     private TextView lblWorklistSubtitle;
     private TextView lblKpiTotalVisits, lblKpiInProgressVisits, lblKpiCompletedVisits, lblKpiRegisteredVisits;
     private EditText inputSearchWorklist;
@@ -151,6 +154,7 @@ public class PatientWorklistActivity extends AppCompatActivity {
     private void initViews() {
         btnWorklistBack = findViewById(R.id.btnWorklistBack);
         btnRefreshWorklist = findViewById(R.id.btnRefreshWorklist);
+        imgRefreshWorklistIcon = findViewById(R.id.imgRefreshWorklistIcon);
         lblWorklistSubtitle = findViewById(R.id.lblWorklistSubtitle);
         lblKpiTotalVisits = findViewById(R.id.lblKpiTotalVisits);
         lblKpiInProgressVisits = findViewById(R.id.lblKpiInProgressVisits);
@@ -203,7 +207,15 @@ public class PatientWorklistActivity extends AppCompatActivity {
 
     private void setupEvents() {
         btnWorklistBack.setOnClickListener(v -> finish());
-        btnRefreshWorklist.setOnClickListener(v -> fetchPatientWorklist());
+        btnRefreshWorklist.setOnClickListener(v -> {
+            if (imgRefreshWorklistIcon != null) {
+                RotateAnimation rotate = new RotateAnimation(0, 360,
+                        Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+                rotate.setDuration(600);
+                imgRefreshWorklistIcon.startAnimation(rotate);
+            }
+            fetchPatientWorklist();
+        });
 
         btnClearSearchWorklist.setOnClickListener(v -> {
             inputSearchWorklist.setText("");

@@ -23,11 +23,10 @@
             android:layout_marginBottom="8dp">
 
             <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
                 android:layout_gravity="center"
-                android:src="@drawable/ic_mod_registration"
-                android:tint="#0D6EFD" />
+                android:src="@drawable/ic_mod_clean_register" />
 
         </FrameLayout>
 

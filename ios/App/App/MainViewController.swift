@@ -541,8 +541,15 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
 
     @objc private func retryLoad() {
         offlineView.isHidden = true
-        currentPath = nil
-        loadUrl(path: "/workspace/analytics")
+        if selectedTab == 0 {
+            showNativeHome()
+        } else if let path = currentPath, !path.isEmpty {
+            let retryPath = path
+            currentPath = nil
+            loadUrl(path: retryPath)
+        } else {
+            showNativeHome()
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -599,7 +606,7 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         ])
 
         homeNativeView.onNavigate = { [weak self] path in
-            if path == "/dashboard" || path == "/workspace/dashboard" || path.starts(with: "/dashboard") {
+            if path == "/dashboard" || path == "/workspace/dashboard" || path.starts(with: "/dashboard") || path == "/workspace" || path == "/home" || path == "/" {
                 let labDashVC = LabDashboardViewController()
                 labDashVC.modalPresentationStyle = .fullScreen
                 self.present(labDashVC, animated: true, completion: nil)
@@ -733,6 +740,18 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
 
     private func loadUrl(path: String) {
         guard let webView = self.webView else { return }
+
+        // Never allow Financial Analytics or Dashboard web page inside WKWebView
+        if path == "/workspace/analytics" || path.starts(with: "/workspace/analytics") || path == "/analytics" || path.starts(with: "/analytics") || path == "/dashboard" || path.starts(with: "/dashboard") || path == "/workspace/dashboard" {
+            let dashVC = DashboardViewController()
+            dashVC.modalPresentationStyle = .fullScreen
+            self.present(dashVC, animated: true, completion: nil)
+            if selectedTab == 0 {
+                showNativeHome()
+            }
+            return
+        }
+
         headerTitleLabel.text = getHeaderTitle(for: path)
         if path == currentPath { return }
         currentPath = path
@@ -775,6 +794,47 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
                 let supportVC = SupportViewController()
                 supportVC.modalPresentationStyle = .fullScreen
                 self.present(supportVC, animated: true, completion: nil)
+            } else if path == "/workspace/analytics" || path.starts(with: "/workspace/analytics") || path == "/analytics" || path.starts(with: "/analytics") || path == "/dashboard" || path.starts(with: "/dashboard") || path == "/workspace/dashboard" {
+                let dashVC = DashboardViewController()
+                dashVC.modalPresentationStyle = .fullScreen
+                self.present(dashVC, animated: true, completion: nil)
+            } else if path == "/workspace/wallet" || path.starts(with: "/workspace/wallet") {
+                let walletVC = WalletViewController()
+                walletVC.modalPresentationStyle = .fullScreen
+                self.present(walletVC, animated: true, completion: nil)
+            } else if path == "/workspace/registration" || path.starts(with: "/workspace/registration") || path == "/workspace/patients/new" {
+                let regVC = RegistrationViewController()
+                regVC.modalPresentationStyle = .fullScreen
+                self.present(regVC, animated: true, completion: nil)
+            } else if path == "/workspace/test-management" || path.starts(with: "/workspace/test-management") || path == "/workspace/tests" {
+                let testVC = TestManagementViewController()
+                testVC.modalPresentationStyle = .fullScreen
+                self.present(testVC, animated: true, completion: nil)
+            } else if path == "/workspace/billing" || path.starts(with: "/workspace/billing") || path == "/workspace/invoices" {
+                let billVC = BillingViewController()
+                billVC.modalPresentationStyle = .fullScreen
+                self.present(billVC, animated: true, completion: nil)
+            } else if path == "/workspace/reports" || path.starts(with: "/workspace/reports") {
+                let repVC = ReportsViewController()
+                repVC.modalPresentationStyle = .fullScreen
+                self.present(repVC, animated: true, completion: nil)
+            } else if path == "/workspace/samples" || path.starts(with: "/workspace/samples") || path == "/workspace/accession" {
+                let smpVC = SamplesViewController()
+                smpVC.modalPresentationStyle = .fullScreen
+                self.present(smpVC, animated: true, completion: nil)
+            } else if path == "/workspace/patients" || path.starts(with: "/workspace/patients") || path == "/workspace/results" {
+                let patVC = PatientWorklistViewController()
+                patVC.modalPresentationStyle = .fullScreen
+                self.present(patVC, animated: true, completion: nil)
+            } else if path == "/workspace/staff" || path.starts(with: "/workspace/staff") {
+                let staffVC = StaffManagementViewController()
+                staffVC.modalPresentationStyle = .fullScreen
+                self.present(staffVC, animated: true, completion: nil)
+            } else if path == "/workspace/settings" {
+                let settingsVC = ProfileSettingsViewController()
+                let nav = UINavigationController(rootViewController: settingsVC)
+                nav.modalPresentationStyle = .fullScreen
+                self.present(nav, animated: true, completion: nil)
             } else {
                 self.currentPath = nil          // force reload even if same path
                 self.selectedTab = 0
@@ -1338,6 +1398,15 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
     // MARK: – WKWebView Key-Value Observing (KVO)
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
         if keyPath == "URL", let webView = object as? WKWebView, let url = webView.url {
+            let path = url.path
+            // Never allow Financial Analytics or Dashboard web page inside WKWebView
+            if path == "/workspace/analytics" || path.starts(with: "/workspace/analytics") || path == "/analytics" || path.starts(with: "/analytics") || path == "/dashboard" || path.starts(with: "/dashboard") || path == "/workspace/dashboard" {
+                let dashVC = DashboardViewController()
+                dashVC.modalPresentationStyle = .fullScreen
+                self.present(dashVC, animated: true, completion: nil)
+                showNativeHome()
+                return
+            }
             checkAuthRedirect(url: url)
         }
         if keyPath == "estimatedProgress" {
@@ -1385,11 +1454,14 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         if path == "/login" || path == "/register" || path == "/forgot-password" || path == "/verify" || path == "/reset-password" || path.hasPrefix("/login/") {
             // Check if user still has a valid token in Keychain
             if let token = KeychainManager.read(forKey: KeychainManager.tokenKey), !token.isEmpty {
-                // Token exists, re-inject cookie and reload dashboard
+                // Token exists, re-inject cookie and reload
                 AuthService.injectCookieIntoWebView(token: token) { [weak self] in
                     DispatchQueue.main.async {
-                        self?.currentPath = nil
-                        self?.loadUrl(path: "/workspace/analytics")
+                        if self?.selectedTab == 0 {
+                            self?.showNativeHome()
+                        } else if let p = self?.currentPath, !p.isEmpty {
+                            self?.loadUrl(path: p)
+                        }
                     }
                 }
                 return

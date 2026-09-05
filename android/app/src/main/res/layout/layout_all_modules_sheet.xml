@@ -42,14 +42,6 @@
                 android:textColor="#0F172A"
                 android:letterSpacing="-0.02" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:text="Complete Clinical, RIS/PACS &amp; Enterprise Directory"
-                android:textSize="12sp"
-                android:textColor="#64748B" />
-
         </LinearLayout>
 
         <!-- Cross / Close Button -->
@@ -139,7 +131,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="RECENTLY USED • QUICK JUMP"
+                    android:text="RECENTLY USED"
                     android:textSize="11sp"
                     android:textStyle="bold"
                     android:textColor="#0D6EFD"

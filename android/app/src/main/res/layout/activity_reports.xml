@@ -76,18 +76,20 @@
 
                 <FrameLayout
                     android:id="@+id/btnRefreshReports"
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
                     android:background="@drawable/bg_wallet_pill"
                     android:clickable="true"
                     android:focusable="true">
 
                     <ImageView
+                        android:id="@+id/imgRefreshReportsIcon"
                         android:layout_width="18dp"
                         android:layout_height="18dp"
                         android:layout_gravity="center"
-                        android:src="@android:drawable/ic_popup_sync"
-                        android:tint="#FFFFFF" />
+                        android:src="@drawable/ic_refresh_cw"
+                        android:tint="#FFFFFF"
+                        app:tint="#FFFFFF" />
 
                 </FrameLayout>
 
@@ -415,11 +417,10 @@
             android:layout_marginBottom="12dp">
 
             <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
                 android:layout_gravity="center"
-                android:src="@drawable/ic_mod_reports"
-                android:tint="#0284C7" />
+                android:src="@drawable/ic_mod_clean_reports" />
 
         </FrameLayout>
 

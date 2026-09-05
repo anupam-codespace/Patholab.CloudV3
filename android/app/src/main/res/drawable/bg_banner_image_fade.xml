@@ -1,10 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <gradient
-        android:type="linear"
-        android:startColor="#FF0D6EFD"
-        android:centerColor="#260D6EFD"
-        android:endColor="#00000000"
-        android:centerX="0.20"
-        android:angle="0" />
-</shape>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Primary sapphire gradient blend: solid vibrant blue on left for text legibility, smooth fade across photo -->
+    <item>
+        <shape>
+            <gradient
+                android:type="linear"
+                android:angle="0"
+                android:startColor="#FF0A58CA"
+                android:centerColor="#FF0D6EFD"
+                android:endColor="#000D6EFD"
+                android:centerX="0.42" />
+        </shape>
+    </item>
+
+    <!-- Secondary softening layer for butter-smooth natural transition with zero visible edges -->
+    <item>
+        <shape>
+            <gradient
+                android:type="linear"
+                android:angle="0"
+                android:startColor="#FF0A58CA"
+                android:centerColor="#A60B5ED7"
+                android:endColor="#000B5ED7"
+                android:centerX="0.35" />
+        </shape>
+    </item>
+</layer-list>
+
