@@ -20,6 +20,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import cloud.patholab.app.MainActivity;
+import cloud.patholab.app.HomeNativeManager;
 import cloud.patholab.app.R;
 import cloud.patholab.app.api.ApiClient;
 
@@ -142,7 +143,8 @@ public class LoginActivity extends AppCompatActivity {
                         setLoading(false);
                         if (success && token != null) {
                             AuthManager.saveToken(LoginActivity.this, token);
-                            AuthManager.saveUserInfo(LoginActivity.this, email, "User", "Lab Owner");
+                            String initialName = HomeNativeManager.formatSmartFirstName(email);
+                            AuthManager.saveUserInfo(LoginActivity.this, email, initialName, "Lab Owner");
                             try {
                                 Vibrator v = (Vibrator) getSystemService(VIBRATOR_SERVICE);
                                 if (v != null) {

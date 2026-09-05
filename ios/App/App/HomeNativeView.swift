@@ -1326,7 +1326,14 @@ class HomeNativeView: UIView {
 
     private func triggerWelcomeNotificationIfEligible() {
         let userEmail = UserDefaults.standard.string(forKey: "user_email") ?? currentFullName
-        MobileNotificationHelper.shared.scheduleWelcomeNotification(userName: currentFullName, userId: userEmail)
+        var nameToUse = currentFullName
+        if nameToUse.isEmpty || nameToUse.lowercased() == "user" || nameToUse.contains("@") {
+            if let savedName = UserDefaults.standard.string(forKey: "user_name"), !savedName.isEmpty, savedName.lowercased() != "user", !savedName.contains("@") {
+                nameToUse = savedName
+            }
+        }
+        let cleanName = Self.formatSmartFirstName(nameToUse)
+        MobileNotificationHelper.shared.scheduleWelcomeNotification(userName: cleanName, userId: userEmail)
     }
 
     private func triggerLowBalanceAlertIfEligible(_ balance: Double) {
@@ -1525,17 +1532,22 @@ class HomeNativeView: UIView {
 
     static func formatSmartFirstName(_ raw: String) -> String {
         var str = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        if str.isEmpty { return "User" }
+        if str.isEmpty { return "Doctor" }
 
         // Remove email domain
         if let atIdx = str.firstIndex(of: "@") {
             str = String(str[..<atIdx])
         }
 
-        // Split on separators
+        // Split on separators, skipping title prefixes like Dr, Mr
         let tokens = str.components(separatedBy: CharacterSet(charactersIn: " ._-"))
         if let firstToken = tokens.first, !firstToken.isEmpty {
-            str = firstToken
+            let lowerToken = firstToken.lowercased()
+            if ["dr", "doc", "doctor", "mr", "mrs", "ms"].contains(lowerToken) && tokens.count > 1 && !tokens[1].isEmpty {
+                str = tokens[1]
+            } else {
+                str = firstToken
+            }
         }
 
         // Handle CamelCase
@@ -1550,7 +1562,7 @@ class HomeNativeView: UIView {
 
         // Filter letters only
         str = str.filter { $0.isLetter }
-        if str.isEmpty { return "User" }
+        if str.isEmpty || str.lowercased() == "user" || str.lowercased() == "admin" { return "Doctor" }
 
         // Capitalize
         str = str.prefix(1).uppercased() + str.dropFirst().lowercased()

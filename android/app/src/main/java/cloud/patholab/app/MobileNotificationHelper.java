@@ -84,10 +84,26 @@ public class MobileNotificationHelper {
         // Record timestamp immediately to prevent concurrent duplicate schedules
         prefs.edit().putLong(welcomeTimestampKey, now).apply();
 
-        String cleanName = (userName != null && !userName.trim().isEmpty()) ? userName.trim() : "Lab Partner";
-        String firstName = cleanName.split("\\s+")[0];
+        String rawName = userName;
+        if (rawName == null || rawName.trim().isEmpty() || "User".equalsIgnoreCase(rawName.trim()) || rawName.contains("@")) {
+            String storedName = cloud.patholab.app.auth.AuthManager.getUserName(context);
+            if (storedName != null && !storedName.trim().isEmpty() && !"User".equalsIgnoreCase(storedName.trim()) && !storedName.contains("@")) {
+                rawName = storedName;
+            } else {
+                String storedEmail = cloud.patholab.app.auth.AuthManager.getUserEmail(context);
+                if (storedEmail != null && !storedEmail.trim().isEmpty()) {
+                    rawName = storedEmail;
+                }
+            }
+        }
+
+        String firstName = HomeNativeManager.formatSmartFirstName(rawName);
+        if (firstName == null || firstName.trim().isEmpty() || "User".equalsIgnoreCase(firstName.trim())) {
+            firstName = "Doctor";
+        }
 
         // 8-Second Delay per user requirement
+        final String finalFirstName = firstName;
         new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
             try {
                 Intent intent = new Intent(context, MainActivity.class);
@@ -102,7 +118,7 @@ public class MobileNotificationHelper {
                 Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 
                 String title = "Welcome to PathoLab Cloud";
-                String body = "Welcome, " + firstName + ". Your laboratory workspace is ready for seamless operations and patient care.";
+                String body = "Welcome, " + finalFirstName + ". Your laboratory workspace is ready for seamless operations and patient care.";
 
                 NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
                         .setSmallIcon(R.mipmap.ic_launcher)

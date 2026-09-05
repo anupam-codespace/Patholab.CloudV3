@@ -326,8 +326,13 @@ public class HomeNativeManager {
             String smartFirst = formatSmartFirstName(currentFullName);
             String initial = !smartFirst.isEmpty() ? String.valueOf(smartFirst.charAt(0)).toUpperCase() : "U";
 
+            String displayName = currentFullName;
+            if (displayName == null || displayName.trim().isEmpty() || displayName.contains("@") || "User".equalsIgnoreCase(displayName.trim())) {
+                displayName = smartFirst;
+            }
+
             if (tvInitial != null) tvInitial.setText(initial);
-            if (tvName != null) tvName.setText(currentFullName);
+            if (tvName != null) tvName.setText(displayName);
             if (tvRole != null) tvRole.setText(currentRole);
 
             // Option 1: Profile Settings
@@ -722,7 +727,21 @@ public class HomeNativeManager {
         String userId = extractNameFromJwt(token);
         if (userId == null || userId.isEmpty()) userId = AuthManager.getUserEmail(ctx);
         if (userId == null || userId.isEmpty()) userId = currentFullName;
-        MobileNotificationHelper.scheduleWelcomeNotification(ctx, currentFullName, userId);
+
+        String nameToUse = currentFullName;
+        if (nameToUse == null || nameToUse.isEmpty() || "User".equalsIgnoreCase(nameToUse.trim()) || nameToUse.contains("@")) {
+            String storedName = AuthManager.getUserName(ctx);
+            if (storedName != null && !storedName.trim().isEmpty() && !"User".equalsIgnoreCase(storedName.trim()) && !storedName.contains("@")) {
+                nameToUse = storedName;
+            } else {
+                String storedEmail = AuthManager.getUserEmail(ctx);
+                if (storedEmail != null && !storedEmail.trim().isEmpty()) {
+                    nameToUse = storedEmail;
+                }
+            }
+        }
+        String cleanFirstName = formatSmartFirstName(nameToUse);
+        MobileNotificationHelper.scheduleWelcomeNotification(ctx, cleanFirstName, userId);
     }
 
     private void triggerLowBalanceAlertIfEligible(double balance) {
@@ -756,8 +775,8 @@ public class HomeNativeManager {
         @Override
         public void onBindViewHolder(@NonNull VH holder, int position) {
             NotificationItem item = items.get(position);
-            holder.title.setText(item.title);
-            holder.message.setText(item.message);
+            holder.title.setText(stripEmailFromString(item.title));
+            holder.message.setText(stripEmailFromString(item.message));
             holder.time.setText(item.time);
             holder.unreadDot.setVisibility(item.isRead ? View.GONE : View.VISIBLE);
 
@@ -2019,21 +2038,28 @@ public class HomeNativeManager {
     /**
      * Smart First Name Extraction:
      * Handles spaces, emails, CamelCase concatenated strings (e.g. MonowarHussain -> Monowar),
-     * compound prefixes, and cleanly caps at 7-8 letters.
+     * title prefixes (Dr., Mr.), compound prefixes, and cleanly caps at 7-8 letters.
      */
     public static String formatSmartFirstName(String raw) {
-        if (raw == null || raw.trim().isEmpty()) return "User";
+        if (raw == null || raw.trim().isEmpty()) return "Doctor";
         String str = raw.trim();
 
-        // 1. Remove email domain if present
+        // 1. Remove email domain if present (e.g. monowar@gmail.com -> monowar)
         if (str.contains("@")) {
             str = str.substring(0, str.indexOf('@'));
         }
 
-        // 2. If contains space, underscore, dot, or dash, take first token
+        // 2. If contains space, underscore, dot, or dash, take first token (skipping title prefixes like Dr, Mr)
         String[] tokens = str.split("[\\s._\\-]+");
         if (tokens.length > 0 && !tokens[0].isEmpty()) {
-            str = tokens[0];
+            String firstToken = tokens[0];
+            if ((firstToken.equalsIgnoreCase("dr") || firstToken.equalsIgnoreCase("doc") ||
+                 firstToken.equalsIgnoreCase("doctor") || firstToken.equalsIgnoreCase("mr") ||
+                 firstToken.equalsIgnoreCase("mrs") || firstToken.equalsIgnoreCase("ms")) && tokens.length > 1 && !tokens[1].isEmpty()) {
+                str = tokens[1];
+            } else {
+                str = firstToken;
+            }
         }
 
         // 3. Handle CamelCase / PascalCase without spaces (e.g. "MonowarHussainSafi" -> "Monowar")
@@ -2046,7 +2072,7 @@ public class HomeNativeManager {
 
         // 4. Clean up non-alphabetic chars
         str = str.replaceAll("[^a-zA-Z]", "");
-        if (str.isEmpty()) return "User";
+        if (str.isEmpty() || "user".equalsIgnoreCase(str) || "admin".equalsIgnoreCase(str)) return "Doctor";
 
         // 5. Capitalize first letter, lowercase rest
         str = Character.toUpperCase(str.charAt(0)) + str.substring(1).toLowerCase();
@@ -2066,6 +2092,23 @@ public class HomeNativeManager {
         }
 
         return str;
+    }
+
+    /**
+     * Sanitizes strings destined for notification dialogs or popups, replacing any email addresses with clean smart first names.
+     */
+    public static String stripEmailFromString(String text) {
+        if (text == null || text.isEmpty()) return "";
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}");
+        java.util.regex.Matcher matcher = pattern.matcher(text);
+        StringBuffer sb = new StringBuffer();
+        while (matcher.find()) {
+            String email = matcher.group();
+            String name = formatSmartFirstName(email);
+            matcher.appendReplacement(sb, java.util.regex.Matcher.quoteReplacement(name));
+        }
+        matcher.appendTail(sb);
+        return sb.toString();
     }
 
     private String extractNameFromJwt(String jwtToken) {

@@ -53,8 +53,21 @@ class MobileNotificationHelper: NSObject, UNUserNotificationCenterDelegate {
         // Record timestamp immediately to prevent duplicate schedules
         userDefaults.set(now, forKey: welcomeTimestampKey)
 
-        let cleanName = userName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Lab Partner" : userName.trimmingCharacters(in: .whitespacesAndNewlines)
-        let firstName = cleanName.components(separatedBy: .whitespaces).first ?? cleanName
+        var candidate = userName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if candidate.isEmpty || candidate.lowercased() == "user" || candidate.contains("@") {
+            if let storedName = UserDefaults.standard.string(forKey: "user_name"), !storedName.isEmpty, storedName.lowercased() != "user", !storedName.contains("@") {
+                candidate = storedName
+            } else if let storedEmail = UserDefaults.standard.string(forKey: "user_email"), !storedEmail.isEmpty {
+                candidate = storedEmail
+            } else if !userId.isEmpty {
+                candidate = userId
+            }
+        }
+
+        var firstName = HomeNativeView.formatSmartFirstName(candidate)
+        if firstName.isEmpty || firstName.lowercased() == "user" {
+            firstName = "Doctor"
+        }
 
         let content = UNMutableNotificationContent()
         content.title = "Welcome to PathoLab Cloud"
