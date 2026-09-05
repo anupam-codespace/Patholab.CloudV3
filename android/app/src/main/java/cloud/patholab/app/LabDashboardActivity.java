@@ -20,7 +20,9 @@ import android.widget.PopupWindow;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.widget.ImageViewCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import android.content.res.ColorStateList;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -61,7 +63,8 @@ public class LabDashboardActivity extends AppCompatActivity {
     private String currentRange = "30D";
 
     // Primary KPIs
-    private LinearLayout cardWalletBalance, cardInventoryAlerts;
+    private LinearLayout cardWalletBalance, cardInventoryAlerts, containerWalletStatusBadge;
+    private ImageView imgWalletStatusIcon;
     private TextView lblDashWalletBal, lblDashWalletStatus, btnRechargeWallet;
     private TextView lblDashRevenue, lblDashTestsCount, lblDashInventoryAlerts;
 
@@ -102,6 +105,8 @@ public class LabDashboardActivity extends AppCompatActivity {
         lblSelectedRangeName = findViewById(R.id.lblSelectedRangeName);
 
         cardWalletBalance = findViewById(R.id.cardWalletBalance);
+        containerWalletStatusBadge = findViewById(R.id.containerWalletStatusBadge);
+        imgWalletStatusIcon = findViewById(R.id.imgWalletStatusIcon);
         lblDashWalletBal = findViewById(R.id.lblDashWalletBal);
         lblDashWalletStatus = findViewById(R.id.lblDashWalletStatus);
         btnRechargeWallet = findViewById(R.id.btnRechargeWallet);
@@ -355,13 +360,29 @@ public class LabDashboardActivity extends AppCompatActivity {
             if (walletBal < 100) {
                 cardWalletBalance.setBackgroundResource(R.drawable.bg_wallet_card_alert);
                 lblDashWalletBal.setTextColor(0xFF991B1B); // Red-800
-                lblDashWalletStatus.setText("⚠️ Low Balance");
+                if (containerWalletStatusBadge != null) {
+                    containerWalletStatusBadge.setBackgroundResource(R.drawable.bg_badge_wallet_alert);
+                }
+                if (imgWalletStatusIcon != null) {
+                    imgWalletStatusIcon.setVisibility(View.VISIBLE);
+                    imgWalletStatusIcon.setImageResource(R.drawable.ic_alert_triangle);
+                    ImageViewCompat.setImageTintList(imgWalletStatusIcon, ColorStateList.valueOf(0xFFDC2626));
+                }
+                lblDashWalletStatus.setText("Low Balance");
                 lblDashWalletStatus.setTextColor(0xFFDC2626); // Red-600
                 btnRechargeWallet.setBackgroundResource(R.drawable.bg_btn_danger);
             } else {
                 cardWalletBalance.setBackgroundResource(R.drawable.bg_wallet_card_active);
                 lblDashWalletBal.setTextColor(0xFF312E81); // Indigo-900
-                lblDashWalletStatus.setText("● Pay-As-You-Go Active");
+                if (containerWalletStatusBadge != null) {
+                    containerWalletStatusBadge.setBackgroundResource(R.drawable.bg_badge_wallet_active);
+                }
+                if (imgWalletStatusIcon != null) {
+                    imgWalletStatusIcon.setVisibility(View.VISIBLE);
+                    imgWalletStatusIcon.setImageResource(R.drawable.bg_online_dot);
+                    ImageViewCompat.setImageTintList(imgWalletStatusIcon, ColorStateList.valueOf(0xFF4F46E5));
+                }
+                lblDashWalletStatus.setText("Active Balance");
                 lblDashWalletStatus.setTextColor(0xFF4F46E5); // Indigo-600
                 btnRechargeWallet.setBackgroundResource(R.drawable.bg_btn_primary);
             }

@@ -33,6 +33,8 @@ class LabDashboardViewController: UIViewController {
     private let cardWallet = UIView()
     private var cardInv: UIView?
     private let lblWalletBal = UILabel()
+    private let walletStatusBadge = UIView()
+    private let walletStatusIconView = UIImageView()
     private let lblWalletStatus = UILabel()
     private let btnRecharge = UIButton(type: .system)
     private let lblRevenue = UILabel()
@@ -78,53 +80,58 @@ class LabDashboardViewController: UIViewController {
 
         let gradient = CAGradientLayer()
         gradient.colors = [
-            UIColor(red: 0.039, green: 0.059, blue: 0.180, alpha: 1).cgColor, // #0A0F2E
-            UIColor(red: 0.118, green: 0.227, blue: 0.541, alpha: 1).cgColor  // #1E3A8A
+            UIColor(hex: "0A58CA").cgColor, // Primary sapphire start
+            UIColor(hex: "0D6EFD").cgColor, // Radiant vibrant blue
+            UIColor(hex: "007AFF").cgColor  // Clean modern accent
         ]
         gradient.startPoint = CGPoint(x: 0, y: 0)
-        gradient.endPoint = CGPoint(x: 1, y: 1)
+        gradient.endPoint = CGPoint(x: 0.85, y: 1.0)
         topHeaderView.layer.insertSublayer(gradient, at: 0)
-        topHeaderView.layer.cornerRadius = 24
+        topHeaderView.layer.cornerRadius = 26
         topHeaderView.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
         topHeaderView.clipsToBounds = true
 
         // Top Action Row
         let backBtn = UIButton(type: .system)
-        backBtn.setImage(UIImage(systemName: "chevron.left"), for: .normal)
-        backBtn.tintColor = .white
-        backBtn.backgroundColor = UIColor.white.withAlphaComponent(0.18)
+        let backConfig = UIImage.SymbolConfiguration(pointSize: 15, weight: .bold)
+        backBtn.setImage(UIImage(systemName: "chevron.left", withConfiguration: backConfig), for: .normal)
+        backBtn.tintColor = UIColor(hex: "0D6EFD")
+        backBtn.backgroundColor = .white
         backBtn.layer.cornerRadius = 19
         backBtn.layer.borderWidth = 1
-        backBtn.layer.borderColor = UIColor.white.withAlphaComponent(0.25).cgColor
+        backBtn.layer.borderColor = UIColor.white.withAlphaComponent(0.35).cgColor
+        backBtn.clipsToBounds = true
         backBtn.addTarget(self, action: #selector(didTapBack), for: .touchUpInside)
         backBtn.translatesAutoresizingMaskIntoConstraints = false
         topHeaderView.addSubview(backBtn)
 
         let titleLbl = UILabel()
         titleLbl.text = "Dashboard Overview"
-        titleLbl.font = .systemFont(ofSize: 18.5, weight: .bold)
+        titleLbl.font = .systemFont(ofSize: 19, weight: .bold)
         titleLbl.textColor = .white
         titleLbl.translatesAutoresizingMaskIntoConstraints = false
         topHeaderView.addSubview(titleLbl)
 
         let refreshBtn = UIButton(type: .system)
-        refreshBtn.backgroundColor = UIColor.white.withAlphaComponent(0.18)
+        refreshBtn.backgroundColor = .white
         refreshBtn.layer.cornerRadius = 19
         refreshBtn.layer.borderWidth = 1
-        refreshBtn.layer.borderColor = UIColor.white.withAlphaComponent(0.25).cgColor
+        refreshBtn.layer.borderColor = UIColor.white.withAlphaComponent(0.35).cgColor
+        refreshBtn.clipsToBounds = true
         refreshBtn.addTarget(self, action: #selector(didTapRefresh), for: .touchUpInside)
         refreshBtn.translatesAutoresizingMaskIntoConstraints = false
         topHeaderView.addSubview(refreshBtn)
 
-        refreshIconView.image = UIImage(systemName: "arrow.clockwise")
-        refreshIconView.tintColor = .white
+        let refreshConfig = UIImage.SymbolConfiguration(pointSize: 15, weight: .bold)
+        refreshIconView.image = UIImage(systemName: "arrow.clockwise", withConfiguration: refreshConfig)
+        refreshIconView.tintColor = UIColor(hex: "0D6EFD")
         refreshIconView.contentMode = .scaleAspectFit
         refreshIconView.translatesAutoresizingMaskIntoConstraints = false
         refreshBtn.addSubview(refreshIconView)
 
         lblBranchName.text = "Care Diagnostic Hub • Main Branch"
         lblBranchName.font = .systemFont(ofSize: 11.5, weight: .medium)
-        lblBranchName.textColor = UIColor(red: 0.576, green: 0.773, blue: 0.992, alpha: 1)
+        lblBranchName.textColor = UIColor(hex: "C7DFFF")
         lblBranchName.translatesAutoresizingMaskIntoConstraints = false
         topHeaderView.addSubview(lblBranchName)
 
@@ -150,7 +157,7 @@ class LabDashboardViewController: UIViewController {
             topHeaderView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             topHeaderView.heightAnchor.constraint(equalToConstant: 185),
 
-            backBtn.leadingAnchor.constraint(equalTo: topHeaderView.leadingAnchor, constant: 16),
+            backBtn.leadingAnchor.constraint(equalTo: topHeaderView.leadingAnchor, constant: 18),
             backBtn.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 4),
             backBtn.widthAnchor.constraint(equalToConstant: 38),
             backBtn.heightAnchor.constraint(equalToConstant: 38),
@@ -161,18 +168,18 @@ class LabDashboardViewController: UIViewController {
             lblBranchName.leadingAnchor.constraint(equalTo: titleLbl.leadingAnchor),
             lblBranchName.topAnchor.constraint(equalTo: titleLbl.bottomAnchor, constant: 2),
 
-            refreshBtn.trailingAnchor.constraint(equalTo: topHeaderView.trailingAnchor, constant: -16),
+            refreshBtn.trailingAnchor.constraint(equalTo: topHeaderView.trailingAnchor, constant: -18),
             refreshBtn.centerYAnchor.constraint(equalTo: backBtn.centerYAnchor),
             refreshBtn.widthAnchor.constraint(equalToConstant: 38),
             refreshBtn.heightAnchor.constraint(equalToConstant: 38),
 
             refreshIconView.centerXAnchor.constraint(equalTo: refreshBtn.centerXAnchor),
             refreshIconView.centerYAnchor.constraint(equalTo: refreshBtn.centerYAnchor),
-            refreshIconView.widthAnchor.constraint(equalToConstant: 16),
-            refreshIconView.heightAnchor.constraint(equalToConstant: 16),
+            refreshIconView.widthAnchor.constraint(equalToConstant: 17),
+            refreshIconView.heightAnchor.constraint(equalToConstant: 17),
 
-            dateStack.leadingAnchor.constraint(equalTo: topHeaderView.leadingAnchor, constant: 16),
-            dateStack.trailingAnchor.constraint(equalTo: topHeaderView.trailingAnchor, constant: -16),
+            dateStack.leadingAnchor.constraint(equalTo: topHeaderView.leadingAnchor, constant: 18),
+            dateStack.trailingAnchor.constraint(equalTo: topHeaderView.trailingAnchor, constant: -18),
             dateStack.bottomAnchor.constraint(equalTo: topHeaderView.bottomAnchor, constant: -12),
             dateStack.heightAnchor.constraint(equalToConstant: 32),
         ])
@@ -197,7 +204,7 @@ class LabDashboardViewController: UIViewController {
             btn.setTitleColor(UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1), for: .normal)
         } else {
             btn.backgroundColor = UIColor.white.withAlphaComponent(0.14)
-            btn.setTitleColor(UIColor(red: 0.576, green: 0.773, blue: 0.992, alpha: 1), for: .normal)
+            btn.setTitleColor(UIColor(hex: "C7DFFF"), for: .normal)
         }
     }
 
@@ -208,7 +215,7 @@ class LabDashboardViewController: UIViewController {
         [tabToday, tab7D, tab30D, tabMonth, tabYear].forEach { btn in
             let isActive = (btn == sender)
             btn.backgroundColor = isActive ? .white : UIColor.white.withAlphaComponent(0.14)
-            btn.setTitleColor(isActive ? UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1) : UIColor(red: 0.576, green: 0.773, blue: 0.992, alpha: 1), for: .normal)
+            btn.setTitleColor(isActive ? UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1) : UIColor(hex: "C7DFFF"), for: .normal)
         }
 
         fetchDashboardData(range: currentRange)
@@ -257,11 +264,11 @@ class LabDashboardViewController: UIViewController {
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
 
-            contentStack.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 8),
-            contentStack.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor, constant: 16),
-            contentStack.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor, constant: -16),
+            contentStack.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 10),
+            contentStack.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor, constant: 18),
+            contentStack.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor, constant: -18),
             contentStack.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor, constant: -32),
-            contentStack.widthAnchor.constraint(equalTo: scrollView.widthAnchor, constant: -32),
+            contentStack.widthAnchor.constraint(equalTo: scrollView.widthAnchor, constant: -36),
         ])
     }
 
@@ -274,14 +281,16 @@ class LabDashboardViewController: UIViewController {
         row1.spacing = 12
 
         // 1. Wallet Balance Card
-        cardWallet.backgroundColor = UIColor(red: 0.933, green: 0.949, blue: 1.0, alpha: 1)
+        cardWallet.backgroundColor = UIColor(hex: "FEF2F2")
         cardWallet.layer.cornerRadius = 16
         cardWallet.layer.borderWidth = 1
-        cardWallet.layer.borderColor = UIColor(red: 0.780, green: 0.824, blue: 0.996, alpha: 1).cgColor
+        cardWallet.layer.borderColor = UIColor(hex: "FECACA").cgColor
 
+        // True Circular Container for Wallet Icon
         let iconFrameW = UIView()
         iconFrameW.backgroundColor = UIColor(hex: "EEF2FF")
-        iconFrameW.layer.cornerRadius = 10
+        iconFrameW.layer.cornerRadius = 19
+        iconFrameW.clipsToBounds = true
         iconFrameW.translatesAutoresizingMaskIntoConstraints = false
 
         let iconW = UIImageView(image: UIImage(systemName: "wallet.pass.fill"))
@@ -291,9 +300,9 @@ class LabDashboardViewController: UIViewController {
         iconFrameW.addSubview(iconW)
 
         btnRecharge.setTitle("Recharge", for: .normal)
-        btnRecharge.titleLabel?.font = .systemFont(ofSize: 10.5, weight: .bold)
+        btnRecharge.titleLabel?.font = .systemFont(ofSize: 11, weight: .bold)
         btnRecharge.setTitleColor(.white, for: .normal)
-        btnRecharge.backgroundColor = UIColor(red: 0.31, green: 0.27, blue: 0.90, alpha: 1)
+        btnRecharge.backgroundColor = UIColor(hex: "DC2626")
         btnRecharge.layer.cornerRadius = 8
         btnRecharge.addTarget(self, action: #selector(didTapRecharge), for: .touchUpInside)
         btnRecharge.translatesAutoresizingMaskIntoConstraints = false
@@ -306,42 +315,67 @@ class LabDashboardViewController: UIViewController {
 
         lblWalletBal.text = "₹0"
         lblWalletBal.font = .systemFont(ofSize: 22, weight: .black)
-        lblWalletBal.textColor = UIColor(red: 0.19, green: 0.18, blue: 0.51, alpha: 1)
+        lblWalletBal.textColor = UIColor(hex: "991B1B")
         lblWalletBal.translatesAutoresizingMaskIntoConstraints = false
 
-        lblWalletStatus.text = "Pay-As-You-Go Active"
-        lblWalletStatus.font = .systemFont(ofSize: 10.5, weight: .medium)
-        lblWalletStatus.textColor = UIColor(red: 0.31, green: 0.27, blue: 0.90, alpha: 1)
-        lblWalletStatus.translatesAutoresizingMaskIntoConstraints = false
+        // Polished Status Pill Badge with Warning Icon
+        walletStatusBadge.backgroundColor = UIColor(hex: "FEF2F2")
+        walletStatusBadge.layer.cornerRadius = 9
+        walletStatusBadge.layer.borderWidth = 1
+        walletStatusBadge.layer.borderColor = UIColor(hex: "FECACA").cgColor
+        walletStatusBadge.clipsToBounds = true
+        walletStatusBadge.translatesAutoresizingMaskIntoConstraints = false
 
-        [iconFrameW, btnRecharge, titleW, lblWalletBal, lblWalletStatus].forEach { cardWallet.addSubview($0) }
+        walletStatusIconView.image = UIImage(systemName: "exclamationmark.triangle.fill")
+        walletStatusIconView.tintColor = UIColor(hex: "DC2626")
+        walletStatusIconView.contentMode = .scaleAspectFit
+        walletStatusIconView.translatesAutoresizingMaskIntoConstraints = false
+        walletStatusBadge.addSubview(walletStatusIconView)
+
+        lblWalletStatus.text = "Low Balance"
+        lblWalletStatus.font = .systemFont(ofSize: 10.5, weight: .bold)
+        lblWalletStatus.textColor = UIColor(hex: "DC2626")
+        lblWalletStatus.translatesAutoresizingMaskIntoConstraints = false
+        walletStatusBadge.addSubview(lblWalletStatus)
+
+        [iconFrameW, btnRecharge, titleW, lblWalletBal, walletStatusBadge].forEach { cardWallet.addSubview($0) }
 
         NSLayoutConstraint.activate([
-            iconFrameW.topAnchor.constraint(equalTo: cardWallet.topAnchor, constant: 12),
-            iconFrameW.leadingAnchor.constraint(equalTo: cardWallet.leadingAnchor, constant: 12),
-            iconFrameW.widthAnchor.constraint(equalToConstant: 30),
-            iconFrameW.heightAnchor.constraint(equalToConstant: 30),
+            iconFrameW.topAnchor.constraint(equalTo: cardWallet.topAnchor, constant: 16),
+            iconFrameW.leadingAnchor.constraint(equalTo: cardWallet.leadingAnchor, constant: 18),
+            iconFrameW.widthAnchor.constraint(equalToConstant: 38),
+            iconFrameW.heightAnchor.constraint(equalToConstant: 38),
 
             iconW.centerXAnchor.constraint(equalTo: iconFrameW.centerXAnchor),
             iconW.centerYAnchor.constraint(equalTo: iconFrameW.centerYAnchor),
-            iconW.widthAnchor.constraint(equalToConstant: 15),
-            iconW.heightAnchor.constraint(equalToConstant: 15),
+            iconW.widthAnchor.constraint(equalToConstant: 18),
+            iconW.heightAnchor.constraint(equalToConstant: 18),
 
-            btnRecharge.trailingAnchor.constraint(equalTo: cardWallet.trailingAnchor, constant: -12),
+            btnRecharge.trailingAnchor.constraint(equalTo: cardWallet.trailingAnchor, constant: -14),
             btnRecharge.centerYAnchor.constraint(equalTo: iconFrameW.centerYAnchor),
-            btnRecharge.heightAnchor.constraint(equalToConstant: 24),
-            btnRecharge.widthAnchor.constraint(greaterThanOrEqualToConstant: 64),
+            btnRecharge.heightAnchor.constraint(equalToConstant: 26),
+            btnRecharge.widthAnchor.constraint(greaterThanOrEqualToConstant: 68),
 
-            titleW.topAnchor.constraint(equalTo: iconFrameW.bottomAnchor, constant: 8),
-            titleW.leadingAnchor.constraint(equalTo: cardWallet.leadingAnchor, constant: 12),
-            titleW.trailingAnchor.constraint(equalTo: cardWallet.trailingAnchor, constant: -12),
+            titleW.topAnchor.constraint(equalTo: iconFrameW.bottomAnchor, constant: 10),
+            titleW.leadingAnchor.constraint(equalTo: cardWallet.leadingAnchor, constant: 18),
+            titleW.trailingAnchor.constraint(equalTo: cardWallet.trailingAnchor, constant: -14),
 
             lblWalletBal.topAnchor.constraint(equalTo: titleW.bottomAnchor, constant: 2),
             lblWalletBal.leadingAnchor.constraint(equalTo: titleW.leadingAnchor),
 
-            lblWalletStatus.topAnchor.constraint(equalTo: lblWalletBal.bottomAnchor, constant: 2),
-            lblWalletStatus.leadingAnchor.constraint(equalTo: titleW.leadingAnchor),
-            lblWalletStatus.bottomAnchor.constraint(equalTo: cardWallet.bottomAnchor, constant: -12),
+            walletStatusBadge.topAnchor.constraint(equalTo: lblWalletBal.bottomAnchor, constant: 4),
+            walletStatusBadge.leadingAnchor.constraint(equalTo: titleW.leadingAnchor),
+            walletStatusBadge.bottomAnchor.constraint(equalTo: cardWallet.bottomAnchor, constant: -16),
+
+            walletStatusIconView.leadingAnchor.constraint(equalTo: walletStatusBadge.leadingAnchor, constant: 7),
+            walletStatusIconView.centerYAnchor.constraint(equalTo: walletStatusBadge.centerYAnchor),
+            walletStatusIconView.widthAnchor.constraint(equalToConstant: 12),
+            walletStatusIconView.heightAnchor.constraint(equalToConstant: 12),
+
+            lblWalletStatus.leadingAnchor.constraint(equalTo: walletStatusIconView.trailingAnchor, constant: 4),
+            lblWalletStatus.trailingAnchor.constraint(equalTo: walletStatusBadge.trailingAnchor, constant: -8),
+            lblWalletStatus.topAnchor.constraint(equalTo: walletStatusBadge.topAnchor, constant: 3),
+            lblWalletStatus.bottomAnchor.constraint(equalTo: walletStatusBadge.bottomAnchor, constant: -3),
         ])
 
         // 2. Revenue Card
@@ -373,9 +407,11 @@ class LabDashboardViewController: UIViewController {
         card.layer.borderWidth = 1
         card.layer.borderColor = UIColor(red: 0.89, green: 0.91, blue: 0.95, alpha: 1).cgColor
 
+        // True Circular Container for Card Icon
         let iconFrame = UIView()
         iconFrame.backgroundColor = UIColor(hex: iconBg)
-        iconFrame.layer.cornerRadius = 10
+        iconFrame.layer.cornerRadius = 19
+        iconFrame.clipsToBounds = true
         iconFrame.translatesAutoresizingMaskIntoConstraints = false
 
         let iconView = UIImageView(image: UIImage(systemName: icon))
@@ -391,7 +427,7 @@ class LabDashboardViewController: UIViewController {
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
 
         valueLbl.text = defaultVal
-        valueLbl.font = .systemFont(ofSize: 19, weight: .black)
+        valueLbl.font = .systemFont(ofSize: 22, weight: .black)
         valueLbl.textColor = valColor
         valueLbl.translatesAutoresizingMaskIntoConstraints = false
 
@@ -404,26 +440,26 @@ class LabDashboardViewController: UIViewController {
         [iconFrame, titleLabel, valueLbl, subLbl].forEach { card.addSubview($0) }
 
         NSLayoutConstraint.activate([
-            iconFrame.topAnchor.constraint(equalTo: card.topAnchor, constant: 12),
-            iconFrame.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 12),
-            iconFrame.widthAnchor.constraint(equalToConstant: 30),
-            iconFrame.heightAnchor.constraint(equalToConstant: 30),
+            iconFrame.topAnchor.constraint(equalTo: card.topAnchor, constant: 16),
+            iconFrame.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 18),
+            iconFrame.widthAnchor.constraint(equalToConstant: 38),
+            iconFrame.heightAnchor.constraint(equalToConstant: 38),
 
             iconView.centerXAnchor.constraint(equalTo: iconFrame.centerXAnchor),
             iconView.centerYAnchor.constraint(equalTo: iconFrame.centerYAnchor),
-            iconView.widthAnchor.constraint(equalToConstant: 15),
-            iconView.heightAnchor.constraint(equalToConstant: 15),
+            iconView.widthAnchor.constraint(equalToConstant: 18),
+            iconView.heightAnchor.constraint(equalToConstant: 18),
 
-            titleLabel.topAnchor.constraint(equalTo: iconFrame.bottomAnchor, constant: 8),
-            titleLabel.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 12),
-            titleLabel.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -12),
+            titleLabel.topAnchor.constraint(equalTo: iconFrame.bottomAnchor, constant: 10),
+            titleLabel.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 18),
+            titleLabel.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14),
 
             valueLbl.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 2),
             valueLbl.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
 
             subLbl.topAnchor.constraint(equalTo: valueLbl.bottomAnchor, constant: 2),
             subLbl.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
-            subLbl.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -12),
+            subLbl.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -16),
         ])
 
         if let tag = tag {
@@ -439,7 +475,7 @@ class LabDashboardViewController: UIViewController {
             card.addSubview(tagLbl)
 
             NSLayoutConstraint.activate([
-                tagLbl.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -12),
+                tagLbl.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14),
                 tagLbl.centerYAnchor.constraint(equalTo: iconFrame.centerYAnchor),
                 tagLbl.heightAnchor.constraint(equalToConstant: 20),
                 tagLbl.widthAnchor.constraint(greaterThanOrEqualToConstant: 58)
@@ -766,19 +802,27 @@ class LabDashboardViewController: UIViewController {
 
         lblWalletBal.text = formatINR(walletBal)
         if walletBal < 100 {
-            cardWallet.backgroundColor = UIColor(red: 0.996, green: 0.949, blue: 0.949, alpha: 1) // #FEF2F2
-            cardWallet.layer.borderColor = UIColor(red: 0.988, green: 0.647, blue: 0.647, alpha: 1).cgColor // #FCA5A5
-            lblWalletBal.textColor = UIColor(red: 0.600, green: 0.106, blue: 0.106, alpha: 1) // #991B1B
-            lblWalletStatus.text = "⚠️ Low Balance"
-            lblWalletStatus.textColor = UIColor(red: 0.863, green: 0.149, blue: 0.149, alpha: 1) // #DC2626
-            btnRecharge.backgroundColor = UIColor(red: 0.863, green: 0.149, blue: 0.149, alpha: 1) // #DC2626
+            cardWallet.backgroundColor = UIColor(hex: "FEF2F2")
+            cardWallet.layer.borderColor = UIColor(hex: "FECACA").cgColor
+            lblWalletBal.textColor = UIColor(hex: "991B1B")
+            walletStatusBadge.backgroundColor = UIColor(hex: "FEF2F2")
+            walletStatusBadge.layer.borderColor = UIColor(hex: "FECACA").cgColor
+            walletStatusIconView.image = UIImage(systemName: "exclamationmark.triangle.fill")
+            walletStatusIconView.tintColor = UIColor(hex: "DC2626")
+            lblWalletStatus.text = "Low Balance"
+            lblWalletStatus.textColor = UIColor(hex: "DC2626")
+            btnRecharge.backgroundColor = UIColor(hex: "DC2626")
         } else {
-            cardWallet.backgroundColor = UIColor(red: 0.933, green: 0.949, blue: 1.0, alpha: 1) // #EEF2FF
-            cardWallet.layer.borderColor = UIColor(red: 0.780, green: 0.824, blue: 0.996, alpha: 1).cgColor // #C7D2FE
-            lblWalletBal.textColor = UIColor(red: 0.192, green: 0.180, blue: 0.506, alpha: 1) // #312E81
-            lblWalletStatus.text = "● Pay-As-You-Go Active"
-            lblWalletStatus.textColor = UIColor(red: 0.310, green: 0.275, blue: 0.898, alpha: 1) // #4F46E5
-            btnRecharge.backgroundColor = UIColor(red: 0.310, green: 0.275, blue: 0.898, alpha: 1) // #4F46E5
+            cardWallet.backgroundColor = UIColor(hex: "EEF2FF")
+            cardWallet.layer.borderColor = UIColor(hex: "C7D2FE").cgColor
+            lblWalletBal.textColor = UIColor(hex: "312E81")
+            walletStatusBadge.backgroundColor = UIColor(hex: "EEF2FF")
+            walletStatusBadge.layer.borderColor = UIColor(hex: "E0E7FF").cgColor
+            walletStatusIconView.image = UIImage(systemName: "circle.fill")
+            walletStatusIconView.tintColor = UIColor(hex: "4F46E5")
+            lblWalletStatus.text = "Active Balance"
+            lblWalletStatus.textColor = UIColor(hex: "4F46E5")
+            btnRecharge.backgroundColor = UIColor(hex: "4F46E5")
         }
 
         lblRevenue.text = formatINR(revenue)

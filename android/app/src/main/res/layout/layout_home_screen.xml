@@ -436,8 +436,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="52dp"
                     android:orientation="vertical"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
                     android:paddingBottom="18dp">
 
                 <!-- Row 1: Dashboard, Patient Directory, New Registration, Reports -->
@@ -454,7 +454,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:layout_marginEnd="6dp">
+                        android:layout_marginEnd="4dp">
                         <FrameLayout
                             android:layout_width="48dp"
                             android:layout_height="48dp"
@@ -476,7 +476,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:layout_marginEnd="6dp">
+                        android:layout_marginEnd="4dp">
                         <FrameLayout
                             android:layout_width="48dp"
                             android:layout_height="48dp"
@@ -489,7 +489,7 @@
                                 android:src="@drawable/ic_mod_clean_patients"
                                 android:contentDescription="Patient Directory" />
                         </FrameLayout>
-                        <TextView style="@style/HomeModuleBold" android:text="Patient Directory" />
+                        <TextView style="@style/HomeModuleBold" android:text="Patient&#10;Directory" />
                     </LinearLayout>
 
                     <!-- 3. New Registration -->
@@ -498,7 +498,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:layout_marginEnd="6dp">
+                        android:layout_marginEnd="4dp">
                         <FrameLayout
                             android:layout_width="48dp"
                             android:layout_height="48dp"
@@ -511,7 +511,7 @@
                                 android:src="@drawable/ic_mod_clean_register"
                                 android:contentDescription="New Registration" />
                         </FrameLayout>
-                        <TextView style="@style/HomeModuleBold" android:text="New Registration" />
+                        <TextView style="@style/HomeModuleBold" android:text="New&#10;Registration" />
                     </LinearLayout>
 
                     <!-- 4. Reports -->
@@ -550,7 +550,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:layout_marginEnd="6dp">
+                        android:layout_marginEnd="4dp">
                         <FrameLayout
                             android:layout_width="48dp"
                             android:layout_height="48dp"
@@ -563,7 +563,7 @@
                                 android:src="@drawable/ic_mod_clean_tests"
                                 android:contentDescription="Test Management" />
                         </FrameLayout>
-                        <TextView style="@style/HomeModuleBold" android:text="Test Management" />
+                        <TextView style="@style/HomeModuleBold" android:text="Test&#10;Management" />
                     </LinearLayout>
 
                     <!-- 6. Wallet -->
@@ -572,7 +572,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:layout_marginEnd="6dp">
+                        android:layout_marginEnd="4dp">
                         <FrameLayout
                             android:layout_width="48dp"
                             android:layout_height="48dp"
@@ -594,7 +594,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:layout_marginEnd="6dp">
+                        android:layout_marginEnd="4dp">
                         <FrameLayout
                             android:layout_width="48dp"
                             android:layout_height="48dp"
