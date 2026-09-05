@@ -53,8 +53,7 @@ import cloud.patholab.app.ui.SimpleBarChartView;
 public class LabDashboardActivity extends AppCompatActivity {
 
     private SwipeRefreshLayout swipeRefreshDashboard;
-    private FrameLayout btnDashboardBack, btnDashboardRefresh;
-    private ImageView imgDashboardRefreshIcon;
+    private FrameLayout btnDashboardBack;
     private TextView lblDashboardBranch;
 
     // Range selector dropdown
@@ -96,8 +95,6 @@ public class LabDashboardActivity extends AppCompatActivity {
     private void initViews() {
         swipeRefreshDashboard = findViewById(R.id.swipeRefreshDashboard);
         btnDashboardBack = findViewById(R.id.btnDashboardBack);
-        btnDashboardRefresh = findViewById(R.id.btnDashboardRefresh);
-        imgDashboardRefreshIcon = findViewById(R.id.imgDashboardRefreshIcon);
         lblDashboardBranch = findViewById(R.id.lblDashboardBranch);
 
         containerRangeDropdownRow = findViewById(R.id.containerRangeDropdownRow);
@@ -141,18 +138,6 @@ public class LabDashboardActivity extends AppCompatActivity {
 
         swipeRefreshDashboard.setColorSchemeColors(0xFF4F46E5);
         swipeRefreshDashboard.setOnRefreshListener(() -> fetchDashboardData(currentRange));
-
-        if (btnDashboardRefresh != null) {
-            btnDashboardRefresh.setOnClickListener(v -> {
-                if (imgDashboardRefreshIcon != null) {
-                    RotateAnimation rotate = new RotateAnimation(0, 360,
-                            Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
-                    rotate.setDuration(600);
-                    imgDashboardRefreshIcon.startAnimation(rotate);
-                }
-                fetchDashboardData(currentRange);
-            });
-        }
 
         // Timeframe Dropdown Events
         if (btnRangeDropdown != null) {

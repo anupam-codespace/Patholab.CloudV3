@@ -45,8 +45,7 @@ import cloud.patholab.app.auth.AuthManager;
 public class DashboardActivity extends AppCompatActivity {
 
     private SwipeRefreshLayout swipeRefreshDashboard;
-    private FrameLayout btnDashboardBack, btnDashboardRefresh;
-    private ImageView imgDashboardRefreshIcon;
+    private FrameLayout btnDashboardBack;
     private TextView lblDashboardUserRoleLab;
 
     // Top-Level KPI Metric Labels
@@ -78,8 +77,6 @@ public class DashboardActivity extends AppCompatActivity {
     private void initViews() {
         swipeRefreshDashboard = findViewById(R.id.swipeRefreshDashboard);
         btnDashboardBack = findViewById(R.id.btnDashboardBack);
-        btnDashboardRefresh = findViewById(R.id.btnDashboardRefresh);
-        imgDashboardRefreshIcon = findViewById(R.id.imgDashboardRefreshIcon);
         lblDashboardUserRoleLab = findViewById(R.id.lblDashboardUserRoleLab);
 
         lblDashTotalRevenue = findViewById(R.id.lblDashTotalRevenue);
@@ -106,18 +103,6 @@ public class DashboardActivity extends AppCompatActivity {
 
         swipeRefreshDashboard.setColorSchemeColors(0xFF0D6EFD);
         swipeRefreshDashboard.setOnRefreshListener(this::fetchDashboardMetrics);
-
-        if (btnDashboardRefresh != null) {
-            btnDashboardRefresh.setOnClickListener(v -> {
-                if (imgDashboardRefreshIcon != null) {
-                    RotateAnimation rotate = new RotateAnimation(0, 360,
-                            Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
-                    rotate.setDuration(600);
-                    imgDashboardRefreshIcon.startAnimation(rotate);
-                }
-                fetchDashboardMetrics();
-            });
-        }
 
         // Tab Switching
         tabLedgerInvoices.setOnClickListener(v -> {
