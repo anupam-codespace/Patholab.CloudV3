@@ -293,9 +293,9 @@
                     android:id="@+id/spinnerNewTestDept"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
-                    android:background="@drawable/bg_input_field"
-                    android:paddingStart="8dp"
-                    android:paddingEnd="8dp"
+                    android:background="@drawable/bg_spinner_field"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="32dp"
                     android:layout_marginBottom="14dp" />
 
                 <!-- Sample Type & Container Tube -->
@@ -324,9 +324,9 @@
                             android:id="@+id/spinnerNewTestSample"
                             android:layout_width="match_parent"
                             android:layout_height="48dp"
-                            android:background="@drawable/bg_input_field"
-                            android:paddingStart="8dp"
-                            android:paddingEnd="8dp" />
+                            android:background="@drawable/bg_spinner_field"
+                            android:paddingStart="12dp"
+                            android:paddingEnd="32dp" />
 
                     </LinearLayout>
 
@@ -350,9 +350,9 @@
                             android:id="@+id/spinnerNewTestContainer"
                             android:layout_width="match_parent"
                             android:layout_height="48dp"
-                            android:background="@drawable/bg_input_field"
-                            android:paddingStart="8dp"
-                            android:paddingEnd="8dp" />
+                            android:background="@drawable/bg_spinner_field"
+                            android:paddingStart="12dp"
+                            android:paddingEnd="32dp" />
 
                     </LinearLayout>
 

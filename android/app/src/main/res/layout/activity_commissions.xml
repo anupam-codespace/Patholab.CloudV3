@@ -1,0 +1,434 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dedicated Commission Payout & Settlements Console -->
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F8FAFC">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <!-- ── TOP CURVED SAPPHIRE HEADER ─────────────────────────────── -->
+        <FrameLayout
+            android:id="@+id/commissionHeaderLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_home_header"
+            android:paddingStart="18dp"
+            android:paddingEnd="18dp"
+            android:paddingTop="32dp"
+            android:paddingBottom="24dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <FrameLayout
+                    android:id="@+id/btnCommissionBack"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:background="@drawable/bg_glass_back_btn"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_back_arrow"
+                        android:tint="#FFFFFF"
+                        app:tint="#FFFFFF" />
+
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="14dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Commission Pay"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"
+                        android:letterSpacing="-0.02" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Payout settlements, tracking &amp; reconciliation"
+                        android:textSize="11.5sp"
+                        android:textColor="#C7DFFF"
+                        android:singleLine="true"
+                        android:ellipsize="end" />
+
+                </LinearLayout>
+
+                <!-- Refresh Button -->
+                <FrameLayout
+                    android:id="@+id/btnRefreshCommissions"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:background="@drawable/bg_wallet_pill"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageView
+                        android:id="@+id/imgRefreshCommissionsIcon"
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_refresh_cw"
+                        android:tint="#FFFFFF"
+                        app:tint="#FFFFFF" />
+
+                </FrameLayout>
+
+            </LinearLayout>
+
+        </FrameLayout>
+
+        <!-- ── 4 KPI METRICS CARDS (WEB PARITY) ───────────────────────── -->
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="6dp"
+            android:clipToPadding="false">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <!-- KPI 1: Total Commissions -->
+                <LinearLayout
+                    android:layout_width="150dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_billing_kpi_card_indigo"
+                    android:padding="12dp"
+                    android:elevation="1dp"
+                    android:layout_marginEnd="10dp">
+
+                    <TextView
+                        android:text="TOTAL COMMISSIONS"
+                        android:textSize="9.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#6366F1"
+                        android:letterSpacing="0.04"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                    <TextView
+                        android:id="@+id/lblKpiTotalCommission"
+                        android:text="₹0"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="#1E1B4B"
+                        android:layout_marginTop="4dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                    <TextView
+                        android:text="Gross earned"
+                        android:textSize="10.5sp"
+                        android:textColor="#818CF8"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                </LinearLayout>
+
+                <!-- KPI 2: Pending Payouts -->
+                <LinearLayout
+                    android:layout_width="150dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_billing_kpi_card_amber"
+                    android:padding="12dp"
+                    android:elevation="1dp"
+                    android:layout_marginEnd="10dp">
+
+                    <TextView
+                        android:text="PENDING PAYOUTS"
+                        android:textSize="9.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#D97706"
+                        android:letterSpacing="0.04"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                    <TextView
+                        android:id="@+id/lblKpiPendingCommission"
+                        android:text="₹0"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="#78350F"
+                        android:layout_marginTop="4dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                    <TextView
+                        android:text="Unsettled balance"
+                        android:textSize="10.5sp"
+                        android:textColor="#FBBF24"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                </LinearLayout>
+
+                <!-- KPI 3: Settled Paid -->
+                <LinearLayout
+                    android:layout_width="150dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_billing_kpi_card_emerald"
+                    android:padding="12dp"
+                    android:elevation="1dp"
+                    android:layout_marginEnd="10dp">
+
+                    <TextView
+                        android:text="SETTLED DISBURSED"
+                        android:textSize="9.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#059669"
+                        android:letterSpacing="0.04"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                    <TextView
+                        android:id="@+id/lblKpiSettledCommission"
+                        android:text="₹0"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="#064E3B"
+                        android:layout_marginTop="4dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                    <TextView
+                        android:text="Disbursed to partners"
+                        android:textSize="10.5sp"
+                        android:textColor="#34D399"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                </LinearLayout>
+
+                <!-- KPI 4: Active Referrers -->
+                <LinearLayout
+                    android:layout_width="140dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_billing_kpi_card_cyan"
+                    android:padding="12dp"
+                    android:elevation="1dp">
+
+                    <TextView
+                        android:text="ACTIVE REFERRERS"
+                        android:textSize="9.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#0284C7"
+                        android:letterSpacing="0.04"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                    <TextView
+                        android:id="@+id/lblKpiActiveReferrers"
+                        android:text="0"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="#0C4A6E"
+                        android:layout_marginTop="4dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                    <TextView
+                        android:text="Doctors &amp; Agencies"
+                        android:textSize="10.5sp"
+                        android:textColor="#38BDF8"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </HorizontalScrollView>
+
+        <!-- ── 2-TAB SWITCHER (DOCTORS vs AGENCIES) ───────────────────── -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:layout_marginTop="8dp">
+
+            <TextView
+                android:id="@+id/tabDoctors"
+                android:layout_width="0dp"
+                android:layout_height="38dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="Referring Doctors"
+                android:textSize="12.5sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:background="@drawable/bg_tab_pill_active"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_marginEnd="6dp" />
+
+            <TextView
+                android:id="@+id/tabAgencies"
+                android:layout_width="0dp"
+                android:layout_height="38dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="Corporate Agencies"
+                android:textSize="12.5sp"
+                android:textStyle="normal"
+                android:textColor="#64748B"
+                android:background="@drawable/bg_tab_pill_inactive"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_marginStart="6dp" />
+
+        </LinearLayout>
+
+        <!-- ── SEARCH OMNIBAR ─────────────────────────────────────────── -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="8dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:background="@drawable/bg_search_input_field"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/ic_search"
+                    android:tint="#94A3B8"
+                    app:tint="#94A3B8" />
+
+                <EditText
+                    android:id="@+id/inputSearchCommissions"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@null"
+                    android:hint="Search referrer name, phone, clinic..."
+                    android:textColor="#0F172A"
+                    android:textColorHint="#94A3B8"
+                    android:textSize="13.5sp"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:singleLine="true"
+                    android:imeOptions="actionSearch" />
+
+                <ImageView
+                    android:id="@+id/btnClearSearchCommissions"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_close_circle"
+                    android:tint="#94A3B8"
+                    app:tint="#94A3B8"
+                    android:visibility="gone"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+            </LinearLayout>
+
+        </FrameLayout>
+
+        <!-- ── PROGRESS BAR ───────────────────────────────────────────── -->
+        <ProgressBar
+            android:id="@+id/progressCommissions"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="20dp"
+            android:visibility="gone" />
+
+        <!-- ── COMMISSIONS LIST & EMPTY STATE ─────────────────────────── -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerCommissions"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="40dp"
+                android:clipToPadding="false" />
+
+            <!-- Empty State -->
+            <LinearLayout
+                android:id="@+id/emptyStateCommissions"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="32dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:src="@drawable/ic_mod_clean_payout"
+                    android:tint="#CBD5E1"
+                    app:tint="#CBD5E1" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="No Commissions Outstanding"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="#334155" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="All referral commissions are currently balanced and settled."
+                    android:textSize="12.5sp"
+                    android:textColor="#64748B"
+                    android:gravity="center" />
+
+            </LinearLayout>
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+</FrameLayout>

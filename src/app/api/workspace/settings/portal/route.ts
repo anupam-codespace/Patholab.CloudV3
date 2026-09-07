@@ -4,6 +4,40 @@ import { getDataFromToken } from "@/lib/auth"; // Adjust path if needed
 
 const prisma = new PrismaClient();
 
+export async function GET(req: NextRequest) {
+  try {
+    const user = await getDataFromToken(req);
+    if (!user || !user.labId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const lab = await prisma.lab.findUnique({
+      where: { id: user.labId },
+      select: {
+        id: true,
+        name: true,
+        portalSlug: true,
+      },
+    });
+
+    if (!lab) {
+      return NextResponse.json({ error: "Lab not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      labId: lab.id,
+      name: lab.name,
+      portalSlug: lab.portalSlug,
+      isLive: !!lab.portalSlug,
+      url: lab.portalSlug ? `https://portal.patholab.cloud/p/${lab.portalSlug}` : null,
+    });
+  } catch (error: any) {
+    console.error("Portal Settings GET Error:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
+}
+
 export async function PATCH(req: NextRequest) {
   try {
     // 1. Authenticate the Lab Owner
@@ -38,9 +72,9 @@ export async function PATCH(req: NextRequest) {
       data: { portalSlug }
     });
 
-    return NextResponse.json({ 
-      success: true, 
-      portalSlug: updatedLab.portalSlug 
+    return NextResponse.json({
+      success: true,
+      portalSlug: updatedLab.portalSlug
     });
 
   } catch (error: any) {

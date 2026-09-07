@@ -27,9 +27,18 @@ struct AuthService {
             }
             if (200...299).contains(http.statusCode) {
                 var token: String? = nil
-                if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                   let jsonToken = json["token"] as? String, !jsonToken.isEmpty {
-                    token = jsonToken
+                if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                    if let jsonToken = json["token"] as? String, !jsonToken.isEmpty {
+                        token = jsonToken
+                    }
+                    if let user = json["user"] as? [String: Any] {
+                        if let name = user["name"] as? String, !name.isEmpty, !name.contains("@"), name.lowercased() != "null" {
+                            let fn = HomeNativeView.formatSmartFirstName(name)
+                            if !fn.isEmpty && fn.lowercased() != "doctor" {
+                                UserDefaults.standard.set(fn, forKey: "user_name")
+                            }
+                        }
+                    }
                 }
                 if token == nil {
                     token = extractToken(from: http)

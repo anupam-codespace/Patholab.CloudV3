@@ -98,8 +98,8 @@ public class MobileNotificationHelper {
         }
 
         String firstName = HomeNativeManager.formatSmartFirstName(rawName);
-        if (firstName == null || firstName.trim().isEmpty() || "User".equalsIgnoreCase(firstName.trim()) || firstName.toLowerCase().contains("gmail")) {
-            firstName = "Doctor";
+        if (firstName == null || firstName.trim().isEmpty() || "User".equalsIgnoreCase(firstName.trim()) || "Doctor".equalsIgnoreCase(firstName.trim()) || firstName.toLowerCase().contains("gmail")) {
+            firstName = "Owner";
         }
 
         // 8-Second Delay per user requirement
@@ -152,7 +152,7 @@ public class MobileNotificationHelper {
 
         try {
             String cleanName = HomeNativeManager.stripEmailFromString(HomeNativeManager.formatSmartFirstName(patientName));
-            if (cleanName.isEmpty() || "Doctor".equalsIgnoreCase(cleanName)) {
+            if (cleanName.isEmpty() || "Doctor".equalsIgnoreCase(cleanName) || "Owner".equalsIgnoreCase(cleanName)) {
                 cleanName = (patientName != null && !patientName.trim().isEmpty() && !patientName.contains("@")) ? patientName.trim() : "Patient";
             }
             String cleanUhid = (uhid != null && !uhid.trim().isEmpty()) ? uhid.trim() : "";

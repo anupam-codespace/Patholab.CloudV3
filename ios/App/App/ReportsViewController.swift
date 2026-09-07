@@ -664,10 +664,23 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
             verBadge.trailingAnchor.constraint(equalTo: testBox.trailingAnchor, constant: -10),
         ])
 
+        let dateStack = UIStackView()
+        dateStack.axis = .horizontal
+        dateStack.spacing = 5
+        dateStack.alignment = .center
+
+        let dateIcon = UIImageView(image: UIImage(systemName: "calendar"))
+        dateIcon.tintColor = UIColor(red: 0.392, green: 0.451, blue: 0.549, alpha: 1)
+        dateIcon.translatesAutoresizingMaskIntoConstraints = false
+        dateIcon.widthAnchor.constraint(equalToConstant: 12).isActive = true
+        dateIcon.heightAnchor.constraint(equalToConstant: 12).isActive = true
+        dateStack.addArrangedSubview(dateIcon)
+
         let dateLbl = UILabel()
-        dateLbl.text = "📅 \(report.createdAt)"
+        dateLbl.text = report.createdAt
         dateLbl.font = .systemFont(ofSize: 12, weight: .medium)
         dateLbl.textColor = UIColor(red: 0.392, green: 0.451, blue: 0.549, alpha: 1)
+        dateStack.addArrangedSubview(dateLbl)
 
         // Modern Elevated Action Buttons
         let downloadBtn = UIButton(type: .system)
@@ -728,7 +741,7 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
             shareBtn.widthAnchor.constraint(equalToConstant: 40),
         ])
 
-        [avatarIV, nameLbl, uhidLbl, statusBadge, testBox, dateLbl, btnStack].forEach {
+        [avatarIV, nameLbl, uhidLbl, statusBadge, testBox, dateStack, btnStack].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
             card.addSubview($0)
         }
@@ -756,10 +769,10 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
             testBox.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
             testBox.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14),
 
-            dateLbl.topAnchor.constraint(equalTo: testBox.bottomAnchor, constant: 10),
-            dateLbl.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
+            dateStack.topAnchor.constraint(equalTo: testBox.bottomAnchor, constant: 10),
+            dateStack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
 
-            btnStack.topAnchor.constraint(equalTo: dateLbl.bottomAnchor, constant: 12),
+            btnStack.topAnchor.constraint(equalTo: dateStack.bottomAnchor, constant: 12),
             btnStack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
             btnStack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14),
             btnStack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -14),
@@ -803,9 +816,9 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
 
         let verifyUrl = "\(baseUrl)/verify/\(report.id)"
 
-        alert.addAction(UIAlertAction(title: "💬 Send via WhatsApp", style: .default, handler: { [weak self] _ in
+        alert.addAction(UIAlertAction(title: "Send via WhatsApp", style: .default, handler: { [weak self] _ in
             guard let self = self else { return }
-            let text = "Hello \(report.patientName),\n\nYour verified diagnostic laboratory report from Patholab Cloud is ready:\n• Test: \(report.testName)\n• Ref: \(report.uhid) (v\(report.version).0)\n\n📄 View & Download Report:\n\(verifyUrl)\n\nThank you for choosing our pathology laboratory!"
+            let text = "Hello \(report.patientName),\n\nYour verified diagnostic laboratory report from Patholab Cloud is ready:\n• Test: \(report.testName)\n• Ref: \(report.uhid) (v\(report.version).0)\n\nView & Download Report:\n\(verifyUrl)\n\nThank you for choosing our pathology laboratory!"
             let escaped = text.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
             let phone = report.patientPhone.hasPrefix("91") ? report.patientPhone : "91" + report.patientPhone
             if let url = URL(string: "https://api.whatsapp.com/send?phone=\(phone)&text=\(escaped)") {
@@ -813,14 +826,14 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
             }
         }))
 
-        alert.addAction(UIAlertAction(title: "✉️ Send via Email", style: .default, handler: { _ in
+        alert.addAction(UIAlertAction(title: "Send via Email", style: .default, handler: { _ in
             let text = "mailto:\(report.patientEmail)?subject=Diagnostic%20Report%20\(report.testName)&body=Your%20report%20is%20ready%20at%20\(verifyUrl)"
             if let url = URL(string: text) {
                 UIApplication.shared.open(url, options: [:], completionHandler: nil)
             }
         }))
 
-        alert.addAction(UIAlertAction(title: "📋 Copy Secure Verification Link", style: .default, handler: { _ in
+        alert.addAction(UIAlertAction(title: "Copy Secure Verification Link", style: .default, handler: { _ in
             UIPasteboard.general.string = verifyUrl
         }))
 

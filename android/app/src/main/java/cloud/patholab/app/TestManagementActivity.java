@@ -1836,17 +1836,20 @@ public class TestManagementActivity extends AppCompatActivity {
         btnClose.setOnClickListener(v -> dialog.dismiss());
         btnCancel.setOnClickListener(v -> dialog.dismiss());
 
-        // Setup Spinners
+        // Setup Spinners with High-Contrast Healthcare Typography (Explicit dark text)
         String[] deptsList = {"Hematology", "Clinical Biochemistry", "Immunoassay & Endocrinology", "Clinical Pathology", "Microbiology", "Serology"};
-        ArrayAdapter<String> deptAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, deptsList);
+        ArrayAdapter<String> deptAdapter = new ArrayAdapter<>(this, R.layout.item_spinner_selected, deptsList);
+        deptAdapter.setDropDownViewResource(R.layout.item_spinner_dropdown);
         spinnerDept.setAdapter(deptAdapter);
 
         String[] samplesList = {"Serum Gel", "EDTA Whole Blood", "Fluoride Plasma", "Sterile Urine", "Sodium Citrate Plasma", "Body Fluid"};
-        ArrayAdapter<String> sampleAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, samplesList);
+        ArrayAdapter<String> sampleAdapter = new ArrayAdapter<>(this, R.layout.item_spinner_selected, samplesList);
+        sampleAdapter.setDropDownViewResource(R.layout.item_spinner_dropdown);
         spinnerSample.setAdapter(sampleAdapter);
 
         String[] containerList = {"Gold Top (SST Gel)", "Lavender Top (EDTA)", "Grey Top (Fluoride)", "Red Top (Plain)", "Blue Top (Citrate)"};
-        ArrayAdapter<String> containerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, containerList);
+        ArrayAdapter<String> containerAdapter = new ArrayAdapter<>(this, R.layout.item_spinner_selected, containerList);
+        containerAdapter.setDropDownViewResource(R.layout.item_spinner_dropdown);
         spinnerContainer.setAdapter(containerAdapter);
 
         // Selected components list for Tab 2

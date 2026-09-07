@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Test Catalog Selector Item Row for Online Booking -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingStart="12dp"
+    android:paddingEnd="12dp"
+    android:paddingTop="10dp"
+    android:paddingBottom="10dp"
+    android:background="?android:attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true">
+
+    <CheckBox
+        android:id="@+id/checkSelectTest"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="false"
+        android:focusable="false" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:layout_marginStart="8dp">
+
+        <TextView
+            android:id="@+id/lblTestCatalogName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Complete Blood Count (CBC)"
+            android:textSize="13.5sp"
+            android:textStyle="bold"
+            android:textColor="#1E293B" />
+
+        <TextView
+            android:id="@+id/lblTestCatalogCode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="1dp"
+            android:text="CODE: CBC01 • Hematology"
+            android:textSize="11sp"
+            android:textColor="#64748B" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/lblTestCatalogPrice"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:text="₹350"
+        android:textSize="13.5sp"
+        android:textStyle="bold"
+        android:textColor="#059669" />
+
+</LinearLayout>

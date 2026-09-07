@@ -117,6 +117,12 @@ public class ProfileSettingsActivity extends AppCompatActivity {
         loadAllSettings();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadAllSettings();
+    }
+
     private void bindViews() {
         btnBack            = findViewById(R.id.btnBack);
         heroAvatarInitial  = findViewById(R.id.heroAvatarInitial);
@@ -497,7 +503,18 @@ public class ProfileSettingsActivity extends AppCompatActivity {
 
     private String getAuthToken() {
         String token = AuthManager.getToken(this);
-        if (token != null && !token.isEmpty()) return token;
+        if (token != null && !token.trim().isEmpty()) return token.trim();
+        try {
+            SharedPreferences sp = getSharedPreferences("PatholabPrefs", MODE_PRIVATE);
+            String spToken = sp.getString("auth_token", null);
+            if (spToken == null || spToken.trim().isEmpty()) {
+                spToken = sp.getString("token", null);
+            }
+            if (spToken != null && !spToken.trim().isEmpty()) {
+                AuthManager.saveToken(this, spToken.trim());
+                return spToken.trim();
+            }
+        } catch (Exception ignored) {}
         try {
             CookieManager cm = CookieManager.getInstance();
             String cookies = cm.getCookie(BASE_URL);
@@ -505,7 +522,11 @@ public class ProfileSettingsActivity extends AppCompatActivity {
                 for (String part : cookies.split(";")) {
                     String trimmed = part.trim();
                     if (trimmed.startsWith("token=")) {
-                        return trimmed.substring(6).trim();
+                        String cookieToken = trimmed.substring(6).trim();
+                        if (!cookieToken.isEmpty()) {
+                            AuthManager.saveToken(this, cookieToken);
+                            return cookieToken;
+                        }
                     }
                 }
             }

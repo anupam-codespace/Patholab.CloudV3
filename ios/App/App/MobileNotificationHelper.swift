@@ -65,8 +65,8 @@ class MobileNotificationHelper: NSObject, UNUserNotificationCenterDelegate {
         }
 
         var firstName = HomeNativeView.formatSmartFirstName(candidate)
-        if firstName.isEmpty || firstName.lowercased() == "user" || firstName.lowercased().contains("gmail") {
-            firstName = "Doctor"
+        if firstName.isEmpty || firstName.lowercased() == "user" || firstName.lowercased() == "doctor" || firstName.lowercased().contains("gmail") {
+            firstName = "Owner"
         }
 
         let content = UNMutableNotificationContent()
@@ -96,7 +96,7 @@ class MobileNotificationHelper: NSObject, UNUserNotificationCenterDelegate {
      */
     func postNewPatientNotification(patientName: String, uhid: String) {
         var cleanName = HomeNativeView.stripEmailFromString(HomeNativeView.formatSmartFirstName(patientName))
-        if cleanName.isEmpty || cleanName.lowercased() == "doctor" {
+        if cleanName.isEmpty || cleanName.lowercased() == "doctor" || cleanName.lowercased() == "owner" {
             cleanName = (!patientName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !patientName.contains("@"))
                 ? patientName.trimmingCharacters(in: .whitespacesAndNewlines)
                 : "Patient"

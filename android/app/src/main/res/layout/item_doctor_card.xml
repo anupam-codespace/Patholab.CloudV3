@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Referral Doctor Card Item -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_setting_item"
+    android:padding="14dp"
+    android:layout_marginBottom="10dp"
+    android:elevation="2dp">
+
+    <!-- 1. Top Bar: Specialization Badge + Commission Pill -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/lblDoctorSpecializationBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="CARDIOLOGY"
+            android:textSize="10.5sp"
+            android:textStyle="bold"
+            android:textColor="#2563EB"
+            android:background="#DBEAFE"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp" />
+
+        <TextView
+            android:id="@+id/lblDoctorRegNo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:text="REG: MCI-8921"
+            android:textSize="10.5sp"
+            android:textColor="#64748B"
+            android:background="#F1F5F9"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <!-- Default Commission Rate -->
+        <TextView
+            android:id="@+id/lblDoctorCommissionRate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="15% Comm"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#4338CA"
+            android:background="#EEF2FF"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp" />
+
+    </LinearLayout>
+
+    <!-- 2. Doctor Name & Clinic -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="10dp">
+
+        <FrameLayout
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:background="@drawable/bg_mod_icon_blue">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_stethoscope"
+                android:tint="#1D4ED8"
+                app:tint="#1D4ED8" />
+
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginStart="10dp">
+
+            <TextView
+                android:id="@+id/lblDoctorName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Dr. Rajesh Sharma, MD"
+                android:textSize="14.5sp"
+                android:textStyle="bold"
+                android:textColor="#0F172A" />
+
+            <TextView
+                android:id="@+id/lblDoctorClinic"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:text="Apollo Clinic • +91 98765 43210"
+                android:textSize="12sp"
+                android:textColor="#64748B" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- 3. Qualification & Email Info -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/lblDoctorQualification"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="MBBS, MD (General Medicine)"
+            android:textSize="11.5sp"
+            android:textColor="#475569"
+            android:singleLine="true"
+            android:ellipsize="end" />
+
+        <TextView
+            android:id="@+id/lblDoctorEmail"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="dr.rajesh@gmail.com"
+            android:textSize="11sp"
+            android:textColor="#94A3B8" />
+
+    </LinearLayout>
+
+    <!-- Divider -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#F1F5F9"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp" />
+
+    <!-- 4. Financial & Referral Stats Bento -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="#F8FAFC"
+        android:padding="8dp">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:text="TOTAL REFERRALS"
+                android:textSize="9.5sp"
+                android:textStyle="bold"
+                android:textColor="#64748B"
+                android:letterSpacing="0.04"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/lblDoctorReferralsCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="#0F172A" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.2"
+            android:orientation="vertical">
+
+            <TextView
+                android:text="BILLED VOLUME"
+                android:textSize="9.5sp"
+                android:textStyle="bold"
+                android:textColor="#64748B"
+                android:letterSpacing="0.04"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/lblDoctorBilledVolume"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="₹0"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="#0D9488" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.2"
+            android:orientation="vertical">
+
+            <TextView
+                android:text="UNSETTLED DUE"
+                android:textSize="9.5sp"
+                android:textStyle="bold"
+                android:textColor="#64748B"
+                android:letterSpacing="0.04"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/lblDoctorPendingCommission"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="₹0"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="#D97706" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- 5. Action Buttons Bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="12dp"
+        android:gravity="center_vertical">
+
+        <!-- Call Doctor -->
+        <FrameLayout
+            android:id="@+id/btnDoctorCall"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:background="@drawable/bg_copy_pill"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginEnd="6dp">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_phone_call_modern"
+                android:tint="#0D6EFD"
+                app:tint="#0D6EFD" />
+
+        </FrameLayout>
+
+        <!-- WhatsApp Doctor -->
+        <FrameLayout
+            android:id="@+id/btnDoctorWhatsApp"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:background="@drawable/bg_copy_pill"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginEnd="6dp">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_whatsapp"
+                android:tint="#16A34A"
+                app:tint="#16A34A" />
+
+        </FrameLayout>
+
+        <!-- View Ledger / Referrals -->
+        <LinearLayout
+            android:id="@+id/btnDoctorLedger"
+            android:layout_width="0dp"
+            android:layout_height="34dp"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:background="@drawable/bg_copy_pill"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginEnd="6dp">
+
+            <ImageView
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:src="@drawable/ic_receipt_vector"
+                android:tint="#334155"
+                app:tint="#334155" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:text="Ledger"
+                android:textSize="11.5sp"
+                android:textStyle="bold"
+                android:textColor="#334155" />
+
+        </LinearLayout>
+
+        <!-- Edit Doctor -->
+        <FrameLayout
+            android:id="@+id/btnDoctorEdit"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:background="@drawable/bg_copy_pill"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginEnd="6dp">
+
+            <ImageView
+                android:layout_width="15dp"
+                android:layout_height="15dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_edit_pen"
+                android:tint="#475569"
+                app:tint="#475569" />
+
+        </FrameLayout>
+
+        <!-- Delete Doctor -->
+        <FrameLayout
+            android:id="@+id/btnDoctorDelete"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:background="@drawable/bg_copy_pill"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:layout_width="15dp"
+                android:layout_height="15dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_trash"
+                android:tint="#DC2626"
+                app:tint="#DC2626" />
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

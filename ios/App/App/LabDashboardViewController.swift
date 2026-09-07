@@ -32,9 +32,6 @@ class LabDashboardViewController: UIViewController {
     private let cardWallet = UIView()
     private var cardInv: UIView?
     private let lblWalletBal = UILabel()
-    private let walletStatusBadge = UIView()
-    private let walletStatusIconView = UIImageView()
-    private let lblWalletStatus = UILabel()
     private let btnRecharge = UIButton(type: .system)
     private let lblRevenue = UILabel()
     private let lblTestsCount = UILabel()
@@ -243,14 +240,14 @@ class LabDashboardViewController: UIViewController {
         row1.spacing = 12
 
         // 1. Wallet Balance Card
-        cardWallet.backgroundColor = UIColor(hex: "FEF2F2")
+        cardWallet.backgroundColor = UIColor(hex: "EEF2FF")
         cardWallet.layer.cornerRadius = 16
         cardWallet.layer.borderWidth = 1
-        cardWallet.layer.borderColor = UIColor(hex: "FECACA").cgColor
+        cardWallet.layer.borderColor = UIColor(hex: "C7D2FE").cgColor
 
         // True Circular Container for Wallet Icon
         let iconFrameW = UIView()
-        iconFrameW.backgroundColor = UIColor(hex: "EEF2FF")
+        iconFrameW.backgroundColor = UIColor(hex: "E0E7FF")
         iconFrameW.layer.cornerRadius = 19
         iconFrameW.clipsToBounds = true
         iconFrameW.translatesAutoresizingMaskIntoConstraints = false
@@ -264,7 +261,7 @@ class LabDashboardViewController: UIViewController {
         btnRecharge.setTitle("Recharge", for: .normal)
         btnRecharge.titleLabel?.font = .systemFont(ofSize: 11, weight: .bold)
         btnRecharge.setTitleColor(.white, for: .normal)
-        btnRecharge.backgroundColor = UIColor(hex: "DC2626")
+        btnRecharge.backgroundColor = UIColor(hex: "4F46E5")
         btnRecharge.layer.cornerRadius = 8
         btnRecharge.addTarget(self, action: #selector(didTapRecharge), for: .touchUpInside)
         btnRecharge.translatesAutoresizingMaskIntoConstraints = false
@@ -277,30 +274,16 @@ class LabDashboardViewController: UIViewController {
 
         lblWalletBal.text = "₹0"
         lblWalletBal.font = .systemFont(ofSize: 22, weight: .black)
-        lblWalletBal.textColor = UIColor(hex: "991B1B")
+        lblWalletBal.textColor = UIColor(hex: "312E81")
         lblWalletBal.translatesAutoresizingMaskIntoConstraints = false
 
-        // Polished Status Pill Badge with Warning Icon
-        walletStatusBadge.backgroundColor = UIColor(hex: "FEF2F2")
-        walletStatusBadge.layer.cornerRadius = 9
-        walletStatusBadge.layer.borderWidth = 1
-        walletStatusBadge.layer.borderColor = UIColor(hex: "FECACA").cgColor
-        walletStatusBadge.clipsToBounds = true
-        walletStatusBadge.translatesAutoresizingMaskIntoConstraints = false
+        let lblWalletSub = UILabel()
+        lblWalletSub.text = "Available balance"
+        lblWalletSub.font = .systemFont(ofSize: 10.5, weight: .medium)
+        lblWalletSub.textColor = UIColor(red: 0.58, green: 0.64, blue: 0.72, alpha: 1)
+        lblWalletSub.translatesAutoresizingMaskIntoConstraints = false
 
-        walletStatusIconView.image = UIImage(systemName: "exclamationmark.triangle.fill")
-        walletStatusIconView.tintColor = UIColor(hex: "DC2626")
-        walletStatusIconView.contentMode = .scaleAspectFit
-        walletStatusIconView.translatesAutoresizingMaskIntoConstraints = false
-        walletStatusBadge.addSubview(walletStatusIconView)
-
-        lblWalletStatus.text = "Low Balance"
-        lblWalletStatus.font = .systemFont(ofSize: 10.5, weight: .bold)
-        lblWalletStatus.textColor = UIColor(hex: "DC2626")
-        lblWalletStatus.translatesAutoresizingMaskIntoConstraints = false
-        walletStatusBadge.addSubview(lblWalletStatus)
-
-        [iconFrameW, btnRecharge, titleW, lblWalletBal, walletStatusBadge].forEach { cardWallet.addSubview($0) }
+        [iconFrameW, btnRecharge, titleW, lblWalletBal, lblWalletSub].forEach { cardWallet.addSubview($0) }
 
         NSLayoutConstraint.activate([
             iconFrameW.topAnchor.constraint(equalTo: cardWallet.topAnchor, constant: 16),
@@ -325,19 +308,9 @@ class LabDashboardViewController: UIViewController {
             lblWalletBal.topAnchor.constraint(equalTo: titleW.bottomAnchor, constant: 2),
             lblWalletBal.leadingAnchor.constraint(equalTo: titleW.leadingAnchor),
 
-            walletStatusBadge.topAnchor.constraint(equalTo: lblWalletBal.bottomAnchor, constant: 4),
-            walletStatusBadge.leadingAnchor.constraint(equalTo: titleW.leadingAnchor),
-            walletStatusBadge.bottomAnchor.constraint(equalTo: cardWallet.bottomAnchor, constant: -16),
-
-            walletStatusIconView.leadingAnchor.constraint(equalTo: walletStatusBadge.leadingAnchor, constant: 7),
-            walletStatusIconView.centerYAnchor.constraint(equalTo: walletStatusBadge.centerYAnchor),
-            walletStatusIconView.widthAnchor.constraint(equalToConstant: 12),
-            walletStatusIconView.heightAnchor.constraint(equalToConstant: 12),
-
-            lblWalletStatus.leadingAnchor.constraint(equalTo: walletStatusIconView.trailingAnchor, constant: 4),
-            lblWalletStatus.trailingAnchor.constraint(equalTo: walletStatusBadge.trailingAnchor, constant: -8),
-            lblWalletStatus.topAnchor.constraint(equalTo: walletStatusBadge.topAnchor, constant: 3),
-            lblWalletStatus.bottomAnchor.constraint(equalTo: walletStatusBadge.bottomAnchor, constant: -3),
+            lblWalletSub.topAnchor.constraint(equalTo: lblWalletBal.bottomAnchor, constant: 2),
+            lblWalletSub.leadingAnchor.constraint(equalTo: titleW.leadingAnchor),
+            lblWalletSub.bottomAnchor.constraint(equalTo: cardWallet.bottomAnchor, constant: -16),
         ])
 
         // 2. Revenue Card
@@ -763,29 +736,10 @@ class LabDashboardViewController: UIViewController {
         let lowStockCount = alerts["inventory"] as? Int ?? 0
 
         lblWalletBal.text = formatINR(walletBal)
-        if walletBal < 100 {
-            cardWallet.backgroundColor = UIColor(hex: "FEF2F2")
-            cardWallet.layer.borderColor = UIColor(hex: "FECACA").cgColor
-            lblWalletBal.textColor = UIColor(hex: "991B1B")
-            walletStatusBadge.backgroundColor = UIColor(hex: "FEF2F2")
-            walletStatusBadge.layer.borderColor = UIColor(hex: "FECACA").cgColor
-            walletStatusIconView.image = UIImage(systemName: "exclamationmark.triangle.fill")
-            walletStatusIconView.tintColor = UIColor(hex: "DC2626")
-            lblWalletStatus.text = "Low Balance"
-            lblWalletStatus.textColor = UIColor(hex: "DC2626")
-            btnRecharge.backgroundColor = UIColor(hex: "DC2626")
-        } else {
-            cardWallet.backgroundColor = UIColor(hex: "EEF2FF")
-            cardWallet.layer.borderColor = UIColor(hex: "C7D2FE").cgColor
-            lblWalletBal.textColor = UIColor(hex: "312E81")
-            walletStatusBadge.backgroundColor = UIColor(hex: "EEF2FF")
-            walletStatusBadge.layer.borderColor = UIColor(hex: "E0E7FF").cgColor
-            walletStatusIconView.image = UIImage(systemName: "circle.fill")
-            walletStatusIconView.tintColor = UIColor(hex: "4F46E5")
-            lblWalletStatus.text = "Active Balance"
-            lblWalletStatus.textColor = UIColor(hex: "4F46E5")
-            btnRecharge.backgroundColor = UIColor(hex: "4F46E5")
-        }
+        cardWallet.backgroundColor = UIColor(hex: "EEF2FF")
+        cardWallet.layer.borderColor = UIColor(hex: "C7D2FE").cgColor
+        lblWalletBal.textColor = UIColor(hex: "312E81")
+        btnRecharge.backgroundColor = UIColor(hex: "4F46E5")
 
         lblRevenue.text = formatINR(revenue)
         lblTestsCount.text = "\(totalTests)"

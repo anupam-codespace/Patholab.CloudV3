@@ -71,15 +71,21 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
 // =====================
 export async function getDataFromToken(request: NextRequest): Promise<JWTPayload | null> {
   try {
-    let token = request.cookies.get('token')?.value;
-    if (!token) {
-      const authHeader = request.headers.get('authorization');
-      if (authHeader && authHeader.startsWith('Bearer ')) {
-        token = authHeader.substring(7).trim();
+    const cookieToken = request.cookies.get('token')?.value;
+    if (cookieToken && cookieToken.trim().length > 0 && cookieToken !== 'null' && cookieToken !== 'undefined') {
+      const verified = await verifyToken(cookieToken.trim());
+      if (verified) return verified;
+    }
+
+    const authHeader = request.headers.get('authorization');
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const bearerToken = authHeader.substring(7).trim();
+      if (bearerToken.length > 0 && bearerToken !== 'null' && bearerToken !== 'undefined') {
+        const verified = await verifyToken(bearerToken);
+        if (verified) return verified;
       }
     }
-    if (!token) return null;
-    return await verifyToken(token);
+    return null;
   } catch (error) {
     return null;
   }

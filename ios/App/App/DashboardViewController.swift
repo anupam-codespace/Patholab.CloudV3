@@ -4,9 +4,11 @@ import UIKit
  * ═══════════════════════════════════════════════════════════════════════════
  *  DashboardViewController — Native Financial Analytics Console (iOS)
  *  Directly mirroring web (/workspace/analytics):
- *   1. 4 Primary Top-Level KPIs: Revenue, Expenses, Net Profit, Pending Due
- *   2. 4 Tax & Discount Breakdown Cards: Gross Billing, Discounts, CGST, SGST
- *   3. Interactive Multi-Ledger Viewer: Recent Invoices & Recent Expenses
+ *   1. 4 Primary Bento KPIs: Revenue, Expenses, Net Profit (Margin %), Pending Due
+ *   2. Operational Summary: Invoices Count & Patients Count
+ *   3. Frosted Sapphire Timeframe Selector Pill (All Time, This Year, This Month, Last 30 Days)
+ *   4. Real-Time Two-Way Sync: "+ Log Expense" Modal with Live Database Persistence
+ *   5. Dynamic Interactive Ledgers: Recent Invoices (B2B tags) & Recent Expenses
  * ═══════════════════════════════════════════════════════════════════════════
  */
 class DashboardViewController: UIViewController {
@@ -17,25 +19,22 @@ class DashboardViewController: UIViewController {
 
     // Header Views
     private let topHeaderView = UIView()
-    private let userGreetingLbl = UILabel()
     private let userRoleLabLbl = UILabel()
+    private let refreshBtn = UIButton(type: .system)
+    private let timeframeBtn = UIButton(type: .system)
+    private let lblTimeframeText = UILabel()
+    private var selectedTimeframe = "all_time"
 
-    // Top-Level KPI Metric Labels
+    // Primary Top-Level KPI Metric Labels
     private let lblTotalRevenue = UILabel()
     private let lblTotalExpenses = UILabel()
     private let lblNetProfit = UILabel()
+    private let lblProfitMargin = UILabel()
     private let lblPendingDue = UILabel()
 
+    // Operational Counters
     private let lblInvoicesCount = UILabel()
-    private let lblExpensesCount = UILabel()
-    private let lblPendingCount = UILabel()
-
-    // Tax & Discount Breakdown Labels
-    private let lblGrossBilling = UILabel()
-    private let lblDiscountsGiven = UILabel()
-    private let lblDiscountPercent = UILabel()
-    private let lblCGST = UILabel()
-    private let lblSGST = UILabel()
+    private let lblPatientsCount = UILabel()
 
     // Ledger Tabs & Containers
     private let tabLedgerInvoices = UIButton(type: .system)
@@ -54,10 +53,19 @@ class DashboardViewController: UIViewController {
         setupHeader()
         setupScrollView()
         setupPrimaryKPIGrid()
+        setupOperationalCountsRow()
         setupLedgersSection()
         setupQuickActions()
 
         syncUserDetails()
+        fetchLoggedInUserInfo()
+        fetchDashboardMetrics()
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        // Automatic lifecycle sync
+        fetchLoggedInUserInfo()
         fetchDashboardMetrics()
     }
 
@@ -72,8 +80,8 @@ class DashboardViewController: UIViewController {
 
         let gradient = CAGradientLayer()
         gradient.colors = [
-            UIColor(red: 0.039, green: 0.059, blue: 0.180, alpha: 1).cgColor, // #0A0F2E
-            UIColor(red: 0.118, green: 0.227, blue: 0.541, alpha: 1).cgColor  // #1E3A8A
+            UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1).cgColor, // #0D6EFD
+            UIColor(red: 0.114, green: 0.306, blue: 0.847, alpha: 1).cgColor  // #1D4ED8
         ]
         gradient.startPoint = CGPoint(x: 0, y: 0)
         gradient.endPoint = CGPoint(x: 1, y: 1)
@@ -82,7 +90,7 @@ class DashboardViewController: UIViewController {
         topHeaderView.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
         topHeaderView.clipsToBounds = true
 
-        // Top Action Row
+        // Back Button
         let backBtn = UIButton(type: .system)
         backBtn.setImage(UIImage(systemName: "chevron.left"), for: .normal)
         backBtn.tintColor = .white
@@ -94,24 +102,132 @@ class DashboardViewController: UIViewController {
         backBtn.translatesAutoresizingMaskIntoConstraints = false
         topHeaderView.addSubview(backBtn)
 
+        // Title
         let titleLbl = UILabel()
         titleLbl.text = "Financial Analytics"
-        titleLbl.font = .systemFont(ofSize: 18.5, weight: .bold)
+        titleLbl.font = .systemFont(ofSize: 19, weight: .bold)
         titleLbl.textColor = .white
         titleLbl.translatesAutoresizingMaskIntoConstraints = false
         topHeaderView.addSubview(titleLbl)
 
-        userRoleLabLbl.text = "Overview of your enterprise's financial health"
+        // Subtitle
+        userRoleLabLbl.text = "Lab Owner • Care Diagnostic Hub"
         userRoleLabLbl.font = .systemFont(ofSize: 11.5, weight: .medium)
-        userRoleLabLbl.textColor = UIColor(red: 0.576, green: 0.773, blue: 0.992, alpha: 1)
+        userRoleLabLbl.textColor = UIColor(red: 0.78, green: 0.88, blue: 1.0, alpha: 1)
         userRoleLabLbl.translatesAutoresizingMaskIntoConstraints = false
         topHeaderView.addSubview(userRoleLabLbl)
+
+        // Refresh Button
+        refreshBtn.setImage(UIImage(systemName: "arrow.clockwise"), for: .normal)
+        refreshBtn.tintColor = .white
+        refreshBtn.backgroundColor = UIColor.white.withAlphaComponent(0.18)
+        refreshBtn.layer.cornerRadius = 19
+        refreshBtn.layer.borderWidth = 1
+        refreshBtn.layer.borderColor = UIColor.white.withAlphaComponent(0.25).cgColor
+        refreshBtn.addTarget(self, action: #selector(didTapRefresh), for: .touchUpInside)
+        refreshBtn.translatesAutoresizingMaskIntoConstraints = false
+        topHeaderView.addSubview(refreshBtn)
+
+        // Secondary Header Row: Timeframe Pill & Wallet Status Badge
+        let controlsRow = UIStackView()
+        controlsRow.axis = .horizontal
+        controlsRow.spacing = 8
+        controlsRow.alignment = .center
+        controlsRow.translatesAutoresizingMaskIntoConstraints = false
+        topHeaderView.addSubview(controlsRow)
+
+        // Frosted Sapphire Timeframe Selector Pill
+        timeframeBtn.backgroundColor = UIColor.white.withAlphaComponent(0.14)
+        timeframeBtn.layer.cornerRadius = 12
+        timeframeBtn.layer.borderWidth = 1
+        timeframeBtn.layer.borderColor = UIColor.white.withAlphaComponent(0.25).cgColor
+        timeframeBtn.addTarget(self, action: #selector(didTapTimeframePill), for: .touchUpInside)
+
+        let tfStack = UIStackView()
+        tfStack.axis = .horizontal
+        tfStack.spacing = 6
+        tfStack.alignment = .center
+        tfStack.isUserInteractionEnabled = false
+        tfStack.translatesAutoresizingMaskIntoConstraints = false
+
+        let calImg = UIImageView(image: UIImage(systemName: "calendar"))
+        calImg.tintColor = UIColor(red: 0.8, green: 0.88, blue: 1.0, alpha: 1)
+        calImg.contentMode = .scaleAspectFit
+        calImg.widthAnchor.constraint(equalToConstant: 14).isActive = true
+        calImg.heightAnchor.constraint(equalToConstant: 14).isActive = true
+
+        let lblTfBadge = UILabel()
+        lblTfBadge.text = "TIMEFRAME:"
+        lblTfBadge.font = .systemFont(ofSize: 10, weight: .bold)
+        lblTfBadge.textColor = UIColor(red: 0.8, green: 0.88, blue: 1.0, alpha: 1)
+
+        lblTimeframeText.text = "All Time"
+        lblTimeframeText.font = .systemFont(ofSize: 11.5, weight: .bold)
+        lblTimeframeText.textColor = .white
+
+        let chevron = UIImageView(image: UIImage(systemName: "chevron.down"))
+        chevron.tintColor = .white
+        chevron.contentMode = .scaleAspectFit
+        chevron.widthAnchor.constraint(equalToConstant: 11).isActive = true
+        chevron.heightAnchor.constraint(equalToConstant: 11).isActive = true
+
+        tfStack.addArrangedSubview(calImg)
+        tfStack.addArrangedSubview(lblTfBadge)
+        tfStack.addArrangedSubview(lblTimeframeText)
+        tfStack.addArrangedSubview(chevron)
+        timeframeBtn.addSubview(tfStack)
+
+        NSLayoutConstraint.activate([
+            tfStack.leadingAnchor.constraint(equalTo: timeframeBtn.leadingAnchor, constant: 10),
+            tfStack.trailingAnchor.constraint(equalTo: timeframeBtn.trailingAnchor, constant: -10),
+            tfStack.topAnchor.constraint(equalTo: timeframeBtn.topAnchor, constant: 7),
+            tfStack.bottomAnchor.constraint(equalTo: timeframeBtn.bottomAnchor, constant: -7),
+            timeframeBtn.heightAnchor.constraint(equalToConstant: 34),
+        ])
+        controlsRow.addArrangedSubview(timeframeBtn)
+
+        // Wallet Era Status Badge
+        let walletBadge = UIView()
+        walletBadge.backgroundColor = UIColor(red: 0.02, green: 0.59, blue: 0.41, alpha: 0.2)
+        walletBadge.layer.cornerRadius = 12
+        walletBadge.layer.borderWidth = 1
+        walletBadge.layer.borderColor = UIColor(red: 0.2, green: 0.83, blue: 0.6, alpha: 0.35).cgColor
+
+        let wStack = UIStackView()
+        wStack.axis = .horizontal
+        wStack.spacing = 5
+        wStack.alignment = .center
+        wStack.translatesAutoresizingMaskIntoConstraints = false
+
+        let dot = UIView()
+        dot.backgroundColor = UIColor(red: 0.2, green: 0.83, blue: 0.6, alpha: 1)
+        dot.layer.cornerRadius = 3
+        dot.widthAnchor.constraint(equalToConstant: 6).isActive = true
+        dot.heightAnchor.constraint(equalToConstant: 6).isActive = true
+
+        let wLbl = UILabel()
+        wLbl.text = "Wallet Active"
+        wLbl.font = .systemFont(ofSize: 11, weight: .bold)
+        wLbl.textColor = .white
+
+        wStack.addArrangedSubview(dot)
+        wStack.addArrangedSubview(wLbl)
+        walletBadge.addSubview(wStack)
+
+        NSLayoutConstraint.activate([
+            wStack.leadingAnchor.constraint(equalTo: walletBadge.leadingAnchor, constant: 10),
+            wStack.trailingAnchor.constraint(equalTo: walletBadge.trailingAnchor, constant: -10),
+            wStack.topAnchor.constraint(equalTo: walletBadge.topAnchor, constant: 7),
+            wStack.bottomAnchor.constraint(equalTo: walletBadge.bottomAnchor, constant: -7),
+            walletBadge.heightAnchor.constraint(equalToConstant: 34),
+        ])
+        controlsRow.addArrangedSubview(walletBadge)
 
         NSLayoutConstraint.activate([
             topHeaderView.topAnchor.constraint(equalTo: view.topAnchor),
             topHeaderView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             topHeaderView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            topHeaderView.bottomAnchor.constraint(equalTo: userRoleLabLbl.bottomAnchor, constant: 18),
+            topHeaderView.bottomAnchor.constraint(equalTo: controlsRow.bottomAnchor, constant: 16),
 
             backBtn.leadingAnchor.constraint(equalTo: topHeaderView.leadingAnchor, constant: 16),
             backBtn.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 4),
@@ -123,6 +239,15 @@ class DashboardViewController: UIViewController {
 
             userRoleLabLbl.leadingAnchor.constraint(equalTo: titleLbl.leadingAnchor),
             userRoleLabLbl.topAnchor.constraint(equalTo: titleLbl.bottomAnchor, constant: 2),
+
+            refreshBtn.trailingAnchor.constraint(equalTo: topHeaderView.trailingAnchor, constant: -16),
+            refreshBtn.centerYAnchor.constraint(equalTo: backBtn.centerYAnchor),
+            refreshBtn.widthAnchor.constraint(equalToConstant: 38),
+            refreshBtn.heightAnchor.constraint(equalToConstant: 38),
+
+            controlsRow.leadingAnchor.constraint(equalTo: topHeaderView.leadingAnchor, constant: 16),
+            controlsRow.trailingAnchor.constraint(equalTo: topHeaderView.trailingAnchor, constant: -16),
+            controlsRow.topAnchor.constraint(equalTo: backBtn.bottomAnchor, constant: 12),
         ])
     }
 
@@ -141,7 +266,43 @@ class DashboardViewController: UIViewController {
         }
     }
 
+    @objc private func didTapRefresh() {
+        let rotation = CABasicAnimation(keyPath: "transform.rotation.z")
+        rotation.toValue = NSNumber(value: Double.pi * 2)
+        rotation.duration = 0.65
+        rotation.isCumulative = true
+        refreshBtn.layer.add(rotation, forKey: "rotationAnimation")
+        fetchLoggedInUserInfo()
+        fetchDashboardMetrics()
+    }
+
+    @objc private func didTapTimeframePill() {
+        let alert = UIAlertController(title: "Select Timeframe", message: nil, preferredStyle: .actionSheet)
+        let options: [(title: String, val: String)] = [
+            ("All Time", "all_time"),
+            ("This Year", "this_year"),
+            ("This Month", "this_month"),
+            ("Last 30 Days", "last_30_days")
+        ]
+
+        for opt in options {
+            alert.addAction(UIAlertAction(title: opt.title, style: .default, handler: { [weak self] _ in
+                self?.selectedTimeframe = opt.val
+                self?.lblTimeframeText.text = opt.title
+                self?.fetchDashboardMetrics()
+            }))
+        }
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+
+        if let popover = alert.popoverPresentationController {
+            popover.sourceView = timeframeBtn
+            popover.sourceRect = timeframeBtn.bounds
+        }
+        present(alert, animated: true)
+    }
+
     @objc private func didPullRefresh() {
+        fetchLoggedInUserInfo()
         fetchDashboardMetrics()
     }
 
@@ -182,8 +343,8 @@ class DashboardViewController: UIViewController {
         row1.distribution = .fillEqually
         row1.spacing = 12
 
-        let cardRev = makeBentoCard(title: "TOTAL REVENUE", valueLbl: lblTotalRevenue, defaultVal: "₹0", valColor: UIColor(red: 0.02, green: 0.59, blue: 0.41, alpha: 1))
-        let cardExp = makeBentoCard(title: "TOTAL EXPENSES", valueLbl: lblTotalExpenses, defaultVal: "₹0", valColor: UIColor(red: 0.88, green: 0.11, blue: 0.28, alpha: 1))
+        let cardRev = makeBentoCard(title: "TOTAL REVENUE", valueLbl: lblTotalRevenue, defaultVal: "₹0", valColor: UIColor(red: 0.02, green: 0.59, blue: 0.41, alpha: 1), subtitle: "Non-cancelled invoices")
+        let cardExp = makeBentoCard(title: "TOTAL EXPENSES", valueLbl: lblTotalExpenses, defaultVal: "₹0", valColor: UIColor(red: 0.88, green: 0.11, blue: 0.28, alpha: 1), subtitle: "Operational & lab costs")
         row1.addArrangedSubview(cardRev)
         row1.addArrangedSubview(cardExp)
         contentStack.addArrangedSubview(row1)
@@ -194,14 +355,63 @@ class DashboardViewController: UIViewController {
         row2.distribution = .fillEqually
         row2.spacing = 12
 
-        let cardNet = makeBentoCard(title: "NET PROFIT", valueLbl: lblNetProfit, defaultVal: "₹0", valColor: UIColor(red: 0.05, green: 0.43, blue: 0.99, alpha: 1))
-        let cardPending = makeBentoCard(title: "PENDING DUE", valueLbl: lblPendingDue, defaultVal: "₹0", valColor: UIColor(red: 0.85, green: 0.47, blue: 0.02, alpha: 1))
+        let cardNet = makeBentoCard(title: "NET PROFIT", valueLbl: lblNetProfit, defaultVal: "₹0", valColor: UIColor(red: 0.05, green: 0.43, blue: 0.99, alpha: 1), subtitle: "Revenue minus expenses", badgeLbl: lblProfitMargin)
+        let cardPending = makeBentoCard(title: "PENDING DUE", valueLbl: lblPendingDue, defaultVal: "₹0", valColor: UIColor(red: 0.85, green: 0.47, blue: 0.02, alpha: 1), subtitle: "Uncollected invoices")
         row2.addArrangedSubview(cardNet)
         row2.addArrangedSubview(cardPending)
         contentStack.addArrangedSubview(row2)
     }
 
-    private func makeBentoCard(title: String, valueLbl: UILabel, defaultVal: String, valColor: UIColor) -> UIView {
+    // ── Operational Summary Row ───────────────────────────────────────────────
+    private func setupOperationalCountsRow() {
+        let opsRow = UIStackView()
+        opsRow.axis = .horizontal
+        opsRow.distribution = .fillEqually
+        opsRow.spacing = 10
+
+        let cardInvoices = makeOperationalCard(title: "Invoices Generated", countLbl: lblInvoicesCount, color: UIColor(red: 0.05, green: 0.43, blue: 0.99, alpha: 1))
+        let cardPatients = makeOperationalCard(title: "Patients Billed", countLbl: lblPatientsCount, color: UIColor(red: 0.02, green: 0.59, blue: 0.41, alpha: 1))
+        opsRow.addArrangedSubview(cardInvoices)
+        opsRow.addArrangedSubview(cardPatients)
+        contentStack.addArrangedSubview(opsRow)
+    }
+
+    private func makeOperationalCard(title: String, countLbl: UILabel, color: UIColor) -> UIView {
+        let card = UIView()
+        card.backgroundColor = .white
+        card.layer.cornerRadius = 14
+        card.layer.borderWidth = 1
+        card.layer.borderColor = UIColor(red: 0.89, green: 0.91, blue: 0.95, alpha: 1).cgColor
+
+        let stack = UIStackView()
+        stack.axis = .horizontal
+        stack.alignment = .center
+        stack.translatesAutoresizingMaskIntoConstraints = false
+
+        let tLbl = UILabel()
+        tLbl.text = title
+        tLbl.font = .systemFont(ofSize: 11.5, weight: .medium)
+        tLbl.textColor = UIColor(red: 0.28, green: 0.33, blue: 0.41, alpha: 1)
+
+        countLbl.text = "0"
+        countLbl.font = .systemFont(ofSize: 14.5, weight: .bold)
+        countLbl.textColor = color
+
+        stack.addArrangedSubview(tLbl)
+        stack.addArrangedSubview(countLbl)
+        card.addSubview(stack)
+
+        NSLayoutConstraint.activate([
+            stack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 12),
+            stack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -12),
+            stack.topAnchor.constraint(equalTo: card.topAnchor, constant: 10),
+            stack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -10),
+            card.heightAnchor.constraint(equalToConstant: 44),
+        ])
+        return card
+    }
+
+    private func makeBentoCard(title: String, valueLbl: UILabel, defaultVal: String, valColor: UIColor, subtitle: String? = nil, badgeLbl: UILabel? = nil) -> UIView {
         let card = UIView()
         card.backgroundColor = .white
         card.layer.cornerRadius = 16
@@ -212,35 +422,75 @@ class DashboardViewController: UIViewController {
         card.layer.shadowRadius = 4
         card.layer.shadowOffset = CGSize(width: 0, height: 2)
 
+        let topRow = UIStackView()
+        topRow.axis = .horizontal
+        topRow.alignment = .center
+        topRow.translatesAutoresizingMaskIntoConstraints = false
+
         let titleLabel = UILabel()
         titleLabel.text = title
         titleLabel.font = .systemFont(ofSize: 10, weight: .bold)
         titleLabel.textColor = UIColor(red: 0.392, green: 0.455, blue: 0.545, alpha: 1)
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        topRow.addArrangedSubview(titleLabel)
+
+        if let badgeLbl = badgeLbl {
+            let spacer = UIView()
+            topRow.addArrangedSubview(spacer)
+
+            badgeLbl.text = "0.0%"
+            badgeLbl.font = .systemFont(ofSize: 9.5, weight: .bold)
+            badgeLbl.textColor = UIColor(red: 0.02, green: 0.59, blue: 0.41, alpha: 1)
+            badgeLbl.backgroundColor = UIColor(red: 0.925, green: 0.992, blue: 0.961, alpha: 1)
+            badgeLbl.layer.cornerRadius = 4
+            badgeLbl.clipsToBounds = true
+            badgeLbl.textAlignment = .center
+            badgeLbl.widthAnchor.constraint(equalToConstant: 44).isActive = true
+            badgeLbl.heightAnchor.constraint(equalToConstant: 18).isActive = true
+            topRow.addArrangedSubview(badgeLbl)
+        }
 
         valueLbl.text = defaultVal
-        valueLbl.font = .systemFont(ofSize: 21, weight: .black)
+        valueLbl.font = .systemFont(ofSize: 20, weight: .black)
         valueLbl.textColor = valColor
         valueLbl.translatesAutoresizingMaskIntoConstraints = false
 
-        card.addSubview(titleLabel)
+        card.addSubview(topRow)
         card.addSubview(valueLbl)
 
-        NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: card.topAnchor, constant: 16),
-            titleLabel.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 16),
-            titleLabel.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -16),
+        var subLabel: UILabel?
+        if let sub = subtitle {
+            let sl = UILabel()
+            sl.text = sub
+            sl.font = .systemFont(ofSize: 9.5, weight: .regular)
+            sl.textColor = UIColor(red: 0.58, green: 0.64, blue: 0.72, alpha: 1)
+            sl.translatesAutoresizingMaskIntoConstraints = false
+            card.addSubview(sl)
+            subLabel = sl
+        }
 
-            valueLbl.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 6),
-            valueLbl.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
-            valueLbl.trailingAnchor.constraint(equalTo: titleLabel.trailingAnchor),
-            valueLbl.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -16),
+        NSLayoutConstraint.activate([
+            topRow.topAnchor.constraint(equalTo: card.topAnchor, constant: 14),
+            topRow.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
+            topRow.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14),
+
+            valueLbl.topAnchor.constraint(equalTo: topRow.bottomAnchor, constant: 5),
+            valueLbl.leadingAnchor.constraint(equalTo: topRow.leadingAnchor),
+            valueLbl.trailingAnchor.constraint(equalTo: topRow.trailingAnchor),
         ])
+
+        if let sl = subLabel {
+            NSLayoutConstraint.activate([
+                sl.topAnchor.constraint(equalTo: valueLbl.bottomAnchor, constant: 2),
+                sl.leadingAnchor.constraint(equalTo: valueLbl.leadingAnchor),
+                sl.trailingAnchor.constraint(equalTo: valueLbl.trailingAnchor),
+                sl.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -14),
+            ])
+        } else {
+            valueLbl.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -14).isActive = true
+        }
 
         return card
     }
-
-    private func setupTaxBreakdownGrid() {}
 
     // ── Detailed Ledgers Section (Recent Invoices & Recent Expenses) ──────────
     private func setupLedgersSection() {
@@ -250,8 +500,8 @@ class DashboardViewController: UIViewController {
         tabsStack.spacing = 8
         tabsStack.translatesAutoresizingMaskIntoConstraints = false
 
-        styleTabButton(tabLedgerInvoices, title: "Recent Invoices", active: true)
-        styleTabButton(tabLedgerExpenses, title: "Recent Expenses", active: false)
+        styleTabButton(tabLedgerInvoices, title: "Recent Invoices (0)", active: true)
+        styleTabButton(tabLedgerExpenses, title: "Recent Expenses (0)", active: false)
 
         tabLedgerInvoices.addTarget(self, action: #selector(didSelectInvoicesTab), for: .touchUpInside)
         tabLedgerExpenses.addTarget(self, action: #selector(didSelectExpensesTab), for: .touchUpInside)
@@ -276,17 +526,17 @@ class DashboardViewController: UIViewController {
     private func styleTabButton(_ btn: UIButton, title: String, active: Bool) {
         btn.setTitle(title, for: .normal)
         btn.titleLabel?.font = .systemFont(ofSize: 12.5, weight: .bold)
-        btn.layer.cornerRadius = 12
+        btn.layer.cornerRadius = 10
         btn.heightAnchor.constraint(equalToConstant: 38).isActive = true
 
         if active {
-            btn.backgroundColor = .white
             btn.setTitleColor(UIColor(red: 0.05, green: 0.43, blue: 0.99, alpha: 1), for: .normal)
+            btn.backgroundColor = UIColor(red: 0.937, green: 0.965, blue: 1.0, alpha: 1)
             btn.layer.borderWidth = 1
-            btn.layer.borderColor = UIColor(red: 0.80, green: 0.88, blue: 1.0, alpha: 1).cgColor
+            btn.layer.borderColor = UIColor(red: 0.05, green: 0.43, blue: 0.99, alpha: 0.3).cgColor
         } else {
-            btn.backgroundColor = UIColor(red: 0.94, green: 0.96, blue: 0.98, alpha: 1)
             btn.setTitleColor(UIColor(red: 0.392, green: 0.455, blue: 0.545, alpha: 1), for: .normal)
+            btn.backgroundColor = UIColor(red: 0.945, green: 0.961, blue: 0.976, alpha: 1)
             btn.layer.borderWidth = 0
         }
     }
@@ -305,35 +555,192 @@ class DashboardViewController: UIViewController {
         renderCurrentLedger()
     }
 
-    // ── Quick Actions (View Full Invoices Button) ────────────────────────────
+    // ── Quick Actions ────────────────────────────────────────────────────────
     private func setupQuickActions() {
-        let btnViewAll = UIButton(type: .system)
-        btnViewAll.setTitle("View Full Invoices & Billing", for: .normal)
-        btnViewAll.setTitleColor(.white, for: .normal)
-        btnViewAll.titleLabel?.font = .systemFont(ofSize: 14, weight: .bold)
-        btnViewAll.backgroundColor = UIColor(red: 0.05, green: 0.43, blue: 0.99, alpha: 1)
-        btnViewAll.layer.cornerRadius = 15
-        btnViewAll.layer.shadowColor = UIColor(red: 0.05, green: 0.43, blue: 0.99, alpha: 0.35).cgColor
-        btnViewAll.layer.shadowOpacity = 1
-        btnViewAll.layer.shadowRadius = 8
-        btnViewAll.layer.shadowOffset = CGSize(width: 0, height: 4)
-        btnViewAll.heightAnchor.constraint(equalToConstant: 52).isActive = true
-        btnViewAll.addTarget(self, action: #selector(didTapViewAllInvoices), for: .touchUpInside)
-        contentStack.addArrangedSubview(btnViewAll)
+        let row = UIStackView()
+        row.axis = .horizontal
+        row.distribution = .fillEqually
+        row.spacing = 10
+
+        let btnLog = UIButton(type: .system)
+        btnLog.setTitle("+ Log Expense", for: .normal)
+        btnLog.setTitleColor(UIColor(red: 0.05, green: 0.43, blue: 0.99, alpha: 1), for: .normal)
+        btnLog.backgroundColor = UIColor(red: 0.937, green: 0.965, blue: 1.0, alpha: 1)
+        btnLog.titleLabel?.font = .systemFont(ofSize: 13.5, weight: .bold)
+        btnLog.layer.cornerRadius = 12
+        btnLog.layer.borderWidth = 1
+        btnLog.layer.borderColor = UIColor(red: 0.05, green: 0.43, blue: 0.99, alpha: 0.4).cgColor
+        btnLog.heightAnchor.constraint(equalToConstant: 48).isActive = true
+        btnLog.addTarget(self, action: #selector(didTapLogExpense), for: .touchUpInside)
+
+        let btnBilling = UIButton(type: .system)
+        btnBilling.setTitle("All Invoices", for: .normal)
+        btnBilling.setTitleColor(.white, for: .normal)
+        btnBilling.backgroundColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1)
+        btnBilling.titleLabel?.font = .systemFont(ofSize: 13.5, weight: .bold)
+        btnBilling.layer.cornerRadius = 12
+        btnBilling.heightAnchor.constraint(equalToConstant: 48).isActive = true
+        btnBilling.addTarget(self, action: #selector(didTapViewBilling), for: .touchUpInside)
+
+        row.addArrangedSubview(btnLog)
+        row.addArrangedSubview(btnBilling)
+        contentStack.addArrangedSubview(row)
     }
 
-    @objc private func didTapViewAllInvoices() {
-        let billingVC = BillingViewController()
-        if let nav = navigationController {
-            nav.pushViewController(billingVC, animated: true)
-        } else {
-            present(billingVC, animated: true)
+    @objc private func didTapLogExpense() {
+        let alert = UIAlertController(title: "Log Operational Expense", message: "Enter expense title and amount in ₹", preferredStyle: .alert)
+        alert.addTextField { tf in
+            tf.placeholder = "Title (e.g. Reagents, Lab Rent)"
         }
+        alert.addTextField { tf in
+            tf.placeholder = "Amount in ₹"
+            tf.keyboardType = .decimalPad
+        }
+        alert.addTextField { tf in
+            tf.placeholder = "Notes (Optional)"
+        }
+
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Save & Sync", style: .default, handler: { [weak self] _ in
+            guard let self = self else { return }
+            let title = alert.textFields?[0].text?.trimmingCharacters(in: .whitespaces) ?? ""
+            let amountStr = alert.textFields?[1].text?.trimmingCharacters(in: .whitespaces) ?? ""
+            let notes = alert.textFields?[2].text?.trimmingCharacters(in: .whitespaces) ?? ""
+
+            guard !title.isEmpty, let amount = Double(amountStr), amount > 0 else {
+                return
+            }
+            self.postExpense(title: title, amount: amount, notes: notes)
+        }))
+
+        present(alert, animated: true)
+    }
+
+    private func getAuthToken() -> String? {
+        if let token = KeychainManager.shared.getToken(), !token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return token.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        if let token = UserDefaults.standard.string(forKey: "auth_token"), !token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return token.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        if let token = UserDefaults.standard.string(forKey: "token"), !token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return token.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        if let cookies = HTTPCookieStorage.shared.cookies {
+            for cookie in cookies {
+                if cookie.name == "token" && !cookie.value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    let cookieToken = cookie.value.trimmingCharacters(in: .whitespacesAndNewlines)
+                    KeychainManager.save(cookieToken, forKey: KeychainManager.tokenKey)
+                    return cookieToken
+                }
+            }
+        }
+        return nil
+    }
+
+    private func fetchLoggedInUserInfo() {
+        guard let token = getAuthToken() else { return }
+        guard let url = URL(string: "https://app.patholab.cloud/api/auth/me") else { return }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.timeoutInterval = 8
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
+
+        URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+            guard let data = data, error == nil else { return }
+            do {
+                if let res = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                    var userObj = res["user"] as? [String: Any]
+                    if userObj == nil {
+                        userObj = res["data"] as? [String: Any]
+                    }
+                    if let user = userObj {
+                        let realName = user["name"] as? String ?? ""
+                        let rawRole = user["role"] as? String ?? "Lab Owner"
+                        var labName: String?
+                        var labId: String?
+
+                        if let labObj = res["lab"] as? [String: Any] {
+                            labName = labObj["name"] as? String
+                            labId = labObj["id"] as? String
+                        } else if let labObj = user["lab"] as? [String: Any] {
+                            labName = labObj["name"] as? String
+                            labId = labObj["id"] as? String
+                        }
+
+                        let userId = user["id"] as? String
+                        let email = user["email"] as? String
+
+                        if let labName = labName, !labName.isEmpty {
+                            UserDefaults.standard.set(labName, forKey: "lab_name")
+                        }
+                        if let labId = labId, !labId.isEmpty {
+                            UserDefaults.standard.set(labId, forKey: "lab_id")
+                        }
+                        if !rawRole.isEmpty {
+                            KeychainManager.save(rawRole, forKey: KeychainManager.roleKey)
+                            UserDefaults.standard.set(rawRole, forKey: "user_role")
+                        }
+                        if !realName.isEmpty {
+                            KeychainManager.save(realName, forKey: KeychainManager.nameKey)
+                            UserDefaults.standard.set(realName, forKey: "user_name")
+                        }
+                        if let email = email, !email.isEmpty {
+                            KeychainManager.save(email, forKey: KeychainManager.emailKey)
+                        }
+
+                        DispatchQueue.main.async {
+                            self?.syncUserDetails()
+                        }
+                    }
+                }
+            } catch {}
+        }.resume()
+    }
+
+    private func postExpense(title: String, amount: Double, notes: String) {
+        guard let url = URL(string: "https://app.patholab.cloud/api/workspace/analytics") else { return }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        if let token = getAuthToken() {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            request.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
+        }
+
+        let payload: [String: Any] = [
+            "title": title,
+            "amount": amount,
+            "category": "MISC",
+            "paymentMode": "CASH",
+            "notes": notes
+        ]
+
+        guard let bodyData = try? JSONSerialization.data(withJSONObject: payload) else { return }
+        request.httpBody = bodyData
+
+        URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+            DispatchQueue.main.async {
+                if let httpRes = response as? HTTPURLResponse, httpRes.statusCode >= 200, httpRes.statusCode < 300 {
+                    self?.fetchDashboardMetrics()
+                }
+            }
+        }.resume()
+    }
+
+    @objc private func didTapViewBilling() {
+        let billingVC = BillingViewController()
+        billingVC.modalPresentationStyle = .fullScreen
+        present(billingVC, animated: true)
     }
 
     private func syncUserDetails() {
-        let role = KeychainManager.shared.getUserRole() ?? "Lab Owner"
-        let lab = KeychainManager.shared.getLabName() ?? "Care Diagnostic Hub"
+        var role = KeychainManager.shared.getUserRole() ?? "Lab Owner"
+        let lab = UserDefaults.standard.string(forKey: "lab_name") ?? KeychainManager.shared.getLabName() ?? "Care Diagnostics"
 
         var displayRole = "Lab Owner"
         if role.caseInsensitiveCompare("LAB_OWNER") == .orderedSame { displayRole = "Lab Owner" }
@@ -349,7 +756,8 @@ class DashboardViewController: UIViewController {
     private func fetchDashboardMetrics() {
         refreshControl.beginRefreshing()
 
-        guard let url = URL(string: "https://app.patholab.cloud/api/workspace/analytics") else {
+        let urlStr = "https://app.patholab.cloud/api/workspace/analytics?timeframe=\(selectedTimeframe)"
+        guard let url = URL(string: urlStr) else {
             refreshControl.endRefreshing()
             return
         }
@@ -358,7 +766,7 @@ class DashboardViewController: UIViewController {
         request.httpMethod = "GET"
         request.timeoutInterval = 10
 
-        if let token = KeychainManager.shared.getToken(), !token.isEmpty {
+        if let token = getAuthToken() {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
             request.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
         }
@@ -382,13 +790,22 @@ class DashboardViewController: UIViewController {
         let totalRev = json["totalRevenue"] as? Double ?? 0.0
         let totalExp = json["totalExpense"] as? Double ?? 0.0
         let netProfit = json["netProfit"] as? Double ?? 0.0
+        let profitMargin = json["profitMargin"] as? Double ?? 0.0
         let pendingDue = json["pendingCollections"] as? Double ?? 0.0
 
-        // Bind Primary KPIs
+        let invCount = json["invoicesCount"] as? Int ?? 0
+        let patCount = json["patientsCount"] as? Int ?? 0
+
+        // Bind Primary Bento KPIs
         lblTotalRevenue.text = formatINR(totalRev)
         lblTotalExpenses.text = formatINR(totalExp)
         lblNetProfit.text = formatINR(netProfit)
+        lblProfitMargin.text = String(format: "%.1f%%", profitMargin)
         lblPendingDue.text = formatINR(pendingDue)
+
+        // Bind Operational Counters
+        lblInvoicesCount.text = "\(invCount)"
+        lblPatientsCount.text = "\(patCount)"
 
         // Bind Ledgers
         cachedInvoices = json["recentInvoices"] as? [[String: Any]] ?? []
@@ -405,7 +822,7 @@ class DashboardViewController: UIViewController {
 
         if isShowingInvoices {
             if cachedInvoices.isEmpty {
-                emptyStateLbl.text = "No recent invoices found"
+                emptyStateLbl.text = "No recent invoices found for this timeframe"
                 emptyStateLbl.isHidden = false
                 return
             }
@@ -417,7 +834,7 @@ class DashboardViewController: UIViewController {
             }
         } else {
             if cachedExpenses.isEmpty {
-                emptyStateLbl.text = "No recent expenses recorded"
+                emptyStateLbl.text = "No recent expenses recorded for this timeframe"
                 emptyStateLbl.isHidden = false
                 return
             }
@@ -446,13 +863,7 @@ class DashboardViewController: UIViewController {
         let status = (inv["status"] as? String ?? "PAID").uppercased()
         let grandTotal = inv["grandTotal"] as? Double ?? 0.0
         let dateStr = formatDate(inv["createdAt"] as? String)
-
-        var billedToName = "Patient"
-        if isB2B, let agency = inv["agency"] as? [String: Any], let aName = agency["agencyName"] as? String {
-            billedToName = aName
-        } else if let patient = inv["patient"] as? [String: Any], let pName = patient["name"] as? String {
-            billedToName = pName
-        }
+        let billedToName = inv["patientName"] as? String ?? "Walk-in Patient"
 
         // Top Row: Number + B2B tag + Status Badge
         let topRow = UIStackView()
@@ -663,20 +1074,5 @@ class DashboardViewController: UIViewController {
             return outFmt.string(from: date)
         }
         return String(iso.prefix(10))
-    }
-}
-
-private extension UIColor {
-    convenience init(hex: String) {
-        var cString = hex.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
-        if cString.hasPrefix("#") { cString.remove(at: cString.startIndex) }
-        var rgbValue: UInt64 = 0
-        Scanner(string: cString).scanHexInt64(&rgbValue)
-        self.init(
-            red: CGFloat((rgbValue & 0xFF0000) >> 16) / 255.0,
-            green: CGFloat((rgbValue & 0x00FF00) >> 8) / 255.0,
-            blue: CGFloat(rgbValue & 0x0000FF) / 255.0,
-            alpha: 1.0
-        )
     }
 }

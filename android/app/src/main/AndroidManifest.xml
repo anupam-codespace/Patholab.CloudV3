@@ -205,6 +205,46 @@
             android:exported="true"
         />
 
+        <activity
+            android:name=".OnlineBookingActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustResize"
+            android:screenOrientation="portrait"
+            android:exported="true"
+        />
+
+        <activity
+            android:name=".B2BActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustResize"
+            android:screenOrientation="portrait"
+            android:exported="true"
+        />
+
+        <activity
+            android:name=".B2BSettingsActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustResize"
+            android:screenOrientation="portrait"
+            android:exported="true"
+        />
+
+        <activity
+            android:name=".ReferralDoctorsActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustResize"
+            android:screenOrientation="portrait"
+            android:exported="true"
+        />
+
+        <activity
+            android:name=".CommissionsActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustResize"
+            android:screenOrientation="portrait"
+            android:exported="true"
+        />
+
 
 
         <provider

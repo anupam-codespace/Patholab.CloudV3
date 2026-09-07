@@ -5,16 +5,46 @@ import { hash } from 'bcryptjs';
 
 export const dynamic = 'force-dynamic';
 
+async function getAuthenticatedLabId(req: NextRequest): Promise<string | null> {
+  const user = await getDataFromToken(req);
+  if (!user) return null;
+  if (user.labId) return user.labId;
+
+  const userId = user.userId || user.id;
+  if (!userId) return null;
+
+  const lab = await prisma.lab.findFirst({
+    where: { ownerId: userId },
+    select: { id: true },
+  });
+  if (lab) return lab.id;
+
+  const staff = await prisma.labStaff.findFirst({
+    where: { userId, isActive: true },
+    select: { labId: true },
+  });
+  if (staff) return staff.labId;
+
+  if (user.role === "SUPER_ADMIN") {
+    const firstLab = await prisma.lab.findFirst({
+      where: { isActive: true },
+      select: { id: true },
+    });
+    if (firstLab) return firstLab.id;
+  }
+  return null;
+}
+
 // ==========================================
 // GET: List all staff for the Lab
 // ==========================================
 export async function GET(req: NextRequest) {
   try {
-    const user = await getDataFromToken(req);
-    if (!user?.labId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const labId = await getAuthenticatedLabId(req);
+    if (!labId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const staffList = await prisma.labStaff.findMany({
-      where: { labId: user.labId },
+      where: { labId },
       include: {
         user: {
           select: {
@@ -50,8 +80,8 @@ export async function GET(req: NextRequest) {
 // ==========================================
 export async function POST(req: NextRequest) {
   try {
-    const admin = await getDataFromToken(req);
-    if (!admin?.labId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const labId = await getAuthenticatedLabId(req);
+    if (!labId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
     const { name, email, phone, role, salary, department, position, branchId, password } = body;

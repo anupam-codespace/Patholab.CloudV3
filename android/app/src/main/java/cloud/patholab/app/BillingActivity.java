@@ -55,7 +55,6 @@ public class BillingActivity extends AppCompatActivity {
     private static final String BASE_URL = "https://app.patholab.cloud";
 
     private FrameLayout btnBillingBack;
-    private LinearLayout btnNewInvoiceHeader;
     private TextView lblBillingSubtitle;
     private TextView lblKpiTotalRevenue, lblKpiMonthlyRevenue, lblKpiSettledCount, lblKpiTotalInvoicesCount;
     private EditText inputSearchInvoices;
@@ -134,7 +133,6 @@ public class BillingActivity extends AppCompatActivity {
 
     private void initViews() {
         btnBillingBack = findViewById(R.id.btnBillingBack);
-        btnNewInvoiceHeader = (LinearLayout) findViewById(R.id.btnNewInvoiceHeader);
         lblBillingSubtitle = findViewById(R.id.lblBillingSubtitle);
         lblKpiTotalRevenue = findViewById(R.id.lblKpiTotalRevenue);
         lblKpiMonthlyRevenue = findViewById(R.id.lblKpiMonthlyRevenue);
@@ -160,12 +158,6 @@ public class BillingActivity extends AppCompatActivity {
 
     private void setupEvents() {
         btnBillingBack.setOnClickListener(v -> finish());
-
-        btnNewInvoiceHeader.setOnClickListener(v -> {
-            // Launch Native Registration
-            Intent intent = new Intent(this, RegistrationActivity.class);
-            startActivity(intent);
-        });
 
         btnClearSearchInvoices.setOnClickListener(v -> {
             inputSearchInvoices.setText("");
@@ -555,8 +547,7 @@ public class BillingActivity extends AppCompatActivity {
             holder.lblPatientName.setText(item.patientName);
             holder.lblPatientDetails.setText(item.patientDetails);
             holder.lblInvoiceNumber.setText(item.invoiceNumber);
-            holder.lblDate.setText("" + item.dateLogged);
-            holder.lblPaymentMethod.setText("💳 " + item.paymentMethod);
+            holder.lblPaymentMethod.setText(item.paymentMethod);
             holder.lblTotal.setText(String.format(Locale.getDefault(), "₹ %,.2f", item.grandTotal));
 
             // Status Badge & Accent styling

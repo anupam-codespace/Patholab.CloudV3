@@ -1,0 +1,399 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Bottom Sheet Dialog: Log New Operational Expense -->
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_bottom_sheet">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="vertical"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="36dp">
+
+            <!-- Drag Handle -->
+            <View
+                android:layout_width="38dp"
+                android:layout_height="4dp"
+                android:layout_gravity="center_horizontal"
+                android:background="#CBD5E1"
+                android:layout_marginBottom="14dp" />
+
+            <!-- Header Title -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Log Operational Expense"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="#0F172A" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Record lab expenditure &amp; sync real-time"
+                        android:textSize="11.5sp"
+                        android:textColor="#64748B" />
+
+                </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/btnExpenseClose"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:src="@drawable/ic_close_cross"
+                    android:tint="#94A3B8"
+                    app:tint="#94A3B8"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+            </LinearLayout>
+
+            <!-- Expense Title Field -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="EXPENSE TITLE *"
+                android:textSize="10.5sp"
+                android:textStyle="bold"
+                android:textColor="#64748B"
+                android:letterSpacing="0.06" />
+
+            <EditText
+                android:id="@+id/inputExpenseTitle"
+                android:layout_width="match_parent"
+                android:layout_height="46dp"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/bg_search_input_field"
+                android:hint="e.g. Reagent Kits, Electricity Bill, Staff Salary"
+                android:textSize="13.5sp"
+                android:textColor="#0F172A"
+                android:textColorHint="#94A3B8"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:inputType="textCapSentences"
+                android:maxLines="1" />
+
+            <!-- Amount Field -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:text="AMOUNT (₹) *"
+                android:textSize="10.5sp"
+                android:textStyle="bold"
+                android:textColor="#64748B"
+                android:letterSpacing="0.06" />
+
+            <EditText
+                android:id="@+id/inputExpenseAmount"
+                android:layout_width="match_parent"
+                android:layout_height="46dp"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/bg_search_input_field"
+                android:hint="Enter amount in ₹"
+                android:textSize="14sp"
+                android:textColor="#0F172A"
+                android:textColorHint="#94A3B8"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:inputType="numberDecimal"
+                android:maxLines="1" />
+
+            <!-- Category Selector -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:text="EXPENSE CATEGORY *"
+                android:textSize="10.5sp"
+                android:textStyle="bold"
+                android:textColor="#64748B"
+                android:letterSpacing="0.06" />
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:id="@+id/containerCategoryChips"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/chipCatSalary"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Salaries"
+                        android:textSize="11.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#0D6EFD"
+                        android:background="@drawable/bg_chip_toggle_active"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:paddingTop="7dp"
+                        android:paddingBottom="7dp"
+                        android:layout_marginEnd="6dp"
+                        android:clickable="true"
+                        android:focusable="true" />
+
+                    <TextView
+                        android:id="@+id/chipCatRent"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Rent"
+                        android:textSize="11.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#64748B"
+                        android:background="@drawable/bg_chip_toggle_inactive"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:paddingTop="7dp"
+                        android:paddingBottom="7dp"
+                        android:layout_marginEnd="6dp"
+                        android:clickable="true"
+                        android:focusable="true" />
+
+                    <TextView
+                        android:id="@+id/chipCatUtilities"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Utilities"
+                        android:textSize="11.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#64748B"
+                        android:background="@drawable/bg_chip_toggle_inactive"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:paddingTop="7dp"
+                        android:paddingBottom="7dp"
+                        android:layout_marginEnd="6dp"
+                        android:clickable="true"
+                        android:focusable="true" />
+
+                    <TextView
+                        android:id="@+id/chipCatMaintenance"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Maintenance"
+                        android:textSize="11.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#64748B"
+                        android:background="@drawable/bg_chip_toggle_inactive"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:paddingTop="7dp"
+                        android:paddingBottom="7dp"
+                        android:layout_marginEnd="6dp"
+                        android:clickable="true"
+                        android:focusable="true" />
+
+                    <TextView
+                        android:id="@+id/chipCatSupplies"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Supplies"
+                        android:textSize="11.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#64748B"
+                        android:background="@drawable/bg_chip_toggle_inactive"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:paddingTop="7dp"
+                        android:paddingBottom="7dp"
+                        android:layout_marginEnd="6dp"
+                        android:clickable="true"
+                        android:focusable="true" />
+
+                    <TextView
+                        android:id="@+id/chipCatMisc"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Misc"
+                        android:textSize="11.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#64748B"
+                        android:background="@drawable/bg_chip_toggle_inactive"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:paddingTop="7dp"
+                        android:paddingBottom="7dp"
+                        android:clickable="true"
+                        android:focusable="true" />
+
+                </LinearLayout>
+
+            </HorizontalScrollView>
+
+            <!-- Payment Mode -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:text="PAYMENT MODE *"
+                android:textSize="10.5sp"
+                android:textStyle="bold"
+                android:textColor="#64748B"
+                android:letterSpacing="0.06" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/chipPayCash"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="Cash"
+                    android:textSize="11.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#0D6EFD"
+                    android:background="@drawable/bg_chip_toggle_active"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp"
+                    android:layout_marginEnd="6dp"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <TextView
+                    android:id="@+id/chipPayUPI"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="UPI"
+                    android:textSize="11.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#64748B"
+                    android:background="@drawable/bg_chip_toggle_inactive"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp"
+                    android:layout_marginEnd="6dp"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <TextView
+                    android:id="@+id/chipPayBank"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="Bank"
+                    android:textSize="11.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#64748B"
+                    android:background="@drawable/bg_chip_toggle_inactive"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp"
+                    android:layout_marginEnd="6dp"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <TextView
+                    android:id="@+id/chipPayCard"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="Card"
+                    android:textSize="11.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#64748B"
+                    android:background="@drawable/bg_chip_toggle_inactive"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+            </LinearLayout>
+
+            <!-- Reference / Notes Field -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:text="REFERENCE / NOTES (OPTIONAL)"
+                android:textSize="10.5sp"
+                android:textStyle="bold"
+                android:textColor="#64748B"
+                android:letterSpacing="0.06" />
+
+            <EditText
+                android:id="@+id/inputExpenseNotes"
+                android:layout_width="match_parent"
+                android:layout_height="46dp"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/bg_search_input_field"
+                android:hint="Invoice / UTR / Reference number"
+                android:textSize="13.5sp"
+                android:textColor="#0F172A"
+                android:textColorHint="#94A3B8"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:inputType="text"
+                android:maxLines="1" />
+
+            <!-- Submit Button -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnSaveExpense"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:text="Save &amp; Sync Expense"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    app:cornerRadius="12dp"
+                    app:backgroundTint="#0D6EFD" />
+
+                <ProgressBar
+                    android:id="@+id/progressSaveExpense"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_gravity="center"
+                    android:visibility="gone"
+                    android:indeterminateTint="#FFFFFF" />
+
+            </FrameLayout>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</FrameLayout>

@@ -81,6 +81,14 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
         let id: String
         let name: String
         let hospital: String
+        let label: String
+
+        init(id: String, name: String, hospital: String, label: String? = nil) {
+            self.id = id
+            self.name = name
+            self.hospital = hospital
+            self.label = label ?? name
+        }
     }
 
     private var registeredDoctors: [DoctorItem] = []
@@ -98,6 +106,14 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
         super.viewDidLoad()
         view.backgroundColor = UIColor(red: 0.973, green: 0.980, blue: 0.988, alpha: 1)
 
+        registeredDoctors = [DoctorItem(id: "Self", name: "Self (No Doctor)", hospital: "Direct", label: "Self (No Doctor)")]
+        registeredAgencies = [DoctorItem(id: "Direct", name: "Direct Walk-in", hospital: "Standard", label: "Direct Walk-in")]
+        registeredCollectors = [
+            DoctorItem(id: "Lab Phlebotomist", name: "Lab Phlebotomist", hospital: "", label: "Lab Phlebotomist"),
+            DoctorItem(id: "Home Collection Agent", name: "Home Collection Agent", hospital: "", label: "Home Collection Agent"),
+            DoctorItem(id: "Self (Patient)", name: "Self (Patient)", hospital: "", label: "Self (Patient)")
+        ]
+
         setupHeader()
         setupSearchSection()
         setupNewRegSection()
@@ -109,6 +125,7 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         startClockTimer()
+        fetchDoctorsAndAgencies()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -667,26 +684,35 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
 
         setupMenuButton(doctorBtn, title: "Doctor: Self (No Doctor)", items: ["Doctor: Self (No Doctor)"]) { [weak self] sel in
             let clean = sel.replacingOccurrences(of: "Doctor: ", with: "")
-            if let doc = self?.registeredDoctors.first(where: { $0.name == clean || $0.name == sel }) {
+            if let doc = self?.registeredDoctors.first(where: { $0.label == sel || $0.label == clean || $0.name == clean || $0.name == sel }) {
                 self?.selectedDoctor = doc.id
+                self?.doctorBtn.setTitle("Doctor: \(doc.name)", for: .normal)
             } else {
                 self?.selectedDoctor = "Self"
+                self?.doctorBtn.setTitle("Doctor: Self (No Doctor)", for: .normal)
             }
         }
 
         setupMenuButton(agencyBtn, title: "Agency: Direct Walk-in", items: ["Agency: Direct Walk-in"]) { [weak self] sel in
             let clean = sel.replacingOccurrences(of: "Agency: ", with: "")
-            if let ag = self?.registeredAgencies.first(where: { $0.name == clean || $0.name == sel }) {
+            if let ag = self?.registeredAgencies.first(where: { $0.label == sel || $0.label == clean || $0.name == clean || $0.name == sel }) {
                 self?.selectedAgency = ag.id
+                self?.agencyBtn.setTitle("Agency: \(ag.name)", for: .normal)
             } else {
                 self?.selectedAgency = "Direct"
+                self?.agencyBtn.setTitle("Agency: Direct Walk-in", for: .normal)
             }
         }
 
         setupMenuButton(collectorBtn, title: "Collector: Lab Phlebotomist", items: ["Lab Phlebotomist", "Home Collection Agent", "Self (Patient)"]) { [weak self] sel in
             let clean = sel.replacingOccurrences(of: "Collector: ", with: "")
-            self?.selectedCollector = clean
-            self?.collectorBtn.setTitle("Collector: \(clean)", for: .normal)
+            if let col = self?.registeredCollectors.first(where: { $0.label == sel || $0.label == clean || $0.name == clean || $0.name == sel }) {
+                self?.selectedCollector = col.name
+                self?.collectorBtn.setTitle("Collector: \(col.name)", for: .normal)
+            } else {
+                self?.selectedCollector = clean
+                self?.collectorBtn.setTitle("Collector: \(clean)", for: .normal)
+            }
         }
 
         setupMenuButton(paymentModeBtn, title: "Cash", items: ["Cash", "UPI / QR", "Card", "Credit (Due)"]) { [weak self] sel in
@@ -838,28 +864,45 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
                     req.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
                 }
                 if let (data, res) = try? await URLSession.shared.data(for: req),
-                   (res as? HTTPURLResponse)?.statusCode == 200,
-                   let list = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] {
-                    var docs: [DoctorItem] = [DoctorItem(id: "Self", name: "Self (No Doctor)", hospital: "Direct")]
+                   (res as? HTTPURLResponse)?.statusCode == 200 {
+                    var list: [[String: Any]] = []
+                    if let dict = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] {
+                        if let docs = dict["doctors"] as? [[String: Any]] {
+                            list = docs
+                        } else if let dataArr = dict["data"] as? [[String: Any]] {
+                            list = dataArr
+                        }
+                    } else if let arr = (try? JSONSerialization.jsonObject(with: data)) as? [[String: Any]] {
+                        list = arr
+                    }
+
+                    var docs: [DoctorItem] = [DoctorItem(id: "Self", name: "Self (No Doctor)", hospital: "Direct", label: "Doctor: Self (No Doctor)")]
                     var docLabels = ["Doctor: Self (No Doctor)"]
                     for d in list {
                         let id = d["id"] as? String ?? ""
-                        let name = d["name"] as? String ?? ""
-                        let hosp = d["hospital"] as? String ?? ""
-                        docs.append(DoctorItem(id: id, name: name, hospital: hosp))
-                        docLabels.append(name)
+                        let name = d["name"] as? String ?? "Dr. Partner"
+                        let spec = d["specialization"] as? String ?? ""
+                        let hosp = (d["hospital"] as? String) ?? (d["clinic"] as? String) ?? ""
+                        let label = spec.isEmpty ? name : "\(name) (\(spec))"
+                        docs.append(DoctorItem(id: id, name: name, hospital: hosp, label: label))
+                        docLabels.append(label)
                     }
                     await MainActor.run {
                         self.registeredDoctors = docs
-                        self.setupMenuButton(self.doctorBtn, title: self.doctorBtn.title(for: .normal) ?? "Doctor: Self (No Doctor)", items: docLabels) { [weak self] sel in
+                        let currentId = self.selectedDoctor
+                        let currentTitle = self.doctorBtn.title(for: .normal) ?? "Doctor: Self (No Doctor)"
+                        self.setupMenuButton(self.doctorBtn, title: currentTitle, items: docLabels) { [weak self] sel in
                             let clean = sel.replacingOccurrences(of: "Doctor: ", with: "")
-                            if let doc = self?.registeredDoctors.first(where: { $0.name == clean || $0.name == sel }) {
+                            if let doc = self?.registeredDoctors.first(where: { $0.label == sel || $0.label == clean || $0.name == clean || $0.name == sel }) {
                                 self?.selectedDoctor = doc.id
                                 self?.doctorBtn.setTitle("Doctor: \(doc.name)", for: .normal)
                             } else {
                                 self?.selectedDoctor = "Self"
                                 self?.doctorBtn.setTitle("Doctor: Self (No Doctor)", for: .normal)
                             }
+                        }
+                        if let activeDoc = docs.first(where: { $0.id == currentId }) {
+                            self.doctorBtn.setTitle("Doctor: \(activeDoc.name)", for: .normal)
                         }
                     }
                 }
@@ -873,22 +916,35 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
                     req.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
                 }
                 if let (data, res) = try? await URLSession.shared.data(for: req),
-                   (res as? HTTPURLResponse)?.statusCode == 200,
-                   let list = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] {
-                    var ags: [DoctorItem] = [DoctorItem(id: "Direct", name: "Direct Walk-in", hospital: "Standard")]
+                   (res as? HTTPURLResponse)?.statusCode == 200 {
+                    var list: [[String: Any]] = []
+                    if let dict = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] {
+                        if let ags = dict["agencies"] as? [[String: Any]] {
+                            list = ags
+                        } else if let dataArr = dict["data"] as? [[String: Any]] {
+                            list = dataArr
+                        }
+                    } else if let arr = (try? JSONSerialization.jsonObject(with: data)) as? [[String: Any]] {
+                        list = arr
+                    }
+
+                    var ags: [DoctorItem] = [DoctorItem(id: "Direct", name: "Direct Walk-in", hospital: "Standard", label: "Agency: Direct Walk-in")]
                     var agLabels = ["Agency: Direct Walk-in"]
                     for a in list {
                         let id = a["id"] as? String ?? ""
-                        let name = a["agencyName"] as? String ?? "Partner Center"
-                        let code = a["code"] as? String ?? "AGENCY"
-                        ags.append(DoctorItem(id: id, name: name, hospital: code))
-                        agLabels.append(name)
+                        let name = (a["agencyName"] as? String) ?? (a["name"] as? String) ?? "Partner Center"
+                        let tier = a["agencyTier"] as? String ?? ""
+                        let label = tier.isEmpty ? name : "\(name) [\(tier)]"
+                        ags.append(DoctorItem(id: id, name: name, hospital: tier, label: label))
+                        agLabels.append(label)
                     }
                     await MainActor.run {
                         self.registeredAgencies = ags
-                        self.setupMenuButton(self.agencyBtn, title: self.agencyBtn.title(for: .normal) ?? "Agency: Direct Walk-in", items: agLabels) { [weak self] sel in
+                        let currentId = self.selectedAgency
+                        let currentTitle = self.agencyBtn.title(for: .normal) ?? "Agency: Direct Walk-in"
+                        self.setupMenuButton(self.agencyBtn, title: currentTitle, items: agLabels) { [weak self] sel in
                             let clean = sel.replacingOccurrences(of: "Agency: ", with: "")
-                            if let ag = self?.registeredAgencies.first(where: { $0.name == clean || $0.name == sel }) {
+                            if let ag = self?.registeredAgencies.first(where: { $0.label == sel || $0.label == clean || $0.name == clean || $0.name == sel }) {
                                 self?.selectedAgency = ag.id
                                 self?.agencyBtn.setTitle("Agency: \(ag.name)", for: .normal)
                             } else {
@@ -896,38 +952,77 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
                                 self?.agencyBtn.setTitle("Agency: Direct Walk-in", for: .normal)
                             }
                         }
+                        if let activeAg = ags.first(where: { $0.id == currentId }) {
+                            self.agencyBtn.setTitle("Agency: \(activeAg.name)", for: .normal)
+                        }
                     }
                 }
             }
 
-            // 3. Collectors (From user account & staff)
-            if let colUrl = URL(string: "\(baseUrl)/api/workspace/collectors") {
-                var req = URLRequest(url: colUrl)
+            // 3. Collectors (From current user account & lab staff)
+            var cols: [DoctorItem] = []
+            var colLabels: [String] = []
+
+            // A. Current Logged-in User
+            let curUser = UserDefaults.standard.string(forKey: "user_name") ?? ""
+            if !curUser.trimmingCharacters(in: .whitespaces).isEmpty {
+                let label = "\(curUser) (Current User)"
+                cols.append(DoctorItem(id: curUser, name: curUser, hospital: "User", label: label))
+                colLabels.append(label)
+            }
+
+            // B. Standard collector options
+            cols.append(DoctorItem(id: "Lab Phlebotomist", name: "Lab Phlebotomist", hospital: "", label: "Lab Phlebotomist"))
+            colLabels.append("Lab Phlebotomist")
+            cols.append(DoctorItem(id: "Home Collection Agent", name: "Home Collection Agent", hospital: "", label: "Home Collection Agent"))
+            colLabels.append("Home Collection Agent")
+            cols.append(DoctorItem(id: "Self (Patient)", name: "Self (Patient)", hospital: "", label: "Self (Patient)"))
+            colLabels.append("Self (Patient)")
+
+            // C. Lab staff from /api/workspace/staff
+            if let staffUrl = URL(string: "\(baseUrl)/api/workspace/staff") {
+                var sReq = URLRequest(url: staffUrl)
                 if let token = token {
-                    req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-                    req.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
+                    sReq.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+                    sReq.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
                 }
-                if let (data, res) = try? await URLSession.shared.data(for: req),
-                   (res as? HTTPURLResponse)?.statusCode == 200,
-                   let list = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] {
-                    var cols: [DoctorItem] = []
-                    var colLabels: [String] = []
-                    for c in list {
-                        let id = c["id"] as? String ?? ""
-                        let name = c["name"] as? String ?? id
-                        cols.append(DoctorItem(id: id, name: name, hospital: ""))
-                        colLabels.append(name)
+                if let (sData, sRes) = try? await URLSession.shared.data(for: sReq),
+                   (sRes as? HTTPURLResponse)?.statusCode == 200 {
+                    var staffArr: [[String: Any]] = []
+                    if let arr = (try? JSONSerialization.jsonObject(with: sData)) as? [[String: Any]] {
+                        staffArr = arr
+                    } else if let dict = (try? JSONSerialization.jsonObject(with: sData)) as? [String: Any] {
+                        staffArr = (dict["staff"] as? [[String: Any]]) ?? (dict["data"] as? [[String: Any]]) ?? []
                     }
-                    if !cols.isEmpty {
-                        await MainActor.run {
-                            self.registeredCollectors = cols
-                            self.setupMenuButton(self.collectorBtn, title: "Collector: \(colLabels.first ?? "Lab Phlebotomist")", items: colLabels) { [weak self] sel in
-                                let clean = sel.replacingOccurrences(of: "Collector: ", with: "")
-                                self?.selectedCollector = clean
-                                self?.collectorBtn.setTitle("Collector: \(clean)", for: .normal)
-                            }
+                    for s in staffArr {
+                        let staffUser = s["user"] as? [String: Any]
+                        let staffName = (staffUser?["name"] as? String) ?? (s["name"] as? String) ?? ""
+                        let staffRole = (staffUser?["role"] as? String) ?? (s["role"] as? String) ?? ""
+                        if !staffName.isEmpty && !cols.contains(where: { $0.name.lowercased() == staffName.lowercased() }) {
+                            let label = staffRole.isEmpty ? staffName : "\(staffName) (\(staffRole))"
+                            cols.append(DoctorItem(id: staffName, name: staffName, hospital: staffRole, label: label))
+                            colLabels.append(label)
                         }
                     }
+                }
+            }
+
+            await MainActor.run {
+                self.registeredCollectors = cols
+                let curCollector = self.selectedCollector
+                let curTitle = self.collectorBtn.title(for: .normal) ?? "Collector: Lab Phlebotomist"
+                self.setupMenuButton(self.collectorBtn, title: curTitle, items: colLabels) { [weak self] sel in
+                    let clean = sel.replacingOccurrences(of: "Collector: ", with: "")
+                    if let col = self?.registeredCollectors.first(where: { $0.label == sel || $0.label == clean || $0.name == clean || $0.name == sel }) {
+                        self?.selectedCollector = col.name
+                        self?.collectorBtn.setTitle("Collector: \(col.name)", for: .normal)
+                    } else {
+                        self?.selectedCollector = clean
+                        self?.collectorBtn.setTitle("Collector: \(clean)", for: .normal)
+                    }
+                }
+                if let activeCol = cols.first(where: { $0.name == curCollector }) {
+                    self.collectorBtn.setTitle("Collector: \(activeCol.name)", for: .normal)
                 }
             }
         }

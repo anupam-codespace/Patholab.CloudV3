@@ -20,6 +20,10 @@ public class ApiClient {
         void onResult(boolean success, String error, String token);
     }
 
+    public interface LoginCallback {
+        void onResult(boolean success, String error, String token, JSONObject user);
+    }
+
     public static class ApiResponse {
         public final boolean success;
         public final JSONObject body;
@@ -123,7 +127,7 @@ public class ApiClient {
         }
     }
 
-    public static void login(final String email, final String password, final ApiCallback callback) {
+    public static void login(final String email, final String password, final LoginCallback callback) {
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -142,16 +146,26 @@ public class ApiClient {
                         if (token != null && !token.isEmpty()) {
                             AuthManager.syncWebViewCookie(token);
                         }
-                        callback.onResult(true, null, token);
+                        JSONObject user = response.body.optJSONObject("user");
+                        if (callback != null) callback.onResult(true, null, token, user);
                     } else {
                         String error = response.body.optString("error", "Login failed");
-                        callback.onResult(false, error, null);
+                        if (callback != null) callback.onResult(false, error, null, null);
                     }
                 } catch (Exception e) {
-                    callback.onResult(false, "Network error: " + e.getMessage(), null);
+                    if (callback != null) callback.onResult(false, "Network error: " + e.getMessage(), null, null);
                 }
             }
         }).start();
+    }
+
+    public static void login(final String email, final String password, final ApiCallback callback) {
+        login(email, password, new LoginCallback() {
+            @Override
+            public void onResult(boolean success, String error, String token, JSONObject user) {
+                if (callback != null) callback.onResult(success, error, token);
+            }
+        });
     }
 
     public static void register(final String labName, final String name, final String email, final String phone,

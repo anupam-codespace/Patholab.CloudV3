@@ -1,0 +1,615 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Bottom Sheet Dialog: Create In-App Online Booking -->
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_bottom_sheet">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="vertical"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="36dp">
+
+            <!-- Drag Handle -->
+            <View
+                android:layout_width="38dp"
+                android:layout_height="4dp"
+                android:layout_gravity="center_horizontal"
+                android:background="#CBD5E1"
+                android:layout_marginBottom="14dp" />
+
+            <!-- Header Title -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="New Online Booking"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="#0F172A" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Create patient visit &amp; sync with live portal"
+                        android:textSize="11.5sp"
+                        android:textColor="#64748B" />
+
+                </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/btnCreateBookingClose"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:src="@drawable/ic_close_cross"
+                    android:tint="#94A3B8"
+                    app:tint="#94A3B8"
+                    android:padding="5dp"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+            </LinearLayout>
+
+            <!-- ── SECTION 1: PATIENT INFORMATION ────────────────────── -->
+            <TextView
+                android:text="PATIENT DETAILS"
+                android:textSize="10.5sp"
+                android:textStyle="bold"
+                android:textColor="#64748B"
+                android:letterSpacing="0.05"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp" />
+
+            <!-- Full Name -->
+            <EditText
+                android:id="@+id/inputCreatePatientName"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_input_field"
+                android:hint="Full Name (e.g., Rohit Verma) *"
+                android:textColor="#1E293B"
+                android:textColorHint="#94A3B8"
+                android:textSize="13.5sp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:singleLine="true" />
+
+            <!-- Phone + Age Row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="10dp">
+
+                <EditText
+                    android:id="@+id/inputCreatePatientPhone"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1.6"
+                    android:background="@drawable/bg_input_field"
+                    android:hint="Phone Number (10 digits) *"
+                    android:textColor="#1E293B"
+                    android:textColorHint="#94A3B8"
+                    android:textSize="13.5sp"
+                    android:inputType="phone"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:singleLine="true" />
+
+                <EditText
+                    android:id="@+id/inputCreatePatientAge"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="0.8"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_input_field"
+                    android:hint="Age (Yrs)"
+                    android:textColor="#1E293B"
+                    android:textColorHint="#94A3B8"
+                    android:textSize="13.5sp"
+                    android:inputType="number"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:singleLine="true" />
+
+            </LinearLayout>
+
+            <!-- Email Address -->
+            <EditText
+                android:id="@+id/inputCreatePatientEmail"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_input_field"
+                android:hint="Email Address (Optional)"
+                android:textColor="#1E293B"
+                android:textColorHint="#94A3B8"
+                android:textSize="13.5sp"
+                android:inputType="textEmailAddress"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:singleLine="true" />
+
+            <!-- Gender Chips -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="10dp">
+
+                <TextView
+                    android:id="@+id/chipGenderMale"
+                    android:layout_width="0dp"
+                    android:layout_height="36dp"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="Male"
+                    android:textSize="12.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:background="@drawable/bg_chip_active"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <TextView
+                    android:id="@+id/chipGenderFemale"
+                    android:layout_width="0dp"
+                    android:layout_height="36dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="6dp"
+                    android:gravity="center"
+                    android:text="Female"
+                    android:textSize="12.5sp"
+                    android:textColor="#64748B"
+                    android:background="@drawable/bg_chip_inactive"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <TextView
+                    android:id="@+id/chipGenderOther"
+                    android:layout_width="0dp"
+                    android:layout_height="36dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="6dp"
+                    android:gravity="center"
+                    android:text="Other"
+                    android:textSize="12.5sp"
+                    android:textColor="#64748B"
+                    android:background="@drawable/bg_chip_inactive"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+            </LinearLayout>
+
+            <!-- ── SECTION 2: COLLECTION TYPE ──────────────────────────── -->
+            <TextView
+                android:text="COLLECTION METHOD"
+                android:textSize="10.5sp"
+                android:textStyle="bold"
+                android:textColor="#64748B"
+                android:letterSpacing="0.05"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp">
+
+                <TextView
+                    android:id="@+id/btnTypeHomeCollection"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="Home Collection"
+                    android:textSize="12.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:background="@drawable/bg_btn_primary"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <TextView
+                    android:id="@+id/btnTypeLabVisit"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:gravity="center"
+                    android:text="Lab Visit (Walk-in)"
+                    android:textSize="12.5sp"
+                    android:textColor="#64748B"
+                    android:background="@drawable/bg_input_field"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+            </LinearLayout>
+
+            <!-- Address Input (Conditional for Home Collection) -->
+            <LinearLayout
+                android:id="@+id/containerCreateAddress"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="10dp">
+
+                <EditText
+                    android:id="@+id/inputCreateAddress"
+                    android:layout_width="match_parent"
+                    android:layout_height="54dp"
+                    android:background="@drawable/bg_input_field"
+                    android:hint="Street Address, Flat / House No, Landmark *"
+                    android:textColor="#1E293B"
+                    android:textColorHint="#94A3B8"
+                    android:textSize="13sp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:gravity="top|start"
+                    android:paddingTop="10dp" />
+
+                <EditText
+                    android:id="@+id/inputCreatePincode"
+                    android:layout_width="160dp"
+                    android:layout_height="44dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_input_field"
+                    android:hint="Pincode (6 digits)"
+                    android:textColor="#1E293B"
+                    android:textColorHint="#94A3B8"
+                    android:textSize="13.5sp"
+                    android:inputType="number"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:singleLine="true" />
+
+            </LinearLayout>
+
+            <!-- ── SECTION 3: APPOINTMENT SCHEDULE ─────────────────────── -->
+            <TextView
+                android:text="SCHEDULE &amp; TIME SLOT"
+                android:textSize="10.5sp"
+                android:textStyle="bold"
+                android:textColor="#64748B"
+                android:letterSpacing="0.05"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp" />
+
+            <!-- Date Picker Button -->
+            <LinearLayout
+                android:id="@+id/btnPickScheduledDate"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_input_field"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/ic_calendar"
+                    android:tint="#2563EB"
+                    app:tint="#2563EB" />
+
+                <TextView
+                    android:id="@+id/lblSelectedScheduledDate"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:text="Select Date (e.g. Today)"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textColor="#1E293B" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Change"
+                    android:textSize="11.5sp"
+                    android:textColor="#2563EB" />
+
+            </LinearLayout>
+
+            <!-- Time Slots Horizontal Scroll -->
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="none"
+                android:layout_marginTop="10dp">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btnSlot1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="34dp"
+                        android:gravity="center"
+                        android:text="07:00 AM - 09:00 AM"
+                        android:textSize="11.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"
+                        android:background="@drawable/bg_chip_active"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:layout_marginEnd="6dp"
+                        android:clickable="true"
+                        android:focusable="true" />
+
+                    <TextView
+                        android:id="@+id/btnSlot2"
+                        android:layout_width="wrap_content"
+                        android:layout_height="34dp"
+                        android:gravity="center"
+                        android:text="09:00 AM - 11:00 AM"
+                        android:textSize="11.5sp"
+                        android:textColor="#64748B"
+                        android:background="@drawable/bg_chip_inactive"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:layout_marginEnd="6dp"
+                        android:clickable="true"
+                        android:focusable="true" />
+
+                    <TextView
+                        android:id="@+id/btnSlot3"
+                        android:layout_width="wrap_content"
+                        android:layout_height="34dp"
+                        android:gravity="center"
+                        android:text="11:00 AM - 01:00 PM"
+                        android:textSize="11.5sp"
+                        android:textColor="#64748B"
+                        android:background="@drawable/bg_chip_inactive"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:layout_marginEnd="6dp"
+                        android:clickable="true"
+                        android:focusable="true" />
+
+                    <TextView
+                        android:id="@+id/btnSlot4"
+                        android:layout_width="wrap_content"
+                        android:layout_height="34dp"
+                        android:gravity="center"
+                        android:text="02:00 PM - 04:00 PM"
+                        android:textSize="11.5sp"
+                        android:textColor="#64748B"
+                        android:background="@drawable/bg_chip_inactive"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:layout_marginEnd="6dp"
+                        android:clickable="true"
+                        android:focusable="true" />
+
+                    <TextView
+                        android:id="@+id/btnSlot5"
+                        android:layout_width="wrap_content"
+                        android:layout_height="34dp"
+                        android:gravity="center"
+                        android:text="04:00 PM - 06:00 PM"
+                        android:textSize="11.5sp"
+                        android:textColor="#64748B"
+                        android:background="@drawable/bg_chip_inactive"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:clickable="true"
+                        android:focusable="true" />
+
+                </LinearLayout>
+
+            </HorizontalScrollView>
+
+            <!-- ── SECTION 4: TEST CATALOG SELECTION ───────────────────── -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="18dp">
+
+                <TextView
+                    android:text="SELECT TESTS &amp; PACKAGES"
+                    android:textSize="10.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#64748B"
+                    android:letterSpacing="0.05"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
+
+                <TextView
+                    android:id="@+id/lblSelectedTestsSummary"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0 selected"
+                    android:textSize="11.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#2563EB" />
+
+            </LinearLayout>
+
+            <!-- Test Search Field -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_input_field"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp">
+
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:src="@drawable/ic_search"
+                    android:tint="#94A3B8"
+                    app:tint="#94A3B8" />
+
+                <EditText
+                    android:id="@+id/inputSearchTestCatalog"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@null"
+                    android:layout_marginStart="8dp"
+                    android:hint="Search available tests..."
+                    android:textSize="12.5sp"
+                    android:textColor="#1E293B"
+                    android:textColorHint="#94A3B8"
+                    android:singleLine="true" />
+
+            </LinearLayout>
+
+            <!-- Tests RecyclerView Container -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="180dp"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/bg_input_field">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recyclerCreateTestCatalog"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scrollbars="vertical" />
+
+                <ProgressBar
+                    android:id="@+id/progressCatalogLoading"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_gravity="center"
+                    android:visibility="gone" />
+
+            </FrameLayout>
+
+            <!-- ── SECTION 5: CLINICAL NOTES ───────────────────────────── -->
+            <TextView
+                android:text="CLINICAL NOTES / REMARKS"
+                android:textSize="10.5sp"
+                android:textStyle="bold"
+                android:textColor="#64748B"
+                android:letterSpacing="0.05"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp" />
+
+            <EditText
+                android:id="@+id/inputCreateNotes"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_input_field"
+                android:hint="Fasting required, special phlebotomist instructions..."
+                android:textColor="#1E293B"
+                android:textColorHint="#94A3B8"
+                android:textSize="12.5sp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingTop="8dp"
+                android:gravity="top|start" />
+
+            <!-- ── BILLING SUMMARY & SUBMIT BUTTON ─────────────────────── -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="#F8FAFC"
+                android:padding="12dp"
+                android:layout_marginTop="16dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:text="Total Amount"
+                        android:textSize="11.5sp"
+                        android:textColor="#64748B"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                    <TextView
+                        android:id="@+id/lblCreateGrandTotal"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="1dp"
+                        android:text="₹0"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="#059669" />
+
+                </LinearLayout>
+
+                <FrameLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <Button
+                        android:id="@+id/btnConfirmCreateBooking"
+                        android:layout_width="wrap_content"
+                        android:layout_height="44dp"
+                        android:text="Confirm Booking"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"
+                        android:backgroundTint="#2563EB"
+                        android:paddingStart="20dp"
+                        android:paddingEnd="20dp" />
+
+                    <ProgressBar
+                        android:id="@+id/progressCreateBooking"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center"
+                        android:indeterminateTint="#FFFFFF"
+                        android:visibility="gone" />
+
+                </FrameLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</FrameLayout>

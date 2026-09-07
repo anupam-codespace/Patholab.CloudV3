@@ -4,19 +4,50 @@ import { getCurrentUser, getDataFromToken } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
+async function getAuthenticatedLabId(req: NextRequest): Promise<string | null> {
+  const user = (await getDataFromToken(req)) || (await getCurrentUser());
+  if (!user) return null;
+  const userId = user.userId || (user as any).id;
+  if (user.labId) return user.labId;
+
+  if (userId) {
+    const ownerLab = await prisma.lab.findFirst({
+      where: { ownerId: userId },
+      select: { id: true },
+    });
+    if (ownerLab) return ownerLab.id;
+
+    const staffLab = await prisma.labStaff.findFirst({
+      where: { userId, isActive: true },
+      select: { labId: true },
+    });
+    if (staffLab) return staffLab.labId;
+
+    if (user.role === "SUPER_ADMIN") {
+      const firstLab = await prisma.lab.findFirst({
+        where: { isActive: true },
+        select: { id: true },
+      });
+      if (firstLab) return firstLab.id;
+    }
+  }
+
+  return null;
+}
+
 // ============================================================================
 // GET: Fetch ALL Lab Settings (Branches, Configs) - WALLET ERA UPDATED
 // ============================================================================
 export async function GET(req: NextRequest) {
   try {
-    const user = (await getDataFromToken(req)) || (await getCurrentUser());
+    const labId = await getAuthenticatedLabId(req);
     
-    if (!user || !user.labId) {
+    if (!labId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const lab = await prisma.lab.findUnique({
-      where: { id: user.labId },
+      where: { id: labId },
       include: {
         owner: {
           select: { name: true, email: true, phone: true }
@@ -43,9 +74,9 @@ export async function GET(req: NextRequest) {
 // ============================================================================
 export async function PUT(req: NextRequest) {
   try {
-    const user = (await getDataFromToken(req)) || (await getCurrentUser());
+    const labId = await getAuthenticatedLabId(req);
     
-    if (!user || !user.labId) {
+    if (!labId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -56,7 +87,7 @@ export async function PUT(req: NextRequest) {
       
       // 1. Update the Global Lab Master Record
       const updatedLab = await tx.lab.update({
-        where: { id: user.labId },
+        where: { id: labId },
         data: {
           // General Details
           name: body.name,
@@ -90,18 +121,21 @@ export async function PUT(req: NextRequest) {
           defaultDoctorCommission: body.defaultDoctorCommission ? parseFloat(body.defaultDoctorCommission.toString()) : null,
           defaultAgencyCommission: body.defaultAgencyCommission ? parseFloat(body.defaultAgencyCommission.toString()) : null,
 
+          // Modules Toggles
+          activeModules: Array.isArray(body.activeModules) ? body.activeModules : undefined,
+
           // Communication Modules (WhatsApp & SMS)
-          // whatsappApiKey: body.whatsappApiKey,
-          // whatsappPhoneId: body.whatsappPhoneId,
-          // smsApiKey: body.smsApiKey,
-          // smsSenderId: body.smsSenderId,
+          whatsappApiKey: body.whatsappApiKey !== undefined ? body.whatsappApiKey : undefined,
+          whatsappPhoneId: body.whatsappPhoneId !== undefined ? body.whatsappPhoneId : undefined,
+          smsApiKey: body.smsApiKey !== undefined ? body.smsApiKey : undefined,
+          smsSenderId: body.smsSenderId !== undefined ? body.smsSenderId : undefined,
         },
       });
 
       // 2. Smart Sync: Update the "Main Branch" location automatically if requested
       if (body.syncMainBranch) {
         const mainBranch = await tx.branch.findFirst({
-          where: { labId: user.labId, isMainBranch: true }
+          where: { labId: labId, isMainBranch: true }
         });
 
         if (mainBranch) {

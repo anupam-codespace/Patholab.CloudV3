@@ -99,17 +99,16 @@
                     android:gravity="center_vertical"
                     android:layout_marginTop="6dp">
 
-                    <!-- The Dropdown Capsule Button (Covers space across header) -->
+                    <!-- Modern Timeframe Selector (Frosted Sapphire Healthcare Pill) -->
                     <LinearLayout
                         android:id="@+id/btnRangeDropdown"
                         android:layout_width="match_parent"
-                        android:layout_height="44dp"
-                        android:background="@drawable/bg_dashboard_dropdown_capsule"
+                        android:layout_height="42dp"
+                        android:background="@drawable/bg_timeframe_sapphire_pill"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:paddingStart="15dp"
+                        android:paddingStart="14dp"
                         android:paddingEnd="14dp"
-                        android:elevation="2dp"
                         android:clickable="true"
                         android:focusable="true"
                         android:foreground="?attr/selectableItemBackground">
@@ -117,19 +116,26 @@
                         <ImageView
                             android:layout_width="16dp"
                             android:layout_height="16dp"
-                            android:src="@drawable/ic_calendar_clock"
-                            android:tint="#0D6EFD"
-                            app:tint="#0D6EFD"
-                            android:layout_marginEnd="8dp" />
+                            android:src="@drawable/ic_calendar"
+                            android:tint="#E0E7FF"
+                            app:tint="#E0E7FF"
+                            android:layout_marginEnd="10dp" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Timeframe:"
-                            android:textColor="#64748B"
-                            android:textSize="12.5sp"
-                            android:fontFamily="sans-serif-medium"
-                            android:layout_marginEnd="6dp" />
+                            android:text="TIMEFRAME"
+                            android:textColor="#BFDBFE"
+                            android:textSize="10sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="0.06"
+                            android:layout_marginEnd="8dp" />
+
+                        <View
+                            android:layout_width="1dp"
+                            android:layout_height="14dp"
+                            android:background="#44FFFFFF"
+                            android:layout_marginEnd="8dp" />
 
                         <TextView
                             android:id="@+id/lblSelectedRangeName"
@@ -137,17 +143,17 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="Last 30 Days"
-                            android:textColor="#0F172A"
+                            android:textColor="#FFFFFF"
                             android:textSize="13sp"
                             android:textStyle="bold" />
 
                         <ImageView
-                            android:layout_width="16dp"
-                            android:layout_height="16dp"
+                            android:layout_width="14dp"
+                            android:layout_height="14dp"
                             android:layout_marginStart="6dp"
                             android:src="@drawable/ic_chevron_down"
-                            android:tint="#0D6EFD"
-                            app:tint="#0D6EFD" />
+                            android:tint="#FFFFFF"
+                            app:tint="#FFFFFF" />
 
                     </LinearLayout>
 
@@ -254,39 +260,13 @@
                             android:textStyle="bold"
                             android:textColor="#312E81" />
 
-                        <!-- Polished Status Warning Pill with Vector Icon -->
-                        <LinearLayout
-                            android:id="@+id/containerWalletStatusBadge"
+                        <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical"
-                            android:background="@drawable/bg_badge_wallet_alert"
-                            android:paddingStart="7dp"
-                            android:paddingEnd="8dp"
-                            android:paddingTop="2.5dp"
-                            android:paddingBottom="2.5dp">
-
-                            <ImageView
-                                android:id="@+id/imgWalletStatusIcon"
-                                android:layout_width="12dp"
-                                android:layout_height="12dp"
-                                android:src="@drawable/ic_alert_triangle"
-                                android:tint="#DC2626"
-                                app:tint="#DC2626"
-                                android:layout_marginEnd="4dp" />
-
-                            <TextView
-                                android:id="@+id/lblDashWalletStatus"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Low Balance"
-                                android:textSize="10.5sp"
-                                android:textStyle="bold"
-                                android:textColor="#DC2626" />
-
-                        </LinearLayout>
+                            android:layout_marginTop="2dp"
+                            android:text="Available balance"
+                            android:textSize="10.5sp"
+                            android:textColor="#94A3B8" />
 
                     </LinearLayout>
 

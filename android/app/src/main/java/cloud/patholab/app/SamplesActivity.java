@@ -538,11 +538,11 @@ public class SamplesActivity extends AppCompatActivity {
         inputPhlebotomistName.setText(currentUserName);
 
         String[] tubes = {
-                "🟣 EDTA Whole Blood (Lavender Tube)",
-                "🟡 Serum Gel / SST (Gold/Yellow Tube)",
-                "🔘 Sodium Fluoride / Plasma (Grey Tube)",
-                "🟢 Sodium Heparin (Green Tube)",
-                "🟠 Sterile Container (Urine/Sputum Cup)"
+                "EDTA Whole Blood (Lavender Tube)",
+                "Serum Gel / SST (Gold/Yellow Tube)",
+                "Sodium Fluoride / Plasma (Grey Tube)",
+                "Sodium Heparin (Green Tube)",
+                "Sterile Container (Urine/Sputum Cup)"
         };
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, tubes);
         spinnerTubeType.setAdapter(adapter);

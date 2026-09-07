@@ -116,44 +116,30 @@ class BillingViewController: UIViewController, UITableViewDataSource, UITableVie
         titleLbl.translatesAutoresizingMaskIntoConstraints = false
         topHeaderView.addSubview(titleLbl)
 
-        let subLbl = UILabel()
         subLbl.text = "Financial Ledger & Revenue Hub"
         subLbl.font = .systemFont(ofSize: 11.5, weight: .medium)
         subLbl.textColor = UIColor(red: 0.780, green: 0.880, blue: 1.0, alpha: 1) // #C7DFFF
         subLbl.translatesAutoresizingMaskIntoConstraints = false
         topHeaderView.addSubview(subLbl)
 
-        let newInvBtn = UIButton(type: .system)
-        newInvBtn.setTitle("+ New Invoice", for: .normal)
-        newInvBtn.setTitleColor(UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1), for: .normal)
-        newInvBtn.titleLabel?.font = .systemFont(ofSize: 12.5, weight: .bold)
-        newInvBtn.backgroundColor = .white
-        newInvBtn.layer.cornerRadius = 17
-        newInvBtn.contentEdgeInsets = UIEdgeInsets(top: 0, left: 14, bottom: 0, right: 14)
-        newInvBtn.addTarget(self, action: #selector(didTapNewInvoice), for: .touchUpInside)
-        newInvBtn.translatesAutoresizingMaskIntoConstraints = false
-        topHeaderView.addSubview(newInvBtn)
-
         NSLayoutConstraint.activate([
             topHeaderView.topAnchor.constraint(equalTo: view.topAnchor),
             topHeaderView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             topHeaderView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            topHeaderView.heightAnchor.constraint(equalToConstant: 116),
+            topHeaderView.heightAnchor.constraint(equalToConstant: 104),
 
             backBtn.leadingAnchor.constraint(equalTo: topHeaderView.leadingAnchor, constant: 16),
-            backBtn.bottomAnchor.constraint(equalTo: topHeaderView.bottomAnchor, constant: -14),
+            backBtn.bottomAnchor.constraint(equalTo: topHeaderView.bottomAnchor, constant: -12),
             backBtn.widthAnchor.constraint(equalToConstant: 38),
             backBtn.heightAnchor.constraint(equalToConstant: 38),
 
             titleLbl.leadingAnchor.constraint(equalTo: backBtn.trailingAnchor, constant: 12),
             titleLbl.topAnchor.constraint(equalTo: backBtn.topAnchor, constant: -1),
+            titleLbl.trailingAnchor.constraint(lessThanOrEqualTo: topHeaderView.trailingAnchor, constant: -16),
 
             subLbl.leadingAnchor.constraint(equalTo: titleLbl.leadingAnchor),
             subLbl.topAnchor.constraint(equalTo: titleLbl.bottomAnchor, constant: 2),
-
-            newInvBtn.trailingAnchor.constraint(equalTo: topHeaderView.trailingAnchor, constant: -16),
-            newInvBtn.centerYAnchor.constraint(equalTo: backBtn.centerYAnchor),
-            newInvBtn.heightAnchor.constraint(equalToConstant: 34),
+            subLbl.trailingAnchor.constraint(lessThanOrEqualTo: topHeaderView.trailingAnchor, constant: -16),
         ])
     }
 
@@ -176,7 +162,7 @@ class BillingViewController: UIViewController, UITableViewDataSource, UITableVie
         kpiScrollView.addSubview(kpiStack)
 
         NSLayoutConstraint.activate([
-            kpiScrollView.topAnchor.constraint(equalTo: topHeaderView.bottomAnchor, constant: 12),
+            kpiScrollView.topAnchor.constraint(equalTo: topHeaderView.bottomAnchor, constant: 8),
             kpiScrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             kpiScrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             kpiScrollView.heightAnchor.constraint(equalToConstant: 92),

@@ -209,6 +209,7 @@ public class RegistrationActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         mainHandler.post(clockRunnable);
+        fetchDoctorsAndAgencies();
     }
 
     @Override
@@ -305,18 +306,26 @@ public class RegistrationActivity extends AppCompatActivity {
         spinnerAgeUnit.setAdapter(createCleanAdapter(new String[]{"Years", "Months", "Days"}));
 
         // Referring Doctor
+        registeredDoctors.clear();
+        registeredDoctors.add(new DoctorItem("Self", "Self (No Doctor)", "Direct", "Direct"));
         doctorLabels.clear();
         doctorLabels.add("Self (No Doctor)");
         adapterDoctor = createCleanAdapter(doctorLabels);
         spinnerDoctor.setAdapter(adapterDoctor);
 
         // Referring Agency
+        registeredAgencies.clear();
+        registeredAgencies.add(new DoctorItem("Direct", "Direct Walk-in", "Standard", "Standard"));
         agencyLabels.clear();
         agencyLabels.add("Direct Walk-in");
         adapterAgency = createCleanAdapter(agencyLabels);
         spinnerAgency.setAdapter(adapterAgency);
 
         // Collected By
+        registeredCollectors.clear();
+        registeredCollectors.add(new DoctorItem("Lab Phlebotomist", "Lab Phlebotomist", "", ""));
+        registeredCollectors.add(new DoctorItem("Home Collection Agent", "Home Collection Agent", "", ""));
+        registeredCollectors.add(new DoctorItem("Self (Patient)", "Self (Patient)", "", ""));
         collectorLabels.clear();
         collectorLabels.add("Lab Phlebotomist");
         collectorLabels.add("Home Collection Agent");
@@ -693,7 +702,7 @@ public class RegistrationActivity extends AppCompatActivity {
                 String colValue = "Lab Phlebotomist";
                 int colPos = spinnerCollector.getSelectedItemPosition();
                 if (colPos >= 0 && colPos < registeredCollectors.size()) {
-                    colValue = registeredCollectors.get(colPos).id;
+                    colValue = registeredCollectors.get(colPos).name;
                 } else if (spinnerCollector.getSelectedItem() != null) {
                     colValue = spinnerCollector.getSelectedItem().toString();
                 }
@@ -888,28 +897,50 @@ public class RegistrationActivity extends AppCompatActivity {
                     }
                     if (docConn.getResponseCode() == 200) {
                         String res = readStream(docConn.getInputStream());
-                        JSONArray arr = new JSONArray(res);
-                        List<DoctorItem> newDocs = new ArrayList<>();
-                        List<String> newDocLabels = new ArrayList<>();
-                        newDocs.add(new DoctorItem("Self", "Self (No Doctor)", "Direct", "Direct"));
-                        newDocLabels.add("Self (No Doctor)");
-                        for (int i = 0; i < arr.length(); i++) {
-                            JSONObject d = arr.getJSONObject(i);
-                            String id = d.optString("id");
-                            String docName = d.optString("name", "Dr. Partner");
-                            String spec = d.optString("specialization", "");
-                            String hosp = d.optString("hospital", d.optString("clinic", ""));
-                            newDocs.add(new DoctorItem(id, docName, spec, hosp));
-                            String label = docName + (spec.isEmpty() ? "" : " (" + spec + ")");
-                            newDocLabels.add(label);
+                        JSONArray arr = null;
+                        if (res != null && res.trim().startsWith("[")) {
+                            arr = new JSONArray(res);
+                        } else if (res != null && res.trim().startsWith("{")) {
+                            JSONObject obj = new JSONObject(res);
+                            if (obj.has("doctors")) {
+                                arr = obj.optJSONArray("doctors");
+                            } else if (obj.has("data")) {
+                                arr = obj.optJSONArray("data");
+                            }
                         }
-                        mainHandler.post(() -> {
-                            registeredDoctors.clear();
-                            registeredDoctors.addAll(newDocs);
-                            doctorLabels.clear();
-                            doctorLabels.addAll(newDocLabels);
-                            adapterDoctor.notifyDataSetChanged();
-                        });
+                        if (arr != null) {
+                            List<DoctorItem> newDocs = new ArrayList<>();
+                            List<String> newDocLabels = new ArrayList<>();
+                            newDocs.add(new DoctorItem("Self", "Self (No Doctor)", "Direct", "Direct"));
+                            newDocLabels.add("Self (No Doctor)");
+                            for (int i = 0; i < arr.length(); i++) {
+                                JSONObject d = arr.getJSONObject(i);
+                                String id = d.optString("id");
+                                String docName = d.optString("name", "Dr. Partner");
+                                String spec = d.optString("specialization", "");
+                                String hosp = d.optString("hospital", d.optString("clinic", ""));
+                                newDocs.add(new DoctorItem(id, docName, spec, hosp));
+                                String label = docName + (spec.isEmpty() ? "" : " (" + spec + ")");
+                                newDocLabels.add(label);
+                            }
+                            mainHandler.post(() -> {
+                                int curPos = spinnerDoctor.getSelectedItemPosition();
+                                String curId = (curPos >= 0 && curPos < registeredDoctors.size()) ? registeredDoctors.get(curPos).id : null;
+                                registeredDoctors.clear();
+                                registeredDoctors.addAll(newDocs);
+                                doctorLabels.clear();
+                                doctorLabels.addAll(newDocLabels);
+                                adapterDoctor.notifyDataSetChanged();
+                                if (curId != null) {
+                                    for (int i = 0; i < registeredDoctors.size(); i++) {
+                                        if (curId.equals(registeredDoctors.get(i).id)) {
+                                            spinnerDoctor.setSelection(i);
+                                            break;
+                                        }
+                                    }
+                                }
+                            });
+                        }
                     }
                 } catch (Exception ignored) {}
 
@@ -923,77 +954,138 @@ public class RegistrationActivity extends AppCompatActivity {
                     }
                     if (agConn.getResponseCode() == 200) {
                         String res = readStream(agConn.getInputStream());
-                        JSONArray arr = new JSONArray(res);
-                        List<DoctorItem> newAgs = new ArrayList<>();
-                        List<String> newAgLabels = new ArrayList<>();
-                        newAgs.add(new DoctorItem("Direct", "Direct Walk-in", "Standard", "Standard"));
-                        newAgLabels.add("Direct Walk-in");
-                        for (int i = 0; i < arr.length(); i++) {
-                            JSONObject a = arr.getJSONObject(i);
-                            String id = a.optString("id");
-                            String agName = a.optString("agencyName", "Partner Center");
-                            newAgs.add(new DoctorItem(id, agName, "Partner Center", a.optString("code", "AGENCY")));
-                            newAgLabels.add(agName);
+                        JSONArray arr = null;
+                        if (res != null && res.trim().startsWith("[")) {
+                            arr = new JSONArray(res);
+                        } else if (res != null && res.trim().startsWith("{")) {
+                            JSONObject obj = new JSONObject(res);
+                            if (obj.has("agencies")) {
+                                arr = obj.optJSONArray("agencies");
+                            } else if (obj.has("data")) {
+                                arr = obj.optJSONArray("data");
+                            }
                         }
-                        mainHandler.post(() -> {
-                            registeredAgencies.clear();
-                            registeredAgencies.addAll(newAgs);
-                            agencyLabels.clear();
-                            agencyLabels.addAll(newAgLabels);
-                            adapterAgency.notifyDataSetChanged();
-                        });
+                        if (arr != null) {
+                            List<DoctorItem> newAgs = new ArrayList<>();
+                            List<String> newAgLabels = new ArrayList<>();
+                            newAgs.add(new DoctorItem("Direct", "Direct Walk-in", "Standard", "Standard"));
+                            newAgLabels.add("Direct Walk-in");
+                            for (int i = 0; i < arr.length(); i++) {
+                                JSONObject a = arr.getJSONObject(i);
+                                String id = a.optString("id");
+                                String agName = a.optString("agencyName", a.optString("name", "Partner Center"));
+                                String tier = a.optString("agencyTier", "");
+                                newAgs.add(new DoctorItem(id, agName, "Partner Center", tier));
+                                String label = agName + (tier.isEmpty() ? "" : " [" + tier + "]");
+                                newAgLabels.add(label);
+                            }
+                            mainHandler.post(() -> {
+                                int curPos = spinnerAgency.getSelectedItemPosition();
+                                String curId = (curPos >= 0 && curPos < registeredAgencies.size()) ? registeredAgencies.get(curPos).id : null;
+                                registeredAgencies.clear();
+                                registeredAgencies.addAll(newAgs);
+                                agencyLabels.clear();
+                                agencyLabels.addAll(newAgLabels);
+                                adapterAgency.notifyDataSetChanged();
+                                if (curId != null) {
+                                    for (int i = 0; i < registeredAgencies.size(); i++) {
+                                        if (curId.equals(registeredAgencies.get(i).id)) {
+                                            spinnerAgency.setSelection(i);
+                                            break;
+                                        }
+                                    }
+                                }
+                            });
+                        }
                     }
                 } catch (Exception ignored) {}
 
                 // 3. Collectors (From user account & staff)
                 try {
-                    String[] colEndpoints = new String[]{
-                        BASE_URL + "/api/workspace/collectors",
-                        BASE_URL + "/api/workspace/staff"
-                    };
-                    for (String ep : colEndpoints) {
-                        try {
-                            URL colUrl = new URL(ep);
-                            HttpURLConnection colConn = (HttpURLConnection) colUrl.openConnection();
-                            if (token != null) {
-                                colConn.setRequestProperty("Authorization", "Bearer " + token);
-                                colConn.setRequestProperty("Cookie", "token=" + token);
+                    List<DoctorItem> newCols = new ArrayList<>();
+                    List<String> newColLabels = new ArrayList<>();
+
+                    // A. Current Logged-in User
+                    String curUser = AuthManager.getUserName(this);
+                    if (curUser != null && !curUser.trim().isEmpty()) {
+                        newCols.add(new DoctorItem(curUser, curUser, "User", ""));
+                        newColLabels.add(curUser + " (Current User)");
+                    }
+
+                    // B. Standard collector options
+                    newCols.add(new DoctorItem("Lab Phlebotomist", "Lab Phlebotomist", "", ""));
+                    newColLabels.add("Lab Phlebotomist");
+                    newCols.add(new DoctorItem("Home Collection Agent", "Home Collection Agent", "", ""));
+                    newColLabels.add("Home Collection Agent");
+                    newCols.add(new DoctorItem("Self (Patient)", "Self (Patient)", "", ""));
+                    newColLabels.add("Self (Patient)");
+
+                    // C. Lab staff from /api/workspace/staff
+                    try {
+                        URL staffUrl = new URL(BASE_URL + "/api/workspace/staff");
+                        HttpURLConnection staffConn = (HttpURLConnection) staffUrl.openConnection();
+                        if (token != null) {
+                            staffConn.setRequestProperty("Authorization", "Bearer " + token);
+                            staffConn.setRequestProperty("Cookie", "token=" + token);
+                        }
+                        if (staffConn.getResponseCode() == 200) {
+                            String res = readStream(staffConn.getInputStream());
+                            JSONArray arr = null;
+                            if (res != null && res.trim().startsWith("[")) {
+                                arr = new JSONArray(res);
+                            } else if (res != null && res.trim().startsWith("{")) {
+                                JSONObject obj = new JSONObject(res);
+                                arr = obj.optJSONArray("staff");
+                                if (arr == null) arr = obj.optJSONArray("data");
                             }
-                            if (colConn.getResponseCode() == 200) {
-                                String res = readStream(colConn.getInputStream());
-                                if (res != null && res.trim().startsWith("[")) {
-                                    JSONArray arr = new JSONArray(res);
-                                    List<DoctorItem> newCols = new ArrayList<>();
-                                    List<String> newColLabels = new ArrayList<>();
-                                    for (int i = 0; i < arr.length(); i++) {
-                                        JSONObject c = arr.getJSONObject(i);
-                                        String id = c.optString("id");
-                                        String colName = c.optString("name", "");
-                                        if (colName.isEmpty() && c.has("user")) {
-                                            JSONObject u = c.optJSONObject("user");
-                                            if (u != null) {
-                                                colName = u.optString("name", "");
-                                            }
-                                        }
-                                        if (!colName.isEmpty()) {
-                                            newCols.add(new DoctorItem(id, colName, "", ""));
-                                            newColLabels.add(colName);
+                            if (arr != null) {
+                                for (int i = 0; i < arr.length(); i++) {
+                                    JSONObject s = arr.getJSONObject(i);
+                                    String staffName = s.optString("name", "");
+                                    String staffRole = s.optString("role", "");
+                                    if (s.has("user")) {
+                                        JSONObject u = s.optJSONObject("user");
+                                        if (u != null) {
+                                            if (staffName.isEmpty()) staffName = u.optString("name", "");
+                                            if (staffRole.isEmpty()) staffRole = u.optString("role", "");
                                         }
                                     }
-                                    if (!newCols.isEmpty()) {
-                                        mainHandler.post(() -> {
-                                            registeredCollectors.clear();
-                                            registeredCollectors.addAll(newCols);
-                                            collectorLabels.clear();
-                                            collectorLabels.addAll(newColLabels);
-                                            adapterCollector.notifyDataSetChanged();
-                                        });
-                                        break;
+                                    if (!staffName.isEmpty()) {
+                                        boolean alreadyExists = false;
+                                        for (DoctorItem existing : newCols) {
+                                            if (existing.name.equalsIgnoreCase(staffName)) {
+                                                alreadyExists = true;
+                                                break;
+                                            }
+                                        }
+                                        if (!alreadyExists) {
+                                            newCols.add(new DoctorItem(staffName, staffName, staffRole, ""));
+                                            String label = staffRole.isEmpty() ? staffName : staffName + " (" + staffRole + ")";
+                                            newColLabels.add(label);
+                                        }
                                     }
                                 }
                             }
-                        } catch (Exception ignored) {}
-                    }
+                        }
+                    } catch (Exception ignored) {}
+
+                    mainHandler.post(() -> {
+                        int curPos = spinnerCollector.getSelectedItemPosition();
+                        String curName = (curPos >= 0 && curPos < registeredCollectors.size()) ? registeredCollectors.get(curPos).name : null;
+                        registeredCollectors.clear();
+                        registeredCollectors.addAll(newCols);
+                        collectorLabels.clear();
+                        collectorLabels.addAll(newColLabels);
+                        adapterCollector.notifyDataSetChanged();
+                        if (curName != null) {
+                            for (int i = 0; i < registeredCollectors.size(); i++) {
+                                if (curName.equalsIgnoreCase(registeredCollectors.get(i).name)) {
+                                    spinnerCollector.setSelection(i);
+                                    break;
+                                }
+                            }
+                        }
+                    });
                 } catch (Exception ignored) {}
 
             } catch (Exception ignored) {}

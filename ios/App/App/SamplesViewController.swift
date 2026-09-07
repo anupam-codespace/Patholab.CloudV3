@@ -480,7 +480,7 @@ class SamplesViewController: UIViewController, UITableViewDataSource, UITableVie
                         patientName: pName,
                         patientDetails: pDetails,
                         uhid: pId,
-                        tubeEmoji: "🟡",
+                        tubeEmoji: "",
                         tubeTypeName: "Serum Gel (SST)",
                         tubeBgColor: UIColor(red: 1.0, green: 0.98, blue: 0.76, alpha: 1),
                         tubeTextColor: UIColor(red: 0.63, green: 0.38, blue: 0.03, alpha: 1),
@@ -585,7 +585,7 @@ class SamplesViewController: UIViewController, UITableViewDataSource, UITableVie
         tubePill.translatesAutoresizingMaskIntoConstraints = false
 
         let tubeLbl = UILabel()
-        tubeLbl.text = "\(sample.tubeEmoji) \(sample.tubeTypeName)"
+        tubeLbl.text = sample.tubeTypeName
         tubeLbl.font = .systemFont(ofSize: 11, weight: .bold)
         tubeLbl.textColor = sample.tubeTextColor
         tubeLbl.translatesAutoresizingMaskIntoConstraints = false
@@ -678,10 +678,23 @@ class SamplesViewController: UIViewController, UITableViewDataSource, UITableVie
             deptLbl.bottomAnchor.constraint(equalTo: testsBox.bottomAnchor, constant: -6),
         ])
 
+        let timeStack = UIStackView()
+        timeStack.axis = .horizontal
+        timeStack.spacing = 5
+        timeStack.alignment = .center
+
+        let timeIcon = UIImageView(image: UIImage(systemName: "calendar"))
+        timeIcon.tintColor = UIColor(red: 0.392, green: 0.451, blue: 0.549, alpha: 1)
+        timeIcon.translatesAutoresizingMaskIntoConstraints = false
+        timeIcon.widthAnchor.constraint(equalToConstant: 12).isActive = true
+        timeIcon.heightAnchor.constraint(equalToConstant: 12).isActive = true
+        timeStack.addArrangedSubview(timeIcon)
+
         let timeLbl = UILabel()
         timeLbl.text = sample.collectionInfo
         timeLbl.font = .systemFont(ofSize: 11, weight: .medium)
         timeLbl.textColor = UIColor(red: 0.392, green: 0.451, blue: 0.549, alpha: 1)
+        timeStack.addArrangedSubview(timeLbl)
 
         // Action Buttons
         let printBtn = UIButton(type: .system)
@@ -729,7 +742,7 @@ class SamplesViewController: UIViewController, UITableViewDataSource, UITableVie
             detailsBtn.widthAnchor.constraint(equalToConstant: 38),
         ])
 
-        [tubePill, barcodePill, statusBadge, avatarIV, nameLbl, detailsLbl, testsBox, timeLbl, btnStack].forEach {
+        [tubePill, barcodePill, statusBadge, avatarIV, nameLbl, detailsLbl, testsBox, timeStack, btnStack].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
             card.addSubview($0)
         }
@@ -763,10 +776,10 @@ class SamplesViewController: UIViewController, UITableViewDataSource, UITableVie
             testsBox.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
             testsBox.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14),
 
-            timeLbl.topAnchor.constraint(equalTo: testsBox.bottomAnchor, constant: 8),
-            timeLbl.leadingAnchor.constraint(equalTo: nameLbl.leadingAnchor),
+            timeStack.topAnchor.constraint(equalTo: testsBox.bottomAnchor, constant: 8),
+            timeStack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
 
-            btnStack.topAnchor.constraint(equalTo: timeLbl.bottomAnchor, constant: 12),
+            btnStack.topAnchor.constraint(equalTo: timeStack.bottomAnchor, constant: 12),
             btnStack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
             btnStack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14),
             btnStack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -14),
@@ -781,11 +794,11 @@ class SamplesViewController: UIViewController, UITableViewDataSource, UITableVie
         let sample = filteredSamples[sender.tag]
         let alert = UIAlertController(
             title: "Barcode Label: \(sample.barcode)",
-            message: "Patient: \(sample.patientName) (\(sample.uhid))\nContainer: \(sample.tubeEmoji) \(sample.tubeTypeName)\nTests: \(sample.testsAssigned)\n\nReady for 50x25mm thermal sticker printing.",
+            message: "Patient: \(sample.patientName) (\(sample.uhid))\nContainer: \(sample.tubeTypeName)\nTests: \(sample.testsAssigned)\n\nReady for 50x25mm thermal sticker printing.",
             preferredStyle: .alert
         )
 
-        alert.addAction(UIAlertAction(title: "🖨️ Print Label", style: .default, handler: { _ in
+        alert.addAction(UIAlertAction(title: "Print Label", style: .default, handler: { _ in
             // Print spooler simulation
         }))
         alert.addAction(UIAlertAction(title: "Close", style: .cancel, handler: nil))
@@ -799,7 +812,7 @@ class SamplesViewController: UIViewController, UITableViewDataSource, UITableVie
                 allSamples[idx].status = "IN_ANALYZER"
             } else {
                 allSamples[idx].status = "COLLECTED"
-                allSamples[idx].collectionInfo = "📅 Just now • Phleb. Active Station"
+                allSamples[idx].collectionInfo = "Just now • Phleb. Active Station"
             }
             updateKpiStats()
             applySamplesFilter()
@@ -841,7 +854,7 @@ class SamplesViewController: UIViewController, UITableViewDataSource, UITableVie
         let sample = filteredSamples[sender.tag]
         let alert = UIAlertController(
             title: "Specimen: \(sample.barcode)",
-            message: "Patient: \(sample.patientName)\nUHID: \(sample.uhid)\nContainer: \(sample.tubeEmoji) \(sample.tubeTypeName)\nTests Assigned: \(sample.testsAssigned)\nDepartment: \(sample.department)\nCollection: \(sample.collectionInfo)\nStatus: \(sample.status)" + (sample.rejectionReason != nullString ? "\n\n⚠️ Note: \(sample.rejectionReason!)" : ""),
+            message: "Patient: \(sample.patientName)\nUHID: \(sample.uhid)\nContainer: \(sample.tubeTypeName)\nTests Assigned: \(sample.testsAssigned)\nDepartment: \(sample.department)\nCollection: \(sample.collectionInfo)\nStatus: \(sample.status)" + (sample.rejectionReason != nullString ? "\n\nNote: \(sample.rejectionReason!)" : ""),
             preferredStyle: .alert
         )
         alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
@@ -882,13 +895,13 @@ class SamplesViewController: UIViewController, UITableViewDataSource, UITableVie
                 patientName: name,
                 patientDetails: "Demographics Recorded • UHID: P-000\(96 + self.allSamples.count)",
                 uhid: "P-000\(96 + self.allSamples.count)",
-                tubeEmoji: "🟣",
+                tubeEmoji: "",
                 tubeTypeName: "EDTA Whole Blood",
                 tubeBgColor: UIColor(red: 0.95, green: 0.91, blue: 1.0, alpha: 1),
                 tubeTextColor: UIColor(red: 0.49, green: 0.13, blue: 0.81, alpha: 1),
                 testsAssigned: testVal,
                 department: "Hematology & Pathology",
-                collectionInfo: "📅 Just now • Phleb. Station",
+                collectionInfo: "Just now • Phleb. Station",
                 status: "COLLECTED",
                 rejectionReason: nil
             )

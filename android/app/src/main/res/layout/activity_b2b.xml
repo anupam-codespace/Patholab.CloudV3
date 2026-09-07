@@ -1,0 +1,459 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dedicated B2B & Corporate Agencies Management Console -->
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F8FAFC">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <!-- ── TOP CURVED SAPPHIRE HEADER ─────────────────────────────── -->
+        <FrameLayout
+            android:id="@+id/b2bHeaderLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_home_header"
+            android:paddingStart="18dp"
+            android:paddingEnd="18dp"
+            android:paddingTop="32dp"
+            android:paddingBottom="24dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <FrameLayout
+                    android:id="@+id/btnB2BBack"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:background="@drawable/bg_glass_back_btn"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_back_arrow"
+                        android:tint="#FFFFFF"
+                        app:tint="#FFFFFF" />
+
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="14dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Corporate Agencies"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"
+                        android:letterSpacing="-0.02" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Manage partner labs, enterprise tiers &amp; margins"
+                        android:textSize="11.5sp"
+                        android:textColor="#C7DFFF"
+                        android:singleLine="true"
+                        android:ellipsize="end" />
+
+                </LinearLayout>
+
+                <!-- Export / Share Report Button -->
+                <FrameLayout
+                    android:id="@+id/btnExportAgencies"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:background="@drawable/bg_wallet_pill"
+                    android:layout_marginEnd="8dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_share_hero"
+                        android:tint="#FFFFFF"
+                        app:tint="#FFFFFF" />
+
+                </FrameLayout>
+
+                <!-- Refresh Button -->
+                <FrameLayout
+                    android:id="@+id/btnRefreshAgencies"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:background="@drawable/bg_wallet_pill"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageView
+                        android:id="@+id/imgRefreshAgenciesIcon"
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_refresh_cw"
+                        android:tint="#FFFFFF"
+                        app:tint="#FFFFFF" />
+
+                </FrameLayout>
+
+            </LinearLayout>
+
+        </FrameLayout>
+
+        <!-- ── 4 KPI METRICS CARDS (WEB PARITY) ───────────────────────── -->
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="6dp"
+            android:clipToPadding="false">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <!-- KPI 1: Total Agencies -->
+                <LinearLayout
+                    android:layout_width="140dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_billing_kpi_card_indigo"
+                    android:padding="12dp"
+                    android:elevation="1dp"
+                    android:layout_marginEnd="10dp">
+
+                    <TextView
+                        android:text="PARTNER AGENCIES"
+                        android:textSize="9.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#6366F1"
+                        android:letterSpacing="0.04"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                    <TextView
+                        android:id="@+id/lblKpiTotalAgencies"
+                        android:text="0"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="#1E1B4B"
+                        android:layout_marginTop="4dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                    <TextView
+                        android:text="Active contracts"
+                        android:textSize="10.5sp"
+                        android:textColor="#818CF8"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                </LinearLayout>
+
+                <!-- KPI 2: Total Volume -->
+                <LinearLayout
+                    android:layout_width="140dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_billing_kpi_card_emerald"
+                    android:padding="12dp"
+                    android:elevation="1dp"
+                    android:layout_marginEnd="10dp">
+
+                    <TextView
+                        android:text="TOTAL VOLUME"
+                        android:textSize="9.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#059669"
+                        android:letterSpacing="0.04"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                    <TextView
+                        android:id="@+id/lblKpiTotalVolume"
+                        android:text="0"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="#064E3B"
+                        android:layout_marginTop="4dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                    <TextView
+                        android:text="Referred samples"
+                        android:textSize="10.5sp"
+                        android:textColor="#34D399"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                </LinearLayout>
+
+                <!-- KPI 3: Billed Volume -->
+                <LinearLayout
+                    android:layout_width="150dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_billing_kpi_card_cyan"
+                    android:padding="12dp"
+                    android:elevation="1dp"
+                    android:layout_marginEnd="10dp">
+
+                    <TextView
+                        android:text="BILLED VOLUME"
+                        android:textSize="9.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#0284C7"
+                        android:letterSpacing="0.04"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                    <TextView
+                        android:id="@+id/lblKpiBilledVolume"
+                        android:text="₹0"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="#0C4A6E"
+                        android:layout_marginTop="4dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                    <TextView
+                        android:text="Gross B2B billing"
+                        android:textSize="10.5sp"
+                        android:textColor="#38BDF8"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                </LinearLayout>
+
+                <!-- KPI 4: Pending Payout -->
+                <LinearLayout
+                    android:layout_width="150dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_billing_kpi_card_amber"
+                    android:padding="12dp"
+                    android:elevation="1dp">
+
+                    <TextView
+                        android:text="PENDING PAYOUT"
+                        android:textSize="9.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#D97706"
+                        android:letterSpacing="0.04"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                    <TextView
+                        android:id="@+id/lblKpiPendingPayout"
+                        android:text="₹0"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="#78350F"
+                        android:layout_marginTop="4dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                    <TextView
+                        android:text="Unsettled commission"
+                        android:textSize="10.5sp"
+                        android:textColor="#FBBF24"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </HorizontalScrollView>
+
+        <!-- ── SEARCH OMNIBAR ─────────────────────────────────────────── -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="8dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:background="@drawable/bg_search_input_field"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/ic_search"
+                    android:tint="#94A3B8"
+                    app:tint="#94A3B8" />
+
+                <EditText
+                    android:id="@+id/inputSearchAgencies"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@null"
+                    android:hint="Search agency, contact, phone, tier..."
+                    android:textColor="#0F172A"
+                    android:textColorHint="#94A3B8"
+                    android:textSize="13.5sp"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:singleLine="true"
+                    android:imeOptions="actionSearch" />
+
+                <ImageView
+                    android:id="@+id/btnClearSearchAgencies"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_close_circle"
+                    android:tint="#94A3B8"
+                    app:tint="#94A3B8"
+                    android:visibility="gone"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+            </LinearLayout>
+
+        </FrameLayout>
+
+        <!-- ── FILTER CHIPS ───────────────────────────────────────────── -->
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:clipToPadding="false">
+
+            <LinearLayout
+                android:id="@+id/containerAgencyFilterChips"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal" />
+
+        </HorizontalScrollView>
+
+        <!-- ── PROGRESS BAR ───────────────────────────────────────────── -->
+        <ProgressBar
+            android:id="@+id/progressAgencies"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="20dp"
+            android:visibility="gone" />
+
+        <!-- ── AGENCIES LIST & EMPTY STATE ────────────────────────────── -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerAgencies"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingTop="4dp"
+                android:paddingBottom="90dp"
+                android:clipToPadding="false" />
+
+            <!-- Empty State -->
+            <LinearLayout
+                android:id="@+id/emptyStateAgencies"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="32dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:src="@drawable/ic_building"
+                    android:tint="#CBD5E1"
+                    app:tint="#CBD5E1" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="No Corporate Agencies Found"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="#334155" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Add partner diagnostics, nursing homes or clinics to automate B2B margins and portal access."
+                    android:textSize="12.5sp"
+                    android:textColor="#64748B"
+                    android:gravity="center" />
+
+                <Button
+                    android:id="@+id/btnEmptyAddAgency"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_marginTop="16dp"
+                    android:text="+ Add Partner Agency"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12.5sp"
+                    android:background="@drawable/bg_btn_primary" />
+
+            </LinearLayout>
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+    <!-- ── FLOATING ACTION BUTTON (+ ADD AGENCY) ──────────────────────── -->
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        android:id="@+id/fabAddAgency"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="18dp"
+        android:layout_marginBottom="24dp"
+        android:text="New Agency"
+        android:textColor="#FFFFFF"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        app:icon="@drawable/ic_plus"
+        app:iconTint="#FFFFFF"
+        app:backgroundTint="#0D6EFD"
+        android:elevation="6dp" />
+
+</FrameLayout>

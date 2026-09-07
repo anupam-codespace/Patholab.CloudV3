@@ -1,0 +1,446 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Bottom Sheet Dialog: Online Booking Detail & Workflow Actions -->
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_setting_item">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="24dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <!-- Drag Handle -->
+            <View
+                android:layout_width="38dp"
+                android:layout_height="4dp"
+                android:layout_gravity="center_horizontal"
+                android:background="#CBD5E1"
+                android:layout_marginBottom="16dp" />
+
+            <!-- Header Row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/lblDetailPatientName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Rahul Sharma"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="#0F172A" />
+
+                    <TextView
+                        android:id="@+id/lblDetailBookingUhid"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="UHID: PAT-881920 • Online Portal"
+                        android:textSize="12sp"
+                        android:textColor="#64748B" />
+
+                </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/btnDetailClose"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:src="@drawable/ic_back_arrow"
+                    android:tint="#94A3B8"
+                    app:tint="#94A3B8"
+                    android:padding="4dp"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+            </LinearLayout>
+
+            <!-- Badges Row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="12dp">
+
+                <TextView
+                    android:id="@+id/lblDetailModeBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Home Collection"
+                    android:textSize="11.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#7C3AED"
+                    android:background="@drawable/bg_mod_badge_home_collection"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:paddingTop="3dp"
+                    android:paddingBottom="3dp" />
+
+                <TextView
+                    android:id="@+id/lblDetailStatusBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="SCHEDULED"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="#1D4ED8"
+                    android:background="@drawable/bg_status_scheduled"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:paddingTop="3dp"
+                    android:paddingBottom="3dp" />
+
+            </LinearLayout>
+
+            <!-- Contact & Bio Card -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="#F8FAFC"
+                android:padding="12dp"
+                android:layout_marginTop="16dp">
+
+                <TextView
+                    android:text="PATIENT DETAILS"
+                    android:textSize="10.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#64748B"
+                    android:letterSpacing="0.05"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:id="@+id/lblDetailPhone"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="+91 98765 43210"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:textColor="#1E293B" />
+
+                    <!-- Quick Call -->
+                    <Button
+                        android:id="@+id/btnDetailCall"
+                        android:layout_width="wrap_content"
+                        android:layout_height="32dp"
+                        android:text="Call"
+                        android:textSize="11sp"
+                        android:textColor="#2563EB"
+                        android:backgroundTint="#EFF6FF"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp" />
+
+                    <!-- Quick WhatsApp -->
+                    <Button
+                        android:id="@+id/btnDetailWhatsApp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="32dp"
+                        android:layout_marginStart="6dp"
+                        android:text="WhatsApp"
+                        android:textSize="11sp"
+                        android:textColor="#16A34A"
+                        android:backgroundTint="#ECFDF5"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp" />
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/lblDetailEmail"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="patient@example.com"
+                    android:textSize="12sp"
+                    android:textColor="#64748B" />
+
+                <TextView
+                    android:id="@+id/lblDetailAgeGender"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Age: 34 Yrs • Gender: Male"
+                    android:textSize="12sp"
+                    android:textColor="#64748B" />
+
+            </LinearLayout>
+
+            <!-- Schedule & Reschedule Card -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="#F8FAFC"
+                android:padding="12dp"
+                android:layout_marginTop="10dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:text="SCHEDULE"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#64748B"
+                        android:letterSpacing="0.05"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1" />
+
+                    <TextView
+                        android:id="@+id/btnDetailReschedule"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Reschedule"
+                        android:textSize="11.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#2563EB"
+                        android:clickable="true"
+                        android:focusable="true" />
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/lblDetailScheduleDateTime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Wednesday, 06 Sep 2026 • 08:00 AM - 10:00 AM"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textColor="#1E293B" />
+
+            </LinearLayout>
+
+            <!-- Address Card (Home Collection) -->
+            <LinearLayout
+                android:id="@+id/containerDetailAddress"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="#F8FAFC"
+                android:padding="12dp"
+                android:layout_marginTop="10dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:text="COLLECTION ADDRESS"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#64748B"
+                        android:letterSpacing="0.05"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1" />
+
+                    <Button
+                        android:id="@+id/btnDetailOpenMaps"
+                        android:layout_width="wrap_content"
+                        android:layout_height="30dp"
+                        android:text="Open Maps"
+                        android:textSize="11sp"
+                        android:textColor="#7C3AED"
+                        android:backgroundTint="#F3E8FF"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp" />
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/lblDetailAddressText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Flat 4B, Silver Heights, MG Road, Ward 12, Pincode: 781005"
+                    android:textSize="12.5sp"
+                    android:textColor="#334155" />
+
+            </LinearLayout>
+
+            <!-- Tests & Billing Card -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="#F8FAFC"
+                android:padding="12dp"
+                android:layout_marginTop="10dp">
+
+                <TextView
+                    android:text="ORDERED TESTS &amp; INVOICING"
+                    android:textSize="10.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#64748B"
+                    android:letterSpacing="0.05"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:id="@+id/lblDetailTestsFullList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="1. Complete Blood Count (CBC) - ₹350\n2. Lipid Profile - ₹650\n3. Fasting Blood Sugar - ₹150"
+                    android:textSize="12.5sp"
+                    android:textColor="#334155"
+                    android:lineSpacingExtra="3dp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#E2E8F0"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:text="Grand Total:"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:textColor="#0F172A"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1" />
+
+                    <TextView
+                        android:id="@+id/lblDetailGrandTotal"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="₹1,150"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#059669" />
+
+                    <TextView
+                        android:id="@+id/lblDetailPaymentStatusBadge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="PAID"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#059669"
+                        android:background="@drawable/bg_payment_paid"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:paddingTop="2dp"
+                        android:paddingBottom="2dp" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- Status Workflow Actions -->
+            <TextView
+                android:text="WORKFLOW ACTIONS"
+                android:textSize="10.5sp"
+                android:textStyle="bold"
+                android:textColor="#64748B"
+                android:letterSpacing="0.05"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp">
+
+                <Button
+                    android:id="@+id/btnDetailMarkAssigned"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:text="Assign Trip"
+                    android:textSize="12sp"
+                    android:textColor="#FFFFFF"
+                    android:backgroundTint="#4F46E5"
+                    android:layout_marginEnd="6dp" />
+
+                <Button
+                    android:id="@+id/btnDetailMarkCollected"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:text="Collect Sample"
+                    android:textSize="12sp"
+                    android:textColor="#FFFFFF"
+                    android:backgroundTint="#059669" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp">
+
+                <Button
+                    android:id="@+id/btnDetailMarkCompleted"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:text="Complete Visit"
+                    android:textSize="12sp"
+                    android:textColor="#FFFFFF"
+                    android:backgroundTint="#0284C7"
+                    android:layout_marginEnd="6dp" />
+
+                <Button
+                    android:id="@+id/btnDetailCancelBooking"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:text="Cancel Booking"
+                    android:textSize="12sp"
+                    android:textColor="#E11D48"
+                    android:backgroundTint="#FFE4E6" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</FrameLayout>

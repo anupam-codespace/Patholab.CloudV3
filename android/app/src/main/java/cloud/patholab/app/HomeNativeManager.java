@@ -203,6 +203,9 @@ public class HomeNativeManager {
     private void bindViews() {
         txtGreeting       = homeRoot.findViewById(R.id.homeGreeting);
         homeWaveEmoji     = homeRoot.findViewById(R.id.homeWaveEmoji);
+        if (homeWaveEmoji != null) {
+            homeWaveEmoji.setOnClickListener(v -> playWaveAnimation());
+        }
         txtWalletBalance  = homeRoot.findViewById(R.id.homeWalletBalance);
         walletPill        = homeRoot.findViewById(R.id.homeWalletPill);
 
@@ -1087,7 +1090,8 @@ public class HomeNativeManager {
                 List<SheetModDef> b2bGrowthList = Arrays.asList(
                         new SheetModDef("Referral Doctors", "/workspace/doctors", "ic_mod_clean_doctors", "bg_mod_icon_blue"),
                         new SheetModDef("Corporate Agencies", "/workspace/agencies", "ic_mod_clean_agencies", "bg_mod_icon_orange"),
-                        new SheetModDef("Commissions Payout", "/workspace/commissions", "ic_mod_clean_payout", "bg_mod_icon_purple")
+                        new SheetModDef("Commissions Payout", "/workspace/commissions", "ic_mod_clean_payout", "bg_mod_icon_purple"),
+                        new SheetModDef("B2B Settings", "/workspace/settings/b2b-tiers", "ic_mod_clean_b2b_settings", "bg_mod_icon_blue")
                 );
                 buildCategorySection(sheet, contentContainer, "B2B & GROWTH", b2bGrowthList);
 
@@ -1268,6 +1272,22 @@ public class HomeNativeManager {
             ctx.startActivity(new Intent(ctx, StaffManagementActivity.class));
         } else if (path.equals("/workspace/support") || path.startsWith("/workspace/support")) {
             ctx.startActivity(new Intent(ctx, SupportActivity.class));
+        } else if (path.equals("/workspace/bookings") || path.startsWith("/workspace/bookings")
+                || path.equals("/workspace/online-booking") || path.startsWith("/workspace/online-booking")) {
+            ctx.startActivity(new Intent(ctx, OnlineBookingActivity.class));
+        } else if (path.equals("/workspace/agencies") || path.startsWith("/workspace/agencies")
+                || path.equals("/workspace/b2b") || path.startsWith("/workspace/b2b")) {
+            ctx.startActivity(new Intent(ctx, B2BActivity.class));
+        } else if (path.equals("/workspace/settings/b2b-tiers") || path.startsWith("/workspace/settings/b2b-tiers")
+                || path.equals("/workspace/settings/b2b") || path.startsWith("/workspace/settings/b2b")) {
+            ctx.startActivity(new Intent(ctx, B2BSettingsActivity.class));
+        } else if (path.equals("/workspace/doctors") || path.startsWith("/workspace/doctors")) {
+            ctx.startActivity(new Intent(ctx, ReferralDoctorsActivity.class));
+        } else if (path.equals("/workspace/commissions") || path.startsWith("/workspace/commissions")) {
+            ctx.startActivity(new Intent(ctx, CommissionsActivity.class));
+        } else if (path.equals("/workspace/settings") || path.startsWith("/workspace/settings")
+                || path.equals("/settings") || path.startsWith("/settings")) {
+            ctx.startActivity(new Intent(ctx, ProfileSettingsActivity.class));
         } else if (navListener != null) {
             navListener.onNavigateTo(path);
         }
@@ -1448,21 +1468,36 @@ public class HomeNativeManager {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  Waving Hand 🤚 Animation (Animates on launch and every home return)
+    //  Waving Hand 👋 Animation (Animates on launch, home return, user update & tap)
     // ─────────────────────────────────────────────────────────────────────────
     public void playWaveAnimation() {
         if (homeWaveEmoji == null) return;
-        mainHandler.postDelayed(() -> {
+        mainHandler.post(() -> {
             if (homeWaveEmoji == null) return;
-            homeWaveEmoji.setPivotX(homeWaveEmoji.getWidth() > 0 ? homeWaveEmoji.getWidth() * 0.70f : dp(12));
-            homeWaveEmoji.setPivotY(homeWaveEmoji.getHeight() > 0 ? homeWaveEmoji.getHeight() * 0.85f : dp(16));
+            homeWaveEmoji.post(() -> {
+                if (homeWaveEmoji == null) return;
+                float w = homeWaveEmoji.getWidth();
+                float h = homeWaveEmoji.getHeight();
+                homeWaveEmoji.setPivotX(w > 0 ? w * 0.70f : dp(14));
+                homeWaveEmoji.setPivotY(h > 0 ? h * 0.85f : dp(18));
 
-            ObjectAnimator wave = ObjectAnimator.ofFloat(homeWaveEmoji, "rotation",
-                    0f, 20f, -14f, 17f, -9f, 11f, -5f, 6f, 0f);
-            wave.setDuration(1200);
-            wave.setInterpolator(new AccelerateDecelerateInterpolator());
-            wave.start();
-        }, 250);
+                // Lively hand-waving rotation
+                ObjectAnimator rotate = ObjectAnimator.ofFloat(homeWaveEmoji, "rotation",
+                        0f, 22f, -14f, 20f, -10f, 16f, -6f, 10f, 0f);
+                rotate.setDuration(1300);
+                rotate.setInterpolator(new AccelerateDecelerateInterpolator());
+
+                // Subtle scale bounce to give clear visible feedback
+                ObjectAnimator scaleX = ObjectAnimator.ofFloat(homeWaveEmoji, "scaleX", 1.0f, 1.25f, 1.0f, 1.15f, 1.0f);
+                ObjectAnimator scaleY = ObjectAnimator.ofFloat(homeWaveEmoji, "scaleY", 1.0f, 1.25f, 1.0f, 1.15f, 1.0f);
+                scaleX.setDuration(1300);
+                scaleY.setDuration(1300);
+
+                android.animation.AnimatorSet animSet = new android.animation.AnimatorSet();
+                animSet.playTogether(rotate, scaleX, scaleY);
+                animSet.start();
+            });
+        });
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -1505,6 +1540,22 @@ public class HomeNativeManager {
                 } else if (path.equals("/dashboard") || path.equals("/workspace/dashboard") || path.startsWith("/dashboard")
                         || path.equals("/workspace") || path.equals("/home") || path.equals("/")) {
                     ctx.startActivity(new Intent(ctx, LabDashboardActivity.class));
+                } else if (path.equals("/workspace/bookings") || path.startsWith("/workspace/bookings")
+                        || path.equals("/workspace/online-booking") || path.startsWith("/workspace/online-booking")) {
+                    ctx.startActivity(new Intent(ctx, OnlineBookingActivity.class));
+                } else if (path.equals("/workspace/agencies") || path.startsWith("/workspace/agencies")
+                        || path.equals("/workspace/b2b") || path.startsWith("/workspace/b2b")) {
+                    ctx.startActivity(new Intent(ctx, B2BActivity.class));
+                } else if (path.equals("/workspace/settings/b2b-tiers") || path.startsWith("/workspace/settings/b2b-tiers")
+                        || path.equals("/workspace/settings/b2b") || path.startsWith("/workspace/settings/b2b")) {
+                    ctx.startActivity(new Intent(ctx, B2BSettingsActivity.class));
+                } else if (path.equals("/workspace/doctors") || path.startsWith("/workspace/doctors")) {
+                    ctx.startActivity(new Intent(ctx, ReferralDoctorsActivity.class));
+                } else if (path.equals("/workspace/commissions") || path.startsWith("/workspace/commissions")) {
+                    ctx.startActivity(new Intent(ctx, CommissionsActivity.class));
+                } else if (path.equals("/workspace/settings") || path.startsWith("/workspace/settings")
+                        || path.equals("/settings") || path.startsWith("/settings")) {
+                    ctx.startActivity(new Intent(ctx, ProfileSettingsActivity.class));
                 } else if (navListener != null) {
                     navListener.onNavigateTo(path);
                 }
@@ -1667,24 +1718,27 @@ public class HomeNativeManager {
     public void loadUserInfo() {
         // 1. Check AuthManager and SharedPreferences
         String name = AuthManager.getUserName(ctx);
-        if (name == null || name.isEmpty()) {
+        if (name == null || name.isEmpty() || name.equalsIgnoreCase("Doctor") || name.equalsIgnoreCase("User")) {
             if (prefs != null) name = prefs.getString("user_name", "");
+        }
+        if (name != null && (name.equalsIgnoreCase("Doctor") || name.equalsIgnoreCase("User") || name.equalsIgnoreCase("null"))) {
+            name = "";
         }
         if (name == null || name.isEmpty()) {
             String email = AuthManager.getUserEmail(ctx);
-            if (email != null && !email.isEmpty()) name = email;
+            if (email != null && !email.isEmpty()) name = formatSmartFirstName(email);
         }
 
         // 2. Decode JWT payload if available
         String token = getAuthToken();
         if (token != null && !token.isEmpty()) {
             String jwtName = extractNameFromJwt(token);
-            if (jwtName != null && !jwtName.isEmpty()) {
+            if (jwtName != null && !jwtName.isEmpty() && !jwtName.equalsIgnoreCase("Doctor")) {
                 name = jwtName;
             }
         }
 
-        if (name != null && !name.isEmpty() && !name.equalsIgnoreCase("User")) {
+        if (name != null && !name.isEmpty() && !name.equalsIgnoreCase("User") && !name.equalsIgnoreCase("Doctor")) {
             applyUserName(name);
         }
 
@@ -1702,23 +1756,49 @@ public class HomeNativeManager {
                 if (conn.getResponseCode() == 200) {
                     String json = readStream(conn.getInputStream());
                     JSONObject obj = new JSONObject(json);
-                    String rawServerName = obj.optString("name", "");
-                    String serverName = (!rawServerName.isEmpty() && !"null".equalsIgnoreCase(rawServerName.trim()) && !rawServerName.contains("@"))
-                            ? rawServerName
-                            : formatSmartFirstName(obj.optString("email", ""));
-                    String role = obj.optString("role", "Lab Owner");
+
+                    // The server payload is { user: { name, email, role, avatar }, lab: { name, wallet } }
+                    JSONObject userObj = obj.optJSONObject("user");
+                    if (userObj == null) userObj = obj;
+
+                    String rawServerName = userObj.optString("name", "");
+                    if (rawServerName.isEmpty() || "null".equalsIgnoreCase(rawServerName.trim())) {
+                        rawServerName = obj.optString("name", "");
+                    }
+
+                    String serverEmail = userObj.optString("email", "");
+                    if (serverEmail.isEmpty() || "null".equalsIgnoreCase(serverEmail.trim())) {
+                        serverEmail = obj.optString("email", "");
+                    }
+
+                    String role = userObj.optString("role", obj.optString("role", "Lab Owner"));
                     currentRole = role.replace("_", " ");
 
-                    if (!serverName.isEmpty()) {
-                        currentFullName = serverName;
-                        if (prefs != null) prefs.edit().putString("user_name", serverName).apply();
-                        AuthManager.saveUserInfo(ctx, obj.optString("email", ""), serverName, role);
-                        String finalName = serverName;
+                    JSONObject lab = obj.optJSONObject("lab");
+                    String labName = lab != null ? lab.optString("name", "") : "";
+
+                    String resolvedName = "";
+                    if (!rawServerName.isEmpty() && !"null".equalsIgnoreCase(rawServerName.trim()) && !rawServerName.contains("@")) {
+                        resolvedName = formatSmartFirstName(rawServerName);
+                    } else if (!serverEmail.isEmpty()) {
+                        resolvedName = formatSmartFirstName(serverEmail);
+                    } else if (!labName.isEmpty()) {
+                        resolvedName = formatSmartFirstName(labName);
+                    }
+
+                    if (resolvedName.isEmpty() || resolvedName.equalsIgnoreCase("Doctor")) {
+                        resolvedName = !rawServerName.isEmpty() ? rawServerName : (!labName.isEmpty() ? labName : "Owner");
+                    }
+
+                    if (!resolvedName.isEmpty()) {
+                        currentFullName = resolvedName;
+                        if (prefs != null) prefs.edit().putString("user_name", resolvedName).apply();
+                        AuthManager.saveUserInfo(ctx, serverEmail, resolvedName, role);
+                        String finalName = resolvedName;
                         mainHandler.post(() -> applyUserName(finalName));
                     }
 
                     // Extract wallet balance directly if present in user's lab
-                    JSONObject lab = obj.optJSONObject("lab");
                     if (lab != null) {
                         JSONObject wallet = lab.optJSONObject("wallet");
                         if (wallet != null && wallet.has("balance")) {
@@ -1734,7 +1814,7 @@ public class HomeNativeManager {
                     }
 
                     // Check for avatar in /api/auth/me response
-                    String av = obj.optString("avatar", "");
+                    String av = userObj.optString("avatar", obj.optString("avatar", ""));
                     if (!av.isEmpty() && !"null".equalsIgnoreCase(av)) {
                         loadAvatarImage(av);
                     }
@@ -1758,6 +1838,15 @@ public class HomeNativeManager {
                     JSONObject obj = new JSONObject(json);
                     JSONObject user = obj.optJSONObject("user");
                     if (user != null) {
+                        String profName = user.optString("name", "");
+                        if (!profName.isEmpty() && !"null".equalsIgnoreCase(profName.trim()) && !profName.contains("@")) {
+                            String formatted = formatSmartFirstName(profName);
+                            if (!formatted.isEmpty() && !formatted.equalsIgnoreCase("Doctor")) {
+                                currentFullName = formatted;
+                                if (prefs != null) prefs.edit().putString("user_name", formatted).apply();
+                                mainHandler.post(() -> applyUserName(formatted));
+                            }
+                        }
                         String av = user.optString("avatar", "");
                         if (!av.isEmpty() && !"null".equalsIgnoreCase(av)) {
                             loadAvatarImage(av);
@@ -2050,6 +2139,9 @@ public class HomeNativeManager {
     private void applyUserName(String fullName) {
         currentFullName = fullName;
         String firstName = formatSmartFirstName(fullName);
+        if (firstName == null || firstName.isEmpty() || firstName.equalsIgnoreCase("Doctor")) {
+            firstName = "Owner";
+        }
         if (txtGreeting != null) {
             txtGreeting.setText("Hello, " + firstName);
         }
@@ -2059,19 +2151,22 @@ public class HomeNativeManager {
         }
         if (avatarInitial != null) avatarInitial.setVisibility(View.GONE);
 
+        // Always trigger lively waving hand animation whenever user name updates
+        playWaveAnimation();
+
         triggerWelcomeNotificationIfEligible();
     }
 
     /**
      * Smart First Name Extraction:
-     * Handles spaces, emails, CamelCase concatenated strings (e.g. MonowarHussain -> Monowar),
-     * title prefixes (Dr., Mr.), compound prefixes, and cleanly caps at 7-8 letters.
+     * Handles spaces, emails, CamelCase concatenated strings (e.g. SupriyoSaha -> Supriyo),
+     * title prefixes (Dr., Mr.), compound prefixes, and cleanly formats for greeting.
      */
     public static String formatSmartFirstName(String raw) {
-        if (raw == null || raw.trim().isEmpty()) return "Doctor";
+        if (raw == null || raw.trim().isEmpty()) return "Owner";
         String str = raw.trim();
 
-        // 1. Remove email domain if present (e.g. monowar@gmail.com -> monowar)
+        // 1. Remove email domain if present (e.g. supriyo@gmail.com -> supriyo)
         if (str.contains("@")) {
             str = str.substring(0, str.indexOf('@'));
         }
@@ -2081,7 +2176,7 @@ public class HomeNativeManager {
         str = str.replaceAll("(?i)[._\\-](gmail|yahoo|hotmail|outlook|icloud|mail|email)\\b", "");
         str = str.replaceAll("(?i)\\b(gmail|yahoo|hotmail|outlook|icloud|mail|email)[._\\-]", "");
 
-        // If string ends with "gmail" without separator (e.g. monowargmail), strip it
+        // If string ends with "gmail" without separator (e.g. supriyogmail), strip it
         if (str.toLowerCase().endsWith("gmail") && str.length() > 5) {
             str = str.substring(0, str.length() - 5);
         }
@@ -2099,7 +2194,7 @@ public class HomeNativeManager {
             }
         }
 
-        // 4. Handle CamelCase / PascalCase without spaces (e.g. "MonowarHussainSafi" -> "Monowar")
+        // 4. Handle CamelCase / PascalCase without spaces (e.g. "SupriyoSaha" -> "Supriyo")
         String[] camelParts = str.split("(?=[A-Z])");
         if (camelParts.length > 1 && !camelParts[0].isEmpty()) {
             str = camelParts[0];
@@ -2110,7 +2205,7 @@ public class HomeNativeManager {
         // 5. Clean up non-alphabetic chars
         str = str.replaceAll("[^a-zA-Z]", "");
         
-        // Strict blacklist check: fallback to "Doctor"
+        // Strict blacklist check: fallback to "Owner" (NEVER "Doctor")
         String lowerCaseStr = str.toLowerCase();
         if (str.isEmpty() || str.length() < 2 ||
             "user".equals(lowerCaseStr) || "admin".equals(lowerCaseStr) ||
@@ -2122,29 +2217,29 @@ public class HomeNativeManager {
             "test".equals(lowerCaseStr) || "demo".equals(lowerCaseStr) || "default".equals(lowerCaseStr) ||
             "workspace".equals(lowerCaseStr) || "account".equals(lowerCaseStr) || "login".equals(lowerCaseStr) ||
             "null".equals(lowerCaseStr) || "undefined".equals(lowerCaseStr)) {
-            return "Doctor";
+            return "Owner";
         }
 
         // 6. Capitalize first letter, lowercase rest
         str = Character.toUpperCase(str.charAt(0)) + str.substring(1).toLowerCase();
 
-        // 7. Check common compound prefixes if concatenated without spaces (e.g. monowarhussain... -> Monowar)
+        // 7. Check common compound prefixes if concatenated without spaces (e.g. supriyosaha -> Supriyo)
         String lower = str.toLowerCase();
-        String[] knownPrefixes = {"monowar", "manohar", "mohammad", "anupam", "shahid", "abhishek", "rahul", "amit", "priya", "rohit", "vikram", "rajesh", "suresh", "deepak", "sanjay"};
+        String[] knownPrefixes = {"supriyo", "monowar", "manohar", "mohammad", "anupam", "shahid", "abhishek", "rahul", "amit", "priya", "rohit", "vikram", "rajesh", "suresh", "deepak", "sanjay"};
         for (String p : knownPrefixes) {
             if (lower.startsWith(p) && lower.length() > p.length() + 2) {
                 return Character.toUpperCase(p.charAt(0)) + p.substring(1).toLowerCase();
             }
         }
 
-        // 8. If still longer than 8 characters, cap cleanly at 7 characters
-        if (str.length() > 8) {
-            str = str.substring(0, 7);
+        // 8. If still longer than 12 characters, cap cleanly
+        if (str.length() > 12) {
+            str = str.substring(0, 11);
         }
 
         // Final safety check: never return any string containing "gmail"
         if (str.toLowerCase().contains("gmail") || str.length() < 2) {
-            return "Doctor";
+            return "Owner";
         }
 
         return str;

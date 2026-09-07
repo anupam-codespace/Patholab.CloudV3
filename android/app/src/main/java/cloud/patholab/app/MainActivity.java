@@ -794,6 +794,28 @@ public class MainActivity extends BridgeActivity {
             } else if (path.equals("/workspace/support") || path.startsWith("/workspace/support")) {
                 startActivity(new Intent(this, SupportActivity.class));
                 return;
+            } else if (path.equals("/workspace/bookings") || path.startsWith("/workspace/bookings")
+                    || path.equals("/workspace/online-booking") || path.startsWith("/workspace/online-booking")) {
+                startActivity(new Intent(this, OnlineBookingActivity.class));
+                return;
+            } else if (path.equals("/workspace/agencies") || path.startsWith("/workspace/agencies")
+                    || path.equals("/workspace/b2b") || path.startsWith("/workspace/b2b")) {
+                startActivity(new Intent(this, B2BActivity.class));
+                return;
+            } else if (path.equals("/workspace/settings/b2b-tiers") || path.startsWith("/workspace/settings/b2b-tiers")
+                    || path.equals("/workspace/settings/b2b") || path.startsWith("/workspace/settings/b2b")) {
+                startActivity(new Intent(this, B2BSettingsActivity.class));
+                return;
+            } else if (path.equals("/workspace/doctors") || path.startsWith("/workspace/doctors")) {
+                startActivity(new Intent(this, ReferralDoctorsActivity.class));
+                return;
+            } else if (path.equals("/workspace/commissions") || path.startsWith("/workspace/commissions")) {
+                startActivity(new Intent(this, CommissionsActivity.class));
+                return;
+            } else if (path.equals("/workspace/settings") || path.startsWith("/workspace/settings")
+                    || path.equals("/settings") || path.startsWith("/settings")) {
+                startActivity(new Intent(this, ProfileSettingsActivity.class));
+                return;
             }
         }
         if (offlineOverlay != null)

@@ -377,11 +377,21 @@
             android:padding="32dp"
             android:visibility="gone">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="📋"
-                android:textSize="48sp" />
+            <FrameLayout
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:background="@drawable/bg_pill_white"
+                android:backgroundTint="#F1F5F9">
+
+                <ImageView
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_mod_clean_worklist"
+                    android:tint="#94A3B8"
+                    app:tint="#94A3B8" />
+
+            </FrameLayout>
 
             <TextView
                 android:layout_width="wrap_content"

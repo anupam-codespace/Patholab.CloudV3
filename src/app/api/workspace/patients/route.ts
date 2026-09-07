@@ -4,13 +4,37 @@ import { getDataFromToken } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
+async function getAuthenticatedAuth(req: NextRequest): Promise<{ labId: string; user: any } | null> {
+  const user = await getDataFromToken(req);
+  if (!user) return null;
+  if (user.labId) return { labId: user.labId, user };
+
+  const userId = user.userId || user.id;
+  if (!userId) return null;
+
+  const lab = await prisma.lab.findFirst({
+    where: { ownerId: userId },
+    select: { id: true },
+  });
+  if (lab) return { labId: lab.id, user: { ...user, labId: lab.id } };
+
+  const staff = await prisma.labStaff.findFirst({
+    where: { userId, isActive: true },
+    select: { labId: true },
+  });
+  if (staff?.labId) return { labId: staff.labId, user: { ...user, labId: staff.labId } };
+
+  return null;
+}
+
 // =========================================================================
 // GET: Fetch Patients (Enterprise DB Pagination & Branch Scoping)
 // =========================================================================
 export async function GET(req: NextRequest) {
   try {
-    const user = await getDataFromToken(req);
-    if (!user || !user.labId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const auth = await getAuthenticatedAuth(req);
+    if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const user = auth.user;
 
     const { searchParams } = new URL(req.url);
     
@@ -169,8 +193,9 @@ export async function GET(req: NextRequest) {
 // =========================================================================
 export async function POST(req: NextRequest) {
   try {
-    const user = await getDataFromToken(req);
-    if (!user || !user.labId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const auth = await getAuthenticatedAuth(req);
+    if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const user = auth.user;
 
     const body = await req.json();
 

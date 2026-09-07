@@ -493,7 +493,7 @@ class PatientWorklistViewController: UIViewController, UITableViewDataSource, UI
 
                             let testListStr = testStrings.isEmpty ? "Routine Diagnostic Panel" : testStrings.joined(separator: "  •  ")
                             let visitStatus = (count > 0 && allApproved) ? "COMPLETED" : (count == 0 ? "NO_TESTS" : "IN_PROGRESS")
-                            let finText = "💰 Total Bill: ₹\(Int(grandTotal)) • Status: \(invStatus)"
+                            let finText = "Total Bill: ₹\(Int(grandTotal)) • Status: \(invStatus)"
 
                             parsed.append(PatientVisitRecord(
                                 id: invId,
@@ -523,7 +523,7 @@ class PatientWorklistViewController: UIViewController, UITableViewDataSource, UI
                             patientDetails: pDetails,
                             doctor: doctorName,
                             testsList: "No Active Tests Assigned (Patient Registration Only)",
-                            financials: "💰 Unbilled Registration",
+                            financials: "Unbilled Registration",
                             status: "NO_TESTS",
                             reportId: nil,
                             invoiceId: nil
@@ -556,9 +556,9 @@ class PatientWorklistViewController: UIViewController, UITableViewDataSource, UI
             let diff = max(0, Int(Date().timeIntervalSince(d)))
             let hours = diff / 3600
             let mins = (diff % 3600) / 60
-            return String(format: "⏱ %02dh %02dm", hours, mins)
+            return String(format: "%02dh %02dm", hours, mins)
         }
-        return "⏱ 01h 15m"
+        return "01h 15m"
     }
 
     private func computeTATColor(_ isoDate: String) -> UIColor {
@@ -650,7 +650,7 @@ class PatientWorklistViewController: UIViewController, UITableViewDataSource, UI
 
         // TAT Badge
         let tatBadge = UILabel()
-        tatBadge.text = " \(visit.tatFormatted.replacingOccurrences(of: "⏱", with: "").trimmingCharacters(in: .whitespaces)) "
+        tatBadge.text = " \(visit.tatFormatted.trimmingCharacters(in: .whitespaces)) "
         tatBadge.font = .systemFont(ofSize: 11, weight: .bold)
         tatBadge.textColor = visit.tatColor
         tatBadge.backgroundColor = UIColor(red: 0.93, green: 0.99, blue: 0.96, alpha: 1)
@@ -699,11 +699,11 @@ class PatientWorklistViewController: UIViewController, UITableViewDataSource, UI
         let doctorLbl = UILabel()
         let isRealDoctor = !visit.doctor.isEmpty && !visit.doctor.lowercased().contains("self")
         if isRealDoctor {
-            doctorLbl.text = "  🩺 \(visit.doctor)  "
+            doctorLbl.text = "  \(visit.doctor)  "
             doctorLbl.textColor = UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1) // Black / Deep slate #0F172A
             doctorLbl.backgroundColor = UIColor(red: 0.996, green: 0.941, blue: 0.541, alpha: 1) // Yellow #FEF08A
         } else {
-            doctorLbl.text = "  👤 \(visit.doctor)  "
+            doctorLbl.text = "  \(visit.doctor)  "
             doctorLbl.textColor = UIColor(red: 0.392, green: 0.455, blue: 0.545, alpha: 1)
             doctorLbl.backgroundColor = UIColor(red: 0.945, green: 0.961, blue: 0.976, alpha: 1)
         }

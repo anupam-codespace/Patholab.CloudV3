@@ -680,6 +680,36 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
                 self.present(supportVC, animated: true, completion: nil)
                 return
             }
+            if path == "/workspace/bookings" || path.starts(with: "/workspace/bookings") || path == "/workspace/online-booking" || path.starts(with: "/workspace/online-booking") {
+                let bookingVC = OnlineBookingViewController()
+                bookingVC.modalPresentationStyle = .fullScreen
+                self.present(bookingVC, animated: true, completion: nil)
+                return
+            }
+            if path == "/workspace/agencies" || path.starts(with: "/workspace/agencies") || path == "/workspace/b2b" || path.starts(with: "/workspace/b2b") {
+                let b2bVC = B2BViewController()
+                b2bVC.modalPresentationStyle = .fullScreen
+                self.present(b2bVC, animated: true, completion: nil)
+                return
+            }
+            if path == "/workspace/settings/b2b-tiers" || path.starts(with: "/workspace/settings/b2b-tiers") || path == "/workspace/settings/b2b" || path.starts(with: "/workspace/settings/b2b") {
+                let b2bSettingsVC = B2BSettingsViewController()
+                b2bSettingsVC.modalPresentationStyle = .fullScreen
+                self.present(b2bSettingsVC, animated: true, completion: nil)
+                return
+            }
+            if path == "/workspace/doctors" || path.starts(with: "/workspace/doctors") {
+                let docVC = ReferralDoctorsViewController()
+                docVC.modalPresentationStyle = .fullScreen
+                self.present(docVC, animated: true, completion: nil)
+                return
+            }
+            if path == "/workspace/commissions" || path.starts(with: "/workspace/commissions") {
+                let commVC = CommissionsViewController()
+                commVC.modalPresentationStyle = .fullScreen
+                self.present(commVC, animated: true, completion: nil)
+                return
+            }
             self.showWebView(navigatingTo: path)
         }
 
@@ -815,6 +845,26 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
                 let supportVC = SupportViewController()
                 supportVC.modalPresentationStyle = .fullScreen
                 self.present(supportVC, animated: true, completion: nil)
+            } else if path == "/workspace/bookings" || path.starts(with: "/workspace/bookings") || path == "/workspace/online-booking" || path.starts(with: "/workspace/online-booking") {
+                let bookingVC = OnlineBookingViewController()
+                bookingVC.modalPresentationStyle = .fullScreen
+                self.present(bookingVC, animated: true, completion: nil)
+            } else if path == "/workspace/agencies" || path.starts(with: "/workspace/agencies") || path == "/workspace/b2b" || path.starts(with: "/workspace/b2b") {
+                let b2bVC = B2BViewController()
+                b2bVC.modalPresentationStyle = .fullScreen
+                self.present(b2bVC, animated: true, completion: nil)
+            } else if path == "/workspace/settings/b2b-tiers" || path.starts(with: "/workspace/settings/b2b-tiers") || path == "/workspace/settings/b2b" || path.starts(with: "/workspace/settings/b2b") {
+                let b2bSettingsVC = B2BSettingsViewController()
+                b2bSettingsVC.modalPresentationStyle = .fullScreen
+                self.present(b2bSettingsVC, animated: true, completion: nil)
+            } else if path == "/workspace/doctors" || path.starts(with: "/workspace/doctors") {
+                let docVC = ReferralDoctorsViewController()
+                docVC.modalPresentationStyle = .fullScreen
+                self.present(docVC, animated: true, completion: nil)
+            } else if path == "/workspace/commissions" || path.starts(with: "/workspace/commissions") {
+                let commVC = CommissionsViewController()
+                commVC.modalPresentationStyle = .fullScreen
+                self.present(commVC, animated: true, completion: nil)
             } else if path == "/workspace/analytics" || path.starts(with: "/workspace/analytics") || path == "/analytics" || path.starts(with: "/analytics") || path == "/dashboard" || path.starts(with: "/dashboard") || path == "/workspace/dashboard" {
                 let dashVC = DashboardViewController()
                 dashVC.modalPresentationStyle = .fullScreen

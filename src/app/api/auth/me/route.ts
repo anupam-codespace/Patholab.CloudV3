@@ -8,13 +8,14 @@ export async function GET(req: NextRequest) {
   try {
     // 1. Verify Session Token
     const session = await getDataFromToken(req);
-    if (!session || !session.userId) {
+    const userId = session?.userId || (session as any)?.id;
+    if (!session || !userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // 2. Fetch User with Enterprise RBAC & Wallet Context
     const user = await prisma.user.findUnique({
-      where: { id: session.userId },
+      where: { id: userId },
       include: {
         // A. If LAB_OWNER, get their direct lab & wallet
         lab: {
@@ -54,8 +55,8 @@ export async function GET(req: NextRequest) {
       activeBranch = activeLab?.branches?.[0] || null;
       permissions = ["ALL"];
     } else if (user.role === "LAB_OWNER") {
-      activeLab = user.lab || null;
-      activeBranch = user.lab?.branches?.[0] || null;
+      activeLab = user.lab || user.staffLabs?.[0]?.lab || null;
+      activeBranch = user.lab?.branches?.[0] || user.staffLabs?.[0]?.branch || null;
       permissions = ["ALL"]; // Owners have unrestricted access to their lab
     } else if (user.role !== "PATIENT") {
       const primaryProfile = user.staffLabs[0];

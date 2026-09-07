@@ -1,0 +1,339 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Bottom Sheet Dialog: Add / Edit Referral Doctor -->
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_bottom_sheet">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="vertical"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="36dp">
+
+            <!-- Drag Handle -->
+            <View
+                android:layout_width="38dp"
+                android:layout_height="4dp"
+                android:layout_gravity="center_horizontal"
+                android:background="#CBD5E1"
+                android:layout_marginBottom="14dp" />
+
+            <!-- Header Title -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/lblAddDoctorTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Add Referral Doctor"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="#0F172A" />
+
+                    <TextView
+                        android:id="@+id/lblAddDoctorSubtitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Configure physician profile, commission margin &amp; clinic"
+                        android:textSize="11.5sp"
+                        android:textColor="#64748B" />
+
+                </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/btnAddDoctorClose"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:src="@drawable/ic_close_cross"
+                    android:tint="#94A3B8"
+                    app:tint="#94A3B8"
+                    android:padding="5dp"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+            </LinearLayout>
+
+            <!-- ── SECTION 1: DOCTOR DETAILS ──────────────────────────── -->
+            <TextView
+                android:text="PHYSICIAN INFORMATION"
+                android:textSize="10.5sp"
+                android:textStyle="bold"
+                android:textColor="#64748B"
+                android:letterSpacing="0.05"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp" />
+
+            <!-- Doctor Name -->
+            <EditText
+                android:id="@+id/inputDoctorName"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_input_field"
+                android:hint="Full Name (e.g., Dr. Priya Sharma) *"
+                android:textColor="#1E293B"
+                android:textColorHint="#94A3B8"
+                android:textSize="13.5sp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:singleLine="true" />
+
+            <!-- Phone & Reg No Row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="10dp">
+
+                <EditText
+                    android:id="@+id/inputDoctorPhone"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="6dp"
+                    android:background="@drawable/bg_input_field"
+                    android:hint="Phone Number *"
+                    android:textColor="#1E293B"
+                    android:textColorHint="#94A3B8"
+                    android:textSize="13.5sp"
+                    android:inputType="phone"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:singleLine="true" />
+
+                <EditText
+                    android:id="@+id/inputDoctorRegNo"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="6dp"
+                    android:background="@drawable/bg_input_field"
+                    android:hint="Registration No (MCI)"
+                    android:textColor="#1E293B"
+                    android:textColorHint="#94A3B8"
+                    android:textSize="13.5sp"
+                    android:inputType="textCapCharacters"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:singleLine="true" />
+
+            </LinearLayout>
+
+            <!-- Email Address -->
+            <EditText
+                android:id="@+id/inputDoctorEmail"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_input_field"
+                android:hint="Email Address"
+                android:textColor="#1E293B"
+                android:textColorHint="#94A3B8"
+                android:textSize="13.5sp"
+                android:inputType="textEmailAddress"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:singleLine="true" />
+
+            <!-- Specialization Chips -->
+            <TextView
+                android:text="SPECIALIZATION"
+                android:textSize="10.5sp"
+                android:textStyle="bold"
+                android:textColor="#64748B"
+                android:letterSpacing="0.05"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp" />
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="none"
+                android:layout_marginTop="6dp">
+
+                <LinearLayout
+                    android:id="@+id/containerSpecializationChips"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" />
+
+            </HorizontalScrollView>
+
+            <EditText
+                android:id="@+id/inputDoctorSpecialization"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_input_field"
+                android:hint="Specialization (e.g. General Physician) *"
+                android:textColor="#1E293B"
+                android:textColorHint="#94A3B8"
+                android:textSize="13.5sp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:singleLine="true" />
+
+            <!-- Qualification & Clinic Row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="10dp">
+
+                <EditText
+                    android:id="@+id/inputDoctorQualification"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="6dp"
+                    android:background="@drawable/bg_input_field"
+                    android:hint="Qualification (MBBS, MD)"
+                    android:textColor="#1E293B"
+                    android:textColorHint="#94A3B8"
+                    android:textSize="13.5sp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:singleLine="true" />
+
+                <EditText
+                    android:id="@+id/inputDoctorClinic"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1.2"
+                    android:layout_marginStart="6dp"
+                    android:background="@drawable/bg_input_field"
+                    android:hint="Clinic / Hospital"
+                    android:textColor="#1E293B"
+                    android:textColorHint="#94A3B8"
+                    android:textSize="13.5sp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:singleLine="true" />
+
+            </LinearLayout>
+
+            <!-- ── SECTION 2: COMMISSION RATE & TYPE ──────────────────── -->
+            <TextView
+                android:text="COMMISSION MARGIN"
+                android:textSize="10.5sp"
+                android:textStyle="bold"
+                android:textColor="#64748B"
+                android:letterSpacing="0.05"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp">
+
+                <EditText
+                    android:id="@+id/inputDoctorCommissionRate"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1.2"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_input_field"
+                    android:hint="Default Rate (e.g., 10) *"
+                    android:textColor="#1E293B"
+                    android:textColorHint="#94A3B8"
+                    android:textSize="13.5sp"
+                    android:inputType="numberDecimal"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:singleLine="true" />
+
+                <LinearLayout
+                    android:id="@+id/btnDoctorToggleCommissionType"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_copy_pill"
+                    android:gravity="center"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        android:id="@+id/lblDoctorCommissionType"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="% Percentage"
+                        android:textSize="12.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#2563EB" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- Error Banner -->
+            <TextView
+                android:id="@+id/lblDoctorFormError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="#FEE2E2"
+                android:padding="10dp"
+                android:text="Please complete all required fields."
+                android:textColor="#DC2626"
+                android:textSize="12sp"
+                android:visibility="gone" />
+
+            <!-- Save Action Button -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp">
+
+                <Button
+                    android:id="@+id/btnSaveDoctor"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:text="Save Referral Doctor"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:background="@drawable/bg_btn_primary" />
+
+                <ProgressBar
+                    android:id="@+id/progressDoctorSaving"
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
+                    android:layout_gravity="center"
+                    android:indeterminateTint="#FFFFFF"
+                    android:visibility="gone" />
+
+            </FrameLayout>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</FrameLayout>

@@ -557,7 +557,7 @@ public class PatientWorklistActivity extends AppCompatActivity {
     }
 
     private String computeTAT(String isoDate) {
-        if (isoDate == null || isoDate.isEmpty()) return "⏱ 00h 45m";
+        if (isoDate == null || isoDate.isEmpty()) return "00h 45m";
         try {
             SimpleDateFormat inFmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US);
             inFmt.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -807,17 +807,17 @@ public class PatientWorklistActivity extends AppCompatActivity {
             h.lblWorklistPatientName.setText(v.patientName);
             h.lblWorklistPatientDetails.setText(v.patientDetails);
 
-            // 🌟 Doctor Badge: Highlight in Yellow (#FEF08A) with Black Text (#0F172A)
+            // Doctor Badge: Highlight in Yellow (#FEF08A) with Black Text (#0F172A)
             String doc = v.doctor != null ? v.doctor.trim() : "";
             boolean isRealDoc = !doc.isEmpty() && !doc.equalsIgnoreCase("Self Referral / Walk-in") && !doc.equalsIgnoreCase("Self");
             float density = h.itemView.getContext().getResources().getDisplayMetrics().density;
             if (isRealDoc) {
-                h.lblWorklistDoctor.setText("🩺 " + doc);
+                h.lblWorklistDoctor.setText(doc);
                 h.lblWorklistDoctor.setTextColor(0xFF0F172A); // Black / deep slate
                 h.lblWorklistDoctor.setBackgroundResource(R.drawable.bg_pill_white);
                 h.lblWorklistDoctor.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFFEF08A)); // Yellow
             } else {
-                h.lblWorklistDoctor.setText("👤 Self Referral / Walk-in");
+                h.lblWorklistDoctor.setText("Self Referral / Walk-in");
                 h.lblWorklistDoctor.setTextColor(0xFF64748B);
                 h.lblWorklistDoctor.setBackgroundResource(R.drawable.bg_pill_white);
                 h.lblWorklistDoctor.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF1F5F9)); // Light gray

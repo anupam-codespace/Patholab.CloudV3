@@ -280,12 +280,15 @@ class HomeNativeView: UIView {
         greetingLabel.text = "Hello, User"
         greetingLabel.lineBreakMode = .byTruncatingTail
 
-        waveLabel.font = .systemFont(ofSize: 17.5)
+        waveLabel.font = .systemFont(ofSize: 19.5)
         waveLabel.text = "\u{1F44B}"
+        waveLabel.isUserInteractionEnabled = true
+        let waveTap = UITapGestureRecognizer(target: self, action: #selector(playWaveAnimation))
+        waveLabel.addGestureRecognizer(waveTap)
 
         let greetingRow = UIStackView(arrangedSubviews: [greetingLabel, waveLabel])
         greetingRow.axis = .horizontal
-        greetingRow.spacing = 4
+        greetingRow.spacing = 5
         greetingRow.alignment = .center
 
         // Modern Wallet Capsule
@@ -1111,7 +1114,7 @@ class HomeNativeView: UIView {
 
     // MARK: – Data fetching
     func loadUserInfo() {
-        if let savedName = UserDefaults.standard.string(forKey: "user_name"), !savedName.isEmpty {
+        if let savedName = UserDefaults.standard.string(forKey: "user_name"), !savedName.isEmpty, !savedName.lowercased().contains("doctor"), !savedName.lowercased().contains("user") {
             self.currentFullName = savedName
             let fn = Self.formatSmartFirstName(savedName)
             self.greetingLabel.text = "Hello, \(fn)"
@@ -1127,11 +1130,23 @@ class HomeNativeView: UIView {
             req.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
             if let (data, _) = try? await URLSession.shared.data(for: req),
                let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                let rawServerName = (json["name"] as? String) ?? ""
-                let serverName = (!rawServerName.isEmpty && !rawServerName.contains("@") && rawServerName.lowercased() != "null")
-                    ? rawServerName
-                    : Self.formatSmartFirstName((json["email"] as? String) ?? "")
-                let role = (json["role"] as? String ?? "Lab Owner").replacingOccurrences(of: "_", with: " ")
+                let userObj = (json["user"] as? [String: Any]) ?? json
+                let rawServerName = (userObj["name"] as? String) ?? (json["name"] as? String) ?? ""
+                let userEmail = (userObj["email"] as? String) ?? (json["email"] as? String) ?? ""
+                let labObj = json["lab"] as? [String: Any]
+                let labName = (labObj?["name"] as? String) ?? ""
+
+                var serverName = (!rawServerName.isEmpty && !rawServerName.contains("@") && rawServerName.lowercased() != "null")
+                    ? Self.formatSmartFirstName(rawServerName)
+                    : (!userEmail.isEmpty ? Self.formatSmartFirstName(userEmail) : "")
+                if serverName.isEmpty && !labName.isEmpty {
+                    serverName = Self.formatSmartFirstName(labName)
+                }
+                if serverName.isEmpty || serverName.lowercased() == "doctor" {
+                    serverName = !rawServerName.isEmpty ? rawServerName : (!labName.isEmpty() ? labName : "Owner")
+                }
+
+                let role = (userObj["role"] as? String ?? json["role"] as? String ?? "Lab Owner").replacingOccurrences(of: "_", with: " ")
                 self.currentRole = role
                 if !serverName.isEmpty {
                     self.currentFullName = serverName
@@ -1153,21 +1168,35 @@ class HomeNativeView: UIView {
                         self.triggerLowBalanceAlertIfEligible(bal)
                     }
                 }
-                if let av = json["avatar"] as? String, !av.isEmpty {
+                let av = (userObj["avatar"] as? String) ?? (json["avatar"] as? String) ?? ""
+                if !av.isEmpty {
                     self.loadAvatar(av)
                 }
             }
 
-            // Fetch profile for avatar
+            // Fetch profile for avatar & latest name
             if let pUrl = URL(string: "https://app.patholab.cloud/api/users/profile") {
                 var pReq = URLRequest(url: pUrl)
                 pReq.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
                 pReq.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
                 if let (pData, _) = try? await URLSession.shared.data(for: pReq),
                    let pJson = try? JSONSerialization.jsonObject(with: pData) as? [String: Any],
-                   let pUser = pJson["user"] as? [String: Any],
-                   let pAv = pUser["avatar"] as? String, !pAv.isEmpty {
-                    self.loadAvatar(pAv)
+                   let pUser = pJson["user"] as? [String: Any] {
+                    if let profName = pUser["name"] as? String, !profName.isEmpty, !profName.contains("@"), profName.lowercased() != "null" {
+                        let cleanName = Self.formatSmartFirstName(profName)
+                        if !cleanName.isEmpty && cleanName.lowercased() != "doctor" {
+                            self.currentFullName = cleanName
+                            UserDefaults.standard.set(cleanName, forKey: "user_name")
+                            await MainActor.run {
+                                self.greetingLabel.text = "Hello, \(cleanName)"
+                                self.avatarLabel.text   = String(cleanName.prefix(1)).uppercased()
+                                self.playWaveAnimation()
+                            }
+                        }
+                    }
+                    if let pAv = pUser["avatar"] as? String, !pAv.isEmpty {
+                        self.loadAvatar(pAv)
+                    }
                 }
             }
         }
@@ -1525,19 +1554,25 @@ class HomeNativeView: UIView {
         }
     }
 
-    func playWaveAnimation() {
-        waveLabel.layer.anchorPoint = CGPoint(x: 0.75, y: 0.90)
-        let anim = CAKeyframeAnimation(keyPath: "transform.rotation")
-        anim.values = [0, 0.45, -0.30, 0.42, -0.22, 0.32, -0.12, 0.18, 0]
-        anim.keyTimes = [0, 0.12, 0.25, 0.38, 0.50, 0.64, 0.76, 0.88, 1.0]
-        anim.duration = 1.2
-        anim.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-        waveLabel.layer.add(anim, forKey: "waveHand")
+    @objc func playWaveAnimation() {
+        let rotationAnim = CAKeyframeAnimation(keyPath: "transform.rotation.z")
+        rotationAnim.values = [0, 0.38, -0.24, 0.32, -0.18, 0.24, -0.10, 0.14, 0]
+        rotationAnim.keyTimes = [0, 0.12, 0.25, 0.38, 0.50, 0.64, 0.76, 0.88, 1.0]
+
+        let scaleAnim = CAKeyframeAnimation(keyPath: "transform.scale")
+        scaleAnim.values = [1.0, 1.25, 1.0, 1.15, 1.0]
+        scaleAnim.keyTimes = [0, 0.25, 0.50, 0.75, 1.0]
+
+        let group = CAAnimationGroup()
+        group.animations = [rotationAnim, scaleAnim]
+        group.duration = 1.3
+        group.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+        waveLabel.layer.add(group, forKey: "waveHand")
     }
 
     static func formatSmartFirstName(_ raw: String) -> String {
         var str = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        if str.isEmpty { return "Doctor" }
+        if str.isEmpty { return "Owner" }
 
         // 1. Remove email domain if present
         if let atIdx = str.firstIndex(of: "@") {
@@ -1552,7 +1587,7 @@ class HomeNativeView: UIView {
         str = str.replacingOccurrences(of: "(?i)[._\\-](gmail|yahoo|hotmail|outlook|icloud|mail|email)\\b", with: "", options: .regularExpression)
         str = str.replacingOccurrences(of: "(?i)\\b(gmail|yahoo|hotmail|outlook|icloud|mail|email)[._\\-]", with: "", options: .regularExpression)
 
-        // If string ends with "gmail" without separator (e.g. monowargmail), strip it
+        // If string ends with "gmail" without separator (e.g. supriyogmail), strip it
         if str.lowercased().hasSuffix("gmail") && str.count > 5 {
             str = String(str.dropLast(5))
         }
@@ -1581,7 +1616,7 @@ class HomeNativeView: UIView {
         // 5. Filter letters only
         str = str.filter { $0.isLetter }
 
-        // Strict blacklist check: fallback to "Doctor"
+        // Strict blacklist check: fallback to "Owner" (NEVER "Doctor")
         let lower = str.lowercased()
         let blacklist = [
             "user", "admin", "gmail", "email", "mail", "workmail", "testmail",
@@ -1590,28 +1625,28 @@ class HomeNativeView: UIView {
             "workspace", "account", "login", "null", "undefined"
         ]
         if str.isEmpty || str.count < 2 || blacklist.contains(lower) {
-            return "Doctor"
+            return "Owner"
         }
 
         // 6. Capitalize first letter, lowercase rest
         str = str.prefix(1).uppercased() + str.dropFirst().lowercased()
 
         // 7. Known prefixes
-        let prefixes = ["monowar", "manohar", "mohammad", "anupam", "shahid", "abhishek", "rahul", "amit", "priya", "rohit", "vikram", "rajesh", "suresh", "deepak", "sanjay"]
+        let prefixes = ["supriyo", "monowar", "manohar", "mohammad", "anupam", "shahid", "abhishek", "rahul", "amit", "priya", "rohit", "vikram", "rajesh", "suresh", "deepak", "sanjay"]
         for p in prefixes {
             if lower.hasPrefix(p) && lower.count > p.count + 2 {
                 return p.prefix(1).uppercased() + p.dropFirst().lowercased()
             }
         }
 
-        // 8. Cap at 7 characters if still longer than 8
-        if str.count > 8 {
-            str = String(str.prefix(7))
+        // 8. Cap cleanly if too long
+        if str.count > 12 {
+            str = String(str.prefix(11))
         }
 
         // Final safety check: never return any string containing "gmail"
         if str.lowercased().contains("gmail") || str.count < 2 {
-            return "Doctor"
+            return "Owner"
         }
 
         return str
@@ -1973,6 +2008,36 @@ class HomeNativeView: UIView {
             let supportVC = SupportViewController()
             supportVC.modalPresentationStyle = .fullScreen
             parentVC.present(supportVC, animated: true, completion: nil)
+            return
+        }
+        if (path == "/workspace/bookings" || path.starts(with: "/workspace/bookings") || path == "/workspace/online-booking" || path.starts(with: "/workspace/online-booking")), let parentVC = self.findViewController() {
+            let bookingVC = OnlineBookingViewController()
+            bookingVC.modalPresentationStyle = .fullScreen
+            parentVC.present(bookingVC, animated: true, completion: nil)
+            return
+        }
+        if (path == "/workspace/agencies" || path.starts(with: "/workspace/agencies") || path == "/workspace/b2b" || path.starts(with: "/workspace/b2b")), let parentVC = self.findViewController() {
+            let b2bVC = B2BViewController()
+            b2bVC.modalPresentationStyle = .fullScreen
+            parentVC.present(b2bVC, animated: true, completion: nil)
+            return
+        }
+        if (path == "/workspace/settings/b2b-tiers" || path.starts(with: "/workspace/settings/b2b-tiers") || path == "/workspace/settings/b2b" || path.starts(with: "/workspace/settings/b2b")), let parentVC = self.findViewController() {
+            let b2bSettingsVC = B2BSettingsViewController()
+            b2bSettingsVC.modalPresentationStyle = .fullScreen
+            parentVC.present(b2bSettingsVC, animated: true, completion: nil)
+            return
+        }
+        if (path == "/workspace/doctors" || path.starts(with: "/workspace/doctors")), let parentVC = self.findViewController() {
+            let docVC = ReferralDoctorsViewController()
+            docVC.modalPresentationStyle = .fullScreen
+            parentVC.present(docVC, animated: true, completion: nil)
+            return
+        }
+        if (path == "/workspace/commissions" || path.starts(with: "/workspace/commissions")), let parentVC = self.findViewController() {
+            let commVC = CommissionsViewController()
+            commVC.modalPresentationStyle = .fullScreen
+            parentVC.present(commVC, animated: true, completion: nil)
             return
         }
         onNavigate?(path)

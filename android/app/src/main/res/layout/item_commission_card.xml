@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Commission Referrer Card Item -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_setting_item"
+    android:padding="14dp"
+    android:layout_marginBottom="10dp"
+    android:elevation="2dp">
+
+    <!-- 1. Top Bar: Type Badge + Pending Amount Alert -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/lblReferrerTypeBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="DOCTOR"
+            android:textSize="10.5sp"
+            android:textStyle="bold"
+            android:textColor="#2563EB"
+            android:background="#DBEAFE"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp" />
+
+        <TextView
+            android:id="@+id/lblReferrerCategory"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:text="Cardiology"
+            android:textSize="11sp"
+            android:textColor="#64748B"
+            android:background="#F1F5F9"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <!-- Pending Balance Badge -->
+        <TextView
+            android:id="@+id/lblReferrerDueBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="DUE: ₹4,500"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#D97706"
+            android:background="#FEF3C7"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp" />
+
+    </LinearLayout>
+
+    <!-- 2. Referrer Name & Subtitle -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="10dp">
+
+        <FrameLayout
+            android:id="@+id/containerReferrerIcon"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:background="@drawable/bg_mod_icon_purple">
+
+            <ImageView
+                android:id="@+id/imgReferrerIcon"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_mod_clean_payout"
+                android:tint="#7E22CE"
+                app:tint="#7E22CE" />
+
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginStart="10dp">
+
+            <TextView
+                android:id="@+id/lblReferrerName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Dr. Rajesh Sharma"
+                android:textSize="14.5sp"
+                android:textStyle="bold"
+                android:textColor="#0F172A" />
+
+            <TextView
+                android:id="@+id/lblReferrerSubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:text="+91 98765 43210 • 14 Tests Referred"
+                android:textSize="12sp"
+                android:textColor="#64748B" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Divider -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#F1F5F9"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp" />
+
+    <!-- 3. Financial Breakdown Bento -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="#F8FAFC"
+        android:padding="8dp">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:text="BILLED VOL"
+                android:textSize="9.5sp"
+                android:textStyle="bold"
+                android:textColor="#64748B"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/lblReferrerBilled"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="₹12,400"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="#0F172A" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:text="TOTAL EARNED"
+                android:textSize="9.5sp"
+                android:textStyle="bold"
+                android:textColor="#64748B"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/lblReferrerEarned"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="₹1,860"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="#059669" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.2"
+            android:orientation="vertical">
+
+            <TextView
+                android:text="UNSETTLED DUE"
+                android:textSize="9.5sp"
+                android:textStyle="bold"
+                android:textColor="#64748B"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/lblReferrerPendingDue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="₹1,860"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="#D97706" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- 4. Action Buttons Bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="12dp"
+        android:gravity="center_vertical">
+
+        <!-- Call Referrer -->
+        <FrameLayout
+            android:id="@+id/btnReferrerCall"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@drawable/bg_copy_pill"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginEnd="6dp">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_phone_call_modern"
+                android:tint="#0D6EFD"
+                app:tint="#0D6EFD" />
+
+        </FrameLayout>
+
+        <!-- WhatsApp Referrer -->
+        <FrameLayout
+            android:id="@+id/btnReferrerWhatsApp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@drawable/bg_copy_pill"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginEnd="8dp">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_whatsapp"
+                android:tint="#16A34A"
+                app:tint="#16A34A" />
+
+        </FrameLayout>
+
+        <!-- Prominent Settle Payout Button -->
+        <Button
+            android:id="@+id/btnSettlePayout"
+            android:layout_width="0dp"
+            android:layout_height="38dp"
+            android:layout_weight="1"
+            android:text="Settle Payout"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/bg_btn_primary"
+            android:backgroundTint="#059669" />
+
+    </LinearLayout>
+
+</LinearLayout>

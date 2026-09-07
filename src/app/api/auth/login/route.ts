@@ -53,10 +53,10 @@ export async function POST(request: NextRequest) {
     let permissions: string[] = [];
 
     if (user.role === 'LAB_OWNER') {
-      // Owners own the lab directly via the `lab` relation
-      finalLabId = user.lab?.id || null;
-      finalBranchId = user.lab?.branches?.[0]?.id || null;
-      activeLab = user.lab || null;
+      // Owners own the lab directly via the `lab` relation or staffLabs fallback
+      finalLabId = user.lab?.id || user.staffLabs?.[0]?.labId || null;
+      finalBranchId = user.lab?.branches?.[0]?.id || user.staffLabs?.[0]?.branchId || null;
+      activeLab = user.lab || user.staffLabs?.[0]?.lab || null;
       permissions = ['ALL']; // Owners implicitly have all permissions
     } else if (user.role !== 'SUPER_ADMIN' && user.role !== 'PATIENT') {
       // Staff are assigned via the LabStaff pivot table

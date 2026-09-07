@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Online Booking Card Item -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_setting_item"
+    android:padding="14dp"
+    android:layout_marginBottom="10dp"
+    android:elevation="2dp">
+
+    <!-- 1. Top Bar: UHID + Mode Tag + Status Badge -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/lblItemBookingUhid"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="PAT-881920"
+            android:textSize="10.5sp"
+            android:textStyle="bold"
+            android:textColor="#64748B"
+            android:background="#F1F5F9"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp" />
+
+        <!-- Collection Mode Badge -->
+        <TextView
+            android:id="@+id/lblItemBookingMode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:text="Home Collection"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#7C3AED"
+            android:background="@drawable/bg_mod_badge_home_collection"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <!-- Status Badge -->
+        <TextView
+            android:id="@+id/lblItemBookingStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="SCHEDULED"
+            android:textSize="10.5sp"
+            android:textStyle="bold"
+            android:textColor="#1D4ED8"
+            android:background="@drawable/bg_status_scheduled"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp" />
+
+    </LinearLayout>
+
+    <!-- 2. Patient Name & Details -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="8dp">
+
+        <TextView
+            android:id="@+id/lblItemPatientName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Rahul Sharma"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="#0F172A" />
+
+        <TextView
+            android:id="@+id/lblItemPatientAgeGender"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="34 Yrs • MALE"
+            android:textSize="11.5sp"
+            android:textColor="#64748B" />
+
+    </LinearLayout>
+
+    <!-- 3. Schedule & Slot -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="5dp">
+
+        <ImageView
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:src="@drawable/ic_nav_more"
+            android:tint="#2563EB"
+            app:tint="#2563EB" />
+
+        <TextView
+            android:id="@+id/lblItemScheduleDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
+            android:text="06 Sep 2026"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="#1E293B" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:layout_marginEnd="6dp"
+            android:text="•"
+            android:textColor="#CBD5E1" />
+
+        <TextView
+            android:id="@+id/lblItemScheduleSlot"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="08:00 AM - 10:00 AM"
+            android:textSize="12sp"
+            android:textColor="#475569" />
+
+    </LinearLayout>
+
+    <!-- 4. Address (if home collection) -->
+    <LinearLayout
+        android:id="@+id/containerItemAddress"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="4dp">
+
+        <ImageView
+            android:layout_width="13dp"
+            android:layout_height="13dp"
+            android:src="@drawable/ic_nav_dashboard"
+            android:tint="#7C3AED"
+            app:tint="#7C3AED" />
+
+        <TextView
+            android:id="@+id/lblItemAddress"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="5dp"
+            android:text="Flat 4B, Silver Heights, MG Road • 781005"
+            android:textSize="11.5sp"
+            android:textColor="#64748B"
+            android:singleLine="true"
+            android:ellipsize="end" />
+
+    </LinearLayout>
+
+    <!-- 5. Tests Ordered List -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="8dp"
+        android:background="#F8FAFC"
+        android:padding="8dp">
+
+        <TextView
+            android:id="@+id/lblItemTestsList"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Complete Blood Count (CBC), Lipid Profile, Fasting Blood Sugar"
+            android:textSize="12sp"
+            android:textColor="#334155"
+            android:lineSpacingExtra="2dp" />
+
+    </LinearLayout>
+
+    <!-- 6. Financial Summary & Actions Row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="10dp">
+
+        <!-- Financial Total & Status -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/lblItemGrandTotal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="₹1,450"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="#0F172A" />
+
+            <TextView
+                android:id="@+id/lblItemPaymentStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="PAID ONLINE"
+                android:textSize="10.5sp"
+                android:textStyle="bold"
+                android:textColor="#059669" />
+
+        </LinearLayout>
+
+        <!-- Quick Dial Button -->
+        <FrameLayout
+            android:id="@+id/btnItemCall"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:background="#F1F5F9"
+            android:layout_marginEnd="6dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_phone_call_modern"
+                android:tint="#2563EB"
+                app:tint="#2563EB" />
+
+        </FrameLayout>
+
+        <!-- Quick WhatsApp Button -->
+        <FrameLayout
+            android:id="@+id/btnItemWhatsApp"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:background="#ECFDF5"
+            android:layout_marginEnd="6dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:layout_width="17dp"
+                android:layout_height="17dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_mod_clean_whatsapp"
+                android:tint="#16A34A"
+                app:tint="#16A34A" />
+
+        </FrameLayout>
+
+        <!-- Primary Action Button (Assign Trip or Collect Sample) -->
+        <Button
+            android:id="@+id/btnItemPrimaryAction"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="Assign Trip"
+            android:textSize="11.5sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#4F46E5"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp" />
+
+    </LinearLayout>
+
+</LinearLayout>

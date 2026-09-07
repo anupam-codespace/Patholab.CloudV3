@@ -134,17 +134,45 @@ public class LoginActivity extends AppCompatActivity {
         hideError();
         setLoading(true);
 
-        ApiClient.login(email, password, new ApiClient.ApiCallback() {
+        ApiClient.login(email, password, new ApiClient.LoginCallback() {
             @Override
-            public void onResult(final boolean success, final String error, final String token) {
+            public void onResult(final boolean success, final String error, final String token, final org.json.JSONObject user) {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         setLoading(false);
                         if (success && token != null) {
                             AuthManager.saveToken(LoginActivity.this, token);
-                            String initialName = HomeNativeManager.formatSmartFirstName(email);
-                            AuthManager.saveUserInfo(LoginActivity.this, email, initialName, "Lab Owner");
+
+                            String realName = "";
+                            String role = "Lab Owner";
+                            String userId = null;
+                            String labId = null;
+                            String labName = null;
+
+                            if (user != null) {
+                                realName = user.optString("name", "");
+                                String rawRole = user.optString("role", "Lab Owner");
+                                if (!rawRole.isEmpty()) role = rawRole.replace("_", " ");
+                                userId = user.optString("id", null);
+                                org.json.JSONObject lab = user.optJSONObject("lab");
+                                if (lab != null) {
+                                    labId = lab.optString("id", null);
+                                    labName = lab.optString("name", null);
+                                }
+                            }
+
+                            String initialName;
+                            if (!realName.isEmpty() && !"null".equalsIgnoreCase(realName.trim()) && !realName.contains("@")) {
+                                initialName = HomeNativeManager.formatSmartFirstName(realName);
+                            } else {
+                                initialName = HomeNativeManager.formatSmartFirstName(email);
+                            }
+                            if (initialName == null || initialName.isEmpty() || initialName.equalsIgnoreCase("Doctor")) {
+                                initialName = (!realName.isEmpty() && !realName.equalsIgnoreCase("Doctor")) ? realName : "Owner";
+                            }
+
+                            AuthManager.saveUserInfo(LoginActivity.this, userId, email, initialName, role, labId, labName);
                             try {
                                 Vibrator v = (Vibrator) getSystemService(VIBRATOR_SERVICE);
                                 if (v != null) {

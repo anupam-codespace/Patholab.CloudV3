@@ -1,0 +1,410 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Bottom Sheet Dialog: Add / Edit Corporate Agency -->
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_bottom_sheet">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="vertical"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="36dp">
+
+            <!-- Drag Handle -->
+            <View
+                android:layout_width="38dp"
+                android:layout_height="4dp"
+                android:layout_gravity="center_horizontal"
+                android:background="#CBD5E1"
+                android:layout_marginBottom="14dp" />
+
+            <!-- Header Title -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/lblAddAgencyTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Add Corporate Agency"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="#0F172A" />
+
+                    <TextView
+                        android:id="@+id/lblAddAgencySubtitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Configure agency contract, pricing tier &amp; portal access"
+                        android:textSize="11.5sp"
+                        android:textColor="#64748B" />
+
+                </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/btnAddAgencyClose"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:src="@drawable/ic_close_cross"
+                    android:tint="#94A3B8"
+                    app:tint="#94A3B8"
+                    android:padding="5dp"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+            </LinearLayout>
+
+            <!-- ── SECTION 1: AGENCY DETAILS ──────────────────────────── -->
+            <TextView
+                android:text="AGENCY DETAILS"
+                android:textSize="10.5sp"
+                android:textStyle="bold"
+                android:textColor="#64748B"
+                android:letterSpacing="0.05"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp" />
+
+            <!-- Agency Name -->
+            <EditText
+                android:id="@+id/inputAgencyName"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_input_field"
+                android:hint="Agency / Company Name *"
+                android:textColor="#1E293B"
+                android:textColorHint="#94A3B8"
+                android:textSize="13.5sp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:singleLine="true" />
+
+            <!-- Contact Person -->
+            <EditText
+                android:id="@+id/inputAgencyContactPerson"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_input_field"
+                android:hint="Primary Contact Person *"
+                android:textColor="#1E293B"
+                android:textColorHint="#94A3B8"
+                android:textSize="13.5sp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:singleLine="true" />
+
+            <!-- Phone & Email Row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="10dp">
+
+                <EditText
+                    android:id="@+id/inputAgencyPhone"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="6dp"
+                    android:background="@drawable/bg_input_field"
+                    android:hint="Phone Number *"
+                    android:textColor="#1E293B"
+                    android:textColorHint="#94A3B8"
+                    android:textSize="13.5sp"
+                    android:inputType="phone"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:singleLine="true" />
+
+                <EditText
+                    android:id="@+id/inputAgencyPan"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="6dp"
+                    android:background="@drawable/bg_input_field"
+                    android:hint="PAN Number"
+                    android:textColor="#1E293B"
+                    android:textColorHint="#94A3B8"
+                    android:textSize="13.5sp"
+                    android:inputType="textCapCharacters"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:singleLine="true" />
+
+            </LinearLayout>
+
+            <EditText
+                android:id="@+id/inputAgencyEmail"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_input_field"
+                android:hint="Official Email Address"
+                android:textColor="#1E293B"
+                android:textColorHint="#94A3B8"
+                android:textSize="13.5sp"
+                android:inputType="textEmailAddress"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:singleLine="true" />
+
+            <!-- ── SECTION 2: PRICING TIER & COMMISSION ───────────────── -->
+            <TextView
+                android:text="PRICING TIER &amp; COMMISSION"
+                android:textSize="10.5sp"
+                android:textStyle="bold"
+                android:textColor="#64748B"
+                android:letterSpacing="0.05"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp" />
+
+            <!-- Tier Selector (Horizontal Radio Chips) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp">
+
+                <TextView
+                    android:id="@+id/chipTierStandard"
+                    android:layout_width="0dp"
+                    android:layout_height="36dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="4dp"
+                    android:gravity="center"
+                    android:text="Standard"
+                    android:textSize="11.5sp"
+                    android:background="@drawable/bg_chip_active"
+                    android:textColor="#FFFFFF"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <TextView
+                    android:id="@+id/chipTierSilver"
+                    android:layout_width="0dp"
+                    android:layout_height="36dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="4dp"
+                    android:gravity="center"
+                    android:text="Tier 1"
+                    android:textSize="11.5sp"
+                    android:background="@drawable/bg_chip_inactive"
+                    android:textColor="#64748B"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <TextView
+                    android:id="@+id/chipTierGold"
+                    android:layout_width="0dp"
+                    android:layout_height="36dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="4dp"
+                    android:gravity="center"
+                    android:text="Tier 2"
+                    android:textSize="11.5sp"
+                    android:background="@drawable/bg_chip_inactive"
+                    android:textColor="#64748B"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <TextView
+                    android:id="@+id/chipTierPlatinum"
+                    android:layout_width="0dp"
+                    android:layout_height="36dp"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="Tier 3"
+                    android:textSize="11.5sp"
+                    android:background="@drawable/bg_chip_inactive"
+                    android:textColor="#64748B"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+            </LinearLayout>
+
+            <!-- Commission Rate & Type -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="10dp">
+
+                <EditText
+                    android:id="@+id/inputAgencyCommissionRate"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1.2"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_input_field"
+                    android:hint="Default Rate (e.g., 15) *"
+                    android:textColor="#1E293B"
+                    android:textColorHint="#94A3B8"
+                    android:textSize="13.5sp"
+                    android:inputType="numberDecimal"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:singleLine="true" />
+
+                <LinearLayout
+                    android:id="@+id/btnToggleCommissionType"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_copy_pill"
+                    android:gravity="center"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        android:id="@+id/lblCommissionType"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="% Percentage"
+                        android:textSize="12.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#2563EB" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- ── SECTION 3: B2B PORTAL ACCESS ───────────────────────── -->
+            <TextView
+                android:text="B2B PORTAL ACCESS"
+                android:textSize="10.5sp"
+                android:textStyle="bold"
+                android:textColor="#64748B"
+                android:letterSpacing="0.05"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp" />
+
+            <LinearLayout
+                android:id="@+id/layoutPortalToggle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="#F1F5F9"
+                android:padding="12dp"
+                android:layout_marginTop="8dp">
+
+                <CheckBox
+                    android:id="@+id/chkCreatePortalAccount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:buttonTint="#0D6EFD" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="8dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Enable B2B Partner Portal"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:textColor="#0F172A" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Allows partner to log in at /b2b-portal to view patient test results"
+                        android:textSize="11sp"
+                        android:textColor="#64748B" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- Portal Password (conditional) -->
+            <EditText
+                android:id="@+id/inputPortalPassword"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_input_field"
+                android:hint="Initial Portal Password (min 6 chars)"
+                android:textColor="#1E293B"
+                android:textColorHint="#94A3B8"
+                android:textSize="13.5sp"
+                android:inputType="textPassword"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:singleLine="true"
+                android:visibility="gone" />
+
+            <!-- Error Banner -->
+            <TextView
+                android:id="@+id/lblAgencyFormError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="#FEE2E2"
+                android:padding="10dp"
+                android:text="Please complete all required fields."
+                android:textColor="#DC2626"
+                android:textSize="12sp"
+                android:visibility="gone" />
+
+            <!-- Save Action Button -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp">
+
+                <Button
+                    android:id="@+id/btnSaveAgency"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:text="Save Corporate Agency"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:background="@drawable/bg_btn_primary" />
+
+                <ProgressBar
+                    android:id="@+id/progressAgencySaving"
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
+                    android:layout_gravity="center"
+                    android:indeterminateTint="#FFFFFF"
+                    android:visibility="gone" />
+
+            </FrameLayout>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</FrameLayout>

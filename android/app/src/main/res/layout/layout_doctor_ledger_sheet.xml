@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Bottom Sheet Dialog: Doctor Referral Ledger & History -->
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_bottom_sheet">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="36dp">
+
+        <!-- Drag Handle -->
+        <View
+            android:layout_width="38dp"
+            android:layout_height="4dp"
+            android:layout_gravity="center_horizontal"
+            android:background="#CBD5E1"
+            android:layout_marginBottom="14dp" />
+
+        <!-- Header -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/lblLedgerDoctorName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Doctor Referral Ledger"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="#0F172A" />
+
+                <TextView
+                    android:id="@+id/lblLedgerDoctorSubtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Prescribed tests, patient volume and commission ledger"
+                    android:textSize="11.5sp"
+                    android:textColor="#64748B" />
+
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/btnDoctorLedgerClose"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:src="@drawable/ic_close_cross"
+                android:tint="#94A3B8"
+                app:tint="#94A3B8"
+                android:padding="5dp"
+                android:clickable="true"
+                android:focusable="true" />
+
+        </LinearLayout>
+
+        <!-- Summary Pill -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:background="#F8FAFC"
+            android:padding="12dp"
+            android:layout_marginTop="14dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:text="TOTAL EARNED"
+                    android:textSize="9.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#64748B"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:id="@+id/lblDoctorLedgerTotalEarned"
+                    android:text="₹0"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="#0F172A"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:text="PAID OUT"
+                    android:textSize="9.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#64748B"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:id="@+id/lblDoctorLedgerPaidOut"
+                    android:text="₹0"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="#059669"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:text="BALANCE DUE"
+                    android:textSize="9.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#64748B"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:id="@+id/lblDoctorLedgerBalanceDue"
+                    android:text="₹0"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="#D97706"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Transactions Header -->
+        <TextView
+            android:text="RECENT REFERRAL TRANSACTIONS"
+            android:textSize="10.5sp"
+            android:textStyle="bold"
+            android:textColor="#64748B"
+            android:letterSpacing="0.05"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Transactions Container -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="120dp">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerDoctorLedger"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxHeight="320dp"
+                android:nestedScrollingEnabled="false" />
+
+            <TextView
+                android:id="@+id/lblEmptyDoctorLedger"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="No referral transactions recorded yet."
+                android:textColor="#94A3B8"
+                android:textSize="13sp"
+                android:visibility="gone" />
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+</FrameLayout>

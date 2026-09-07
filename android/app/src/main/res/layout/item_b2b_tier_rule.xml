@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_card_white"
+    android:elevation="1dp"
+    android:padding="14dp"
+    android:layout_marginBottom="10dp">
+
+    <!-- Top Row: Test Name + Base Price & Delete Action -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/lblRuleTestName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Complete Blood Count (CBC)"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#0F172A" />
+
+            <TextView
+                android:id="@+id/lblRuleBasePrice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Base MRP: ₹350"
+                android:textSize="11.5sp"
+                android:textColor="#64748B"
+                android:fontFamily="monospace" />
+
+        </LinearLayout>
+
+        <FrameLayout
+            android:id="@+id/btnDeleteTierRule"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="@drawable/bg_circle_slate"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_trash"
+                android:tint="#EF4444"
+                app:tint="#EF4444" />
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#F1F5F9"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp" />
+
+    <!-- Bottom Row: Pricing Rule Type + Value Input -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <!-- Rule Type Selector Spinner / Button -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.2"
+            android:orientation="vertical"
+            android:layout_marginEnd="10dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="RULE TYPE"
+                android:textSize="9.5sp"
+                android:textStyle="bold"
+                android:textColor="#94A3B8"
+                android:letterSpacing="0.04" />
+
+            <Spinner
+                android:id="@+id/spinnerRuleType"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_marginTop="4dp"
+                android:background="@drawable/bg_input_field"
+                android:spinnerMode="dropdown" />
+
+        </LinearLayout>
+
+        <!-- Rule Value Input -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/lblRuleValueHeading"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="VALUE"
+                android:textSize="9.5sp"
+                android:textStyle="bold"
+                android:textColor="#94A3B8"
+                android:letterSpacing="0.04" />
+
+            <EditText
+                android:id="@+id/inputRuleValue"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_marginTop="4dp"
+                android:background="@drawable/bg_input_field"
+                android:inputType="numberDecimal"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:text="250"
+                android:textColor="#0F172A"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

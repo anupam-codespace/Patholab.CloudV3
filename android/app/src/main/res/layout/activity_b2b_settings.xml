@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dedicated B2B Tier Configuration Console (Independent Settings Module) -->
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F8FAFC">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <!-- ── TOP CURVED SAPPHIRE HEADER ─────────────────────────────── -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_home_header"
+            android:paddingStart="18dp"
+            android:paddingEnd="18dp"
+            android:paddingTop="32dp"
+            android:paddingBottom="24dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <FrameLayout
+                    android:id="@+id/btnB2BSettingsBack"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:background="@drawable/bg_glass_back_btn"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_back_arrow"
+                        android:tint="#FFFFFF"
+                        app:tint="#FFFFFF" />
+
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="14dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="B2B Tier Settings"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"
+                        android:letterSpacing="-0.02" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Master net pricing &amp; enterprise margins"
+                        android:textSize="11.5sp"
+                        android:textColor="#C7DFFF"
+                        android:singleLine="true"
+                        android:ellipsize="end" />
+
+                </LinearLayout>
+
+                <!-- Save Tier Rules Button -->
+                <Button
+                    android:id="@+id/btnSaveTierRules"
+                    android:layout_width="wrap_content"
+                    android:layout_height="38dp"
+                    android:background="@drawable/bg_btn_primary"
+                    android:text="Save Tier"
+                    android:textAllCaps="false"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12.5sp"
+                    android:textStyle="bold"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:elevation="2dp" />
+
+            </LinearLayout>
+
+        </FrameLayout>
+
+        <!-- ── HOW TIERS WORK CALLOUT BANNER ───────────────────────────── -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:background="@drawable/bg_pill_indigo_soft"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="12dp"
+            android:padding="12dp"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:src="@drawable/ic_shield_check"
+                android:tint="#4F46E5"
+                app:tint="#4F46E5"
+                android:layout_marginEnd="10dp" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Tiers apply pricing rules automatically. If a test is not configured here, the agency's default margin applies."
+                android:textSize="11.5sp"
+                android:textColor="#3730A3"
+                android:lineSpacingExtra="2dp" />
+
+        </LinearLayout>
+
+        <!-- ── 5 TIER TABS CONTAINER ───────────────────────────────────── -->
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="8dp"
+            android:clipToPadding="false">
+
+            <LinearLayout
+                android:id="@+id/containerTierTabs"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <!-- Populated dynamically: STANDARD, BRONZE, SILVER, GOLD, PLATINUM -->
+
+            </LinearLayout>
+
+        </HorizontalScrollView>
+
+        <!-- ── TOOLBAR: SEARCH TO ADD & BULK ACTIONS ───────────────────── -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card_white"
+            android:elevation="1dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="4dp"
+            android:padding="12dp">
+
+            <!-- Search to Add Single Test -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="42dp"
+                    android:background="@drawable/bg_search_input_field"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:src="@drawable/ic_search"
+                        android:tint="#94A3B8"
+                        app:tint="#94A3B8" />
+
+                    <EditText
+                        android:id="@+id/inputSearchAddTest"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:background="@null"
+                        android:hint="Search catalog test to add..."
+                        android:imeOptions="actionDone"
+                        android:inputType="text"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:textColor="#0F172A"
+                        android:textColorHint="#94A3B8"
+                        android:textSize="13sp" />
+
+                    <ImageView
+                        android:id="@+id/btnClearSearchAddTest"
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:src="@drawable/ic_close_circle"
+                        android:tint="#94A3B8"
+                        app:tint="#94A3B8"
+                        android:visibility="gone"
+                        android:clickable="true"
+                        android:focusable="true" />
+
+                </LinearLayout>
+
+            </FrameLayout>
+
+            <!-- Dropdown suggestions container -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerTestSuggestions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxHeight="160dp"
+                android:visibility="gone"
+                android:background="#FFFFFF"
+                android:layout_marginTop="4dp" />
+
+            <!-- Bulk Actions Row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="10dp">
+
+                <Button
+                    android:id="@+id/btnAddAllCatalog"
+                    android:layout_width="wrap_content"
+                    android:layout_height="34dp"
+                    android:background="@drawable/bg_btn_outline"
+                    android:text="Add All Catalog Tests"
+                    android:textAllCaps="false"
+                    android:textColor="#2563EB"
+                    android:textSize="11.5sp"
+                    android:textStyle="bold"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp" />
+
+                <Button
+                    android:id="@+id/btnClearTierRules"
+                    android:layout_width="wrap_content"
+                    android:layout_height="34dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:text="Clear All"
+                    android:textAllCaps="false"
+                    android:textColor="#EF4444"
+                    android:textSize="11.5sp"
+                    android:textStyle="bold"
+                    android:layout_marginStart="8dp"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1" />
+
+                <TextView
+                    android:id="@+id/lblActiveRulesCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0 Active Rules"
+                    android:textSize="11.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#10B981" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Loading Indicator -->
+        <ProgressBar
+            android:id="@+id/progressTierRules"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="24dp"
+            android:visibility="gone"
+            android:indeterminateTint="#2563EB" />
+
+        <!-- ── RULES RECYCLERVIEW ──────────────────────────────────────── -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="8dp">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerTierRules"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingBottom="24dp" />
+
+            <!-- Empty State -->
+            <LinearLayout
+                android:id="@+id/emptyStateTierRules"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="32dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:src="@drawable/ic_mod_clean_b2b_settings"
+                    android:tint="#CBD5E1"
+                    app:tint="#CBD5E1" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="No specific rules configured"
+                    android:textColor="#334155"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center"
+                    android:text="Search for a test above or tap 'Add All Catalog Tests' to generate rules for this tier."
+                    android:textColor="#94A3B8"
+                    android:textSize="12.5sp" />
+
+            </LinearLayout>
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+</FrameLayout>

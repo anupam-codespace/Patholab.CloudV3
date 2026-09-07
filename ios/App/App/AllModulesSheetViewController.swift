@@ -78,6 +78,7 @@ class AllModulesSheetViewController: UIViewController, UITextFieldDelegate {
         SheetModule(name: "Referral Doctors",    path: "/workspace/doctors",         icon: "stethoscope",           bgHex: "EFF6FF", tintHex: "1D4ED8"),
         SheetModule(name: "Corporate Agencies",  path: "/workspace/agencies",        icon: "building.2.fill",       bgHex: "FFF7ED", tintHex: "EA580C"),
         SheetModule(name: "Commissions Payout",  path: "/workspace/commissions",     icon: "dollarsign.circle.fill",bgHex: "FAF5FF", tintHex: "9333EA"),
+        SheetModule(name: "B2B Settings",        path: "/workspace/settings/b2b-tiers", icon: "slider.horizontal.3",  bgHex: "EFF6FF", tintHex: "2563EB"),
     ]
 
     // ── 7. Administration ──
