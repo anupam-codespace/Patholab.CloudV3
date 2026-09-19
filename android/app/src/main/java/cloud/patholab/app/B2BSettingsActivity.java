@@ -29,6 +29,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -64,7 +65,7 @@ import cloud.patholab.app.auth.AuthManager;
  */
 public class B2BSettingsActivity extends AppCompatActivity {
 
-    private static final String BASE_URL = "https://app.patholab.cloud";
+    private static final String[] BASE_URLS = new String[]{"https://app.patholab.cloud", "https://patholab.cloud"};
     private static final String[] TIERS = {"STANDARD", "BRONZE", "SILVER", "GOLD", "PLATINUM"};
 
     // Header & Views
@@ -81,6 +82,7 @@ public class B2BSettingsActivity extends AppCompatActivity {
     private TextView lblActiveRulesCount;
 
     // Main List & States
+    private SwipeRefreshLayout swipeRefreshTierRules;
     private RecyclerView recyclerTierRules;
     private LinearLayout emptyStateTierRules;
     private ProgressBar progressTierRules;
@@ -141,6 +143,12 @@ public class B2BSettingsActivity extends AppCompatActivity {
         loadTierSettings();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadTierSettings();
+    }
+
     private void initViews() {
         btnB2BSettingsBack = findViewById(R.id.btnB2BSettingsBack);
         btnSaveTierRules = findViewById(R.id.btnSaveTierRules);
@@ -153,6 +161,7 @@ public class B2BSettingsActivity extends AppCompatActivity {
         btnClearTierRules = findViewById(R.id.btnClearTierRules);
         lblActiveRulesCount = findViewById(R.id.lblActiveRulesCount);
 
+        swipeRefreshTierRules = findViewById(R.id.swipeRefreshTierRules);
         recyclerTierRules = findViewById(R.id.recyclerTierRules);
         emptyStateTierRules = findViewById(R.id.emptyStateTierRules);
         progressTierRules = findViewById(R.id.progressTierRules);
@@ -166,6 +175,11 @@ public class B2BSettingsActivity extends AppCompatActivity {
         btnAddAllCatalog.setOnClickListener(v -> handleAddAllCatalog());
 
         btnClearTierRules.setOnClickListener(v -> handleClearAll());
+
+        if (swipeRefreshTierRules != null) {
+            swipeRefreshTierRules.setColorSchemeColors(Color.parseColor("#2563EB"), Color.parseColor("#0A58CA"));
+            swipeRefreshTierRules.setOnRefreshListener(this::loadTierSettings);
+        }
 
         btnClearSearchAddTest.setOnClickListener(v -> {
             inputSearchAddTest.setText("");
@@ -397,20 +411,25 @@ public class B2BSettingsActivity extends AppCompatActivity {
     // ─────────────────────────────────────────────────────────────────────────
     private String getAuthToken() {
         String token = AuthManager.getToken(this);
-        if (token != null && !token.isEmpty()) return token;
+        if (token != null && !token.trim().isEmpty()) return token.trim();
 
         try {
             CookieManager cm = CookieManager.getInstance();
-            String cookies = cm.getCookie(BASE_URL);
-            if (cookies != null) {
-                String[] parts = cookies.split(";");
-                for (String part : parts) {
-                    String trimmed = part.trim();
-                    if (trimmed.startsWith("token=")) {
-                        String cookieToken = trimmed.substring(6).trim();
-                        if (!cookieToken.isEmpty()) {
-                            AuthManager.saveToken(this, cookieToken);
-                            return cookieToken;
+            for (String host : BASE_URLS) {
+                String cookies = cm.getCookie(host);
+                if (cookies != null) {
+                    String[] parts = cookies.split(";");
+                    for (String part : parts) {
+                        String trimmed = part.trim();
+                        if (trimmed.startsWith("token=") || trimmed.startsWith("auth-token=") || trimmed.startsWith("auth_token=")) {
+                            int eqIdx = trimmed.indexOf('=');
+                            if (eqIdx != -1) {
+                                String cookieToken = trimmed.substring(eqIdx + 1).trim();
+                                if (!cookieToken.isEmpty()) {
+                                    AuthManager.saveToken(this, cookieToken);
+                                    return cookieToken;
+                                }
+                            }
                         }
                     }
                 }
@@ -429,80 +448,123 @@ public class B2BSettingsActivity extends AppCompatActivity {
     }
 
     private void loadTierSettings() {
-        progressTierRules.setVisibility(View.VISIBLE);
+        if (swipeRefreshTierRules == null || !swipeRefreshTierRules.isRefreshing()) {
+            progressTierRules.setVisibility(View.VISIBLE);
+        }
 
         new Thread(() -> {
-            try {
-                String token = getAuthToken();
-                URL url = new URL(BASE_URL + "/api/workspace/b2b/tiers");
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("GET");
-                conn.setRequestProperty("Authorization", "Bearer " + token);
-                conn.setRequestProperty("Cookie", "token=" + token);
-                conn.setRequestProperty("Accept", "application/json");
-                conn.setConnectTimeout(10000);
-                conn.setReadTimeout(15000);
+            boolean success = false;
+            String lastError = null;
 
-                int code = conn.getResponseCode();
-                if (code >= 200 && code < 300) {
-                    String jsonStr = readStream(conn.getInputStream());
-                    JSONObject json = new JSONObject(jsonStr);
-
-                    // 1. Parse Catalog
-                    allCatalogTests.clear();
-                    JSONArray catalogArr = json.optJSONArray("catalog");
-                    if (catalogArr != null) {
-                        for (int i = 0; i < catalogArr.length(); i++) {
-                            JSONObject obj = catalogArr.getJSONObject(i);
-                            allCatalogTests.add(new CatalogTest(
-                                    obj.optString("id"),
-                                    obj.optString("name"),
-                                    obj.optDouble("price", 0)
-                            ));
-                        }
+            for (String base : BASE_URLS) {
+                try {
+                    String token = getAuthToken();
+                    URL url = new URL(base + "/api/workspace/b2b/tiers");
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.setRequestMethod("GET");
+                    if (!token.isEmpty()) {
+                        conn.setRequestProperty("Authorization", "Bearer " + token);
+                        conn.setRequestProperty("Cookie", "token=" + token + "; auth-token=" + token + "; auth_token=" + token);
                     }
+                    conn.setRequestProperty("Accept", "application/json");
+                    conn.setConnectTimeout(8000);
+                    conn.setReadTimeout(12000);
 
-                    // 2. Parse Grouped Rules
-                    JSONObject grouped = json.optJSONObject("groupedRules");
-                    for (String tier : TIERS) {
-                        List<TierRule> list = new ArrayList<>();
-                        if (grouped != null && grouped.has(tier)) {
-                            JSONArray arr = grouped.optJSONArray(tier);
-                            if (arr != null) {
-                                for (int i = 0; i < arr.length(); i++) {
-                                    JSONObject rObj = arr.getJSONObject(i);
-                                    list.add(new TierRule(
-                                            rObj.optString("id"),
-                                            rObj.optString("testTemplateId"),
-                                            rObj.optString("testName"),
-                                            rObj.optDouble("basePrice", 0),
-                                            rObj.optString("ruleType", "NET_PRICE"),
-                                            rObj.optDouble("value", 0)
-                                    ));
-                                }
+                    int code = conn.getResponseCode();
+                    if (code >= 200 && code < 300) {
+                        String jsonStr = readStream(conn.getInputStream());
+                        JSONObject json = new JSONObject(jsonStr);
+
+                        // 1. Parse Catalog
+                        allCatalogTests.clear();
+                        JSONArray catalogArr = json.optJSONArray("catalog");
+                        if (catalogArr != null) {
+                            for (int i = 0; i < catalogArr.length(); i++) {
+                                JSONObject obj = catalogArr.getJSONObject(i);
+                                allCatalogTests.add(new CatalogTest(
+                                        obj.optString("id"),
+                                        obj.optString("name"),
+                                        obj.optDouble("price", 0)
+                                ));
                             }
                         }
-                        tierRulesMap.put(tier, list);
-                    }
 
-                    mainHandler.post(() -> {
-                        progressTierRules.setVisibility(View.GONE);
-                        renderTabs();
-                        renderRulesList();
-                    });
-                } else {
-                    mainHandler.post(() -> {
-                        progressTierRules.setVisibility(View.GONE);
-                        Toast.makeText(this, "Failed to load tiers (" + code + ")", Toast.LENGTH_SHORT).show();
-                        renderTabs();
-                        renderRulesList();
-                    });
+                        // Fallback to fetch catalog from agencies route if empty
+                        if (allCatalogTests.isEmpty()) {
+                            try {
+                                URL catUrl = new URL(base + "/api/workspace/b2b/agencies");
+                                HttpURLConnection catConn = (HttpURLConnection) catUrl.openConnection();
+                                catConn.setRequestMethod("GET");
+                                if (!token.isEmpty()) {
+                                    catConn.setRequestProperty("Authorization", "Bearer " + token);
+                                    catConn.setRequestProperty("Cookie", "token=" + token + "; auth-token=" + token + "; auth_token=" + token);
+                                }
+                                catConn.setRequestProperty("Accept", "application/json");
+                                if (catConn.getResponseCode() == 200) {
+                                    JSONObject catRes = new JSONObject(readStream(catConn.getInputStream()));
+                                    JSONArray fallbackCat = catRes.optJSONArray("catalog");
+                                    if (fallbackCat != null) {
+                                        for (int i = 0; i < fallbackCat.length(); i++) {
+                                            JSONObject obj = fallbackCat.getJSONObject(i);
+                                            allCatalogTests.add(new CatalogTest(
+                                                    obj.optString("id"),
+                                                    obj.optString("name"),
+                                                    obj.optDouble("price", 0)
+                                            ));
+                                        }
+                                    }
+                                }
+                                catConn.disconnect();
+                            } catch (Exception ignored) {}
+                        }
+
+                        // 2. Parse Grouped Rules
+                        JSONObject grouped = json.optJSONObject("groupedRules");
+                        for (String tier : TIERS) {
+                            List<TierRule> list = new ArrayList<>();
+                            if (grouped != null && grouped.has(tier)) {
+                                JSONArray arr = grouped.optJSONArray(tier);
+                                if (arr != null) {
+                                    for (int i = 0; i < arr.length(); i++) {
+                                        JSONObject rObj = arr.getJSONObject(i);
+                                        list.add(new TierRule(
+                                                rObj.optString("id"),
+                                                rObj.optString("testTemplateId"),
+                                                rObj.optString("testName"),
+                                                rObj.optDouble("basePrice", 0),
+                                                rObj.optString("ruleType", "NET_PRICE"),
+                                                rObj.optDouble("value", 0)
+                                        ));
+                                    }
+                                }
+                            }
+                            tierRulesMap.put(tier, list);
+                        }
+
+                        conn.disconnect();
+                        success = true;
+                        mainHandler.post(() -> {
+                            progressTierRules.setVisibility(View.GONE);
+                            if (swipeRefreshTierRules != null) swipeRefreshTierRules.setRefreshing(false);
+                            renderTabs();
+                            renderRulesList();
+                        });
+                        break;
+                    } else {
+                        lastError = "HTTP " + code;
+                        conn.disconnect();
+                    }
+                } catch (Exception e) {
+                    lastError = e.getMessage();
                 }
-                conn.disconnect();
-            } catch (Exception e) {
+            }
+
+            if (!success) {
+                final String err = lastError;
                 mainHandler.post(() -> {
                     progressTierRules.setVisibility(View.GONE);
-                    Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    if (swipeRefreshTierRules != null) swipeRefreshTierRules.setRefreshing(false);
+                    Toast.makeText(this, "Failed to load tier settings: " + err, Toast.LENGTH_SHORT).show();
                     renderTabs();
                     renderRulesList();
                 });
@@ -520,53 +582,69 @@ public class B2BSettingsActivity extends AppCompatActivity {
         final List<TierRule> rulesToSave = currentRules;
 
         new Thread(() -> {
-            try {
-                JSONObject payload = new JSONObject();
-                payload.put("tier", activeTier);
+            boolean success = false;
+            String lastError = null;
 
-                JSONArray rulesArr = new JSONArray();
-                for (TierRule r : rulesToSave) {
-                    JSONObject rObj = new JSONObject();
-                    rObj.put("testTemplateId", r.testTemplateId);
-                    rObj.put("testName", r.testName);
-                    rObj.put("basePrice", r.basePrice);
-                    rObj.put("ruleType", r.ruleType);
-                    rObj.put("value", r.value);
-                    rulesArr.put(rObj);
-                }
-                payload.put("rules", rulesArr);
+            for (String base : BASE_URLS) {
+                try {
+                    JSONObject payload = new JSONObject();
+                    payload.put("tier", activeTier);
 
-                String token = getAuthToken();
-                URL url = new URL(BASE_URL + "/api/workspace/b2b/tiers");
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("POST");
-                conn.setRequestProperty("Authorization", "Bearer " + token);
-                conn.setRequestProperty("Cookie", "token=" + token);
-                conn.setRequestProperty("Content-Type", "application/json");
-                conn.setRequestProperty("Accept", "application/json");
-                conn.setDoOutput(true);
-
-                OutputStream os = conn.getOutputStream();
-                os.write(payload.toString().getBytes(StandardCharsets.UTF_8));
-                os.flush();
-                os.close();
-
-                int resCode = conn.getResponseCode();
-                mainHandler.post(() -> {
-                    btnSaveTierRules.setEnabled(true);
-                    btnSaveTierRules.setText(String.format("Save %s", formatTierName(activeTier)));
-                    if (resCode >= 200 && resCode < 300) {
-                        Toast.makeText(this, String.format("%s tier rules saved successfully!", formatTierName(activeTier)), Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(this, "Failed to save: " + resCode, Toast.LENGTH_SHORT).show();
+                    JSONArray rulesArr = new JSONArray();
+                    for (TierRule r : rulesToSave) {
+                        JSONObject rObj = new JSONObject();
+                        rObj.put("testTemplateId", r.testTemplateId);
+                        rObj.put("testName", r.testName);
+                        rObj.put("basePrice", r.basePrice);
+                        rObj.put("ruleType", r.ruleType);
+                        rObj.put("value", r.value);
+                        rulesArr.put(rObj);
                     }
-                });
-                conn.disconnect();
-            } catch (Exception e) {
+                    payload.put("rules", rulesArr);
+
+                    String token = getAuthToken();
+                    URL url = new URL(base + "/api/workspace/b2b/tiers");
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.setRequestMethod("POST");
+                    if (!token.isEmpty()) {
+                        conn.setRequestProperty("Authorization", "Bearer " + token);
+                        conn.setRequestProperty("Cookie", "token=" + token + "; auth-token=" + token + "; auth_token=" + token);
+                    }
+                    conn.setRequestProperty("Content-Type", "application/json");
+                    conn.setRequestProperty("Accept", "application/json");
+                    conn.setDoOutput(true);
+
+                    OutputStream os = conn.getOutputStream();
+                    os.write(payload.toString().getBytes(StandardCharsets.UTF_8));
+                    os.flush();
+                    os.close();
+
+                    int resCode = conn.getResponseCode();
+                    conn.disconnect();
+
+                    if (resCode >= 200 && resCode < 300) {
+                        success = true;
+                        mainHandler.post(() -> {
+                            btnSaveTierRules.setEnabled(true);
+                            btnSaveTierRules.setText(String.format("Save %s", formatTierName(activeTier)));
+                            Toast.makeText(this, String.format("%s tier rules saved successfully!", formatTierName(activeTier)), Toast.LENGTH_SHORT).show();
+                            loadTierSettings();
+                        });
+                        break;
+                    } else {
+                        lastError = "HTTP " + resCode;
+                    }
+                } catch (Exception e) {
+                    lastError = e.getMessage();
+                }
+            }
+
+            if (!success) {
+                final String err = lastError;
                 mainHandler.post(() -> {
                     btnSaveTierRules.setEnabled(true);
                     btnSaveTierRules.setText(String.format("Save %s", formatTierName(activeTier)));
-                    Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Failed to save: " + err, Toast.LENGTH_SHORT).show();
                 });
             }
         }).start();
@@ -611,6 +689,30 @@ public class B2BSettingsActivity extends AppCompatActivity {
             return new RuleViewHolder(v);
         }
 
+        private static void updateEffectivePriceBadge(RuleViewHolder holder, TierRule rule) {
+            if (holder.lblEffectivePrice == null) return;
+            double effective = rule.basePrice;
+            if ("PERCENTAGE".equalsIgnoreCase(rule.ruleType)) {
+                effective = Math.max(0, rule.basePrice * (1.0 - (rule.value / 100.0)));
+            } else if ("FIXED".equalsIgnoreCase(rule.ruleType)) {
+                effective = Math.max(0, rule.basePrice - rule.value);
+            } else {
+                effective = rule.value;
+            }
+            double diff = rule.basePrice - effective;
+            if (diff > 0.01) {
+                double pct = (diff / Math.max(1.0, rule.basePrice)) * 100.0;
+                holder.lblEffectivePrice.setText(String.format(Locale.getDefault(), "B2B Pays: ₹%.2f (Save ₹%.2f / %.1f%%)", effective, diff, pct));
+                holder.lblEffectivePrice.setTextColor(Color.parseColor("#15803D"));
+            } else if (diff < -0.01) {
+                holder.lblEffectivePrice.setText(String.format(Locale.getDefault(), "B2B Pays: ₹%.2f (+₹%.2f markup)", effective, -diff));
+                holder.lblEffectivePrice.setTextColor(Color.parseColor("#B45309"));
+            } else {
+                holder.lblEffectivePrice.setText(String.format(Locale.getDefault(), "B2B Pays: ₹%.2f (Base MRP)", effective));
+                holder.lblEffectivePrice.setTextColor(Color.parseColor("#4338CA"));
+            }
+        }
+
         @Override
         public void onBindViewHolder(@NonNull RuleViewHolder holder, int position) {
             TierRule rule = rules.get(position);
@@ -643,14 +745,21 @@ public class B2BSettingsActivity extends AppCompatActivity {
                         rule.ruleType = "NET_PRICE";
                         holder.lblRuleValueHeading.setText("NET PRICE ₹");
                     }
+                    updateEffectivePriceBadge(holder, rule);
                 }
 
                 @Override
                 public void onNothingSelected(AdapterView<?> parent) {}
             });
 
+            if (holder.textWatcher != null) {
+                holder.inputRuleValue.removeTextChangedListener(holder.textWatcher);
+            }
+
             holder.inputRuleValue.setText(String.format(Locale.getDefault(), "%.2f", rule.value));
-            holder.inputRuleValue.addTextChangedListener(new TextWatcher() {
+            updateEffectivePriceBadge(holder, rule);
+
+            holder.textWatcher = new TextWatcher() {
                 @Override
                 public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
@@ -658,12 +767,14 @@ public class B2BSettingsActivity extends AppCompatActivity {
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
                     try {
                         rule.value = Double.parseDouble(s.toString().trim());
+                        updateEffectivePriceBadge(holder, rule);
                     } catch (Exception ignored) {}
                 }
 
                 @Override
                 public void afterTextChanged(Editable s) {}
-            });
+            };
+            holder.inputRuleValue.addTextChangedListener(holder.textWatcher);
 
             holder.btnDeleteTierRule.setOnClickListener(v -> onDelete.onDelete(rule));
         }
@@ -678,6 +789,9 @@ public class B2BSettingsActivity extends AppCompatActivity {
             Spinner spinnerRuleType;
             EditText inputRuleValue;
             FrameLayout btnDeleteTierRule;
+            View layoutEffectivePrice;
+            TextView lblEffectivePrice;
+            TextWatcher textWatcher;
 
             public RuleViewHolder(@NonNull View itemView) {
                 super(itemView);
@@ -687,6 +801,8 @@ public class B2BSettingsActivity extends AppCompatActivity {
                 spinnerRuleType = itemView.findViewById(R.id.spinnerRuleType);
                 inputRuleValue = itemView.findViewById(R.id.inputRuleValue);
                 btnDeleteTierRule = itemView.findViewById(R.id.btnDeleteTierRule);
+                layoutEffectivePrice = itemView.findViewById(R.id.layoutEffectivePrice);
+                lblEffectivePrice = itemView.findViewById(R.id.lblEffectivePrice);
             }
         }
     }

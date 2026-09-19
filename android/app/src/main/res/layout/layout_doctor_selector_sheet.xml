@@ -2,6 +2,7 @@
 <!-- Referring Doctor & Agency Selector Bottom Sheet -->
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -50,6 +51,22 @@
                 android:textColor="#64748B" />
 
         </LinearLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnAddDocAction"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="+ Add New"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="#0D6EFD"
+            android:backgroundTint="#EFF6FF"
+            app:cornerRadius="18dp"
+            android:layout_marginEnd="8dp"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:elevation="0dp"
+            android:textAllCaps="false" />
 
         <FrameLayout
             android:id="@+id/btnCloseDocSheet"
@@ -100,7 +117,7 @@
                 android:layout_height="match_parent"
                 android:layout_marginStart="10dp"
                 android:background="@null"
-                android:hint="Search doctor name or hospital..."
+                android:hint="Search or type new..."
                 android:textSize="14sp"
                 android:textColor="#0F172A"
                 android:textColorHint="#94A3B8"

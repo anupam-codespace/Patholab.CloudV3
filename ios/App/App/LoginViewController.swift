@@ -9,11 +9,22 @@ class LoginViewController: AuthBaseViewController {
     private let spinner       = UIActivityIndicatorView(style: .medium)
     private var eyeButton: UIButton!
 
-    // Thread-safe flag to prevent double-firing of login completion/timeout
-    private var loginFinished = false
-    private let loginQueue = DispatchQueue(label: "com.patholab.login", qos: .userInitiated)
+    private var prefilledEmail: String?
+    private var initialSuccessMessage: String?
 
     var onLoginSuccess: (() -> Void)?
+
+    // MARK: – Initializers
+
+    init(prefilledEmail: String? = nil, initialSuccessMessage: String? = nil) {
+        self.prefilledEmail = prefilledEmail
+        self.initialSuccessMessage = initialSuccessMessage
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+    }
 
     // MARK: – Lifecycle
 
@@ -22,6 +33,15 @@ class LoginViewController: AuthBaseViewController {
         buildUI()
         registerKeyboardObservers()
         addDismissKeyboardGesture()
+
+        if let email = prefilledEmail, !email.isEmpty {
+            emailField.text = email
+        }
+        if let msg = initialSuccessMessage, !msg.isEmpty {
+            showSuccess(msg)
+        }
+        // Clean stale cookies to avoid any legacy cookie session conflicts
+        AuthService.clearWebViewCookie()
     }
 
     // MARK: – Build UI
@@ -149,27 +169,25 @@ class LoginViewController: AuthBaseViewController {
     // MARK: – Field Factories
 
     private func configuredEmailField() -> UITextField {
-        let tf = makeTextField(placeholder: "workmail@gmail.com", keyboardType: .emailAddress)
-        tf.textContentType = .emailAddress
-        tf.returnKeyType = .next
-        tf.tag = 1
-        tf.delegate = self
-        // Store reference
-        tf.accessibilityIdentifier = "email_field"
-        self.emailField.copyProperties(from: tf)
-        return tf
+        configureTextField(emailField, placeholder: "workmail@gmail.com", keyboardType: .emailAddress)
+        emailField.textContentType = .emailAddress
+        emailField.returnKeyType = .next
+        emailField.tag = 1
+        emailField.delegate = self
+        emailField.accessibilityIdentifier = "email_field"
+        return emailField
     }
 
     private func configuredPasswordField() -> UIView {
-        let tf = makeTextField(placeholder: "Enter your password", isSecure: true)
-        tf.textContentType = .password
-        tf.returnKeyType = .done
-        tf.tag = 2
-        tf.delegate = self
+        configureTextField(passwordField, placeholder: "Enter your password", isSecure: true)
+        passwordField.textContentType = .password
+        passwordField.returnKeyType = .done
+        passwordField.tag = 2
+        passwordField.delegate = self
+        passwordField.accessibilityIdentifier = "password_field"
 
-        let (container, eye) = makeAnimatedPasswordRow(tf: tf, identifier: "password_field")
+        let (container, eye) = makeAnimatedPasswordRow(tf: passwordField, identifier: "password_field")
         self.eyeButton = eye
-        self.passwordField.copyProperties(from: tf)
         return container
     }
 
@@ -218,8 +236,8 @@ class LoginViewController: AuthBaseViewController {
     // MARK: – Actions
 
     @objc private func loginTapped() {
-        guard let email = findTextField(id: "email_field")?.text?.trimmingCharacters(in: .whitespacesAndNewlines),
-              let password = findTextField(id: "password_field")?.text else { return }
+        let email = (emailField.text ?? findTextField(id: "email_field")?.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let password = passwordField.text ?? findTextField(id: "password_field")?.text ?? ""
 
         if email.isEmpty || !isValidEmail(email) {
             showError("Please enter a valid email address.")
@@ -232,45 +250,68 @@ class LoginViewController: AuthBaseViewController {
 
         hideError()
         setLoading(true)
-        loginFinished = false
 
-        // Safety timeout: fires BEFORE the 15s network timeout so UI never stays stuck.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 12.0) { [weak self] in
+        AuthService.login(email: email, password: password) { [weak self] success, error, token, user in
             guard let self = self else { return }
-            self.loginQueue.sync {
-                guard !self.loginFinished else { return }
-                self.loginFinished = true
-            }
-            DispatchQueue.main.async {
-                self.setLoading(false)
-                self.showError("Connection timed out. Please check your internet connection and try again.")
-            }
-        }
-
-        AuthService.login(email: email, password: password) { [weak self] success, error, _ in
-            guard let self = self else { return }
-
-            // Atomically check-and-set the finished flag.
-            var shouldProceed = false
-            self.loginQueue.sync {
-                if !self.loginFinished {
-                    self.loginFinished = true
-                    shouldProceed = true
-                }
-            }
-            guard shouldProceed else { return }
 
             DispatchQueue.main.async {
                 self.setLoading(false)
                 if success {
-                    let initialName = HomeNativeView.formatSmartFirstName(email)
-                    UserDefaults.standard.set(initialName, forKey: "user_name")
-                    UserDefaults.standard.set(email, forKey: "user_email")
-                    MobileNotificationHelper.shared.scheduleWelcomeNotification(userName: initialName, userId: email)
-                    if let onLoginSuccess = self.onLoginSuccess {
-                        onLoginSuccess()
-                    } else if let app = UIApplication.shared.delegate as? AppDelegate {
-                        app.presentMainApp()
+                    var resolvedName = ""
+                    if let user = user {
+                        if let name = user["name"] as? String, !name.isEmpty, !name.contains("@"), name.lowercased() != "null" {
+                            resolvedName = HomeNativeView.formatSmartFirstName(name)
+                        }
+                        if let userEmail = user["email"] as? String, !userEmail.isEmpty {
+                            UserDefaults.standard.set(userEmail, forKey: "user_email")
+                        }
+                        if let role = user["role"] as? String, !role.isEmpty {
+                            UserDefaults.standard.set(role, forKey: "user_role")
+                        }
+                        var labId = (user["lab_id"] as? String) ?? (user["labId"] as? String)
+                        var labName = (user["lab_name"] as? String) ?? (user["labName"] as? String)
+                        if let labObj = user["lab"] as? [String: Any] {
+                            if let id = labObj["id"] as? String, !id.isEmpty { labId = id }
+                            if let name = labObj["name"] as? String, !name.isEmpty { labName = name }
+                        }
+                        if let labId = labId, !labId.isEmpty {
+                            UserDefaults.standard.set(labId, forKey: "lab_id")
+                        }
+                        if let labName = labName, !labName.isEmpty {
+                            UserDefaults.standard.set(labName, forKey: "lab_name")
+                        }
+                        if let branchId = (user["branchId"] as? String) ?? (user["branch_id"] as? String), !branchId.isEmpty {
+                            UserDefaults.standard.set(branchId, forKey: "branch_id")
+                        }
+                        if let userId = user["id"] as? String, !userId.isEmpty {
+                            UserDefaults.standard.set(userId, forKey: "user_id")
+                        }
+                    }
+                    if resolvedName.isEmpty {
+                        resolvedName = HomeNativeView.formatSmartFirstName(email)
+                    }
+                    UserDefaults.standard.set(resolvedName, forKey: "user_name")
+                    if let token = token, !token.isEmpty {
+                        UserDefaults.standard.set(token, forKey: "auth_token")
+                        KeychainManager.save(token, forKey: KeychainManager.tokenKey)
+                    }
+
+                    MobileNotificationHelper.shared.scheduleWelcomeNotification(userName: resolvedName, userId: email)
+                    NSLog("[LoginViewController] Login success, navigating to main app")
+                    if let presenting = self.presentingViewController {
+                        presenting.dismiss(animated: false) {
+                            if let onLoginSuccess = self.onLoginSuccess {
+                                onLoginSuccess()
+                            } else if let app = UIApplication.shared.delegate as? AppDelegate {
+                                app.presentMainApp()
+                            }
+                        }
+                    } else {
+                        if let onLoginSuccess = self.onLoginSuccess {
+                            onLoginSuccess()
+                        } else if let app = UIApplication.shared.delegate as? AppDelegate {
+                            app.presentMainApp()
+                        }
                     }
                 } else {
                     self.showError(error ?? "Login failed. Please try again.")

@@ -90,6 +90,6 @@ struct KeychainManager {
     }
 
     func getLabName() -> String? {
-        return UserDefaults.standard.string(forKey: "lab_name") ?? "Care Diagnostic Hub"
+        return UserDefaults.standard.string(forKey: "lab_name")
     }
 }

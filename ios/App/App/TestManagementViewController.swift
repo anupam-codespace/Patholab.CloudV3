@@ -876,7 +876,7 @@ class TestManagementViewController: UIViewController, UITableViewDataSource, UIT
                         let isGlobal = dict["isGlobal"] as? Bool ?? false
                         let isActive = dict["isActive"] as? Bool ?? true
 
-                        var cId = dict["containerTypeId"] as? String
+                        let cId = dict["containerTypeId"] as? String
                         var cCode = "EDTA"
                         var cColor = "#7C3AED"
                         if let cObj = dict["containerType"] as? [String: Any] {
@@ -2072,8 +2072,8 @@ class TestCatalogCardCell: UITableViewCell {
         specLabel.text = " \(test.sampleType) "
         paramsBadge.text = " \(test.paramsCount) Params "
         tatLabel.text = " TAT: \(test.tat) "
-        priceLabel.text = String(format: "₹%,.2f", test.price)
-        b2bLabel.text = String(format: " B2B ₹%,.2f ", test.b2bPrice)
+        priceLabel.text = String(format: "₹%.2f", test.price)
+        b2bLabel.text = String(format: " B2B ₹%.2f ", test.b2bPrice)
 
         if test.isGlobal {
             scopeBadge.text = " Master "
@@ -2355,7 +2355,7 @@ class ParameterCardCell: UITableViewCell {
         reagentsBadge.isHidden = param.reagents.isEmpty
 
         if param.price > 0 {
-            priceLabel.text = String(format: "₹%,.2f", param.price)
+            priceLabel.text = String(format: "₹%.2f", param.price)
             priceLabel.isHidden = false
         } else {
             priceLabel.isHidden = true

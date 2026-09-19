@@ -58,9 +58,19 @@
     </LinearLayout>
 
     <ImageView
+        android:id="@+id/imgDocCheck"
+        android:layout_width="18dp"
+        android:layout_height="18dp"
+        android:src="@drawable/ic_check_bold"
+        android:tint="#0D6EFD"
+        android:visibility="gone" />
+
+    <ImageView
+        android:id="@+id/imgDocArrow"
         android:layout_width="16dp"
         android:layout_height="16dp"
         android:src="@drawable/ic_arrow_right"
-        android:tint="#CBD5E1" />
+        android:tint="#CBD5E1"
+        android:visibility="visible" />
 
 </LinearLayout>

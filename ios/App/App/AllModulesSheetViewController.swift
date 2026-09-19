@@ -37,9 +37,9 @@ class AllModulesSheetViewController: UIViewController, UITextFieldDelegate {
     // ── 2. Clinical Operations ──
     private let clinicalModules: [SheetModule] = [
         SheetModule(name: "New Registration",    path: "/workspace/registration",    icon: "person.badge.plus.fill",bgHex: "EFF6FF", tintHex: "2563EB"),
-        SheetModule(name: "Patient Directory",   path: "/workspace/patients",        icon: "person.2.fill",         bgHex: "FDF4FF", tintHex: "C026D3"),
-        SheetModule(name: "Test Management",     path: "/workspace/test-management", icon: "flask.fill",            bgHex: "F5F3FF", tintHex: "7C3AED"),
-        SheetModule(name: "Worklist & Results",  path: "/workspace/results",         icon: "list.bullet.rectangle.portrait.fill", bgHex: "EEF2FF", tintHex: "4F46E5"),
+        SheetModule(name: "Patient Worklist",    path: "/workspace/patients",        icon: "list.clipboard.fill",   bgHex: "FDF4FF", tintHex: "C026D3"),
+        SheetModule(name: "Clinical Results",    path: "/workspace/results",         icon: "flask.fill",            bgHex: "EEF2FF", tintHex: "4F46E5"),
+        SheetModule(name: "Test Management",     path: "/workspace/test-management", icon: "slider.horizontal.3",   bgHex: "F5F3FF", tintHex: "7C3AED"),
         SheetModule(name: "Report Dispatch",     path: "/workspace/reports",         icon: "paperplane.fill",       bgHex: "F0FDFA", tintHex: "0D9488"),
     ]
 
@@ -354,14 +354,38 @@ class AllModulesSheetViewController: UIViewController, UITextFieldDelegate {
         }
     }
 
+    private var isNavigating: Bool = false
+
     @objc private func cardTapped(_ gr: UITapGestureRecognizer) {
-        guard let path = gr.view?.accessibilityIdentifier else { return }
-        dismiss(animated: true) { [weak self] in
-            self?.onNavigate?(path)
+        guard !isNavigating, let path = gr.view?.accessibilityIdentifier else { return }
+        isNavigating = true
+        view.isUserInteractionEnabled = false
+
+        // Provide immediate visual & haptic feedback
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.impactOccurred()
+        if let cardView = gr.view {
+            UIView.animate(withDuration: 0.1, animations: {
+                cardView.alpha = 0.5
+                cardView.transform = CGAffineTransform(scaleX: 0.94, y: 0.94)
+            }) { _ in
+                UIView.animate(withDuration: 0.1) {
+                    cardView.alpha = 1.0
+                    cardView.transform = .identity
+                }
+            }
+        }
+
+        let navigateAction = self.onNavigate
+        dismiss(animated: true) {
+            DispatchQueue.main.async {
+                navigateAction?(path)
+            }
         }
     }
 
     @objc private func closeTapped() {
+        guard !isNavigating else { return }
         dismiss(animated: true, completion: nil)
     }
 }

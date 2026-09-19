@@ -1,4 +1,5 @@
 import UIKit
+import WebKit
 
 /**
  * RegistrationViewController
@@ -10,7 +11,7 @@ import UIKit
  */
 class RegistrationViewController: UIViewController, UITextFieldDelegate {
 
-    private let baseUrl = "https://patholab.cloud"
+    private let baseUrl = "https://app.patholab.cloud"
 
     // ── Header Views ────────────────────────────────────────────────────────
     private let headerView     = UIView()
@@ -54,7 +55,9 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
     private var selectedGender = "MALE"
     private var selectedAgeUnit = "Years"
     private var selectedDoctor = "Self"
+    private var selectedDoctorName = "Self (No Doctor)"
     private var selectedAgency = "Direct"
+    private var selectedAgencyName = "Direct Walk-in"
     private var selectedCollector = "Lab Phlebotomist"
     private var selectedPaymentMode = "Cash"
 
@@ -166,33 +169,32 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
     private func setupHeader() {
         headerView.translatesAutoresizingMaskIntoConstraints = false
         headerGradient.colors = [
-            UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1).cgColor,
-            UIColor(red: 0.114, green: 0.306, blue: 0.847, alpha: 1).cgColor
+            UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1).cgColor, // #0D6EFD
+            UIColor(red: 0.039, green: 0.345, blue: 0.792, alpha: 1).cgColor, // #0A58CA
+            UIColor(red: 0.114, green: 0.306, blue: 0.847, alpha: 1).cgColor  // #1D4ED8
         ]
         headerGradient.startPoint = CGPoint(x: 0, y: 0)
         headerGradient.endPoint = CGPoint(x: 1, y: 1)
         headerView.layer.insertSublayer(headerGradient, at: 0)
-        headerView.layer.cornerRadius = 20
+        headerView.layer.cornerRadius = 24
         headerView.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
         headerView.clipsToBounds = true
         view.addSubview(headerView)
 
-        // Back Button
+        // Frosted Glass Back Button
         backBtn.setImage(UIImage(systemName: "chevron.left"), for: .normal)
-        backBtn.tintColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1)
-        backBtn.backgroundColor = .white
-        backBtn.layer.cornerRadius = 18
-        backBtn.layer.shadowColor = UIColor.black.cgColor
-        backBtn.layer.shadowOpacity = 0.08
-        backBtn.layer.shadowRadius = 4
-        backBtn.layer.shadowOffset = CGSize(width: 0, height: 2)
+        backBtn.tintColor = .white
+        backBtn.backgroundColor = UIColor.white.withAlphaComponent(0.20)
+        backBtn.layer.borderColor = UIColor.white.withAlphaComponent(0.30).cgColor
+        backBtn.layer.borderWidth = 1
+        backBtn.layer.cornerRadius = 19
         backBtn.translatesAutoresizingMaskIntoConstraints = false
         backBtn.addTarget(self, action: #selector(backTapped), for: .touchUpInside)
         headerView.addSubview(backBtn)
 
         // Titles
         titleLabel.text = "Patient Registration"
-        titleLabel.font = .systemFont(ofSize: 18, weight: .bold)
+        titleLabel.font = .systemFont(ofSize: 19, weight: .bold)
         titleLabel.textColor = .white
 
         subtitleLabel.text = "Search Database & Test Accession"
@@ -205,13 +207,17 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
         titleVStack.translatesAutoresizingMaskIntoConstraints = false
         headerView.addSubview(titleVStack)
 
-        // Clear button
+        // Clear button (White pill CTA)
         clearBtn.setTitle("Clear", for: .normal)
         clearBtn.setTitleColor(UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1), for: .normal)
-        clearBtn.titleLabel?.font = .systemFont(ofSize: 12, weight: .bold)
+        clearBtn.titleLabel?.font = .systemFont(ofSize: 12.5, weight: .bold)
         clearBtn.backgroundColor = .white
-        clearBtn.layer.cornerRadius = 14
-        clearBtn.contentEdgeInsets = UIEdgeInsets(top: 5, left: 12, bottom: 5, right: 12)
+        clearBtn.layer.cornerRadius = 16
+        clearBtn.layer.shadowColor = UIColor.black.cgColor
+        clearBtn.layer.shadowOpacity = 0.10
+        clearBtn.layer.shadowRadius = 3
+        clearBtn.layer.shadowOffset = CGSize(width: 0, height: 1.5)
+        clearBtn.contentEdgeInsets = UIEdgeInsets(top: 6, left: 14, bottom: 6, right: 14)
         clearBtn.translatesAutoresizingMaskIntoConstraints = false
         clearBtn.addTarget(self, action: #selector(clearForm), for: .touchUpInside)
         headerView.addSubview(clearBtn)
@@ -230,14 +236,14 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
             headerView.topAnchor.constraint(equalTo: view.topAnchor),
             headerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             headerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            headerView.heightAnchor.constraint(equalToConstant: 146),
+            headerView.heightAnchor.constraint(equalToConstant: 152),
 
             backBtn.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 14),
             backBtn.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 4),
-            backBtn.widthAnchor.constraint(equalToConstant: 36),
-            backBtn.heightAnchor.constraint(equalToConstant: 36),
+            backBtn.widthAnchor.constraint(equalToConstant: 38),
+            backBtn.heightAnchor.constraint(equalToConstant: 38),
 
-            titleVStack.leadingAnchor.constraint(equalTo: backBtn.trailingAnchor, constant: 10),
+            titleVStack.leadingAnchor.constraint(equalTo: backBtn.trailingAnchor, constant: 12),
             titleVStack.centerYAnchor.constraint(equalTo: backBtn.centerYAnchor),
 
             clearBtn.trailingAnchor.constraint(equalTo: headerView.trailingAnchor, constant: -14),
@@ -245,8 +251,8 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
 
             modeSegment.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 14),
             modeSegment.trailingAnchor.constraint(equalTo: headerView.trailingAnchor, constant: -14),
-            modeSegment.bottomAnchor.constraint(equalTo: headerView.bottomAnchor, constant: -10),
-            modeSegment.heightAnchor.constraint(equalToConstant: 34),
+            modeSegment.bottomAnchor.constraint(equalTo: headerView.bottomAnchor, constant: -12),
+            modeSegment.heightAnchor.constraint(equalToConstant: 36),
         ])
     }
 
@@ -682,47 +688,38 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
         scheduleRow.spacing = 8
         scheduleRow.distribution = .fillEqually
 
-        setupMenuButton(doctorBtn, title: "Doctor: Self (No Doctor)", items: ["Doctor: Self (No Doctor)"]) { [weak self] sel in
-            let clean = sel.replacingOccurrences(of: "Doctor: ", with: "")
-            if let doc = self?.registeredDoctors.first(where: { $0.label == sel || $0.label == clean || $0.name == clean || $0.name == sel }) {
-                self?.selectedDoctor = doc.id
-                self?.doctorBtn.setTitle("Doctor: \(doc.name)", for: .normal)
-            } else {
-                self?.selectedDoctor = "Self"
-                self?.doctorBtn.setTitle("Doctor: Self (No Doctor)", for: .normal)
-            }
-        }
+        let docLabel = makeFieldLabel(text: "REFERRING DOCTOR")
+        styleSelectButton(doctorBtn, title: selectedDoctorName.isEmpty ? "Self (No Doctor)" : selectedDoctorName, icon: "stethoscope")
+        doctorBtn.addTarget(self, action: #selector(didTapDoctorBtn), for: .touchUpInside)
 
-        setupMenuButton(agencyBtn, title: "Agency: Direct Walk-in", items: ["Agency: Direct Walk-in"]) { [weak self] sel in
-            let clean = sel.replacingOccurrences(of: "Agency: ", with: "")
-            if let ag = self?.registeredAgencies.first(where: { $0.label == sel || $0.label == clean || $0.name == clean || $0.name == sel }) {
-                self?.selectedAgency = ag.id
-                self?.agencyBtn.setTitle("Agency: \(ag.name)", for: .normal)
-            } else {
-                self?.selectedAgency = "Direct"
-                self?.agencyBtn.setTitle("Agency: Direct Walk-in", for: .normal)
-            }
-        }
+        let agencyLabel = makeFieldLabel(text: "AGENCY / CLIENT")
+        styleSelectButton(agencyBtn, title: selectedAgencyName.isEmpty ? "Direct Walk-in" : selectedAgencyName, icon: "briefcase")
+        agencyBtn.addTarget(self, action: #selector(didTapAgencyBtn), for: .touchUpInside)
 
-        setupMenuButton(collectorBtn, title: "Collector: Lab Phlebotomist", items: ["Lab Phlebotomist", "Home Collection Agent", "Self (Patient)"]) { [weak self] sel in
-            let clean = sel.replacingOccurrences(of: "Collector: ", with: "")
-            if let col = self?.registeredCollectors.first(where: { $0.label == sel || $0.label == clean || $0.name == clean || $0.name == sel }) {
-                self?.selectedCollector = col.name
-                self?.collectorBtn.setTitle("Collector: \(col.name)", for: .normal)
-            } else {
-                self?.selectedCollector = clean
-                self?.collectorBtn.setTitle("Collector: \(clean)", for: .normal)
-            }
-        }
+        let collectorLabel = makeFieldLabel(text: "COLLECTED BY")
+        styleSelectButton(collectorBtn, title: selectedCollector.isEmpty ? "Lab Phlebotomist" : selectedCollector, icon: "person.badge.shield.checkmark")
+        collectorBtn.addTarget(self, action: #selector(didTapCollectorBtn), for: .touchUpInside)
 
+        let payLabel = makeFieldLabel(text: "PAYMENT MODE")
         setupMenuButton(paymentModeBtn, title: "Cash", items: ["Cash", "UPI / QR", "Card", "Credit (Due)"]) { [weak self] sel in
             self?.selectedPaymentMode = sel
             self?.paymentModeBtn.setTitle(sel, for: .normal)
         }
 
-        let stack = UIStackView(arrangedSubviews: [title, scheduleRow, doctorBtn, agencyBtn, collectorBtn, paymentModeBtn])
+        let stack = UIStackView(arrangedSubviews: [
+            title,
+            scheduleRow,
+            docLabel, doctorBtn,
+            agencyLabel, agencyBtn,
+            collectorLabel, collectorBtn,
+            payLabel, paymentModeBtn
+        ])
         stack.axis = .vertical
-        stack.spacing = 8
+        stack.spacing = 6
+        stack.setCustomSpacing(10, after: scheduleRow)
+        stack.setCustomSpacing(10, after: doctorBtn)
+        stack.setCustomSpacing(10, after: agencyBtn)
+        stack.setCustomSpacing(10, after: collectorBtn)
         card.addSubview(stack)
         stack.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
@@ -852,177 +849,192 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
         modeSegmentChanged()
     }
 
+    private func getAuthCredentials(completion: @escaping (String?, String?) -> Void) {
+        // 1. Keychain
+        if let token = KeychainManager.read(forKey: KeychainManager.tokenKey),
+           !token.isEmpty, token != "null", token != "undefined" {
+            completion(token, "token=\(token); auth-token=\(token)")
+            return
+        }
+        // 2. UserDefaults
+        if let token = UserDefaults.standard.string(forKey: "auth_token") ?? UserDefaults.standard.string(forKey: "token"),
+           !token.isEmpty, token != "null", token != "undefined" {
+            KeychainManager.save(token, forKey: KeychainManager.tokenKey)
+            completion(token, "token=\(token); auth-token=\(token)")
+            return
+        }
+        // 3. HTTPCookieStorage
+        if let cookies = HTTPCookieStorage.shared.cookies {
+            for cookie in cookies {
+                if (cookie.name == "token" || cookie.name == "auth-token") && !cookie.value.isEmpty && cookie.value != "null" {
+                    let token = cookie.value
+                    KeychainManager.save(token, forKey: KeychainManager.tokenKey)
+                    let cookieHeader = cookies.map { "\($0.name)=\($0.value)" }.joined(separator: "; ")
+                    completion(token, cookieHeader)
+                    return
+                }
+            }
+        }
+        // 4. WKWebsiteDataStore
+        WKWebsiteDataStore.default().httpCookieStore.getAllCookies { cookies in
+            var foundToken: String? = nil
+            var cookiePairs: [String] = []
+            for cookie in cookies {
+                cookiePairs.append("\(cookie.name)=\(cookie.value)")
+                if (cookie.name == "token" || cookie.name == "auth-token") && !cookie.value.isEmpty && cookie.value != "null" {
+                    foundToken = cookie.value
+                }
+            }
+            if let token = foundToken {
+                KeychainManager.save(token, forKey: KeychainManager.tokenKey)
+            }
+            let cookieHeader = cookiePairs.joined(separator: "; ")
+            completion(foundToken, cookieHeader.isEmpty ? nil : cookieHeader)
+        }
+    }
+
     private func fetchDoctorsAndAgencies() {
-        Task {
-            let token = KeychainManager.read(forKey: KeychainManager.tokenKey) ?? UserDefaults.standard.string(forKey: "auth_token")
+        getAuthCredentials { [weak self] token, cookieHeader in
+            guard let self = self else { return }
+            Task {
+                // 1. Doctors (Added by this user / lab ID)
+                if let docUrl = URL(string: "\(self.baseUrl)/api/workspace/doctors") {
+                    var req = URLRequest(url: docUrl)
+                    if let token = token, !token.isEmpty {
+                        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+                    }
+                    if let cookieHeader = cookieHeader, !cookieHeader.isEmpty {
+                        req.setValue(cookieHeader, forHTTPHeaderField: "Cookie")
+                    } else if let token = token, !token.isEmpty {
+                        req.setValue("token=\(token); auth-token=\(token)", forHTTPHeaderField: "Cookie")
+                    }
+                    req.setValue("application/json", forHTTPHeaderField: "Accept")
 
-            // 1. Doctors (Added by this user / lab ID)
-            if let docUrl = URL(string: "\(baseUrl)/api/workspace/doctors") {
-                var req = URLRequest(url: docUrl)
-                if let token = token {
-                    req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-                    req.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
-                }
-                if let (data, res) = try? await URLSession.shared.data(for: req),
-                   (res as? HTTPURLResponse)?.statusCode == 200 {
-                    var list: [[String: Any]] = []
-                    if let dict = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] {
-                        if let docs = dict["doctors"] as? [[String: Any]] {
-                            list = docs
-                        } else if let dataArr = dict["data"] as? [[String: Any]] {
-                            list = dataArr
+                    if let (data, res) = try? await URLSession.shared.data(for: req),
+                       let httpRes = res as? HTTPURLResponse, (httpRes.statusCode >= 200 && httpRes.statusCode < 300) {
+                        var list: [[String: Any]] = []
+                        if let dict = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] {
+                            if let docs = dict["doctors"] as? [[String: Any]] {
+                                list = docs
+                            } else if let dataArr = dict["data"] as? [[String: Any]] {
+                                list = dataArr
+                            }
+                        } else if let arr = (try? JSONSerialization.jsonObject(with: data)) as? [[String: Any]] {
+                            list = arr
                         }
-                    } else if let arr = (try? JSONSerialization.jsonObject(with: data)) as? [[String: Any]] {
-                        list = arr
-                    }
 
-                    var docs: [DoctorItem] = [DoctorItem(id: "Self", name: "Self (No Doctor)", hospital: "Direct", label: "Doctor: Self (No Doctor)")]
-                    var docLabels = ["Doctor: Self (No Doctor)"]
-                    for d in list {
-                        let id = d["id"] as? String ?? ""
-                        let name = d["name"] as? String ?? "Dr. Partner"
-                        let spec = d["specialization"] as? String ?? ""
-                        let hosp = (d["hospital"] as? String) ?? (d["clinic"] as? String) ?? ""
-                        let label = spec.isEmpty ? name : "\(name) (\(spec))"
-                        docs.append(DoctorItem(id: id, name: name, hospital: hosp, label: label))
-                        docLabels.append(label)
+                        var docs: [DoctorItem] = [DoctorItem(id: "Self", name: "Self (No Doctor)", hospital: "Direct", label: "Self (No Doctor)")]
+                        for d in list {
+                            let id = d["id"] as? String ?? ""
+                            let name = d["name"] as? String ?? "Dr. Partner"
+                            let spec = d["specialization"] as? String ?? ""
+                            let hosp = (d["hospital"] as? String) ?? (d["clinic"] as? String) ?? ""
+                            let label = spec.isEmpty ? name : "\(name) (\(spec))"
+                            docs.append(DoctorItem(id: id, name: name, hospital: hosp, label: label))
+                        }
+                        await MainActor.run {
+                            self.registeredDoctors = docs
+                            if let activeDoc = docs.first(where: { $0.id == self.selectedDoctor }) {
+                                self.selectedDoctorName = activeDoc.name
+                            }
+                            self.doctorBtn.setTitle(self.selectedDoctorName.isEmpty ? "Self (No Doctor)" : self.selectedDoctorName, for: .normal)
+                        }
                     }
-                    await MainActor.run {
-                        self.registeredDoctors = docs
-                        let currentId = self.selectedDoctor
-                        let currentTitle = self.doctorBtn.title(for: .normal) ?? "Doctor: Self (No Doctor)"
-                        self.setupMenuButton(self.doctorBtn, title: currentTitle, items: docLabels) { [weak self] sel in
-                            let clean = sel.replacingOccurrences(of: "Doctor: ", with: "")
-                            if let doc = self?.registeredDoctors.first(where: { $0.label == sel || $0.label == clean || $0.name == clean || $0.name == sel }) {
-                                self?.selectedDoctor = doc.id
-                                self?.doctorBtn.setTitle("Doctor: \(doc.name)", for: .normal)
-                            } else {
-                                self?.selectedDoctor = "Self"
-                                self?.doctorBtn.setTitle("Doctor: Self (No Doctor)", for: .normal)
+                }
+
+                // 2. Agencies (Added by this user / lab ID)
+                if let agUrl = URL(string: "\(self.baseUrl)/api/workspace/agencies") {
+                    var req = URLRequest(url: agUrl)
+                    if let token = token, !token.isEmpty {
+                        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+                    }
+                    if let cookieHeader = cookieHeader, !cookieHeader.isEmpty {
+                        req.setValue(cookieHeader, forHTTPHeaderField: "Cookie")
+                    } else if let token = token, !token.isEmpty {
+                        req.setValue("token=\(token); auth-token=\(token)", forHTTPHeaderField: "Cookie")
+                    }
+                    req.setValue("application/json", forHTTPHeaderField: "Accept")
+
+                    if let (data, res) = try? await URLSession.shared.data(for: req),
+                       let httpRes = res as? HTTPURLResponse, (httpRes.statusCode >= 200 && httpRes.statusCode < 300) {
+                        var list: [[String: Any]] = []
+                        if let dict = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] {
+                            if let ags = dict["agencies"] as? [[String: Any]] {
+                                list = ags
+                            } else if let dataArr = dict["data"] as? [[String: Any]] {
+                                list = dataArr
+                            }
+                        } else if let arr = (try? JSONSerialization.jsonObject(with: data)) as? [[String: Any]] {
+                            list = arr
+                        }
+
+                        var ags: [DoctorItem] = [DoctorItem(id: "Direct", name: "Direct Walk-in", hospital: "Standard", label: "Direct Walk-in")]
+                        for a in list {
+                            let id = a["id"] as? String ?? ""
+                            let name = (a["agencyName"] as? String) ?? (a["name"] as? String) ?? "Partner Center"
+                            let tier = a["agencyTier"] as? String ?? ""
+                            let label = tier.isEmpty ? name : "\(name) [\(tier)]"
+                            ags.append(DoctorItem(id: id, name: name, hospital: tier, label: label))
+                        }
+                        await MainActor.run {
+                            self.registeredAgencies = ags
+                            if let activeAg = ags.first(where: { $0.id == self.selectedAgency }) {
+                                self.selectedAgencyName = activeAg.name
+                            }
+                            self.agencyBtn.setTitle(self.selectedAgencyName.isEmpty ? "Direct Walk-in" : self.selectedAgencyName, for: .normal)
+                        }
+                    }
+                }
+
+                // 3. Collectors (From current user account & lab staff)
+                var cols: [DoctorItem] = [
+                    DoctorItem(id: "Lab Phlebotomist", name: "Lab Phlebotomist", hospital: "In-Lab Sample Collection", label: "Lab Phlebotomist"),
+                    DoctorItem(id: "Home Collection Agent", name: "Home Collection Agent", hospital: "At-Home Phlebotomist Visit", label: "Home Collection Agent"),
+                    DoctorItem(id: "Self (Patient)", name: "Self (Patient)", hospital: "Sample brought by patient", label: "Self (Patient)")
+                ]
+
+                let curUser = UserDefaults.standard.string(forKey: "user_name") ?? ""
+                if !curUser.trimmingCharacters(in: .whitespaces).isEmpty && !cols.contains(where: { $0.name.lowercased() == curUser.lowercased() }) {
+                    cols.insert(DoctorItem(id: curUser, name: curUser, hospital: "Current Logged-in Staff", label: curUser), at: 0)
+                }
+
+                if let staffUrl = URL(string: "\(self.baseUrl)/api/workspace/staff") {
+                    var sReq = URLRequest(url: staffUrl)
+                    if let token = token, !token.isEmpty {
+                        sReq.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+                    }
+                    if let cookieHeader = cookieHeader, !cookieHeader.isEmpty {
+                        sReq.setValue(cookieHeader, forHTTPHeaderField: "Cookie")
+                    } else if let token = token, !token.isEmpty {
+                        sReq.setValue("token=\(token); auth-token=\(token)", forHTTPHeaderField: "Cookie")
+                    }
+                    sReq.setValue("application/json", forHTTPHeaderField: "Accept")
+
+                    if let (sData, sRes) = try? await URLSession.shared.data(for: sReq),
+                       let sHttpRes = sRes as? HTTPURLResponse, (sHttpRes.statusCode >= 200 && sHttpRes.statusCode < 300) {
+                        var staffArr: [[String: Any]] = []
+                        if let arr = (try? JSONSerialization.jsonObject(with: sData)) as? [[String: Any]] {
+                            staffArr = arr
+                        } else if let dict = (try? JSONSerialization.jsonObject(with: sData)) as? [String: Any] {
+                            staffArr = (dict["staff"] as? [[String: Any]]) ?? (dict["data"] as? [[String: Any]]) ?? []
+                        }
+                        for s in staffArr {
+                            let staffUser = s["user"] as? [String: Any]
+                            let staffName = (staffUser?["name"] as? String) ?? (s["name"] as? String) ?? ""
+                            let staffRole = (staffUser?["role"] as? String) ?? (s["role"] as? String) ?? "Staff"
+                            if !staffName.isEmpty && !cols.contains(where: { $0.name.lowercased() == staffName.lowercased() }) {
+                                cols.append(DoctorItem(id: staffName, name: staffName, hospital: staffRole, label: staffName))
                             }
                         }
-                        if let activeDoc = docs.first(where: { $0.id == currentId }) {
-                            self.doctorBtn.setTitle("Doctor: \(activeDoc.name)", for: .normal)
-                        }
                     }
                 }
-            }
 
-            // 2. Agencies (Added by this user / lab ID)
-            if let agUrl = URL(string: "\(baseUrl)/api/workspace/agencies") {
-                var req = URLRequest(url: agUrl)
-                if let token = token {
-                    req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-                    req.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
-                }
-                if let (data, res) = try? await URLSession.shared.data(for: req),
-                   (res as? HTTPURLResponse)?.statusCode == 200 {
-                    var list: [[String: Any]] = []
-                    if let dict = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] {
-                        if let ags = dict["agencies"] as? [[String: Any]] {
-                            list = ags
-                        } else if let dataArr = dict["data"] as? [[String: Any]] {
-                            list = dataArr
-                        }
-                    } else if let arr = (try? JSONSerialization.jsonObject(with: data)) as? [[String: Any]] {
-                        list = arr
+                await MainActor.run {
+                    self.registeredCollectors = cols
+                    if let activeCol = cols.first(where: { $0.name.lowercased() == self.selectedCollector.lowercased() }) {
+                        self.selectedCollector = activeCol.name
                     }
-
-                    var ags: [DoctorItem] = [DoctorItem(id: "Direct", name: "Direct Walk-in", hospital: "Standard", label: "Agency: Direct Walk-in")]
-                    var agLabels = ["Agency: Direct Walk-in"]
-                    for a in list {
-                        let id = a["id"] as? String ?? ""
-                        let name = (a["agencyName"] as? String) ?? (a["name"] as? String) ?? "Partner Center"
-                        let tier = a["agencyTier"] as? String ?? ""
-                        let label = tier.isEmpty ? name : "\(name) [\(tier)]"
-                        ags.append(DoctorItem(id: id, name: name, hospital: tier, label: label))
-                        agLabels.append(label)
-                    }
-                    await MainActor.run {
-                        self.registeredAgencies = ags
-                        let currentId = self.selectedAgency
-                        let currentTitle = self.agencyBtn.title(for: .normal) ?? "Agency: Direct Walk-in"
-                        self.setupMenuButton(self.agencyBtn, title: currentTitle, items: agLabels) { [weak self] sel in
-                            let clean = sel.replacingOccurrences(of: "Agency: ", with: "")
-                            if let ag = self?.registeredAgencies.first(where: { $0.label == sel || $0.label == clean || $0.name == clean || $0.name == sel }) {
-                                self?.selectedAgency = ag.id
-                                self?.agencyBtn.setTitle("Agency: \(ag.name)", for: .normal)
-                            } else {
-                                self?.selectedAgency = "Direct"
-                                self?.agencyBtn.setTitle("Agency: Direct Walk-in", for: .normal)
-                            }
-                        }
-                        if let activeAg = ags.first(where: { $0.id == currentId }) {
-                            self.agencyBtn.setTitle("Agency: \(activeAg.name)", for: .normal)
-                        }
-                    }
-                }
-            }
-
-            // 3. Collectors (From current user account & lab staff)
-            var cols: [DoctorItem] = []
-            var colLabels: [String] = []
-
-            // A. Current Logged-in User
-            let curUser = UserDefaults.standard.string(forKey: "user_name") ?? ""
-            if !curUser.trimmingCharacters(in: .whitespaces).isEmpty {
-                let label = "\(curUser) (Current User)"
-                cols.append(DoctorItem(id: curUser, name: curUser, hospital: "User", label: label))
-                colLabels.append(label)
-            }
-
-            // B. Standard collector options
-            cols.append(DoctorItem(id: "Lab Phlebotomist", name: "Lab Phlebotomist", hospital: "", label: "Lab Phlebotomist"))
-            colLabels.append("Lab Phlebotomist")
-            cols.append(DoctorItem(id: "Home Collection Agent", name: "Home Collection Agent", hospital: "", label: "Home Collection Agent"))
-            colLabels.append("Home Collection Agent")
-            cols.append(DoctorItem(id: "Self (Patient)", name: "Self (Patient)", hospital: "", label: "Self (Patient)"))
-            colLabels.append("Self (Patient)")
-
-            // C. Lab staff from /api/workspace/staff
-            if let staffUrl = URL(string: "\(baseUrl)/api/workspace/staff") {
-                var sReq = URLRequest(url: staffUrl)
-                if let token = token {
-                    sReq.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-                    sReq.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
-                }
-                if let (sData, sRes) = try? await URLSession.shared.data(for: sReq),
-                   (sRes as? HTTPURLResponse)?.statusCode == 200 {
-                    var staffArr: [[String: Any]] = []
-                    if let arr = (try? JSONSerialization.jsonObject(with: sData)) as? [[String: Any]] {
-                        staffArr = arr
-                    } else if let dict = (try? JSONSerialization.jsonObject(with: sData)) as? [String: Any] {
-                        staffArr = (dict["staff"] as? [[String: Any]]) ?? (dict["data"] as? [[String: Any]]) ?? []
-                    }
-                    for s in staffArr {
-                        let staffUser = s["user"] as? [String: Any]
-                        let staffName = (staffUser?["name"] as? String) ?? (s["name"] as? String) ?? ""
-                        let staffRole = (staffUser?["role"] as? String) ?? (s["role"] as? String) ?? ""
-                        if !staffName.isEmpty && !cols.contains(where: { $0.name.lowercased() == staffName.lowercased() }) {
-                            let label = staffRole.isEmpty ? staffName : "\(staffName) (\(staffRole))"
-                            cols.append(DoctorItem(id: staffName, name: staffName, hospital: staffRole, label: label))
-                            colLabels.append(label)
-                        }
-                    }
-                }
-            }
-
-            await MainActor.run {
-                self.registeredCollectors = cols
-                let curCollector = self.selectedCollector
-                let curTitle = self.collectorBtn.title(for: .normal) ?? "Collector: Lab Phlebotomist"
-                self.setupMenuButton(self.collectorBtn, title: curTitle, items: colLabels) { [weak self] sel in
-                    let clean = sel.replacingOccurrences(of: "Collector: ", with: "")
-                    if let col = self?.registeredCollectors.first(where: { $0.label == sel || $0.label == clean || $0.name == clean || $0.name == sel }) {
-                        self?.selectedCollector = col.name
-                        self?.collectorBtn.setTitle("Collector: \(col.name)", for: .normal)
-                    } else {
-                        self?.selectedCollector = clean
-                        self?.collectorBtn.setTitle("Collector: \(clean)", for: .normal)
-                    }
-                }
-                if let activeCol = cols.first(where: { $0.name == curCollector }) {
-                    self.collectorBtn.setTitle("Collector: \(activeCol.name)", for: .normal)
+                    self.collectorBtn.setTitle(self.selectedCollector.isEmpty ? "Lab Phlebotomist" : self.selectedCollector, for: .normal)
                 }
             }
         }
@@ -1109,7 +1121,9 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
                 "collectedBy": selectedCollector
             ]
             if selectedDoctor != "Self" { patBody["doctorId"] = selectedDoctor }
+            patBody["doctorName"] = selectedDoctorName
             if selectedAgency != "Direct" { patBody["agencyId"] = selectedAgency }
+            patBody["agencyName"] = selectedAgencyName
 
             if let url = URL(string: "\(baseUrl)/api/workspace/patients") {
                 var req = URLRequest(url: url)
@@ -1210,11 +1224,13 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
         noMatchCard.isHidden = true
         matchedPatientDbId = nil
         selectedDoctor = "Self"
-        doctorBtn.setTitle("Doctor: Self (No Doctor)", for: .normal)
+        selectedDoctorName = "Self (No Doctor)"
+        doctorBtn.setTitle("Self (No Doctor)", for: .normal)
         selectedAgency = "Direct"
-        agencyBtn.setTitle("Agency: Direct Walk-in", for: .normal)
+        selectedAgencyName = "Direct Walk-in"
+        agencyBtn.setTitle("Direct Walk-in", for: .normal)
         selectedCollector = "Lab Phlebotomist"
-        collectorBtn.setTitle("Collector: Lab Phlebotomist", for: .normal)
+        collectorBtn.setTitle("Lab Phlebotomist", for: .normal)
         selectedPaymentMode = "Cash"
         paymentModeBtn.setTitle("Cash", for: .normal)
         setupDateTimeDefaults();
@@ -1238,41 +1254,369 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
         return v
     }
 
-    private func styleInput(_ tf: UITextField) {
-        tf.backgroundColor = UIColor(red: 0.945, green: 0.961, blue: 0.976, alpha: 1)
-        tf.layer.cornerRadius = 10
-        tf.layer.borderWidth = 1
-        tf.layer.borderColor = UIColor(red: 0.886, green: 0.910, blue: 0.941, alpha: 1).cgColor
-        tf.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 10, height: 42))
-        tf.rightView = UIView(frame: CGRect(x: 0, y: 0, width: 10, height: 42))
-        tf.leftViewMode = .always
-        tf.rightViewMode = .always
-        tf.heightAnchor.constraint(equalToConstant: 42).isActive = true
+    private func makeFieldLabel(text: String) -> UILabel {
+        let lbl = UILabel()
+        lbl.text = text
+        lbl.font = .systemFont(ofSize: 11, weight: .bold)
+        lbl.textColor = UIColor(red: 0.392, green: 0.455, blue: 0.545, alpha: 1) // slate-600
+        lbl.translatesAutoresizingMaskIntoConstraints = false
+        return lbl
     }
 
-    private func styleSelectButton(_ btn: UIButton, icon: String) {
-        btn.backgroundColor = UIColor(red: 0.945, green: 0.961, blue: 0.976, alpha: 1)
-        btn.layer.cornerRadius = 10
+    private func styleInput(_ tf: UITextField) {
+        tf.backgroundColor = UIColor(red: 0.973, green: 0.980, blue: 0.988, alpha: 1)
+        tf.layer.cornerRadius = 12
+        tf.layer.borderWidth = 1
+        tf.layer.borderColor = UIColor(red: 0.886, green: 0.910, blue: 0.941, alpha: 1).cgColor
+        tf.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 10, height: 44))
+        tf.rightView = UIView(frame: CGRect(x: 0, y: 0, width: 10, height: 44))
+        tf.leftViewMode = .always
+        tf.rightViewMode = .always
+        tf.heightAnchor.constraint(equalToConstant: 44).isActive = true
+    }
+
+    private func styleSelectButton(_ btn: UIButton, title: String, icon: String) {
+        btn.backgroundColor = UIColor(red: 0.973, green: 0.980, blue: 0.988, alpha: 1) // slate-50
+        btn.layer.cornerRadius = 12
         btn.layer.borderWidth = 1
-        btn.layer.borderColor = UIColor(red: 0.886, green: 0.910, blue: 0.941, alpha: 1).cgColor
-        btn.setTitleColor(UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1), for: .normal)
-        btn.titleLabel?.font = .systemFont(ofSize: 13, weight: .bold)
+        btn.layer.borderColor = UIColor(red: 0.886, green: 0.910, blue: 0.941, alpha: 1).cgColor // slate-200
+        btn.setTitle(title, for: .normal)
+        btn.setTitleColor(UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1), for: .normal) // slate-900
+        btn.titleLabel?.font = .systemFont(ofSize: 13.5, weight: .medium)
         btn.contentHorizontalAlignment = .leading
-        btn.contentEdgeInsets = UIEdgeInsets(top: 0, left: 12, bottom: 0, right: 12)
-        btn.heightAnchor.constraint(equalToConstant: 44).isActive = true
+        if #available(iOS 13.0, *) {
+            let config = UIImage.SymbolConfiguration(pointSize: 13.5, weight: .medium)
+            let img = UIImage(systemName: icon, withConfiguration: config)?.withTintColor(UIColor(red: 0.392, green: 0.455, blue: 0.545, alpha: 1), renderingMode: .alwaysOriginal)
+            btn.setImage(img, for: .normal)
+            btn.imageEdgeInsets = UIEdgeInsets(top: 0, left: 12, bottom: 0, right: 8)
+            btn.titleEdgeInsets = UIEdgeInsets(top: 0, left: 18, bottom: 0, right: 30)
+        } else {
+            btn.contentEdgeInsets = UIEdgeInsets(top: 0, left: 12, bottom: 0, right: 30)
+        }
+
+        if btn.viewWithTag(999) == nil {
+            let chevron = UIImageView(image: UIImage(systemName: "chevron.up.chevron.down"))
+            chevron.tintColor = UIColor(red: 0.580, green: 0.639, blue: 0.722, alpha: 1)
+            chevron.contentMode = .scaleAspectFit
+            chevron.tag = 999
+            chevron.translatesAutoresizingMaskIntoConstraints = false
+            btn.addSubview(chevron)
+            NSLayoutConstraint.activate([
+                chevron.trailingAnchor.constraint(equalTo: btn.trailingAnchor, constant: -12),
+                chevron.centerYAnchor.constraint(equalTo: btn.centerYAnchor),
+                chevron.widthAnchor.constraint(equalToConstant: 13),
+                chevron.heightAnchor.constraint(equalToConstant: 13)
+            ])
+        }
+        btn.heightAnchor.constraint(equalToConstant: 46).isActive = true
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // MARK: – Searchable Selection Sheets & Quick Add
+    // ─────────────────────────────────────────────────────────────────────────
+    @objc private func didTapDoctorBtn() {
+        let picker = SearchableModalPickerViewController()
+        picker.pickerTitle = "Referring Doctor"
+        picker.addNewTitle = "+ Add Doctor"
+        picker.items = registeredDoctors.map { doc in
+            let sub = doc.id == "Self" ? "Direct Walk-in / Self" : (doc.hospital.isEmpty ? "Registered Doctor" : doc.hospital)
+            return SearchableModalPickerViewController.Item(
+                id: doc.id,
+                title: doc.name,
+                subtitle: sub,
+                isSelected: doc.id == selectedDoctor || doc.name == selectedDoctorName
+            )
+        }
+        picker.onSelect = { [weak self] item in
+            guard let self = self else { return }
+            self.selectedDoctor = item.id
+            self.selectedDoctorName = item.title
+            self.doctorBtn.setTitle(item.title, for: .normal)
+
+            // If user typed a custom new doctor, persist to the user's lab account
+            if item.id != "Self" && !self.registeredDoctors.contains(where: { $0.id == item.id }) {
+                let formatted = item.title.lowercased().hasPrefix("dr") ? item.title : "Dr. \(item.title)"
+                self.registeredDoctors.insert(DoctorItem(id: item.id, name: formatted, hospital: "Registered Doctor", label: formatted), at: 1)
+                self.persistNewDoctor(name: formatted, spec: "", clinic: "", phone: "")
+            }
+        }
+        picker.onAddNew = { [weak self, weak picker] in
+            self?.showAddDoctorAlert(from: picker)
+        }
+        let nav = UINavigationController(rootViewController: picker)
+        if #available(iOS 15.0, *) {
+            if let sheet = nav.sheetPresentationController {
+                sheet.detents = [.medium(), .large()]
+                sheet.prefersGrabberVisible = true
+            }
+        }
+        present(nav, animated: true)
+    }
+
+    private func showAddDoctorAlert(from picker: SearchableModalPickerViewController?) {
+        let alert = UIAlertController(title: "Add Referring Doctor", message: "Enter physician information to add them to your laboratory.", preferredStyle: .alert)
+        alert.addTextField { tf in
+            tf.placeholder = "Full Name (e.g., Dr. Priya Sharma) *"
+            tf.autocapitalizationType = .words
+        }
+        alert.addTextField { tf in
+            tf.placeholder = "Specialization (e.g., MBBS, MD)"
+            tf.autocapitalizationType = .words
+        }
+        alert.addTextField { tf in
+            tf.placeholder = "Clinic / Hospital (e.g., City Clinic)"
+            tf.autocapitalizationType = .words
+        }
+        alert.addTextField { tf in
+            tf.placeholder = "Phone Number (Optional)"
+            tf.keyboardType = .phonePad
+        }
+
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        alert.addAction(UIAlertAction(title: "Add Doctor", style: .default, handler: { [weak self, weak picker] _ in
+            guard let name = alert.textFields?[0].text?.trimmingCharacters(in: .whitespaces), !name.isEmpty else { return }
+            let spec = alert.textFields?[1].text?.trimmingCharacters(in: .whitespaces) ?? ""
+            let clinic = alert.textFields?[2].text?.trimmingCharacters(in: .whitespaces) ?? ""
+            let phone = alert.textFields?[3].text?.trimmingCharacters(in: .whitespaces) ?? ""
+            let formatted = name.lowercased().hasPrefix("dr") ? name : "Dr. \(name)"
+
+            self?.selectedDoctor = formatted
+            self?.selectedDoctorName = formatted
+            self?.doctorBtn.setTitle(formatted, for: .normal)
+            self?.persistNewDoctor(name: formatted, spec: spec, clinic: clinic, phone: phone)
+            picker?.dismiss(animated: true)
+        }))
+
+        (picker ?? self).present(alert, animated: true)
+    }
+
+    private func persistNewDoctor(name: String, spec: String, clinic: String, phone: String) {
+        getAuthCredentials { [weak self] token, cookieHeader in
+            guard let self = self, let url = URL(string: "\(self.baseUrl)/api/workspace/doctors") else { return }
+            var req = URLRequest(url: url)
+            req.httpMethod = "POST"
+            req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            if let token = token, !token.isEmpty {
+                req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            }
+            if let cookieHeader = cookieHeader, !cookieHeader.isEmpty {
+                req.setValue(cookieHeader, forHTTPHeaderField: "Cookie")
+            } else if let token = token, !token.isEmpty {
+                req.setValue("token=\(token); auth-token=\(token)", forHTTPHeaderField: "Cookie")
+            }
+            let formatted = name.lowercased().hasPrefix("dr") ? name : "Dr. \(name)"
+            let body: [String: Any] = [
+                "name": formatted,
+                "specialization": spec,
+                "clinic": clinic,
+                "phone": phone
+            ]
+            req.httpBody = try? JSONSerialization.data(withJSONObject: body)
+
+            URLSession.shared.dataTask(with: req) { data, res, _ in
+                if let data = data, let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                   let docObj = json["doctor"] as? [String: Any],
+                   let newId = docObj["id"] as? String {
+                    DispatchQueue.main.async {
+                        self.selectedDoctor = newId
+                        self.selectedDoctorName = formatted
+                        if let idx = self.registeredDoctors.firstIndex(where: { $0.name == name || $0.name == formatted }) {
+                            self.registeredDoctors[idx] = DoctorItem(id: newId, name: formatted, hospital: clinic, label: formatted)
+                        } else {
+                            self.registeredDoctors.insert(DoctorItem(id: newId, name: formatted, hospital: clinic, label: formatted), at: 1)
+                        }
+                    }
+                }
+            }.resume()
+        }
+    }
+
+    @objc private func didTapAgencyBtn() {
+        let picker = SearchableModalPickerViewController()
+        picker.pickerTitle = "Agency / Client"
+        picker.addNewTitle = "+ Add Agency"
+        picker.items = registeredAgencies.map { ag in
+            let sub = ag.id == "Direct" ? "Standard Direct Billing" : (ag.hospital.isEmpty ? "Partner Center" : "Tier: \(ag.hospital)")
+            return SearchableModalPickerViewController.Item(
+                id: ag.id,
+                title: ag.name,
+                subtitle: sub,
+                isSelected: ag.id == selectedAgency || ag.name == selectedAgencyName
+            )
+        }
+        picker.onSelect = { [weak self] item in
+            guard let self = self else { return }
+            self.selectedAgency = item.id
+            self.selectedAgencyName = item.title
+            self.agencyBtn.setTitle(item.title, for: .normal)
+
+            // If user typed a custom new agency, persist to the user's lab account
+            if item.id != "Direct" && !self.registeredAgencies.contains(where: { $0.id == item.id }) {
+                self.registeredAgencies.insert(DoctorItem(id: item.id, name: item.title, hospital: "Partner Center", label: item.title), at: 1)
+                self.persistNewAgency(name: item.title, tier: "Standard", phone: "", contact: "")
+            }
+        }
+        picker.onAddNew = { [weak self, weak picker] in
+            self?.showAddAgencyAlert(from: picker)
+        }
+        let nav = UINavigationController(rootViewController: picker)
+        if #available(iOS 15.0, *) {
+            if let sheet = nav.sheetPresentationController {
+                sheet.detents = [.medium(), .large()]
+                sheet.prefersGrabberVisible = true
+            }
+        }
+        present(nav, animated: true)
+    }
+
+    private func showAddAgencyAlert(from picker: SearchableModalPickerViewController?) {
+        let alert = UIAlertController(title: "Add Corporate Agency", message: "Enter company / partner clinic name to register as B2B client.", preferredStyle: .alert)
+        alert.addTextField { tf in
+            tf.placeholder = "Agency / Company Name *"
+            tf.autocapitalizationType = .words
+        }
+        alert.addTextField { tf in
+            tf.placeholder = "Contact Person (Optional)"
+            tf.autocapitalizationType = .words
+        }
+        alert.addTextField { tf in
+            tf.placeholder = "Phone Number (Optional)"
+            tf.keyboardType = .phonePad
+        }
+
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        alert.addAction(UIAlertAction(title: "Add Agency", style: .default, handler: { [weak self, weak picker] _ in
+            guard let name = alert.textFields?[0].text?.trimmingCharacters(in: .whitespaces), !name.isEmpty else { return }
+            let contact = alert.textFields?[1].text?.trimmingCharacters(in: .whitespaces) ?? ""
+            let phone = alert.textFields?[2].text?.trimmingCharacters(in: .whitespaces) ?? ""
+
+            self?.selectedAgency = name
+            self?.selectedAgencyName = name
+            self?.agencyBtn.setTitle(name, for: .normal)
+            self?.persistNewAgency(name: name, tier: "Standard", phone: phone, contact: contact)
+            picker?.dismiss(animated: true)
+        }))
+
+        (picker ?? self).present(alert, animated: true)
+    }
+
+    private func persistNewAgency(name: String, tier: String, phone: String, contact: String) {
+        getAuthCredentials { [weak self] token, cookieHeader in
+            guard let self = self, let url = URL(string: "\(self.baseUrl)/api/workspace/b2b/agencies") else { return }
+            var req = URLRequest(url: url)
+            req.httpMethod = "POST"
+            req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            if let token = token, !token.isEmpty {
+                req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            }
+            if let cookieHeader = cookieHeader, !cookieHeader.isEmpty {
+                req.setValue(cookieHeader, forHTTPHeaderField: "Cookie")
+            } else if let token = token, !token.isEmpty {
+                req.setValue("token=\(token); auth-token=\(token)", forHTTPHeaderField: "Cookie")
+            }
+            let body: [String: Any] = [
+                "agencyName": name,
+                "contactPerson": contact,
+                "phone": phone,
+                "agencyTier": tier.isEmpty ? "Standard" : tier
+            ]
+            req.httpBody = try? JSONSerialization.data(withJSONObject: body)
+
+            URLSession.shared.dataTask(with: req) { data, res, _ in
+                if let data = data, let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                   let agObj = json["agency"] as? [String: Any],
+                   let newId = agObj["id"] as? String {
+                    DispatchQueue.main.async {
+                        self.selectedAgency = newId
+                        self.selectedAgencyName = name
+                        if let idx = self.registeredAgencies.firstIndex(where: { $0.name == name }) {
+                            self.registeredAgencies[idx] = DoctorItem(id: newId, name: name, hospital: tier, label: name)
+                        } else {
+                            self.registeredAgencies.insert(DoctorItem(id: newId, name: name, hospital: tier, label: name), at: 1)
+                        }
+                    }
+                }
+            }.resume()
+        }
+    }
+
+    @objc private func didTapCollectorBtn() {
+        let picker = SearchableModalPickerViewController()
+        picker.pickerTitle = "Sample Collected By"
+        picker.addNewTitle = "+ Custom"
+        picker.items = registeredCollectors.map { col in
+            var sub = col.hospital
+            if col.name == "Lab Phlebotomist" { sub = "In-Lab Sample Collection" }
+            else if col.name == "Home Collection Agent" { sub = "At-Home Phlebotomist Visit" }
+            else if col.name == "Self (Patient)" { sub = "Sample brought by patient" }
+            else if sub.isEmpty { sub = "Authorized Sample Collector" }
+            return SearchableModalPickerViewController.Item(
+                id: col.name,
+                title: col.name,
+                subtitle: sub,
+                isSelected: col.name.lowercased() == selectedCollector.lowercased()
+            )
+        }
+        picker.onSelect = { [weak self] item in
+            guard let self = self else { return }
+            self.selectedCollector = item.title
+            self.collectorBtn.setTitle(item.title, for: .normal)
+            if !self.registeredCollectors.contains(where: { $0.name.lowercased() == item.title.lowercased() }) {
+                self.registeredCollectors.insert(DoctorItem(id: item.title, name: item.title, hospital: "Custom Collector", label: item.title), at: 0)
+            }
+        }
+        picker.onAddNew = { [weak self, weak picker] in
+            let alert = UIAlertController(title: "Custom Collector", message: "Enter collector or phlebotomist name.", preferredStyle: .alert)
+            alert.addTextField { tf in
+                tf.placeholder = "e.g., Staff Rahul, Phlebotomist Anita"
+                tf.autocapitalizationType = .words
+            }
+            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+            alert.addAction(UIAlertAction(title: "Set Collector", style: .default, handler: { [weak self, weak picker] _ in
+                guard let custom = alert.textFields?[0].text?.trimmingCharacters(in: .whitespaces), !custom.isEmpty else { return }
+                self?.registeredCollectors.insert(DoctorItem(id: custom, name: custom, hospital: "Custom Collector", label: custom), at: 0)
+                self?.selectedCollector = custom
+                self?.collectorBtn.setTitle(custom, for: .normal)
+                picker?.dismiss(animated: true)
+            }))
+            (picker ?? self)?.present(alert, animated: true)
+        }
+        let nav = UINavigationController(rootViewController: picker)
+        if #available(iOS 15.0, *) {
+            if let sheet = nav.sheetPresentationController {
+                sheet.detents = [.medium(), .large()]
+                sheet.prefersGrabberVisible = true
+            }
+        }
+        present(nav, animated: true)
     }
 
     private func setupMenuButton(_ btn: UIButton, title: String, items: [String], onSelect: @escaping (String) -> Void) {
-        btn.backgroundColor = UIColor(red: 0.945, green: 0.961, blue: 0.976, alpha: 1)
-        btn.layer.cornerRadius = 10
+        btn.backgroundColor = UIColor(red: 0.973, green: 0.980, blue: 0.988, alpha: 1)
+        btn.layer.cornerRadius = 12
         btn.layer.borderWidth = 1
         btn.layer.borderColor = UIColor(red: 0.886, green: 0.910, blue: 0.941, alpha: 1).cgColor
         btn.setTitle(title, for: .normal)
         btn.setTitleColor(UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1), for: .normal)
-        btn.titleLabel?.font = .systemFont(ofSize: 13, weight: .bold)
+        btn.titleLabel?.font = .systemFont(ofSize: 13.5, weight: .medium)
         btn.contentHorizontalAlignment = .leading
-        btn.contentEdgeInsets = UIEdgeInsets(top: 0, left: 14, bottom: 0, right: 14)
-        btn.heightAnchor.constraint(equalToConstant: 44).isActive = true
+        btn.contentEdgeInsets = UIEdgeInsets(top: 0, left: 14, bottom: 0, right: 30)
+        btn.heightAnchor.constraint(equalToConstant: 46).isActive = true
+
+        if btn.viewWithTag(999) == nil {
+            let chevron = UIImageView(image: UIImage(systemName: "chevron.up.chevron.down"))
+            chevron.tintColor = UIColor(red: 0.580, green: 0.639, blue: 0.722, alpha: 1)
+            chevron.contentMode = .scaleAspectFit
+            chevron.tag = 999
+            chevron.translatesAutoresizingMaskIntoConstraints = false
+            btn.addSubview(chevron)
+            NSLayoutConstraint.activate([
+                chevron.trailingAnchor.constraint(equalTo: btn.trailingAnchor, constant: -12),
+                chevron.centerYAnchor.constraint(equalTo: btn.centerYAnchor),
+                chevron.widthAnchor.constraint(equalToConstant: 13),
+                chevron.heightAnchor.constraint(equalToConstant: 13)
+            ])
+        }
 
         if #available(iOS 14.0, *) {
             let actions = items.map { item in
@@ -1284,5 +1628,164 @@ class RegistrationViewController: UIViewController, UITextFieldDelegate {
             btn.menu = UIMenu(children: actions)
             btn.showsMenuAsPrimaryAction = true
         }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MARK: – Searchable Modal Picker View Controller (Exact Web Workflow Parity)
+// ─────────────────────────────────────────────────────────────────────────────
+class SearchableModalPickerViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, UISearchBarDelegate {
+
+    struct Item {
+        let id: String
+        let title: String
+        let subtitle: String
+        let isSelected: Bool
+    }
+
+    var pickerTitle: String = "Select Item"
+    var items: [Item] = []
+    var filteredItems: [Item] = []
+    var onSelect: ((Item) -> Void)?
+    var onAddNew: (() -> Void)?
+    var addNewTitle: String? = "+ Add New"
+
+    private let searchBar = UISearchBar()
+    private let tableView = UITableView(frame: .zero, style: .insetGrouped)
+    private var currentSearchText: String = ""
+
+    // Empty state container matching web's CreatableCombobox CommandEmpty
+    private let emptyContainer = UIView()
+    private let emptyLabel = UILabel()
+    private let emptyAddBtn = UIButton(type: .system)
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        title = pickerTitle
+        view.backgroundColor = .systemGroupedBackground
+
+        if let addTitle = addNewTitle, onAddNew != nil {
+            navigationItem.rightBarButtonItem = UIBarButtonItem(title: addTitle, style: .done, target: self, action: #selector(didTapAdd))
+            navigationItem.rightBarButtonItem?.tintColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1)
+        }
+        navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .close, target: self, action: #selector(didTapClose))
+
+        searchBar.placeholder = "Search or type new..."
+        searchBar.delegate = self
+        searchBar.searchBarStyle = .minimal
+        searchBar.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(searchBar)
+
+        tableView.dataSource = self
+        tableView.delegate = self
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(tableView)
+
+        // Setup Empty State
+        setupEmptyState()
+
+        NSLayoutConstraint.activate([
+            searchBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 4),
+            searchBar.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8),
+            searchBar.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -8),
+
+            tableView.topAnchor.constraint(equalTo: searchBar.bottomAnchor, constant: 4),
+            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+
+        filteredItems = items
+    }
+
+    private func setupEmptyState() {
+        emptyContainer.frame = CGRect(x: 0, y: 0, width: 300, height: 120)
+
+        emptyLabel.text = "No record found."
+        emptyLabel.font = .systemFont(ofSize: 13.5, weight: .medium)
+        emptyLabel.textColor = UIColor(red: 0.392, green: 0.455, blue: 0.545, alpha: 1)
+        emptyLabel.textAlignment = .center
+        emptyLabel.translatesAutoresizingMaskIntoConstraints = false
+
+        emptyAddBtn.setTitle("+ Add New", for: .normal)
+        emptyAddBtn.setTitleColor(UIColor(red: 0.263, green: 0.282, blue: 0.933, alpha: 1), for: .normal)
+        emptyAddBtn.titleLabel?.font = .systemFont(ofSize: 14, weight: .bold)
+        emptyAddBtn.backgroundColor = UIColor(red: 0.933, green: 0.949, blue: 1.0, alpha: 1)
+        emptyAddBtn.layer.cornerRadius = 10
+        emptyAddBtn.translatesAutoresizingMaskIntoConstraints = false
+        emptyAddBtn.addTarget(self, action: #selector(didTapEmptyAdd), for: .touchUpInside)
+
+        emptyContainer.addSubview(emptyLabel)
+        emptyContainer.addSubview(emptyAddBtn)
+
+        NSLayoutConstraint.activate([
+            emptyLabel.topAnchor.constraint(equalTo: emptyContainer.topAnchor, constant: 18),
+            emptyLabel.centerXAnchor.constraint(equalTo: emptyContainer.centerXAnchor),
+
+            emptyAddBtn.topAnchor.constraint(equalTo: emptyLabel.bottomAnchor, constant: 12),
+            emptyAddBtn.leadingAnchor.constraint(equalTo: emptyContainer.leadingAnchor, constant: 24),
+            emptyAddBtn.trailingAnchor.constraint(equalTo: emptyContainer.trailingAnchor, constant: -24),
+            emptyAddBtn.heightAnchor.constraint(equalToConstant: 42)
+        ])
+    }
+
+    @objc private func didTapClose() {
+        dismiss(animated: true)
+    }
+
+    @objc private func didTapAdd() {
+        onAddNew?()
+    }
+
+    @objc private func didTapEmptyAdd() {
+        guard !currentSearchText.isEmpty else { return }
+        let newItem = Item(id: currentSearchText, title: currentSearchText, subtitle: "Added Entry", isSelected: true)
+        onSelect?(newItem)
+        dismiss(animated: true)
+    }
+
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        currentSearchText = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let q = currentSearchText.lowercased()
+        if q.isEmpty {
+            filteredItems = items
+            tableView.tableFooterView = UIView()
+        } else {
+            filteredItems = items.filter {
+                $0.title.lowercased().contains(q) || $0.subtitle.lowercased().contains(q)
+            }
+            if filteredItems.isEmpty {
+                emptyAddBtn.setTitle("+ Add \"\(currentSearchText)\"", for: .normal)
+                tableView.tableFooterView = emptyContainer
+            } else {
+                tableView.tableFooterView = UIView()
+            }
+        }
+        tableView.reloadData()
+    }
+
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return filteredItems.count
+    }
+
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let item = filteredItems[indexPath.row]
+        let cell = UITableViewCell(style: .subtitle, reuseIdentifier: "PickerCell")
+        cell.textLabel?.text = item.title
+        cell.textLabel?.font = .systemFont(ofSize: 15, weight: item.isSelected ? .bold : .medium)
+        cell.textLabel?.textColor = UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1)
+        cell.detailTextLabel?.text = item.subtitle
+        cell.detailTextLabel?.font = .systemFont(ofSize: 12)
+        cell.detailTextLabel?.textColor = .secondaryLabel
+        cell.accessoryType = item.isSelected ? .checkmark : .none
+        cell.tintColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1)
+        return cell
+    }
+
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        let item = filteredItems[indexPath.row]
+        onSelect?(item)
+        dismiss(animated: true)
     }
 }

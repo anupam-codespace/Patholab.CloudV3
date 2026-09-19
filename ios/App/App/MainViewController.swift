@@ -42,6 +42,7 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
     private let bottomNavBar       = UIView()
     private let bottomBorder       = UIView()
     private let navStack           = UIStackView()
+    private var navTabItems: [NavTabItemView] = []
     private let moreVC             = MoreViewController()
     private let offlineView        = UIView()
     private let skeletonView       = UIView()
@@ -51,8 +52,8 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
     private let homeNativeView     = HomeNativeView()
 
     // MARK: – Constraints updated for dynamic safe area
-    private var bottomNavHeightConstraint: NSLayoutConstraint!
-    private var walletCardHeightConstraint: NSLayoutConstraint!
+    private var bottomNavHeightConstraint: NSLayoutConstraint?
+    private var walletCardHeightConstraint: NSLayoutConstraint?
 
     // MARK: – State
     private let baseUrl      = "https://app.patholab.cloud"
@@ -196,7 +197,7 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         let topY = topLayoutContainer.frame.maxY
         let bottomY = bottomNavBar.frame.minY > 0 ? bottomNavBar.frame.minY : view.bounds.height
         let targetFrame = CGRect(x: 0, y: topY, width: view.bounds.width, height: max(0, bottomY - topY))
-        if let webView = self.webView, webView.frame != targetFrame {
+        if let webView = self.webView, webView != self.view, webView.frame != targetFrame {
             webView.frame = targetFrame
         }
 
@@ -210,7 +211,7 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
 
     override func viewSafeAreaInsetsDidChange() {
         super.viewSafeAreaInsetsDidChange()
-        bottomNavHeightConstraint.constant = 56 + view.safeAreaInsets.bottom
+        bottomNavHeightConstraint?.constant = 56 + view.safeAreaInsets.bottom
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -343,48 +344,223 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
     // MARK: – Bottom Navigation Bar
     // ─────────────────────────────────────────────────────────────────────────
 
+    // ── Floating Glassmorphic Pill Navigation Bar (matches Android activity_main.xml & bg_floating_glass_navbar)
+    final class NavCenterButton: UIButton {
+        private let gradientLayer = CAGradientLayer()
+        private let cardImageView = UIImageView()
+
+        override init(frame: CGRect) {
+            super.init(frame: frame)
+            setup()
+        }
+        required init?(coder: NSCoder) { super.init(coder: coder); setup() }
+
+        private func setup() {
+            gradientLayer.colors = [
+                UIColor(red: 13/255, green: 110/255, blue: 253/255, alpha: 1).cgColor, // #0D6EFD
+                UIColor(red: 37/255, green: 99/255, blue: 235/255, alpha: 1).cgColor,  // #2563EB
+                UIColor(red: 59/255, green: 130/255, blue: 246/255, alpha: 1).cgColor  // #3B82F6
+            ]
+            gradientLayer.startPoint = CGPoint(x: 0, y: 0)
+            gradientLayer.endPoint   = CGPoint(x: 1, y: 1)
+            layer.insertSublayer(gradientLayer, at: 0)
+
+            layer.cornerRadius = 24
+            layer.borderWidth = 2.0
+            layer.borderColor = UIColor(white: 1.0, alpha: 0.25).cgColor
+            layer.shadowColor = UIColor(red: 13/255, green: 110/255, blue: 253/255, alpha: 1).cgColor
+            layer.shadowOpacity = 0.50
+            layer.shadowRadius = 8
+            layer.shadowOffset = CGSize(width: 0, height: 3)
+            clipsToBounds = false
+
+            let cardConfig = UIImage.SymbolConfiguration(pointSize: 20, weight: .bold)
+            cardImageView.image = UIImage(systemName: "creditcard.fill", withConfiguration: cardConfig)
+            cardImageView.tintColor = .white
+            cardImageView.contentMode = .scaleAspectFit
+            cardImageView.isUserInteractionEnabled = false
+            cardImageView.translatesAutoresizingMaskIntoConstraints = false
+            addSubview(cardImageView)
+
+            NSLayoutConstraint.activate([
+                cardImageView.widthAnchor.constraint(equalToConstant: 22),
+                cardImageView.heightAnchor.constraint(equalToConstant: 22),
+                cardImageView.centerXAnchor.constraint(equalTo: centerXAnchor),
+                cardImageView.centerYAnchor.constraint(equalTo: centerYAnchor),
+            ])
+        }
+
+        override func layoutSubviews() {
+            super.layoutSubviews()
+            gradientLayer.frame = bounds
+            gradientLayer.cornerRadius = layer.cornerRadius
+            bringSubviewToFront(cardImageView)
+        }
+    }
+
+    final class NavTabItemView: UIControl {
+        let tagIndex: Int
+        private let indicatorView = UIView()
+        private let iconImageView = UIImageView()
+        private let titleLabel = UILabel()
+        private let iconName: String
+
+        var isActive: Bool = false {
+            didSet {
+                updateAppearance()
+            }
+        }
+
+        var isDarkMode: Bool = false {
+            didSet {
+                updateAppearance()
+            }
+        }
+
+        init(title: String, icon: String, tag: Int) {
+            self.tagIndex = tag
+            self.iconName = icon
+            super.init(frame: .zero)
+            buildView(title: title)
+        }
+
+        required init?(coder: NSCoder) { fatalError() }
+
+        private func buildView(title: String) {
+            isUserInteractionEnabled = true
+
+            // Indicator pill frame: 46dp x 30dp, cornerRadius 15dp (matches Android indicatorNavHome / bg_nav_active_indicator)
+            indicatorView.layer.cornerRadius = 15
+            indicatorView.isUserInteractionEnabled = false
+            indicatorView.translatesAutoresizingMaskIntoConstraints = false
+            addSubview(indicatorView)
+
+            // Icon inside indicator: 22dp x 22dp, centered
+            let symCfg = UIImage.SymbolConfiguration(pointSize: 17, weight: .bold)
+            iconImageView.image = UIImage(systemName: iconName, withConfiguration: symCfg)
+            iconImageView.contentMode = .scaleAspectFit
+            iconImageView.isUserInteractionEnabled = false
+            iconImageView.translatesAutoresizingMaskIntoConstraints = false
+            indicatorView.addSubview(iconImageView)
+
+            // Label below indicator: 11sp font
+            titleLabel.text = title
+            titleLabel.font = .systemFont(ofSize: 11, weight: .medium)
+            titleLabel.textAlignment = .center
+            titleLabel.isUserInteractionEnabled = false
+            titleLabel.translatesAutoresizingMaskIntoConstraints = false
+            addSubview(titleLabel)
+
+            NSLayoutConstraint.activate([
+                indicatorView.widthAnchor.constraint(equalToConstant: 46),
+                indicatorView.heightAnchor.constraint(equalToConstant: 30),
+                indicatorView.centerXAnchor.constraint(equalTo: centerXAnchor),
+                indicatorView.topAnchor.constraint(equalTo: topAnchor, constant: 6),
+
+                iconImageView.widthAnchor.constraint(equalToConstant: 22),
+                iconImageView.heightAnchor.constraint(equalToConstant: 22),
+                iconImageView.centerXAnchor.constraint(equalTo: indicatorView.centerXAnchor),
+                iconImageView.centerYAnchor.constraint(equalTo: indicatorView.centerYAnchor),
+
+                titleLabel.topAnchor.constraint(equalTo: indicatorView.bottomAnchor, constant: 2),
+                titleLabel.leadingAnchor.constraint(equalTo: leadingAnchor),
+                titleLabel.trailingAnchor.constraint(equalTo: trailingAnchor),
+                titleLabel.bottomAnchor.constraint(lessThanOrEqualTo: bottomAnchor, constant: -4),
+            ])
+
+            updateAppearance()
+        }
+
+        private func updateAppearance() {
+            let activeColor = isDarkMode ? UIColor(red: 129/255, green: 140/255, blue: 248/255, alpha: 1) : UIColor(red: 13/255, green: 110/255, blue: 253/255, alpha: 1)
+            let inactiveColor = UIColor(red: 148/255, green: 163/255, blue: 184/255, alpha: 1) // #94A3B8
+
+            if isActive {
+                indicatorView.backgroundColor = isDarkMode
+                    ? UIColor(red: 30/255, green: 41/255, blue: 59/255, alpha: 1)
+                    : UIColor(red: 235/255, green: 244/255, blue: 255/255, alpha: 1) // #EBF4FF
+                indicatorView.layer.borderWidth = 1.0
+                indicatorView.layer.borderColor = (isDarkMode
+                    ? UIColor(red: 51/255, green: 65/255, blue: 85/255, alpha: 1)
+                    : UIColor(red: 191/255, green: 219/255, blue: 254/255, alpha: 1)).cgColor // #BFDBFE
+
+                iconImageView.tintColor = activeColor
+                titleLabel.textColor = activeColor
+                titleLabel.font = .systemFont(ofSize: 11, weight: .bold)
+            } else {
+                indicatorView.backgroundColor = .clear
+                indicatorView.layer.borderWidth = 0
+
+                iconImageView.tintColor = inactiveColor
+                titleLabel.textColor = inactiveColor
+                titleLabel.font = .systemFont(ofSize: 11, weight: .medium)
+            }
+        }
+
+        func animateSelection() {
+            // Icon pop & spring (matches Android animateTabSelection in MainActivity.java)
+            iconImageView.transform = CGAffineTransform(scaleX: 0.75, y: 0.75)
+            UIView.animate(withDuration: 0.18, delay: 0, usingSpringWithDamping: 0.45, initialSpringVelocity: 2.5, options: .curveEaseOut, animations: {
+                self.iconImageView.transform = CGAffineTransform(scaleX: 1.18, y: 1.18).translatedBy(x: 0, y: -2.5)
+            }) { _ in
+                UIView.animate(withDuration: 0.12, delay: 0, options: .curveEaseInOut, animations: {
+                    self.iconImageView.transform = .identity
+                })
+            }
+
+            // Indicator subtle scale & fade
+            indicatorView.transform = CGAffineTransform(scaleX: 0.88, y: 0.88)
+            indicatorView.alpha = 0.4
+            UIView.animate(withDuration: 0.22, delay: 0, options: .curveEaseOut, animations: {
+                self.indicatorView.transform = .identity
+                self.indicatorView.alpha = 1.0
+            })
+        }
+    }
     private func buildBottomNavBar() {
-        // ── Floating Glassmorphic Pill Container with Gradient
-        bottomNavBar.backgroundColor    = UIColor(red: 0.965, green: 0.976, blue: 0.992, alpha: 1)
-        bottomNavBar.layer.cornerRadius = 33
-        bottomNavBar.layer.shadowColor   = UIColor(red: 0.05, green: 0.15, blue: 0.30, alpha: 1).cgColor
-        bottomNavBar.layer.shadowOpacity = 0.12
-        bottomNavBar.layer.shadowRadius  = 18
-        bottomNavBar.layer.shadowOffset  = CGSize(width: 0, height: 8)
+        bottomNavBar.backgroundColor    = .white
+        bottomNavBar.layer.cornerRadius = 34
+        bottomNavBar.layer.shadowColor   = UIColor.black.cgColor
+        bottomNavBar.layer.shadowOpacity = 0.10
+        bottomNavBar.layer.shadowRadius  = 14
+        bottomNavBar.layer.shadowOffset  = CGSize(width: 0, height: 5)
         bottomNavBar.layer.borderWidth   = 1.5
-        bottomNavBar.layer.borderColor   = UIColor(red: 0.886, green: 0.914, blue: 0.949, alpha: 1).cgColor
+        bottomNavBar.layer.borderColor   = UIColor(red: 226/255, green: 232/255, blue: 240/255, alpha: 1).cgColor // #E2E8F0
         bottomNavBar.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(bottomNavBar)
 
-        let navGradient = CAGradientLayer()
-        navGradient.colors = [
-            UIColor.white.cgColor,
-            UIColor(red: 0.957, green: 0.973, blue: 0.992, alpha: 1).cgColor
-        ]
-        navGradient.startPoint = CGPoint(x: 0.5, y: 0.0)
-        navGradient.endPoint = CGPoint(x: 0.5, y: 1.0)
-        navGradient.cornerRadius = 33
-        bottomNavBar.layer.insertSublayer(navGradient, at: 0)
-
         // ── Items stack
-        navStack.axis        = .horizontal
+        navStack.axis         = .horizontal
         navStack.distribution = .fillEqually
-        navStack.alignment    = .center
+        navStack.alignment    = .fill
         navStack.translatesAutoresizingMaskIntoConstraints = false
         bottomNavBar.addSubview(navStack)
 
-        // Tabs: Home, Patients, Center Action Button, Reports, More
-        navStack.addArrangedSubview(makeNavButton(title: "Home", icon: "house.fill", tag: 0))
-        navStack.addArrangedSubview(makeNavButton(title: "Patients", icon: "person.2.fill", tag: 1))
-        navStack.addArrangedSubview(makeCenterActionButton())
-        navStack.addArrangedSubview(makeNavButton(title: "Reports", icon: "doc.text.fill", tag: 2))
-        navStack.addArrangedSubview(makeNavButton(title: "More", icon: "square.grid.2x2.fill", tag: 3))
+        // Tabs: Home, Patients, Center Action Button (Wallet), Reports, More
+        let tabHome     = NavTabItemView(title: "Home", icon: "house.fill", tag: 0)
+        let tabPatients = NavTabItemView(title: "Patients", icon: "person.2.fill", tag: 1)
+        let centerBtn   = makeCenterActionButton()
+        let tabReports  = NavTabItemView(title: "Reports", icon: "doc.text.fill", tag: 2)
+        let tabMore     = NavTabItemView(title: "More", icon: "square.grid.2x2.fill", tag: 3)
+
+        tabHome.addTarget(self, action: #selector(navTabTapped(_:)), for: .touchUpInside)
+        tabPatients.addTarget(self, action: #selector(navTabTapped(_:)), for: .touchUpInside)
+        tabReports.addTarget(self, action: #selector(navTabTapped(_:)), for: .touchUpInside)
+        tabMore.addTarget(self, action: #selector(navTabTapped(_:)), for: .touchUpInside)
+
+        navTabItems = [tabHome, tabPatients, tabReports, tabMore]
+
+        navStack.addArrangedSubview(tabHome)
+        navStack.addArrangedSubview(tabPatients)
+        navStack.addArrangedSubview(centerBtn)
+        navStack.addArrangedSubview(tabReports)
+        navStack.addArrangedSubview(tabMore)
 
         NSLayoutConstraint.activate([
-            bottomNavBar.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            bottomNavBar.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            bottomNavBar.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -10),
-            bottomNavBar.heightAnchor.constraint(equalToConstant: 66),
+            bottomNavBar.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 14),
+            bottomNavBar.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -14),
+            bottomNavBar.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -8),
+            bottomNavBar.heightAnchor.constraint(equalToConstant: 68),
 
             navStack.topAnchor.constraint(equalTo: bottomNavBar.topAnchor),
             navStack.bottomAnchor.constraint(equalTo: bottomNavBar.bottomAnchor),
@@ -397,93 +573,53 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         let container = UIView()
         container.translatesAutoresizingMaskIntoConstraints = false
 
-        let circle = UIButton(type: .custom)
-        circle.layer.cornerRadius = 25
-        circle.layer.shadowColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1).cgColor
-        circle.layer.shadowOpacity = 0.50
-        circle.layer.shadowRadius = 12
-        circle.layer.shadowOffset = CGSize(width: 0, height: 6)
-        circle.layer.borderWidth = 2.5
-        circle.layer.borderColor = UIColor(red: 0.58, green: 0.77, blue: 0.99, alpha: 1).cgColor
-        circle.setImage(UIImage(systemName: "creditcard.fill"), for: .normal)
-        circle.tintColor = .white
+        let circle = NavCenterButton()
         circle.tag = 99
-
-        let circleGradient = CAGradientLayer()
-        circleGradient.colors = [
-            UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1).cgColor,
-            UIColor(red: 0.310, green: 0.275, blue: 0.898, alpha: 1).cgColor
-        ]
-        circleGradient.startPoint = CGPoint(x: 0, y: 0)
-        circleGradient.endPoint = CGPoint(x: 1, y: 1)
-        circleGradient.cornerRadius = 25
-        circle.layer.insertSublayer(circleGradient, at: 0)
-
         circle.addTarget(self, action: #selector(centerActionTapped(_:)), for: .touchUpInside)
         circle.translatesAutoresizingMaskIntoConstraints = false
 
         container.addSubview(circle)
         NSLayoutConstraint.activate([
-            circle.widthAnchor.constraint(equalToConstant: 50),
-            circle.heightAnchor.constraint(equalToConstant: 50),
+            circle.widthAnchor.constraint(equalToConstant: 48),
+            circle.heightAnchor.constraint(equalToConstant: 48),
             circle.centerXAnchor.constraint(equalTo: container.centerXAnchor),
-            circle.centerYAnchor.constraint(equalTo: container.centerYAnchor)
+            circle.centerYAnchor.constraint(equalTo: container.centerYAnchor),
         ])
 
         return container
     }
 
     @objc private func centerActionTapped(_ sender: UIButton) {
-        AppHaptics.medium()
-        sender.transform = CGAffineTransform(scaleX: 0.82, y: 0.82).rotated(by: 0.15)
-        UIView.animate(withDuration: 0.35, delay: 0, usingSpringWithDamping: 0.55, initialSpringVelocity: 0.8, options: .curveEaseOut) {
-            sender.transform = .identity
+        AppHaptics.mediumImpact()
+        // 15-degree rotation & bounce overshoot (matches Android MainActivity.java lines 620-627)
+        UIView.animate(withDuration: 0.12, delay: 0, options: .curveEaseInOut, animations: {
+            sender.transform = CGAffineTransform(scaleX: 0.82, y: 0.82).rotated(by: 15.0 * .pi / 180.0)
+        }) { _ in
+            UIView.animate(withDuration: 0.22, delay: 0, usingSpringWithDamping: 0.45, initialSpringVelocity: 2.5, options: .curveEaseOut, animations: {
+                sender.transform = .identity
+            })
         }
         let walletVC = WalletViewController()
         walletVC.modalPresentationStyle = .fullScreen
         present(walletVC, animated: true, completion: nil)
     }
 
-    private func makeNavButton(title: String, icon: String, tag: Int) -> UIButton {
-        let btn = UIButton(type: .custom)
-        var cfg = UIButton.Configuration.plain()
-        cfg.image            = UIImage(systemName: icon)
-        cfg.title            = title
-        cfg.imagePlacement   = .top
-        cfg.imagePadding     = 3
-        cfg.contentInsets    = NSDirectionalEdgeInsets(top: 6, leading: 8, bottom: 6, trailing: 8)
-        cfg.baseForegroundColor = UIColor(red: 0.580, green: 0.639, blue: 0.722, alpha: 1)
-        if #available(iOS 15, *) {
-            cfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attr in
-                var a = attr; a.font = UIFont.systemFont(ofSize: 10, weight: .bold); return a
-            }
-        }
-        btn.configuration = cfg
-        btn.tag = tag
-        btn.layer.cornerRadius = 14
-        btn.addTarget(self, action: #selector(navTapped(_:)), for: .touchUpInside)
-        return btn
+    @objc private func navTabTapped(_ sender: NavTabItemView) {
+        AppHaptics.selection()
+        selectTab(sender.tagIndex, animate: true)
     }
 
-    private func updateNavTints() {
-        navStack.arrangedSubviews.compactMap({ $0 as? UIButton }).forEach { btn in
-            let active = btn.tag == selectedTab
-            let color: UIColor
-            if active {
-                color = isDarkMode ? UIColor(red: 129/255, green: 140/255, blue: 248/255, alpha: 1) : UIColor(red: 13/255, green: 110/255, blue: 253/255, alpha: 1)
-                btn.backgroundColor = isDarkMode ? UIColor(red: 30/255, green: 41/255, blue: 59/255, alpha: 1) : UIColor(red: 235/255, green: 244/255, blue: 255/255, alpha: 1)
-                btn.layer.borderWidth = 1
-                btn.layer.borderColor = (isDarkMode ? UIColor(red: 51/255, green: 65/255, blue: 85/255, alpha: 1) : UIColor(red: 191/255, green: 219/255, blue: 254/255, alpha: 1)).cgColor
+    private func updateNavTints(animate: Bool = false) {
+        for item in navTabItems {
+            let active = (item.tagIndex == selectedTab)
+            item.isDarkMode = self.isDarkMode
+            if item.isActive != active {
+                item.isActive = active
+                if active && animate {
+                    item.animateSelection()
+                }
             } else {
-                color = isDarkMode ? UIColor(red: 148/255, green: 163/255, blue: 184/255, alpha: 1) : UIColor(red: 148/255, green: 163/255, blue: 184/255, alpha: 1)
-                btn.backgroundColor = .clear
-                btn.layer.borderWidth = 0
-            }
-            btn.tintColor = color
-            btn.setTitleColor(color, for: .normal)
-            if var cfg = btn.configuration {
-                cfg.baseForegroundColor = color
-                btn.configuration = cfg
+                item.isActive = active
             }
         }
     }
@@ -557,32 +693,23 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
     // MARK: – Navigation
     // ─────────────────────────────────────────────────────────────────────────
 
-    @objc private func navTapped(_ sender: UIButton) {
-        AppHaptics.selection()
-        // Spring overshoot pop animation for selected tab
-        sender.transform = CGAffineTransform(scaleX: 0.78, y: 0.78).translatedBy(x: 0, y: 3)
-        UIView.animate(withDuration: 0.35, delay: 0, usingSpringWithDamping: 0.52, initialSpringVelocity: 0.8, options: .curveEaseOut) {
-            sender.transform = .identity
-        }
-        selectTab(sender.tag)
-    }
-
-    private func selectTab(_ tag: Int) {
+    private func selectTab(_ tag: Int, animate: Bool = false) {
         if tag != 3 {
             previousTab = tag
         }
         selectedTab = tag
-        updateNavTints()
+        updateNavTints(animate: animate)
 
         switch tag {
         case 0:
             showNativeHome()
         case 1:
+            // Open native PatientWorklistViewController directly (not WebView)
             homeNativeView.isHidden = true
-            topLayoutContainer.isHidden = false
-            headerBlurContainer.isHidden = false
-            headerTitleLabel.text = "PATIENT WORKLIST"
-            showWeb(path: "/workspace/patients")
+            topLayoutContainer.isHidden = true
+            headerBlurContainer.isHidden = true
+            let patVC = PatientWorklistViewController()
+            presentNativeModule(patVC)
         case 2:
             let repVC = ReportsViewController()
             repVC.modalPresentationStyle = .fullScreen
@@ -607,110 +734,7 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         ])
 
         homeNativeView.onNavigate = { [weak self] path in
-            if path == "/dashboard" || path == "/workspace/dashboard" || path.starts(with: "/dashboard") || path == "/workspace" || path == "/home" || path == "/" {
-                let labDashVC = LabDashboardViewController()
-                labDashVC.modalPresentationStyle = .fullScreen
-                self.present(labDashVC, animated: true, completion: nil)
-                return
-            }
-            if path == "/workspace/analytics" || path.starts(with: "/workspace/analytics") {
-                let dashVC = DashboardViewController()
-                dashVC.modalPresentationStyle = .fullScreen
-                self.present(dashVC, animated: true, completion: nil)
-                return
-            }
-            if path == "/workspace/settings" {
-                let settingsVC = ProfileSettingsViewController()
-                let nav = UINavigationController(rootViewController: settingsVC)
-                nav.modalPresentationStyle = .fullScreen
-                self.present(nav, animated: true, completion: nil)
-                return
-            }
-            if path == "/workspace/wallet" || path.starts(with: "/workspace/wallet") {
-                let walletVC = WalletViewController()
-                walletVC.modalPresentationStyle = .fullScreen
-                self.present(walletVC, animated: true, completion: nil)
-                return
-            }
-            if path == "/workspace/registration" || path.starts(with: "/workspace/registration") || path == "/workspace/patients/new" {
-                let regVC = RegistrationViewController()
-                regVC.modalPresentationStyle = .fullScreen
-                self.present(regVC, animated: true, completion: nil)
-                return
-            }
-            if path == "/workspace/test-management" || path.starts(with: "/workspace/test-management") || path == "/workspace/tests" {
-                let testVC = TestManagementViewController()
-                testVC.modalPresentationStyle = .fullScreen
-                self.present(testVC, animated: true, completion: nil)
-                return
-            }
-            if path == "/workspace/billing" || path.starts(with: "/workspace/billing") || path == "/workspace/invoices" {
-                let billVC = BillingViewController()
-                billVC.modalPresentationStyle = .fullScreen
-                self.present(billVC, animated: true, completion: nil)
-                return
-            }
-            if path == "/workspace/reports" || path.starts(with: "/workspace/reports") {
-                let repVC = ReportsViewController()
-                repVC.modalPresentationStyle = .fullScreen
-                self.present(repVC, animated: true, completion: nil)
-                return
-            }
-            if path == "/workspace/samples" || path.starts(with: "/workspace/samples") || path == "/workspace/accession" {
-                let smpVC = SamplesViewController()
-                smpVC.modalPresentationStyle = .fullScreen
-                self.present(smpVC, animated: true, completion: nil)
-                return
-            }
-            if path == "/workspace/patients" || path.starts(with: "/workspace/patients") || path == "/workspace/results" {
-                let patVC = PatientWorklistViewController()
-                patVC.modalPresentationStyle = .fullScreen
-                self.present(patVC, animated: true, completion: nil)
-                return
-            }
-            if path == "/workspace/staff" || path.starts(with: "/workspace/staff") {
-                let staffVC = StaffManagementViewController()
-                staffVC.modalPresentationStyle = .fullScreen
-                self.present(staffVC, animated: true, completion: nil)
-                return
-            }
-            if path == "/workspace/support" || path.starts(with: "/workspace/support") {
-                let supportVC = SupportViewController()
-                supportVC.modalPresentationStyle = .fullScreen
-                self.present(supportVC, animated: true, completion: nil)
-                return
-            }
-            if path == "/workspace/bookings" || path.starts(with: "/workspace/bookings") || path == "/workspace/online-booking" || path.starts(with: "/workspace/online-booking") {
-                let bookingVC = OnlineBookingViewController()
-                bookingVC.modalPresentationStyle = .fullScreen
-                self.present(bookingVC, animated: true, completion: nil)
-                return
-            }
-            if path == "/workspace/agencies" || path.starts(with: "/workspace/agencies") || path == "/workspace/b2b" || path.starts(with: "/workspace/b2b") {
-                let b2bVC = B2BViewController()
-                b2bVC.modalPresentationStyle = .fullScreen
-                self.present(b2bVC, animated: true, completion: nil)
-                return
-            }
-            if path == "/workspace/settings/b2b-tiers" || path.starts(with: "/workspace/settings/b2b-tiers") || path == "/workspace/settings/b2b" || path.starts(with: "/workspace/settings/b2b") {
-                let b2bSettingsVC = B2BSettingsViewController()
-                b2bSettingsVC.modalPresentationStyle = .fullScreen
-                self.present(b2bSettingsVC, animated: true, completion: nil)
-                return
-            }
-            if path == "/workspace/doctors" || path.starts(with: "/workspace/doctors") {
-                let docVC = ReferralDoctorsViewController()
-                docVC.modalPresentationStyle = .fullScreen
-                self.present(docVC, animated: true, completion: nil)
-                return
-            }
-            if path == "/workspace/commissions" || path.starts(with: "/workspace/commissions") {
-                let commVC = CommissionsViewController()
-                commVC.modalPresentationStyle = .fullScreen
-                self.present(commVC, animated: true, completion: nil)
-                return
-            }
-            self.showWebView(navigatingTo: path)
+            self?.routeToModule(path: path)
         }
 
         homeNativeView.onSignOut = {
@@ -793,10 +817,18 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         guard let webView = self.webView else { return }
 
         // Never allow Financial Analytics or Dashboard web page inside WKWebView
-        if path == "/workspace/analytics" || path.starts(with: "/workspace/analytics") || path == "/analytics" || path.starts(with: "/analytics") || path == "/dashboard" || path.starts(with: "/dashboard") || path == "/workspace/dashboard" {
+        if path == "/workspace/analytics" || path.starts(with: "/workspace/analytics") || path == "/analytics" || path.starts(with: "/analytics") {
             let dashVC = DashboardViewController()
             dashVC.modalPresentationStyle = .fullScreen
             self.present(dashVC, animated: true, completion: nil)
+            if selectedTab == 0 {
+                showNativeHome()
+            }
+            return
+        } else if path == "/dashboard" || path.starts(with: "/dashboard") || path == "/workspace/dashboard" {
+            let labDashVC = LabDashboardViewController()
+            labDashVC.modalPresentationStyle = .fullScreen
+            self.present(labDashVC, animated: true, completion: nil)
             if selectedTab == 0 {
                 showNativeHome()
             }
@@ -828,91 +860,213 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
 
     func didSelectModule(path: String) {
         moreVC.dismiss(animated: true) { [weak self] in
+            self?.routeToModule(path: path)
+        }
+    }
+
+    private func presentNativeModule(_ vc: UIViewController) {
+        vc.modalPresentationStyle = .fullScreen
+        let doPresent: () -> Void = { [weak self] in
             guard let self = self else { return }
-            if path == "/legal" || path.contains("terms") || path.contains("privacy") || path.contains("refund") {
-                var urlString = "https://patholab.cloud/terms-and-conditions/"
-                if path.contains("privacy") {
-                    urlString = "https://patholab.cloud/privacy-policy/"
-                } else if path.contains("refund") {
-                    urlString = "https://patholab.cloud/refund-and-cancellation/"
-                } else if path.contains("terms") {
-                    urlString = "https://patholab.cloud/terms-and-conditions/"
+
+            func getTopController(root: UIViewController) -> UIViewController {
+                if let presented = root.presentedViewController, !presented.isBeingDismissed {
+                    return getTopController(root: presented)
                 }
-                if let url = URL(string: urlString) {
-                    UIApplication.shared.open(url, options: [:], completionHandler: nil)
+                return root
+            }
+
+            if let presented = self.presentedViewController {
+                if presented.isBeingDismissed {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+                        self?.presentNativeModule(vc)
+                    }
+                } else {
+                    presented.dismiss(animated: true) { [weak self] in
+                        DispatchQueue.main.async {
+                            self?.present(vc, animated: true, completion: nil)
+                        }
+                    }
                 }
-            } else if path == "/workspace/support" || path.starts(with: "/workspace/support") {
-                let supportVC = SupportViewController()
-                supportVC.modalPresentationStyle = .fullScreen
-                self.present(supportVC, animated: true, completion: nil)
-            } else if path == "/workspace/bookings" || path.starts(with: "/workspace/bookings") || path == "/workspace/online-booking" || path.starts(with: "/workspace/online-booking") {
-                let bookingVC = OnlineBookingViewController()
-                bookingVC.modalPresentationStyle = .fullScreen
-                self.present(bookingVC, animated: true, completion: nil)
-            } else if path == "/workspace/agencies" || path.starts(with: "/workspace/agencies") || path == "/workspace/b2b" || path.starts(with: "/workspace/b2b") {
-                let b2bVC = B2BViewController()
-                b2bVC.modalPresentationStyle = .fullScreen
-                self.present(b2bVC, animated: true, completion: nil)
-            } else if path == "/workspace/settings/b2b-tiers" || path.starts(with: "/workspace/settings/b2b-tiers") || path == "/workspace/settings/b2b" || path.starts(with: "/workspace/settings/b2b") {
-                let b2bSettingsVC = B2BSettingsViewController()
-                b2bSettingsVC.modalPresentationStyle = .fullScreen
-                self.present(b2bSettingsVC, animated: true, completion: nil)
-            } else if path == "/workspace/doctors" || path.starts(with: "/workspace/doctors") {
-                let docVC = ReferralDoctorsViewController()
-                docVC.modalPresentationStyle = .fullScreen
-                self.present(docVC, animated: true, completion: nil)
-            } else if path == "/workspace/commissions" || path.starts(with: "/workspace/commissions") {
-                let commVC = CommissionsViewController()
-                commVC.modalPresentationStyle = .fullScreen
-                self.present(commVC, animated: true, completion: nil)
-            } else if path == "/workspace/analytics" || path.starts(with: "/workspace/analytics") || path == "/analytics" || path.starts(with: "/analytics") || path == "/dashboard" || path.starts(with: "/dashboard") || path == "/workspace/dashboard" {
-                let dashVC = DashboardViewController()
-                dashVC.modalPresentationStyle = .fullScreen
-                self.present(dashVC, animated: true, completion: nil)
-            } else if path == "/workspace/wallet" || path.starts(with: "/workspace/wallet") {
-                let walletVC = WalletViewController()
-                walletVC.modalPresentationStyle = .fullScreen
-                self.present(walletVC, animated: true, completion: nil)
-            } else if path == "/workspace/registration" || path.starts(with: "/workspace/registration") || path == "/workspace/patients/new" {
-                let regVC = RegistrationViewController()
-                regVC.modalPresentationStyle = .fullScreen
-                self.present(regVC, animated: true, completion: nil)
-            } else if path == "/workspace/test-management" || path.starts(with: "/workspace/test-management") || path == "/workspace/tests" {
-                let testVC = TestManagementViewController()
-                testVC.modalPresentationStyle = .fullScreen
-                self.present(testVC, animated: true, completion: nil)
-            } else if path == "/workspace/billing" || path.starts(with: "/workspace/billing") || path == "/workspace/invoices" {
-                let billVC = BillingViewController()
-                billVC.modalPresentationStyle = .fullScreen
-                self.present(billVC, animated: true, completion: nil)
-            } else if path == "/workspace/reports" || path.starts(with: "/workspace/reports") {
-                let repVC = ReportsViewController()
-                repVC.modalPresentationStyle = .fullScreen
-                self.present(repVC, animated: true, completion: nil)
-            } else if path == "/workspace/samples" || path.starts(with: "/workspace/samples") || path == "/workspace/accession" {
-                let smpVC = SamplesViewController()
-                smpVC.modalPresentationStyle = .fullScreen
-                self.present(smpVC, animated: true, completion: nil)
-            } else if path == "/workspace/patients" || path.starts(with: "/workspace/patients") || path == "/workspace/results" {
-                let patVC = PatientWorklistViewController()
-                patVC.modalPresentationStyle = .fullScreen
-                self.present(patVC, animated: true, completion: nil)
-            } else if path == "/workspace/staff" || path.starts(with: "/workspace/staff") {
-                let staffVC = StaffManagementViewController()
-                staffVC.modalPresentationStyle = .fullScreen
-                self.present(staffVC, animated: true, completion: nil)
-            } else if path == "/workspace/settings" {
-                let settingsVC = ProfileSettingsViewController()
-                let nav = UINavigationController(rootViewController: settingsVC)
-                nav.modalPresentationStyle = .fullScreen
-                self.present(nav, animated: true, completion: nil)
             } else {
-                self.currentPath = nil          // force reload even if same path
-                self.selectedTab = 0
-                self.updateNavTints()
-                self.showWeb(path: path)
+                self.present(vc, animated: true, completion: nil)
             }
         }
+        if Thread.isMainThread {
+            doPresent()
+        } else {
+            DispatchQueue.main.async(execute: doPresent)
+        }
+    }
+
+    func routeToModule(path: String) {
+        if path == "/legal" || path.contains("terms") || path.contains("privacy") || path.contains("refund") {
+            var urlString = "https://patholab.cloud/terms-and-conditions/"
+            if path.contains("privacy") {
+                urlString = "https://patholab.cloud/privacy-policy/"
+            } else if path.contains("refund") {
+                urlString = "https://patholab.cloud/refund-and-cancellation/"
+            } else if path.contains("terms") {
+                urlString = "https://patholab.cloud/terms-and-conditions/"
+            }
+            if let url = URL(string: urlString) {
+                UIApplication.shared.open(url, options: [:], completionHandler: nil)
+            }
+            return
+        }
+
+        if path == "/workspace/settings/notifications" || path.starts(with: "/workspace/settings/notifications") {
+            let notifVC = NotificationsViewController()
+            presentNativeModule(notifVC)
+            return
+        }
+        if path == "/workspace/settings/b2b-tiers" || path.starts(with: "/workspace/settings/b2b-tiers") || path == "/workspace/settings/b2b" || path.starts(with: "/workspace/settings/b2b") || path == "/workspace/b2b-tiers" || path.starts(with: "/workspace/b2b-tiers") || path == "/workspace/b2b/tiers" || path.starts(with: "/workspace/b2b/tiers") || path == "/workspace/b2b/settings" || path.starts(with: "/workspace/b2b/settings") {
+            let b2bSettingsVC = B2BSettingsViewController()
+            presentNativeModule(b2bSettingsVC)
+            return
+        }
+        if path == "/workspace/settings/templates" || path.starts(with: "/workspace/settings/templates") || path == "/workspace/settings/report-template" || path.starts(with: "/workspace/settings/report-template") || path == "/workspace/report-template" || path.starts(with: "/workspace/report-template") || path == "/workspace/templates" || path.starts(with: "/workspace/templates") {
+            let vc = ReportTemplatesViewController()
+            presentNativeModule(vc)
+            return
+        }
+        if path == "/workspace/settings/branding" || path.starts(with: "/workspace/settings/branding") {
+            let vc = InvoiceBrandingViewController()
+            presentNativeModule(vc)
+            return
+        }
+        if path == "/workspace/settings/payments" || path.starts(with: "/workspace/settings/payments") {
+            let vc = PaymentSettingsViewController()
+            presentNativeModule(vc)
+            return
+        }
+        if path == "/dashboard" || path == "/workspace/dashboard" || path.starts(with: "/dashboard") || path == "/workspace" || path == "/home" || path == "/" {
+            let labDashVC = LabDashboardViewController()
+            presentNativeModule(labDashVC)
+            return
+        }
+        if path == "/workspace/analytics" || path.starts(with: "/workspace/analytics") || path == "/analytics" || path.starts(with: "/analytics") {
+            let dashVC = DashboardViewController()
+            presentNativeModule(dashVC)
+            return
+        }
+        if path == "/workspace/settings" || path == "/settings" || path.starts(with: "/workspace/settings/") || path.starts(with: "/settings/") {
+            let settingsVC = ProfileSettingsViewController()
+            let nav = UINavigationController(rootViewController: settingsVC)
+            presentNativeModule(nav)
+            return
+        }
+        if path == "/workspace/wallet" || path.starts(with: "/workspace/wallet") {
+            let walletVC = WalletViewController()
+            presentNativeModule(walletVC)
+            return
+        }
+        if path == "/workspace/registration" || path.starts(with: "/workspace/registration") || path == "/workspace/patients/new" {
+            let regVC = RegistrationViewController()
+            presentNativeModule(regVC)
+            return
+        }
+        if path == "/workspace/test-management" || path.starts(with: "/workspace/test-management") || path == "/workspace/tests" {
+            let testVC = TestManagementViewController()
+            presentNativeModule(testVC)
+            return
+        }
+        if path == "/workspace/billing" || path.starts(with: "/workspace/billing") || path == "/workspace/invoices" {
+            let billVC = BillingViewController()
+            presentNativeModule(billVC)
+            return
+        }
+        if path == "/workspace/reports" || path.starts(with: "/workspace/reports") {
+            let repVC = ReportsViewController()
+            presentNativeModule(repVC)
+            return
+        }
+        if path == "/workspace/samples" || path.starts(with: "/workspace/samples") || path == "/workspace/accession" {
+            let smpVC = SamplesViewController()
+            presentNativeModule(smpVC)
+            return
+        }
+        if path == "/workspace/results" || path.starts(with: "/workspace/results") {
+            let resVC = ResultsViewController()
+            presentNativeModule(resVC)
+            return
+        }
+        if path == "/workspace/patients" || path.starts(with: "/workspace/patients") {
+            let patVC = PatientWorklistViewController()
+            presentNativeModule(patVC)
+            return
+        }
+        if path == "/workspace/staff" || path.starts(with: "/workspace/staff") {
+            let staffVC = StaffManagementViewController()
+            presentNativeModule(staffVC)
+            return
+        }
+        if path == "/workspace/support" || path.starts(with: "/workspace/support") {
+            let supportVC = SupportViewController()
+            presentNativeModule(supportVC)
+            return
+        }
+        if path == "/workspace/bookings" || path.starts(with: "/workspace/bookings") || path == "/workspace/online-booking" || path.starts(with: "/workspace/online-booking") {
+            let bookingVC = OnlineBookingViewController()
+            presentNativeModule(bookingVC)
+            return
+        }
+        if path == "/workspace/agencies" || path.starts(with: "/workspace/agencies") || path == "/workspace/b2b" || path.starts(with: "/workspace/b2b") {
+            let b2bVC = B2BViewController()
+            presentNativeModule(b2bVC)
+            return
+        }
+        if path == "/workspace/doctors" || path.starts(with: "/workspace/doctors") {
+            let docVC = ReferralDoctorsViewController()
+            presentNativeModule(docVC)
+            return
+        }
+        if path == "/workspace/commissions" || path.starts(with: "/workspace/commissions") {
+            let commVC = CommissionsViewController()
+            presentNativeModule(commVC)
+            return
+        }
+        if path == "/workspace/radiology/dashboard/appointments" || path == "/workspace/radiology/appointments" || path.starts(with: "/workspace/radiology/dashboard/appointments") || path.starts(with: "/workspace/radiology/appointments") {
+            let vc = ScanScheduleViewController()
+            presentNativeModule(vc)
+            return
+        }
+        if path == "/workspace/radiology/machines" || path.starts(with: "/workspace/radiology/machines") {
+            let vc = MachinesViewController()
+            presentNativeModule(vc)
+            return
+        }
+        if path == "/workspace/radiology/macros" || path.starts(with: "/workspace/radiology/macros") {
+            let vc = RISMacrosViewController()
+            presentNativeModule(vc)
+            return
+        }
+        if path == "/workspace/radiology/settings/dicom" || path.starts(with: "/workspace/radiology/settings/dicom") {
+            let vc = DICOMSettingsViewController()
+            presentNativeModule(vc)
+            return
+        }
+        if path == "/workspace/radiology/settings/letterhead" || path.starts(with: "/workspace/radiology/settings/letterhead") {
+            let vc = RISLetterheadViewController()
+            presentNativeModule(vc)
+            return
+        }
+        if path == "/workspace/radiology/dashboard" || path == "/workspace/radiology" || path.starts(with: "/workspace/radiology/dashboard") || path.starts(with: "/workspace/radiology") {
+            let vc = RISDashboardViewController()
+            presentNativeModule(vc)
+            return
+        }
+        if path == "/workspace/inventory" || path.starts(with: "/workspace/inventory") {
+            let vc = InventoryViewController()
+            presentNativeModule(vc)
+            return
+        }
+        if path == "/workspace/logistics" || path.starts(with: "/workspace/logistics") {
+            let vc = LogisticsViewController()
+            presentNativeModule(vc)
+            return
+        }
+        showWebView(navigatingTo: path)
     }
 
     func didTapSignOut() {
@@ -1439,7 +1593,7 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         if path.contains("test-management") { return "Categories" }
         if path.contains("bookings") { return "Online Bookings" }
         if path.contains("registration") { return "Registration" }
-        if path.contains("results") { return "Worklist & Results" }
+        if path.contains("results") { return "Clinical Results" }
         if path.contains("reports") { return "Report Dispatch" }
         if path.contains("inventory") { return "Inventory & Stock" }
         if path.contains("logistics") { return "Logistics & Trips" }
@@ -1471,10 +1625,16 @@ class MainViewController: CAPBridgeViewController, MoreViewControllerDelegate, U
         if keyPath == "URL", let webView = object as? WKWebView, let url = webView.url {
             let path = url.path
             // Never allow Financial Analytics or Dashboard web page inside WKWebView
-            if path == "/workspace/analytics" || path.starts(with: "/workspace/analytics") || path == "/analytics" || path.starts(with: "/analytics") || path == "/dashboard" || path.starts(with: "/dashboard") || path == "/workspace/dashboard" {
+            if path == "/workspace/analytics" || path.starts(with: "/workspace/analytics") || path == "/analytics" || path.starts(with: "/analytics") {
                 let dashVC = DashboardViewController()
                 dashVC.modalPresentationStyle = .fullScreen
                 self.present(dashVC, animated: true, completion: nil)
+                showNativeHome()
+                return
+            } else if path == "/dashboard" || path.starts(with: "/dashboard") || path == "/workspace/dashboard" {
+                let labDashVC = LabDashboardViewController()
+                labDashVC.modalPresentationStyle = .fullScreen
+                self.present(labDashVC, animated: true, completion: nil)
                 showNativeHome()
                 return
             }
@@ -2653,7 +2813,7 @@ class HelpPanelViewController: UIViewController, MFMailComposeViewControllerDele
             openWhatsApp(phone: phone, message: message)
         case .email(let to, let subject, let body):
             openEmail(to: to, subject: subject, body: body)
-        case .bugReport(let path):
+        case .bugReport(_):
             let presenting = self.presentingViewController
             dismiss(animated: true) {
                 let supportVC = SupportViewController()

@@ -26,269 +26,358 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:orientation="vertical">
 
-                <FrameLayout
-                    android:id="@+id/btnB2BBack"
-                    android:layout_width="38dp"
-                    android:layout_height="38dp"
-                    android:background="@drawable/bg_glass_back_btn"
-                    android:clickable="true"
-                    android:focusable="true">
-
-                    <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
-                        android:layout_gravity="center"
-                        android:src="@drawable/ic_back_arrow"
-                        android:tint="#FFFFFF"
-                        app:tint="#FFFFFF" />
-
-                </FrameLayout>
-
+                <!-- Tier 1: Action Navigation Bar -->
                 <LinearLayout
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:layout_marginStart="14dp">
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Corporate Agencies"
-                        android:textSize="20sp"
-                        android:textStyle="bold"
-                        android:textColor="#FFFFFF"
-                        android:letterSpacing="-0.02" />
+                    <FrameLayout
+                        android:id="@+id/btnB2BBack"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:background="@drawable/bg_glass_back_btn"
+                        android:clickable="true"
+                        android:focusable="true">
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_back_arrow"
+                            android:tint="#FFFFFF"
+                            app:tint="#FFFFFF" />
+
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="Manage partner labs, enterprise tiers &amp; margins"
-                        android:textSize="11.5sp"
-                        android:textColor="#C7DFFF"
-                        android:singleLine="true"
-                        android:ellipsize="end" />
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginStart="14dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Corporate Agencies"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            android:textColor="#FFFFFF"
+                            android:letterSpacing="-0.02" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="Manage partner labs, enterprise tiers &amp; margins"
+                            android:textSize="11.5sp"
+                            android:textColor="#C7DFFF"
+                            android:singleLine="true"
+                            android:ellipsize="end" />
+
+                    </LinearLayout>
+
+                    <!-- Export / Share Report Button -->
+                    <FrameLayout
+                        android:id="@+id/btnExportAgencies"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:background="@drawable/bg_glass_back_btn"
+                        android:layout_marginEnd="8dp"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_share_hero"
+                            android:tint="#FFFFFF"
+                            app:tint="#FFFFFF" />
+
+                    </FrameLayout>
+
+                    <!-- B2B Tier Settings Button -->
+                    <FrameLayout
+                        android:id="@+id/btnB2BTiersSettings"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:background="@drawable/bg_glass_back_btn"
+                        android:layout_marginEnd="8dp"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_mod_clean_settings"
+                            android:tint="#FFFFFF"
+                            app:tint="#FFFFFF" />
+
+                    </FrameLayout>
+
+                    <!-- Refresh Button -->
+                    <FrameLayout
+                        android:id="@+id/btnRefreshAgencies"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:background="@drawable/bg_glass_back_btn"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <ImageView
+                            android:id="@+id/imgRefreshAgenciesIcon"
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_refresh_cw"
+                            android:tint="#FFFFFF"
+                            app:tint="#FFFFFF" />
+
+                    </FrameLayout>
 
                 </LinearLayout>
 
-                <!-- Export / Share Report Button -->
-                <FrameLayout
-                    android:id="@+id/btnExportAgencies"
-                    android:layout_width="38dp"
-                    android:layout_height="38dp"
-                    android:background="@drawable/bg_wallet_pill"
-                    android:layout_marginEnd="8dp"
-                    android:clickable="true"
-                    android:focusable="true">
+                <!-- Tier 2: 4 Frosted Glass Bento KPI Stat Cards -->
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:scrollbars="none"
+                    android:layout_marginTop="16dp"
+                    android:clipToPadding="false">
 
-                    <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
-                        android:layout_gravity="center"
-                        android:src="@drawable/ic_share_hero"
-                        android:tint="#FFFFFF"
-                        app:tint="#FFFFFF" />
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
 
-                </FrameLayout>
+                        <!-- KPI 1: Total Agencies -->
+                        <LinearLayout
+                            android:layout_width="145dp"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:background="@drawable/bg_billing_kpi_card"
+                            android:paddingStart="13dp"
+                            android:paddingEnd="13dp"
+                            android:paddingTop="11dp"
+                            android:paddingBottom="11dp"
+                            android:layout_marginEnd="10dp">
 
-                <!-- Refresh Button -->
-                <FrameLayout
-                    android:id="@+id/btnRefreshAgencies"
-                    android:layout_width="38dp"
-                    android:layout_height="38dp"
-                    android:background="@drawable/bg_wallet_pill"
-                    android:clickable="true"
-                    android:focusable="true">
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical">
 
-                    <ImageView
-                        android:id="@+id/imgRefreshAgenciesIcon"
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
-                        android:layout_gravity="center"
-                        android:src="@drawable/ic_refresh_cw"
-                        android:tint="#FFFFFF"
-                        app:tint="#FFFFFF" />
+                                <View
+                                    android:layout_width="6dp"
+                                    android:layout_height="6dp"
+                                    android:background="@drawable/bg_dot_active"
+                                    android:layout_marginEnd="6dp" />
 
-                </FrameLayout>
+                                <TextView
+                                    android:text="PARTNER AGENCIES"
+                                    android:textSize="9.5sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#C7DFFF"
+                                    android:letterSpacing="0.04"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content" />
+
+                            </LinearLayout>
+
+                            <TextView
+                                android:id="@+id/lblKpiTotalAgencies"
+                                android:text="0"
+                                android:textSize="20sp"
+                                android:textStyle="bold"
+                                android:textColor="#FFFFFF"
+                                android:layout_marginTop="4dp"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content" />
+
+                            <TextView
+                                android:text="Active contracts"
+                                android:textSize="10.5sp"
+                                android:textColor="#C7DFFF"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content" />
+
+                        </LinearLayout>
+
+                        <!-- KPI 2: Total Volume -->
+                        <LinearLayout
+                            android:layout_width="145dp"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:background="@drawable/bg_billing_kpi_card"
+                            android:paddingStart="13dp"
+                            android:paddingEnd="13dp"
+                            android:paddingTop="11dp"
+                            android:paddingBottom="11dp"
+                            android:layout_marginEnd="10dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical">
+
+                                <View
+                                    android:layout_width="6dp"
+                                    android:layout_height="6dp"
+                                    android:background="@drawable/bg_dot_emerald"
+                                    android:layout_marginEnd="6dp" />
+
+                                <TextView
+                                    android:text="TOTAL VOLUME"
+                                    android:textSize="9.5sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#C7DFFF"
+                                    android:letterSpacing="0.04"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content" />
+
+                            </LinearLayout>
+
+                            <TextView
+                                android:id="@+id/lblKpiTotalVolume"
+                                android:text="0"
+                                android:textSize="20sp"
+                                android:textStyle="bold"
+                                android:textColor="#FFFFFF"
+                                android:layout_marginTop="4dp"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content" />
+
+                            <TextView
+                                android:text="Referred samples"
+                                android:textSize="10.5sp"
+                                android:textColor="#C7DFFF"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content" />
+
+                        </LinearLayout>
+
+                        <!-- KPI 3: Billed Volume -->
+                        <LinearLayout
+                            android:layout_width="155dp"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:background="@drawable/bg_billing_kpi_card"
+                            android:paddingStart="13dp"
+                            android:paddingEnd="13dp"
+                            android:paddingTop="11dp"
+                            android:paddingBottom="11dp"
+                            android:layout_marginEnd="10dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical">
+
+                                <View
+                                    android:layout_width="6dp"
+                                    android:layout_height="6dp"
+                                    android:background="@drawable/bg_dot_cyan"
+                                    android:layout_marginEnd="6dp" />
+
+                                <TextView
+                                    android:text="BILLED VOLUME"
+                                    android:textSize="9.5sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#C7DFFF"
+                                    android:letterSpacing="0.04"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content" />
+
+                            </LinearLayout>
+
+                            <TextView
+                                android:id="@+id/lblKpiBilledVolume"
+                                android:text="₹0"
+                                android:textSize="20sp"
+                                android:textStyle="bold"
+                                android:textColor="#FFFFFF"
+                                android:layout_marginTop="4dp"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content" />
+
+                            <TextView
+                                android:text="Gross B2B billing"
+                                android:textSize="10.5sp"
+                                android:textColor="#C7DFFF"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content" />
+
+                        </LinearLayout>
+
+                        <!-- KPI 4: Pending Payout -->
+                        <LinearLayout
+                            android:layout_width="155dp"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:background="@drawable/bg_billing_kpi_card"
+                            android:paddingStart="13dp"
+                            android:paddingEnd="13dp"
+                            android:paddingTop="11dp"
+                            android:paddingBottom="11dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical">
+
+                                <View
+                                    android:layout_width="6dp"
+                                    android:layout_height="6dp"
+                                    android:background="@drawable/bg_dot_amber"
+                                    android:layout_marginEnd="6dp" />
+
+                                <TextView
+                                    android:text="PENDING PAYOUT"
+                                    android:textSize="9.5sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#C7DFFF"
+                                    android:letterSpacing="0.04"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content" />
+
+                            </LinearLayout>
+
+                            <TextView
+                                android:id="@+id/lblKpiPendingPayout"
+                                android:text="₹0"
+                                android:textSize="20sp"
+                                android:textStyle="bold"
+                                android:textColor="#FFFFFF"
+                                android:layout_marginTop="4dp"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content" />
+
+                            <TextView
+                                android:text="Unsettled commission"
+                                android:textSize="10.5sp"
+                                android:textColor="#C7DFFF"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </HorizontalScrollView>
 
             </LinearLayout>
 
         </FrameLayout>
-
-        <!-- ── 4 KPI METRICS CARDS (WEB PARITY) ───────────────────────── -->
-        <HorizontalScrollView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:scrollbars="none"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:paddingTop="12dp"
-            android:paddingBottom="6dp"
-            android:clipToPadding="false">
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <!-- KPI 1: Total Agencies -->
-                <LinearLayout
-                    android:layout_width="140dp"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:background="@drawable/bg_billing_kpi_card_indigo"
-                    android:padding="12dp"
-                    android:elevation="1dp"
-                    android:layout_marginEnd="10dp">
-
-                    <TextView
-                        android:text="PARTNER AGENCIES"
-                        android:textSize="9.5sp"
-                        android:textStyle="bold"
-                        android:textColor="#6366F1"
-                        android:letterSpacing="0.04"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-
-                    <TextView
-                        android:id="@+id/lblKpiTotalAgencies"
-                        android:text="0"
-                        android:textSize="20sp"
-                        android:textStyle="bold"
-                        android:textColor="#1E1B4B"
-                        android:layout_marginTop="4dp"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-
-                    <TextView
-                        android:text="Active contracts"
-                        android:textSize="10.5sp"
-                        android:textColor="#818CF8"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-
-                </LinearLayout>
-
-                <!-- KPI 2: Total Volume -->
-                <LinearLayout
-                    android:layout_width="140dp"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:background="@drawable/bg_billing_kpi_card_emerald"
-                    android:padding="12dp"
-                    android:elevation="1dp"
-                    android:layout_marginEnd="10dp">
-
-                    <TextView
-                        android:text="TOTAL VOLUME"
-                        android:textSize="9.5sp"
-                        android:textStyle="bold"
-                        android:textColor="#059669"
-                        android:letterSpacing="0.04"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-
-                    <TextView
-                        android:id="@+id/lblKpiTotalVolume"
-                        android:text="0"
-                        android:textSize="20sp"
-                        android:textStyle="bold"
-                        android:textColor="#064E3B"
-                        android:layout_marginTop="4dp"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-
-                    <TextView
-                        android:text="Referred samples"
-                        android:textSize="10.5sp"
-                        android:textColor="#34D399"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-
-                </LinearLayout>
-
-                <!-- KPI 3: Billed Volume -->
-                <LinearLayout
-                    android:layout_width="150dp"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:background="@drawable/bg_billing_kpi_card_cyan"
-                    android:padding="12dp"
-                    android:elevation="1dp"
-                    android:layout_marginEnd="10dp">
-
-                    <TextView
-                        android:text="BILLED VOLUME"
-                        android:textSize="9.5sp"
-                        android:textStyle="bold"
-                        android:textColor="#0284C7"
-                        android:letterSpacing="0.04"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-
-                    <TextView
-                        android:id="@+id/lblKpiBilledVolume"
-                        android:text="₹0"
-                        android:textSize="20sp"
-                        android:textStyle="bold"
-                        android:textColor="#0C4A6E"
-                        android:layout_marginTop="4dp"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-
-                    <TextView
-                        android:text="Gross B2B billing"
-                        android:textSize="10.5sp"
-                        android:textColor="#38BDF8"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-
-                </LinearLayout>
-
-                <!-- KPI 4: Pending Payout -->
-                <LinearLayout
-                    android:layout_width="150dp"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:background="@drawable/bg_billing_kpi_card_amber"
-                    android:padding="12dp"
-                    android:elevation="1dp">
-
-                    <TextView
-                        android:text="PENDING PAYOUT"
-                        android:textSize="9.5sp"
-                        android:textStyle="bold"
-                        android:textColor="#D97706"
-                        android:letterSpacing="0.04"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-
-                    <TextView
-                        android:id="@+id/lblKpiPendingPayout"
-                        android:text="₹0"
-                        android:textSize="20sp"
-                        android:textStyle="bold"
-                        android:textColor="#78350F"
-                        android:layout_marginTop="4dp"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-
-                    <TextView
-                        android:text="Unsettled commission"
-                        android:textSize="10.5sp"
-                        android:textColor="#FBBF24"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-
-                </LinearLayout>
-
-            </LinearLayout>
-
-        </HorizontalScrollView>
 
         <!-- ── SEARCH OMNIBAR ─────────────────────────────────────────── -->
         <FrameLayout

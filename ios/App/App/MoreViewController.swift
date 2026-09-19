@@ -207,7 +207,8 @@ class MoreViewController: UIViewController {
             ModuleItem(title: "Appointments", path: "/workspace/appointments", category: "Clinical", desc: "Manage doctor appointments & home visits", icon: "calendar", isNew: false),
             ModuleItem(title: "Sample Accession", path: "/workspace/samples", category: "Clinical", desc: "Scan barcode & receive lab samples", icon: "barcode.viewfinder", isNew: false),
             ModuleItem(title: "Accession Desk", path: "/workspace/accession", category: "Clinical", desc: "Manage accession logs & verify collections", icon: "checkmark.seal.fill", isNew: false),
-            ModuleItem(title: "Worklist & Results", path: "/workspace/results", category: "Clinical", desc: "Fill raw tests values & review parameters", icon: "doc.text.fill", isNew: false),
+            ModuleItem(title: "Patient Worklist", path: "/workspace/patients", category: "Clinical", desc: "Track patient queue, turnaround time & visits", icon: "list.clipboard.fill", isNew: false),
+            ModuleItem(title: "Clinical Results", path: "/workspace/results", category: "Clinical", desc: "Fill raw tests values & review parameters", icon: "flask.fill", isNew: false),
             ModuleItem(title: "Report Dispatch", path: "/workspace/reports", category: "Clinical", desc: "Sign off reports & dispatch PDF files", icon: "paperplane.fill", isNew: false),
 
             // Radiology (RIS)

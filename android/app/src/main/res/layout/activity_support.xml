@@ -23,9 +23,9 @@
             android:paddingStart="18dp"
             android:paddingEnd="18dp"
             android:paddingTop="36dp"
-            android:paddingBottom="20dp">
+            android:paddingBottom="22dp">
 
-            <!-- Top Row: Back Button + Title + New Ticket CTA -->
+            <!-- Tier 1: Action Navigation Bar (Back, Refresh, New Ticket CTA) -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -45,62 +45,25 @@
                         android:layout_height="18dp"
                         android:layout_gravity="center"
                         android:src="@drawable/ic_back_arrow"
-                        android:tint="#FFFFFF" />
+                        android:tint="#FFFFFF"
+                        app:tint="#FFFFFF" />
                 </FrameLayout>
 
-                <LinearLayout
+                <View
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:layout_marginStart="14dp">
+                    android:layout_height="1dp"
+                    android:layout_weight="1" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Help &amp; Support"
-                        android:textSize="20sp"
-                        android:textStyle="bold"
-                        android:textColor="#FFFFFF"
-                        android:letterSpacing="-0.02" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="24/7 Dedicated Assistance Desk"
-                        android:textSize="12sp"
-                        android:textColor="#93C5FD" />
-                </LinearLayout>
-
-                <!-- Refresh Button -->
-                <FrameLayout
-                    android:id="@+id/btnRefreshSupport"
-                    android:layout_width="38dp"
-                    android:layout_height="38dp"
-                    android:background="@drawable/bg_glass_back_btn"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:layout_marginEnd="10dp">
-
-                    <ImageView
-                        android:id="@+id/imgRefreshSupportIcon"
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
-                        android:layout_gravity="center"
-                        android:src="@drawable/ic_refresh_cw"
-                        android:tint="#FFFFFF" />
-                </FrameLayout>
-
-                <!-- New Ticket Action Button -->
+                <!-- New Ticket Action Button — White Luxury Capsule CTA -->
                 <LinearLayout
                     android:id="@+id/btnHeaderNewTicket"
                     android:layout_width="wrap_content"
-                    android:layout_height="36dp"
-                    android:background="@drawable/bg_btn_primary"
+                    android:layout_height="38dp"
+                    android:background="@drawable/bg_white_pill_btn"
+                    android:elevation="3dp"
                     android:gravity="center"
-                    android:paddingStart="12dp"
-                    android:paddingEnd="14dp"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="16dp"
                     android:clickable="true"
                     android:focusable="true">
 
@@ -108,26 +71,53 @@
                         android:layout_width="14dp"
                         android:layout_height="14dp"
                         android:src="@drawable/ic_plus"
-                        android:tint="#FFFFFF"
+                        android:tint="#0D6EFD"
+                        app:tint="#0D6EFD"
                         android:layout_marginEnd="6dp" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="New Ticket"
-                        android:textColor="#FFFFFF"
-                        android:textSize="13sp"
+                        android:textColor="#0D6EFD"
+                        android:textSize="13.5sp"
                         android:textStyle="bold" />
                 </LinearLayout>
 
             </LinearLayout>
 
-            <!-- Real-time KPI Stat Cards Row -->
+            <!-- Tier 2: Hero Header Greeting & Subtitle (Full Unrestricted Width) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Help &amp; Support"
+                    android:textSize="23sp"
+                    android:fontFamily="sans-serif-black"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:letterSpacing="-0.02" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:text="24/7 Dedicated Assistance Desk &amp; Ticket Tracker"
+                    android:textSize="12.5sp"
+                    android:textColor="#C7DFFF" />
+            </LinearLayout>
+
+            <!-- Tier 3: 3 Frosted Glass Bento KPI Stat Cards -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_marginTop="18dp">
+                android:layout_marginTop="16dp">
 
                 <!-- Card 1: Open Requests -->
                 <LinearLayout
@@ -135,31 +125,46 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:background="@drawable/bg_bento_white"
+                    android:background="@drawable/bg_glass_kpi_card"
                     android:orientation="vertical"
                     android:padding="12dp"
-                    android:layout_marginEnd="6dp"
+                    android:layout_marginEnd="8dp"
                     android:clickable="true"
-                    android:focusable="true">
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground">
 
-                    <TextView
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="OPEN"
-                        android:textSize="11sp"
-                        android:textStyle="bold"
-                        android:textColor="#EF4444"
-                        android:letterSpacing="0.05" />
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <View
+                            android:layout_width="6dp"
+                            android:layout_height="6dp"
+                            android:background="@drawable/shape_dot_rose"
+                            android:layout_marginEnd="5dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="OPEN"
+                            android:textSize="10.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#FCA5A5"
+                            android:letterSpacing="0.05" />
+                    </LinearLayout>
 
                     <TextView
                         android:id="@+id/tvKpiOpenCount"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
+                        android:layout_marginTop="3dp"
                         android:text="0"
-                        android:textSize="20sp"
+                        android:textSize="21sp"
+                        android:fontFamily="sans-serif-black"
                         android:textStyle="bold"
-                        android:textColor="#0F172A" />
+                        android:textColor="#FFFFFF" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -167,7 +172,7 @@
                         android:layout_marginTop="1dp"
                         android:text="Awaiting review"
                         android:textSize="10sp"
-                        android:textColor="#64748B" />
+                        android:textColor="#C7DFFF" />
                 </LinearLayout>
 
                 <!-- Card 2: In Progress -->
@@ -176,31 +181,46 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:background="@drawable/bg_bento_white"
+                    android:background="@drawable/bg_glass_kpi_card"
                     android:orientation="vertical"
                     android:padding="12dp"
-                    android:layout_marginEnd="6dp"
+                    android:layout_marginEnd="8dp"
                     android:clickable="true"
-                    android:focusable="true">
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground">
 
-                    <TextView
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="IN PROGRESS"
-                        android:textSize="11sp"
-                        android:textStyle="bold"
-                        android:textColor="#F59E0B"
-                        android:letterSpacing="0.05" />
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <View
+                            android:layout_width="6dp"
+                            android:layout_height="6dp"
+                            android:background="@drawable/shape_dot_amber"
+                            android:layout_marginEnd="5dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="PROGRESS"
+                            android:textSize="10.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#FDE68A"
+                            android:letterSpacing="0.05" />
+                    </LinearLayout>
 
                     <TextView
                         android:id="@+id/tvKpiProgressCount"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
+                        android:layout_marginTop="3dp"
                         android:text="0"
-                        android:textSize="20sp"
+                        android:textSize="21sp"
+                        android:fontFamily="sans-serif-black"
                         android:textStyle="bold"
-                        android:textColor="#0F172A" />
+                        android:textColor="#FFFFFF" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -208,7 +228,7 @@
                         android:layout_marginTop="1dp"
                         android:text="Being handled"
                         android:textSize="10sp"
-                        android:textColor="#64748B" />
+                        android:textColor="#C7DFFF" />
                 </LinearLayout>
 
                 <!-- Card 3: Resolved -->
@@ -217,38 +237,53 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:background="@drawable/bg_bento_white"
+                    android:background="@drawable/bg_glass_kpi_card"
                     android:orientation="vertical"
                     android:padding="12dp"
                     android:clickable="true"
-                    android:focusable="true">
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground">
 
-                    <TextView
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="RESOLVED"
-                        android:textSize="11sp"
-                        android:textStyle="bold"
-                        android:textColor="#10B981"
-                        android:letterSpacing="0.05" />
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <View
+                            android:layout_width="6dp"
+                            android:layout_height="6dp"
+                            android:background="@drawable/shape_dot_emerald"
+                            android:layout_marginEnd="5dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="RESOLVED"
+                            android:textSize="10.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#A7F3D0"
+                            android:letterSpacing="0.05" />
+                    </LinearLayout>
 
                     <TextView
                         android:id="@+id/tvKpiResolvedCount"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
+                        android:layout_marginTop="3dp"
                         android:text="0"
-                        android:textSize="20sp"
+                        android:textSize="21sp"
+                        android:fontFamily="sans-serif-black"
                         android:textStyle="bold"
-                        android:textColor="#0F172A" />
+                        android:textColor="#FFFFFF" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="1dp"
-                        android:text="Completed issues"
+                        android:text="Completed"
                         android:textSize="10sp"
-                        android:textColor="#64748B" />
+                        android:textColor="#C7DFFF" />
                 </LinearLayout>
 
             </LinearLayout>
@@ -487,350 +522,353 @@
                         android:orientation="vertical" />
 
                     <!-- ══════════════════════════════════════════════════════════
-                         FREQUENTLY ASKED QUESTIONS SECTION
-                         ══════════════════════════════════════════════════════════ -->
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="24dp"
-                        android:text="Frequently Asked Questions"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="#0F172A" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:layout_marginBottom="12dp"
-                        android:text="Quick solutions to standard workflow and system questions"
-                        android:textSize="12sp"
-                        android:textColor="#64748B" />
-
-                    <!-- FAQ Item 1 -->
-                    <LinearLayout
-                        android:id="@+id/faqItem1"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:background="@drawable/bg_card_white"
-                        android:padding="14dp"
-                        android:layout_marginBottom="8dp"
-                        android:clickable="true"
-                        android:focusable="true">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical">
-
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="How do I add new test parameters to inventory?"
-                                android:textSize="13sp"
-                                android:textStyle="bold"
-                                android:textColor="#1E293B" />
-
-                            <ImageView
-                                android:id="@+id/faqArrow1"
-                                android:layout_width="16dp"
-                                android:layout_height="16dp"
-                                android:src="@drawable/ic_chevron_down"
-                                android:tint="#64748B" />
-                        </LinearLayout>
-
-                        <TextView
-                            android:id="@+id/faqAnswer1"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="Navigate to Laboratory Settings > Tests Catalog. Click 'Add Parameter' to configure reference ranges, units, specimen type, and pricing."
-                            android:textSize="12sp"
-                            android:textColor="#475569"
-                            android:lineSpacingExtra="3dp"
-                            android:visibility="gone" />
-                    </LinearLayout>
-
-                    <!-- FAQ Item 2 -->
-                    <LinearLayout
-                        android:id="@+id/faqItem2"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:background="@drawable/bg_card_white"
-                        android:padding="14dp"
-                        android:layout_marginBottom="8dp"
-                        android:clickable="true"
-                        android:focusable="true">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical">
-
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="Why is my WhatsApp messaging balance decreasing?"
-                                android:textSize="13sp"
-                                android:textStyle="bold"
-                                android:textColor="#1E293B" />
-
-                            <ImageView
-                                android:id="@+id/faqArrow2"
-                                android:layout_width="16dp"
-                                android:layout_height="16dp"
-                                android:src="@drawable/ic_chevron_down"
-                                android:tint="#64748B" />
-                        </LinearLayout>
-
-                        <TextView
-                            android:id="@+id/faqAnswer2"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="Each automated WhatsApp report delivery and OTP notification consumes 1 WhatsApp credit. Recharge credits seamlessly in the Wallet &amp; Billing screen."
-                            android:textSize="12sp"
-                            android:textColor="#475569"
-                            android:lineSpacingExtra="3dp"
-                            android:visibility="gone" />
-                    </LinearLayout>
-
-                    <!-- FAQ Item 3 -->
-                    <LinearLayout
-                        android:id="@+id/faqItem3"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:background="@drawable/bg_card_white"
-                        android:padding="14dp"
-                        android:layout_marginBottom="8dp"
-                        android:clickable="true"
-                        android:focusable="true">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical">
-
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="How do I print barcoded patient sample labels?"
-                                android:textSize="13sp"
-                                android:textStyle="bold"
-                                android:textColor="#1E293B" />
-
-                            <ImageView
-                                android:id="@+id/faqArrow3"
-                                android:layout_width="16dp"
-                                android:layout_height="16dp"
-                                android:src="@drawable/ic_chevron_down"
-                                android:tint="#64748B" />
-                        </LinearLayout>
-
-                        <TextView
-                            android:id="@+id/faqAnswer3"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="On the Patient Registration confirmation or Sample Logistics screen, tap 'Print Label' to send the 50x25mm barcode to any paired Bluetooth thermal printer."
-                            android:textSize="12sp"
-                            android:textColor="#475569"
-                            android:lineSpacingExtra="3dp"
-                            android:visibility="gone" />
-                    </LinearLayout>
-
-                    <!-- FAQ Item 4 -->
-                    <LinearLayout
-                        android:id="@+id/faqItem4"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:background="@drawable/bg_card_white"
-                        android:padding="14dp"
-                        android:layout_marginBottom="16dp"
-                        android:clickable="true"
-                        android:focusable="true">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical">
-
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="How to configure thermal Bluetooth receipt printers?"
-                                android:textSize="13sp"
-                                android:textStyle="bold"
-                                android:textColor="#1E293B" />
-
-                            <ImageView
-                                android:id="@+id/faqArrow4"
-                                android:layout_width="16dp"
-                                android:layout_height="16dp"
-                                android:src="@drawable/ic_chevron_down"
-                                android:tint="#64748B" />
-                        </LinearLayout>
-
-                        <TextView
-                            android:id="@+id/faqAnswer4"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="Go to Settings > Printer Setup. Ensure Bluetooth is enabled, choose ESC/POS 58mm or 80mm mode, and perform a test print."
-                            android:textSize="12sp"
-                            android:textColor="#475569"
-                            android:lineSpacingExtra="3dp"
-                            android:visibility="gone" />
-                    </LinearLayout>
-
-                    <!-- ══════════════════════════════════════════════════════════
-                         DIRECT ASSISTANCE CHANNELS CARD
+                         DIRECT ASSISTANCE CHANNELS CARD (REDESIGNED LUXURY CARD)
                          ══════════════════════════════════════════════════════════ -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="20dp"
+                        android:layout_marginBottom="28dp"
                         android:background="@drawable/bg_card_white"
                         android:orientation="vertical"
-                        android:padding="16dp"
-                        android:layout_marginBottom="24dp">
+                        android:padding="18dp">
 
-                        <TextView
-                            android:layout_width="wrap_content"
+                        <!-- Header with Title, Subtitle & Live Status Pill -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Direct Assistance Channels"
-                            android:textSize="15sp"
-                            android:textStyle="bold"
-                            android:textColor="#0F172A" />
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="14dp">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:layout_marginBottom="12dp"
-                            android:text="Reach our dedicated clinical technical team immediately"
-                            android:textSize="12sp"
-                            android:textColor="#64748B" />
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Direct Assistance Channels"
+                                    android:textSize="15.5sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#0F172A" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="2dp"
+                                    android:text="Connect directly with our clinical technical desk"
+                                    android:textSize="12sp"
+                                    android:textColor="#64748B" />
+                            </LinearLayout>
+
+                            <!-- Live Status Indicator Pill -->
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:background="@drawable/bg_tag_emerald"
+                                android:gravity="center_vertical"
+                                android:paddingStart="8dp"
+                                android:paddingEnd="10dp"
+                                android:paddingTop="4dp"
+                                android:paddingBottom="4dp">
+
+                                <View
+                                    android:layout_width="7dp"
+                                    android:layout_height="7dp"
+                                    android:background="@drawable/bg_status_wave_green"
+                                    android:layout_marginEnd="5dp" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="LIVE DESK"
+                                    android:textColor="#059669"
+                                    android:textSize="10.5sp"
+                                    android:textStyle="bold" />
+                            </LinearLayout>
+                        </LinearLayout>
 
                         <!-- Action 1: Priority Phone Line -->
                         <LinearLayout
                             android:id="@+id/btnCallSupport"
                             android:layout_width="match_parent"
-                            android:layout_height="44dp"
+                            android:layout_height="wrap_content"
                             android:background="@drawable/bg_interactive_row"
                             android:orientation="horizontal"
                             android:gravity="center_vertical"
                             android:paddingStart="12dp"
                             android:paddingEnd="12dp"
+                            android:paddingTop="11dp"
+                            android:paddingBottom="11dp"
                             android:clickable="true"
                             android:focusable="true">
 
-                            <ImageView
-                                android:layout_width="18dp"
-                                android:layout_height="18dp"
-                                android:src="@drawable/ic_phone"
-                                android:tint="#2563EB" />
+                            <FrameLayout
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:background="@drawable/bg_squircle_blue_soft">
 
-                            <TextView
+                                <ImageView
+                                    android:layout_width="20dp"
+                                    android:layout_height="20dp"
+                                    android:layout_gravity="center"
+                                    android:src="@drawable/ic_phone"
+                                    android:tint="#2563EB"
+                                    app:tint="#2563EB" />
+                            </FrameLayout>
+
+                            <LinearLayout
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
+                                android:orientation="vertical"
                                 android:layout_marginStart="12dp"
-                                android:text="Priority Hotline (+91 98765 43210)"
-                                android:textSize="13sp"
-                                android:textColor="#0F172A"
-                                android:textStyle="bold" />
+                                android:layout_marginEnd="8dp">
 
-                            <ImageView
-                                android:layout_width="14dp"
-                                android:layout_height="14dp"
-                                android:src="@drawable/ic_chevron_right"
-                                android:tint="#94A3B8" />
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Priority Technical Hotline"
+                                    android:textSize="13.5sp"
+                                    android:textColor="#0F172A"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="1.5dp"
+                                    android:text="+91 98765 43210 • Toll-Free Emergency"
+                                    android:textSize="11.5sp"
+                                    android:textColor="#64748B" />
+                            </LinearLayout>
+
+                            <!-- Action Badge -->
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:background="@drawable/bg_tag_blue"
+                                android:gravity="center_vertical"
+                                android:paddingStart="9dp"
+                                android:paddingEnd="7dp"
+                                android:paddingTop="5dp"
+                                android:paddingBottom="5dp">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="CALL"
+                                    android:textSize="11sp"
+                                    android:textColor="#2563EB"
+                                    android:textStyle="bold" />
+
+                                <ImageView
+                                    android:layout_width="12dp"
+                                    android:layout_height="12dp"
+                                    android:layout_marginStart="3dp"
+                                    android:src="@drawable/ic_chevron_right"
+                                    android:tint="#2563EB"
+                                    app:tint="#2563EB" />
+                            </LinearLayout>
                         </LinearLayout>
 
                         <!-- Action 2: WhatsApp Concierge -->
                         <LinearLayout
                             android:id="@+id/btnWhatsAppSupport"
                             android:layout_width="match_parent"
-                            android:layout_height="44dp"
+                            android:layout_height="wrap_content"
                             android:background="@drawable/bg_interactive_row"
                             android:orientation="horizontal"
                             android:gravity="center_vertical"
                             android:paddingStart="12dp"
                             android:paddingEnd="12dp"
-                            android:layout_marginTop="6dp"
+                            android:paddingTop="11dp"
+                            android:paddingBottom="11dp"
+                            android:layout_marginTop="8dp"
                             android:clickable="true"
                             android:focusable="true">
 
-                            <ImageView
-                                android:layout_width="22dp"
-                                android:layout_height="22dp"
-                                android:src="@drawable/ic_whatsapp_official"
-                                android:scaleType="fitCenter" />
+                            <FrameLayout
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:background="@drawable/bg_squircle_green_soft">
 
-                            <TextView
+                                <ImageView
+                                    android:layout_width="22dp"
+                                    android:layout_height="22dp"
+                                    android:layout_gravity="center"
+                                    android:src="@drawable/ic_whatsapp_official"
+                                    android:scaleType="fitCenter" />
+                            </FrameLayout>
+
+                            <LinearLayout
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
+                                android:orientation="vertical"
                                 android:layout_marginStart="12dp"
-                                android:text="WhatsApp Concierge"
-                                android:textSize="13sp"
-                                android:textColor="#0F172A"
-                                android:textStyle="bold" />
+                                android:layout_marginEnd="8dp">
 
-                            <ImageView
-                                android:layout_width="14dp"
-                                android:layout_height="14dp"
-                                android:src="@drawable/ic_chevron_right"
-                                android:tint="#94A3B8" />
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="WhatsApp Concierge Desk"
+                                    android:textSize="13.5sp"
+                                    android:textColor="#0F172A"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="1.5dp"
+                                    android:text="Instant chat, live reports &amp; media support"
+                                    android:textSize="11.5sp"
+                                    android:textColor="#64748B" />
+                            </LinearLayout>
+
+                            <!-- Action Badge -->
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:background="@drawable/bg_tag_emerald"
+                                android:gravity="center_vertical"
+                                android:paddingStart="9dp"
+                                android:paddingEnd="7dp"
+                                android:paddingTop="5dp"
+                                android:paddingBottom="5dp">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="CHAT"
+                                    android:textSize="11sp"
+                                    android:textColor="#059669"
+                                    android:textStyle="bold" />
+
+                                <ImageView
+                                    android:layout_width="12dp"
+                                    android:layout_height="12dp"
+                                    android:layout_marginStart="3dp"
+                                    android:src="@drawable/ic_chevron_right"
+                                    android:tint="#059669"
+                                    app:tint="#059669" />
+                            </LinearLayout>
                         </LinearLayout>
 
-                        <!-- Action 3: Email Desk -->
+                        <!-- Action 3: Official Support Desk -->
                         <LinearLayout
                             android:id="@+id/btnEmailSupport"
                             android:layout_width="match_parent"
-                            android:layout_height="44dp"
+                            android:layout_height="wrap_content"
                             android:background="@drawable/bg_interactive_row"
                             android:orientation="horizontal"
                             android:gravity="center_vertical"
                             android:paddingStart="12dp"
                             android:paddingEnd="12dp"
-                            android:layout_marginTop="6dp"
+                            android:paddingTop="11dp"
+                            android:paddingBottom="11dp"
+                            android:layout_marginTop="8dp"
                             android:clickable="true"
                             android:focusable="true">
 
+                            <FrameLayout
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:background="@drawable/bg_squircle_indigo_soft">
+
+                                <ImageView
+                                    android:layout_width="22dp"
+                                    android:layout_height="22dp"
+                                    android:layout_gravity="center"
+                                    android:src="@drawable/ic_gmail_official"
+                                    android:scaleType="fitCenter" />
+                            </FrameLayout>
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical"
+                                android:layout_marginStart="12dp"
+                                android:layout_marginEnd="8dp">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Official Support Desk"
+                                    android:textSize="13.5sp"
+                                    android:textColor="#0F172A"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="1.5dp"
+                                    android:text="support@patholab.cloud • SLA &lt; 2 Hours"
+                                    android:textSize="11.5sp"
+                                    android:textColor="#64748B" />
+                            </LinearLayout>
+
+                            <!-- Action Badge -->
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:background="@drawable/bg_tag_indigo"
+                                android:gravity="center_vertical"
+                                android:paddingStart="9dp"
+                                android:paddingEnd="7dp"
+                                android:paddingTop="5dp"
+                                android:paddingBottom="5dp">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="EMAIL"
+                                    android:textSize="11sp"
+                                    android:textColor="#4F46E5"
+                                    android:textStyle="bold" />
+
+                                <ImageView
+                                    android:layout_width="12dp"
+                                    android:layout_height="12dp"
+                                    android:layout_marginStart="3dp"
+                                    android:src="@drawable/ic_chevron_right"
+                                    android:tint="#4F46E5"
+                                    app:tint="#4F46E5" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <!-- SLA Trust Banner -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_trust_badge_soft"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginTop="14dp"
+                            android:paddingStart="12dp"
+                            android:paddingEnd="12dp"
+                            android:paddingTop="9dp"
+                            android:paddingBottom="9dp">
+
                             <ImageView
-                                android:layout_width="22dp"
-                                android:layout_height="22dp"
-                                android:src="@drawable/ic_gmail_official"
-                                android:scaleType="fitCenter" />
+                                android:layout_width="16dp"
+                                android:layout_height="16dp"
+                                android:src="@drawable/ic_verified_shield"
+                                android:tint="#0D6EFD"
+                                app:tint="#0D6EFD" />
 
                             <TextView
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:layout_marginStart="12dp"
-                                android:text="Official Support Desk (support@patholab.cloud)"
-                                android:textSize="13sp"
-                                android:textColor="#0F172A"
+                                android:layout_marginStart="8dp"
+                                android:text="Guaranteed SLA: Under 15 mins for critical lab incidents"
+                                android:textSize="11sp"
+                                android:textColor="#475569"
                                 android:textStyle="bold" />
-
-                            <ImageView
-                                android:layout_width="14dp"
-                                android:layout_height="14dp"
-                                android:src="@drawable/ic_chevron_right"
-                                android:tint="#94A3B8" />
                         </LinearLayout>
 
                     </LinearLayout>

@@ -84,25 +84,31 @@ class SamplesViewController: UIViewController, UITableViewDataSource, UITableVie
 
         let gradient = CAGradientLayer()
         gradient.colors = [
-            UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1).cgColor,
-            UIColor(red: 0.118, green: 0.251, blue: 0.686, alpha: 1).cgColor
+            UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1).cgColor, // #0D6EFD
+            UIColor(red: 0.039, green: 0.345, blue: 0.792, alpha: 1).cgColor, // #0A58CA
+            UIColor(red: 0.114, green: 0.306, blue: 0.847, alpha: 1).cgColor  // #1D4ED8
         ]
         gradient.startPoint = CGPoint(x: 0, y: 0)
         gradient.endPoint = CGPoint(x: 1, y: 1)
         topHeaderView.layer.insertSublayer(gradient, at: 0)
+        topHeaderView.layer.cornerRadius = 24
+        topHeaderView.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
+        topHeaderView.clipsToBounds = true
 
         let backBtn = UIButton(type: .system)
         backBtn.setImage(UIImage(systemName: "chevron.left"), for: .normal)
-        backBtn.tintColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1)
-        backBtn.backgroundColor = .white
-        backBtn.layer.cornerRadius = 20
+        backBtn.tintColor = .white
+        backBtn.backgroundColor = UIColor.white.withAlphaComponent(0.20)
+        backBtn.layer.borderColor = UIColor.white.withAlphaComponent(0.30).cgColor
+        backBtn.layer.borderWidth = 1
+        backBtn.layer.cornerRadius = 19
         backBtn.addTarget(self, action: #selector(didTapBack), for: .touchUpInside)
         backBtn.translatesAutoresizingMaskIntoConstraints = false
         topHeaderView.addSubview(backBtn)
 
         let titleLbl = UILabel()
-        titleLbl.text = "Sample & Specimen Tracking"
-        titleLbl.font = .systemFont(ofSize: 18.5, weight: .bold)
+        titleLbl.text = "Sample Tracking"
+        titleLbl.font = .systemFont(ofSize: 20, weight: .bold)
         titleLbl.textColor = .white
         titleLbl.translatesAutoresizingMaskIntoConstraints = false
         topHeaderView.addSubview(titleLbl)
@@ -117,7 +123,9 @@ class SamplesViewController: UIViewController, UITableViewDataSource, UITableVie
         refreshBtn.setImage(UIImage(systemName: "arrow.clockwise"), for: .normal)
         refreshBtn.tintColor = .white
         refreshBtn.backgroundColor = UIColor.white.withAlphaComponent(0.20)
-        refreshBtn.layer.cornerRadius = 18
+        refreshBtn.layer.borderColor = UIColor.white.withAlphaComponent(0.30).cgColor
+        refreshBtn.layer.borderWidth = 1
+        refreshBtn.layer.cornerRadius = 19
         refreshBtn.addTarget(self, action: #selector(didTapRefresh), for: .touchUpInside)
         refreshBtn.translatesAutoresizingMaskIntoConstraints = false
         topHeaderView.addSubview(refreshBtn)
@@ -126,15 +134,15 @@ class SamplesViewController: UIViewController, UITableViewDataSource, UITableVie
             topHeaderView.topAnchor.constraint(equalTo: view.topAnchor),
             topHeaderView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             topHeaderView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            topHeaderView.heightAnchor.constraint(equalToConstant: 116),
+            topHeaderView.bottomAnchor.constraint(equalTo: backBtn.bottomAnchor, constant: 14),
 
             backBtn.leadingAnchor.constraint(equalTo: topHeaderView.leadingAnchor, constant: 16),
-            backBtn.bottomAnchor.constraint(equalTo: topHeaderView.bottomAnchor, constant: -14),
-            backBtn.widthAnchor.constraint(equalToConstant: 40),
-            backBtn.heightAnchor.constraint(equalToConstant: 40),
+            backBtn.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
+            backBtn.widthAnchor.constraint(equalToConstant: 38),
+            backBtn.heightAnchor.constraint(equalToConstant: 38),
 
             titleLbl.leadingAnchor.constraint(equalTo: backBtn.trailingAnchor, constant: 12),
-            titleLbl.topAnchor.constraint(equalTo: backBtn.topAnchor, constant: -1),
+            titleLbl.topAnchor.constraint(equalTo: backBtn.topAnchor, constant: -2),
             titleLbl.trailingAnchor.constraint(lessThanOrEqualTo: refreshBtn.leadingAnchor, constant: -8),
 
             subLbl.leadingAnchor.constraint(equalTo: titleLbl.leadingAnchor),
@@ -143,8 +151,8 @@ class SamplesViewController: UIViewController, UITableViewDataSource, UITableVie
 
             refreshBtn.trailingAnchor.constraint(equalTo: topHeaderView.trailingAnchor, constant: -16),
             refreshBtn.centerYAnchor.constraint(equalTo: backBtn.centerYAnchor),
-            refreshBtn.widthAnchor.constraint(equalToConstant: 36),
-            refreshBtn.heightAnchor.constraint(equalToConstant: 36),
+            refreshBtn.widthAnchor.constraint(equalToConstant: 38),
+            refreshBtn.heightAnchor.constraint(equalToConstant: 38),
         ])
     }
 
@@ -509,7 +517,7 @@ class SamplesViewController: UIViewController, UITableViewDataSource, UITableVie
     }
 
     private func updateKpiStats() {
-        var total = allSamples.count
+        let total = allSamples.count
         var pending = 0, processing = 0, rejected = 0
         for s in allSamples {
             let st = s.status.uppercased()
@@ -704,7 +712,7 @@ class SamplesViewController: UIViewController, UITableViewDataSource, UITableVie
         printBtn.backgroundColor = UIColor(red: 0.937, green: 0.965, blue: 1.0, alpha: 1)
         printBtn.layer.cornerRadius = 10
         printBtn.tag = indexPath.row
-        printBtn.addTarget(self, action: #selector(didTapBarcodePrint(_:)), for: .touchUpInside)
+        printBtn.addTarget(self, action: #selector(didTapPrintBarcode(_:)), for: .touchUpInside)
 
         let collectBtn = UIButton(type: .system)
         let isCollected = (sample.status == "Collected")
@@ -714,7 +722,7 @@ class SamplesViewController: UIViewController, UITableViewDataSource, UITableVie
         collectBtn.backgroundColor = isCollected ? UIColor(red: 0.93, green: 0.99, blue: 0.96, alpha: 1) : UIColor(red: 1.0, green: 0.98, blue: 0.92, alpha: 1)
         collectBtn.layer.cornerRadius = 10
         collectBtn.tag = indexPath.row
-        collectBtn.addTarget(self, action: #selector(didTapCollectSample(_:)), for: .touchUpInside)
+        collectBtn.addTarget(self, action: #selector(didTapCollect(_:)), for: .touchUpInside)
 
         let rejectBtn = UIButton(type: .system)
         rejectBtn.setImage(UIImage(systemName: "exclamationmark.triangle.fill"), for: .normal)
@@ -722,7 +730,7 @@ class SamplesViewController: UIViewController, UITableViewDataSource, UITableVie
         rejectBtn.backgroundColor = UIColor(red: 0.996, green: 0.949, blue: 0.949, alpha: 1)
         rejectBtn.layer.cornerRadius = 10
         rejectBtn.tag = indexPath.row
-        rejectBtn.addTarget(self, action: #selector(didTapRejectSample(_:)), for: .touchUpInside)
+        rejectBtn.addTarget(self, action: #selector(didTapReject(_:)), for: .touchUpInside)
 
         let detailsBtn = UIButton(type: .system)
         detailsBtn.setImage(UIImage(systemName: "info.circle.fill"), for: .normal)
@@ -730,7 +738,7 @@ class SamplesViewController: UIViewController, UITableViewDataSource, UITableVie
         detailsBtn.backgroundColor = UIColor(red: 0.945, green: 0.961, blue: 0.976, alpha: 1)
         detailsBtn.layer.cornerRadius = 10
         detailsBtn.tag = indexPath.row
-        detailsBtn.addTarget(self, action: #selector(didTapSampleDetails(_:)), for: .touchUpInside)
+        detailsBtn.addTarget(self, action: #selector(didTapDetails(_:)), for: .touchUpInside)
 
         let btnStack = UIStackView(arrangedSubviews: [printBtn, collectBtn, rejectBtn, detailsBtn])
         btnStack.axis = .horizontal

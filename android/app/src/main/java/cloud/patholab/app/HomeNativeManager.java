@@ -83,7 +83,7 @@ public class HomeNativeManager {
 
     // ── Views ─────────────────────────────────────────────────────────────────
     private TextView txtGreeting;
-    private TextView homeWaveEmoji;
+    private View homeWaveEmoji;
     private TextView txtWalletBalance;
     private FrameLayout walletPill;
     private FrameLayout bellBtn;
@@ -204,7 +204,7 @@ public class HomeNativeManager {
         txtGreeting       = homeRoot.findViewById(R.id.homeGreeting);
         homeWaveEmoji     = homeRoot.findViewById(R.id.homeWaveEmoji);
         if (homeWaveEmoji != null) {
-            homeWaveEmoji.setOnClickListener(v -> playWaveAnimation());
+            homeWaveEmoji.setVisibility(View.GONE);
         }
         txtWalletBalance  = homeRoot.findViewById(R.id.homeWalletBalance);
         walletPill        = homeRoot.findViewById(R.id.homeWalletPill);
@@ -748,11 +748,8 @@ public class HomeNativeManager {
     }
 
     private void triggerLowBalanceAlertIfEligible(double balance) {
-        // In-app low balance popups and automatic dashboard notifications removed per user specification.
-        // Low balance notification will only fire when wallet balance is 0 and user attempts patient registration.
-        if (balance <= 50) {
-            if (bellDot != null) bellDot.setVisibility(View.VISIBLE);
-        }
+        // In-app low balance popups and bellDot triggers removed per user specification.
+        // Notification bell red dot is strictly driven by new unread notifications.
     }
 
     public static class NotificationPopupAdapter extends RecyclerView.Adapter<NotificationPopupAdapter.VH> {
@@ -1000,7 +997,10 @@ public class HomeNativeManager {
         }
     }
 
+    private boolean isNavigatingToModule = false;
+
     public void showAllModulesBottomSheet() {
+        isNavigatingToModule = false;
         try {
             com.google.android.material.bottomsheet.BottomSheetDialog sheet =
                     new com.google.android.material.bottomsheet.BottomSheetDialog(ctx);
@@ -1046,9 +1046,9 @@ public class HomeNativeManager {
                 // 2. CLINICAL OPERATIONS
                 List<SheetModDef> clinicalList = Arrays.asList(
                         new SheetModDef("New Registration", "/workspace/registration", "ic_mod_clean_register", "bg_mod_icon_blue"),
-                        new SheetModDef("Patient Directory", "/workspace/patients", "ic_mod_clean_patients", "bg_mod_icon_fuchsia"),
+                        new SheetModDef("Patient Worklist", "/workspace/patients", "ic_mod_clean_worklist", "bg_mod_icon_fuchsia"),
+                        new SheetModDef("Clinical Results", "/workspace/results", "ic_mod_clean_tests", "bg_mod_icon_indigo"),
                         new SheetModDef("Test Management", "/workspace/test-management", "ic_mod_clean_tests", "bg_mod_icon_purple"),
-                        new SheetModDef("Worklist & Results", "/workspace/results", "ic_mod_clean_worklist", "bg_mod_icon_indigo"),
                         new SheetModDef("Report Dispatch", "/workspace/reports", "ic_mod_clean_reports", "bg_mod_icon_amber")
                 );
                 buildCategorySection(sheet, contentContainer, "CLINICAL OPERATIONS", clinicalList);
@@ -1219,9 +1219,19 @@ public class HomeNativeManager {
 
         final String finalIconName = iconName;
         card.setOnClickListener(v -> {
+            if (isNavigatingToModule) return;
+            isNavigatingToModule = true;
             recordRecentModule(mod.name, mod.path, finalIconName, mod.bgDrawable);
-            sheet.dismiss();
-            navigateToModule(mod.path);
+            try {
+                sheet.dismiss();
+            } catch (Exception ignored) {}
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                try {
+                    navigateToModule(mod.path);
+                } finally {
+                    new Handler(Looper.getMainLooper()).postDelayed(() -> isNavigatingToModule = false, 500);
+                }
+            }, 80);
         });
 
         return card;
@@ -1229,48 +1239,94 @@ public class HomeNativeManager {
 
     private void navigateToModule(String path) {
         if (path == null) return;
-        if (path.equals("/dashboard") || path.equals("/workspace/dashboard") || path.startsWith("/dashboard")
-                || path.equals("/workspace") || path.equals("/home") || path.equals("/")) {
-            ctx.startActivity(new Intent(ctx, LabDashboardActivity.class));
-            return;
-        } else if (path.equals("/workspace/analytics") || path.startsWith("/workspace/analytics")) {
-            ctx.startActivity(new Intent(ctx, FinancialAnalyticsActivity.class));
-        } else if (path.equals("/workspace/wallet") || path.startsWith("/workspace/wallet")) {
-            ctx.startActivity(new Intent(ctx, WalletActivity.class));
-        } else if (path.equals("/workspace/registration") || path.startsWith("/workspace/registration") || path.equals("/workspace/patients/new")) {
-            ctx.startActivity(new Intent(ctx, RegistrationActivity.class));
-        } else if (path.equals("/workspace/test-management") || path.startsWith("/workspace/test-management") || path.equals("/workspace/tests")) {
-            ctx.startActivity(new Intent(ctx, TestManagementActivity.class));
-        } else if (path.equals("/workspace/billing") || path.startsWith("/workspace/billing") || path.equals("/workspace/invoices")) {
-            ctx.startActivity(new Intent(ctx, BillingActivity.class));
-        } else if (path.equals("/workspace/reports") || path.startsWith("/workspace/reports")) {
-            ctx.startActivity(new Intent(ctx, ReportsActivity.class));
-        } else if (path.equals("/workspace/samples") || path.startsWith("/workspace/samples") || path.equals("/workspace/accession")) {
-            ctx.startActivity(new Intent(ctx, SamplesActivity.class));
-        } else if (path.equals("/workspace/patients") || path.startsWith("/workspace/patients") || path.equals("/workspace/results")) {
-            ctx.startActivity(new Intent(ctx, PatientWorklistActivity.class));
-        } else if (path.equals("/workspace/staff") || path.startsWith("/workspace/staff")) {
-            ctx.startActivity(new Intent(ctx, StaffManagementActivity.class));
-        } else if (path.equals("/workspace/support") || path.startsWith("/workspace/support")) {
-            ctx.startActivity(new Intent(ctx, SupportActivity.class));
-        } else if (path.equals("/workspace/bookings") || path.startsWith("/workspace/bookings")
-                || path.equals("/workspace/online-booking") || path.startsWith("/workspace/online-booking")) {
-            ctx.startActivity(new Intent(ctx, OnlineBookingActivity.class));
-        } else if (path.equals("/workspace/agencies") || path.startsWith("/workspace/agencies")
-                || path.equals("/workspace/b2b") || path.startsWith("/workspace/b2b")) {
-            ctx.startActivity(new Intent(ctx, B2BActivity.class));
-        } else if (path.equals("/workspace/settings/b2b-tiers") || path.startsWith("/workspace/settings/b2b-tiers")
-                || path.equals("/workspace/settings/b2b") || path.startsWith("/workspace/settings/b2b")) {
-            ctx.startActivity(new Intent(ctx, B2BSettingsActivity.class));
-        } else if (path.equals("/workspace/doctors") || path.startsWith("/workspace/doctors")) {
-            ctx.startActivity(new Intent(ctx, ReferralDoctorsActivity.class));
-        } else if (path.equals("/workspace/commissions") || path.startsWith("/workspace/commissions")) {
-            ctx.startActivity(new Intent(ctx, CommissionsActivity.class));
-        } else if (path.equals("/workspace/settings") || path.startsWith("/workspace/settings")
-                || path.equals("/settings") || path.startsWith("/settings")) {
-            ctx.startActivity(new Intent(ctx, ProfileSettingsActivity.class));
-        } else if (navListener != null) {
-            navListener.onNavigateTo(path);
+        try {
+            if (path.equals("/workspace/settings/notifications") || path.startsWith("/workspace/settings/notifications") || path.equals("/notifications") || path.startsWith("/notifications")) {
+                ctx.startActivity(new Intent(ctx, NotificationsActivity.class));
+                return;
+            } else if (path.equals("/dashboard") || path.equals("/workspace/dashboard") || path.startsWith("/dashboard")
+                    || path.equals("/workspace") || path.equals("/home") || path.equals("/")) {
+                ctx.startActivity(new Intent(ctx, LabDashboardActivity.class));
+                return;
+            } else if (path.equals("/workspace/analytics") || path.startsWith("/workspace/analytics")) {
+                ctx.startActivity(new Intent(ctx, FinancialAnalyticsActivity.class));
+            } else if (path.equals("/workspace/wallet") || path.startsWith("/workspace/wallet")) {
+                ctx.startActivity(new Intent(ctx, WalletActivity.class));
+            } else if (path.equals("/workspace/registration") || path.startsWith("/workspace/registration") || path.equals("/workspace/patients/new")) {
+                ctx.startActivity(new Intent(ctx, RegistrationActivity.class));
+            } else if (path.equals("/workspace/test-management") || path.startsWith("/workspace/test-management") || path.equals("/workspace/tests")) {
+                ctx.startActivity(new Intent(ctx, TestManagementActivity.class));
+            } else if (path.equals("/workspace/billing") || path.startsWith("/workspace/billing") || path.equals("/workspace/invoices")) {
+                Intent billingIntent = new Intent(ctx, BillingActivity.class);
+                billingIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                ctx.startActivity(billingIntent);
+            } else if (path.equals("/workspace/reports") || path.startsWith("/workspace/reports")) {
+                ctx.startActivity(new Intent(ctx, ReportsActivity.class));
+            } else if (path.equals("/workspace/samples") || path.startsWith("/workspace/samples") || path.equals("/workspace/accession")) {
+                ctx.startActivity(new Intent(ctx, SamplesActivity.class));
+            } else if (path.equals("/workspace/results") || path.startsWith("/workspace/results")) {
+                ctx.startActivity(new Intent(ctx, ResultsActivity.class));
+            } else if (path.equals("/workspace/patients") || path.startsWith("/workspace/patients")) {
+                ctx.startActivity(new Intent(ctx, PatientWorklistActivity.class));
+            } else if (path.equals("/workspace/staff") || path.startsWith("/workspace/staff")) {
+                ctx.startActivity(new Intent(ctx, StaffManagementActivity.class));
+            } else if (path.equals("/workspace/support") || path.startsWith("/workspace/support")) {
+                ctx.startActivity(new Intent(ctx, SupportActivity.class));
+            } else if (path.equals("/workspace/bookings") || path.startsWith("/workspace/bookings")
+                    || path.equals("/workspace/online-booking") || path.startsWith("/workspace/online-booking")) {
+                ctx.startActivity(new Intent(ctx, OnlineBookingActivity.class));
+            } else if (path.equals("/workspace/settings/b2b-tiers") || path.startsWith("/workspace/settings/b2b-tiers")
+                    || path.equals("/workspace/settings/b2b") || path.startsWith("/workspace/settings/b2b")
+                    || path.equals("/workspace/b2b-tiers") || path.startsWith("/workspace/b2b-tiers")
+                    || path.equals("/workspace/b2b/tiers") || path.startsWith("/workspace/b2b/tiers")
+                    || path.equals("/workspace/b2b/settings") || path.startsWith("/workspace/b2b/settings")) {
+                ctx.startActivity(new Intent(ctx, B2BSettingsActivity.class));
+            } else if (path.equals("/workspace/settings/templates") || path.startsWith("/workspace/settings/templates")
+                    || path.equals("/workspace/settings/report-template") || path.startsWith("/workspace/settings/report-template")
+                    || path.equals("/workspace/report-template") || path.startsWith("/workspace/report-template")
+                    || path.equals("/workspace/templates") || path.startsWith("/workspace/templates")) {
+                ctx.startActivity(new Intent(ctx, ReportTemplatesActivity.class));
+            } else if (path.equals("/workspace/agencies") || path.startsWith("/workspace/agencies")
+                    || path.equals("/workspace/b2b") || path.startsWith("/workspace/b2b")) {
+                ctx.startActivity(new Intent(ctx, B2BActivity.class));
+            } else if (path.equals("/workspace/doctors") || path.startsWith("/workspace/doctors")) {
+                ctx.startActivity(new Intent(ctx, ReferralDoctorsActivity.class));
+            } else if (path.equals("/workspace/commissions") || path.startsWith("/workspace/commissions")) {
+                ctx.startActivity(new Intent(ctx, CommissionsActivity.class));
+            } else if (path.equals("/workspace/radiology/dashboard/appointments") || path.startsWith("/workspace/radiology/dashboard/appointments")
+                    || path.equals("/workspace/radiology/appointments") || path.startsWith("/workspace/radiology/appointments")) {
+                ctx.startActivity(new Intent(ctx, ScanScheduleActivity.class));
+            } else if (path.equals("/workspace/radiology/machines") || path.startsWith("/workspace/radiology/machines")) {
+                ctx.startActivity(new Intent(ctx, MachinesActivity.class));
+            } else if (path.equals("/workspace/radiology/macros") || path.startsWith("/workspace/radiology/macros")) {
+                ctx.startActivity(new Intent(ctx, RISMacrosActivity.class));
+            } else if (path.equals("/workspace/radiology/settings/dicom") || path.startsWith("/workspace/radiology/settings/dicom")) {
+                ctx.startActivity(new Intent(ctx, DICOMSettingsActivity.class));
+            } else if (path.equals("/workspace/radiology/settings/letterhead") || path.startsWith("/workspace/radiology/settings/letterhead")) {
+                ctx.startActivity(new Intent(ctx, RISLetterheadActivity.class));
+            } else if (path.equals("/workspace/radiology/dashboard") || path.startsWith("/workspace/radiology/dashboard")
+                    || path.equals("/workspace/radiology") || path.startsWith("/workspace/radiology")) {
+                ctx.startActivity(new Intent(ctx, RISDashboardActivity.class));
+            } else if (path.equals("/workspace/inventory") || path.startsWith("/workspace/inventory")) {
+                ctx.startActivity(new Intent(ctx, InventoryActivity.class));
+            } else if (path.equals("/workspace/logistics") || path.startsWith("/workspace/logistics")) {
+                ctx.startActivity(new Intent(ctx, LogisticsActivity.class));
+            } else if (path.equals("/workspace/settings/templates") || path.startsWith("/workspace/settings/templates")) {
+                ctx.startActivity(new Intent(ctx, ReportTemplatesActivity.class));
+            } else if (path.equals("/workspace/settings/branding") || path.startsWith("/workspace/settings/branding")) {
+                ctx.startActivity(new Intent(ctx, InvoiceBrandingActivity.class));
+            } else if (path.equals("/workspace/settings/payments") || path.startsWith("/workspace/settings/payments")) {
+                ctx.startActivity(new Intent(ctx, PaymentSettingsActivity.class));
+            } else if (path.equals("/workspace/settings") || path.startsWith("/workspace/settings")
+                    || path.equals("/settings") || path.startsWith("/settings")) {
+                ctx.startActivity(new Intent(ctx, ProfileSettingsActivity.class));
+            } else if (navListener != null) {
+                navListener.onNavigateTo(path);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            if (navListener != null) {
+                navListener.onNavigateTo(path);
+            }
         }
     }
 
@@ -1382,9 +1438,19 @@ public class HomeNativeManager {
 
             final String finalIconName = iconName;
             chip.setOnClickListener(v -> {
+                if (isNavigatingToModule) return;
+                isNavigatingToModule = true;
                 recordRecentModule(name, path, finalIconName, bgName);
-                sheet.dismiss();
-                navigateToModule(path);
+                try {
+                    sheet.dismiss();
+                } catch (Exception ignored) {}
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    try {
+                        navigateToModule(path);
+                    } finally {
+                        new Handler(Looper.getMainLooper()).postDelayed(() -> isNavigatingToModule = false, 500);
+                    }
+                }, 80);
             });
 
             recentsContainer.addView(chip);
@@ -1452,7 +1518,7 @@ public class HomeNativeManager {
     //  Waving Hand 👋 Animation (Animates on launch, home return, user update & tap)
     // ─────────────────────────────────────────────────────────────────────────
     public void playWaveAnimation() {
-        if (homeWaveEmoji == null) return;
+        if (homeWaveEmoji == null || homeWaveEmoji.getVisibility() == View.GONE) return;
         mainHandler.post(() -> {
             if (homeWaveEmoji == null) return;
             homeWaveEmoji.post(() -> {
@@ -1461,6 +1527,7 @@ public class HomeNativeManager {
                 float h = homeWaveEmoji.getHeight();
                 homeWaveEmoji.setPivotX(w > 0 ? w * 0.70f : dp(14));
                 homeWaveEmoji.setPivotY(h > 0 ? h * 0.85f : dp(18));
+                homeWaveEmoji.setAlpha(1.0f);
 
                 // Lively hand-waving rotation
                 ObjectAnimator rotate = ObjectAnimator.ofFloat(homeWaveEmoji, "rotation",
@@ -1507,12 +1574,16 @@ public class HomeNativeManager {
                 } else if (path.equals("/workspace/test-management") || path.startsWith("/workspace/test-management") || path.equals("/workspace/tests")) {
                     ctx.startActivity(new Intent(ctx, TestManagementActivity.class));
                 } else if (path.equals("/workspace/billing") || path.startsWith("/workspace/billing") || path.equals("/workspace/invoices")) {
-                    ctx.startActivity(new Intent(ctx, BillingActivity.class));
+                    Intent billingIntent = new Intent(ctx, BillingActivity.class);
+                    billingIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                    ctx.startActivity(billingIntent);
                 } else if (path.equals("/workspace/reports") || path.startsWith("/workspace/reports")) {
                     ctx.startActivity(new Intent(ctx, ReportsActivity.class));
                 } else if (path.equals("/workspace/samples") || path.startsWith("/workspace/samples") || path.equals("/workspace/accession")) {
                     ctx.startActivity(new Intent(ctx, SamplesActivity.class));
-                } else if (path.equals("/workspace/patients") || path.startsWith("/workspace/patients") || path.equals("/workspace/results")) {
+                } else if (path.equals("/workspace/results") || path.startsWith("/workspace/results")) {
+                    ctx.startActivity(new Intent(ctx, ResultsActivity.class));
+                } else if (path.equals("/workspace/patients") || path.startsWith("/workspace/patients")) {
                     ctx.startActivity(new Intent(ctx, PatientWorklistActivity.class));
                 } else if (path.equals("/workspace/staff") || path.startsWith("/workspace/staff")) {
                     ctx.startActivity(new Intent(ctx, StaffManagementActivity.class));
@@ -1524,12 +1595,20 @@ public class HomeNativeManager {
                 } else if (path.equals("/workspace/bookings") || path.startsWith("/workspace/bookings")
                         || path.equals("/workspace/online-booking") || path.startsWith("/workspace/online-booking")) {
                     ctx.startActivity(new Intent(ctx, OnlineBookingActivity.class));
+                } else if (path.equals("/workspace/settings/b2b-tiers") || path.startsWith("/workspace/settings/b2b-tiers")
+                        || path.equals("/workspace/settings/b2b") || path.startsWith("/workspace/settings/b2b")
+                        || path.equals("/workspace/b2b-tiers") || path.startsWith("/workspace/b2b-tiers")
+                        || path.equals("/workspace/b2b/tiers") || path.startsWith("/workspace/b2b/tiers")
+                        || path.equals("/workspace/b2b/settings") || path.startsWith("/workspace/b2b/settings")) {
+                    ctx.startActivity(new Intent(ctx, B2BSettingsActivity.class));
+                } else if (path.equals("/workspace/settings/templates") || path.startsWith("/workspace/settings/templates")
+                        || path.equals("/workspace/settings/report-template") || path.startsWith("/workspace/settings/report-template")
+                        || path.equals("/workspace/report-template") || path.startsWith("/workspace/report-template")
+                        || path.equals("/workspace/templates") || path.startsWith("/workspace/templates")) {
+                    ctx.startActivity(new Intent(ctx, ReportTemplatesActivity.class));
                 } else if (path.equals("/workspace/agencies") || path.startsWith("/workspace/agencies")
                         || path.equals("/workspace/b2b") || path.startsWith("/workspace/b2b")) {
                     ctx.startActivity(new Intent(ctx, B2BActivity.class));
-                } else if (path.equals("/workspace/settings/b2b-tiers") || path.startsWith("/workspace/settings/b2b-tiers")
-                        || path.equals("/workspace/settings/b2b") || path.startsWith("/workspace/settings/b2b")) {
-                    ctx.startActivity(new Intent(ctx, B2BSettingsActivity.class));
                 } else if (path.equals("/workspace/doctors") || path.startsWith("/workspace/doctors")) {
                     ctx.startActivity(new Intent(ctx, ReferralDoctorsActivity.class));
                 } else if (path.equals("/workspace/commissions") || path.startsWith("/workspace/commissions")) {
@@ -1774,7 +1853,15 @@ public class HomeNativeManager {
                     if (!resolvedName.isEmpty()) {
                         currentFullName = resolvedName;
                         if (prefs != null) prefs.edit().putString("user_name", resolvedName).apply();
-                        AuthManager.saveUserInfo(ctx, serverEmail, resolvedName, role);
+                        String resolvedLabId = lab != null ? lab.optString("id", null) : null;
+                        String resolvedUserId = userObj != null ? userObj.optString("id", null) : null;
+                        if (resolvedLabId == null || resolvedLabId.trim().isEmpty()) {
+                            resolvedLabId = AuthManager.getLabId(ctx);
+                        }
+                        if (labName == null || labName.trim().isEmpty()) {
+                            labName = AuthManager.getLabName(ctx);
+                        }
+                        AuthManager.saveUserInfo(ctx, resolvedUserId, serverEmail, resolvedName, role, resolvedLabId, labName);
                         String finalName = resolvedName;
                         mainHandler.post(() -> applyUserName(finalName));
                     }

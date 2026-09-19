@@ -1,0 +1,731 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#F8FAFC">
+
+    <!-- TOP HEADER -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_home_header"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="36dp"
+        android:paddingBottom="18dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <FrameLayout
+                android:id="@+id/btnDicomBack"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_glass_back_btn"
+                android:clickable="true"
+                android:focusable="true">
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_back_arrow"
+                    app:tint="#FFFFFF" />
+            </FrameLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginStart="14dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="DICOM &amp; PACS Settings"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Imaging modalities &amp; archive networking"
+                    android:textSize="11.5sp"
+                    android:textColor="#C7DFFF" />
+            </LinearLayout>
+
+            <FrameLayout
+                android:id="@+id/btnDicomRefresh"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_glass_back_btn"
+                android:clickable="true"
+                android:focusable="true">
+                <ImageView
+                    android:id="@+id/imgDicomRefreshIcon"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_refresh"
+                    app:tint="#FFFFFF" />
+            </FrameLayout>
+        </LinearLayout>
+    </FrameLayout>
+
+    <!-- MAIN SCROLL CONTENT -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true"
+            android:scrollbars="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- SECTION 1: Local RIS Node (This Server) -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_card_white"
+                    android:elevation="1dp"
+                    android:padding="16dp"
+                    android:layout_marginBottom="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="14dp">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_cpu"
+                            app:tint="#475569" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="10dp"
+                            android:text="Local RIS Node (This Server)"
+                            android:textSize="14.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#0F172A" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="IDENTITY"
+                            android:textSize="9.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#475569"
+                            android:background="#F1F5F9"
+                            android:paddingStart="8dp"
+                            android:paddingEnd="8dp"
+                            android:paddingTop="3dp"
+                            android:paddingBottom="3dp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="LOCAL AE TITLE"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#64748B"
+                        android:letterSpacing="0.05"
+                        android:layout_marginBottom="4dp" />
+
+                    <EditText
+                        android:id="@+id/inputLocalAETitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:background="@drawable/bg_input_field"
+                        android:hint="PATHORIS"
+                        android:inputType="textCapCharacters"
+                        android:typeface="monospace"
+                        android:textSize="13.5sp"
+                        android:textColor="#0F172A"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:layout_marginBottom="4dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="The Application Entity Title of this RIS software."
+                        android:textSize="10.5sp"
+                        android:textColor="#94A3B8"
+                        android:layout_marginBottom="14dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="LISTENER PORT"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#64748B"
+                        android:letterSpacing="0.05"
+                        android:layout_marginBottom="4dp" />
+
+                    <EditText
+                        android:id="@+id/inputLocalPort"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:background="@drawable/bg_input_field"
+                        android:hint="11112"
+                        android:inputType="number"
+                        android:typeface="monospace"
+                        android:textSize="13.5sp"
+                        android:textColor="#0F172A"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp" />
+                </LinearLayout>
+
+                <!-- SECTION 2: Primary PACS Archive -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_card_white"
+                    android:elevation="1dp"
+                    android:padding="16dp"
+                    android:layout_marginBottom="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="14dp">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_shield_check"
+                            app:tint="#10B981" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="10dp"
+                            android:text="Primary PACS Archive"
+                            android:textSize="14.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#0F172A" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="STORAGE"
+                            android:textSize="9.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#059669"
+                            android:background="#ECFDF5"
+                            android:paddingStart="8dp"
+                            android:paddingEnd="8dp"
+                            android:paddingTop="3dp"
+                            android:paddingBottom="3dp" />
+                    </LinearLayout>
+
+                    <!-- PACS AE Title -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="PACS AE TITLE"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#64748B"
+                        android:letterSpacing="0.05"
+                        android:layout_marginBottom="4dp" />
+
+                    <EditText
+                        android:id="@+id/inputPacsAETitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:background="@drawable/bg_input_field"
+                        android:hint="ORTHANC"
+                        android:inputType="textCapCharacters"
+                        android:typeface="monospace"
+                        android:textSize="13.5sp"
+                        android:textColor="#0F172A"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:layout_marginBottom="12dp" />
+
+                    <!-- IP and Port Row -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="16dp">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="2"
+                            android:orientation="vertical"
+                            android:layout_marginEnd="6dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="IP / HOSTNAME"
+                                android:textSize="10.5sp"
+                                android:textStyle="bold"
+                                android:textColor="#64748B"
+                                android:letterSpacing="0.05"
+                                android:layout_marginBottom="4dp" />
+
+                            <EditText
+                                android:id="@+id/inputPacsIpAddress"
+                                android:layout_width="match_parent"
+                                android:layout_height="44dp"
+                                android:background="@drawable/bg_input_field"
+                                android:hint="192.168.1.100"
+                                android:typeface="monospace"
+                                android:textSize="13.5sp"
+                                android:textColor="#0F172A"
+                                android:paddingStart="12dp"
+                                android:paddingEnd="12dp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="6dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="PACS PORT"
+                                android:textSize="10.5sp"
+                                android:textStyle="bold"
+                                android:textColor="#64748B"
+                                android:letterSpacing="0.05"
+                                android:layout_marginBottom="4dp" />
+
+                            <EditText
+                                android:id="@+id/inputPacsPort"
+                                android:layout_width="match_parent"
+                                android:layout_height="44dp"
+                                android:background="@drawable/bg_input_field"
+                                android:hint="4242"
+                                android:inputType="number"
+                                android:typeface="monospace"
+                                android:textSize="13.5sp"
+                                android:textColor="#0F172A"
+                                android:paddingStart="12dp"
+                                android:paddingEnd="12dp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- CONNECTION TESTER (C-ECHO PING) -->
+                    <LinearLayout
+                        android:id="@+id/cardConnectionStatus"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_dicom_status_unknown"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:padding="12dp">
+
+                        <FrameLayout
+                            android:id="@+id/boxStatusIcon"
+                            android:layout_width="38dp"
+                            android:layout_height="38dp"
+                            android:background="@drawable/bg_white_circle_btn">
+
+                            <ImageView
+                                android:id="@+id/imgStatusIcon"
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_network_plug" />
+
+                            <ProgressBar
+                                android:id="@+id/progressCEchoPing"
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:layout_gravity="center"
+                                android:visibility="gone" />
+                        </FrameLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="10dp"
+                            android:layout_marginEnd="8dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="CONNECTION STATUS"
+                                android:textSize="10sp"
+                                android:textStyle="bold"
+                                android:textColor="#0F172A"
+                                android:letterSpacing="0.04" />
+
+                            <TextView
+                                android:id="@+id/lblStatusDescription"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:text="Not tested recently"
+                                android:textSize="11.5sp"
+                                android:textStyle="bold"
+                                android:textColor="#64748B"
+                                android:maxLines="1"
+                                android:ellipsize="end" />
+                        </LinearLayout>
+
+                        <Button
+                            android:id="@+id/btnTestCEcho"
+                            android:layout_width="wrap_content"
+                            android:layout_height="36dp"
+                            android:background="@drawable/bg_btn_primary"
+                            android:text="Test C-ECHO"
+                            android:textColor="#FFFFFF"
+                            android:textSize="11.5sp"
+                            android:textStyle="bold"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- SECTION 3: Diagnostic Web Viewer (WADO) -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_card_white"
+                    android:elevation="1dp"
+                    android:padding="16dp"
+                    android:layout_marginBottom="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="14dp">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_external_link"
+                            app:tint="#4F46E5" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
+                            android:text="Diagnostic Web Viewer (WADO)"
+                            android:textSize="14.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#0F172A" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="VIEWER BASE URL"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#64748B"
+                        android:letterSpacing="0.05"
+                        android:layout_marginBottom="4dp" />
+
+                    <EditText
+                        android:id="@+id/inputViewerBaseUrl"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:background="@drawable/bg_input_field"
+                        android:hint="http://192.168.1.100:8042/viewer?StudyInstanceUID="
+                        android:inputType="textUri"
+                        android:typeface="monospace"
+                        android:textSize="12.5sp"
+                        android:textColor="#4338CA"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:layout_marginBottom="6dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Example format for Orthanc/Osimis: http://192.168.1.100:8042/viewer?StudyInstanceUID="
+                        android:textSize="10.5sp"
+                        android:textColor="#94A3B8" />
+                </LinearLayout>
+
+                <!-- SECTION 4: Modality Worklist (MWL) -->
+                <LinearLayout
+                    android:id="@+id/cardMwlSection"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_card_white"
+                    android:elevation="1dp"
+                    android:padding="16dp"
+                    android:layout_marginBottom="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_mod_clean_dicom" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="10dp"
+                            android:text="Modality Worklist"
+                            android:textSize="14.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#0F172A" />
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:id="@+id/lblMwlStatusBadge"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="ACTIVE"
+                                android:textSize="10sp"
+                                android:textStyle="bold"
+                                android:textColor="#059669"
+                                android:layout_marginEnd="6dp" />
+
+                            <View
+                                android:id="@+id/dotMwlIndicator"
+                                android:layout_width="8dp"
+                                android:layout_height="8dp"
+                                android:background="@drawable/shape_dot_emerald" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="MWL allows your MRI and CT machines to automatically fetch patient details from this RIS, eliminating manual data entry by technicians."
+                        android:textSize="11.5sp"
+                        android:textColor="#64748B"
+                        android:lineSpacingExtra="2dp"
+                        android:layout_marginBottom="14dp" />
+
+                    <!-- MWL Input Fields Container -->
+                    <LinearLayout
+                        android:id="@+id/layoutMwlInputs"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginBottom="14dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="MWL AE TITLE"
+                            android:textSize="10.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#64748B"
+                            android:letterSpacing="0.05"
+                            android:layout_marginBottom="4dp" />
+
+                        <EditText
+                            android:id="@+id/inputMwlAETitle"
+                            android:layout_width="match_parent"
+                            android:layout_height="44dp"
+                            android:background="@drawable/bg_input_field"
+                            android:hint="RIS_MWL"
+                            android:inputType="textCapCharacters"
+                            android:typeface="monospace"
+                            android:textSize="13.5sp"
+                            android:textColor="#0F172A"
+                            android:paddingStart="12dp"
+                            android:paddingEnd="12dp"
+                            android:layout_marginBottom="12dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="MWL PORT"
+                            android:textSize="10.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#64748B"
+                            android:letterSpacing="0.05"
+                            android:layout_marginBottom="4dp" />
+
+                        <EditText
+                            android:id="@+id/inputMwlPort"
+                            android:layout_width="match_parent"
+                            android:layout_height="44dp"
+                            android:background="@drawable/bg_input_field"
+                            android:hint="11113"
+                            android:inputType="number"
+                            android:typeface="monospace"
+                            android:textSize="13.5sp"
+                            android:textColor="#0F172A"
+                            android:paddingStart="12dp"
+                            android:paddingEnd="12dp" />
+                    </LinearLayout>
+
+                    <Button
+                        android:id="@+id/btnToggleMwlService"
+                        android:layout_width="match_parent"
+                        android:layout_height="42dp"
+                        android:background="@drawable/bg_btn_danger"
+                        android:text="Disable MWL Service"
+                        android:textColor="#FFFFFF"
+                        android:textSize="12.5sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <!-- SECTION 5: Quick Terminology Card -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="#EEF2FF"
+                    android:padding="14dp"
+                    android:layout_marginBottom="24dp">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="8dp">
+
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:src="@drawable/ic_info"
+                            app:tint="#4F46E5" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:text="Quick Terminology"
+                            android:textSize="12.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#312E81" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="• AE Title: Application Entity Title. A unique identity string for a DICOM node (no spaces allowed)."
+                        android:textSize="11sp"
+                        android:textColor="#4338CA"
+                        android:lineSpacingExtra="2dp"
+                        android:layout_marginBottom="6dp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="• C-ECHO: A standard DICOM ping used to verify if a remote PACS server is online and listening."
+                        android:textSize="11sp"
+                        android:textColor="#4338CA"
+                        android:lineSpacingExtra="2dp"
+                        android:layout_marginBottom="6dp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="• WADO: Web Access to DICOM Objects. Used to securely stream heavy medical imaging studies directly in browsers and mobile viewers."
+                        android:textSize="11sp"
+                        android:textColor="#4338CA"
+                        android:lineSpacingExtra="2dp" />
+                </LinearLayout>
+            </LinearLayout>
+        </ScrollView>
+
+        <!-- FULL PAGE LOADING SPINNER -->
+        <ProgressBar
+            android:id="@+id/progressDicomLoading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <!-- STICKY FOOTER ACTION: SAVE CONFIGURATION -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#FFFFFF"
+        android:elevation="8dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="14dp">
+
+        <LinearLayout
+            android:id="@+id/btnSaveDicomConfig"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@drawable/bg_btn_primary"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:id="@+id/imgSaveIcon"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:src="@drawable/ic_save"
+                app:tint="#FFFFFF"
+                android:layout_marginEnd="8dp" />
+
+            <ProgressBar
+                android:id="@+id/progressDicomSave"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:indeterminateTint="#FFFFFF"
+                android:visibility="gone"
+                android:layout_marginEnd="8dp" />
+
+            <TextView
+                android:id="@+id/lblSaveButtonText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Save Configuration"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </FrameLayout>
+</LinearLayout>

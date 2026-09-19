@@ -1,0 +1,530 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#F8FAFC">
+
+    <!-- App Bar Header -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_home_header"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="36dp"
+        android:paddingBottom="20dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <FrameLayout
+                android:id="@+id/btnLetterheadBack"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:background="@drawable/bg_glass_back_btn"
+                android:clickable="true"
+                android:focusable="true">
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_back_arrow"
+                    app:tint="#FFFFFF" />
+            </FrameLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginStart="14dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Report Letterhead"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Radiology Report Header &amp; Footer Settings"
+                    android:textSize="11.5sp"
+                    android:textColor="#C7DFFF" />
+            </LinearLayout>
+
+            <FrameLayout
+                android:id="@+id/btnLetterheadRefresh"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:background="@drawable/bg_glass_back_btn"
+                android:clickable="true"
+                android:focusable="true">
+                <ImageView
+                    android:id="@+id/imgLetterheadRefreshIcon"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_refresh"
+                    app:tint="#FFFFFF" />
+            </FrameLayout>
+        </LinearLayout>
+    </FrameLayout>
+
+    <!-- Content Scroll -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Loading Spinner -->
+            <ProgressBar
+                android:id="@+id/progressLetterheadLoading"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginBottom="12dp"
+                android:visibility="gone" />
+
+            <!-- Description Banner -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_bento_indigo"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="14dp"
+                android:layout_marginBottom="16dp">
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_info"
+                    app:tint="#FFFFFF" />
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="10dp"
+                    android:text="Upload your clinic's official header and footer. These will automatically appear on all printed A4 reports."
+                    android:textSize="12.5sp"
+                    android:textColor="#FFFFFF"
+                    android:lineSpacingExtra="2dp" />
+            </LinearLayout>
+
+            <!-- 1. HEADER IMAGE CARD -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_stat_card"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:layout_marginBottom="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Header Image"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="#0F172A" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:text="Recommended size: 2100px wide by 300px tall. Max 2MB."
+                    android:textSize="11.5sp"
+                    android:textColor="#64748B" />
+
+                <!-- Dropzone Box -->
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/bg_upload_dashed_box"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center_horizontal">
+
+                        <!-- Empty State -->
+                        <LinearLayout
+                            android:id="@+id/layoutHeaderEmpty"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:gravity="center"
+                            android:paddingTop="12dp"
+                            android:paddingBottom="12dp">
+                            <ImageView
+                                android:layout_width="42dp"
+                                android:layout_height="42dp"
+                                android:src="@drawable/ic_gallery_upload"
+                                app:tint="#94A3B8" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:text="No header image uploaded"
+                                android:textSize="12.5sp"
+                                android:textStyle="bold"
+                                android:textColor="#64748B" />
+                        </LinearLayout>
+
+                        <!-- Filled State Preview Container -->
+                        <FrameLayout
+                            android:id="@+id/layoutHeaderFilled"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="12dp"
+                            android:visibility="gone">
+
+                            <ImageView
+                                android:id="@+id/imgHeaderPreview"
+                                android:layout_width="match_parent"
+                                android:layout_height="90dp"
+                                android:scaleType="fitCenter"
+                                android:background="#FFFFFF"
+                                android:adjustViewBounds="true" />
+
+                            <FrameLayout
+                                android:id="@+id/btnDeleteHeader"
+                                android:layout_width="28dp"
+                                android:layout_height="28dp"
+                                android:layout_gravity="top|end"
+                                android:layout_marginTop="-4dp"
+                                android:layout_marginEnd="-4dp"
+                                android:background="@drawable/bg_circle_red_trash"
+                                android:clickable="true"
+                                android:focusable="true">
+                                <ImageView
+                                    android:layout_width="14dp"
+                                    android:layout_height="14dp"
+                                    android:layout_gravity="center"
+                                    android:src="@drawable/ic_trash"
+                                    app:tint="#FFFFFF" />
+                            </FrameLayout>
+                        </FrameLayout>
+
+                        <!-- Upload/Replace Button -->
+                        <androidx.appcompat.widget.AppCompatButton
+                            android:id="@+id/btnUploadHeader"
+                            android:layout_width="wrap_content"
+                            android:layout_height="42dp"
+                            android:background="@drawable/bg_btn_primary"
+                            android:text="Upload Header Image"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:textColor="#FFFFFF"
+                            android:textAllCaps="false"
+                            android:paddingStart="24dp"
+                            android:paddingEnd="24dp" />
+                    </LinearLayout>
+                </FrameLayout>
+            </LinearLayout>
+
+            <!-- 2. FOOTER IMAGE CARD -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_stat_card"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:layout_marginBottom="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Footer Image"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="#0F172A" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:text="Recommended size: 2100px wide by 200px tall. Max 2MB."
+                    android:textSize="11.5sp"
+                    android:textColor="#64748B" />
+
+                <!-- Dropzone Box -->
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/bg_upload_dashed_box"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center_horizontal">
+
+                        <!-- Empty State -->
+                        <LinearLayout
+                            android:id="@+id/layoutFooterEmpty"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:gravity="center"
+                            android:paddingTop="12dp"
+                            android:paddingBottom="12dp">
+                            <ImageView
+                                android:layout_width="42dp"
+                                android:layout_height="42dp"
+                                android:src="@drawable/ic_gallery_upload"
+                                app:tint="#94A3B8" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:text="No footer image uploaded"
+                                android:textSize="12.5sp"
+                                android:textStyle="bold"
+                                android:textColor="#64748B" />
+                        </LinearLayout>
+
+                        <!-- Filled State Preview Container -->
+                        <FrameLayout
+                            android:id="@+id/layoutFooterFilled"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="12dp"
+                            android:visibility="gone">
+
+                            <ImageView
+                                android:id="@+id/imgFooterPreview"
+                                android:layout_width="match_parent"
+                                android:layout_height="70dp"
+                                android:scaleType="fitCenter"
+                                android:background="#FFFFFF"
+                                android:adjustViewBounds="true" />
+
+                            <FrameLayout
+                                android:id="@+id/btnDeleteFooter"
+                                android:layout_width="28dp"
+                                android:layout_height="28dp"
+                                android:layout_gravity="top|end"
+                                android:layout_marginTop="-4dp"
+                                android:layout_marginEnd="-4dp"
+                                android:background="@drawable/bg_circle_red_trash"
+                                android:clickable="true"
+                                android:focusable="true">
+                                <ImageView
+                                    android:layout_width="14dp"
+                                    android:layout_height="14dp"
+                                    android:layout_gravity="center"
+                                    android:src="@drawable/ic_trash"
+                                    app:tint="#FFFFFF" />
+                            </FrameLayout>
+                        </FrameLayout>
+
+                        <!-- Upload/Replace Button -->
+                        <androidx.appcompat.widget.AppCompatButton
+                            android:id="@+id/btnUploadFooter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="42dp"
+                            android:background="@drawable/bg_btn_primary"
+                            android:text="Upload Footer Image"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:textColor="#FFFFFF"
+                            android:textAllCaps="false"
+                            android:paddingStart="24dp"
+                            android:paddingEnd="24dp" />
+                    </LinearLayout>
+                </FrameLayout>
+            </LinearLayout>
+
+            <!-- 3. A4 REPORT LIVE PREVIEW CARD -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_stat_card"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:layout_marginBottom="20dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="A4 Report Live Preview"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:textColor="#0F172A" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_bento_indigo"
+                        android:text="PRINT ACCURATE"
+                        android:textSize="9.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
+                        android:paddingTop="4dp"
+                        android:paddingBottom="4dp" />
+                </LinearLayout>
+
+                <!-- Sheet Container -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/bg_card_white"
+                    android:elevation="2dp"
+                    android:orientation="vertical"
+                    android:padding="12dp">
+
+                    <!-- Sheet Header -->
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <ImageView
+                            android:id="@+id/imgA4HeaderPreview"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:scaleType="fitCenter"
+                            android:visibility="gone" />
+
+                        <TextView
+                            android:id="@+id/layoutA4HeaderPlaceholder"
+                            android:layout_width="match_parent"
+                            android:layout_height="44dp"
+                            android:background="#F1F5F9"
+                            android:gravity="center"
+                            android:text="CLINIC &amp; DIAGNOSTIC CENTER HEADER BANNER"
+                            android:textSize="10sp"
+                            android:textStyle="bold"
+                            android:textColor="#94A3B8" />
+                    </FrameLayout>
+
+                    <!-- Divider -->
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginBottom="8dp"
+                        android:background="#E2E8F0" />
+
+                    <!-- Patient Row -->
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Patient: John Doe (42Y / M)   •   UHID: RD-8921   •   Modality: MRI"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#0F172A" />
+
+                    <!-- Examination Title -->
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="EXAMINATION: MRI BRAIN WITH CONTRAST"
+                        android:textSize="11.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#2563EB" />
+
+                    <!-- Findings & Impression -->
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="FINDINGS:\nBrain parenchyma demonstrates normal grey-white matter differentiation. Ventricular system, basal cisterns and sulci are within normal limits for age. No intracranial hemorrhage or acute mass effect.\n\nIMPRESSION:\nNormal MRI study of the brain. No focal acute lesions identified."
+                        android:textSize="10sp"
+                        android:textColor="#475569"
+                        android:lineSpacingExtra="2dp" />
+
+                    <!-- Divider -->
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="8dp"
+                        android:background="#E2E8F0" />
+
+                    <!-- Sheet Footer -->
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <ImageView
+                            android:id="@+id/imgA4FooterPreview"
+                            android:layout_width="match_parent"
+                            android:layout_height="36dp"
+                            android:scaleType="fitCenter"
+                            android:visibility="gone" />
+
+                        <TextView
+                            android:id="@+id/layoutA4FooterPlaceholder"
+                            android:layout_width="match_parent"
+                            android:layout_height="32dp"
+                            android:background="#F1F5F9"
+                            android:gravity="center"
+                            android:text="ACCREDITATION &amp; FOOTER ADDRESS BANNER"
+                            android:textSize="9.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#94A3B8" />
+                    </FrameLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Save Status Label -->
+            <TextView
+                android:id="@+id/lblLetterheadSaveStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:gravity="center"
+                android:textSize="12.5sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+            <!-- Save Button -->
+            <Button
+                android:id="@+id/btnSaveLetterhead"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:background="@drawable/bg_btn_primary"
+                android:text="Save Letterhead"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <ProgressBar
+                android:id="@+id/progressLetterheadSaving"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="8dp"
+                android:visibility="gone" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>

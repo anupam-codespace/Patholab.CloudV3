@@ -745,15 +745,26 @@ class WalletViewController: UIViewController, UITextFieldDelegate {
         renderTransactions()
     }
 
-    // MARK: – Quick Recharge Modal
+    // MARK: – Recharge Bottom Sheet (matches Android pack selection UI)
     @objc private func rechargeTapped() {
-        let alert = UIAlertController(title: "Recharge Credits", message: "Select top-up package:", preferredStyle: .actionSheet)
-        alert.addAction(UIAlertAction(title: "₹ 500 (+ 18% GST = ₹ 590)", style: .default) { _ in self.initiateRecharge(500) })
-        alert.addAction(UIAlertAction(title: "₹ 1,000 (+ 18% GST = ₹ 1,180)", style: .default) { _ in self.initiateRecharge(1000) })
-        alert.addAction(UIAlertAction(title: "₹ 2,000 (+ 18% GST = ₹ 2,360)", style: .default) { _ in self.initiateRecharge(2000) })
-        alert.addAction(UIAlertAction(title: "₹ 5,000 (+ 18% GST = ₹ 5,900)", style: .default) { _ in self.initiateRecharge(5000) })
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-        present(alert, animated: true)
+        let sheet = RechargePackSheetViewController()
+        sheet.onPackSelected = { [weak self] amount in
+            self?.initiateRecharge(amount)
+        }
+        sheet.modalPresentationStyle = .pageSheet
+        if #available(iOS 16.0, *) {
+            if let pc = sheet.sheetPresentationController {
+                pc.detents = [.large()]
+                pc.prefersGrabberVisible = true
+                pc.preferredCornerRadius = 28
+            }
+        } else if #available(iOS 15.0, *) {
+            if let pc = sheet.sheetPresentationController {
+                pc.prefersGrabberVisible = true
+                pc.preferredCornerRadius = 28
+            }
+        }
+        present(sheet, animated: true)
     }
 
     private func initiateRecharge(_ amount: Double) {

@@ -140,7 +140,7 @@
                         android:paddingEnd="6dp">
 
                         <LinearLayout
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
                             android:clipChildren="false"
@@ -158,23 +158,13 @@
                                 android:singleLine="true"
                                 android:ellipsize="end" />
 
-                            <TextView
+                            <ImageView
                                 android:id="@+id/homeWaveEmoji"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="4dp"
-                                android:text="👋"
-                                android:textSize="20sp"
-                                android:includeFontPadding="true"
-                                android:paddingStart="4dp"
-                                android:paddingEnd="6dp"
-                                android:paddingTop="2dp"
-                                android:paddingBottom="2dp"
-                                android:clipChildren="false"
-                                android:clipToPadding="false"
-                                android:clickable="true"
-                                android:focusable="true"
-                                android:gravity="center" />
+                                android:layout_width="0dp"
+                                android:layout_height="0dp"
+                                android:visibility="gone"
+                                android:src="@drawable/ic_waving_hand_vibrant"
+                                android:contentDescription="Waving Hand" />
 
                         </LinearLayout>
 
@@ -260,20 +250,19 @@
                         android:id="@+id/homeHelpBtn"
                         android:layout_width="40dp"
                         android:layout_height="40dp"
-                        android:background="@drawable/bg_white_circle_btn"
+                        android:background="?attr/selectableItemBackgroundBorderless"
                         android:clickable="true"
                         android:focusable="true"
-                        android:elevation="3dp"
                         android:contentDescription="Help &amp; Support">
 
                         <ImageView
                             android:id="@+id/homeHelpIcon"
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_help"
-                            android:tint="#0D6EFD"
-                            app:tint="#0D6EFD" />
+                            android:tint="#FFFFFF"
+                            app:tint="#FFFFFF" />
 
                     </FrameLayout>
 

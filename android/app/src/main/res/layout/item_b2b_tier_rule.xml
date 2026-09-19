@@ -140,4 +140,35 @@
 
     </LinearLayout>
 
+    <!-- Dynamic Live Effective Price Pill -->
+    <LinearLayout
+        android:id="@+id/layoutEffectivePrice"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@drawable/bg_pill_indigo_soft"
+        android:padding="8dp"
+        android:layout_marginTop="10dp"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:src="@drawable/ic_billing"
+            android:tint="#4F46E5"
+            app:tint="#4F46E5"
+            android:layout_marginEnd="6dp" />
+
+        <TextView
+            android:id="@+id/lblEffectivePrice"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="B2B Pays: ₹0 (Save ₹0 / 0%)"
+            android:textSize="11.5sp"
+            android:textStyle="bold"
+            android:textColor="#3730A3" />
+
+    </LinearLayout>
+
 </LinearLayout>

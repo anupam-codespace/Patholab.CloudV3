@@ -251,6 +251,60 @@ public class MobileNotificationHelper {
     }
 
     /**
+     * Posts a device system notification when a patient report is downloaded successfully.
+     * Tapping the notification opens that report in the app's Preview page.
+     */
+    public static void postReportDownloadSuccessNotification(Context context, String patientName, String uhid, String reportId, String testName, int version, String pdfUrl) {
+        if (context == null) return;
+        initNotificationChannel(context);
+
+        try {
+            String cleanName = (patientName != null && !patientName.trim().isEmpty()) ? patientName.trim() : "Patient";
+            String cleanUhid = (uhid != null && !uhid.trim().isEmpty()) ? uhid.trim() : "";
+
+            Intent intent = new Intent(context, ReportPreviewActivity.class);
+            intent.putExtra("report_id", reportId != null ? reportId : "");
+            intent.putExtra("patient_name", cleanName);
+            intent.putExtra("uhid", cleanUhid);
+            intent.putExtra("test_name", testName != null ? testName : "Diagnostic Investigation");
+            intent.putExtra("version", version > 0 ? version : 1);
+            intent.putExtra("pdf_url", pdfUrl != null ? pdfUrl : "");
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+            int notifId = Math.abs((cleanName + cleanUhid + System.currentTimeMillis()).hashCode());
+
+            PendingIntent pendingIntent = PendingIntent.getActivity(
+                    context,
+                    notifId,
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
+            );
+
+            Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+
+            String title = "Download Successful";
+            String body = "Download successful! Report for " + cleanName + (!cleanUhid.isEmpty() ? " (" + cleanUhid + ")" : "") + " has been saved to your device.";
+
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
+                    .setSmallIcon(R.mipmap.ic_launcher)
+                    .setContentTitle(title)
+                    .setContentText(body)
+                    .setStyle(new NotificationCompat.BigTextStyle().bigText(body))
+                    .setAutoCancel(true)
+                    .setSound(defaultSoundUri)
+                    .setPriority(NotificationCompat.PRIORITY_HIGH)
+                    .setDefaults(NotificationCompat.DEFAULT_ALL)
+                    .setContentIntent(pendingIntent)
+                    .setCategory(NotificationCompat.CATEGORY_EVENT)
+                    .setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+
+            NotificationManagerCompat nmc = NotificationManagerCompat.from(context);
+            nmc.notify(notifId, builder.build());
+
+        } catch (Exception ignored) {}
+    }
+
+    /**
      * Resets notification session state upon user sign out.
      */
     public static void clearNotificationSession(Context context) {

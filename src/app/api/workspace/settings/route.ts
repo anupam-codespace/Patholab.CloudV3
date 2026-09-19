@@ -62,6 +62,18 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Workspace not found' }, { status: 404 });
     }
 
+    const sanitizeAsset = (val: any) => {
+      if (!val || typeof val !== 'string') return null;
+      const trimmed = val.trim();
+      if (!trimmed || trimmed.toLowerCase() === 'null' || trimmed.toLowerCase() === 'undefined') return null;
+      return trimmed;
+    };
+
+    lab.logo = sanitizeAsset(lab.logo);
+    lab.letterhead = sanitizeAsset(lab.letterhead);
+    lab.footer = sanitizeAsset(lab.footer);
+    lab.signature = sanitizeAsset(lab.signature);
+
     return NextResponse.json({ lab });
   } catch (error) {
     console.error('[SETTINGS_GET_ERROR]', error);
@@ -81,6 +93,13 @@ export async function PUT(req: NextRequest) {
     }
 
     const body = await req.json();
+
+    const sanitizeAsset = (val: any) => {
+      if (!val || typeof val !== 'string') return null;
+      const trimmed = val.trim();
+      if (!trimmed || trimmed.toLowerCase() === 'null' || trimmed.toLowerCase() === 'undefined') return null;
+      return trimmed;
+    };
 
     // Use a transaction to ensure data consistency across potential multiple table updates
     const result = await prisma.$transaction(async (tx) => {
@@ -111,10 +130,10 @@ export async function PUT(req: NextRequest) {
           accountHolder: body.accountHolder,
 
           // Branding Assets
-          logo: body.logo,
-          letterhead: body.letterhead,
-          footer: body.footer,
-          signature: body.signature,
+          logo: body.logo !== undefined ? sanitizeAsset(body.logo) : undefined,
+          letterhead: body.letterhead !== undefined ? sanitizeAsset(body.letterhead) : undefined,
+          footer: body.footer !== undefined ? sanitizeAsset(body.footer) : undefined,
+          signature: body.signature !== undefined ? sanitizeAsset(body.signature) : undefined,
           
           // Commissions
           commissionType: body.commissionType,

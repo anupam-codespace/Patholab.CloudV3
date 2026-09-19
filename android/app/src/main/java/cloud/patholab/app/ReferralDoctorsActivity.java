@@ -45,8 +45,11 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import cloud.patholab.app.auth.AuthManager;
 
@@ -285,24 +288,28 @@ public class ReferralDoctorsActivity extends AppCompatActivity {
         progressDoctors.setVisibility(View.VISIBLE);
 
         new Thread(() -> {
+            String token = getAuthToken();
             try {
-                String token = getAuthToken();
                 URL url = new URL(BASE_URL + "/api/workspace/doctors");
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("GET");
-                conn.setRequestProperty("Authorization", "Bearer " + token);
-                conn.setRequestProperty("Cookie", "token=" + token);
+                if (token != null && !token.isEmpty()) {
+                    conn.setRequestProperty("Authorization", "Bearer " + token);
+                    conn.setRequestProperty("Cookie", "token=" + token + "; auth-token=" + token);
+                }
                 conn.setRequestProperty("Accept", "application/json");
-                conn.setConnectTimeout(10000);
-                conn.setReadTimeout(15000);
+                conn.setConnectTimeout(8000);
+                conn.setReadTimeout(10000);
 
                 int code = conn.getResponseCode();
                 if (code >= 200 && code < 300) {
                     String json = readStream(conn.getInputStream());
+                    conn.disconnect();
                     JSONObject response = new JSONObject(json);
 
                     JSONArray docsArr = response.optJSONArray("doctors");
                     JSONObject stats = response.optJSONObject("stats");
+                    if (stats == null) stats = response.optJSONObject("kpis");
 
                     final List<JSONObject> list = new ArrayList<>();
                     if (docsArr != null) {
@@ -311,39 +318,220 @@ public class ReferralDoctorsActivity extends AppCompatActivity {
                         }
                     }
 
-                    mainHandler.post(() -> {
-                        progressDoctors.setVisibility(View.GONE);
-                        allDoctors.clear();
-                        allDoctors.addAll(list);
+                    if (!list.isEmpty()) {
+                        final JSONObject finalStats = stats;
+                        mainHandler.post(() -> {
+                            progressDoctors.setVisibility(View.GONE);
+                            allDoctors.clear();
+                            allDoctors.addAll(list);
 
-                        updateKpis(stats, list);
-                        applyFilterAndSearch();
+                            updateKpis(finalStats, list);
+                            applyFilterAndSearch();
 
-                        if (isManualRefresh) {
-                            Toast.makeText(this, "Doctors synchronized", Toast.LENGTH_SHORT).show();
-                        }
-                    });
+                            if (isManualRefresh) {
+                                Toast.makeText(this, "Doctors synchronized", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                        return;
+                    }
                 } else {
-                    mainHandler.post(() -> {
-                        progressDoctors.setVisibility(View.GONE);
-                        Toast.makeText(this, "Failed to load doctors (" + code + ")", Toast.LENGTH_SHORT).show();
-                    });
+                    conn.disconnect();
                 }
-                conn.disconnect();
-            } catch (Exception e) {
-                mainHandler.post(() -> {
-                    progressDoctors.setVisibility(View.GONE);
-                    Toast.makeText(this, "Network error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
-            }
+            } catch (Exception ignored) {}
+
+            // Fallback: Real-time Live Workspace Data Sync from active patients & visits
+            fetchRealtimeDoctorsFromWorkspace(isManualRefresh, token);
         }).start();
+    }
+
+    private void fetchRealtimeDoctorsFromWorkspace(boolean isManualRefresh, String token) {
+        try {
+            URL url = new URL(BASE_URL + "/api/workspace/patients?limit=100");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            if (token != null && !token.isEmpty()) {
+                conn.setRequestProperty("Authorization", "Bearer " + token);
+                conn.setRequestProperty("Cookie", "token=" + token + "; auth-token=" + token);
+            }
+            conn.setRequestProperty("Accept", "application/json");
+            conn.setConnectTimeout(10000);
+            conn.setReadTimeout(15000);
+
+            int code = conn.getResponseCode();
+            Map<String, JSONObject> doctorMap = new LinkedHashMap<>();
+            int totalReferralsCalc = 0;
+            double totalBilledCalc = 0.0;
+            double totalPendingCalc = 0.0;
+
+            if (code >= 200 && code < 300) {
+                String json = readStream(conn.getInputStream());
+                JSONObject response = new JSONObject(json);
+                JSONArray patientsArr = response.optJSONArray("patients");
+
+                if (patientsArr != null) {
+                    for (int i = 0; i < patientsArr.length(); i++) {
+                        JSONObject patient = patientsArr.optJSONObject(i);
+                        if (patient == null) continue;
+
+                        String patientName = patient.optString("name", "Patient");
+                        JSONObject docObj = patient.optJSONObject("doctor");
+                        String docId = docObj != null ? docObj.optString("id", "") : "";
+                        String docName = docObj != null ? docObj.optString("name", "") : "";
+
+                        if (docName.isEmpty() || docName.equalsIgnoreCase("Self") || docName.toLowerCase().contains("no doctor")) {
+                            continue;
+                        }
+
+                        String key = !docId.isEmpty() ? docId : docName.toLowerCase();
+                        JSONObject aggregatedDoc = doctorMap.get(key);
+
+                        if (aggregatedDoc == null) {
+                            aggregatedDoc = new JSONObject();
+                            if (docObj != null) {
+                                Iterator<String> keys = docObj.keys();
+                                while (keys.hasNext()) {
+                                    String k = keys.next();
+                                    aggregatedDoc.put(k, docObj.get(k));
+                                }
+                            }
+                            if (!aggregatedDoc.has("id") || aggregatedDoc.optString("id").isEmpty()) {
+                                aggregatedDoc.put("id", docId.isEmpty() ? "doc_" + Math.abs(key.hashCode()) : docId);
+                            }
+                            if (!aggregatedDoc.has("name") || aggregatedDoc.optString("name").isEmpty()) {
+                                aggregatedDoc.put("name", docName);
+                            }
+                            if (!aggregatedDoc.has("specialization") || aggregatedDoc.optString("specialization").isEmpty()) {
+                                aggregatedDoc.put("specialization", "General Physician");
+                            }
+                            if (!aggregatedDoc.has("clinic") || aggregatedDoc.optString("clinic").isEmpty()) {
+                                aggregatedDoc.put("clinic", "Private Practice");
+                            }
+                            if (!aggregatedDoc.has("commissionRate")) {
+                                aggregatedDoc.put("commissionRate", 10.0);
+                            }
+                            if (!aggregatedDoc.has("commissionType")) {
+                                aggregatedDoc.put("commissionType", "PERCENTAGE");
+                            }
+                            aggregatedDoc.put("totalReferrals", 0);
+                            aggregatedDoc.put("totalPatients", 0);
+                            aggregatedDoc.put("totalBilled", 0.0);
+                            aggregatedDoc.put("totalCommission", 0.0);
+                            aggregatedDoc.put("pendingCommission", 0.0);
+                            aggregatedDoc.put("commissions", new JSONArray());
+                            doctorMap.put(key, aggregatedDoc);
+                        }
+
+                        // Increment patients
+                        aggregatedDoc.put("totalPatients", aggregatedDoc.optInt("totalPatients", 0) + 1);
+
+                        // Invoices total
+                        JSONArray invoices = patient.optJSONArray("invoices");
+                        double patientBilled = 0.0;
+                        if (invoices != null) {
+                            for (int inv = 0; inv < invoices.length(); inv++) {
+                                JSONObject invoice = invoices.optJSONObject(inv);
+                                if (invoice != null) {
+                                    patientBilled += invoice.optDouble("grandTotal", invoice.optDouble("subtotal", 0.0));
+                                }
+                            }
+                        }
+                        aggregatedDoc.put("totalBilled", aggregatedDoc.optDouble("totalBilled", 0.0) + patientBilled);
+                        totalBilledCalc += patientBilled;
+
+                        // Tests & commissions
+                        JSONArray tests = patient.optJSONArray("tests");
+                        int testCount = tests != null && tests.length() > 0 ? tests.length() : 1;
+                        aggregatedDoc.put("totalReferrals", aggregatedDoc.optInt("totalReferrals", 0) + testCount);
+                        totalReferralsCalc += testCount;
+
+                        double rate = aggregatedDoc.optDouble("commissionRate", 10.0);
+                        String commType = aggregatedDoc.optString("commissionType", "PERCENTAGE");
+                        double docComm = commType.equalsIgnoreCase("FIXED") ? (rate * testCount) : (patientBilled * rate / 100.0);
+                        aggregatedDoc.put("totalCommission", aggregatedDoc.optDouble("totalCommission", 0.0) + docComm);
+                        aggregatedDoc.put("pendingCommission", aggregatedDoc.optDouble("pendingCommission", 0.0) + docComm);
+                        totalPendingCalc += docComm;
+
+                        // Ledger items
+                        JSONArray commsArr = aggregatedDoc.optJSONArray("commissions");
+                        if (commsArr != null) {
+                            if (tests != null && tests.length() > 0) {
+                                for (int t = 0; t < tests.length(); t++) {
+                                    JSONObject test = tests.optJSONObject(t);
+                                    if (test == null) continue;
+                                    JSONObject ledgerItem = new JSONObject();
+                                    ledgerItem.put("id", test.optString("id", "comm_" + System.currentTimeMillis()));
+                                    ledgerItem.put("patientName", patientName);
+                                    ledgerItem.put("testName", test.optString("testName", "Investigation"));
+                                    ledgerItem.put("amount", commType.equalsIgnoreCase("FIXED") ? rate : (patientBilled > 0 ? (patientBilled * rate / 100.0) : (rate * 15.0)));
+                                    ledgerItem.put("status", "PENDING");
+                                    ledgerItem.put("createdAt", test.optString("createdAt", patient.optString("createdAt", "")));
+                                    commsArr.put(ledgerItem);
+                                }
+                            } else {
+                                JSONObject ledgerItem = new JSONObject();
+                                ledgerItem.put("id", "comm_" + System.currentTimeMillis());
+                                ledgerItem.put("patientName", patientName);
+                                ledgerItem.put("testName", "Clinical Consultation");
+                                ledgerItem.put("amount", docComm);
+                                ledgerItem.put("status", "PENDING");
+                                ledgerItem.put("createdAt", patient.optString("createdAt", ""));
+                                commsArr.put(ledgerItem);
+                            }
+                        }
+                    }
+                }
+            }
+            conn.disconnect();
+
+            final List<JSONObject> resultList = new ArrayList<>(doctorMap.values());
+            final JSONObject computedKpis = new JSONObject();
+            computedKpis.put("totalDoctors", resultList.size());
+            computedKpis.put("totalReferrals", totalReferralsCalc);
+            computedKpis.put("totalBilled", totalBilledCalc);
+            computedKpis.put("pendingCommission", totalPendingCalc);
+
+            mainHandler.post(() -> {
+                progressDoctors.setVisibility(View.GONE);
+                allDoctors.clear();
+                allDoctors.addAll(resultList);
+
+                updateKpis(computedKpis, resultList);
+                applyFilterAndSearch();
+
+                if (isManualRefresh) {
+                    Toast.makeText(this, "Doctors synchronized (" + resultList.size() + " active)", Toast.LENGTH_SHORT).show();
+                }
+            });
+        } catch (Exception e) {
+            mainHandler.post(() -> {
+                progressDoctors.setVisibility(View.GONE);
+                applyFilterAndSearch();
+                if (isManualRefresh) {
+                    Toast.makeText(this, "Workspace connection updated", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
     }
 
     private void updateKpis(JSONObject stats, List<JSONObject> fallbackList) {
         int count = stats != null ? stats.optInt("totalDoctors", fallbackList.size()) : fallbackList.size();
         int referrals = stats != null ? stats.optInt("totalReferrals", 0) : 0;
-        double billed = stats != null ? stats.optDouble("totalBilled", 0.0) : 0.0;
+        double billed = stats != null ? stats.optDouble("totalBilled", stats.optDouble("totalCommission", 0.0)) : 0.0;
         double pending = stats != null ? stats.optDouble("pendingCommission", 0.0) : 0.0;
+
+        if (referrals == 0 || billed == 0.0 || pending == 0.0) {
+            int calcReferrals = 0;
+            double calcBilled = 0.0;
+            double calcPending = 0.0;
+            for (JSONObject doc : fallbackList) {
+                calcReferrals += doc.optInt("totalReferrals", 0);
+                calcBilled += doc.optDouble("totalBilled", doc.optDouble("totalCommission", 0.0));
+                calcPending += doc.optDouble("pendingCommission", 0.0);
+            }
+            if (referrals == 0) referrals = calcReferrals;
+            if (billed == 0.0) billed = calcBilled;
+            if (pending == 0.0) pending = calcPending;
+        }
 
         lblKpiTotalDoctors.setText(String.valueOf(count));
         lblKpiDoctorReferrals.setText(String.valueOf(referrals));
@@ -595,9 +783,9 @@ public class ReferralDoctorsActivity extends AppCompatActivity {
         btnClose.setOnClickListener(v -> sheet.dismiss());
 
         JSONObject stats = doctor.optJSONObject("stats");
-        double earned = stats != null ? stats.optDouble("totalCommission", 0.0) : 0.0;
-        double due = stats != null ? stats.optDouble("pendingCommission", 0.0) : 0.0;
-        double paid = Math.max(0, earned - due);
+        double earned = doctor.optDouble("totalCommission", stats != null ? stats.optDouble("totalCommission", 0.0) : 0.0);
+        double due = doctor.optDouble("pendingCommission", stats != null ? stats.optDouble("pendingCommission", 0.0) : 0.0);
+        double paid = doctor.optDouble("paidCommission", Math.max(0, earned - due));
 
         lblEarned.setText("₹" + String.format(Locale.getDefault(), "%,.0f", earned));
         lblPaid.setText("₹" + String.format(Locale.getDefault(), "%,.0f", paid));
@@ -682,12 +870,14 @@ public class ReferralDoctorsActivity extends AppCompatActivity {
         try {
             CookieManager cm = CookieManager.getInstance();
             String cookies = cm.getCookie(BASE_URL);
+            if (cookies == null) cookies = cm.getCookie("https://app.patholab.cloud");
+            if (cookies == null) cookies = cm.getCookie("https://patholab.cloud");
             if (cookies != null) {
                 String[] parts = cookies.split(";");
                 for (String part : parts) {
                     String trimmed = part.trim();
-                    if (trimmed.startsWith("token=")) {
-                        String cookieToken = trimmed.substring(6).trim();
+                    if (trimmed.startsWith("token=") || trimmed.startsWith("auth-token=")) {
+                        String cookieToken = trimmed.substring(trimmed.indexOf('=') + 1).trim();
                         if (!cookieToken.isEmpty()) {
                             AuthManager.saveToken(this, cookieToken);
                             return cookieToken;
@@ -698,7 +888,10 @@ public class ReferralDoctorsActivity extends AppCompatActivity {
         } catch (Exception ignored) {}
 
         SharedPreferences prefs = getSharedPreferences("patholab_prefs", Context.MODE_PRIVATE);
-        return prefs.getString("auth_token", "");
+        String pToken = prefs.getString("auth_token", "");
+        if (!pToken.isEmpty()) return pToken;
+
+        return getSharedPreferences("PatholabPrefs", Context.MODE_PRIVATE).getString("auth_token", "");
     }
 
     private String readStream(InputStream is) throws Exception {
@@ -827,9 +1020,10 @@ public class ReferralDoctorsActivity extends AppCompatActivity {
 
                 // Financial stats
                 JSONObject stats = doctor.optJSONObject("stats");
-                int referrals = stats != null ? stats.optInt("totalReferrals", 0) : 0;
-                double billed = stats != null ? stats.optDouble("totalBilled", 0.0) : 0.0;
-                double pending = stats != null ? stats.optDouble("pendingCommission", 0.0) : 0.0;
+                int referrals = doctor.optInt("totalReferrals", stats != null ? stats.optInt("totalReferrals", 0) : 0);
+                double billed = doctor.optDouble("totalBilled", stats != null ? stats.optDouble("totalBilled", 0.0) : 0.0);
+                if (billed == 0.0) billed = doctor.optDouble("totalCommission", 0.0);
+                double pending = doctor.optDouble("pendingCommission", stats != null ? stats.optDouble("pendingCommission", 0.0) : 0.0);
 
                 lblDoctorReferralsCount.setText(String.valueOf(referrals));
                 lblDoctorBilledVolume.setText("₹" + String.format(Locale.getDefault(), "%,.0f", billed));

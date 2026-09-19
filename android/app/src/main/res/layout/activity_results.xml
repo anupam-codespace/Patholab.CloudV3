@@ -1,0 +1,515 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Clinical Results Entry Workstation (Android) -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#F8FAFC">
+
+    <!-- ── TOP CURVED SAPPHIRE HEADER ─────────────────────────────── -->
+    <FrameLayout
+        android:id="@+id/resultsHeaderLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_home_header"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingTop="32dp"
+        android:paddingBottom="24dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Top Row: Back + Title + Live Data Badge + Refresh -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <FrameLayout
+                    android:id="@+id/btnResultsBack"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:background="@drawable/bg_glass_back_btn"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_back_arrow"
+                        android:tint="#FFFFFF"
+                        app:tint="#FFFFFF" />
+
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="14dp">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:id="@+id/lblResultsTitle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Clinical Results"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:textColor="#FFFFFF" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:text="LIVE DATA"
+                            android:textSize="9.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#EEF2FF"
+                            android:background="@drawable/bg_pill_white"
+                            android:backgroundTint="#1D4ED8"
+                            android:paddingStart="6dp"
+                            android:paddingEnd="6dp"
+                            android:paddingTop="2dp"
+                            android:paddingBottom="2dp" />
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/lblResultsSubtitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Process parameters, add impressions &amp; approve"
+                        android:textSize="11.5sp"
+                        android:textColor="#93C5FD"
+                        android:maxLines="1"
+                        android:ellipsize="end" />
+
+                </LinearLayout>
+
+                <FrameLayout
+                    android:id="@+id/btnRefreshResults"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:background="@drawable/bg_glass_back_btn"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageView
+                        android:id="@+id/imgRefreshResultsIcon"
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_refresh"
+                        android:tint="#FFFFFF"
+                        app:tint="#FFFFFF" />
+
+                </FrameLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </FrameLayout>
+
+    <!-- ── 4 STATUS TABS BAR ──────────────────────────────────────── -->
+    <HorizontalScrollView
+        android:id="@+id/scrollResultsTabs"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp"
+        android:clipToPadding="false"
+        android:background="#F1F5F9">
+
+        <LinearLayout
+            android:id="@+id/containerStatusTabs"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <!-- Tab 1: Pending Entry -->
+            <TextView
+                android:id="@+id/tabPending"
+                android:layout_width="wrap_content"
+                android:layout_height="38dp"
+                android:gravity="center"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:text="Pending Entry"
+                android:textSize="12.5sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:background="@drawable/bg_pill_white"
+                android:backgroundTint="#0D6EFD"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_marginEnd="8dp" />
+
+            <!-- Tab 2: Saved Drafts -->
+            <TextView
+                android:id="@+id/tabDraft"
+                android:layout_width="wrap_content"
+                android:layout_height="38dp"
+                android:gravity="center"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:text="Saved Drafts"
+                android:textSize="12.5sp"
+                android:textStyle="bold"
+                android:textColor="#475569"
+                android:background="@drawable/bg_pill_white"
+                android:backgroundTint="#E2E8F0"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_marginEnd="8dp" />
+
+            <!-- Tab 3: Needs Approval -->
+            <TextView
+                android:id="@+id/tabNeedsApproval"
+                android:layout_width="wrap_content"
+                android:layout_height="38dp"
+                android:gravity="center"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:text="Needs Approval"
+                android:textSize="12.5sp"
+                android:textStyle="bold"
+                android:textColor="#475569"
+                android:background="@drawable/bg_pill_white"
+                android:backgroundTint="#E2E8F0"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_marginEnd="8dp" />
+
+            <!-- Tab 4: Completed -->
+            <TextView
+                android:id="@+id/tabCompleted"
+                android:layout_width="wrap_content"
+                android:layout_height="38dp"
+                android:gravity="center"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:text="Completed"
+                android:textSize="12.5sp"
+                android:textStyle="bold"
+                android:textColor="#475569"
+                android:background="@drawable/bg_pill_white"
+                android:backgroundTint="#E2E8F0"
+                android:clickable="true"
+                android:focusable="true" />
+
+        </LinearLayout>
+
+    </HorizontalScrollView>
+
+    <!-- ── MAIN CONTENT CONTAINER (QUEUE VS WORKSTATION) ──────────── -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <!-- 1. QUEUE VIEW                                               -->
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <LinearLayout
+            android:id="@+id/layoutResultsQueue"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:visibility="visible">
+
+            <!-- Search Bar -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="46dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:background="@drawable/bg_pill_white"
+                android:backgroundTint="#FFFFFF"
+                android:gravity="center_vertical"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp">
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:src="@drawable/ic_search"
+                    android:tint="#94A3B8"
+                    app:tint="#94A3B8" />
+
+                <EditText
+                    android:id="@+id/inputSearchResults"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@null"
+                    android:hint="Search Patient Name or SID..."
+                    android:textColorHint="#94A3B8"
+                    android:textColor="#0F172A"
+                    android:textSize="13.5sp"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:singleLine="true" />
+
+                <ImageView
+                    android:id="@+id/btnClearSearchResults"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_close"
+                    android:tint="#94A3B8"
+                    app:tint="#94A3B8"
+                    android:visibility="gone"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+            </LinearLayout>
+
+            <!-- Loading Spinner -->
+            <ProgressBar
+                android:id="@+id/progressResultsQueue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="40dp"
+                android:indeterminateTint="#0D6EFD"
+                android:visibility="gone" />
+
+            <!-- Empty State -->
+            <LinearLayout
+                android:id="@+id/emptyStateResultsQueue"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="32dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:src="@drawable/ic_mod_clean_tests"
+                    android:tint="#CBD5E1"
+                    app:tint="#CBD5E1" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Queue is empty!"
+                    android:textSize="16.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#334155" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="No patient tasks currently in this status."
+                    android:textSize="13sp"
+                    android:textColor="#64748B" />
+
+            </LinearLayout>
+
+            <!-- Recycler View -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerResultsQueue"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:paddingBottom="24dp" />
+
+        </LinearLayout>
+
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <!-- 2. WORKSTATION DATA ENTRY VIEW                              -->
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <LinearLayout
+            android:id="@+id/layoutResultsWorkstation"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <!-- Back to Queue Nav Bar -->
+            <LinearLayout
+                android:id="@+id/btnWorkstationBack"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:background="#EFF6FF"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="← Back to Queue"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textColor="#0D6EFD" />
+
+            </LinearLayout>
+
+            <!-- Patient Summary Card -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="#FFFFFF"
+                android:padding="16dp"
+                android:elevation="1dp">
+
+                <TextView
+                    android:id="@+id/lblWorkstationAvatar"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_pill_white"
+                    android:backgroundTint="#0D6EFD"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:text="P" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="14dp">
+
+                    <TextView
+                        android:id="@+id/lblWorkstationPatientName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Patient Name"
+                        android:textSize="16.5sp"
+                        android:textStyle="bold"
+                        android:textColor="#0F172A" />
+
+                    <TextView
+                        android:id="@+id/lblWorkstationPatientMeta"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="35 Yrs • Male • SID: INV-001"
+                        android:textSize="12sp"
+                        android:textColor="#64748B" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- Dynamic Tests ScrollView -->
+            <androidx.core.widget.NestedScrollView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:fillViewport="true">
+
+                <LinearLayout
+                    android:id="@+id/containerWorkstationTests"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingTop="12dp"
+                    android:paddingBottom="24dp">
+                    <!-- Dynamic Test blocks will be inflated and inserted here -->
+                </LinearLayout>
+
+            </androidx.core.widget.NestedScrollView>
+
+            <!-- Sticky Bottom Action Bar -->
+            <LinearLayout
+                android:id="@+id/workstationActionFooter"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="#FFFFFF"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingTop="12dp"
+                android:paddingBottom="14dp"
+                android:elevation="8dp">
+
+                <!-- Save Draft -->
+                <Button
+                    android:id="@+id/btnActionSaveDraft"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:text="Save Draft"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textColor="#334155"
+                    android:backgroundTint="#F1F5F9"
+                    android:layout_marginEnd="6dp" />
+
+                <!-- Send to Pathologist -->
+                <Button
+                    android:id="@+id/btnActionRequestApproval"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1.2"
+                    android:text="Send to Doc"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textColor="#B45309"
+                    android:backgroundTint="#FEF3C7"
+                    android:layout_marginEnd="6dp" />
+
+                <!-- Approve & Lock -->
+                <Button
+                    android:id="@+id/btnActionApprove"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1.4"
+                    android:text="Approve &amp; Lock"
+                    android:textSize="13.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:backgroundTint="#059669" />
+
+                <!-- Completed Mode: View Final Report -->
+                <Button
+                    android:id="@+id/btnActionViewFinalReport"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:text="View Final Report →"
+                    android:textSize="14.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:backgroundTint="#0D6EFD"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </FrameLayout>
+
+</LinearLayout>

@@ -17,6 +17,10 @@ struct PatientVisitRecord {
     var status: String // COMPLETED, IN_PROGRESS, NO_TESTS
     let reportId: String?
     let invoiceId: String?
+    let patientDbId: String?
+    let uhid: String?
+    let patientPhone: String?
+    let testName: String?
 }
 
 struct WorklistKpiStats {
@@ -50,7 +54,11 @@ class PatientWorklistViewController: UIViewController, UITableViewDataSource, UI
 
     // UI Elements
     private let topHeaderView      = UIView()
+    private let headerGradient     = CAGradientLayer()
+    private let backBtn            = UIButton(type: .system)
+    private let titleLbl           = UILabel()
     private let subLbl             = UILabel()
+    private let refreshBtn         = UIButton(type: .system)
     private let kpiScrollView      = UIScrollView()
     private let kpiStack           = UIStackView()
     private let searchField        = UITextField()
@@ -79,6 +87,16 @@ class PatientWorklistViewController: UIViewController, UITableViewDataSource, UI
         fetchPatientWorklist()
     }
 
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        fetchPatientWorklist()
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        headerGradient.frame = topHeaderView.bounds
+    }
+
     override var preferredStatusBarStyle: UIStatusBarStyle {
         return .lightContent
     }
@@ -88,42 +106,50 @@ class PatientWorklistViewController: UIViewController, UITableViewDataSource, UI
         topHeaderView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(topHeaderView)
 
-        let gradient = CAGradientLayer()
-        gradient.colors = [
-            UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1).cgColor,
-            UIColor(red: 0.118, green: 0.251, blue: 0.686, alpha: 1).cgColor
+        headerGradient.colors = [
+            UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1).cgColor, // #0D6EFD
+            UIColor(red: 0.039, green: 0.345, blue: 0.792, alpha: 1).cgColor, // #0A58CA
+            UIColor(red: 0.114, green: 0.306, blue: 0.847, alpha: 1).cgColor  // #1D4ED8
         ]
-        gradient.startPoint = CGPoint(x: 0, y: 0)
-        gradient.endPoint = CGPoint(x: 1, y: 1)
-        topHeaderView.layer.insertSublayer(gradient, at: 0)
+        headerGradient.startPoint = CGPoint(x: 0, y: 0)
+        headerGradient.endPoint   = CGPoint(x: 1, y: 1)
+        topHeaderView.layer.insertSublayer(headerGradient, at: 0)
+        topHeaderView.layer.cornerRadius = 24
+        topHeaderView.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
+        topHeaderView.clipsToBounds = true
 
-        let backBtn = UIButton(type: .system)
+        // Back Button: Translucent frosted glass circular button
         backBtn.setImage(UIImage(systemName: "chevron.left"), for: .normal)
-        backBtn.tintColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1)
-        backBtn.backgroundColor = .white
-        backBtn.layer.cornerRadius = 20
+        backBtn.tintColor = .white
+        backBtn.backgroundColor = UIColor.white.withAlphaComponent(0.20)
+        backBtn.layer.borderColor = UIColor.white.withAlphaComponent(0.30).cgColor
+        backBtn.layer.borderWidth = 1
+        backBtn.layer.cornerRadius = 19
         backBtn.addTarget(self, action: #selector(didTapBack), for: .touchUpInside)
         backBtn.translatesAutoresizingMaskIntoConstraints = false
         topHeaderView.addSubview(backBtn)
 
-        let titleLbl = UILabel()
-        titleLbl.text = "Patient Visit Worklist"
-        titleLbl.font = .systemFont(ofSize: 18.5, weight: .bold)
+        // Title
+        titleLbl.text = "Patient Worklist"
+        titleLbl.font = .systemFont(ofSize: 20, weight: .bold)
         titleLbl.textColor = .white
         titleLbl.translatesAutoresizingMaskIntoConstraints = false
         topHeaderView.addSubview(titleLbl)
 
-        subLbl.text = "Clinical Accessions • TAT Monitoring"
+        // Subtitle
+        subLbl.text = "Live Accessions • TAT Monitoring"
         subLbl.font = .systemFont(ofSize: 11.5, weight: .medium)
         subLbl.textColor = UIColor(red: 0.78, green: 0.87, blue: 1.0, alpha: 1)
         subLbl.translatesAutoresizingMaskIntoConstraints = false
         topHeaderView.addSubview(subLbl)
 
-        let refreshBtn = UIButton(type: .system)
+        // Refresh Button: Translucent frosted glass circular button
         refreshBtn.setImage(UIImage(systemName: "arrow.clockwise"), for: .normal)
         refreshBtn.tintColor = .white
         refreshBtn.backgroundColor = UIColor.white.withAlphaComponent(0.20)
-        refreshBtn.layer.cornerRadius = 18
+        refreshBtn.layer.borderColor = UIColor.white.withAlphaComponent(0.30).cgColor
+        refreshBtn.layer.borderWidth = 1
+        refreshBtn.layer.cornerRadius = 19
         refreshBtn.addTarget(self, action: #selector(didTapRefresh), for: .touchUpInside)
         refreshBtn.translatesAutoresizingMaskIntoConstraints = false
         topHeaderView.addSubview(refreshBtn)
@@ -132,106 +158,134 @@ class PatientWorklistViewController: UIViewController, UITableViewDataSource, UI
             topHeaderView.topAnchor.constraint(equalTo: view.topAnchor),
             topHeaderView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             topHeaderView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            topHeaderView.heightAnchor.constraint(equalToConstant: 104),
 
             backBtn.leadingAnchor.constraint(equalTo: topHeaderView.leadingAnchor, constant: 16),
-            backBtn.bottomAnchor.constraint(equalTo: topHeaderView.bottomAnchor, constant: -10),
-            backBtn.widthAnchor.constraint(equalToConstant: 40),
-            backBtn.heightAnchor.constraint(equalToConstant: 40),
+            backBtn.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
+            backBtn.widthAnchor.constraint(equalToConstant: 38),
+            backBtn.heightAnchor.constraint(equalToConstant: 38),
+
+            refreshBtn.trailingAnchor.constraint(equalTo: topHeaderView.trailingAnchor, constant: -16),
+            refreshBtn.centerYAnchor.constraint(equalTo: backBtn.centerYAnchor),
+            refreshBtn.widthAnchor.constraint(equalToConstant: 38),
+            refreshBtn.heightAnchor.constraint(equalToConstant: 38),
 
             titleLbl.leadingAnchor.constraint(equalTo: backBtn.trailingAnchor, constant: 12),
-            titleLbl.topAnchor.constraint(equalTo: backBtn.topAnchor, constant: -1),
+            titleLbl.topAnchor.constraint(equalTo: backBtn.topAnchor, constant: -2),
             titleLbl.trailingAnchor.constraint(lessThanOrEqualTo: refreshBtn.leadingAnchor, constant: -8),
 
             subLbl.leadingAnchor.constraint(equalTo: titleLbl.leadingAnchor),
             subLbl.topAnchor.constraint(equalTo: titleLbl.bottomAnchor, constant: 2),
-            subLbl.trailingAnchor.constraint(lessThanOrEqualTo: refreshBtn.leadingAnchor, constant: -8),
-
-            refreshBtn.trailingAnchor.constraint(equalTo: topHeaderView.trailingAnchor, constant: -16),
-            refreshBtn.centerYAnchor.constraint(equalTo: backBtn.centerYAnchor),
-            refreshBtn.widthAnchor.constraint(equalToConstant: 36),
-            refreshBtn.heightAnchor.constraint(equalToConstant: 36),
+            subLbl.trailingAnchor.constraint(lessThanOrEqualTo: refreshBtn.leadingAnchor, constant: -8)
         ])
     }
 
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        if let g = topHeaderView.layer.sublayers?.first as? CAGradientLayer {
-            g.frame = topHeaderView.bounds
+    @objc private func didTapRegister() {
+        let regVC = RegistrationViewController()
+        if let nav = navigationController {
+            nav.pushViewController(regVC, animated: true)
+        } else {
+            regVC.modalPresentationStyle = .fullScreen
+            present(regVC, animated: true)
         }
     }
 
-    // ── KPI Row ──────────────────────────────────────────────────────────────
+    // ── KPI Row (Embedded inside Curved Top Sapphire Header) ─────────────────
     private func setupKpiRow() {
         kpiScrollView.showsHorizontalScrollIndicator = false
+        kpiScrollView.clipsToBounds = false
         kpiScrollView.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(kpiScrollView)
+        topHeaderView.addSubview(kpiScrollView)
 
         kpiStack.axis = .horizontal
         kpiStack.spacing = 10
+        kpiStack.alignment = .fill
+        kpiStack.distribution = .fillProportionally
         kpiStack.translatesAutoresizingMaskIntoConstraints = false
         kpiScrollView.addSubview(kpiStack)
 
+        let card1 = makeKpiCard(title: "TOTAL VISITS", valueLbl: lblTotalVisits, dotColor: UIColor(red: 0.25, green: 0.45, blue: 0.98, alpha: 1), subText: "Accessioned Today")
+        let card2 = makeKpiCard(title: "IN PROGRESS", valueLbl: lblInProgress, dotColor: UIColor(red: 0.961, green: 0.620, blue: 0.043, alpha: 1), subText: "Testing Underway")
+        let card3 = makeKpiCard(title: "COMPLETED & READY", valueLbl: lblCompleted, dotColor: UIColor(red: 0.063, green: 0.725, blue: 0.506, alpha: 1), subText: "Authorized Reports")
+        let card4 = makeKpiCard(title: "REGISTERED ONLY", valueLbl: lblRegistered, dotColor: UIColor(red: 0.024, green: 0.714, blue: 0.831, alpha: 1), subText: "Awaiting Billing / Tests")
+
+        kpiStack.addArrangedSubview(card1)
+        kpiStack.addArrangedSubview(card2)
+        kpiStack.addArrangedSubview(card3)
+        kpiStack.addArrangedSubview(card4)
+
         NSLayoutConstraint.activate([
-            kpiScrollView.topAnchor.constraint(equalTo: topHeaderView.bottomAnchor, constant: 8),
-            kpiScrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            kpiScrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            kpiScrollView.heightAnchor.constraint(equalToConstant: 92),
+            kpiScrollView.topAnchor.constraint(equalTo: backBtn.bottomAnchor, constant: 14),
+            kpiScrollView.leadingAnchor.constraint(equalTo: topHeaderView.leadingAnchor),
+            kpiScrollView.trailingAnchor.constraint(equalTo: topHeaderView.trailingAnchor),
+            kpiScrollView.heightAnchor.constraint(equalToConstant: 80),
+
+            topHeaderView.bottomAnchor.constraint(equalTo: kpiScrollView.bottomAnchor, constant: 18),
 
             kpiStack.topAnchor.constraint(equalTo: kpiScrollView.topAnchor),
             kpiStack.bottomAnchor.constraint(equalTo: kpiScrollView.bottomAnchor),
             kpiStack.leadingAnchor.constraint(equalTo: kpiScrollView.leadingAnchor, constant: 16),
             kpiStack.trailingAnchor.constraint(equalTo: kpiScrollView.trailingAnchor, constant: -16),
+            kpiStack.heightAnchor.constraint(equalTo: kpiScrollView.heightAnchor)
         ])
-
-        kpiStack.addArrangedSubview(makeKpiCard(title: "TOTAL VISITS", valueLbl: lblTotalVisits, valueColor: UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1), subText: "Accessioned Today"))
-        kpiStack.addArrangedSubview(makeKpiCard(title: "IN PROGRESS", valueLbl: lblInProgress, valueColor: UIColor(red: 0.85, green: 0.47, blue: 0.02, alpha: 1), subText: "Testing Underway"))
-        kpiStack.addArrangedSubview(makeKpiCard(title: "COMPLETED & READY", valueLbl: lblCompleted, valueColor: UIColor(red: 0.02, green: 0.59, blue: 0.41, alpha: 1), subText: "Authorized Reports"))
-        kpiStack.addArrangedSubview(makeKpiCard(title: "REGISTERED ONLY", valueLbl: lblRegistered, valueColor: UIColor(red: 0.39, green: 0.45, blue: 0.55, alpha: 1), subText: "Awaiting Billing / Tests"))
     }
 
-    private func makeKpiCard(title: String, valueLbl: UILabel, valueColor: UIColor, subText: String) -> UIView {
+    private func makeKpiCard(title: String, valueLbl: UILabel, dotColor: UIColor, subText: String) -> UIView {
         let card = UIView()
-        card.backgroundColor = .white
-        card.layer.cornerRadius = 16
-        card.layer.shadowColor = UIColor(red: 0.05, green: 0.15, blue: 0.30, alpha: 1).cgColor
-        card.layer.shadowOpacity = 0.05
-        card.layer.shadowRadius = 5
-        card.layer.shadowOffset = CGSize(width: 0, height: 2)
-        card.layer.borderWidth = 1
-        card.layer.borderColor = UIColor(red: 0.92, green: 0.94, blue: 0.97, alpha: 1).cgColor
         card.translatesAutoresizingMaskIntoConstraints = false
-        card.widthAnchor.constraint(equalToConstant: 160).isActive = true
+        card.backgroundColor = UIColor.white.withAlphaComponent(0.16)
+        card.layer.borderColor = UIColor.white.withAlphaComponent(0.25).cgColor
+        card.layer.borderWidth = 1
+        card.layer.cornerRadius = 16
+        card.clipsToBounds = true
+        card.widthAnchor.constraint(equalToConstant: 155).isActive = true
+
+        let dot = UIView()
+        dot.translatesAutoresizingMaskIntoConstraints = false
+        dot.backgroundColor = dotColor
+        dot.layer.cornerRadius = 3.5
+        dot.layer.shadowColor = dotColor.cgColor
+        dot.layer.shadowRadius = 4
+        dot.layer.shadowOpacity = 0.8
+        dot.layer.shadowOffset = .zero
 
         let tLbl = UILabel()
+        tLbl.translatesAutoresizingMaskIntoConstraints = false
         tLbl.text = title
-        tLbl.font = .systemFont(ofSize: 10, weight: .bold)
-        tLbl.textColor = UIColor(red: 0.39, green: 0.45, blue: 0.55, alpha: 1)
+        tLbl.font = .systemFont(ofSize: 9.5, weight: .bold)
+        tLbl.textColor = UIColor(red: 0.78, green: 0.87, blue: 1.0, alpha: 1) // #C7DFFF
 
+        let headerStack = UIStackView(arrangedSubviews: [dot, tLbl])
+        headerStack.translatesAutoresizingMaskIntoConstraints = false
+        headerStack.axis = .horizontal
+        headerStack.spacing = 6
+        headerStack.alignment = .center
+
+        valueLbl.translatesAutoresizingMaskIntoConstraints = false
+        valueLbl.font = .systemFont(ofSize: 20, weight: .bold)
+        valueLbl.textColor = .white
         valueLbl.text = "0"
-        valueLbl.font = .systemFont(ofSize: 21, weight: .bold)
-        valueLbl.textColor = valueColor
 
         let sLbl = UILabel()
+        sLbl.translatesAutoresizingMaskIntoConstraints = false
         sLbl.text = subText
-        sLbl.font = .systemFont(ofSize: 11, weight: .medium)
-        sLbl.textColor = UIColor(red: 0.58, green: 0.64, blue: 0.72, alpha: 1)
+        sLbl.font = .systemFont(ofSize: 10.5, weight: .medium)
+        sLbl.textColor = UIColor(red: 0.78, green: 0.87, blue: 1.0, alpha: 1) // #C7DFFF
 
-        [tLbl, valueLbl, sLbl].forEach {
-            $0.translatesAutoresizingMaskIntoConstraints = false
-            card.addSubview($0)
-        }
+        let vStack = UIStackView(arrangedSubviews: [headerStack, valueLbl, sLbl])
+        vStack.translatesAutoresizingMaskIntoConstraints = false
+        vStack.axis = .vertical
+        vStack.spacing = 3
+        vStack.alignment = .leading
+        card.addSubview(vStack)
 
         NSLayoutConstraint.activate([
-            tLbl.topAnchor.constraint(equalTo: card.topAnchor, constant: 12),
-            tLbl.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
-            tLbl.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14),
+            dot.widthAnchor.constraint(equalToConstant: 7),
+            dot.heightAnchor.constraint(equalToConstant: 7),
 
-            valueLbl.topAnchor.constraint(equalTo: tLbl.bottomAnchor, constant: 4),
-            valueLbl.leadingAnchor.constraint(equalTo: tLbl.leadingAnchor),
-
-            sLbl.topAnchor.constraint(equalTo: valueLbl.bottomAnchor, constant: 2),
-            sLbl.leadingAnchor.constraint(equalTo: tLbl.leadingAnchor),
+            vStack.topAnchor.constraint(equalTo: card.topAnchor, constant: 10),
+            vStack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -10),
+            vStack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
+            vStack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14)
         ])
 
         return card
@@ -269,7 +323,7 @@ class PatientWorklistViewController: UIViewController, UITableViewDataSource, UI
         filterScrollView.addSubview(filterChipsStack)
 
         NSLayoutConstraint.activate([
-            searchField.topAnchor.constraint(equalTo: kpiScrollView.bottomAnchor, constant: 8),
+            searchField.topAnchor.constraint(equalTo: topHeaderView.bottomAnchor, constant: 10),
             searchField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             searchField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             searchField.heightAnchor.constraint(equalToConstant: 44),
@@ -447,6 +501,7 @@ class PatientWorklistViewController: UIViewController, UITableViewDataSource, UI
                     let pId = p["id"] as? String ?? ""
                     let name = p["name"] as? String ?? "Unknown Patient"
                     let uhid = p["patientId"] as? String ?? "P-\(pId.prefix(6))"
+                    let phone = (p["phone"] as? String) ?? (p["mobile"] as? String ?? "")
                     let gender = p["gender"] as? String ?? "MALE"
                     let age = p["age"] as? Int ?? 0
                     let ageUnit = p["ageUnit"] as? String ?? "Yrs"
@@ -472,9 +527,11 @@ class PatientWorklistViewController: UIViewController, UITableViewDataSource, UI
                             var testStrings: [String] = []
                             var allApproved = true
                             let count = tests.count
+                            var firstTestName = "Clinical Diagnostic Investigation"
 
-                            for t in tests {
+                            for (idx, t) in tests.enumerated() {
                                 let tName = (t["testName"] as? String) ?? (t["name"] as? String ?? "Diagnostic Test")
+                                if idx == 0 { firstTestName = tName }
                                 let tStatus = (t["status"] as? String ?? "PENDING").uppercased()
                                 let isApproved = tStatus == "APPROVED" || tStatus == "FINAL" || tStatus == "READY" || tStatus == "COMPLETED"
                                 if !isApproved {
@@ -508,7 +565,11 @@ class PatientWorklistViewController: UIViewController, UITableViewDataSource, UI
                                 financials: finText,
                                 status: visitStatus,
                                 reportId: "rep_\(invNum)",
-                                invoiceId: invId
+                                invoiceId: invId,
+                                patientDbId: pId,
+                                uhid: uhid,
+                                patientPhone: phone,
+                                testName: firstTestName
                             ))
                         }
                     } else {
@@ -526,7 +587,11 @@ class PatientWorklistViewController: UIViewController, UITableViewDataSource, UI
                             financials: "Unbilled Registration",
                             status: "NO_TESTS",
                             reportId: nil,
-                            invoiceId: nil
+                            invoiceId: nil,
+                            patientDbId: pId,
+                            uhid: uhid,
+                            patientPhone: phone,
+                            testName: "Clinical Diagnostic Investigation"
                         ))
                     }
                 }
@@ -717,6 +782,7 @@ class PatientWorklistViewController: UIViewController, UITableViewDataSource, UI
         testsBox.layer.cornerRadius = 10
         testsBox.layer.borderWidth = 1
         testsBox.layer.borderColor = UIColor(red: 0.91, green: 0.93, blue: 0.96, alpha: 1).cgColor
+        testsBox.isUserInteractionEnabled = false
 
         let testsLbl = UILabel()
         testsLbl.attributedText = formatTestsAttributed(visit.testsList)
@@ -835,49 +901,45 @@ class PatientWorklistViewController: UIViewController, UITableViewDataSource, UI
         return cell
     }
 
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        guard indexPath.row < filteredVisits.count else { return }
+        let visit = filteredVisits[indexPath.row]
+        openReportPreview(for: visit)
+    }
+
     // ── Action Handlers ──────────────────────────────────────────────────────
     @objc private func didTapResultsEntry(_ sender: UIButton) {
+        guard sender.tag < filteredVisits.count else { return }
         let visit = filteredVisits[sender.tag]
-        let alert = UIAlertController(
-            title: "Results Entry: \(visit.visitId)",
-            message: "Patient: \(visit.patientName)\n\nEnter test findings for \(visit.testsList):",
-            preferredStyle: .alert
-        )
-
-        alert.addTextField { tf in
-            tf.placeholder = "Hemoglobin Hb (12.0 - 15.5 g/dL)"
-            tf.text = "13.8"
+        let resultsVC = ResultsViewController()
+        resultsVC.targetInvoiceId = visit.invoiceId
+        if let nav = navigationController {
+            nav.pushViewController(resultsVC, animated: true)
+        } else {
+            present(resultsVC, animated: true)
         }
-        alert.addTextField { tf in
-            tf.placeholder = "Platelet Count (1.50 - 4.50 Lakhs)"
-            tf.text = "2.85"
-        }
-        alert.addTextField { tf in
-            tf.placeholder = "Serum TSH (0.35 - 4.94 uIU/mL)"
-            tf.text = "2.45"
-        }
+    }
 
-        alert.addAction(UIAlertAction(title: "Authorize Report", style: .default, handler: { [weak self] _ in
-            guard let self = self else { return }
-            if let idx = self.allVisits.firstIndex(where: { $0.id == visit.id }) {
-                self.allVisits[idx].status = "COMPLETED"
-                self.updateKpiStats()
-                self.applyWorklistFilter()
-            }
-        }))
-
-        alert.addAction(UIAlertAction(title: "Save Draft", style: .cancel, handler: nil))
-        present(alert, animated: true, completion: nil)
+    private func openReportPreview(for visit: PatientVisitRecord) {
+        let previewVC = ReportPreviewViewController()
+        let pId = visit.patientDbId ?? ""
+        let targetId = !pId.isEmpty ? pId : ((visit.invoiceId != nil && !visit.invoiceId!.isEmpty) ? visit.invoiceId! : (visit.reportId ?? visit.visitId))
+        previewVC.reportId = targetId
+        previewVC.patientDbId = pId
+        previewVC.invoiceId = visit.invoiceId ?? ""
+        previewVC.uhid = visit.uhid ?? ""
+        previewVC.patientName = visit.patientName
+        previewVC.patientPhone = visit.patientPhone ?? ""
+        previewVC.testName = visit.testName ?? "Clinical Diagnostic Investigation"
+        previewVC.modalPresentationStyle = .fullScreen
+        present(previewVC, animated: true, completion: nil)
     }
 
     @objc private func didTapViewReport(_ sender: UIButton) {
+        guard sender.tag < filteredVisits.count else { return }
         let visit = filteredVisits[sender.tag]
-        let previewVC = ReportPreviewViewController()
-        let targetId = (visit.invoiceId != nil && !visit.invoiceId!.isEmpty) ? visit.invoiceId! : (visit.reportId ?? visit.visitId)
-        previewVC.reportId = targetId
-        previewVC.patientName = visit.patientName
-        previewVC.modalPresentationStyle = .fullScreen
-        present(previewVC, animated: true, completion: nil)
+        openReportPreview(for: visit)
     }
 
     private func formatTestsAttributed(_ rawTests: String) -> NSAttributedString {
@@ -963,7 +1025,11 @@ class PatientWorklistViewController: UIViewController, UITableViewDataSource, UI
     }
 
     @objc private func didTapBack() {
-        dismiss(animated: true, completion: nil)
+        if let nav = navigationController, nav.viewControllers.count > 1 {
+            nav.popViewController(animated: true)
+        } else {
+            dismiss(animated: true, completion: nil)
+        }
     }
 
     @objc private func didTapRefresh() {

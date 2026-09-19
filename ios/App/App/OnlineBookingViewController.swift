@@ -15,7 +15,7 @@ import UIKit
  */
 class OnlineBookingViewController: UIViewController, UITextFieldDelegate, UITableViewDelegate, UITableViewDataSource {
 
-    private static let baseUrl = "https://app.patholab.cloud"
+    static let baseUrl = "https://app.patholab.cloud"
 
     // ── Fused Hero Header ──
     private let heroHeaderView     = UIView()
@@ -39,10 +39,13 @@ class OnlineBookingViewController: UIViewController, UITextFieldDelegate, UITabl
     // ── 4 KPI Metrics Scroll (Exact Web Parity) ──
     private let kpiScrollView      = UIScrollView()
     private let kpiStackView       = UIStackView()
-    private let kpiTotalCountLbl   = UILabel()
+    private let kpiTotalTodayLbl   = UILabel()
     private let kpiPendingCountLbl = UILabel()
-    private let kpiVerifiedCountLbl = UILabel()
     private let kpiRevenueLbl      = UILabel()
+    private let kpiTotalCountLbl   = UILabel()
+
+    // ── Real-Time Auto Refresh Timer ──
+    private var autoRefreshTimer: Timer?
 
     // ── Search Omnibar ──
     private let searchContainer    = UIView()
@@ -67,7 +70,7 @@ class OnlineBookingViewController: UIViewController, UITextFieldDelegate, UITabl
     private var filteredBookings: [[String: Any]] = []
     private var testCatalog: [[String: Any]] = []
 
-    private var currentFilter: String = "ALL" // ALL, PENDING, VERIFIED, HOME_COLLECTION, LAB_VISIT, CANCELLED
+    private var currentFilter: String = "ALL" // ALL, PENDING, ASSIGNED, SAMPLE_COLLECTED, COMPLETED, HOME_COLLECTION, LAB_VISIT, CANCELLED
     private var searchQuery: String = ""
     private var portalSlug: String? = nil
     private var portalUrl: String? = nil
@@ -85,12 +88,50 @@ class OnlineBookingViewController: UIViewController, UITextFieldDelegate, UITabl
         setupFab()
         setupEmptyView()
 
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAppForeground),
+            name: UIApplication.willEnterForegroundNotification,
+            object: nil
+        )
+
         fetchBookingsData(isManual: false)
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         fetchBookingsData(isManual: false)
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        startAutoRefreshTimer()
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        stopAutoRefreshTimer()
+    }
+
+    private func startAutoRefreshTimer() {
+        stopAutoRefreshTimer()
+        autoRefreshTimer = Timer.scheduledTimer(withTimeInterval: 25.0, repeats: true) { [weak self] _ in
+            self?.fetchBookingsData(isManual: false, isSilent: true)
+        }
+    }
+
+    private func stopAutoRefreshTimer() {
+        autoRefreshTimer?.invalidate()
+        autoRefreshTimer = nil
+    }
+
+    @objc private func handleAppForeground() {
+        fetchBookingsData(isManual: false, isSilent: true)
+    }
+
+    deinit {
+        stopAutoRefreshTimer()
+        NotificationCenter.default.removeObserver(self)
     }
 
     override func viewDidLayoutSubviews() {
@@ -134,7 +175,7 @@ class OnlineBookingViewController: UIViewController, UITextFieldDelegate, UITabl
         heroHeaderView.addSubview(titleLabel)
 
         subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
-        subtitleLabel.text = "Verify patient payments and track booking lifecycle."
+        subtitleLabel.text = "Manage B2B2C patient appointments and home collections."
         subtitleLabel.font = .systemFont(ofSize: 11.5, weight: .medium)
         subtitleLabel.textColor = UIColor(red: 0.78, green: 0.87, blue: 1.0, alpha: 1)
         heroHeaderView.addSubview(subtitleLabel)
@@ -391,11 +432,11 @@ class OnlineBookingViewController: UIViewController, UITextFieldDelegate, UITabl
         kpiStackView.distribution = .fillProportionally
         kpiScrollView.addSubview(kpiStackView)
 
-        // Exact 4 web metrics matching screenshot 3
-        let card1 = createKpiCard(title: "TOTAL BOOKINGS", subtitle: "All Bookings", countLbl: kpiTotalCountLbl, colorHex: "64748B", iconName: "calendar")
-        let card2 = createKpiCard(title: "PENDING VERIFY", subtitle: "Pending Action", countLbl: kpiPendingCountLbl, colorHex: "D97706", iconName: "exclamationmark.triangle.fill")
-        let card3 = createKpiCard(title: "VERIFIED", subtitle: "Confirmed Orders", countLbl: kpiVerifiedCountLbl, colorHex: "16A34A", iconName: "checkmark.circle.fill")
-        let card4 = createKpiCard(title: "VERIFIED REVENUE", subtitle: "Online Value", countLbl: kpiRevenueLbl, colorHex: "2563EB", iconName: "shield.lefthalf.filled")
+        // Exact 4 web metrics matching /workspace/bookings
+        let card1 = createKpiCard(title: "NEW TODAY", subtitle: "New Bookings Today", countLbl: kpiTotalTodayLbl, colorHex: "2563EB", iconName: "calendar.badge.clock")
+        let card2 = createKpiCard(title: "PENDING ACTION", subtitle: "Pending Action", countLbl: kpiPendingCountLbl, colorHex: "D97706", iconName: "clock.fill")
+        let card3 = createKpiCard(title: "TOTAL REVENUE", subtitle: "Online Revenue", countLbl: kpiRevenueLbl, colorHex: "16A34A", iconName: "indianrupeesign.circle.fill")
+        let card4 = createKpiCard(title: "TOTAL BOOKINGS", subtitle: "All Appointments", countLbl: kpiTotalCountLbl, colorHex: "64748B", iconName: "list.clipboard.fill")
 
         kpiStackView.addArrangedSubview(card1)
         kpiStackView.addArrangedSubview(card2)
@@ -558,8 +599,10 @@ class OnlineBookingViewController: UIViewController, UITextFieldDelegate, UITabl
 
         let filters = [
             ("ALL", "All Bookings"),
-            ("PENDING", "Pending Verification"),
-            ("VERIFIED", "Verified"),
+            ("PENDING", "Pending Action"),
+            ("ASSIGNED", "Assigned Trips"),
+            ("SAMPLE_COLLECTED", "Sample Collected"),
+            ("COMPLETED", "Completed"),
             ("HOME_COLLECTION", "Home Collection"),
             ("LAB_VISIT", "Lab Visit"),
             ("CANCELLED", "Cancelled")
@@ -805,8 +848,8 @@ class OnlineBookingViewController: UIViewController, UITextFieldDelegate, UITabl
     // ─────────────────────────────────────────────────────────────────────────
     // MARK: – Networking & Data Parsing
     // ─────────────────────────────────────────────────────────────────────────
-    private func fetchBookingsData(isManual: Bool) {
-        if !refreshControl.isRefreshing {
+    private func fetchBookingsData(isManual: Bool, isSilent: Bool = false) {
+        if !isSilent && !refreshControl.isRefreshing {
             loadingIndicator.startAnimating()
         }
 
@@ -829,7 +872,9 @@ class OnlineBookingViewController: UIViewController, UITextFieldDelegate, UITabl
                 self?.refreshControl.endRefreshing()
 
                 guard let self = self, let data = data, error == nil else {
-                    self?.showToast("Failed to connect to server")
+                    if !isSilent {
+                        self?.showToast("Failed to connect to server")
+                    }
                     return
                 }
 
@@ -849,10 +894,13 @@ class OnlineBookingViewController: UIViewController, UITextFieldDelegate, UITabl
                         }
                     } else if let arr = try JSONSerialization.jsonObject(with: data) as? [[String: Any]] {
                         self.allBookings = arr
+                        self.updateKpiUi(stats: nil)
                         self.applyFilterAndSearch()
                     }
                 } catch {
-                    self.showToast("Error reading bookings")
+                    if !isSilent {
+                        self.showToast("Error reading bookings")
+                    }
                 }
             }
         }.resume()
@@ -879,54 +927,60 @@ class OnlineBookingViewController: UIViewController, UITextFieldDelegate, UITabl
 
     private func updateKpiUi(stats: [String: Any]?) {
         var total = allBookings.count
+        var todayCount = 0
         var pending = 0
-        var verified = 0
-        var verifiedRev: Double = 0
+        var revenue: Double = 0
 
+        let calendar = Calendar.current
         for b in allBookings {
             let s = (b["status"] as? String ?? "").uppercased()
-            let pStatus = (b["paymentStatus"] as? String ?? "").uppercased()
-            let isVerified = (s == "VERIFIED" || s == "ACCEPTED" || s == "COMPLETED" || pStatus == "PAID")
-            if isVerified {
-                verified += 1
-                if let inv = b["invoice"] as? [String: Any], let g = inv["grandTotal"] as? NSNumber {
-                    verifiedRev += g.doubleValue
-                } else if let amt = b["amount"] as? NSNumber {
-                    verifiedRev += amt.doubleValue
-                } else if let grandTotal = b["grandTotal"] as? NSNumber {
-                    verifiedRev += grandTotal.doubleValue
-                }
-            } else if s != "CANCELLED" {
+            if s == "SCHEDULED" || s == "PENDING" || s == "PENDING_PAYMENT" {
                 pending += 1
+            }
+            if let inv = b["invoice"] as? [String: Any], let g = inv["grandTotal"] as? NSNumber {
+                revenue += g.doubleValue
+            } else if let g = b["grandTotal"] as? NSNumber {
+                revenue += g.doubleValue
+            }
+            if let dateStr = b["createdAt"] as? String {
+                let formatter = ISO8601DateFormatter()
+                formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+                if let d = formatter.date(from: dateStr) ?? ISO8601DateFormatter().date(from: dateStr) {
+                    if calendar.isDateInToday(d) {
+                        todayCount += 1
+                    }
+                }
             }
         }
 
         if let stats = stats {
             if let t = stats["totalCount"] as? Int { total = t }
+            if let tod = stats["totalToday"] as? Int { todayCount = tod }
             if let p = stats["totalPending"] as? Int { pending = p }
-            if let v = stats["totalVerified"] as? Int { verified = v }
-            if let r = stats["verifiedRevenue"] as? NSNumber { verifiedRev = r.doubleValue }
-            else if let r = stats["totalRevenue"] as? NSNumber { verifiedRev = r.doubleValue }
+            if let r = stats["totalRevenue"] as? NSNumber { revenue = r.doubleValue }
         }
 
-        kpiTotalCountLbl.text = "\(total)"
+        kpiTotalTodayLbl.text = "\(todayCount)"
         kpiPendingCountLbl.text = "\(pending)"
-        kpiVerifiedCountLbl.text = "\(verified)"
-        kpiRevenueLbl.text = "₹\(Int(verifiedRev))"
+        kpiRevenueLbl.text = "₹\(Int(revenue))"
+        kpiTotalCountLbl.text = "\(total)"
     }
 
     private func applyFilterAndSearch() {
         filteredBookings = allBookings.filter { item in
             let status = (item["status"] as? String ?? "").uppercased()
-            let pStatus = (item["paymentStatus"] as? String ?? "").uppercased()
             let mode = (item["collectionMode"] as? String ?? "").uppercased()
 
             // Filter
             var matchesFilter = true
             if currentFilter == "PENDING" {
-                matchesFilter = (status == "SCHEDULED" || status == "PENDING" || status == "PENDING_PAYMENT" || pStatus != "PAID") && status != "CANCELLED"
-            } else if currentFilter == "VERIFIED" {
-                matchesFilter = (status == "VERIFIED" || status == "ACCEPTED" || status == "COMPLETED" || pStatus == "PAID") && status != "CANCELLED"
+                matchesFilter = (status == "SCHEDULED" || status == "PENDING" || status == "PENDING_PAYMENT") && status != "CANCELLED"
+            } else if currentFilter == "ASSIGNED" {
+                matchesFilter = (status == "ASSIGNED")
+            } else if currentFilter == "SAMPLE_COLLECTED" {
+                matchesFilter = (status == "SAMPLE_COLLECTED")
+            } else if currentFilter == "COMPLETED" {
+                matchesFilter = (status == "COMPLETED")
             } else if currentFilter == "HOME_COLLECTION" {
                 matchesFilter = (mode == "HOME_COLLECTION")
             } else if currentFilter == "LAB_VISIT" {
@@ -1015,12 +1069,19 @@ class OnlineBookingViewController: UIViewController, UITextFieldDelegate, UITabl
 
     private func handleCardAction(booking: [String: Any]) {
         guard let id = booking["id"] as? String else { return }
-        let mode = booking["collectionMode"] as? String ?? ""
+        let status = (booking["status"] as? String ?? "SCHEDULED").uppercased()
+        let mode = booking["collectionMode"] as? String ?? "LAB_VISIT"
 
-        if mode == "HOME_COLLECTION" {
-            updateBookingStatus(id: id, status: "ASSIGNED", successMessage: "Trip assigned successfully")
-        } else {
+        if status == "SCHEDULED" {
+            if mode == "HOME_COLLECTION" {
+                updateBookingStatus(id: id, status: "ASSIGNED", successMessage: "Trip assigned successfully")
+            } else {
+                updateBookingStatus(id: id, status: "SAMPLE_COLLECTED", successMessage: "Sample marked as collected")
+            }
+        } else if status == "ASSIGNED" {
             updateBookingStatus(id: id, status: "SAMPLE_COLLECTED", successMessage: "Sample marked as collected")
+        } else if status == "SAMPLE_COLLECTED" {
+            updateBookingStatus(id: id, status: "COMPLETED", successMessage: "Visit completed successfully")
         }
     }
 
@@ -1060,8 +1121,8 @@ class OnlineBookingViewController: UIViewController, UITextFieldDelegate, UITabl
         sheetVC.onStatusChange = { [weak self] id, newStatus, msg in
             self?.updateBookingStatus(id: id, status: newStatus, successMessage: msg)
         }
-        sheetVC.onReschedule = { [weak self] id, isoDate in
-            self?.rescheduleBooking(id: id, isoDate: isoDate)
+        sheetVC.onReschedule = { [weak self] id, isoDate, timeSlot in
+            self?.rescheduleBooking(id: id, isoDate: isoDate, timeSlot: timeSlot)
         }
         if #available(iOS 15.0, *) {
             if let sheet = sheetVC.sheetPresentationController {
@@ -1072,7 +1133,7 @@ class OnlineBookingViewController: UIViewController, UITextFieldDelegate, UITabl
         present(sheetVC, animated: true, completion: nil)
     }
 
-    private func rescheduleBooking(id: String, isoDate: String) {
+    private func rescheduleBooking(id: String, isoDate: String, timeSlot: String? = nil) {
         loadingIndicator.startAnimating()
 
         guard let token = KeychainManager.shared.getToken(),
@@ -1084,11 +1145,14 @@ class OnlineBookingViewController: UIViewController, UITextFieldDelegate, UITabl
         request.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        let payload: [String: Any] = [
+        var payload: [String: Any] = [
             "appointmentId": id,
             "appointmentDate": isoDate,
             "status": "SCHEDULED"
         ]
+        if let slot = timeSlot, !slot.isEmpty {
+            payload["timeSlot"] = slot
+        }
         request.httpBody = try? JSONSerialization.data(withJSONObject: payload)
 
         URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
@@ -1502,6 +1566,14 @@ class OnlineBookingCell: UITableViewCell {
                 primaryActionBtn.setTitle("Collect Sample", for: .normal)
                 primaryActionBtn.backgroundColor = UIColor(red: 0.02, green: 0.58, blue: 0.41, alpha: 1) // Emerald
             }
+        } else if status == "ASSIGNED" {
+            primaryActionBtn.isHidden = false
+            primaryActionBtn.setTitle("Collect Sample", for: .normal)
+            primaryActionBtn.backgroundColor = UIColor(red: 0.02, green: 0.58, blue: 0.41, alpha: 1) // Emerald
+        } else if status == "SAMPLE_COLLECTED" {
+            primaryActionBtn.isHidden = false
+            primaryActionBtn.setTitle("Complete Visit", for: .normal)
+            primaryActionBtn.backgroundColor = UIColor(red: 0.01, green: 0.52, blue: 0.78, alpha: 1) // Sky
         } else {
             primaryActionBtn.isHidden = true
         }
@@ -1530,7 +1602,7 @@ class OnlineBookingCell: UITableViewCell {
 class BookingDetailSheetViewController: UIViewController {
     private let booking: [String: Any]
     var onStatusChange: ((String, String, String) -> Void)?
-    var onReschedule: ((String, String) -> Void)?
+    var onReschedule: ((String, String, String?) -> Void)?
 
     init(booking: [String: Any]) {
         self.booking = booking
@@ -1578,7 +1650,6 @@ class BookingDetailSheetViewController: UIViewController {
         let age = pat?["age"] as? Int ?? 0
         let gender = pat?["gender"] as? String ?? "MALE"
         let mode = booking["collectionMode"] as? String ?? "LAB_VISIT"
-        let status = booking["status"] as? String ?? "SCHEDULED"
         let apptId = booking["id"] as? String ?? ""
 
         // Header Label
@@ -1650,7 +1721,7 @@ class BookingDetailSheetViewController: UIViewController {
         reschedBtn.titleLabel?.font = .systemFont(ofSize: 12, weight: .bold)
         reschedBtn.tintColor = UIColor(red: 0.15, green: 0.39, blue: 0.92, alpha: 1)
         reschedBtn.addAction(UIAction(handler: { [weak self] _ in
-            self?.promptReschedule(apptId: apptId)
+            self?.presentRescheduleModal(apptId: apptId, currentDateStr: dStr, currentSlot: slot)
         }), for: .touchUpInside)
         sStack.addArrangedSubview(reschedBtn)
 
@@ -1836,26 +1907,256 @@ class BookingDetailSheetViewController: UIViewController {
         stack.addArrangedSubview(row2)
     }
 
-    private func promptReschedule(apptId: String) {
-        let alert = UIAlertController(title: "Reschedule Booking\n\n\n\n\n\n\n\n", message: nil, preferredStyle: .actionSheet)
-        let picker = UIDatePicker()
-        picker.datePickerMode = .date
-        if #available(iOS 14.0, *) {
-            picker.preferredDatePickerStyle = .wheels
-        }
-        picker.frame = CGRect(x: 10, y: 30, width: alert.view.bounds.width - 20, height: 180)
-        alert.view.addSubview(picker)
-
-        alert.addAction(UIAlertAction(title: "Confirm Reschedule", style: .default, handler: { [weak self] _ in
-            let formatter = ISO8601DateFormatter()
-            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-            let iso = formatter.string(from: picker.date)
+    private func presentRescheduleModal(apptId: String, currentDateStr: String, currentSlot: String) {
+        let reschedVC = RescheduleSheetViewController(apptId: apptId, currentDateStr: currentDateStr, currentSlot: currentSlot)
+        reschedVC.onRescheduleConfirmed = { [weak self] id, iso, slot in
             self?.dismiss(animated: true) {
-                self?.onReschedule?(apptId, iso)
+                self?.onReschedule?(id, iso, slot)
             }
-        }))
-        alert.addAction(UIAlertAction(title: "Dismiss", style: .cancel))
-        present(alert, animated: true)
+        }
+        if #available(iOS 15.0, *) {
+            if let sheet = reschedVC.sheetPresentationController {
+                sheet.detents = [.medium(), .large()]
+                sheet.prefersGrabberVisible = true
+            }
+        }
+        present(reschedVC, animated: true, completion: nil)
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MARK: – Reschedule Modal Sheet View Controller
+// ─────────────────────────────────────────────────────────────────────────────
+class RescheduleSheetViewController: UIViewController {
+    var onRescheduleConfirmed: ((String, String, String) -> Void)?
+
+    private let apptId: String
+    private let currentDateStr: String
+    private let currentSlot: String
+
+    private let datePicker = UIDatePicker()
+    private let slotSegment: UISegmentedControl
+    private let slots = ["07-09 AM", "09-11 AM", "11-01 PM", "02-04 PM", "04-06 PM"]
+
+    init(apptId: String, currentDateStr: String, currentSlot: String) {
+        self.apptId = apptId
+        self.currentDateStr = currentDateStr
+        self.currentSlot = currentSlot
+        self.slotSegment = UISegmentedControl(items: slots)
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = UIColor(red: 0.973, green: 0.980, blue: 0.988, alpha: 1) // #F8FAFC
+        setupUI()
+    }
+
+    private func setupUI() {
+        let scrollView = UIScrollView()
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(scrollView)
+
+        let stack = UIStackView()
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        stack.axis = .vertical
+        stack.spacing = 16
+        scrollView.addSubview(stack)
+
+        NSLayoutConstraint.activate([
+            scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
+            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+
+            stack.topAnchor.constraint(equalTo: scrollView.topAnchor),
+            stack.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor, constant: -28),
+            stack.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor, constant: 20),
+            stack.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor, constant: -20),
+            stack.widthAnchor.constraint(equalTo: scrollView.widthAnchor, constant: -40)
+        ])
+
+        // Title Row
+        let topBar = UIStackView()
+        topBar.axis = .horizontal
+        topBar.distribution = .equalSpacing
+        topBar.alignment = .center
+
+        let headerStack = UIStackView()
+        headerStack.axis = .vertical
+        headerStack.spacing = 3
+
+        let titleLbl = UILabel()
+        titleLbl.text = "Reschedule Booking"
+        titleLbl.font = .systemFont(ofSize: 18, weight: .bold)
+        titleLbl.textColor = UIColor(red: 0.06, green: 0.09, blue: 0.16, alpha: 1)
+        headerStack.addArrangedSubview(titleLbl)
+
+        let subLbl = UILabel()
+        subLbl.text = "Select a new date and time slot for this appointment."
+        subLbl.font = .systemFont(ofSize: 12)
+        subLbl.textColor = UIColor(red: 0.39, green: 0.45, blue: 0.55, alpha: 1)
+        headerStack.addArrangedSubview(subLbl)
+
+        topBar.addArrangedSubview(headerStack)
+
+        let closeBtn = UIButton(type: .system)
+        closeBtn.setImage(UIImage(systemName: "xmark.circle.fill"), for: .normal)
+        closeBtn.tintColor = UIColor(red: 0.6, green: 0.64, blue: 0.72, alpha: 1)
+        closeBtn.addAction(UIAction(handler: { [weak self] _ in self?.dismiss(animated: true) }), for: .touchUpInside)
+        topBar.addArrangedSubview(closeBtn)
+
+        stack.addArrangedSubview(topBar)
+
+        // Current appointment banner
+        let banner = UIView()
+        banner.backgroundColor = UIColor(red: 0.94, green: 0.96, blue: 1.0, alpha: 1)
+        banner.layer.cornerRadius = 10
+        banner.layer.borderWidth = 1
+        banner.layer.borderColor = UIColor(red: 0.85, green: 0.90, blue: 1.0, alpha: 1).cgColor
+
+        let bStack = UIStackView()
+        bStack.translatesAutoresizingMaskIntoConstraints = false
+        bStack.axis = .horizontal
+        bStack.spacing = 8
+        bStack.alignment = .center
+        banner.addSubview(bStack)
+
+        let clockIcon = UIImageView(image: UIImage(systemName: "clock.fill"))
+        clockIcon.tintColor = UIColor(red: 0.15, green: 0.39, blue: 0.92, alpha: 1)
+        clockIcon.widthAnchor.constraint(equalToConstant: 16).isActive = true
+        clockIcon.heightAnchor.constraint(equalToConstant: 16).isActive = true
+        bStack.addArrangedSubview(clockIcon)
+
+        let curLbl = UILabel()
+        curLbl.text = "Current: \(String(currentDateStr.prefix(10))) • \(currentSlot)"
+        curLbl.font = .systemFont(ofSize: 12, weight: .semibold)
+        curLbl.textColor = UIColor(red: 0.11, green: 0.31, blue: 0.85, alpha: 1)
+        bStack.addArrangedSubview(curLbl)
+
+        NSLayoutConstraint.activate([
+            bStack.topAnchor.constraint(equalTo: banner.topAnchor, constant: 8),
+            bStack.bottomAnchor.constraint(equalTo: banner.bottomAnchor, constant: -8),
+            bStack.leadingAnchor.constraint(equalTo: banner.leadingAnchor, constant: 12),
+            bStack.trailingAnchor.constraint(equalTo: banner.trailingAnchor, constant: -12)
+        ])
+        stack.addArrangedSubview(banner)
+
+        // Date Picker Card
+        let dateCard = UIView()
+        dateCard.backgroundColor = .white
+        dateCard.layer.cornerRadius = 12
+        dateCard.layer.borderWidth = 1
+        dateCard.layer.borderColor = UIColor(red: 0.89, green: 0.91, blue: 0.94, alpha: 1).cgColor
+
+        let dStack = UIStackView()
+        dStack.translatesAutoresizingMaskIntoConstraints = false
+        dStack.axis = .vertical
+        dStack.spacing = 8
+        dateCard.addSubview(dStack)
+
+        let dTitle = UILabel()
+        dTitle.text = "NEW APPOINTMENT DATE"
+        dTitle.font = .systemFont(ofSize: 11, weight: .bold)
+        dTitle.textColor = UIColor(red: 0.39, green: 0.45, blue: 0.55, alpha: 1)
+        dStack.addArrangedSubview(dTitle)
+
+        datePicker.datePickerMode = .date
+        datePicker.minimumDate = Date()
+        if #available(iOS 14.0, *) {
+            datePicker.preferredDatePickerStyle = .inline
+        }
+        datePicker.tintColor = UIColor(red: 0.15, green: 0.39, blue: 0.92, alpha: 1)
+        dStack.addArrangedSubview(datePicker)
+
+        NSLayoutConstraint.activate([
+            dStack.topAnchor.constraint(equalTo: dateCard.topAnchor, constant: 12),
+            dStack.bottomAnchor.constraint(equalTo: dateCard.bottomAnchor, constant: -12),
+            dStack.leadingAnchor.constraint(equalTo: dateCard.leadingAnchor, constant: 12),
+            dStack.trailingAnchor.constraint(equalTo: dateCard.trailingAnchor, constant: -12)
+        ])
+        stack.addArrangedSubview(dateCard)
+
+        // Slot Selection Card
+        let slotCard = UIView()
+        slotCard.backgroundColor = .white
+        slotCard.layer.cornerRadius = 12
+        slotCard.layer.borderWidth = 1
+        slotCard.layer.borderColor = UIColor(red: 0.89, green: 0.91, blue: 0.94, alpha: 1).cgColor
+
+        let sStack = UIStackView()
+        sStack.translatesAutoresizingMaskIntoConstraints = false
+        sStack.axis = .vertical
+        sStack.spacing = 10
+        slotCard.addSubview(sStack)
+
+        let sTitle = UILabel()
+        sTitle.text = "PREFERRED TIME SLOT"
+        sTitle.font = .systemFont(ofSize: 11, weight: .bold)
+        sTitle.textColor = UIColor(red: 0.39, green: 0.45, blue: 0.55, alpha: 1)
+        sStack.addArrangedSubview(sTitle)
+
+        if let idx = slots.firstIndex(where: { currentSlot.contains($0) }) {
+            slotSegment.selectedSegmentIndex = idx
+        } else {
+            slotSegment.selectedSegmentIndex = 0
+        }
+        slotSegment.selectedSegmentTintColor = UIColor(red: 0.15, green: 0.39, blue: 0.92, alpha: 1)
+        slotSegment.setTitleTextAttributes([.foregroundColor: UIColor.white, .font: UIFont.systemFont(ofSize: 11, weight: .bold)], for: .selected)
+        slotSegment.setTitleTextAttributes([.foregroundColor: UIColor(red: 0.2, green: 0.25, blue: 0.33, alpha: 1), .font: UIFont.systemFont(ofSize: 11)], for: .normal)
+        sStack.addArrangedSubview(slotSegment)
+
+        NSLayoutConstraint.activate([
+            sStack.topAnchor.constraint(equalTo: slotCard.topAnchor, constant: 12),
+            sStack.bottomAnchor.constraint(equalTo: slotCard.bottomAnchor, constant: -12),
+            sStack.leadingAnchor.constraint(equalTo: slotCard.leadingAnchor, constant: 12),
+            sStack.trailingAnchor.constraint(equalTo: slotCard.trailingAnchor, constant: -12)
+        ])
+        stack.addArrangedSubview(slotCard)
+
+        // Buttons
+        let btnStack = UIStackView()
+        btnStack.axis = .horizontal
+        btnStack.spacing = 10
+        btnStack.distribution = .fillEqually
+
+        let cancelBtn = UIButton(type: .system)
+        cancelBtn.setTitle("Cancel", for: .normal)
+        cancelBtn.titleLabel?.font = .systemFont(ofSize: 13, weight: .bold)
+        cancelBtn.tintColor = UIColor(red: 0.39, green: 0.45, blue: 0.55, alpha: 1)
+        cancelBtn.backgroundColor = UIColor(red: 0.92, green: 0.94, blue: 0.96, alpha: 1)
+        cancelBtn.layer.cornerRadius = 10
+        cancelBtn.heightAnchor.constraint(equalToConstant: 44).isActive = true
+        cancelBtn.addAction(UIAction(handler: { [weak self] _ in self?.dismiss(animated: true) }), for: .touchUpInside)
+        btnStack.addArrangedSubview(cancelBtn)
+
+        let confirmBtn = UIButton(type: .system)
+        confirmBtn.setTitle("Confirm Reschedule", for: .normal)
+        confirmBtn.titleLabel?.font = .systemFont(ofSize: 13, weight: .bold)
+        confirmBtn.tintColor = .white
+        confirmBtn.backgroundColor = UIColor(red: 0.15, green: 0.39, blue: 0.92, alpha: 1)
+        confirmBtn.layer.cornerRadius = 10
+        confirmBtn.heightAnchor.constraint(equalToConstant: 44).isActive = true
+        confirmBtn.addAction(UIAction(handler: { [weak self] _ in self?.handleConfirm() }), for: .touchUpInside)
+        btnStack.addArrangedSubview(confirmBtn)
+
+        stack.addArrangedSubview(btnStack)
+    }
+
+    private func handleConfirm() {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let iso = formatter.string(from: datePicker.date)
+
+        let selectedIndex = slotSegment.selectedSegmentIndex
+        let slot = (selectedIndex >= 0 && selectedIndex < slots.count) ? slots[selectedIndex] : "07-09 AM"
+
+        dismiss(animated: true) { [weak self] in
+            guard let self = self else { return }
+            self.onRescheduleConfirmed?(self.apptId, iso, slot)
+        }
     }
 }
 
@@ -2057,23 +2358,59 @@ class CreateOnlineBookingSheetViewController: UIViewController, UITableViewDeleg
     }
 
     private func fetchTestCatalog() {
-        guard let token = KeychainManager.shared.getToken(),
-              let url = URL(string: "https://app.patholab.cloud/api/workspace/test-catalog") else { return }
+        guard let token = KeychainManager.shared.getToken() else { return }
 
-        var req = URLRequest(url: url)
+        let primaryUrlStr = "\(OnlineBookingViewController.baseUrl)/api/workspace/test-catalog"
+        guard let primaryUrl = URL(string: primaryUrlStr) else { return }
+
+        var req = URLRequest(url: primaryUrl)
         req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         req.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
+        req.setValue("application/json", forHTTPHeaderField: "Accept")
 
         URLSession.shared.dataTask(with: req) { [weak self] data, response, error in
-            DispatchQueue.main.async {
-                guard let data = data,
-                      let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                      let tests = json["tests"] as? [[String: Any]] else { return }
-
-                self?.allTests = tests
-                self?.filteredTests = tests
-                self?.testsTableView.reloadData()
+            if let data = data, error == nil {
+                if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                   let tests = json["tests"] as? [[String: Any]], !tests.isEmpty {
+                    DispatchQueue.main.async {
+                        self?.allTests = tests
+                        self?.filteredTests = tests
+                        self?.testsTableView.reloadData()
+                    }
+                    return
+                } else if let arr = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]], !arr.isEmpty {
+                    DispatchQueue.main.async {
+                        self?.allTests = arr
+                        self?.filteredTests = arr
+                        self?.testsTableView.reloadData()
+                    }
+                    return
+                }
             }
+
+            // Fallback to /api/workspace/catalog if test-catalog was empty or errored
+            let fallbackUrlStr = "\(OnlineBookingViewController.baseUrl)/api/workspace/catalog"
+            guard let fallbackUrl = URL(string: fallbackUrlStr) else { return }
+            var fallbackReq = URLRequest(url: fallbackUrl)
+            fallbackReq.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            fallbackReq.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
+            fallbackReq.setValue("application/json", forHTTPHeaderField: "Accept")
+
+            URLSession.shared.dataTask(with: fallbackReq) { [weak self] fData, fResp, fErr in
+                DispatchQueue.main.async {
+                    guard let fData = fData, fErr == nil else { return }
+                    if let json = try? JSONSerialization.jsonObject(with: fData) as? [String: Any],
+                       let tests = json["tests"] as? [[String: Any]] {
+                        self?.allTests = tests
+                        self?.filteredTests = tests
+                        self?.testsTableView.reloadData()
+                    } else if let arr = try? JSONSerialization.jsonObject(with: fData) as? [[String: Any]] {
+                        self?.allTests = arr
+                        self?.filteredTests = arr
+                        self?.testsTableView.reloadData()
+                    }
+                }
+            }.resume()
         }.resume()
     }
 
@@ -2084,8 +2421,8 @@ class CreateOnlineBookingSheetViewController: UIViewController, UITableViewDeleg
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = UITableViewCell(style: .subtitle, reuseIdentifier: "testCell")
         let t = filteredTests[indexPath.row]
-        let name = t["name"] as? String ?? "Test"
-        let code = t["code"] as? String ?? ""
+        let name = t["name"] as? String ?? t["testName"] as? String ?? "Test"
+        let code = t["code"] as? String ?? t["testCode"] as? String ?? ""
         let price = (t["price"] as? NSNumber)?.doubleValue ?? 0
         let id = t["id"] as? String ?? ""
 
@@ -2147,7 +2484,7 @@ class CreateOnlineBookingSheetViewController: UIViewController, UITableViewDeleg
         spinner.startAnimating()
 
         guard let token = KeychainManager.shared.getToken(),
-              let url = URL(string: "https://app.patholab.cloud/api/workspace/appointments/online") else { return }
+              let url = URL(string: "\(OnlineBookingViewController.baseUrl)/api/workspace/appointments/online") else { return }
 
         var req = URLRequest(url: url)
         req.httpMethod = "POST"
@@ -2605,7 +2942,7 @@ class PortalSettingsSheetViewController: UIViewController {
         spinner.startAnimating()
 
         guard let token = KeychainManager.shared.getToken(),
-              let url = URL(string: "https://app.patholab.cloud/api/workspace/settings/portal") else { return }
+              let url = URL(string: "\(OnlineBookingViewController.baseUrl)/api/workspace/settings/portal") else { return }
 
         var req = URLRequest(url: url)
         req.httpMethod = "PATCH"

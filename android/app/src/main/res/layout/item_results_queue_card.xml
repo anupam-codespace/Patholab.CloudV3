@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Queue item card for Clinical Results Entry -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:layout_marginStart="16dp"
+    android:layout_marginEnd="16dp"
+    android:layout_marginTop="6dp"
+    android:layout_marginBottom="6dp"
+    android:background="@drawable/bg_pill_white"
+    android:backgroundTint="#FFFFFF"
+    android:padding="16dp"
+    android:elevation="1dp">
+
+    <!-- Top Row: Patient Name + Created Date/Time -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/lblQueuePatientName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Patient Name"
+            android:textSize="15.5sp"
+            android:textStyle="bold"
+            android:textColor="#0F172A"
+            android:ellipsize="end"
+            android:maxLines="1" />
+
+        <TextView
+            android:id="@+id/lblQueueDateTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="11 Sep, 14:30"
+            android:textSize="10.5sp"
+            android:textStyle="bold"
+            android:textColor="#475569"
+            android:background="@drawable/bg_pill_white"
+            android:backgroundTint="#F1F5F9"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp" />
+
+    </LinearLayout>
+
+    <!-- Subtitle: SID + Age + Gender + Phone -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="6dp">
+
+        <TextView
+            android:id="@+id/lblQueueInvoiceNumber"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="INV-2026-0001"
+            android:textSize="12sp"
+            android:typeface="monospace"
+            android:textColor="#64748B" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=" • "
+            android:textSize="12sp"
+            android:textColor="#CBD5E1" />
+
+        <TextView
+            android:id="@+id/lblQueuePatientMeta"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="35Y M"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#475569"
+            android:background="@drawable/bg_pill_white"
+            android:backgroundTint="#F8FAFC"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp" />
+
+        <TextView
+            android:id="@+id/lblQueuePhone"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text=" • 9876543210"
+            android:textSize="11.5sp"
+            android:textColor="#64748B"
+            android:layout_marginStart="6dp"
+            android:ellipsize="end"
+            android:maxLines="1" />
+
+    </LinearLayout>
+
+    <!-- Bottom Row: Test Tags + Chevron -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="12dp">
+
+        <LinearLayout
+            android:id="@+id/containerQueueTestBadges"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+            <!-- Dynamic Test Badges inserted in code -->
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/btnQueueOpenAction"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Enter Results →"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="#0D6EFD" />
+
+    </LinearLayout>
+
+</LinearLayout>

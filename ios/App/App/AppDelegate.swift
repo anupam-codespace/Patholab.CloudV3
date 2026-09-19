@@ -80,9 +80,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         win.makeKeyAndVisible()
     }
 
-    func presentNativeLogin() {
-        NSLog("DEBUG: AppDelegate presentNativeLogin")
-        let loginVC = LoginViewController()
+    func presentNativeLogin(prefilledEmail: String? = nil, successMessage: String? = nil) {
+        NSLog("DEBUG: AppDelegate presentNativeLogin with email=%@, msg=%@", prefilledEmail ?? "nil", successMessage ?? "nil")
+        let loginVC = LoginViewController(prefilledEmail: prefilledEmail, initialSuccessMessage: successMessage)
         loginVC.onLoginSuccess = { [weak self] in
             self?.presentMainApp()
         }

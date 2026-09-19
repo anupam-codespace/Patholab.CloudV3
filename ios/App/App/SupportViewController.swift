@@ -92,9 +92,9 @@ class SupportViewController: UIViewController, UITextFieldDelegate {
     private func setupHeroHeader() {
         heroHeaderView.translatesAutoresizingMaskIntoConstraints = false
         heroGradientLayer.colors = [
-            UIColor(red: 0.039, green: 0.098, blue: 0.184, alpha: 1).cgColor, // #0A192F
-            UIColor(red: 0.051, green: 0.165, blue: 0.439, alpha: 1).cgColor, // #0D2A70
-            UIColor(red: 0.118, green: 0.227, blue: 0.541, alpha: 1).cgColor  // #1E3A8A
+            UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1).cgColor, // #0D6EFD
+            UIColor(red: 0.039, green: 0.345, blue: 0.792, alpha: 1).cgColor, // #0A58CA
+            UIColor(red: 0.114, green: 0.306, blue: 0.847, alpha: 1).cgColor  // #1D4ED8
         ]
         heroGradientLayer.startPoint = CGPoint(x: 0, y: 0)
         heroGradientLayer.endPoint   = CGPoint(x: 1, y: 1)
@@ -104,56 +104,59 @@ class SupportViewController: UIViewController, UITextFieldDelegate {
         heroHeaderView.clipsToBounds = true
         view.addSubview(heroHeaderView)
 
-        // Back Button
+        // Tier 1: Top Navigation Bar
         backBtn.setImage(UIImage(systemName: "chevron.left"), for: .normal)
         backBtn.tintColor = .white
-        backBtn.backgroundColor = UIColor.white.withAlphaComponent(0.18)
+        backBtn.backgroundColor = UIColor.white.withAlphaComponent(0.20)
         backBtn.layer.cornerRadius = 19
         backBtn.layer.borderWidth = 1
-        backBtn.layer.borderColor = UIColor.white.withAlphaComponent(0.25).cgColor
+        backBtn.layer.borderColor = UIColor.white.withAlphaComponent(0.30).cgColor
         backBtn.translatesAutoresizingMaskIntoConstraints = false
         backBtn.addTarget(self, action: #selector(backTapped), for: .touchUpInside)
 
-        // Titles
-        titleLabel.text = "Help & Support"
-        titleLabel.font = .systemFont(ofSize: 20, weight: .bold)
-        titleLabel.textColor = .white
-
-        subtitleLabel.text = "24/7 Dedicated Assistance Desk"
-        subtitleLabel.font = .systemFont(ofSize: 12, weight: .medium)
-        subtitleLabel.textColor = UIColor(red: 0.576, green: 0.773, blue: 0.992, alpha: 1) // #93C5FD
-
-        let titleStack = UIStackView(arrangedSubviews: [titleLabel, subtitleLabel])
-        titleStack.axis = .vertical
-        titleStack.spacing = 2
-        titleStack.translatesAutoresizingMaskIntoConstraints = false
-
-        // New Ticket Button in Header
+        // New Ticket Button — White Capsule CTA
         headerNewTicketBtn.setTitle("+ New Ticket", for: .normal)
-        headerNewTicketBtn.titleLabel?.font = .systemFont(ofSize: 13, weight: .bold)
-        headerNewTicketBtn.setTitleColor(.white, for: .normal)
-        headerNewTicketBtn.backgroundColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1) // #0D6EFD
+        headerNewTicketBtn.titleLabel?.font = .systemFont(ofSize: 13.5, weight: .bold)
+        headerNewTicketBtn.setTitleColor(UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1), for: .normal)
+        headerNewTicketBtn.backgroundColor = .white
         headerNewTicketBtn.layer.cornerRadius = 18
-        headerNewTicketBtn.contentEdgeInsets = UIEdgeInsets(top: 8, left: 14, bottom: 8, right: 14)
+        headerNewTicketBtn.layer.shadowColor = UIColor.black.cgColor
+        headerNewTicketBtn.layer.shadowOpacity = 0.12
+        headerNewTicketBtn.layer.shadowRadius = 4
+        headerNewTicketBtn.layer.shadowOffset = CGSize(width: 0, height: 2)
+        headerNewTicketBtn.contentEdgeInsets = UIEdgeInsets(top: 8, left: 14, bottom: 8, right: 16)
         headerNewTicketBtn.translatesAutoresizingMaskIntoConstraints = false
         headerNewTicketBtn.addTarget(self, action: #selector(newTicketTapped), for: .touchUpInside)
 
         let topBar = UIView()
         topBar.translatesAutoresizingMaskIntoConstraints = false
         topBar.addSubview(backBtn)
-        topBar.addSubview(titleStack)
         topBar.addSubview(headerNewTicketBtn)
 
-        // KPI Cards Row
+        // Tier 2: Hero Greeting Title & Subtitle (Full Unrestricted Width)
+        titleLabel.text = "Help & Support"
+        titleLabel.font = .systemFont(ofSize: 24, weight: .heavy)
+        titleLabel.textColor = .white
+
+        subtitleLabel.text = "24/7 Dedicated Assistance Desk & Ticket Tracker"
+        subtitleLabel.font = .systemFont(ofSize: 12.5, weight: .medium)
+        subtitleLabel.textColor = UIColor(red: 0.780, green: 0.875, blue: 1.0, alpha: 1) // #C7DFFF
+
+        let titleStack = UIStackView(arrangedSubviews: [titleLabel, subtitleLabel])
+        titleStack.axis = .vertical
+        titleStack.spacing = 3
+        titleStack.translatesAutoresizingMaskIntoConstraints = false
+
+        // Tier 3: 3 Frosted Glass KPI Bento Cards
         let kpiStack = UIStackView()
         kpiStack.axis = .horizontal
         kpiStack.distribution = .fillEqually
         kpiStack.spacing = 8
         kpiStack.translatesAutoresizingMaskIntoConstraints = false
 
-        setupKpiCard(kpiOpenCard, countLabel: kpiOpenCount, tag: "OPEN", sub: "Awaiting review", color: UIColor(red: 0.937, green: 0.267, blue: 0.267, alpha: 1))
-        setupKpiCard(kpiProgressCard, countLabel: kpiProgressCount, tag: "IN PROGRESS", sub: "Being handled", color: UIColor(red: 0.961, green: 0.620, blue: 0.043, alpha: 1))
-        setupKpiCard(kpiResolvedCard, countLabel: kpiResolvedCount, tag: "RESOLVED", sub: "Completed", color: UIColor(red: 0.063, green: 0.725, blue: 0.506, alpha: 1))
+        setupKpiCard(kpiOpenCard, countLabel: kpiOpenCount, tag: "OPEN", sub: "Awaiting review", dotColor: UIColor(red: 0.988, green: 0.647, blue: 0.647, alpha: 1), textColor: UIColor(red: 0.988, green: 0.647, blue: 0.647, alpha: 1))
+        setupKpiCard(kpiProgressCard, countLabel: kpiProgressCount, tag: "PROGRESS", sub: "Being handled", dotColor: UIColor(red: 0.996, green: 0.902, blue: 0.541, alpha: 1), textColor: UIColor(red: 0.996, green: 0.902, blue: 0.541, alpha: 1))
+        setupKpiCard(kpiResolvedCard, countLabel: kpiResolvedCount, tag: "RESOLVED", sub: "Completed", dotColor: UIColor(red: 0.655, green: 0.953, blue: 0.816, alpha: 1), textColor: UIColor(red: 0.655, green: 0.953, blue: 0.816, alpha: 1))
 
         kpiOpenCard.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(kpiOpenTapped)))
         kpiProgressCard.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(kpiProgressTapped)))
@@ -164,6 +167,7 @@ class SupportViewController: UIViewController, UITextFieldDelegate {
         kpiStack.addArrangedSubview(kpiResolvedCard)
 
         heroHeaderView.addSubview(topBar)
+        heroHeaderView.addSubview(titleStack)
         heroHeaderView.addSubview(kpiStack)
 
         NSLayoutConstraint.activate([
@@ -174,51 +178,67 @@ class SupportViewController: UIViewController, UITextFieldDelegate {
             topBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 4),
             topBar.leadingAnchor.constraint(equalTo: heroHeaderView.leadingAnchor, constant: 18),
             topBar.trailingAnchor.constraint(equalTo: heroHeaderView.trailingAnchor, constant: -18),
-            topBar.heightAnchor.constraint(equalToConstant: 44),
+            topBar.heightAnchor.constraint(equalToConstant: 42),
 
             backBtn.leadingAnchor.constraint(equalTo: topBar.leadingAnchor),
             backBtn.centerYAnchor.constraint(equalTo: topBar.centerYAnchor),
             backBtn.widthAnchor.constraint(equalToConstant: 38),
             backBtn.heightAnchor.constraint(equalToConstant: 38),
 
-            titleStack.leadingAnchor.constraint(equalTo: backBtn.trailingAnchor, constant: 12),
-            titleStack.centerYAnchor.constraint(equalTo: topBar.centerYAnchor),
-
             headerNewTicketBtn.trailingAnchor.constraint(equalTo: topBar.trailingAnchor),
             headerNewTicketBtn.centerYAnchor.constraint(equalTo: topBar.centerYAnchor),
             headerNewTicketBtn.heightAnchor.constraint(equalToConstant: 36),
 
-            kpiStack.topAnchor.constraint(equalTo: topBar.bottomAnchor, constant: 16),
+            titleStack.topAnchor.constraint(equalTo: topBar.bottomAnchor, constant: 14),
+            titleStack.leadingAnchor.constraint(equalTo: heroHeaderView.leadingAnchor, constant: 18),
+            titleStack.trailingAnchor.constraint(equalTo: heroHeaderView.trailingAnchor, constant: -18),
+
+            kpiStack.topAnchor.constraint(equalTo: titleStack.bottomAnchor, constant: 16),
             kpiStack.leadingAnchor.constraint(equalTo: heroHeaderView.leadingAnchor, constant: 18),
             kpiStack.trailingAnchor.constraint(equalTo: heroHeaderView.trailingAnchor, constant: -18),
-            kpiStack.bottomAnchor.constraint(equalTo: heroHeaderView.bottomAnchor, constant: -18)
+            kpiStack.bottomAnchor.constraint(equalTo: heroHeaderView.bottomAnchor, constant: -20)
         ])
     }
 
-    private func setupKpiCard(_ card: UIView, countLabel: UILabel, tag: String, sub: String, color: UIColor) {
-        card.backgroundColor = .white
-        card.layer.cornerRadius = 14
+    private func setupKpiCard(_ card: UIView, countLabel: UILabel, tag: String, sub: String, dotColor: UIColor, textColor: UIColor) {
+        card.backgroundColor = UIColor.white.withAlphaComponent(0.15)
+        card.layer.cornerRadius = 16
+        card.layer.borderWidth = 1
+        card.layer.borderColor = UIColor.white.withAlphaComponent(0.24).cgColor
         card.layer.masksToBounds = true
         card.translatesAutoresizingMaskIntoConstraints = false
 
+        let dotView = UIView()
+        dotView.backgroundColor = dotColor
+        dotView.layer.cornerRadius = 3
+        dotView.translatesAutoresizingMaskIntoConstraints = false
+        dotView.widthAnchor.constraint(equalToConstant: 6).isActive = true
+        dotView.heightAnchor.constraint(equalToConstant: 6).isActive = true
+
         let tagLbl = UILabel()
         tagLbl.text = tag
-        tagLbl.font = .systemFont(ofSize: 10, weight: .bold)
-        tagLbl.textColor = color
+        tagLbl.font = .systemFont(ofSize: 10.5, weight: .bold)
+        tagLbl.textColor = textColor
         tagLbl.translatesAutoresizingMaskIntoConstraints = false
 
+        let tagRow = UIStackView(arrangedSubviews: [dotView, tagLbl])
+        tagRow.axis = .horizontal
+        tagRow.spacing = 5
+        tagRow.alignment = .center
+        tagRow.translatesAutoresizingMaskIntoConstraints = false
+
         countLabel.text = "0"
-        countLabel.font = .systemFont(ofSize: 20, weight: .bold)
-        countLabel.textColor = UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1) // #0F172A
+        countLabel.font = .systemFont(ofSize: 21, weight: .heavy)
+        countLabel.textColor = .white
         countLabel.translatesAutoresizingMaskIntoConstraints = false
 
         let subLbl = UILabel()
         subLbl.text = sub
-        subLbl.font = .systemFont(ofSize: 9.5, weight: .medium)
-        subLbl.textColor = UIColor(red: 0.392, green: 0.455, blue: 0.545, alpha: 1) // #64748B
+        subLbl.font = .systemFont(ofSize: 10, weight: .medium)
+        subLbl.textColor = UIColor(red: 0.780, green: 0.875, blue: 1.0, alpha: 1) // #C7DFFF
         subLbl.translatesAutoresizingMaskIntoConstraints = false
 
-        let stack = UIStackView(arrangedSubviews: [tagLbl, countLabel, subLbl])
+        let stack = UIStackView(arrangedSubviews: [tagRow, countLabel, subLbl])
         stack.axis = .vertical
         stack.spacing = 2
         stack.alignment = .leading
@@ -226,10 +246,10 @@ class SupportViewController: UIViewController, UITextFieldDelegate {
         card.addSubview(stack)
 
         NSLayoutConstraint.activate([
-            stack.topAnchor.constraint(equalTo: card.topAnchor, constant: 10),
-            stack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -10),
-            stack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 10),
-            stack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -10)
+            stack.topAnchor.constraint(equalTo: card.topAnchor, constant: 11),
+            stack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -11),
+            stack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 12),
+            stack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -12)
         ])
     }
 
@@ -262,7 +282,6 @@ class SupportViewController: UIViewController, UITextFieldDelegate {
         setupSearchAndTabs()
         setupTicketsHeader()
         setupTicketsContainer()
-        setupFaqsSection()
         setupContactChannelsSection()
     }
 
@@ -471,208 +490,290 @@ class SupportViewController: UIViewController, UITextFieldDelegate {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // MARK: – FAQs Accordion Section
-    // ─────────────────────────────────────────────────────────────────────────
-    private func setupFaqsSection() {
-        let faqHeader = UIView()
-        faqHeader.translatesAutoresizingMaskIntoConstraints = false
-
-        let faqTitle = UILabel()
-        faqTitle.text = "Frequently Asked Questions"
-        faqTitle.font = .systemFont(ofSize: 16, weight: .bold)
-        faqTitle.textColor = UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1)
-
-        let faqSub = UILabel()
-        faqSub.text = "Quick solutions to standard workflow and system questions"
-        faqSub.font = .systemFont(ofSize: 12)
-        faqSub.textColor = UIColor(red: 0.392, green: 0.455, blue: 0.545, alpha: 1)
-
-        let headerStack = UIStackView(arrangedSubviews: [faqTitle, faqSub])
-        headerStack.axis = .vertical
-        headerStack.spacing = 2
-        headerStack.translatesAutoresizingMaskIntoConstraints = false
-        faqHeader.addSubview(headerStack)
-
-        NSLayoutConstraint.activate([
-            headerStack.topAnchor.constraint(equalTo: faqHeader.topAnchor, constant: 14),
-            headerStack.bottomAnchor.constraint(equalTo: faqHeader.bottomAnchor, constant: -4),
-            headerStack.leadingAnchor.constraint(equalTo: faqHeader.leadingAnchor),
-            headerStack.trailingAnchor.constraint(equalTo: faqHeader.trailingAnchor)
-        ])
-
-        contentStack.addArrangedSubview(faqHeader)
-
-        let faqs = [
-            ("How do I add new test parameters to inventory?", "Navigate to Laboratory Settings > Tests Catalog. Click 'Add Parameter' to configure reference ranges, units, specimen type, and pricing."),
-            ("Why is my WhatsApp messaging balance decreasing?", "Each automated WhatsApp report delivery and OTP notification consumes 1 WhatsApp credit. Recharge credits seamlessly in the Wallet & Billing screen."),
-            ("How do I print barcoded patient sample labels?", "On the Patient Registration confirmation or Sample Logistics screen, tap 'Print Label' to send the 50x25mm barcode to any paired Bluetooth thermal printer."),
-            ("How to configure thermal Bluetooth receipt printers?", "Go to Settings > Printer Setup. Ensure Bluetooth is enabled, choose ESC/POS 58mm or 80mm mode, and perform a test print.")
-        ]
-
-        for (q, a) in faqs {
-            contentStack.addArrangedSubview(createFaqCard(question: q, answer: a))
-        }
-    }
-
-    private func createFaqCard(question: String, answer: String) -> UIView {
-        let card = UIView()
-        card.backgroundColor = .white
-        card.layer.cornerRadius = 14
-        card.layer.borderWidth = 1
-        card.layer.borderColor = UIColor(red: 0.886, green: 0.910, blue: 0.941, alpha: 1).cgColor
-        card.translatesAutoresizingMaskIntoConstraints = false
-
-        let qLabel = UILabel()
-        qLabel.text = question
-        qLabel.font = .systemFont(ofSize: 13, weight: .bold)
-        qLabel.textColor = UIColor(red: 0.118, green: 0.161, blue: 0.231, alpha: 1) // #1E293B
-        qLabel.numberOfLines = 0
-        qLabel.translatesAutoresizingMaskIntoConstraints = false
-
-        let chevron = UIImageView(image: UIImage(systemName: "chevron.down"))
-        chevron.tintColor = UIColor(red: 0.392, green: 0.455, blue: 0.545, alpha: 1)
-        chevron.contentMode = .scaleAspectFit
-        chevron.translatesAutoresizingMaskIntoConstraints = false
-
-        let qRow = UIStackView(arrangedSubviews: [qLabel, chevron])
-        qRow.axis = .horizontal
-        qRow.alignment = .center
-        qRow.spacing = 8
-        qRow.translatesAutoresizingMaskIntoConstraints = false
-
-        let aLabel = UILabel()
-        aLabel.text = answer
-        aLabel.font = .systemFont(ofSize: 12)
-        aLabel.textColor = UIColor(red: 0.278, green: 0.333, blue: 0.412, alpha: 1)
-        aLabel.numberOfLines = 0
-        aLabel.isHidden = true
-        aLabel.translatesAutoresizingMaskIntoConstraints = false
-
-        let stack = UIStackView(arrangedSubviews: [qRow, aLabel])
-        stack.axis = .vertical
-        stack.spacing = 8
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        card.addSubview(stack)
-
-        NSLayoutConstraint.activate([
-            chevron.widthAnchor.constraint(equalToConstant: 14),
-            chevron.heightAnchor.constraint(equalToConstant: 14),
-            stack.topAnchor.constraint(equalTo: card.topAnchor, constant: 14),
-            stack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -14),
-            stack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
-            stack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14)
-        ])
-
-        let tap = UITapGestureRecognizer(target: self, action: #selector(faqTapped(_:)))
-        card.addGestureRecognizer(tap)
-        card.isUserInteractionEnabled = true
-        return card
-    }
-
-    @objc private func faqTapped(_ gesture: UITapGestureRecognizer) {
-        guard let card = gesture.view,
-              let stack = card.subviews.first as? UIStackView,
-              let qRow = stack.arrangedSubviews.first as? UIStackView,
-              let chevron = qRow.arrangedSubviews.last as? UIImageView,
-              let aLabel = stack.arrangedSubviews.last as? UILabel else { return }
-
-        let willShow = aLabel.isHidden
-        UIView.animate(withDuration: 0.25) {
-            aLabel.isHidden = !willShow
-            chevron.transform = willShow ? CGAffineTransform(rotationAngle: .pi) : .identity
-            self.view.layoutIfNeeded()
-        }
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // MARK: – Direct Assistance Channels Section
+    // MARK: – Direct Assistance Channels Section (Redesigned Luxury UI)
     // ─────────────────────────────────────────────────────────────────────────
     private func setupContactChannelsSection() {
         let card = UIView()
         card.backgroundColor = .white
-        card.layer.cornerRadius = 16
+        card.layer.cornerRadius = 18
         card.layer.borderWidth = 1
-        card.layer.borderColor = UIColor(red: 0.886, green: 0.910, blue: 0.941, alpha: 1).cgColor
+        card.layer.borderColor = UIColor(red: 0.886, green: 0.910, blue: 0.941, alpha: 1).cgColor // #E2E8F0
+        card.layer.shadowColor = UIColor.black.cgColor
+        card.layer.shadowOpacity = 0.04
+        card.layer.shadowRadius = 8
+        card.layer.shadowOffset = CGSize(width: 0, height: 2)
         card.translatesAutoresizingMaskIntoConstraints = false
 
-        let title = UILabel()
-        title.text = "Direct Assistance Channels"
-        title.font = .systemFont(ofSize: 15, weight: .bold)
-        title.textColor = UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1)
+        // Header Row: Title & Subtitle on left, Live Status Pill on right
+        let headerRow = UIView()
+        headerRow.translatesAutoresizingMaskIntoConstraints = false
 
-        let sub = UILabel()
-        sub.text = "Reach our dedicated clinical technical team immediately"
-        sub.font = .systemFont(ofSize: 12)
-        sub.textColor = UIColor(red: 0.392, green: 0.455, blue: 0.545, alpha: 1)
+        let titleLabel = UILabel()
+        titleLabel.text = "Direct Assistance Channels"
+        titleLabel.font = .systemFont(ofSize: 15.5, weight: .bold)
+        titleLabel.textColor = UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1) // #0F172A
 
-        let callRow = createContactRow(icon: "phone.fill", iconColor: UIColor(red: 0.145, green: 0.388, blue: 0.922, alpha: 1), title: "Priority Hotline (\(Self.supportPhone))", action: #selector(callTapped))
-        let waRow = createContactRow(icon: "WhatsAppLogo", iconColor: .clear, title: "WhatsApp Concierge Desk", action: #selector(whatsappTapped))
-        let emailRow = createContactRow(icon: "GmailLogo", iconColor: .clear, title: "Official Support (\(Self.supportEmail))", action: #selector(emailTapped))
+        let subLabel = UILabel()
+        subLabel.text = "Connect directly with our clinical technical desk"
+        subLabel.font = .systemFont(ofSize: 12, weight: .regular)
+        subLabel.textColor = UIColor(red: 0.392, green: 0.455, blue: 0.545, alpha: 1) // #64748B
 
-        let stack = UIStackView(arrangedSubviews: [title, sub, callRow, waRow, emailRow])
-        stack.axis = .vertical
-        stack.spacing = 10
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        card.addSubview(stack)
+        let titleStack = UIStackView(arrangedSubviews: [titleLabel, subLabel])
+        titleStack.axis = .vertical
+        titleStack.spacing = 2
+        titleStack.translatesAutoresizingMaskIntoConstraints = false
+
+        // Live Badge Pill
+        let liveBadge = UIView()
+        liveBadge.backgroundColor = UIColor(red: 0.925, green: 0.992, blue: 0.961, alpha: 1) // #ECFDF5
+        liveBadge.layer.cornerRadius = 10
+        liveBadge.layer.borderWidth = 1
+        liveBadge.layer.borderColor = UIColor(red: 0.655, green: 0.953, blue: 0.816, alpha: 1).cgColor // #A7F3D0
+        liveBadge.translatesAutoresizingMaskIntoConstraints = false
+
+        let dot = UIView()
+        dot.backgroundColor = UIColor(red: 0.063, green: 0.725, blue: 0.506, alpha: 1) // #10B981
+        dot.layer.cornerRadius = 3.5
+        dot.translatesAutoresizingMaskIntoConstraints = false
+
+        let liveText = UILabel()
+        liveText.text = "LIVE DESK"
+        liveText.font = .systemFont(ofSize: 10.5, weight: .bold)
+        liveText.textColor = UIColor(red: 0.020, green: 0.588, blue: 0.412, alpha: 1) // #059669
+        liveText.translatesAutoresizingMaskIntoConstraints = false
+
+        let liveStack = UIStackView(arrangedSubviews: [dot, liveText])
+        liveStack.axis = .horizontal
+        liveStack.alignment = .center
+        liveStack.spacing = 5
+        liveStack.translatesAutoresizingMaskIntoConstraints = false
+        liveBadge.addSubview(liveStack)
 
         NSLayoutConstraint.activate([
-            stack.topAnchor.constraint(equalTo: card.topAnchor, constant: 16),
-            stack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -16),
-            stack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
-            stack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14)
+            dot.widthAnchor.constraint(equalToConstant: 7),
+            dot.heightAnchor.constraint(equalToConstant: 7),
+            liveStack.topAnchor.constraint(equalTo: liveBadge.topAnchor, constant: 4),
+            liveStack.bottomAnchor.constraint(equalTo: liveBadge.bottomAnchor, constant: -4),
+            liveStack.leadingAnchor.constraint(equalTo: liveBadge.leadingAnchor, constant: 8),
+            liveStack.trailingAnchor.constraint(equalTo: liveBadge.trailingAnchor, constant: -8)
+        ])
+
+        headerRow.addSubview(titleStack)
+        headerRow.addSubview(liveBadge)
+
+        NSLayoutConstraint.activate([
+            titleStack.leadingAnchor.constraint(equalTo: headerRow.leadingAnchor),
+            titleStack.topAnchor.constraint(equalTo: headerRow.topAnchor),
+            titleStack.bottomAnchor.constraint(equalTo: headerRow.bottomAnchor),
+            titleStack.trailingAnchor.constraint(lessThanOrEqualTo: liveBadge.leadingAnchor, constant: -8),
+
+            liveBadge.trailingAnchor.constraint(equalTo: headerRow.trailingAnchor),
+            liveBadge.centerYAnchor.constraint(equalTo: headerRow.centerYAnchor)
+        ])
+
+        // Action Rows
+        let callRow = createModernContactRow(
+            icon: "phone.fill",
+            iconBg: UIColor(red: 0.937, green: 0.965, blue: 1.0, alpha: 1), // #EFF6FF
+            iconBorder: UIColor(red: 0.859, green: 0.918, blue: 0.996, alpha: 1), // #DBEAFE
+            iconTint: UIColor(red: 0.145, green: 0.388, blue: 0.922, alpha: 1), // #2563EB
+            title: "Priority Technical Hotline",
+            subtitle: "\(Self.supportPhone) • Toll-Free Emergency",
+            badgeText: "CALL",
+            badgeBg: UIColor(red: 0.937, green: 0.965, blue: 1.0, alpha: 1), // #EFF6FF
+            badgeFg: UIColor(red: 0.145, green: 0.388, blue: 0.922, alpha: 1), // #2563EB
+            action: #selector(callTapped)
+        )
+
+        let waRow = createModernContactRow(
+            icon: "WhatsAppLogo",
+            iconBg: UIColor(red: 0.925, green: 0.992, blue: 0.961, alpha: 1), // #ECFDF5
+            iconBorder: UIColor(red: 0.655, green: 0.953, blue: 0.816, alpha: 1), // #A7F3D0
+            iconTint: .clear,
+            title: "WhatsApp Concierge Desk",
+            subtitle: "Instant chat, live reports & media support",
+            badgeText: "CHAT",
+            badgeBg: UIColor(red: 0.925, green: 0.992, blue: 0.961, alpha: 1), // #ECFDF5
+            badgeFg: UIColor(red: 0.020, green: 0.588, blue: 0.412, alpha: 1), // #059669
+            action: #selector(whatsappTapped)
+        )
+
+        let emailRow = createModernContactRow(
+            icon: "GmailLogo",
+            iconBg: UIColor(red: 0.933, green: 0.949, blue: 1.0, alpha: 1), // #EEF2FF
+            iconBorder: UIColor(red: 0.780, green: 0.824, blue: 0.996, alpha: 1), // #C7D2FE
+            iconTint: .clear,
+            title: "Official Support Desk",
+            subtitle: "\(Self.supportEmail) • SLA < 2 Hours",
+            badgeText: "EMAIL",
+            badgeBg: UIColor(red: 0.933, green: 0.949, blue: 1.0, alpha: 1), // #EEF2FF
+            badgeFg: UIColor(red: 0.310, green: 0.275, blue: 0.898, alpha: 1), // #4F46E5
+            action: #selector(emailTapped)
+        )
+
+        // SLA Trust Assurance Banner
+        let slaBanner = UIView()
+        slaBanner.backgroundColor = UIColor(red: 0.945, green: 0.961, blue: 0.976, alpha: 1) // #F1F5F9
+        slaBanner.layer.cornerRadius = 10
+        slaBanner.layer.borderWidth = 1
+        slaBanner.layer.borderColor = UIColor(red: 0.886, green: 0.910, blue: 0.941, alpha: 1).cgColor // #E2E8F0
+        slaBanner.translatesAutoresizingMaskIntoConstraints = false
+
+        let shieldIcon = UIImageView(image: UIImage(systemName: "checkmark.shield.fill"))
+        shieldIcon.tintColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1) // #0D6EFD
+        shieldIcon.contentMode = .scaleAspectFit
+        shieldIcon.translatesAutoresizingMaskIntoConstraints = false
+
+        let slaText = UILabel()
+        slaText.text = "Guaranteed SLA: Under 15 mins for critical lab incidents"
+        slaText.font = .systemFont(ofSize: 11, weight: .bold)
+        slaText.textColor = UIColor(red: 0.278, green: 0.333, blue: 0.412, alpha: 1) // #475569
+        slaText.translatesAutoresizingMaskIntoConstraints = false
+
+        let slaStack = UIStackView(arrangedSubviews: [shieldIcon, slaText])
+        slaStack.axis = .horizontal
+        slaStack.alignment = .center
+        slaStack.spacing = 8
+        slaStack.translatesAutoresizingMaskIntoConstraints = false
+        slaBanner.addSubview(slaStack)
+
+        NSLayoutConstraint.activate([
+            shieldIcon.widthAnchor.constraint(equalToConstant: 16),
+            shieldIcon.heightAnchor.constraint(equalToConstant: 16),
+            slaStack.topAnchor.constraint(equalTo: slaBanner.topAnchor, constant: 9),
+            slaStack.bottomAnchor.constraint(equalTo: slaBanner.bottomAnchor, constant: -9),
+            slaStack.leadingAnchor.constraint(equalTo: slaBanner.leadingAnchor, constant: 12),
+            slaStack.trailingAnchor.constraint(equalTo: slaBanner.trailingAnchor, constant: -12)
+        ])
+
+        let mainStack = UIStackView(arrangedSubviews: [headerRow, callRow, waRow, emailRow, slaBanner])
+        mainStack.axis = .vertical
+        mainStack.spacing = 10
+        mainStack.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(mainStack)
+
+        NSLayoutConstraint.activate([
+            mainStack.topAnchor.constraint(equalTo: card.topAnchor, constant: 18),
+            mainStack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -18),
+            mainStack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 16),
+            mainStack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -16)
         ])
 
         contentStack.addArrangedSubview(card)
     }
 
-    private func createContactRow(icon: String, iconColor: UIColor, title: String, action: Selector) -> UIView {
+    private func createModernContactRow(
+        icon: String,
+        iconBg: UIColor,
+        iconBorder: UIColor,
+        iconTint: UIColor,
+        title: String,
+        subtitle: String,
+        badgeText: String,
+        badgeBg: UIColor,
+        badgeFg: UIColor,
+        action: Selector
+    ) -> UIView {
         let row = UIView()
-        row.backgroundColor = UIColor(red: 0.973, green: 0.980, blue: 0.988, alpha: 1)
-        row.layer.cornerRadius = 10
+        row.backgroundColor = UIColor(red: 0.973, green: 0.980, blue: 0.988, alpha: 1) // #F8FAFC
+        row.layer.cornerRadius = 14
         row.layer.borderWidth = 1
-        row.layer.borderColor = UIColor(red: 0.941, green: 0.957, blue: 0.973, alpha: 1).cgColor
+        row.layer.borderColor = UIColor(red: 0.886, green: 0.910, blue: 0.941, alpha: 1).cgColor // #E2E8F0
         row.translatesAutoresizingMaskIntoConstraints = false
+
+        // Squircle Icon Container
+        let iconBox = UIView()
+        iconBox.backgroundColor = iconBg
+        iconBox.layer.cornerRadius = 12
+        iconBox.layer.borderWidth = 1
+        iconBox.layer.borderColor = iconBorder.cgColor
+        iconBox.translatesAutoresizingMaskIntoConstraints = false
 
         let iv = UIImageView()
         if let custom = UIImage(named: icon) {
             iv.image = custom
         } else {
             iv.image = UIImage(systemName: icon)
-            iv.tintColor = iconColor
+            iv.tintColor = iconTint
         }
         iv.contentMode = .scaleAspectFit
         iv.translatesAutoresizingMaskIntoConstraints = false
+        iconBox.addSubview(iv)
 
-        let lbl = UILabel()
-        lbl.text = title
-        lbl.font = .systemFont(ofSize: 13, weight: .bold)
-        lbl.textColor = UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1)
-        lbl.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            iv.widthAnchor.constraint(equalToConstant: 22),
+            iv.heightAnchor.constraint(equalToConstant: 22),
+            iv.centerXAnchor.constraint(equalTo: iconBox.centerXAnchor),
+            iv.centerYAnchor.constraint(equalTo: iconBox.centerYAnchor),
+            iconBox.widthAnchor.constraint(equalToConstant: 42),
+            iconBox.heightAnchor.constraint(equalToConstant: 42)
+        ])
+
+        // Text Labels Stack
+        let titleLbl = UILabel()
+        titleLbl.text = title
+        titleLbl.font = .systemFont(ofSize: 13.5, weight: .bold)
+        titleLbl.textColor = UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1)
+
+        let subLbl = UILabel()
+        subLbl.text = subtitle
+        subLbl.font = .systemFont(ofSize: 11.5, weight: .regular)
+        subLbl.textColor = UIColor(red: 0.392, green: 0.455, blue: 0.545, alpha: 1)
+
+        let labelStack = UIStackView(arrangedSubviews: [titleLbl, subLbl])
+        labelStack.axis = .vertical
+        labelStack.spacing = 2
+        labelStack.translatesAutoresizingMaskIntoConstraints = false
+
+        // Action Capsule Badge
+        let actionBadge = UIView()
+        actionBadge.backgroundColor = badgeBg
+        actionBadge.layer.cornerRadius = 11
+        actionBadge.translatesAutoresizingMaskIntoConstraints = false
+
+        let badgeLbl = UILabel()
+        badgeLbl.text = badgeText
+        badgeLbl.font = .systemFont(ofSize: 11, weight: .bold)
+        badgeLbl.textColor = badgeFg
+        badgeLbl.translatesAutoresizingMaskIntoConstraints = false
 
         let chevron = UIImageView(image: UIImage(systemName: "chevron.right"))
-        chevron.tintColor = UIColor(red: 0.580, green: 0.639, blue: 0.722, alpha: 1)
+        chevron.tintColor = badgeFg
         chevron.contentMode = .scaleAspectFit
         chevron.translatesAutoresizingMaskIntoConstraints = false
 
-        row.addSubview(iv)
-        row.addSubview(lbl)
-        row.addSubview(chevron)
+        let badgeStack = UIStackView(arrangedSubviews: [badgeLbl, chevron])
+        badgeStack.axis = .horizontal
+        badgeStack.alignment = .center
+        badgeStack.spacing = 3
+        badgeStack.translatesAutoresizingMaskIntoConstraints = false
+        actionBadge.addSubview(badgeStack)
 
         NSLayoutConstraint.activate([
-            row.heightAnchor.constraint(equalToConstant: 46),
-            iv.leadingAnchor.constraint(equalTo: row.leadingAnchor, constant: 12),
-            iv.centerYAnchor.constraint(equalTo: row.centerYAnchor),
-            iv.widthAnchor.constraint(equalToConstant: 22),
-            iv.heightAnchor.constraint(equalToConstant: 22),
+            chevron.widthAnchor.constraint(equalToConstant: 11),
+            chevron.heightAnchor.constraint(equalToConstant: 11),
+            badgeStack.topAnchor.constraint(equalTo: actionBadge.topAnchor, constant: 5),
+            badgeStack.bottomAnchor.constraint(equalTo: actionBadge.bottomAnchor, constant: -5),
+            badgeStack.leadingAnchor.constraint(equalTo: actionBadge.leadingAnchor, constant: 9),
+            badgeStack.trailingAnchor.constraint(equalTo: actionBadge.trailingAnchor, constant: -7)
+        ])
 
-            lbl.leadingAnchor.constraint(equalTo: iv.trailingAnchor, constant: 10),
-            lbl.trailingAnchor.constraint(equalTo: chevron.leadingAnchor, constant: -6),
-            lbl.centerYAnchor.constraint(equalTo: row.centerYAnchor),
+        row.addSubview(iconBox)
+        row.addSubview(labelStack)
+        row.addSubview(actionBadge)
 
-            chevron.trailingAnchor.constraint(equalTo: row.trailingAnchor, constant: -12),
-            chevron.centerYAnchor.constraint(equalTo: row.centerYAnchor),
-            chevron.widthAnchor.constraint(equalToConstant: 12),
-            chevron.heightAnchor.constraint(equalToConstant: 12)
+        NSLayoutConstraint.activate([
+            row.heightAnchor.constraint(greaterThanOrEqualToConstant: 64),
+
+            iconBox.leadingAnchor.constraint(equalTo: row.leadingAnchor, constant: 12),
+            iconBox.centerYAnchor.constraint(equalTo: row.centerYAnchor),
+
+            labelStack.leadingAnchor.constraint(equalTo: iconBox.trailingAnchor, constant: 12),
+            labelStack.centerYAnchor.constraint(equalTo: row.centerYAnchor),
+            labelStack.trailingAnchor.constraint(lessThanOrEqualTo: actionBadge.leadingAnchor, constant: -8),
+
+            actionBadge.trailingAnchor.constraint(equalTo: row.trailingAnchor, constant: -12),
+            actionBadge.centerYAnchor.constraint(equalTo: row.centerYAnchor)
         ])
 
         let tap = UITapGestureRecognizer(target: self, action: action)
@@ -1518,7 +1619,6 @@ class TicketDetailSheetViewController: UIViewController, UITextFieldDelegate {
         view.addSubview(dragPill)
 
         let ticketNum = ticket["ticketNumber"] as? String ?? "TKT-0000"
-        let priority = (ticket["priority"] as? String ?? "MEDIUM").uppercased()
         let category = (ticket["category"] as? String ?? "GENERAL").uppercased()
         let status = (ticket["status"] as? String ?? "OPEN").uppercased()
         let subject = ticket["subject"] as? String ?? "No Subject"

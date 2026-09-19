@@ -72,6 +72,7 @@ public class B2BActivity extends AppCompatActivity {
     // Header Views
     private FrameLayout btnB2BBack;
     private FrameLayout btnExportAgencies;
+    private FrameLayout btnB2BTiersSettings;
     private FrameLayout btnRefreshAgencies;
     private ImageView imgRefreshAgenciesIcon;
 
@@ -119,6 +120,7 @@ public class B2BActivity extends AppCompatActivity {
     private void initViews() {
         btnB2BBack = findViewById(R.id.btnB2BBack);
         btnExportAgencies = findViewById(R.id.btnExportAgencies);
+        btnB2BTiersSettings = findViewById(R.id.btnB2BTiersSettings);
         btnRefreshAgencies = findViewById(R.id.btnRefreshAgencies);
         imgRefreshAgenciesIcon = findViewById(R.id.imgRefreshAgenciesIcon);
 
@@ -142,6 +144,13 @@ public class B2BActivity extends AppCompatActivity {
         btnB2BBack.setOnClickListener(v -> finish());
 
         btnExportAgencies.setOnClickListener(v -> shareAgenciesReport());
+
+        if (btnB2BTiersSettings != null) {
+            btnB2BTiersSettings.setOnClickListener(v -> {
+                Intent intent = new Intent(this, B2BSettingsActivity.class);
+                startActivity(intent);
+            });
+        }
 
         btnRefreshAgencies.setOnClickListener(v -> {
             animateRefreshIcon();
@@ -297,7 +306,7 @@ public class B2BActivity extends AppCompatActivity {
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("GET");
                 conn.setRequestProperty("Authorization", "Bearer " + token);
-                conn.setRequestProperty("Cookie", "token=" + token);
+                conn.setRequestProperty("Cookie", "token=" + token + "; auth-token=" + token + "; auth_token=" + token);
                 conn.setRequestProperty("Accept", "application/json");
                 conn.setConnectTimeout(10000);
                 conn.setReadTimeout(15000);
@@ -308,7 +317,8 @@ public class B2BActivity extends AppCompatActivity {
                     JSONObject response = new JSONObject(json);
 
                     JSONArray agenciesArr = response.optJSONArray("agencies");
-                    JSONObject stats = response.optJSONObject("stats");
+                    JSONObject kpis = response.optJSONObject("kpis");
+                    if (kpis == null) kpis = response.optJSONObject("stats");
 
                     final List<JSONObject> list = new ArrayList<>();
                     if (agenciesArr != null) {
@@ -317,12 +327,13 @@ public class B2BActivity extends AppCompatActivity {
                         }
                     }
 
+                    final JSONObject finalKpis = kpis;
                     mainHandler.post(() -> {
                         progressAgencies.setVisibility(View.GONE);
                         allAgencies.clear();
                         allAgencies.addAll(list);
 
-                        updateKpis(stats, list);
+                        updateKpis(finalKpis, list);
                         applyFilterAndSearch();
 
                         if (isManualRefresh) {
@@ -345,11 +356,27 @@ public class B2BActivity extends AppCompatActivity {
         }).start();
     }
 
-    private void updateKpis(JSONObject stats, List<JSONObject> fallbackList) {
-        int count = stats != null ? stats.optInt("totalAgencies", fallbackList.size()) : fallbackList.size();
-        int volume = stats != null ? stats.optInt("totalVolume", 0) : 0;
-        double billed = stats != null ? stats.optDouble("totalBilled", 0.0) : 0.0;
-        double pending = stats != null ? stats.optDouble("pendingPayout", 0.0) : 0.0;
+    private void updateKpis(JSONObject kpis, List<JSONObject> fallbackList) {
+        int count = 0;
+        int volume = 0;
+        double billed = 0.0;
+        double pending = 0.0;
+
+        if (kpis != null) {
+            count = kpis.optInt("totalAgencies", fallbackList.size());
+            volume = kpis.optInt("totalReferrals", kpis.optInt("totalVolume", 0));
+            billed = kpis.optDouble("totalCommission", kpis.optDouble("totalBilled", 0.0));
+            pending = kpis.optDouble("pendingCommission", kpis.optDouble("pendingPayout", 0.0));
+        }
+
+        if (count == 0 && volume == 0 && billed == 0 && pending == 0) {
+            count = fallbackList.size();
+            for (JSONObject a : fallbackList) {
+                volume += a.optInt("totalReferrals", 0);
+                billed += a.optDouble("totalCommission", 0.0);
+                pending += a.optDouble("pendingCommission", 0.0);
+            }
+        }
 
         lblKpiTotalAgencies.setText(String.valueOf(count));
         lblKpiTotalVolume.setText(String.valueOf(volume));
@@ -541,7 +568,7 @@ public class B2BActivity extends AppCompatActivity {
                     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                     conn.setRequestMethod(isEdit ? "PATCH" : "POST");
                     conn.setRequestProperty("Authorization", "Bearer " + token);
-                    conn.setRequestProperty("Cookie", "token=" + token);
+                    conn.setRequestProperty("Cookie", "token=" + token + "; auth-token=" + token + "; auth_token=" + token);
                     conn.setRequestProperty("Content-Type", "application/json");
                     conn.setRequestProperty("Accept", "application/json");
                     conn.setDoOutput(true);
@@ -549,6 +576,7 @@ public class B2BActivity extends AppCompatActivity {
                     JSONObject payload = new JSONObject();
                     if (isEdit) {
                         payload.put("id", agencyToEdit.optString("id"));
+                        payload.put("isActive", agencyToEdit.optBoolean("isActive", true));
                     }
                     payload.put("agencyName", name);
                     payload.put("contactPerson", contact);
@@ -559,8 +587,11 @@ public class B2BActivity extends AppCompatActivity {
                     payload.put("commissionRate", commRate);
                     payload.put("commissionType", selectedCommType[0]);
                     if (!isEdit && createPortal) {
-                        payload.put("createPortalAccount", true);
-                        payload.put("portalPassword", portalPass);
+                        payload.put("createLogin", true);
+                        payload.put("loginEmail", email);
+                        payload.put("loginPassword", portalPass);
+                    } else if (isEdit && !portalPass.isEmpty()) {
+                        payload.put("resetPassword", portalPass);
                     }
 
                     OutputStream os = conn.getOutputStream();
@@ -620,10 +651,9 @@ public class B2BActivity extends AppCompatActivity {
         lblAgencyName.setText(agency.optString("agencyName", "Agency") + " Ledger");
         btnClose.setOnClickListener(v -> sheet.dismiss());
 
-        JSONObject stats = agency.optJSONObject("stats");
-        double earned = stats != null ? stats.optDouble("totalCommission", 0.0) : 0.0;
-        double due = stats != null ? stats.optDouble("pendingCommission", 0.0) : 0.0;
-        double paid = Math.max(0, earned - due);
+        double earned = agency.optDouble("totalCommission", 0.0);
+        double due = agency.optDouble("pendingCommission", 0.0);
+        double paid = agency.optDouble("paidCommission", Math.max(0, earned - due));
 
         lblEarned.setText("₹" + String.format(Locale.getDefault(), "%,.0f", earned));
         lblPaid.setText("₹" + String.format(Locale.getDefault(), "%,.0f", paid));
@@ -714,7 +744,8 @@ public class B2BActivity extends AppCompatActivity {
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("DELETE");
                 conn.setRequestProperty("Authorization", "Bearer " + token);
-                conn.setRequestProperty("Cookie", "token=" + token);
+                conn.setRequestProperty("Cookie", "token=" + token + "; auth-token=" + token + "; auth_token=" + token);
+                conn.setConnectTimeout(10000);
                 conn.setRequestProperty("Accept", "application/json");
 
                 int resCode = conn.getResponseCode();
@@ -751,8 +782,8 @@ public class B2BActivity extends AppCompatActivity {
                 String[] parts = cookies.split(";");
                 for (String part : parts) {
                     String trimmed = part.trim();
-                    if (trimmed.startsWith("token=")) {
-                        String cookieToken = trimmed.substring(6).trim();
+                    if (trimmed.startsWith("token=") || trimmed.startsWith("auth-token=") || trimmed.startsWith("auth_token=")) {
+                        String cookieToken = trimmed.substring(trimmed.indexOf('=') + 1).trim();
                         if (!cookieToken.isEmpty()) {
                             AuthManager.saveToken(this, cookieToken);
                             return cookieToken;
@@ -875,18 +906,26 @@ public class B2BActivity extends AppCompatActivity {
 
                 // Tier badge styling
                 switch (tier.toUpperCase()) {
+                    case "BRONZE":
+                        lblAgencyTierBadge.setText("BRONZE");
+                        lblAgencyTierBadge.setTextColor(0xFFB45309);
+                        lblAgencyTierBadge.setBackgroundColor(0xFFFEF3C7);
+                        break;
+                    case "SILVER":
                     case "TIER_1":
-                        lblAgencyTierBadge.setText("TIER 1 (SILVER)");
+                        lblAgencyTierBadge.setText("SILVER");
                         lblAgencyTierBadge.setTextColor(0xFF0284C7);
                         lblAgencyTierBadge.setBackgroundColor(0xFFE0F2FE);
                         break;
+                    case "GOLD":
                     case "TIER_2":
-                        lblAgencyTierBadge.setText("TIER 2 (GOLD)");
+                        lblAgencyTierBadge.setText("GOLD");
                         lblAgencyTierBadge.setTextColor(0xFFD97706);
                         lblAgencyTierBadge.setBackgroundColor(0xFFFEF3C7);
                         break;
+                    case "PLATINUM":
                     case "TIER_3":
-                        lblAgencyTierBadge.setText("TIER 3 (PLATINUM)");
+                        lblAgencyTierBadge.setText("PLATINUM");
                         lblAgencyTierBadge.setTextColor(0xFF7C3AED);
                         lblAgencyTierBadge.setBackgroundColor(0xFFEDE9FE);
                         break;
@@ -898,7 +937,7 @@ public class B2BActivity extends AppCompatActivity {
                 }
 
                 // Portal badge
-                boolean hasPortal = agency.has("user") && !agency.isNull("user");
+                boolean hasPortal = agency.optBoolean("hasLogin", agency.has("user") && !agency.isNull("user"));
                 if (hasPortal) {
                     lblAgencyPortalBadge.setText("PORTAL ACTIVE");
                     lblAgencyPortalBadge.setTextColor(0xFF059669);
@@ -917,10 +956,21 @@ public class B2BActivity extends AppCompatActivity {
                 }
 
                 // Financial stats
-                JSONObject stats = agency.optJSONObject("stats");
-                int tests = stats != null ? stats.optInt("totalTests", 0) : 0;
-                double billed = stats != null ? stats.optDouble("totalBilled", 0.0) : 0.0;
-                double pending = stats != null ? stats.optDouble("pendingCommission", 0.0) : 0.0;
+                int tests = agency.optInt("totalReferrals", 0);
+                double earned = agency.optDouble("totalCommission", 0.0);
+                double pending = agency.optDouble("pendingCommission", 0.0);
+
+                double billed = 0.0;
+                JSONArray comms = agency.optJSONArray("commissions");
+                if (comms != null) {
+                    for (int i = 0; i < comms.length(); i++) {
+                        JSONObject c = comms.optJSONObject(i);
+                        if (c != null) {
+                            billed += c.optDouble("testPrice", 0.0);
+                        }
+                    }
+                }
+                if (billed == 0.0) billed = earned;
 
                 lblAgencyTestsCount.setText(String.valueOf(tests));
                 lblAgencyBilledVolume.setText("₹" + String.format(Locale.getDefault(), "%,.0f", billed));

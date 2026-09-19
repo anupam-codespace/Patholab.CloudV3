@@ -114,6 +114,7 @@ class ProfileSettingsViewController: UIViewController {
         buildModulesCard()
         buildCommissionsCard()
         buildIntegrationsCard()
+        buildVersionCard()
         buildSaveButton()
     }
 
@@ -287,6 +288,113 @@ class ProfileSettingsViewController: UIViewController {
         card.addSubview(stack)
 
         addCardConstraints(card: card, stack: stack)
+        contentStack.addArrangedSubview(card)
+    }
+
+    private func buildVersionCard() {
+        let card = createCard()
+
+        let iconContainer = UIView()
+        iconContainer.backgroundColor = UIColor(red: 0.93, green: 0.96, blue: 1.0, alpha: 1.0)
+        iconContainer.layer.cornerRadius = 12
+        iconContainer.translatesAutoresizingMaskIntoConstraints = false
+
+        let iconImg = UIImageView(image: UIImage(systemName: "info.circle.fill"))
+        iconImg.tintColor = Self.headerBlue
+        iconImg.contentMode = .scaleAspectFit
+        iconImg.translatesAutoresizingMaskIntoConstraints = false
+        iconContainer.addSubview(iconImg)
+        NSLayoutConstraint.activate([
+            iconContainer.widthAnchor.constraint(equalToConstant: 40),
+            iconContainer.heightAnchor.constraint(equalToConstant: 40),
+            iconImg.centerXAnchor.constraint(equalTo: iconContainer.centerXAnchor),
+            iconImg.centerYAnchor.constraint(equalTo: iconContainer.centerYAnchor),
+            iconImg.widthAnchor.constraint(equalToConstant: 20),
+            iconImg.heightAnchor.constraint(equalToConstant: 20)
+        ])
+
+        let titleLbl = UILabel()
+        titleLbl.text = "PathoLab Cloud"
+        titleLbl.font = .systemFont(ofSize: 15, weight: .bold)
+        titleLbl.textColor = UIColor(red: 0.06, green: 0.09, blue: 0.16, alpha: 1.0)
+
+        let subtitleLbl = UILabel()
+        subtitleLbl.text = "iOS Application"
+        subtitleLbl.font = .systemFont(ofSize: 12, weight: .regular)
+        subtitleLbl.textColor = UIColor(red: 0.39, green: 0.45, blue: 0.55, alpha: 1.0)
+
+        let titlesStack = UIStackView(arrangedSubviews: [titleLbl, subtitleLbl])
+        titlesStack.axis = .vertical
+        titlesStack.spacing = 2
+
+        let livePill = UIView()
+        livePill.backgroundColor = UIColor(red: 0.92, green: 0.98, blue: 0.95, alpha: 1.0)
+        livePill.layer.cornerRadius = 9
+        livePill.layer.borderWidth = 1
+        livePill.layer.borderColor = UIColor(red: 0.65, green: 0.92, blue: 0.77, alpha: 1.0).cgColor
+
+        let dot = UIView()
+        dot.backgroundColor = UIColor(red: 0.06, green: 0.72, blue: 0.51, alpha: 1.0)
+        dot.layer.cornerRadius = 3
+        dot.translatesAutoresizingMaskIntoConstraints = false
+
+        let pillLbl = UILabel()
+        pillLbl.text = "Up to date"
+        pillLbl.font = .systemFont(ofSize: 11, weight: .bold)
+        pillLbl.textColor = UIColor(red: 0.02, green: 0.59, blue: 0.41, alpha: 1.0)
+        pillLbl.translatesAutoresizingMaskIntoConstraints = false
+
+        let pillStack = UIStackView(arrangedSubviews: [dot, pillLbl])
+        pillStack.axis = .horizontal
+        pillStack.spacing = 5
+        pillStack.alignment = .center
+        pillStack.translatesAutoresizingMaskIntoConstraints = false
+        livePill.addSubview(pillStack)
+        NSLayoutConstraint.activate([
+            dot.widthAnchor.constraint(equalToConstant: 6),
+            dot.heightAnchor.constraint(equalToConstant: 6),
+            pillStack.topAnchor.constraint(equalTo: livePill.topAnchor, constant: 4),
+            pillStack.bottomAnchor.constraint(equalTo: livePill.bottomAnchor, constant: -4),
+            pillStack.leadingAnchor.constraint(equalTo: livePill.leadingAnchor, constant: 8),
+            pillStack.trailingAnchor.constraint(equalTo: livePill.trailingAnchor, constant: -8)
+        ])
+
+        let topRow = UIStackView(arrangedSubviews: [iconContainer, titlesStack, livePill])
+        topRow.axis = .horizontal
+        topRow.spacing = 12
+        topRow.alignment = .center
+
+        let divider = UIView()
+        divider.backgroundColor = UIColor(red: 0.95, green: 0.96, blue: 0.98, alpha: 1.0)
+        divider.translatesAutoresizingMaskIntoConstraints = false
+        divider.heightAnchor.constraint(equalToConstant: 1).isActive = true
+
+        // Current Version Row
+        let iosVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "3.0"
+        let iosBuild = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "5"
+
+        let verTitleLbl = UILabel()
+        verTitleLbl.text = "Current Version"
+        verTitleLbl.font = .systemFont(ofSize: 13, weight: .regular)
+        verTitleLbl.textColor = UIColor(red: 0.39, green: 0.45, blue: 0.55, alpha: 1.0)
+
+        let verValLbl = UILabel()
+        verValLbl.text = "v\(iosVersion) (Build \(iosBuild))"
+        verValLbl.font = .systemFont(ofSize: 13.5, weight: .bold)
+        verValLbl.textColor = UIColor(red: 0.06, green: 0.09, blue: 0.16, alpha: 1.0)
+
+        let versionRow = UIStackView(arrangedSubviews: [verTitleLbl, verValLbl])
+        versionRow.axis = .horizontal
+        versionRow.alignment = .center
+        versionRow.distribution = .equalSpacing
+
+        let mainStack = UIStackView(arrangedSubviews: [topRow, divider, versionRow])
+        mainStack.axis = .vertical
+        mainStack.spacing = 12
+        mainStack.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(mainStack)
+
+        addCardConstraints(card: card, stack: mainStack)
         contentStack.addArrangedSubview(card)
     }
 

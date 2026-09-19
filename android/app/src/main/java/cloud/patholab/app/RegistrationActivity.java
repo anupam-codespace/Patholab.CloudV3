@@ -30,6 +30,7 @@ import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.webkit.CookieManager;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -103,6 +104,17 @@ public class RegistrationActivity extends AppCompatActivity {
     private TextView inputCollectionDate, inputCollectionTime;
 
     // ── Visit Routing Views ───────────────────────────────────────────────────
+    private View cardSelectDoctor, cardSelectAgency, cardSelectCollector;
+    private TextView lblSelectedDoctorName, lblSelectedDoctorSubtitle;
+    private TextView lblSelectedAgencyName, lblSelectedAgencySubtitle;
+    private TextView lblSelectedCollectorName, lblSelectedCollectorSubtitle;
+
+    private String selectedDoctorId = "Self";
+    private String selectedDoctorName = "Self (No Doctor)";
+    private String selectedAgencyId = "Direct";
+    private String selectedAgencyName = "Direct Walk-in";
+    private String selectedCollectorName = "Lab Phlebotomist";
+
     private Spinner spinnerDoctor, spinnerAgency, spinnerCollector;
     private final List<String> doctorLabels = new ArrayList<>();
     private final List<String> agencyLabels = new ArrayList<>();
@@ -187,6 +199,18 @@ public class RegistrationActivity extends AppCompatActivity {
         inputCollectionTime  = findViewById(R.id.inputCollectionTime);
 
         // Visit Routing
+        cardSelectDoctor          = findViewById(R.id.cardSelectDoctor);
+        lblSelectedDoctorName     = findViewById(R.id.lblSelectedDoctorName);
+        lblSelectedDoctorSubtitle = findViewById(R.id.lblSelectedDoctorSubtitle);
+
+        cardSelectAgency          = findViewById(R.id.cardSelectAgency);
+        lblSelectedAgencyName     = findViewById(R.id.lblSelectedAgencyName);
+        lblSelectedAgencySubtitle = findViewById(R.id.lblSelectedAgencySubtitle);
+
+        cardSelectCollector          = findViewById(R.id.cardSelectCollector);
+        lblSelectedCollectorName     = findViewById(R.id.lblSelectedCollectorName);
+        lblSelectedCollectorSubtitle = findViewById(R.id.lblSelectedCollectorSubtitle);
+
         spinnerDoctor        = findViewById(R.id.spinnerDoctor);
         spinnerAgency        = findViewById(R.id.spinnerAgency);
         spinnerCollector     = findViewById(R.id.spinnerCollector);
@@ -413,19 +437,35 @@ public class RegistrationActivity extends AppCompatActivity {
             @Override public void afterTextChanged(Editable s) {}
         });
 
+        if (cardSelectDoctor != null) {
+            cardSelectDoctor.setOnClickListener(v -> openDoctorSelectorSheet());
+        }
+        if (cardSelectAgency != null) {
+            cardSelectAgency.setOnClickListener(v -> openAgencySelectorSheet());
+        }
+        if (cardSelectCollector != null) {
+            cardSelectCollector.setOnClickListener(v -> openCollectorSelectorSheet());
+        }
+
         btnSubmitRegistration.setOnClickListener(v -> submitRegistration());
     }
 
     private void checkDuplicateName(String name) {
         new Thread(() -> {
             try {
-                String token = AuthManager.getToken(this);
+                String token = getAuthToken();
+                String cookieStr = getAuthCookie();
                 URL url = new URL(BASE_URL + "/api/workspace/patients/search?query=" + URLEncoder.encode(name, "UTF-8") + "&type=NAME");
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                if (token != null) {
+                if (token != null && !token.isEmpty()) {
                     conn.setRequestProperty("Authorization", "Bearer " + token);
-                    conn.setRequestProperty("Cookie", "token=" + token);
                 }
+                if (cookieStr != null && !cookieStr.isEmpty()) {
+                    conn.setRequestProperty("Cookie", cookieStr);
+                } else if (token != null && !token.isEmpty()) {
+                    conn.setRequestProperty("Cookie", "token=" + token + "; auth-token=" + token);
+                }
+                conn.setRequestProperty("Accept", "application/json");
                 if (conn.getResponseCode() == 200) {
                     String res = readStream(conn.getInputStream());
                     JSONArray arr = new JSONArray(res);
@@ -485,13 +525,19 @@ public class RegistrationActivity extends AppCompatActivity {
         final String finalQ = q;
         new Thread(() -> {
             try {
-                String token = AuthManager.getToken(this);
+                String token = getAuthToken();
+                String cookieStr = getAuthCookie();
                 URL url = new URL(BASE_URL + "/api/workspace/patients/search?query=" + URLEncoder.encode(finalQ, "UTF-8") + "&type=" + searchType);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                if (token != null) {
+                if (token != null && !token.isEmpty()) {
                     conn.setRequestProperty("Authorization", "Bearer " + token);
-                    conn.setRequestProperty("Cookie", "token=" + token);
                 }
+                if (cookieStr != null && !cookieStr.isEmpty()) {
+                    conn.setRequestProperty("Cookie", cookieStr);
+                } else if (token != null && !token.isEmpty()) {
+                    conn.setRequestProperty("Cookie", "token=" + token + "; auth-token=" + token);
+                }
+                conn.setRequestProperty("Accept", "application/json");
 
                 int code = conn.getResponseCode();
                 if (code == 200) {
@@ -629,13 +675,19 @@ public class RegistrationActivity extends AppCompatActivity {
         new Thread(() -> {
             boolean walletOk = true;
             try {
-                String tokenCheck = AuthManager.getToken(this);
+                String tokenCheck = getAuthToken();
+                String cookieStr = getAuthCookie();
                 URL walletUrl = new URL(BASE_URL + "/api/workspace/wallet/details");
                 HttpURLConnection wc = (HttpURLConnection) walletUrl.openConnection();
-                if (tokenCheck != null) {
+                if (tokenCheck != null && !tokenCheck.isEmpty()) {
                     wc.setRequestProperty("Authorization", "Bearer " + tokenCheck);
-                    wc.setRequestProperty("Cookie", "token=" + tokenCheck);
                 }
+                if (cookieStr != null && !cookieStr.isEmpty()) {
+                    wc.setRequestProperty("Cookie", cookieStr);
+                } else if (tokenCheck != null && !tokenCheck.isEmpty()) {
+                    wc.setRequestProperty("Cookie", "token=" + tokenCheck + "; auth-token=" + tokenCheck);
+                }
+                wc.setRequestProperty("Accept", "application/json");
                 wc.setConnectTimeout(5000);
                 wc.setReadTimeout(5000);
                 if (wc.getResponseCode() == 200) {
@@ -677,7 +729,8 @@ public class RegistrationActivity extends AppCompatActivity {
     private void proceedWithRegistration(String name, String phone, String ageStr) {
         new Thread(() -> {
             try {
-                String token = AuthManager.getToken(this);
+                String token = getAuthToken();
+                String cookieStr = getAuthCookie();
                 String title = spinnerTitle.getSelectedItem().toString();
                 String gender = spinnerGender.getSelectedItem().toString();
                 String ageUnit = spinnerAgeUnit.getSelectedItem().toString();
@@ -687,25 +740,13 @@ public class RegistrationActivity extends AppCompatActivity {
                 String cDate = inputCollectionDate != null ? inputCollectionDate.getText().toString().trim() : "";
                 String cTime = inputCollectionTime != null ? inputCollectionTime.getText().toString().trim() : "";
 
-                int docPos = spinnerDoctor.getSelectedItemPosition();
-                String docId = null;
-                if (docPos > 0 && docPos < registeredDoctors.size()) {
-                    docId = registeredDoctors.get(docPos).id;
-                }
+                String docId = (selectedDoctorId != null && !selectedDoctorId.equals("Self")) ? selectedDoctorId : null;
+                String docName = (selectedDoctorName != null && !selectedDoctorName.trim().isEmpty()) ? selectedDoctorName : "Self (No Doctor)";
 
-                int agPos = spinnerAgency.getSelectedItemPosition();
-                String agId = null;
-                if (agPos > 0 && agPos < registeredAgencies.size()) {
-                    agId = registeredAgencies.get(agPos).id;
-                }
+                String agId = (selectedAgencyId != null && !selectedAgencyId.equals("Direct")) ? selectedAgencyId : null;
+                String agName = (selectedAgencyName != null && !selectedAgencyName.trim().isEmpty()) ? selectedAgencyName : "Direct Walk-in";
 
-                String colValue = "Lab Phlebotomist";
-                int colPos = spinnerCollector.getSelectedItemPosition();
-                if (colPos >= 0 && colPos < registeredCollectors.size()) {
-                    colValue = registeredCollectors.get(colPos).name;
-                } else if (spinnerCollector.getSelectedItem() != null) {
-                    colValue = spinnerCollector.getSelectedItem().toString();
-                }
+                String colValue = (selectedCollectorName != null && !selectedCollectorName.trim().isEmpty()) ? selectedCollectorName : "Lab Phlebotomist";
 
                 JSONObject body = new JSONObject();
                 body.put("title", title);
@@ -716,8 +757,10 @@ public class RegistrationActivity extends AppCompatActivity {
                 body.put("ageUnit", ageUnit);
                 body.put("email", email);
                 body.put("address", address);
-                body.put("doctorId", docId);
-                body.put("agencyId", agId);
+                body.put("doctorId", docId != null ? docId : JSONObject.NULL);
+                body.put("doctorName", docName);
+                body.put("agencyId", agId != null ? agId : JSONObject.NULL);
+                body.put("agencyName", agName);
                 body.put("collectedBy", colValue);
                 body.put("paymentMode", paymentMode);
                 body.put("collectionDate", cDate);
@@ -727,10 +770,15 @@ public class RegistrationActivity extends AppCompatActivity {
                 HttpURLConnection conn = (HttpURLConnection) regUrl.openConnection();
                 conn.setRequestMethod("POST");
                 conn.setRequestProperty("Content-Type", "application/json");
-                if (token != null) {
+                if (token != null && !token.isEmpty()) {
                     conn.setRequestProperty("Authorization", "Bearer " + token);
-                    conn.setRequestProperty("Cookie", "token=" + token);
                 }
+                if (cookieStr != null && !cookieStr.isEmpty()) {
+                    conn.setRequestProperty("Cookie", cookieStr);
+                } else if (token != null && !token.isEmpty()) {
+                    conn.setRequestProperty("Cookie", "token=" + token + "; auth-token=" + token);
+                }
+                conn.setRequestProperty("Accept", "application/json");
                 conn.setDoOutput(true);
 
                 OutputStream os = conn.getOutputStream();
@@ -875,6 +923,18 @@ public class RegistrationActivity extends AppCompatActivity {
         if (layoutWarningDuplicate != null) layoutWarningDuplicate.setVisibility(View.GONE);
         cardMatchFound.setVisibility(View.GONE);
         cardNoMatch.setVisibility(View.GONE);
+
+        selectedDoctorId = "Self";
+        selectedDoctorName = "Self (No Doctor)";
+        updateDoctorCardDisplay();
+
+        selectedAgencyId = "Direct";
+        selectedAgencyName = "Direct Walk-in";
+        updateAgencyCardDisplay();
+
+        selectedCollectorName = "Lab Phlebotomist";
+        updateCollectorCardDisplay();
+
         if (spinnerDoctor != null && spinnerDoctor.getCount() > 0) spinnerDoctor.setSelection(0);
         if (spinnerAgency != null && spinnerAgency.getCount() > 0) spinnerAgency.setSelection(0);
         if (spinnerCollector != null && spinnerCollector.getCount() > 0) spinnerCollector.setSelection(0);
@@ -882,19 +942,805 @@ public class RegistrationActivity extends AppCompatActivity {
         setupDateTimeDefaults();
     }
 
+    private void updateDoctorCardDisplay() {
+        if (lblSelectedDoctorName == null || lblSelectedDoctorSubtitle == null) return;
+        if (selectedDoctorId == null || selectedDoctorId.equals("Self")) {
+            lblSelectedDoctorName.setText("Self (No Doctor)");
+            lblSelectedDoctorSubtitle.setText("Direct Walk-in / Self");
+            return;
+        }
+        for (DoctorItem d : registeredDoctors) {
+            if (selectedDoctorId.equals(d.id)) {
+                lblSelectedDoctorName.setText(d.name);
+                String sub = (d.spec != null && !d.spec.isEmpty() ? d.spec : "") +
+                             (d.hospital != null && !d.hospital.isEmpty() ? (!d.spec.isEmpty() ? " • " : "") + d.hospital : "");
+                lblSelectedDoctorSubtitle.setText(sub.isEmpty() ? "Registered Doctor" : sub);
+                return;
+            }
+        }
+        lblSelectedDoctorName.setText(selectedDoctorName != null ? selectedDoctorName : "Self (No Doctor)");
+        lblSelectedDoctorSubtitle.setText("Registered Doctor");
+    }
+
+    private void updateAgencyCardDisplay() {
+        if (lblSelectedAgencyName == null || lblSelectedAgencySubtitle == null) return;
+        if (selectedAgencyId == null || selectedAgencyId.equals("Direct")) {
+            lblSelectedAgencyName.setText("Direct Walk-in");
+            lblSelectedAgencySubtitle.setText("Standard Direct Billing");
+            return;
+        }
+        for (DoctorItem a : registeredAgencies) {
+            if (selectedAgencyId.equals(a.id)) {
+                lblSelectedAgencyName.setText(a.name);
+                lblSelectedAgencySubtitle.setText(a.hospital != null && !a.hospital.isEmpty() ? "Tier: " + a.hospital : "Partner Center");
+                return;
+            }
+        }
+        lblSelectedAgencyName.setText(selectedAgencyName != null ? selectedAgencyName : "Direct Walk-in");
+        lblSelectedAgencySubtitle.setText("Partner Center");
+    }
+
+    private void updateCollectorCardDisplay() {
+        if (lblSelectedCollectorName == null || lblSelectedCollectorSubtitle == null) return;
+        String col = (selectedCollectorName != null && !selectedCollectorName.isEmpty()) ? selectedCollectorName : "Lab Phlebotomist";
+        lblSelectedCollectorName.setText(col);
+        if (col.equalsIgnoreCase("Lab Phlebotomist")) {
+            lblSelectedCollectorSubtitle.setText("In-Lab Sample Collection");
+        } else if (col.equalsIgnoreCase("Home Collection Agent")) {
+            lblSelectedCollectorSubtitle.setText("At-Home Phlebotomist Visit");
+        } else if (col.equalsIgnoreCase("Self (Patient)") || col.equalsIgnoreCase("Self")) {
+            lblSelectedCollectorSubtitle.setText("Sample brought by patient");
+        } else {
+            lblSelectedCollectorSubtitle.setText("Authorized Sample Collector");
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Selector Sheets & Quick Add Dialogs
+    // ─────────────────────────────────────────────────────────────────────────
+
+    public static class SelectorOption {
+        public String id;
+        public String title;
+        public String subtitle;
+        public int iconRes;
+        public boolean isSelected;
+        public boolean isAddAction;
+
+        public SelectorOption(String id, String title, String subtitle, int iconRes, boolean isSelected) {
+            this(id, title, subtitle, iconRes, isSelected, false);
+        }
+
+        public SelectorOption(String id, String title, String subtitle, int iconRes, boolean isSelected, boolean isAddAction) {
+            this.id = id;
+            this.title = title;
+            this.subtitle = subtitle;
+            this.iconRes = iconRes;
+            this.isSelected = isSelected;
+            this.isAddAction = isAddAction;
+        }
+    }
+
+    public interface OnOptionSelectedListener {
+        void onSelected(SelectorOption option);
+    }
+
+    public static class SelectorAdapter extends RecyclerView.Adapter<SelectorAdapter.ViewHolder> {
+        private final List<SelectorOption> allItems;
+        private final List<SelectorOption> filteredItems;
+        private final OnOptionSelectedListener listener;
+
+        public SelectorAdapter(List<SelectorOption> items, OnOptionSelectedListener listener) {
+            this.allItems = items;
+            this.filteredItems = new ArrayList<>(items);
+            this.listener = listener;
+        }
+
+        public void filter(String query) {
+            filteredItems.clear();
+            if (query == null || query.trim().isEmpty()) {
+                filteredItems.addAll(allItems);
+            } else {
+                String q = query.trim();
+                String qLower = q.toLowerCase();
+                boolean exactMatch = false;
+                for (SelectorOption item : allItems) {
+                    if ((item.title != null && item.title.toLowerCase().contains(qLower)) ||
+                        (item.subtitle != null && item.subtitle.toLowerCase().contains(qLower))) {
+                        filteredItems.add(item);
+                    }
+                    if (item.title != null && item.title.equalsIgnoreCase(q)) {
+                        exactMatch = true;
+                    }
+                }
+                if (!exactMatch && !q.isEmpty()) {
+                    filteredItems.add(new SelectorOption(q, "+ Add \"" + q + "\"", "Select and create entry instantly", R.drawable.ic_plus, false, true));
+                }
+            }
+            notifyDataSetChanged();
+        }
+
+        @NonNull
+        @Override
+        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_doctor_row, parent, false);
+            return new ViewHolder(v);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+            SelectorOption item = filteredItems.get(position);
+            holder.lblDocName.setText(item.title);
+            holder.lblDocSubtitle.setText(item.subtitle);
+            holder.imgDocIcon.setImageResource(item.iconRes);
+
+            if (item.isAddAction) {
+                holder.lblDocName.setTextColor(Color.parseColor("#0D6EFD"));
+                holder.rootDoctorItem.setBackgroundColor(Color.parseColor("#EFF6FF"));
+                if (holder.imgDocCheck != null) holder.imgDocCheck.setVisibility(View.GONE);
+                if (holder.imgDocArrow != null) holder.imgDocArrow.setVisibility(View.VISIBLE);
+            } else {
+                holder.lblDocName.setTextColor(Color.parseColor("#0F172A"));
+                if (item.isSelected) {
+                    holder.rootDoctorItem.setBackgroundColor(Color.parseColor("#EFF6FF"));
+                    if (holder.imgDocCheck != null) holder.imgDocCheck.setVisibility(View.VISIBLE);
+                    if (holder.imgDocArrow != null) holder.imgDocArrow.setVisibility(View.GONE);
+                } else {
+                    holder.rootDoctorItem.setBackgroundResource(android.R.drawable.list_selector_background);
+                    if (holder.imgDocCheck != null) holder.imgDocCheck.setVisibility(View.GONE);
+                    if (holder.imgDocArrow != null) holder.imgDocArrow.setVisibility(View.VISIBLE);
+                }
+            }
+
+            holder.itemView.setOnClickListener(v -> {
+                if (listener != null) listener.onSelected(item);
+            });
+        }
+
+        @Override
+        public int getItemCount() {
+            return filteredItems.size();
+        }
+
+        public static class ViewHolder extends RecyclerView.ViewHolder {
+            View rootDoctorItem;
+            ImageView imgDocIcon;
+            TextView lblDocName, lblDocSubtitle;
+            ImageView imgDocCheck, imgDocArrow;
+
+            public ViewHolder(@NonNull View itemView) {
+                super(itemView);
+                rootDoctorItem = itemView.findViewById(R.id.rootDoctorItem);
+                imgDocIcon = itemView.findViewById(R.id.imgDocIcon);
+                lblDocName = itemView.findViewById(R.id.lblDocName);
+                lblDocSubtitle = itemView.findViewById(R.id.lblDocSubtitle);
+                imgDocCheck = itemView.findViewById(R.id.imgDocCheck);
+                imgDocArrow = itemView.findViewById(R.id.imgDocArrow);
+            }
+        }
+    }
+
+    private void openDoctorSelectorSheet() {
+        BottomSheetDialog dialog = new BottomSheetDialog(this);
+        View sheet = getLayoutInflater().inflate(R.layout.layout_doctor_selector_sheet, null);
+        dialog.setContentView(sheet);
+
+        TextView lblTitle = sheet.findViewById(R.id.lblDoctorSheetTitle);
+        TextView lblSubtitle = sheet.findViewById(R.id.lblDoctorSheetSubtitle);
+        MaterialButton btnAdd = sheet.findViewById(R.id.btnAddDocAction);
+        FrameLayout btnClose = sheet.findViewById(R.id.btnCloseDocSheet);
+        EditText inputSearch = sheet.findViewById(R.id.inputSearchDoctor);
+        RecyclerView recycler = sheet.findViewById(R.id.recyclerDoctorsList);
+
+        lblTitle.setText("Select Referring Doctor");
+        lblSubtitle.setText("Choose from registered doctors or self");
+        btnAdd.setText("+ Add Doctor");
+        inputSearch.setHint("Search or type new...");
+
+        List<SelectorOption> options = new ArrayList<>();
+        for (DoctorItem d : registeredDoctors) {
+            String sub = (d.spec != null && !d.spec.isEmpty() ? d.spec : "") +
+                         (d.hospital != null && !d.hospital.isEmpty() ? (!d.spec.isEmpty() ? " • " : "") + d.hospital : "");
+            if (sub.isEmpty()) sub = d.id.equals("Self") ? "Direct Walk-in / Self" : "Registered Doctor";
+            boolean sel = d.id.equals(selectedDoctorId);
+            options.add(new SelectorOption(d.id, d.name, sub, R.drawable.ic_stethoscope, sel));
+        }
+
+        SelectorAdapter adapter = new SelectorAdapter(options, opt -> {
+            if (opt.isAddAction) {
+                String rawName = opt.id.trim();
+                String finalName = (rawName.toLowerCase().startsWith("dr.") || rawName.toLowerCase().startsWith("dr ")) ? rawName : "Dr. " + rawName;
+                DoctorItem newDoc = new DoctorItem(finalName, finalName, "Custom Referral", "");
+                registeredDoctors.add(1, newDoc);
+                doctorLabels.add(1, finalName);
+                adapterDoctor.notifyDataSetChanged();
+
+                selectedDoctorId = newDoc.id;
+                selectedDoctorName = newDoc.name;
+                updateDoctorCardDisplay();
+                persistNewDoctor(finalName);
+            } else {
+                selectedDoctorId = opt.id;
+                selectedDoctorName = opt.title;
+                updateDoctorCardDisplay();
+
+                // Sync hidden spinner
+                for (int i = 0; i < registeredDoctors.size(); i++) {
+                    if (registeredDoctors.get(i).id.equals(opt.id)) {
+                        spinnerDoctor.setSelection(i);
+                        break;
+                    }
+                }
+            }
+            dialog.dismiss();
+        });
+
+        recycler.setLayoutManager(new LinearLayoutManager(this));
+        recycler.setAdapter(adapter);
+
+        inputSearch.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                adapter.filter(s.toString());
+            }
+            @Override public void afterTextChanged(Editable s) {}
+        });
+
+        btnClose.setOnClickListener(v -> dialog.dismiss());
+        btnAdd.setOnClickListener(v -> showAddDoctorBottomSheet(dialog));
+
+        dialog.show();
+    }
+
+    private void showAddDoctorBottomSheet(BottomSheetDialog parentSheet) {
+        BottomSheetDialog addDialog = new BottomSheetDialog(this);
+        View sheet = getLayoutInflater().inflate(R.layout.layout_add_doctor_sheet, null);
+        addDialog.setContentView(sheet);
+
+        EditText inputName = sheet.findViewById(R.id.inputDoctorName);
+        EditText inputPhone = sheet.findViewById(R.id.inputDoctorPhone);
+        EditText inputSpec = sheet.findViewById(R.id.inputDoctorSpecialization);
+        EditText inputClinic = sheet.findViewById(R.id.inputDoctorClinic);
+        EditText inputQual = sheet.findViewById(R.id.inputDoctorQualification);
+        EditText inputEmail = sheet.findViewById(R.id.inputDoctorEmail);
+        View btnClose = sheet.findViewById(R.id.btnAddDoctorClose);
+        View btnSave = sheet.findViewById(R.id.btnSaveDoctor);
+        ProgressBar progressSaving = sheet.findViewById(R.id.progressDoctorSaving);
+        TextView lblError = sheet.findViewById(R.id.lblDoctorFormError);
+
+        btnClose.setOnClickListener(v -> addDialog.dismiss());
+
+        btnSave.setOnClickListener(v -> {
+            String name = inputName.getText().toString().trim();
+            String phone = inputPhone.getText().toString().trim();
+            String spec = inputSpec.getText().toString().trim();
+            String clinic = inputClinic.getText().toString().trim();
+            String qual = inputQual != null ? inputQual.getText().toString().trim() : "";
+            String email = inputEmail != null ? inputEmail.getText().toString().trim() : "";
+
+            if (name.isEmpty()) {
+                if (lblError != null) {
+                    lblError.setText("Doctor name is required.");
+                    lblError.setVisibility(View.VISIBLE);
+                }
+                inputName.requestFocus();
+                return;
+            }
+
+            if (lblError != null) lblError.setVisibility(View.GONE);
+            btnSave.setEnabled(false);
+            if (progressSaving != null) progressSaving.setVisibility(View.VISIBLE);
+
+            new Thread(() -> {
+                try {
+                    String token = getAuthToken();
+                    String cookieStr = getAuthCookie();
+                    JSONObject postBody = new JSONObject();
+                    postBody.put("name", name.startsWith("Dr.") ? name : "Dr. " + name);
+                    if (!phone.isEmpty()) postBody.put("phone", phone);
+                    if (!spec.isEmpty()) postBody.put("specialization", spec);
+                    if (!clinic.isEmpty()) postBody.put("clinic", clinic);
+                    if (!qual.isEmpty()) postBody.put("qualification", qual);
+                    if (!email.isEmpty()) postBody.put("email", email);
+
+                    URL url = new URL(BASE_URL + "/api/workspace/doctors");
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.setRequestMethod("POST");
+                    conn.setRequestProperty("Content-Type", "application/json");
+                    if (token != null && !token.isEmpty()) {
+                        conn.setRequestProperty("Authorization", "Bearer " + token);
+                    }
+                    if (cookieStr != null && !cookieStr.isEmpty()) {
+                        conn.setRequestProperty("Cookie", cookieStr);
+                    } else if (token != null && !token.isEmpty()) {
+                        conn.setRequestProperty("Cookie", "token=" + token + "; auth-token=" + token);
+                    }
+                    conn.setRequestProperty("Accept", "application/json");
+                    conn.setDoOutput(true);
+
+                    OutputStream os = conn.getOutputStream();
+                    os.write(postBody.toString().getBytes(StandardCharsets.UTF_8));
+                    os.flush();
+                    os.close();
+
+                    int code = conn.getResponseCode();
+                    String res = readStream(code >= 200 && code < 300 ? conn.getInputStream() : conn.getErrorStream());
+
+                    if (code == 200 || code == 201) {
+                        JSONObject resObj = new JSONObject(res);
+                        JSONObject docObj = resObj.optJSONObject("doctor");
+                        String newId = docObj != null ? docObj.optString("id", java.util.UUID.randomUUID().toString()) : java.util.UUID.randomUUID().toString();
+                        String formattedName = docObj != null ? docObj.optString("name", name) : name;
+                        String formattedSpec = docObj != null ? docObj.optString("specialization", spec) : spec;
+                        String formattedClinic = docObj != null ? docObj.optString("clinic", clinic) : clinic;
+
+                        DoctorItem newDoc = new DoctorItem(newId, formattedName, formattedSpec, formattedClinic);
+
+                        mainHandler.post(() -> {
+                            registeredDoctors.add(1, newDoc);
+                            doctorLabels.add(1, formattedName + (formattedSpec.isEmpty() ? "" : " (" + formattedSpec + ")"));
+                            adapterDoctor.notifyDataSetChanged();
+
+                            selectedDoctorId = newDoc.id;
+                            selectedDoctorName = newDoc.name;
+                            updateDoctorCardDisplay();
+
+                            Toast.makeText(RegistrationActivity.this, "Doctor " + newDoc.name + " added successfully!", Toast.LENGTH_SHORT).show();
+                            addDialog.dismiss();
+                            if (parentSheet != null && parentSheet.isShowing()) {
+                                parentSheet.dismiss();
+                            }
+                        });
+                    } else {
+                        String errMsg = "Failed to add doctor (HTTP " + code + ")";
+                        try {
+                            JSONObject err = new JSONObject(res);
+                            errMsg = err.optString("error", err.optString("message", errMsg));
+                        } catch (Exception ignored) {}
+                        final String finalMsg = errMsg;
+                        mainHandler.post(() -> {
+                            btnSave.setEnabled(true);
+                            if (progressSaving != null) progressSaving.setVisibility(View.GONE);
+                            if (lblError != null) {
+                                lblError.setText(finalMsg);
+                                lblError.setVisibility(View.VISIBLE);
+                            } else {
+                                Toast.makeText(RegistrationActivity.this, finalMsg, Toast.LENGTH_LONG).show();
+                            }
+                        });
+                    }
+                } catch (Exception e) {
+                    mainHandler.post(() -> {
+                        btnSave.setEnabled(true);
+                        if (progressSaving != null) progressSaving.setVisibility(View.GONE);
+                        if (lblError != null) {
+                            lblError.setText("Error: " + e.getMessage());
+                            lblError.setVisibility(View.VISIBLE);
+                        } else {
+                            Toast.makeText(RegistrationActivity.this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+            }).start();
+        });
+
+        addDialog.show();
+    }
+
+    private void openAgencySelectorSheet() {
+        BottomSheetDialog dialog = new BottomSheetDialog(this);
+        View sheet = getLayoutInflater().inflate(R.layout.layout_doctor_selector_sheet, null);
+        dialog.setContentView(sheet);
+
+        TextView lblTitle = sheet.findViewById(R.id.lblDoctorSheetTitle);
+        TextView lblSubtitle = sheet.findViewById(R.id.lblDoctorSheetSubtitle);
+        MaterialButton btnAdd = sheet.findViewById(R.id.btnAddDocAction);
+        FrameLayout btnClose = sheet.findViewById(R.id.btnCloseDocSheet);
+        EditText inputSearch = sheet.findViewById(R.id.inputSearchDoctor);
+        RecyclerView recycler = sheet.findViewById(R.id.recyclerDoctorsList);
+
+        lblTitle.setText("Select Agency / Client");
+        lblSubtitle.setText("Choose B2B partner, clinic, or direct walk-in");
+        btnAdd.setText("+ Add Agency");
+        inputSearch.setHint("Search or type new...");
+
+        List<SelectorOption> options = new ArrayList<>();
+        for (DoctorItem a : registeredAgencies) {
+            String sub = (a.hospital != null && !a.hospital.isEmpty()) ? "Tier: " + a.hospital : (a.id.equals("Direct") ? "Standard Direct Billing" : "Partner Center");
+            boolean sel = a.id.equals(selectedAgencyId);
+            options.add(new SelectorOption(a.id, a.name, sub, R.drawable.ic_briefcase, sel));
+        }
+
+        SelectorAdapter adapter = new SelectorAdapter(options, opt -> {
+            if (opt.isAddAction) {
+                String agName = opt.id.trim();
+                DoctorItem newAg = new DoctorItem(agName, agName, "Partner Center", "Standard");
+                registeredAgencies.add(1, newAg);
+                agencyLabels.add(1, agName + " [Standard]");
+                adapterAgency.notifyDataSetChanged();
+
+                selectedAgencyId = newAg.id;
+                selectedAgencyName = newAg.name;
+                updateAgencyCardDisplay();
+                persistNewAgency(agName);
+            } else {
+                selectedAgencyId = opt.id;
+                selectedAgencyName = opt.title;
+                updateAgencyCardDisplay();
+
+                // Sync hidden spinner
+                for (int i = 0; i < registeredAgencies.size(); i++) {
+                    if (registeredAgencies.get(i).id.equals(opt.id)) {
+                        spinnerAgency.setSelection(i);
+                        break;
+                    }
+                }
+            }
+            dialog.dismiss();
+        });
+
+        recycler.setLayoutManager(new LinearLayoutManager(this));
+        recycler.setAdapter(adapter);
+
+        inputSearch.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                adapter.filter(s.toString());
+            }
+            @Override public void afterTextChanged(Editable s) {}
+        });
+
+        btnClose.setOnClickListener(v -> dialog.dismiss());
+        btnAdd.setOnClickListener(v -> showAddAgencyBottomSheet(dialog));
+
+        dialog.show();
+    }
+
+    private void showAddAgencyBottomSheet(BottomSheetDialog parentSheet) {
+        BottomSheetDialog addDialog = new BottomSheetDialog(this);
+        View sheet = getLayoutInflater().inflate(R.layout.layout_add_agency_sheet, null);
+        addDialog.setContentView(sheet);
+
+        EditText inputName = sheet.findViewById(R.id.inputAgencyName);
+        EditText inputContact = sheet.findViewById(R.id.inputAgencyContactPerson);
+        EditText inputPhone = sheet.findViewById(R.id.inputAgencyPhone);
+        EditText inputEmail = sheet.findViewById(R.id.inputAgencyEmail);
+        View btnClose = sheet.findViewById(R.id.btnAddAgencyClose);
+        View btnSave = sheet.findViewById(R.id.btnSaveAgency);
+        ProgressBar progressSaving = sheet.findViewById(R.id.progressAgencySaving);
+        TextView lblError = sheet.findViewById(R.id.lblAgencyFormError);
+
+        btnClose.setOnClickListener(v -> addDialog.dismiss());
+
+        btnSave.setOnClickListener(v -> {
+            String name = inputName.getText().toString().trim();
+            String contact = inputContact != null ? inputContact.getText().toString().trim() : "";
+            String phone = inputPhone != null ? inputPhone.getText().toString().trim() : "";
+            String email = inputEmail != null ? inputEmail.getText().toString().trim() : "";
+
+            if (name.isEmpty()) {
+                if (lblError != null) {
+                    lblError.setText("Agency name is required.");
+                    lblError.setVisibility(View.VISIBLE);
+                }
+                inputName.requestFocus();
+                return;
+            }
+
+            if (lblError != null) lblError.setVisibility(View.GONE);
+            btnSave.setEnabled(false);
+            if (progressSaving != null) progressSaving.setVisibility(View.VISIBLE);
+
+            new Thread(() -> {
+                try {
+                    String token = getAuthToken();
+                    String cookieStr = getAuthCookie();
+                    JSONObject postBody = new JSONObject();
+                    postBody.put("agencyName", name);
+                    if (!contact.isEmpty()) postBody.put("contactPerson", contact);
+                    if (!phone.isEmpty()) postBody.put("phone", phone);
+                    if (!email.isEmpty()) postBody.put("email", email);
+                    postBody.put("agencyTier", "Standard");
+
+                    URL url = new URL(BASE_URL + "/api/workspace/b2b/agencies");
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.setRequestMethod("POST");
+                    conn.setRequestProperty("Content-Type", "application/json");
+                    if (token != null && !token.isEmpty()) {
+                        conn.setRequestProperty("Authorization", "Bearer " + token);
+                    }
+                    if (cookieStr != null && !cookieStr.isEmpty()) {
+                        conn.setRequestProperty("Cookie", cookieStr);
+                    } else if (token != null && !token.isEmpty()) {
+                        conn.setRequestProperty("Cookie", "token=" + token + "; auth-token=" + token);
+                    }
+                    conn.setRequestProperty("Accept", "application/json");
+                    conn.setDoOutput(true);
+
+                    OutputStream os = conn.getOutputStream();
+                    os.write(postBody.toString().getBytes(StandardCharsets.UTF_8));
+                    os.flush();
+                    os.close();
+
+                    int code = conn.getResponseCode();
+                    String res = readStream(code >= 200 && code < 300 ? conn.getInputStream() : conn.getErrorStream());
+
+                    if (code == 200 || code == 201) {
+                        JSONObject resObj = new JSONObject(res);
+                        JSONObject agObj = resObj.optJSONObject("agency");
+                        String newId = agObj != null ? agObj.optString("id", java.util.UUID.randomUUID().toString()) : java.util.UUID.randomUUID().toString();
+                        String formattedName = agObj != null ? agObj.optString("agencyName", name) : name;
+                        String formattedTier = agObj != null ? agObj.optString("agencyTier", "Standard") : "Standard";
+
+                        DoctorItem newAg = new DoctorItem(newId, formattedName, "Partner Center", formattedTier);
+
+                        mainHandler.post(() -> {
+                            registeredAgencies.add(1, newAg);
+                            agencyLabels.add(1, formattedName + " [" + formattedTier + "]");
+                            adapterAgency.notifyDataSetChanged();
+
+                            selectedAgencyId = newAg.id;
+                            selectedAgencyName = newAg.name;
+                            updateAgencyCardDisplay();
+
+                            Toast.makeText(RegistrationActivity.this, "Agency " + newAg.name + " added successfully!", Toast.LENGTH_SHORT).show();
+                            addDialog.dismiss();
+                            if (parentSheet != null && parentSheet.isShowing()) {
+                                parentSheet.dismiss();
+                            }
+                        });
+                    } else {
+                        String errMsg = "Failed to add agency (HTTP " + code + ")";
+                        try {
+                            JSONObject err = new JSONObject(res);
+                            errMsg = err.optString("error", err.optString("message", errMsg));
+                        } catch (Exception ignored) {}
+                        final String finalMsg = errMsg;
+                        mainHandler.post(() -> {
+                            btnSave.setEnabled(true);
+                            if (progressSaving != null) progressSaving.setVisibility(View.GONE);
+                            if (lblError != null) {
+                                lblError.setText(finalMsg);
+                                lblError.setVisibility(View.VISIBLE);
+                            } else {
+                                Toast.makeText(RegistrationActivity.this, finalMsg, Toast.LENGTH_LONG).show();
+                            }
+                        });
+                    }
+                } catch (Exception e) {
+                    mainHandler.post(() -> {
+                        btnSave.setEnabled(true);
+                        if (progressSaving != null) progressSaving.setVisibility(View.GONE);
+                        if (lblError != null) {
+                            lblError.setText("Error: " + e.getMessage());
+                            lblError.setVisibility(View.VISIBLE);
+                        } else {
+                            Toast.makeText(RegistrationActivity.this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+            }).start();
+        });
+
+        addDialog.show();
+    }
+
+    private void openCollectorSelectorSheet() {
+        BottomSheetDialog dialog = new BottomSheetDialog(this);
+        View sheet = getLayoutInflater().inflate(R.layout.layout_doctor_selector_sheet, null);
+        dialog.setContentView(sheet);
+
+        TextView lblTitle = sheet.findViewById(R.id.lblDoctorSheetTitle);
+        TextView lblSubtitle = sheet.findViewById(R.id.lblDoctorSheetSubtitle);
+        MaterialButton btnAdd = sheet.findViewById(R.id.btnAddDocAction);
+        FrameLayout btnClose = sheet.findViewById(R.id.btnCloseDocSheet);
+        EditText inputSearch = sheet.findViewById(R.id.inputSearchDoctor);
+        RecyclerView recycler = sheet.findViewById(R.id.recyclerDoctorsList);
+
+        lblTitle.setText("Select Sample Collector");
+        lblSubtitle.setText("Choose phlebotomist, home agent, patient or staff");
+        btnAdd.setText("+ Custom");
+        inputSearch.setHint("Search or type new...");
+
+        List<SelectorOption> options = new ArrayList<>();
+        for (DoctorItem c : registeredCollectors) {
+            String sub = c.spec != null && !c.spec.isEmpty() ? c.spec : "Sample Collection Agent";
+            if (c.name.equalsIgnoreCase("Lab Phlebotomist")) sub = "In-Lab Sample Collection";
+            else if (c.name.equalsIgnoreCase("Home Collection Agent")) sub = "At-Home Phlebotomist Visit";
+            else if (c.name.equalsIgnoreCase("Self (Patient)")) sub = "Sample brought by patient";
+
+            boolean sel = c.name.equalsIgnoreCase(selectedCollectorName);
+            options.add(new SelectorOption(c.name, c.name, sub, R.drawable.ic_user, sel));
+        }
+
+        SelectorAdapter adapter = new SelectorAdapter(options, opt -> {
+            if (opt.isAddAction) {
+                String colName = opt.id.trim();
+                DoctorItem newCol = new DoctorItem(colName, colName, "Custom Collector", "");
+                registeredCollectors.add(0, newCol);
+                collectorLabels.add(0, colName);
+                adapterCollector.notifyDataSetChanged();
+
+                selectedCollectorName = colName;
+                updateCollectorCardDisplay();
+            } else {
+                selectedCollectorName = opt.title;
+                updateCollectorCardDisplay();
+
+                // Sync hidden spinner
+                for (int i = 0; i < registeredCollectors.size(); i++) {
+                    if (registeredCollectors.get(i).name.equalsIgnoreCase(opt.title)) {
+                        spinnerCollector.setSelection(i);
+                        break;
+                    }
+                }
+            }
+            dialog.dismiss();
+        });
+
+        recycler.setLayoutManager(new LinearLayoutManager(this));
+        recycler.setAdapter(adapter);
+
+        inputSearch.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                adapter.filter(s.toString());
+            }
+            @Override public void afterTextChanged(Editable s) {}
+        });
+
+        btnClose.setOnClickListener(v -> dialog.dismiss());
+        btnAdd.setOnClickListener(v -> showAddCollectorDialog(dialog));
+
+        dialog.show();
+    }
+
+    private void showAddCollectorDialog(BottomSheetDialog parentSheet) {
+        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(this);
+        builder.setTitle("Enter Collector Name");
+        final EditText input = new EditText(this);
+        input.setHint("e.g., Phlebotomist Name, Nurse or Center");
+        input.setSingleLine(true);
+        FrameLayout container = new FrameLayout(this);
+        int pad = (int) dp(20);
+        container.setPadding(pad, (int) dp(10), pad, (int) dp(10));
+        container.addView(input);
+        builder.setView(container);
+
+        builder.setPositiveButton("Set Collector", (d, which) -> {
+            String custom = input.getText().toString().trim();
+            if (!custom.isEmpty()) {
+                registeredCollectors.add(0, new DoctorItem(custom, custom, "Custom Collector", ""));
+                collectorLabels.add(0, custom);
+                adapterCollector.notifyDataSetChanged();
+                selectedCollectorName = custom;
+                updateCollectorCardDisplay();
+                if (parentSheet != null && parentSheet.isShowing()) {
+                    parentSheet.dismiss();
+                }
+            }
+        });
+        builder.setNegativeButton("Cancel", null);
+        builder.show();
+    }
+
+    private String getAuthCookie() {
+        try {
+            CookieManager cm = CookieManager.getInstance();
+            String c = cm.getCookie(BASE_URL);
+            if (c == null || c.trim().isEmpty()) {
+                c = cm.getCookie("https://app.patholab.cloud");
+            }
+            if (c == null || c.trim().isEmpty()) {
+                c = cm.getCookie("https://patholab.cloud");
+            }
+            return c;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private String getAuthToken() {
+        String token = AuthManager.getToken(this);
+        if (token != null && !token.trim().isEmpty()) return token.trim();
+
+        String cookies = getAuthCookie();
+        if (cookies != null) {
+            String[] parts = cookies.split(";");
+            for (String part : parts) {
+                String trimmed = part.trim();
+                if (trimmed.startsWith("token=")) {
+                    String cookieToken = trimmed.substring(6).trim();
+                    if (!cookieToken.isEmpty()) {
+                        AuthManager.saveToken(this, cookieToken);
+                        return cookieToken;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    private void persistNewDoctor(String doctorName) {
+        if (doctorName == null || doctorName.trim().isEmpty()) return;
+        new Thread(() -> {
+            try {
+                String token = getAuthToken();
+                String cookieStr = getAuthCookie();
+                JSONObject body = new JSONObject();
+                body.put("name", doctorName.trim());
+                body.put("specialization", "General Practice");
+
+                URL url = new URL(BASE_URL + "/api/workspace/doctors");
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Content-Type", "application/json");
+                if (token != null && !token.isEmpty()) conn.setRequestProperty("Authorization", "Bearer " + token);
+                if (cookieStr != null && !cookieStr.isEmpty()) conn.setRequestProperty("Cookie", cookieStr);
+                else if (token != null && !token.isEmpty()) conn.setRequestProperty("Cookie", "token=" + token + "; auth-token=" + token);
+                conn.setRequestProperty("Accept", "application/json");
+                conn.setDoOutput(true);
+
+                OutputStream os = conn.getOutputStream();
+                os.write(body.toString().getBytes(StandardCharsets.UTF_8));
+                os.flush();
+                os.close();
+
+                conn.getResponseCode();
+            } catch (Exception ignored) {}
+        }).start();
+    }
+
+    private void persistNewAgency(String agencyName) {
+        if (agencyName == null || agencyName.trim().isEmpty()) return;
+        new Thread(() -> {
+            try {
+                String token = getAuthToken();
+                String cookieStr = getAuthCookie();
+                JSONObject body = new JSONObject();
+                body.put("agencyName", agencyName.trim());
+                body.put("agencyTier", "Standard");
+
+                URL url = new URL(BASE_URL + "/api/workspace/b2b/agencies");
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Content-Type", "application/json");
+                if (token != null && !token.isEmpty()) conn.setRequestProperty("Authorization", "Bearer " + token);
+                if (cookieStr != null && !cookieStr.isEmpty()) conn.setRequestProperty("Cookie", cookieStr);
+                else if (token != null && !token.isEmpty()) conn.setRequestProperty("Cookie", "token=" + token + "; auth-token=" + token);
+                conn.setRequestProperty("Accept", "application/json");
+                conn.setDoOutput(true);
+
+                OutputStream os = conn.getOutputStream();
+                os.write(body.toString().getBytes(StandardCharsets.UTF_8));
+                os.flush();
+                os.close();
+
+                conn.getResponseCode();
+            } catch (Exception ignored) {}
+        }).start();
+    }
+
     private void fetchDoctorsAndAgencies() {
         new Thread(() -> {
             try {
-                String token = AuthManager.getToken(this);
+                String token = getAuthToken();
+                String cookieHeader = getAuthCookie();
 
                 // 1. Doctors (Added by this user / lab ID)
                 try {
                     URL docUrl = new URL(BASE_URL + "/api/workspace/doctors");
                     HttpURLConnection docConn = (HttpURLConnection) docUrl.openConnection();
-                    if (token != null) {
+                    if (token != null && !token.isEmpty()) {
                         docConn.setRequestProperty("Authorization", "Bearer " + token);
-                        docConn.setRequestProperty("Cookie", "token=" + token);
                     }
+                    if (cookieHeader != null && !cookieHeader.isEmpty()) {
+                        docConn.setRequestProperty("Cookie", cookieHeader);
+                    } else if (token != null && !token.isEmpty()) {
+                        docConn.setRequestProperty("Cookie", "token=" + token + "; auth-token=" + token);
+                    }
+                    docConn.setRequestProperty("Accept", "application/json");
+
                     if (docConn.getResponseCode() == 200) {
                         String res = readStream(docConn.getInputStream());
                         JSONArray arr = null;
@@ -939,6 +1785,7 @@ public class RegistrationActivity extends AppCompatActivity {
                                         }
                                     }
                                 }
+                                updateDoctorCardDisplay();
                             });
                         }
                     }
@@ -948,10 +1795,16 @@ public class RegistrationActivity extends AppCompatActivity {
                 try {
                     URL agUrl = new URL(BASE_URL + "/api/workspace/agencies");
                     HttpURLConnection agConn = (HttpURLConnection) agUrl.openConnection();
-                    if (token != null) {
+                    if (token != null && !token.isEmpty()) {
                         agConn.setRequestProperty("Authorization", "Bearer " + token);
-                        agConn.setRequestProperty("Cookie", "token=" + token);
                     }
+                    if (cookieHeader != null && !cookieHeader.isEmpty()) {
+                        agConn.setRequestProperty("Cookie", cookieHeader);
+                    } else if (token != null && !token.isEmpty()) {
+                        agConn.setRequestProperty("Cookie", "token=" + token + "; auth-token=" + token);
+                    }
+                    agConn.setRequestProperty("Accept", "application/json");
+
                     if (agConn.getResponseCode() == 200) {
                         String res = readStream(agConn.getInputStream());
                         JSONArray arr = null;
@@ -995,6 +1848,7 @@ public class RegistrationActivity extends AppCompatActivity {
                                         }
                                     }
                                 }
+                                updateAgencyCardDisplay();
                             });
                         }
                     }
@@ -1012,7 +1866,7 @@ public class RegistrationActivity extends AppCompatActivity {
                         newColLabels.add(curUser + " (Current User)");
                     }
 
-                    // B. Standard collector options
+                    // B. Standard collector options matching web
                     newCols.add(new DoctorItem("Lab Phlebotomist", "Lab Phlebotomist", "", ""));
                     newColLabels.add("Lab Phlebotomist");
                     newCols.add(new DoctorItem("Home Collection Agent", "Home Collection Agent", "", ""));
@@ -1024,10 +1878,16 @@ public class RegistrationActivity extends AppCompatActivity {
                     try {
                         URL staffUrl = new URL(BASE_URL + "/api/workspace/staff");
                         HttpURLConnection staffConn = (HttpURLConnection) staffUrl.openConnection();
-                        if (token != null) {
+                        if (token != null && !token.isEmpty()) {
                             staffConn.setRequestProperty("Authorization", "Bearer " + token);
-                            staffConn.setRequestProperty("Cookie", "token=" + token);
                         }
+                        if (cookieHeader != null && !cookieHeader.isEmpty()) {
+                            staffConn.setRequestProperty("Cookie", cookieHeader);
+                        } else if (token != null && !token.isEmpty()) {
+                            staffConn.setRequestProperty("Cookie", "token=" + token + "; auth-token=" + token);
+                        }
+                        staffConn.setRequestProperty("Accept", "application/json");
+
                         if (staffConn.getResponseCode() == 200) {
                             String res = readStream(staffConn.getInputStream());
                             JSONArray arr = null;
@@ -1085,6 +1945,7 @@ public class RegistrationActivity extends AppCompatActivity {
                                 }
                             }
                         }
+                        updateCollectorCardDisplay();
                     });
                 } catch (Exception ignored) {}
 

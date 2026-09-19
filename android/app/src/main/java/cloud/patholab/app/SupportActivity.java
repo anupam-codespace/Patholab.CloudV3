@@ -98,12 +98,11 @@ public class SupportActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        StatusBarHelper.setStatusBarDeepNavy(this);
+        StatusBarHelper.setStatusBarSapphire(this);
         setContentView(R.layout.activity_support);
 
         initViews();
         setupListeners();
-        setupFaqAccordion();
         setupDirectAssistance();
 
         fetchTickets();
@@ -116,21 +115,6 @@ public class SupportActivity extends AppCompatActivity {
             btnBack.setOnClickListener(v -> finish());
         }
 
-        // Refresh button in header
-        View btnRefresh = findViewById(R.id.btnRefreshSupport);
-        ImageView imgRefreshIcon = findViewById(R.id.imgRefreshSupportIcon);
-        if (btnRefresh != null) {
-            btnRefresh.setOnClickListener(v -> {
-                if (imgRefreshIcon != null) {
-                    RotateAnimation rotate = new RotateAnimation(0, 360,
-                            Animation.RELATIVE_TO_SELF, 0.5f,
-                            Animation.RELATIVE_TO_SELF, 0.5f);
-                    rotate.setDuration(600);
-                    imgRefreshIcon.startAnimation(rotate);
-                }
-                fetchTickets();
-            });
-        }
 
         // New Ticket button in header
         LinearLayout btnHeaderNewTicket = findViewById(R.id.btnHeaderNewTicket);
@@ -875,29 +859,6 @@ public class SupportActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  FAQ Accordion Setup
-    // ─────────────────────────────────────────────────────────────────────────
-    private void setupFaqAccordion() {
-        setupFaqItem(R.id.faqItem1, R.id.faqAnswer1, R.id.faqArrow1);
-        setupFaqItem(R.id.faqItem2, R.id.faqAnswer2, R.id.faqArrow2);
-        setupFaqItem(R.id.faqItem3, R.id.faqAnswer3, R.id.faqArrow3);
-        setupFaqItem(R.id.faqItem4, R.id.faqAnswer4, R.id.faqArrow4);
-    }
-
-    private void setupFaqItem(int itemId, int answerId, int arrowId) {
-        View item = findViewById(itemId);
-        TextView answer = findViewById(answerId);
-        ImageView arrow = findViewById(arrowId);
-
-        if (item != null && answer != null && arrow != null) {
-            item.setOnClickListener(v -> {
-                boolean isExpanded = answer.getVisibility() == View.VISIBLE;
-                answer.setVisibility(isExpanded ? View.GONE : View.VISIBLE);
-                arrow.animate().rotation(isExpanded ? 0f : 180f).setDuration(200).start();
-            });
-        }
-    }
 
     // ─────────────────────────────────────────────────────────────────────────
     //  Direct Assistance Channels

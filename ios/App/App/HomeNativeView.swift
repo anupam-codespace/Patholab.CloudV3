@@ -44,6 +44,18 @@ struct HomePatient {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// MARK: – Gradient Overlay View
+// ─────────────────────────────────────────────────────────────────────────────
+final class GradientOverlayView: UIView {
+    override class var layerClass: AnyClass {
+        return CAGradientLayer.self
+    }
+    var gradientLayer: CAGradientLayer {
+        return layer as! CAGradientLayer
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // MARK: – HomeNativeView (UIScrollView-based root view)
 // ─────────────────────────────────────────────────────────────────────────────
 class HomeNativeView: UIView {
@@ -217,7 +229,7 @@ class HomeNativeView: UIView {
         addSubview(headerView)
         headerView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            headerView.topAnchor.constraint(equalTo: topAnchor, constant: -20),
+            headerView.topAnchor.constraint(equalTo: topAnchor, constant: 0),
             headerView.leadingAnchor.constraint(equalTo: leadingAnchor),
             headerView.trailingAnchor.constraint(equalTo: trailingAnchor),
         ])
@@ -234,16 +246,20 @@ class HomeNativeView: UIView {
         avatarContainer.addGestureRecognizer(avatarTap)
 
         avatarLabel.font       = .systemFont(ofSize: 18, weight: .black)
-        avatarLabel.textColor  = Self.headerBlue
+        avatarLabel.textColor  = Self.headerBlue1
         avatarLabel.textAlignment = .center
         avatarLabel.text = "A"
         avatarLabel.frame = CGRect(x: 0, y: 0, width: 44, height: 44)
+        avatarLabel.isHidden = true
         avatarContainer.addSubview(avatarLabel)
 
         avatarImageView.contentMode = .scaleAspectFill
         avatarImageView.clipsToBounds = true
         avatarImageView.layer.cornerRadius = 22
         avatarImageView.frame = CGRect(x: 0, y: 0, width: 44, height: 44)
+        avatarImageView.image = getDefaultAvatarImage() ?? UIImage(named: "avatar_boy")
+        avatarImageView.isHidden = false
+        avatarContainer.addSubview(avatarImageView)
         avatarContainer.clipsToBounds = false
 
         statusWaveView.backgroundColor = UIColor(red: 16/255, green: 185/255, blue: 129/255, alpha: 0.70)
@@ -274,38 +290,40 @@ class HomeNativeView: UIView {
         setupNetworkMonitor()
         NotificationCenter.default.addObserver(self, selector: #selector(appWillEnterForeground), name: UIApplication.willEnterForegroundNotification, object: nil)
 
-        // Greeting
-        greetingLabel.font = .systemFont(ofSize: 19.5, weight: .bold)
+        // Greeting with waving hand emoji (matching Android: "Hello, Supriyo 👋")
+        greetingLabel.font = .systemFont(ofSize: 18.5, weight: .bold)
         greetingLabel.textColor = .white
         greetingLabel.text = "Hello, User"
         greetingLabel.lineBreakMode = .byTruncatingTail
 
-        waveLabel.font = .systemFont(ofSize: 19.5)
+        waveLabel.font = .systemFont(ofSize: 18)
         waveLabel.text = "\u{1F44B}"
+        waveLabel.isHidden = false
         waveLabel.isUserInteractionEnabled = true
         let waveTap = UITapGestureRecognizer(target: self, action: #selector(playWaveAnimation))
         waveLabel.addGestureRecognizer(waveTap)
 
         let greetingRow = UIStackView(arrangedSubviews: [greetingLabel, waveLabel])
         greetingRow.axis = .horizontal
-        greetingRow.spacing = 5
+        greetingRow.spacing = 4
         greetingRow.alignment = .center
 
-        // Modern Wallet Capsule
-        walletPill.backgroundColor = UIColor.white.withAlphaComponent(0.20)
+        // Modern Frosted Glass Wallet Balance Capsule (matches Android bg_wallet_pill)
+        walletPill.backgroundColor = UIColor(white: 1.0, alpha: 0.16)
         walletPill.layer.cornerRadius = 15
-        walletPill.layer.borderWidth  = 1
-        walletPill.layer.borderColor  = UIColor.white.withAlphaComponent(0.35).cgColor
-        walletPill.contentEdgeInsets  = UIEdgeInsets(top: 5, left: 12, bottom: 5, right: 12)
+        walletPill.layer.borderWidth  = 1.0
+        walletPill.layer.borderColor  = UIColor(white: 1.0, alpha: 0.30).cgColor
+        walletPill.layer.shadowOpacity = 0
+        walletPill.clipsToBounds = true
         walletPill.addTarget(self, action: #selector(walletPillTapped), for: .touchUpInside)
 
-        walletIcon.image = UIImage(systemName: "creditcard.fill")
-        walletIcon.tintColor = UIColor(red: 0.729, green: 0.902, blue: 0.992, alpha: 1)
+        walletIcon.image = UIImage(systemName: "creditcard")?.withRenderingMode(.alwaysTemplate) ?? UIImage(systemName: "creditcard.fill")
+        walletIcon.tintColor = UIColor(red: 186/255, green: 230/255, blue: 253/255, alpha: 1) // Ice blue #BAE6FD
         walletIcon.contentMode = .scaleAspectFit
 
         walletBalanceLabel.text      = "Wallet: ₹ 0.00"
-        walletBalanceLabel.font      = .systemFont(ofSize: 13.5, weight: .black)
-        walletBalanceLabel.textColor = .white
+        walletBalanceLabel.font      = .systemFont(ofSize: 13.5, weight: .bold)
+        walletBalanceLabel.textColor = .white // Bold white text matching Android
 
         let walletRow = UIStackView(arrangedSubviews: [walletIcon, walletBalanceLabel])
         walletRow.axis    = .horizontal
@@ -314,39 +332,35 @@ class HomeNativeView: UIView {
         walletRow.isUserInteractionEnabled = false
         walletPill.addSubview(walletRow)
 
-        // Notification Bell button (First)
+        // Notification Bell button (First) — 40x40 circular white button with blue bell
         bellButton.backgroundColor = .white
         bellButton.layer.cornerRadius = 20
-        bellButton.layer.borderWidth = 1
-        bellButton.layer.borderColor = UIColor(white: 1.0, alpha: 0.35).cgColor
         bellButton.layer.shadowColor  = UIColor.black.cgColor
-        bellButton.layer.shadowOpacity = 0.10
+        bellButton.layer.shadowOpacity = 0.12
         bellButton.layer.shadowRadius  = 4
         bellButton.layer.shadowOffset  = CGSize(width: 0, height: 2)
         let bellConfig = UIImage.SymbolConfiguration(pointSize: 16, weight: .bold)
         bellButton.setImage(UIImage(systemName: "bell.fill", withConfiguration: bellConfig), for: .normal)
-        bellButton.tintColor = Self.headerBlue2
+        bellButton.tintColor = UIColor(red: 13/255, green: 110/255, blue: 253/255, alpha: 1)
         bellButton.accessibilityLabel = "Notifications"
         bellButton.addTarget(self, action: #selector(bellTapped), for: .touchUpInside)
 
-        // Bell unread dot
+        // Bell unread red badge dot on top-right (matching Android bg_notif_dot)
         bellDot.backgroundColor   = UIColor(red: 1, green: 0.231, blue: 0.188, alpha: 1)
         bellDot.layer.cornerRadius = 4
         bellDot.layer.borderWidth  = 1.5
         bellDot.layer.borderColor  = UIColor.white.cgColor
+        bellDot.isHidden = false
+        NotificationCenter.default.addObserver(self, selector: #selector(handleNewNotificationAlert), name: NSNotification.Name("NewNotificationReceived"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(handleNotificationsMarkedRead), name: NSNotification.Name("NotificationsMarkedRead"), object: nil)
 
-        // Help / Assistance Support button
-        helpButton.backgroundColor = .white
-        helpButton.layer.cornerRadius = 20
-        helpButton.layer.borderWidth = 1
-        helpButton.layer.borderColor = UIColor(white: 1.0, alpha: 0.35).cgColor
-        helpButton.layer.shadowColor  = UIColor.black.cgColor
-        helpButton.layer.shadowOpacity = 0.10
-        helpButton.layer.shadowRadius  = 4
-        helpButton.layer.shadowOffset  = CGSize(width: 0, height: 2)
-        let helpConfig = UIImage.SymbolConfiguration(pointSize: 16, weight: .bold)
-        helpButton.setImage(UIImage(systemName: "questionmark.circle.fill", withConfiguration: helpConfig) ?? UIImage(systemName: "questionmark", withConfiguration: helpConfig), for: .normal)
-        helpButton.tintColor = Self.headerBlue2
+        // Help / Assistance Support button — transparent background with white questionmark.circle (reverted strictly for help button)
+        helpButton.backgroundColor = .clear
+        helpButton.layer.cornerRadius = 0
+        helpButton.layer.shadowOpacity = 0
+        let helpConfig = UIImage.SymbolConfiguration(pointSize: 22, weight: .regular)
+        helpButton.setImage(UIImage(systemName: "questionmark.circle", withConfiguration: helpConfig), for: .normal)
+        helpButton.tintColor = .white
         helpButton.accessibilityLabel = "Help & Support"
         helpButton.addTarget(self, action: #selector(helpTapped), for: .touchUpInside)
 
@@ -371,6 +385,7 @@ class HomeNativeView: UIView {
         avatarContainer.translatesAutoresizingMaskIntoConstraints = false
         helpButton.translatesAutoresizingMaskIntoConstraints = false
         bellButton.translatesAutoresizingMaskIntoConstraints = false
+        walletPill.translatesAutoresizingMaskIntoConstraints = false
         walletRow.translatesAutoresizingMaskIntoConstraints = false
 
         NSLayoutConstraint.activate([
@@ -380,11 +395,13 @@ class HomeNativeView: UIView {
             helpButton.heightAnchor.constraint(equalToConstant: 40),
             bellButton.widthAnchor.constraint(equalToConstant: 40),
             bellButton.heightAnchor.constraint(equalToConstant: 40),
-            hStack.topAnchor.constraint(equalTo: headerView.safeAreaLayoutGuide.topAnchor, constant: 10),
+            hStack.topAnchor.constraint(equalTo: headerView.safeAreaLayoutGuide.topAnchor, constant: 6),
             hStack.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 18),
             hStack.trailingAnchor.constraint(equalTo: headerView.trailingAnchor, constant: -18),
-            hStack.bottomAnchor.constraint(equalTo: headerView.bottomAnchor, constant: -26),
-            walletRow.leadingAnchor.constraint(equalTo: walletPill.leadingAnchor, constant: 10),
+            hStack.bottomAnchor.constraint(equalTo: headerView.bottomAnchor, constant: -18),
+            walletPill.heightAnchor.constraint(equalToConstant: 30),
+            walletRow.leadingAnchor.constraint(equalTo: walletPill.leadingAnchor, constant: 12),
+            walletRow.trailingAnchor.constraint(equalTo: walletPill.trailingAnchor, constant: -12),
             walletRow.centerYAnchor.constraint(equalTo: walletPill.centerYAnchor),
             walletIcon.widthAnchor.constraint(equalToConstant: 14),
             walletIcon.heightAnchor.constraint(equalToConstant: 14),
@@ -423,7 +440,7 @@ class HomeNativeView: UIView {
         // Header spacer (the real header is layered on top)
         let headerSpacer = UIView()
         NSLayoutConstraint.activate([
-            headerSpacer.heightAnchor.constraint(equalToConstant: 105),
+            headerSpacer.heightAnchor.constraint(equalToConstant: 92),
         ])
         headerSpacer.translatesAutoresizingMaskIntoConstraints = false
         contentStack.addArrangedSubview(headerSpacer)
@@ -432,10 +449,10 @@ class HomeNativeView: UIView {
         buildModulesSection()
         buildWorklistSection()
 
-        // Bottom padding
+        // Bottom padding so worklist and cards scroll comfortably above the floating navigation bar
         let bottomPad = UIView()
         bottomPad.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([bottomPad.heightAnchor.constraint(equalToConstant: 100)])
+        NSLayoutConstraint.activate([bottomPad.heightAnchor.constraint(equalToConstant: 120)])
         contentStack.addArrangedSubview(bottomPad)
 
         // Place header on top of scroll content
@@ -448,26 +465,32 @@ class HomeNativeView: UIView {
         wrapper.translatesAutoresizingMaskIntoConstraints = false
 
         // Card
-        bannerCard.layer.cornerRadius = 20
-        bannerCard.clipsToBounds = true
-        bannerCard.layer.shadowColor   = UIColor(red: 0.118, green: 0.533, blue: 0.898, alpha: 0.18).cgColor
+        bannerCard.layer.cornerRadius = 22
+        bannerCard.clipsToBounds = false
+        bannerCard.layer.shadowColor   = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 0.22).cgColor
         bannerCard.layer.shadowOpacity = 1
-        bannerCard.layer.shadowRadius  = 10
-        bannerCard.layer.shadowOffset  = CGSize(width: 0, height: 4)
+        bannerCard.layer.shadowRadius  = 12
+        bannerCard.layer.shadowOffset  = CGSize(width: 0, height: 5)
         bannerCard.layer.masksToBounds = false
 
-        // Gradient inside card
+        // Inner clipping container for corners (matches Android CardView corner radius 22dp)
+        let innerView = UIView()
+        innerView.layer.cornerRadius = 22
+        innerView.layer.masksToBounds = true
+        innerView.clipsToBounds = true
+
+        // Horizontal sapphire gradient inside innerView (matches Android bg_banner_gradient)
         bannerGradient.colors = [
-            UIColor(red: 0.086, green: 0.392, blue: 0.878, alpha: 1).cgColor,
-            UIColor(red: 0.118, green: 0.533, blue: 0.898, alpha: 1).cgColor,
-            UIColor(red: 0.161, green: 0.714, blue: 0.965, alpha: 1).cgColor,
+            UIColor(red: 0.039, green: 0.345, blue: 0.792, alpha: 1).cgColor, // #0A58CA
+            UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1).cgColor, // #0D6EFD
+            UIColor(red: 0.043, green: 0.369, blue: 0.843, alpha: 1).cgColor  // #0B5ED7
         ]
-        bannerGradient.startPoint = CGPoint(x: 0, y: 0)
-        bannerGradient.endPoint   = CGPoint(x: 1, y: 1)
-        bannerCard.layer.insertSublayer(bannerGradient, at: 0)
+        bannerGradient.startPoint = CGPoint(x: 0, y: 0.5)
+        bannerGradient.endPoint   = CGPoint(x: 1, y: 0.5)
+        innerView.layer.insertSublayer(bannerGradient, at: 0)
 
         // Title
-        bannerTitleLabel.font                      = .systemFont(ofSize: 21, weight: .heavy)
+        bannerTitleLabel.font                      = .systemFont(ofSize: 20.5, weight: .heavy)
         bannerTitleLabel.textColor                 = .white
         bannerTitleLabel.numberOfLines             = 2
         bannerTitleLabel.adjustsFontSizeToFitWidth = true
@@ -475,8 +498,8 @@ class HomeNativeView: UIView {
         bannerTitleLabel.text                      = "₹ 2.5 Per\nRegistration"
 
         // Subtitle
-        bannerSubLabel.font          = .systemFont(ofSize: 12, weight: .regular)
-        bannerSubLabel.textColor     = UIColor.white.withAlphaComponent(0.88)
+        bannerSubLabel.font          = .systemFont(ofSize: 12, weight: .medium)
+        bannerSubLabel.textColor     = UIColor.white.withAlphaComponent(0.90)
         bannerSubLabel.numberOfLines = 3
         bannerSubLabel.text          = "Cloud reporting, instant WhatsApp sharing & B2B automation at the lowest cost."
 
@@ -504,21 +527,56 @@ class HomeNativeView: UIView {
         textStack.axis    = .vertical
         textStack.spacing = 0
         textStack.setCustomSpacing(8, after: bannerTitleLabel)
-        textStack.setCustomSpacing(14, after: bannerSubLabel)
+        textStack.setCustomSpacing(12, after: bannerSubLabel)
         textStack.alignment = .leading
         textStack.translatesAutoresizingMaskIntoConstraints = false
 
-        let innerView = UIView()
-        innerView.clipsToBounds = true
+        // ── Scientist banner image anchored to right (matches Android layout_home_screen.xml) ──
+        let scientistImageView = UIImageView()
+        let scientistImg = UIImage(named: "img_scientist_banner") ??
+            UIImage(contentsOfFile: Bundle.main.path(forResource: "img_scientist_banner", ofType: "jpg") ?? "") ??
+            UIImage(contentsOfFile: Bundle.main.path(forResource: "scientist_banner", ofType: "jpg", inDirectory: "public/images/banners") ?? "")
+        scientistImageView.image = scientistImg
+        scientistImageView.contentMode = .scaleAspectFill
+        scientistImageView.clipsToBounds = true
+        scientistImageView.translatesAutoresizingMaskIntoConstraints = false
+        innerView.addSubview(scientistImageView)
+
+        // ── Smooth horizontal gradient fade overlay (matches Android bg_banner_image_fade) ──
+        let fadeOverlay = GradientOverlayView()
+        fadeOverlay.isUserInteractionEnabled = false
+        fadeOverlay.translatesAutoresizingMaskIntoConstraints = false
+        fadeOverlay.gradientLayer.colors = [
+            UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1.0).cgColor,  // solid sapphire blue
+            UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 0.35).cgColor, // middle fade
+            UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 0.0).cgColor   // clear over scientist
+        ]
+        fadeOverlay.gradientLayer.locations = [0.0, 0.32, 1.0]
+        fadeOverlay.gradientLayer.startPoint = CGPoint(x: 0, y: 0.5)
+        fadeOverlay.gradientLayer.endPoint   = CGPoint(x: 1, y: 0.5)
+        innerView.addSubview(fadeOverlay)
+
         innerView.addSubview(textStack)
         textStack.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            textStack.topAnchor.constraint(equalTo: innerView.topAnchor, constant: 20),
+            // Scientist image — right-anchored, fills height, 54% width
+            scientistImageView.trailingAnchor.constraint(equalTo: innerView.trailingAnchor),
+            scientistImageView.topAnchor.constraint(equalTo: innerView.topAnchor),
+            scientistImageView.bottomAnchor.constraint(equalTo: innerView.bottomAnchor),
+            scientistImageView.widthAnchor.constraint(equalTo: innerView.widthAnchor, multiplier: 0.54),
+
+            // Fade overlay covers the scientist image precisely
+            fadeOverlay.leadingAnchor.constraint(equalTo: scientistImageView.leadingAnchor),
+            fadeOverlay.trailingAnchor.constraint(equalTo: scientistImageView.trailingAnchor),
+            fadeOverlay.topAnchor.constraint(equalTo: scientistImageView.topAnchor),
+            fadeOverlay.bottomAnchor.constraint(equalTo: scientistImageView.bottomAnchor),
+
+            // Text on the left — perfectly vertically centered (matches Android gravity="center_vertical|start")
+            textStack.centerYAnchor.constraint(equalTo: innerView.centerYAnchor),
             textStack.leadingAnchor.constraint(equalTo: innerView.leadingAnchor, constant: 20),
-            textStack.bottomAnchor.constraint(lessThanOrEqualTo: innerView.bottomAnchor, constant: -20),
-            textStack.widthAnchor.constraint(lessThanOrEqualTo: innerView.widthAnchor, multiplier: 0.65),
+            textStack.trailingAnchor.constraint(lessThanOrEqualTo: innerView.trailingAnchor, constant: -110),
         ])
-        innerView.heightAnchor.constraint(equalToConstant: 170).isActive = true
+        innerView.heightAnchor.constraint(equalToConstant: 195).isActive = true
 
         bannerCard.addSubview(innerView)
         innerView.translatesAutoresizingMaskIntoConstraints = false
@@ -554,7 +612,7 @@ class HomeNativeView: UIView {
         bannerCard.translatesAutoresizingMaskIntoConstraints = false
         bannerDotsStack.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            bannerCard.topAnchor.constraint(equalTo: wrapper.topAnchor, constant: 16),
+            bannerCard.topAnchor.constraint(equalTo: wrapper.topAnchor, constant: 12),
             bannerCard.leadingAnchor.constraint(equalTo: wrapper.leadingAnchor, constant: 16),
             bannerCard.trailingAnchor.constraint(equalTo: wrapper.trailingAnchor, constant: -16),
             bannerDotsStack.topAnchor.constraint(equalTo: bannerCard.bottomAnchor, constant: 10),
@@ -1023,9 +1081,14 @@ class HomeNativeView: UIView {
     }
 
     @objc private func didTapWorklistCard() {
-        if let parentVC = self.parentViewController() {
-            let patVC = PatientWorklistViewController()
-            parentVC.navigationController?.pushViewController(patVC, animated: true)
+        var responder: UIResponder? = self
+        while responder != nil {
+            if let parentVC = responder as? UIViewController {
+                let patVC = PatientWorklistViewController()
+                parentVC.navigationController?.pushViewController(patVC, animated: true)
+                return
+            }
+            responder = responder?.next
         }
     }
 
@@ -1114,11 +1177,22 @@ class HomeNativeView: UIView {
 
     // MARK: – Data fetching
     func loadUserInfo() {
+        // Immediately show gender-appropriate avatar image (like Android - no letter placeholder)
+        let immediateDefaultImg = getDefaultAvatarImage()
+        avatarImageView.image = immediateDefaultImg
+        avatarImageView.isHidden = false
+        avatarLabel.isHidden = true
+
         if let savedName = UserDefaults.standard.string(forKey: "user_name"), !savedName.isEmpty, !savedName.lowercased().contains("doctor"), !savedName.lowercased().contains("user") {
             self.currentFullName = savedName
             let fn = Self.formatSmartFirstName(savedName)
             self.greetingLabel.text = "Hello, \(fn)"
             self.avatarLabel.text   = String(fn.prefix(1)).uppercased()
+            // Update avatar to match the saved name gender
+            let genderImg = Self.isFemaleUser(savedName)
+                ? UIImage(named: "avatar_girl")
+                : UIImage(named: "avatar_boy")
+            self.avatarImageView.image = genderImg ?? immediateDefaultImg
             self.triggerWelcomeNotificationIfEligible()
         }
 
@@ -1143,7 +1217,7 @@ class HomeNativeView: UIView {
                     serverName = Self.formatSmartFirstName(labName)
                 }
                 if serverName.isEmpty || serverName.lowercased() == "doctor" {
-                    serverName = !rawServerName.isEmpty ? rawServerName : (!labName.isEmpty() ? labName : "Owner")
+                    serverName = !rawServerName.isEmpty ? rawServerName : (!labName.isEmpty ? labName : "Owner")
                 }
 
                 let role = (userObj["role"] as? String ?? json["role"] as? String ?? "Lab Owner").replacingOccurrences(of: "_", with: " ")
@@ -1169,6 +1243,17 @@ class HomeNativeView: UIView {
                     }
                 }
                 let av = (userObj["avatar"] as? String) ?? (json["avatar"] as? String) ?? ""
+                // Always update gender avatar when server name is known
+                await MainActor.run {
+                    let serverGenderImg = Self.isFemaleUser(self.currentFullName)
+                        ? UIImage(named: "avatar_girl")
+                        : UIImage(named: "avatar_boy")
+                    if self.avatarImageView.image == nil {
+                        self.avatarImageView.image = serverGenderImg
+                        self.avatarImageView.isHidden = false
+                        self.avatarLabel.isHidden = true
+                    }
+                }
                 if !av.isEmpty {
                     self.loadAvatar(av)
                 }
@@ -1323,15 +1408,23 @@ class HomeNativeView: UIView {
             }, for: .touchUpInside)
         }
 
-        let tap = UITapGestureRecognizer()
-        banner.addGestureRecognizer(tap)
-        tap.addAction(UIAction { [weak banner] _ in
+        let tapBtn = UIButton(type: .custom)
+        tapBtn.translatesAutoresizingMaskIntoConstraints = false
+        tapBtn.backgroundColor = .clear
+        banner.addSubview(tapBtn)
+        NSLayoutConstraint.activate([
+            tapBtn.leadingAnchor.constraint(equalTo: banner.leadingAnchor),
+            tapBtn.trailingAnchor.constraint(equalTo: banner.trailingAnchor),
+            tapBtn.topAnchor.constraint(equalTo: banner.topAnchor),
+            tapBtn.bottomAnchor.constraint(equalTo: banner.bottomAnchor)
+        ])
+        tapBtn.addAction(UIAction { [weak banner] _ in
             action?()
             UIView.animate(withDuration: 0.3, animations: {
                 banner?.transform = CGAffineTransform(translationX: 0, y: -120)
                 banner?.alpha = 0
             }) { _ in banner?.removeFromSuperview() }
-        })
+        }, for: .touchUpInside)
 
         addSubview(banner)
         NSLayoutConstraint.activate([
@@ -1371,11 +1464,8 @@ class HomeNativeView: UIView {
     }
 
     private func triggerLowBalanceAlertIfEligible(_ balance: Double) {
-        // In-app low balance popups removed per user specification.
-        // Low balance notification will only fire when wallet balance is 0 and user attempts patient registration.
-        if balance <= 50 {
-            bellDot.isHidden = false
-        }
+        // In-app low balance popups and bellDot triggers removed per user specification.
+        // Red dot on notification icon is strictly driven by new unread notifications.
     }
 
     // MARK: – Connection Status & Continuous Wave Animation
@@ -1905,6 +1995,8 @@ class HomeNativeView: UIView {
     }
     @objc private func bellTapped() {
         bellDot.isHidden = true
+        UserDefaults.standard.set(false, forKey: "has_unread_notifications")
+        NotificationCenter.default.post(name: NSNotification.Name("NotificationsMarkedRead"), object: nil)
         guard let parentVC = self.findViewController() else {
             onNavigate?("/workspace/reports")
             return
@@ -1912,6 +2004,7 @@ class HomeNativeView: UIView {
         let notifVC = NotificationsViewController()
         notifVC.onAllRead = { [weak self] in
             self?.bellDot.isHidden = true
+            UserDefaults.standard.set(false, forKey: "has_unread_notifications")
         }
         if #available(iOS 15.0, *) {
             if let sheet = notifVC.sheetPresentationController {
@@ -1921,6 +2014,18 @@ class HomeNativeView: UIView {
             }
         }
         parentVC.present(notifVC, animated: true, completion: nil)
+    }
+
+    @objc private func handleNewNotificationAlert() {
+        DispatchQueue.main.async { [weak self] in
+            self?.bellDot.isHidden = false
+        }
+    }
+
+    @objc private func handleNotificationsMarkedRead() {
+        DispatchQueue.main.async { [weak self] in
+            self?.bellDot.isHidden = true
+        }
     }
     @objc private func seeAllTapped() {
         guard let parentVC = self.findViewController() else {
@@ -1980,7 +2085,13 @@ class HomeNativeView: UIView {
             parentVC.present(smpVC, animated: true, completion: nil)
             return
         }
-        if (path == "/workspace/patients" || path == "/workspace/results"), let parentVC = self.findViewController() {
+        if (path == "/workspace/results" || path.starts(with: "/workspace/results")), let parentVC = self.findViewController() {
+            let resVC = ResultsViewController()
+            resVC.modalPresentationStyle = .fullScreen
+            parentVC.present(resVC, animated: true, completion: nil)
+            return
+        }
+        if (path == "/workspace/patients" || path.starts(with: "/workspace/patients")), let parentVC = self.findViewController() {
             let patVC = PatientWorklistViewController()
             patVC.modalPresentationStyle = .fullScreen
             parentVC.present(patVC, animated: true, completion: nil)
@@ -2016,16 +2127,16 @@ class HomeNativeView: UIView {
             parentVC.present(bookingVC, animated: true, completion: nil)
             return
         }
+        if (path == "/workspace/settings/b2b-tiers" || path.starts(with: "/workspace/settings/b2b-tiers") || path == "/workspace/settings/b2b" || path.starts(with: "/workspace/settings/b2b") || path == "/workspace/b2b-tiers" || path.starts(with: "/workspace/b2b-tiers") || path == "/workspace/b2b/tiers" || path.starts(with: "/workspace/b2b/tiers") || path == "/workspace/b2b/settings" || path.starts(with: "/workspace/b2b/settings")), let parentVC = self.findViewController() {
+            let b2bSettingsVC = B2BSettingsViewController()
+            b2bSettingsVC.modalPresentationStyle = .fullScreen
+            parentVC.present(b2bSettingsVC, animated: true, completion: nil)
+            return
+        }
         if (path == "/workspace/agencies" || path.starts(with: "/workspace/agencies") || path == "/workspace/b2b" || path.starts(with: "/workspace/b2b")), let parentVC = self.findViewController() {
             let b2bVC = B2BViewController()
             b2bVC.modalPresentationStyle = .fullScreen
             parentVC.present(b2bVC, animated: true, completion: nil)
-            return
-        }
-        if (path == "/workspace/settings/b2b-tiers" || path.starts(with: "/workspace/settings/b2b-tiers") || path == "/workspace/settings/b2b" || path.starts(with: "/workspace/settings/b2b")), let parentVC = self.findViewController() {
-            let b2bSettingsVC = B2BSettingsViewController()
-            b2bSettingsVC.modalPresentationStyle = .fullScreen
-            parentVC.present(b2bSettingsVC, animated: true, completion: nil)
             return
         }
         if (path == "/workspace/doctors" || path.starts(with: "/workspace/doctors")), let parentVC = self.findViewController() {
@@ -2038,6 +2149,72 @@ class HomeNativeView: UIView {
             let commVC = CommissionsViewController()
             commVC.modalPresentationStyle = .fullScreen
             parentVC.present(commVC, animated: true, completion: nil)
+            return
+        }
+        if (path == "/workspace/radiology/dashboard/appointments" || path == "/workspace/radiology/appointments" || path.starts(with: "/workspace/radiology/dashboard/appointments") || path.starts(with: "/workspace/radiology/appointments")), let parentVC = self.findViewController() {
+            let vc = ScanScheduleViewController()
+            vc.modalPresentationStyle = .fullScreen
+            parentVC.present(vc, animated: true, completion: nil)
+            return
+        }
+        if (path == "/workspace/radiology/machines" || path.starts(with: "/workspace/radiology/machines")), let parentVC = self.findViewController() {
+            let vc = MachinesViewController()
+            vc.modalPresentationStyle = .fullScreen
+            parentVC.present(vc, animated: true, completion: nil)
+            return
+        }
+        if (path == "/workspace/radiology/macros" || path.starts(with: "/workspace/radiology/macros")), let parentVC = self.findViewController() {
+            let vc = RISMacrosViewController()
+            vc.modalPresentationStyle = .fullScreen
+            parentVC.present(vc, animated: true, completion: nil)
+            return
+        }
+        if (path == "/workspace/radiology/settings/dicom" || path.starts(with: "/workspace/radiology/settings/dicom")), let parentVC = self.findViewController() {
+            let vc = DICOMSettingsViewController()
+            vc.modalPresentationStyle = .fullScreen
+            parentVC.present(vc, animated: true, completion: nil)
+            return
+        }
+        if (path == "/workspace/radiology/settings/letterhead" || path.starts(with: "/workspace/radiology/settings/letterhead")), let parentVC = self.findViewController() {
+            let vc = RISLetterheadViewController()
+            vc.modalPresentationStyle = .fullScreen
+            parentVC.present(vc, animated: true, completion: nil)
+            return
+        }
+        if (path == "/workspace/radiology/dashboard" || path == "/workspace/radiology" || path.starts(with: "/workspace/radiology/dashboard") || path.starts(with: "/workspace/radiology")), let parentVC = self.findViewController() {
+            let vc = RISDashboardViewController()
+            vc.modalPresentationStyle = .fullScreen
+            parentVC.present(vc, animated: true, completion: nil)
+            return
+        }
+        if (path == "/workspace/inventory" || path.starts(with: "/workspace/inventory")), let parentVC = self.findViewController() {
+            let vc = InventoryViewController()
+            vc.modalPresentationStyle = .fullScreen
+            parentVC.present(vc, animated: true, completion: nil)
+            return
+        }
+        if (path == "/workspace/logistics" || path.starts(with: "/workspace/logistics")), let parentVC = self.findViewController() {
+            let vc = LogisticsViewController()
+            vc.modalPresentationStyle = .fullScreen
+            parentVC.present(vc, animated: true, completion: nil)
+            return
+        }
+        if (path == "/workspace/settings/templates" || path.starts(with: "/workspace/settings/templates") || path == "/workspace/settings/report-template" || path.starts(with: "/workspace/settings/report-template") || path == "/workspace/report-template" || path.starts(with: "/workspace/report-template") || path == "/workspace/templates" || path.starts(with: "/workspace/templates")), let parentVC = self.findViewController() {
+            let vc = ReportTemplatesViewController()
+            vc.modalPresentationStyle = .fullScreen
+            parentVC.present(vc, animated: true, completion: nil)
+            return
+        }
+        if (path == "/workspace/settings/branding" || path.starts(with: "/workspace/settings/branding")), let parentVC = self.findViewController() {
+            let vc = InvoiceBrandingViewController()
+            vc.modalPresentationStyle = .fullScreen
+            parentVC.present(vc, animated: true, completion: nil)
+            return
+        }
+        if (path == "/workspace/settings/payments" || path.starts(with: "/workspace/settings/payments")), let parentVC = self.findViewController() {
+            let vc = PaymentSettingsViewController()
+            vc.modalPresentationStyle = .fullScreen
+            parentVC.present(vc, animated: true, completion: nil)
             return
         }
         onNavigate?(path)

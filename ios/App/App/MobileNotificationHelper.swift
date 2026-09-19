@@ -152,6 +152,39 @@ class MobileNotificationHelper: NSObject, UNUserNotificationCenterDelegate {
     }
 
     /**
+     * Posts a device system notification when a patient report is downloaded successfully.
+     * Tapping the notification opens that report in the app's Preview page.
+     */
+    func postReportDownloadSuccessNotification(patientName: String, uhid: String, reportId: String, testName: String, version: Int, pdfUrl: String) {
+        let cleanName = (!patientName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty) ? patientName.trimmingCharacters(in: .whitespacesAndNewlines) : "Patient"
+        let cleanUhid = uhid.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        let content = UNMutableNotificationContent()
+        content.title = "Download Successful"
+        let rawBody = cleanUhid.isEmpty
+            ? "Download successful! Report for \(cleanName) has been saved to your device."
+            : "Download successful! Report for \(cleanName) (\(cleanUhid)) has been saved to your device."
+        content.body = rawBody
+        content.sound = .default
+        content.userInfo = [
+            "type": "REPORT_DOWNLOAD_SUCCESS",
+            "route": "/workspace/reports/preview",
+            "report_id": reportId,
+            "patient_name": cleanName,
+            "uhid": cleanUhid,
+            "test_name": testName,
+            "version": version,
+            "pdf_url": pdfUrl
+        ]
+
+        let notifId = "report_dl_\(abs((cleanName + cleanUhid + "\(Date().timeIntervalSince1970)").hashValue))"
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 0.5, repeats: false)
+        let request = UNNotificationRequest(identifier: notifId, content: content, trigger: trigger)
+
+        UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
+    }
+
+    /**
      * Clears user notification session upon sign out
      */
     func clearNotificationSession() {
@@ -169,6 +202,8 @@ class MobileNotificationHelper: NSObject, UNUserNotificationCenterDelegate {
         willPresent notification: UNNotification,
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
+        UserDefaults.standard.set(true, forKey: "has_unread_notifications")
+        NotificationCenter.default.post(name: NSNotification.Name("NewNotificationReceived"), object: nil)
         if #available(iOS 14.0, *) {
             completionHandler([.banner, .sound, .badge, .list])
         } else {
@@ -182,6 +217,8 @@ class MobileNotificationHelper: NSObject, UNUserNotificationCenterDelegate {
         didReceive response: UNNotificationResponse,
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
+        UserDefaults.standard.set(false, forKey: "has_unread_notifications")
+        NotificationCenter.default.post(name: NSNotification.Name("NotificationsMarkedRead"), object: nil)
         let userInfo = response.notification.request.content.userInfo
         let route = userInfo["route"] as? String ?? ""
 
@@ -202,6 +239,16 @@ class MobileNotificationHelper: NSObject, UNUserNotificationCenterDelegate {
                 let walletVC = WalletViewController()
                 walletVC.modalPresentationStyle = .fullScreen
                 topVC.present(walletVC, animated: true, completion: nil)
+            } else if route.contains("preview") {
+                let previewVC = ReportPreviewViewController()
+                previewVC.reportId = userInfo["report_id"] as? String ?? ""
+                previewVC.patientName = userInfo["patient_name"] as? String ?? "Patient"
+                previewVC.uhid = userInfo["uhid"] as? String ?? ""
+                previewVC.testName = userInfo["test_name"] as? String ?? "Diagnostic Investigation"
+                previewVC.version = userInfo["version"] as? Int ?? 1
+                previewVC.pdfUrl = userInfo["pdf_url"] as? String ?? ""
+                previewVC.modalPresentationStyle = .fullScreen
+                topVC.present(previewVC, animated: true, completion: nil)
             } else if route.contains("patients") {
                 let patVC = PatientWorklistViewController()
                 patVC.modalPresentationStyle = .fullScreen

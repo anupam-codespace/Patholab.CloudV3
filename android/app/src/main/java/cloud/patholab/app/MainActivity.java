@@ -760,7 +760,10 @@ public class MainActivity extends BridgeActivity {
 
     private void navigate(String path) {
         if (path != null) {
-            if (path.equals("/dashboard") || path.equals("/workspace/dashboard") || path.startsWith("/dashboard")
+            if (path.equals("/workspace/settings/notifications") || path.startsWith("/workspace/settings/notifications") || path.equals("/notifications") || path.startsWith("/notifications")) {
+                startActivity(new Intent(this, NotificationsActivity.class));
+                return;
+            } else if (path.equals("/dashboard") || path.equals("/workspace/dashboard") || path.startsWith("/dashboard")
                     || path.equals("/workspace") || path.equals("/home") || path.equals("/")) {
                 startActivity(new Intent(this, LabDashboardActivity.class));
                 return;
@@ -785,7 +788,10 @@ public class MainActivity extends BridgeActivity {
             } else if (path.equals("/workspace/samples") || path.startsWith("/workspace/samples") || path.equals("/workspace/accession")) {
                 startActivity(new Intent(this, SamplesActivity.class));
                 return;
-            } else if (path.equals("/workspace/patients") || path.startsWith("/workspace/patients") || path.equals("/workspace/results")) {
+            } else if (path.equals("/workspace/results") || path.startsWith("/workspace/results")) {
+                startActivity(new Intent(this, ResultsActivity.class));
+                return;
+            } else if (path.equals("/workspace/patients") || path.startsWith("/workspace/patients")) {
                 startActivity(new Intent(this, PatientWorklistActivity.class));
                 return;
             } else if (path.equals("/workspace/staff") || path.startsWith("/workspace/staff")) {
@@ -798,19 +804,63 @@ public class MainActivity extends BridgeActivity {
                     || path.equals("/workspace/online-booking") || path.startsWith("/workspace/online-booking")) {
                 startActivity(new Intent(this, OnlineBookingActivity.class));
                 return;
+            } else if (path.equals("/workspace/settings/b2b-tiers") || path.startsWith("/workspace/settings/b2b-tiers")
+                    || path.equals("/workspace/settings/b2b") || path.startsWith("/workspace/settings/b2b")
+                    || path.equals("/workspace/b2b-tiers") || path.startsWith("/workspace/b2b-tiers")
+                    || path.equals("/workspace/b2b/tiers") || path.startsWith("/workspace/b2b/tiers")
+                    || path.equals("/workspace/b2b/settings") || path.startsWith("/workspace/b2b/settings")) {
+                startActivity(new Intent(this, B2BSettingsActivity.class));
+                return;
+            } else if (path.equals("/workspace/settings/templates") || path.startsWith("/workspace/settings/templates")
+                    || path.equals("/workspace/settings/report-template") || path.startsWith("/workspace/settings/report-template")
+                    || path.equals("/workspace/report-template") || path.startsWith("/workspace/report-template")
+                    || path.equals("/workspace/templates") || path.startsWith("/workspace/templates")) {
+                startActivity(new Intent(this, ReportTemplatesActivity.class));
+                return;
             } else if (path.equals("/workspace/agencies") || path.startsWith("/workspace/agencies")
                     || path.equals("/workspace/b2b") || path.startsWith("/workspace/b2b")) {
                 startActivity(new Intent(this, B2BActivity.class));
-                return;
-            } else if (path.equals("/workspace/settings/b2b-tiers") || path.startsWith("/workspace/settings/b2b-tiers")
-                    || path.equals("/workspace/settings/b2b") || path.startsWith("/workspace/settings/b2b")) {
-                startActivity(new Intent(this, B2BSettingsActivity.class));
                 return;
             } else if (path.equals("/workspace/doctors") || path.startsWith("/workspace/doctors")) {
                 startActivity(new Intent(this, ReferralDoctorsActivity.class));
                 return;
             } else if (path.equals("/workspace/commissions") || path.startsWith("/workspace/commissions")) {
                 startActivity(new Intent(this, CommissionsActivity.class));
+                return;
+            } else if (path.equals("/workspace/radiology/dashboard/appointments") || path.startsWith("/workspace/radiology/dashboard/appointments")
+                    || path.equals("/workspace/radiology/appointments") || path.startsWith("/workspace/radiology/appointments")) {
+                startActivity(new Intent(this, ScanScheduleActivity.class));
+                return;
+            } else if (path.equals("/workspace/radiology/machines") || path.startsWith("/workspace/radiology/machines")) {
+                startActivity(new Intent(this, MachinesActivity.class));
+                return;
+            } else if (path.equals("/workspace/radiology/macros") || path.startsWith("/workspace/radiology/macros")) {
+                startActivity(new Intent(this, RISMacrosActivity.class));
+                return;
+            } else if (path.equals("/workspace/radiology/settings/dicom") || path.startsWith("/workspace/radiology/settings/dicom")) {
+                startActivity(new Intent(this, DICOMSettingsActivity.class));
+                return;
+            } else if (path.equals("/workspace/radiology/settings/letterhead") || path.startsWith("/workspace/radiology/settings/letterhead")) {
+                startActivity(new Intent(this, RISLetterheadActivity.class));
+                return;
+            } else if (path.equals("/workspace/radiology/dashboard") || path.startsWith("/workspace/radiology/dashboard")
+                    || path.equals("/workspace/radiology") || path.startsWith("/workspace/radiology")) {
+                startActivity(new Intent(this, RISDashboardActivity.class));
+                return;
+            } else if (path.equals("/workspace/inventory") || path.startsWith("/workspace/inventory")) {
+                startActivity(new Intent(this, InventoryActivity.class));
+                return;
+            } else if (path.equals("/workspace/logistics") || path.startsWith("/workspace/logistics")) {
+                startActivity(new Intent(this, LogisticsActivity.class));
+                return;
+            } else if (path.equals("/workspace/settings/templates") || path.startsWith("/workspace/settings/templates")) {
+                startActivity(new Intent(this, ReportTemplatesActivity.class));
+                return;
+            } else if (path.equals("/workspace/settings/branding") || path.startsWith("/workspace/settings/branding")) {
+                startActivity(new Intent(this, InvoiceBrandingActivity.class));
+                return;
+            } else if (path.equals("/workspace/settings/payments") || path.startsWith("/workspace/settings/payments")) {
+                startActivity(new Intent(this, PaymentSettingsActivity.class));
                 return;
             } else if (path.equals("/workspace/settings") || path.startsWith("/workspace/settings")
                     || path.equals("/settings") || path.startsWith("/settings")) {
@@ -923,237 +973,8 @@ public class MainActivity extends BridgeActivity {
         moreBottomSheetDialog.show();
     }
 
-    private void showNotificationsPanel() {
-        final com.google.android.material.bottomsheet.BottomSheetDialog dialog = new com.google.android.material.bottomsheet.BottomSheetDialog(
-                this);
-        View sheetView = getLayoutInflater().inflate(R.layout.layout_notifications_sheet, null);
-        dialog.setContentView(sheetView);
-
-        final ProgressBar spinner = sheetView.findViewById(R.id.progressSpinner);
-        final View lblNoNotifications = sheetView.findViewById(R.id.lblNoNotifications);
-        final View scrollNotifications = sheetView.findViewById(R.id.scrollNotifications);
-        final LinearLayout stackNotifications = sheetView.findViewById(R.id.stackNotifications);
-        final View btnMarkAllRead = sheetView.findViewById(R.id.btnMarkAllRead);
-
-        // Theme the sheet natively based on current app theme
-        final boolean isDark = this.isDarkMode;
-        if (isDark) {
-            sheetView.setBackgroundTintList(
-                    android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#0F172A")));
-
-            TextView txtTitle = sheetView.findViewById(R.id.txtNotificationsTitle);
-            if (txtTitle != null) {
-                txtTitle.setTextColor(android.graphics.Color.parseColor("#FFFFFF"));
-            }
-
-            View divider = sheetView.findViewById(R.id.notificationsDivider);
-            if (divider != null) {
-                divider.setBackgroundColor(android.graphics.Color.parseColor("#334155"));
-            }
-
-            ImageView imgEmpty = sheetView.findViewById(R.id.imgNotificationsEmpty);
-            if (imgEmpty != null) {
-                imgEmpty.setColorFilter(android.graphics.Color.parseColor("#334155"));
-            }
-
-            TextView txtEmptyTitle = sheetView.findViewById(R.id.txtNotificationsEmptyTitle);
-            if (txtEmptyTitle != null) {
-                txtEmptyTitle.setTextColor(android.graphics.Color.parseColor("#FFFFFF"));
-            }
-
-            TextView txtEmptySubtitle = sheetView.findViewById(R.id.txtNotificationsEmptySubtitle);
-            if (txtEmptySubtitle != null) {
-                txtEmptySubtitle.setTextColor(android.graphics.Color.parseColor("#94A3B8"));
-            }
-        }
-
-        // Cap bottom sheet at 80% screen height
-        dialog.setOnShowListener(d -> {
-            FrameLayout bottomSheet = dialog.findViewById(com.google.android.material.R.id.design_bottom_sheet);
-            if (bottomSheet != null) {
-                com.google.android.material.bottomsheet.BottomSheetBehavior<FrameLayout> behavior = com.google.android.material.bottomsheet.BottomSheetBehavior
-                        .from(bottomSheet);
-                int screenHeight = getResources().getDisplayMetrics().heightPixels;
-                int targetHeight = (int) (screenHeight * 0.8);
-                android.view.ViewGroup.LayoutParams lp = bottomSheet.getLayoutParams();
-                lp.height = targetHeight;
-                bottomSheet.setLayoutParams(lp);
-                behavior.setPeekHeight(targetHeight);
-                behavior.setState(com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED);
-            }
-        });
-
-        // Save the last seen time immediately (but keep previous value to check which
-        // ones are new)
-        final long lastSeenTime = prefs != null ? prefs.getLong("last_seen_notification_time", 0L) : 0L;
-        if (prefs != null) {
-            prefs.edit().putLong("last_seen_notification_time", System.currentTimeMillis()).apply();
-        }
-        runOnUiThread(() -> {
-            TextView badge = findViewById(R.id.txtNotificationBadge);
-            if (badge != null)
-                badge.setVisibility(View.GONE);
-            stopBellAnimationLoop();
-        });
-
-        // Fetch REAL notifications from the server API in background
-        new Thread(() -> {
-            try {
-                java.net.URL url = new java.net.URL(BASE_URL + "/api/notifications");
-                java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("GET");
-                conn.setRequestProperty("Accept", "application/json");
-                // Forward the session cookie from the WebView cookie store
-                String cookie = android.webkit.CookieManager.getInstance().getCookie(BASE_URL);
-                if (cookie != null)
-                    conn.setRequestProperty("Cookie", cookie);
-                conn.setConnectTimeout(10000);
-                conn.setReadTimeout(10000);
-
-                int code = conn.getResponseCode();
-                StringBuilder sb = new StringBuilder();
-                java.io.InputStream stream = (code >= 200 && code < 300) ? conn.getInputStream()
-                        : conn.getErrorStream();
-                if (stream != null) {
-                    java.io.BufferedReader reader = new java.io.BufferedReader(
-                            new java.io.InputStreamReader(stream, "UTF-8"));
-                    String line;
-                    while ((line = reader.readLine()) != null)
-                        sb.append(line);
-                    reader.close();
-                }
-                conn.disconnect();
-
-                final String responseBody = sb.toString();
-                runOnUiThread(() -> {
-                    if (spinner != null)
-                        spinner.setVisibility(View.GONE);
-                    if (stackNotifications == null)
-                        return;
-                    stackNotifications.removeAllViews();
-
-                    try {
-                        org.json.JSONObject root = new org.json.JSONObject(responseBody);
-                        org.json.JSONArray arr = root.optJSONArray("notifications");
-                        if (arr != null && arr.length() > 0) {
-                            if (scrollNotifications != null)
-                                scrollNotifications.setVisibility(View.VISIBLE);
-                            for (int i = 0; i < arr.length(); i++) {
-                                org.json.JSONObject n = arr.getJSONObject(i);
-                                String title = n.optString("title", "");
-                                String body = n.optString("body", "");
-                                String createdStr = n.optString("createdAt", "");
-                                boolean isRead = true;
-                                if (!createdStr.isEmpty()) {
-                                    long createdTime = parseIsoDateTime(createdStr);
-                                    if (createdTime > lastSeenTime) {
-                                        isRead = false;
-                                    }
-                                }
-
-                                LinearLayout row = new LinearLayout(MainActivity.this);
-                                row.setOrientation(LinearLayout.VERTICAL);
-                                row.setPadding(48, 28, 48, 28);
-                                if (!isRead) {
-                                    row.setBackgroundColor(
-                                            isDark ? android.graphics.Color.parseColor("#1E3A8A") : 0xFFEFF6FF); // Blue-50/unread
-                                                                                                                 // highlight
-                                } else {
-                                    row.setBackgroundColor(isDark ? android.graphics.Color.parseColor("#1E293B")
-                                            : android.graphics.Color.parseColor("#FFFFFF"));
-                                }
-
-                                TextView tvTitle = new TextView(MainActivity.this);
-                                tvTitle.setText(title);
-                                tvTitle.setTextColor(isDark
-                                        ? (isRead ? android.graphics.Color.parseColor("#E2E8F0")
-                                                : android.graphics.Color.parseColor("#93C5FD"))
-                                        : (isRead ? 0xFF475569 : 0xFF1E40AF));
-                                tvTitle.setTextSize(13.5f);
-                                if (!isRead)
-                                    tvTitle.setTypeface(null, android.graphics.Typeface.BOLD);
-                                row.addView(tvTitle);
-
-                                if (!body.isEmpty()) {
-                                    TextView tvBody = new TextView(MainActivity.this);
-                                    tvBody.setText(body);
-                                    tvBody.setTextColor(
-                                            isDark ? android.graphics.Color.parseColor("#94A3B8") : 0xFF94A3B8);
-                                    tvBody.setTextSize(11.5f);
-                                    tvBody.setPadding(0, 4, 0, 0);
-                                    row.addView(tvBody);
-                                }
-
-                                // Separator
-                                View sep = new View(MainActivity.this);
-                                sep.setBackgroundColor(
-                                        isDark ? android.graphics.Color.parseColor("#334155") : 0xFFF1F5F9);
-                                LinearLayout.LayoutParams sepLp = new LinearLayout.LayoutParams(
-                                        LinearLayout.LayoutParams.MATCH_PARENT, 1);
-                                sep.setLayoutParams(sepLp);
-
-                                stackNotifications.addView(row);
-                                stackNotifications.addView(sep);
-                            }
-                        } else {
-                            if (scrollNotifications != null)
-                                scrollNotifications.setVisibility(View.GONE);
-                            if (lblNoNotifications != null)
-                                lblNoNotifications.setVisibility(View.VISIBLE);
-                        }
-                    } catch (Exception e) {
-                        // Fallback: show no notifications
-                        if (scrollNotifications != null)
-                            scrollNotifications.setVisibility(View.GONE);
-                        if (lblNoNotifications != null)
-                            lblNoNotifications.setVisibility(View.VISIBLE);
-                    }
-                });
-            } catch (Exception e) {
-                runOnUiThread(() -> {
-                    if (spinner != null)
-                        spinner.setVisibility(View.GONE);
-                    if (scrollNotifications != null)
-                        scrollNotifications.setVisibility(View.GONE);
-                    if (lblNoNotifications != null)
-                        lblNoNotifications.setVisibility(View.VISIBLE);
-                });
-            }
-        }).start();
-
-        if (btnMarkAllRead != null) {
-            btnMarkAllRead.setOnClickListener(v -> {
-                // Mark all read on server in background
-                new Thread(() -> {
-                    try {
-                        java.net.URL url = new java.net.URL(BASE_URL + "/api/notifications/mark-read");
-                        java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
-                        conn.setRequestMethod("POST");
-                        String cookie = android.webkit.CookieManager.getInstance().getCookie(BASE_URL);
-                        if (cookie != null)
-                            conn.setRequestProperty("Cookie", cookie);
-                        conn.getResponseCode();
-                        conn.disconnect();
-                    } catch (Exception ignored) {
-                    }
-                }).start();
-
-                if (stackNotifications != null)
-                    stackNotifications.removeAllViews();
-                if (scrollNotifications != null)
-                    scrollNotifications.setVisibility(View.GONE);
-                if (lblNoNotifications != null)
-                    lblNoNotifications.setVisibility(View.VISIBLE);
-
-                // Instantly clear the badge and stop bell animation
-                TextView badge = findViewById(R.id.txtNotificationBadge);
-                if (badge != null)
-                    badge.setVisibility(View.GONE);
-                stopBellAnimationLoop();
-            });
-        }
-
-        dialog.show();
+    public void showNotificationsPanel() {
+        startActivity(new Intent(this, NotificationsActivity.class));
     }
 
     private void showLegalBottomSheet() {
@@ -1781,12 +1602,12 @@ public class MainActivity extends BridgeActivity {
         // ── Clinical Operations ───────────────────────────────────────────────
         allModules.add(new ModuleItem("New Registration", "/workspace/registration", "Clinical",
                 "Register patients & book new lab tests", R.drawable.ic_mod_clean_register, true));
-        allModules.add(new ModuleItem("Patient Directory", "/workspace/patients", "Clinical",
-                "Browse & search patient records", R.drawable.ic_mod_clean_patients, false));
+        allModules.add(new ModuleItem("Patient Worklist", "/workspace/patients", "Clinical",
+                "Patient visit queue & turnaround times", R.drawable.ic_mod_clean_worklist, false));
+        allModules.add(new ModuleItem("Clinical Results", "/workspace/results", "Clinical",
+                "Fill raw values & review parameters", R.drawable.ic_mod_clean_tests, false));
         allModules.add(new ModuleItem("Test Management", "/workspace/test-management", "Clinical",
                 "Manage test packages, profiles & pricing", R.drawable.ic_mod_clean_tests, false));
-        allModules.add(new ModuleItem("Worklist & Results", "/workspace/results", "Clinical",
-                "Fill raw values & review parameters", R.drawable.ic_mod_clean_worklist, false));
         allModules.add(new ModuleItem("Report Dispatch", "/workspace/reports", "Clinical",
                 "Sign off & dispatch PDF reports", R.drawable.ic_mod_clean_reports, false));
 
@@ -2160,7 +1981,9 @@ public class MainActivity extends BridgeActivity {
         if (path.contains("registration"))
             return "Registration";
         if (path.contains("results"))
-            return "Worklist & Results";
+            return "Clinical Results";
+        if (path.contains("patients"))
+            return "Patient Worklist";
         if (path.contains("reports"))
             return "Report Dispatch";
         if (path.contains("inventory"))

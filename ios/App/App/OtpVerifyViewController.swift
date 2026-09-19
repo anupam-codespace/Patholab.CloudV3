@@ -113,6 +113,9 @@ class OtpVerifyViewController: AuthBaseViewController {
             tf.textColor = AuthBaseViewController.textPrimary
             tf.textAlignment = .center
             tf.keyboardType = .numberPad
+            if #available(iOS 12.0, *) {
+                tf.textContentType = .oneTimeCode
+            }
             tf.layer.cornerRadius = 10
             tf.layer.borderWidth = 1.5
             tf.layer.borderColor = AuthBaseViewController.indigoMid.cgColor
@@ -210,9 +213,16 @@ class OtpVerifyViewController: AuthBaseViewController {
                 DispatchQueue.main.async {
                     self?.setLoading(false)
                     if success {
-                        self?.view.window?.rootViewController?.dismiss(animated: true)
+                        self?.showSuccess("Account verified successfully! Please sign in.")
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+                            if let app = UIApplication.shared.delegate as? AppDelegate {
+                                app.presentNativeLogin(prefilledEmail: self?.email, successMessage: "Account verified successfully! Please sign in.")
+                            } else {
+                                self?.view.window?.rootViewController?.dismiss(animated: true)
+                            }
+                        }
                     } else {
-                        self?.showError(error ?? "Verification failed")
+                        self?.showError(error ?? "Verification failed. Please check your code.")
                     }
                 }
             }
@@ -227,10 +237,28 @@ class OtpVerifyViewController: AuthBaseViewController {
 
 extension OtpVerifyViewController: UITextFieldDelegate {
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+        // Multi-digit paste or iOS One-Time Code autofill
+        let digits = string.filter { $0.isNumber }
+        if digits.count > 1 {
+            let digitChars = Array(digits)
+            for (idx, ch) in digitChars.prefix(6).enumerated() {
+                otpFields[idx].text = String(ch)
+            }
+            if digitChars.count >= 6 {
+                view.endEditing(true)
+                verifyTapped()
+            } else {
+                otpFields[min(digitChars.count, 5)].becomeFirstResponder()
+            }
+            return false
+        }
+
+        // Single digit typing or deletion
         if let text = textField.text, let range = Range(range, in: text) {
             let newText = text.replacingCharacters(in: range, with: string)
-            if newText.count == 1 {
-                textField.text = newText
+            let filtered = newText.filter { $0.isNumber }
+            if !filtered.isEmpty {
+                textField.text = String(filtered.last!)
                 let nextTag = textField.tag + 1
                 if nextTag < 6 {
                     otpFields[nextTag].becomeFirstResponder()
@@ -238,7 +266,7 @@ extension OtpVerifyViewController: UITextFieldDelegate {
                     textField.resignFirstResponder()
                 }
                 return false
-            } else if newText.isEmpty {
+            } else if string.isEmpty {
                 textField.text = ""
                 let prevTag = textField.tag - 1
                 if prevTag >= 0 {
@@ -247,6 +275,6 @@ extension OtpVerifyViewController: UITextFieldDelegate {
                 return false
             }
         }
-        return true
+        return false
     }
 }

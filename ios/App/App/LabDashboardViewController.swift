@@ -19,6 +19,13 @@ class LabDashboardViewController: UIViewController {
     // Header Views
     private let topHeaderView = UIView()
     private let lblBranchName = UILabel()
+    private let headerLoadingSpinner = UIActivityIndicatorView(style: .medium)
+
+    // Loading State
+    private let centerLoadingSpinner = UIActivityIndicatorView(style: .large)
+    private let loadingPill = UIView()
+    private let loadingPillLabel = UILabel()
+    private let loadingPillSpinner = UIActivityIndicatorView(style: .medium)
 
     // Date Range Pills
     private let tabToday = UIButton(type: .system)
@@ -60,8 +67,10 @@ class LabDashboardViewController: UIViewController {
         setupOperationalPulse()
         setupVisualChartsSection()
         setupRecentPatientsSection()
+        setupLoadingUI()
 
         syncLabDetails()
+        showLoadingState(message: "Syncing live analytics...", isInitial: true)
         fetchDashboardData(range: currentRange)
     }
 
@@ -83,7 +92,7 @@ class LabDashboardViewController: UIViewController {
         gradient.startPoint = CGPoint(x: 0, y: 0)
         gradient.endPoint = CGPoint(x: 0.85, y: 1.0)
         topHeaderView.layer.insertSublayer(gradient, at: 0)
-        topHeaderView.layer.cornerRadius = 26
+        topHeaderView.layer.cornerRadius = 24
         topHeaderView.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
         topHeaderView.clipsToBounds = true
 
@@ -93,7 +102,7 @@ class LabDashboardViewController: UIViewController {
         backBtn.setImage(UIImage(systemName: "chevron.left", withConfiguration: backConfig), for: .normal)
         backBtn.tintColor = UIColor(hex: "0D6EFD")
         backBtn.backgroundColor = .white
-        backBtn.layer.cornerRadius = 19
+        backBtn.layer.cornerRadius = 18
         backBtn.layer.borderWidth = 1
         backBtn.layer.borderColor = UIColor.white.withAlphaComponent(0.35).cgColor
         backBtn.clipsToBounds = true
@@ -103,16 +112,27 @@ class LabDashboardViewController: UIViewController {
 
         let titleLbl = UILabel()
         titleLbl.text = "Dashboard Overview"
-        titleLbl.font = .systemFont(ofSize: 19, weight: .bold)
+        titleLbl.font = .systemFont(ofSize: 18.5, weight: .bold)
         titleLbl.textColor = .white
         titleLbl.translatesAutoresizingMaskIntoConstraints = false
-        topHeaderView.addSubview(titleLbl)
 
         lblBranchName.text = "Care Diagnostic Hub • Main Branch"
         lblBranchName.font = .systemFont(ofSize: 11.5, weight: .medium)
         lblBranchName.textColor = UIColor(hex: "C7DFFF")
         lblBranchName.translatesAutoresizingMaskIntoConstraints = false
-        topHeaderView.addSubview(lblBranchName)
+
+        headerLoadingSpinner.style = .medium
+        headerLoadingSpinner.color = .white
+        headerLoadingSpinner.hidesWhenStopped = true
+        headerLoadingSpinner.translatesAutoresizingMaskIntoConstraints = false
+        topHeaderView.addSubview(headerLoadingSpinner)
+
+        let titleStack = UIStackView(arrangedSubviews: [titleLbl, lblBranchName])
+        titleStack.axis = .vertical
+        titleStack.spacing = 2
+        titleStack.alignment = .leading
+        titleStack.translatesAutoresizingMaskIntoConstraints = false
+        topHeaderView.addSubview(titleStack)
 
         // Date Range Stack
         let dateStack = UIStackView()
@@ -134,22 +154,23 @@ class LabDashboardViewController: UIViewController {
             topHeaderView.topAnchor.constraint(equalTo: view.topAnchor),
             topHeaderView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             topHeaderView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            topHeaderView.heightAnchor.constraint(equalToConstant: 185),
+            topHeaderView.heightAnchor.constraint(equalToConstant: 160),
 
             backBtn.leadingAnchor.constraint(equalTo: topHeaderView.leadingAnchor, constant: 18),
-            backBtn.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 4),
-            backBtn.widthAnchor.constraint(equalToConstant: 38),
-            backBtn.heightAnchor.constraint(equalToConstant: 38),
+            backBtn.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: -4),
+            backBtn.widthAnchor.constraint(equalToConstant: 36),
+            backBtn.heightAnchor.constraint(equalToConstant: 36),
 
-            titleLbl.leadingAnchor.constraint(equalTo: backBtn.trailingAnchor, constant: 12),
-            titleLbl.centerYAnchor.constraint(equalTo: backBtn.centerYAnchor, constant: -8),
+            titleStack.leadingAnchor.constraint(equalTo: backBtn.trailingAnchor, constant: 12),
+            titleStack.centerYAnchor.constraint(equalTo: backBtn.centerYAnchor),
+            titleStack.trailingAnchor.constraint(lessThanOrEqualTo: headerLoadingSpinner.leadingAnchor, constant: -8),
 
-            lblBranchName.leadingAnchor.constraint(equalTo: titleLbl.leadingAnchor),
-            lblBranchName.topAnchor.constraint(equalTo: titleLbl.bottomAnchor, constant: 2),
+            headerLoadingSpinner.trailingAnchor.constraint(equalTo: topHeaderView.trailingAnchor, constant: -18),
+            headerLoadingSpinner.centerYAnchor.constraint(equalTo: backBtn.centerYAnchor),
 
             dateStack.leadingAnchor.constraint(equalTo: topHeaderView.leadingAnchor, constant: 18),
             dateStack.trailingAnchor.constraint(equalTo: topHeaderView.trailingAnchor, constant: -18),
-            dateStack.bottomAnchor.constraint(equalTo: topHeaderView.bottomAnchor, constant: -12),
+            dateStack.bottomAnchor.constraint(equalTo: topHeaderView.bottomAnchor, constant: -10),
             dateStack.heightAnchor.constraint(equalToConstant: 32),
         ])
     }
@@ -187,6 +208,8 @@ class LabDashboardViewController: UIViewController {
             btn.setTitleColor(isActive ? UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1) : UIColor(hex: "C7DFFF"), for: .normal)
         }
 
+        let rangeTitle = sender.title(for: .normal) ?? range
+        showLoadingState(message: "Loading \(rangeTitle) analytics...", isInitial: false)
         fetchDashboardData(range: currentRange)
     }
 
@@ -199,6 +222,7 @@ class LabDashboardViewController: UIViewController {
     }
 
     @objc private func didPullRefresh() {
+        showLoadingState(message: "Syncing real-time data...", isInitial: false)
         fetchDashboardData(range: currentRange)
     }
 
@@ -218,7 +242,7 @@ class LabDashboardViewController: UIViewController {
         scrollView.addSubview(contentStack)
 
         NSLayoutConstraint.activate([
-            scrollView.topAnchor.constraint(equalTo: topHeaderView.bottomAnchor, constant: 8),
+            scrollView.topAnchor.constraint(equalTo: topHeaderView.bottomAnchor, constant: 4),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
@@ -229,6 +253,82 @@ class LabDashboardViewController: UIViewController {
             contentStack.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor, constant: -32),
             contentStack.widthAnchor.constraint(equalTo: scrollView.widthAnchor, constant: -36),
         ])
+    }
+
+    // ── Loading UI Setup & Animation ─────────────────────────────────────────
+    private func setupLoadingUI() {
+        centerLoadingSpinner.color = UIColor(hex: "0D6EFD")
+        centerLoadingSpinner.hidesWhenStopped = true
+        centerLoadingSpinner.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(centerLoadingSpinner)
+
+        loadingPill.backgroundColor = UIColor.white.withAlphaComponent(0.96)
+        loadingPill.layer.cornerRadius = 16
+        loadingPill.layer.borderWidth = 1
+        loadingPill.layer.borderColor = UIColor(red: 0.89, green: 0.91, blue: 0.95, alpha: 1).cgColor
+        loadingPill.layer.shadowColor = UIColor.black.cgColor
+        loadingPill.layer.shadowOpacity = 0.08
+        loadingPill.layer.shadowRadius = 8
+        loadingPill.layer.shadowOffset = CGSize(width: 0, height: 3)
+        loadingPill.translatesAutoresizingMaskIntoConstraints = false
+        loadingPill.alpha = 0
+        loadingPill.isHidden = true
+        view.addSubview(loadingPill)
+
+        loadingPillSpinner.style = .medium
+        loadingPillSpinner.color = UIColor(hex: "0D6EFD")
+        loadingPillSpinner.translatesAutoresizingMaskIntoConstraints = false
+        loadingPill.addSubview(loadingPillSpinner)
+
+        loadingPillLabel.text = "Syncing live data..."
+        loadingPillLabel.font = .systemFont(ofSize: 12, weight: .semibold)
+        loadingPillLabel.textColor = UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1)
+        loadingPillLabel.translatesAutoresizingMaskIntoConstraints = false
+        loadingPill.addSubview(loadingPillLabel)
+
+        NSLayoutConstraint.activate([
+            centerLoadingSpinner.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            centerLoadingSpinner.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: 40),
+
+            loadingPill.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            loadingPill.topAnchor.constraint(equalTo: topHeaderView.bottomAnchor, constant: 10),
+            loadingPill.heightAnchor.constraint(equalToConstant: 34),
+
+            loadingPillSpinner.leadingAnchor.constraint(equalTo: loadingPill.leadingAnchor, constant: 12),
+            loadingPillSpinner.centerYAnchor.constraint(equalTo: loadingPill.centerYAnchor),
+
+            loadingPillLabel.leadingAnchor.constraint(equalTo: loadingPillSpinner.trailingAnchor, constant: 8),
+            loadingPillLabel.trailingAnchor.constraint(equalTo: loadingPill.trailingAnchor, constant: -14),
+            loadingPillLabel.centerYAnchor.constraint(equalTo: loadingPill.centerYAnchor),
+        ])
+    }
+
+    private func showLoadingState(message: String, isInitial: Bool = false) {
+        headerLoadingSpinner.startAnimating()
+        loadingPillLabel.text = message
+        loadingPill.isHidden = false
+        loadingPillSpinner.startAnimating()
+
+        if isInitial {
+            centerLoadingSpinner.startAnimating()
+        }
+
+        UIView.animate(withDuration: 0.22) {
+            self.loadingPill.alpha = 1.0
+            self.contentStack.alpha = 0.55
+        }
+    }
+
+    private func hideLoadingState() {
+        UIView.animate(withDuration: 0.25) {
+            self.loadingPill.alpha = 0.0
+            self.contentStack.alpha = 1.0
+        } completion: { _ in
+            self.headerLoadingSpinner.stopAnimating()
+            self.loadingPillSpinner.stopAnimating()
+            self.loadingPill.isHidden = true
+            self.centerLoadingSpinner.stopAnimating()
+        }
     }
 
     // ── Primary 4 KPI Bento Grid ─────────────────────────────────────────────
@@ -428,26 +528,33 @@ class LabDashboardViewController: UIViewController {
         card.layer.borderWidth = 1
         card.layer.borderColor = UIColor(red: 0.89, green: 0.91, blue: 0.95, alpha: 1).cgColor
 
-        let stack = UIStackView()
+        let col1 = makePulseCol(valLbl: lblPulseSamplesToday, label: "Samples Today", valColor: UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1))
+        let col2 = makePulseCol(valLbl: lblPulsePendingSamples, label: "In Progress", valColor: UIColor(red: 0.85, green: 0.47, blue: 0.02, alpha: 1))
+        let col3 = makePulseCol(valLbl: lblPulsePendingReports, label: "Pending Approval", valColor: UIColor(red: 0.05, green: 0.43, blue: 0.99, alpha: 1))
+
+        let stack = UIStackView(arrangedSubviews: [col1, col2, col3])
         stack.axis = .horizontal
         stack.distribution = .fillEqually
         stack.alignment = .center
         stack.translatesAutoresizingMaskIntoConstraints = false
         card.addSubview(stack)
 
-        let col1 = makePulseCol(valLbl: lblPulseSamplesToday, label: "Samples Today", valColor: UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1))
         let div1 = makeDivider()
-        let col2 = makePulseCol(valLbl: lblPulsePendingSamples, label: "In Progress", valColor: UIColor(red: 0.85, green: 0.47, blue: 0.02, alpha: 1))
         let div2 = makeDivider()
-        let col3 = makePulseCol(valLbl: lblPulsePendingReports, label: "Pending Approval", valColor: UIColor(red: 0.05, green: 0.43, blue: 0.99, alpha: 1))
-
-        [col1, div1, col2, div2, col3].forEach { stack.addArrangedSubview($0) }
+        card.addSubview(div1)
+        card.addSubview(div2)
 
         NSLayoutConstraint.activate([
             stack.topAnchor.constraint(equalTo: card.topAnchor, constant: 12),
             stack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 8),
             stack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -8),
             stack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -12),
+
+            div1.centerYAnchor.constraint(equalTo: card.centerYAnchor),
+            div1.centerXAnchor.constraint(equalTo: col1.trailingAnchor),
+
+            div2.centerYAnchor.constraint(equalTo: card.centerYAnchor),
+            div2.centerXAnchor.constraint(equalTo: col2.trailingAnchor),
         ])
 
         contentStack.addArrangedSubview(card)
@@ -457,16 +564,20 @@ class LabDashboardViewController: UIViewController {
         let col = UIStackView()
         col.axis = .vertical
         col.alignment = .center
-        col.spacing = 1
+        col.spacing = 2
 
         valLbl.text = "0"
-        valLbl.font = .systemFont(ofSize: 15, weight: .bold)
+        valLbl.font = .systemFont(ofSize: 16, weight: .bold)
         valLbl.textColor = valColor
+        valLbl.textAlignment = .center
 
         let lbl = UILabel()
         lbl.text = label
-        lbl.font = .systemFont(ofSize: 10, weight: .medium)
+        lbl.font = .systemFont(ofSize: 10.5, weight: .medium)
         lbl.textColor = UIColor(red: 0.392, green: 0.455, blue: 0.545, alpha: 1)
+        lbl.textAlignment = .center
+        lbl.adjustsFontSizeToFitWidth = true
+        lbl.minimumScaleFactor = 0.82
 
         col.addArrangedSubview(valLbl)
         col.addArrangedSubview(lbl)
@@ -478,7 +589,7 @@ class LabDashboardViewController: UIViewController {
         v.backgroundColor = UIColor(red: 0.89, green: 0.91, blue: 0.95, alpha: 1)
         v.translatesAutoresizingMaskIntoConstraints = false
         v.widthAnchor.constraint(equalToConstant: 1).isActive = true
-        v.heightAnchor.constraint(equalToConstant: 24).isActive = true
+        v.heightAnchor.constraint(equalToConstant: 26).isActive = true
         return v
     }
 
@@ -681,6 +792,7 @@ class LabDashboardViewController: UIViewController {
             guard index < endpoints.count, let url = URL(string: endpoints[index]) else {
                 DispatchQueue.main.async {
                     self.refreshControl.endRefreshing()
+                    self.hideLoadingState()
                 }
                 return
             }
@@ -706,6 +818,7 @@ class LabDashboardViewController: UIViewController {
                                 DispatchQueue.main.async {
                                     self.bindDashboardData(json)
                                     self.refreshControl.endRefreshing()
+                                    self.hideLoadingState()
                                 }
                             }
                             return

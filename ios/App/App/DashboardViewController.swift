@@ -1,4 +1,5 @@
 import UIKit
+import WebKit
 
 /**
  * ═══════════════════════════════════════════════════════════════════════════
@@ -32,11 +33,20 @@ class DashboardViewController: UIViewController {
     private let lblProfitMargin = UILabel()
     private let lblPendingDue = UILabel()
 
+    // GST & Revenue Adjustments Labels (Full Web Parity)
+    private let lblGrossBilling = UILabel()
+    private let lblDiscountsGiven = UILabel()
+    private let lblDiscountPercent = UILabel()
+    private var lblDiscountSubtitle: UILabel?
+    private let lblCGST = UILabel()
+    private let lblSGST = UILabel()
+
     // Operational Counters
     private let lblInvoicesCount = UILabel()
     private let lblPatientsCount = UILabel()
 
-    // Ledger Tabs & Containers
+    // Ledger Tabs & Containers (All Records, Recent Invoices, Recent Expenses)
+    private let tabLedgerAll = UIButton(type: .system)
     private let tabLedgerInvoices = UIButton(type: .system)
     private let tabLedgerExpenses = UIButton(type: .system)
     private let ledgerStack = UIStackView()
@@ -44,7 +54,9 @@ class DashboardViewController: UIViewController {
 
     private var cachedInvoices: [[String: Any]] = []
     private var cachedExpenses: [[String: Any]] = []
-    private var isShowingInvoices = true
+    private var selectedLedgerIndex = 0 // 0: All, 1: Invoices, 2: Expenses
+
+    private var autoRefreshTimer: Timer?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -53,6 +65,7 @@ class DashboardViewController: UIViewController {
         setupHeader()
         setupScrollView()
         setupPrimaryKPIGrid()
+        setupGstAndDiscountGrid()
         setupOperationalCountsRow()
         setupLedgersSection()
         setupQuickActions()
@@ -60,11 +73,44 @@ class DashboardViewController: UIViewController {
         syncUserDetails()
         fetchLoggedInUserInfo()
         fetchDashboardMetrics()
+
+        NotificationCenter.default.addObserver(self, selector: #selector(appWillEnterForeground), name: UIApplication.willEnterForegroundNotification, object: nil)
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        // Automatic lifecycle sync
+        fetchLoggedInUserInfo()
+        fetchDashboardMetrics()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        startAutoRefresh()
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        stopAutoRefresh()
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+        stopAutoRefresh()
+    }
+
+    private func startAutoRefresh() {
+        stopAutoRefresh()
+        autoRefreshTimer = Timer.scheduledTimer(withTimeInterval: 25.0, repeats: true) { [weak self] _ in
+            self?.fetchDashboardMetrics()
+        }
+    }
+
+    private func stopAutoRefresh() {
+        autoRefreshTimer?.invalidate()
+        autoRefreshTimer = nil
+    }
+
+    @objc private func appWillEnterForeground() {
         fetchLoggedInUserInfo()
         fetchDashboardMetrics()
     }
@@ -110,8 +156,9 @@ class DashboardViewController: UIViewController {
         titleLbl.translatesAutoresizingMaskIntoConstraints = false
         topHeaderView.addSubview(titleLbl)
 
-        // Subtitle
-        userRoleLabLbl.text = "Lab Owner • Care Diagnostic Hub"
+        // Subtitle — Financial overview; synced dynamically by syncUserDetails()
+        userRoleLabLbl.text = "Financial Health Overview"
+        userRoleLabLbl.isHidden = false
         userRoleLabLbl.font = .systemFont(ofSize: 11.5, weight: .medium)
         userRoleLabLbl.textColor = UIColor(red: 0.78, green: 0.88, blue: 1.0, alpha: 1)
         userRoleLabLbl.translatesAutoresizingMaskIntoConstraints = false
@@ -205,12 +252,18 @@ class DashboardViewController: UIViewController {
         dot.widthAnchor.constraint(equalToConstant: 6).isActive = true
         dot.heightAnchor.constraint(equalToConstant: 6).isActive = true
 
+        let wTag = UILabel()
+        wTag.text = "WALLET ERA:"
+        wTag.font = .systemFont(ofSize: 9.5, weight: .bold)
+        wTag.textColor = UIColor(red: 0.8, green: 0.95, blue: 0.88, alpha: 1)
+
         let wLbl = UILabel()
-        wLbl.text = "Wallet Active"
+        wLbl.text = "Pay-As-You-Go Active"
         wLbl.font = .systemFont(ofSize: 11, weight: .bold)
         wLbl.textColor = .white
 
         wStack.addArrangedSubview(dot)
+        wStack.addArrangedSubview(wTag)
         wStack.addArrangedSubview(wLbl)
         walletBadge.addSubview(wStack)
 
@@ -230,7 +283,7 @@ class DashboardViewController: UIViewController {
             topHeaderView.bottomAnchor.constraint(equalTo: controlsRow.bottomAnchor, constant: 16),
 
             backBtn.leadingAnchor.constraint(equalTo: topHeaderView.leadingAnchor, constant: 16),
-            backBtn.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 4),
+            backBtn.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
             backBtn.widthAnchor.constraint(equalToConstant: 38),
             backBtn.heightAnchor.constraint(equalToConstant: 38),
 
@@ -356,9 +409,44 @@ class DashboardViewController: UIViewController {
         row2.spacing = 12
 
         let cardNet = makeBentoCard(title: "NET PROFIT", valueLbl: lblNetProfit, defaultVal: "₹0", valColor: UIColor(red: 0.05, green: 0.43, blue: 0.99, alpha: 1), subtitle: "Revenue minus expenses", badgeLbl: lblProfitMargin)
-        let cardPending = makeBentoCard(title: "PENDING DUE", valueLbl: lblPendingDue, defaultVal: "₹0", valColor: UIColor(red: 0.85, green: 0.47, blue: 0.02, alpha: 1), subtitle: "Uncollected invoices")
+        let cardPending = makeBentoCard(title: "PENDING COLLECTIONS", valueLbl: lblPendingDue, defaultVal: "₹0", valColor: UIColor(red: 0.85, green: 0.47, blue: 0.02, alpha: 1), subtitle: "Uncollected invoices")
         row2.addArrangedSubview(cardNet)
         row2.addArrangedSubview(cardPending)
+        contentStack.addArrangedSubview(row2)
+    }
+
+    // ── GST & Revenue Adjustments Bento Grid (Full Web Parity) ───────────────
+    private func setupGstAndDiscountGrid() {
+        let sectionHeader = UILabel()
+        sectionHeader.text = "GST & REVENUE ADJUSTMENTS"
+        sectionHeader.font = .systemFont(ofSize: 10.5, weight: .bold)
+        sectionHeader.textColor = UIColor(red: 0.39, green: 0.45, blue: 0.55, alpha: 1) // #64748B
+        contentStack.addArrangedSubview(sectionHeader)
+
+        // Row 1: Gross Billing & Discounts Given
+        let row1 = UIStackView()
+        row1.axis = .horizontal
+        row1.distribution = .fillEqually
+        row1.spacing = 12
+
+        let cardGross = makeBentoCard(title: "GROSS BILLING", valueLbl: lblGrossBilling, defaultVal: "₹0", valColor: UIColor(red: 0.06, green: 0.09, blue: 0.16, alpha: 1), subtitle: "Subtotal before adjustments")
+        let cardDisc = makeBentoCard(title: "DISCOUNTS GIVEN", valueLbl: lblDiscountsGiven, defaultVal: "₹0", valColor: UIColor(red: 0.06, green: 0.09, blue: 0.16, alpha: 1), subtitle: "0.0% of gross revenue", badgeLbl: lblDiscountPercent, subtitleOut: { [weak self] sl in
+            self?.lblDiscountSubtitle = sl
+        })
+        row1.addArrangedSubview(cardGross)
+        row1.addArrangedSubview(cardDisc)
+        contentStack.addArrangedSubview(row1)
+
+        // Row 2: CGST & SGST Collected
+        let row2 = UIStackView()
+        row2.axis = .horizontal
+        row2.distribution = .fillEqually
+        row2.spacing = 12
+
+        let cardCGST = makeBentoCard(title: "CGST COLLECTED", valueLbl: lblCGST, defaultVal: "₹0", valColor: UIColor(red: 0.06, green: 0.09, blue: 0.16, alpha: 1), subtitle: "Central GST")
+        let cardSGST = makeBentoCard(title: "SGST COLLECTED", valueLbl: lblSGST, defaultVal: "₹0", valColor: UIColor(red: 0.06, green: 0.09, blue: 0.16, alpha: 1), subtitle: "State GST")
+        row2.addArrangedSubview(cardCGST)
+        row2.addArrangedSubview(cardSGST)
         contentStack.addArrangedSubview(row2)
     }
 
@@ -411,7 +499,7 @@ class DashboardViewController: UIViewController {
         return card
     }
 
-    private func makeBentoCard(title: String, valueLbl: UILabel, defaultVal: String, valColor: UIColor, subtitle: String? = nil, badgeLbl: UILabel? = nil) -> UIView {
+    private func makeBentoCard(title: String, valueLbl: UILabel, defaultVal: String, valColor: UIColor, subtitle: String? = nil, badgeLbl: UILabel? = nil, subtitleOut: ((UILabel) -> Void)? = nil) -> UIView {
         let card = UIView()
         card.backgroundColor = .white
         card.layer.cornerRadius = 16
@@ -466,6 +554,7 @@ class DashboardViewController: UIViewController {
             sl.translatesAutoresizingMaskIntoConstraints = false
             card.addSubview(sl)
             subLabel = sl
+            subtitleOut?(sl)
         }
 
         NSLayoutConstraint.activate([
@@ -500,18 +589,21 @@ class DashboardViewController: UIViewController {
         tabsStack.spacing = 8
         tabsStack.translatesAutoresizingMaskIntoConstraints = false
 
-        styleTabButton(tabLedgerInvoices, title: "Recent Invoices (0)", active: true)
-        styleTabButton(tabLedgerExpenses, title: "Recent Expenses (0)", active: false)
+        styleTabButton(tabLedgerAll, title: "All Records", active: true)
+        styleTabButton(tabLedgerInvoices, title: "Invoices (0)", active: false)
+        styleTabButton(tabLedgerExpenses, title: "Expenses (0)", active: false)
 
+        tabLedgerAll.addTarget(self, action: #selector(didSelectAllTab), for: .touchUpInside)
         tabLedgerInvoices.addTarget(self, action: #selector(didSelectInvoicesTab), for: .touchUpInside)
         tabLedgerExpenses.addTarget(self, action: #selector(didSelectExpensesTab), for: .touchUpInside)
 
+        tabsStack.addArrangedSubview(tabLedgerAll)
         tabsStack.addArrangedSubview(tabLedgerInvoices)
         tabsStack.addArrangedSubview(tabLedgerExpenses)
         contentStack.addArrangedSubview(tabsStack)
 
         ledgerStack.axis = .vertical
-        ledgerStack.spacing = 8
+        ledgerStack.spacing = 10
         ledgerStack.translatesAutoresizingMaskIntoConstraints = false
         contentStack.addArrangedSubview(ledgerStack)
 
@@ -525,7 +617,7 @@ class DashboardViewController: UIViewController {
 
     private func styleTabButton(_ btn: UIButton, title: String, active: Bool) {
         btn.setTitle(title, for: .normal)
-        btn.titleLabel?.font = .systemFont(ofSize: 12.5, weight: .bold)
+        btn.titleLabel?.font = .systemFont(ofSize: 12, weight: .bold)
         btn.layer.cornerRadius = 10
         btn.heightAnchor.constraint(equalToConstant: 38).isActive = true
 
@@ -541,18 +633,28 @@ class DashboardViewController: UIViewController {
         }
     }
 
+    @objc private func didSelectAllTab() {
+        selectedLedgerIndex = 0
+        updateLedgerTabStyles()
+        renderCurrentLedger()
+    }
+
     @objc private func didSelectInvoicesTab() {
-        isShowingInvoices = true
-        styleTabButton(tabLedgerInvoices, title: "Recent Invoices (\(cachedInvoices.count))", active: true)
-        styleTabButton(tabLedgerExpenses, title: "Recent Expenses (\(cachedExpenses.count))", active: false)
+        selectedLedgerIndex = 1
+        updateLedgerTabStyles()
         renderCurrentLedger()
     }
 
     @objc private func didSelectExpensesTab() {
-        isShowingInvoices = false
-        styleTabButton(tabLedgerInvoices, title: "Recent Invoices (\(cachedInvoices.count))", active: false)
-        styleTabButton(tabLedgerExpenses, title: "Recent Expenses (\(cachedExpenses.count))", active: true)
+        selectedLedgerIndex = 2
+        updateLedgerTabStyles()
         renderCurrentLedger()
+    }
+
+    private func updateLedgerTabStyles() {
+        styleTabButton(tabLedgerAll, title: "All Records", active: selectedLedgerIndex == 0)
+        styleTabButton(tabLedgerInvoices, title: "Invoices (\(cachedInvoices.count))", active: selectedLedgerIndex == 1)
+        styleTabButton(tabLedgerExpenses, title: "Expenses (\(cachedExpenses.count))", active: selectedLedgerIndex == 2)
     }
 
     // ── Quick Actions ────────────────────────────────────────────────────────
@@ -617,119 +719,146 @@ class DashboardViewController: UIViewController {
     }
 
     private func getAuthToken() -> String? {
-        if let token = KeychainManager.shared.getToken(), !token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return token.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let token = KeychainManager.shared.getToken()?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !token.isEmpty, token.lowercased() != "null", token.lowercased() != "undefined" {
+            return token
         }
-        if let token = UserDefaults.standard.string(forKey: "auth_token"), !token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return token.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let token = UserDefaults.standard.string(forKey: "auth_token")?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !token.isEmpty, token.lowercased() != "null", token.lowercased() != "undefined" {
+            return token
         }
-        if let token = UserDefaults.standard.string(forKey: "token"), !token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return token.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let token = UserDefaults.standard.string(forKey: "token")?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !token.isEmpty, token.lowercased() != "null", token.lowercased() != "undefined" {
+            return token
         }
         if let cookies = HTTPCookieStorage.shared.cookies {
             for cookie in cookies {
-                if cookie.name == "token" && !cookie.value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                if cookie.name == "token" {
                     let cookieToken = cookie.value.trimmingCharacters(in: .whitespacesAndNewlines)
-                    KeychainManager.save(cookieToken, forKey: KeychainManager.tokenKey)
-                    return cookieToken
+                    if !cookieToken.isEmpty, cookieToken.lowercased() != "null", cookieToken.lowercased() != "undefined" {
+                        KeychainManager.save(cookieToken, forKey: KeychainManager.tokenKey)
+                        return cookieToken
+                    }
                 }
             }
         }
         return nil
     }
 
+    private func ensureAuthToken(completion: @escaping (String?) -> Void) {
+        if let token = getAuthToken() {
+            completion(token)
+            return
+        }
+        WKWebsiteDataStore.default().httpCookieStore.getAllCookies { cookies in
+            if let cookie = cookies.first(where: {
+                $0.name == "token" &&
+                !$0.value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+                $0.value.lowercased() != "null" &&
+                $0.value.lowercased() != "undefined"
+            }) {
+                let tokenVal = cookie.value.trimmingCharacters(in: .whitespacesAndNewlines)
+                KeychainManager.save(tokenVal, forKey: KeychainManager.tokenKey)
+                completion(tokenVal)
+            } else {
+                completion(nil)
+            }
+        }
+    }
+
     private func fetchLoggedInUserInfo() {
-        guard let token = getAuthToken() else { return }
-        guard let url = URL(string: "https://app.patholab.cloud/api/auth/me") else { return }
+        ensureAuthToken { [weak self] token in
+            guard let token = token, let url = URL(string: "https://app.patholab.cloud/api/auth/me") else { return }
 
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        request.timeoutInterval = 8
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
+            var request = URLRequest(url: url)
+            request.httpMethod = "GET"
+            request.timeoutInterval = 8
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            request.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
 
-        URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
-            guard let data = data, error == nil else { return }
-            do {
-                if let res = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                    var userObj = res["user"] as? [String: Any]
-                    if userObj == nil {
-                        userObj = res["data"] as? [String: Any]
+            URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+                guard let data = data, error == nil else { return }
+                do {
+                    if let res = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                        var userObj = res["user"] as? [String: Any]
+                        if userObj == nil {
+                            userObj = res["data"] as? [String: Any]
+                        }
+                        if let user = userObj {
+                            let realName = user["name"] as? String ?? ""
+                            let rawRole = user["role"] as? String ?? "Lab Owner"
+                            var labName: String?
+                            var labId: String?
+
+                            if let labObj = res["lab"] as? [String: Any] {
+                                labName = labObj["name"] as? String
+                                labId = labObj["id"] as? String
+                            } else if let labObj = user["lab"] as? [String: Any] {
+                                labName = labObj["name"] as? String
+                                labId = labObj["id"] as? String
+                            }
+
+                            if let labName = labName, !labName.isEmpty {
+                                UserDefaults.standard.set(labName, forKey: "lab_name")
+                            }
+                            if let labId = labId, !labId.isEmpty {
+                                UserDefaults.standard.set(labId, forKey: "lab_id")
+                            }
+                            if !rawRole.isEmpty {
+                                KeychainManager.save(rawRole, forKey: KeychainManager.roleKey)
+                                UserDefaults.standard.set(rawRole, forKey: "user_role")
+                            }
+                            if !realName.isEmpty {
+                                KeychainManager.save(realName, forKey: KeychainManager.nameKey)
+                                UserDefaults.standard.set(realName, forKey: "user_name")
+                            }
+                            if let email = user["email"] as? String, !email.isEmpty {
+                                KeychainManager.save(email, forKey: KeychainManager.emailKey)
+                            }
+
+                            DispatchQueue.main.async {
+                                self?.syncUserDetails()
+                                self?.fetchDashboardMetrics()
+                            }
+                        }
                     }
-                    if let user = userObj {
-                        let realName = user["name"] as? String ?? ""
-                        let rawRole = user["role"] as? String ?? "Lab Owner"
-                        var labName: String?
-                        var labId: String?
-
-                        if let labObj = res["lab"] as? [String: Any] {
-                            labName = labObj["name"] as? String
-                            labId = labObj["id"] as? String
-                        } else if let labObj = user["lab"] as? [String: Any] {
-                            labName = labObj["name"] as? String
-                            labId = labObj["id"] as? String
-                        }
-
-                        let userId = user["id"] as? String
-                        let email = user["email"] as? String
-
-                        if let labName = labName, !labName.isEmpty {
-                            UserDefaults.standard.set(labName, forKey: "lab_name")
-                        }
-                        if let labId = labId, !labId.isEmpty {
-                            UserDefaults.standard.set(labId, forKey: "lab_id")
-                        }
-                        if !rawRole.isEmpty {
-                            KeychainManager.save(rawRole, forKey: KeychainManager.roleKey)
-                            UserDefaults.standard.set(rawRole, forKey: "user_role")
-                        }
-                        if !realName.isEmpty {
-                            KeychainManager.save(realName, forKey: KeychainManager.nameKey)
-                            UserDefaults.standard.set(realName, forKey: "user_name")
-                        }
-                        if let email = email, !email.isEmpty {
-                            KeychainManager.save(email, forKey: KeychainManager.emailKey)
-                        }
-
-                        DispatchQueue.main.async {
-                            self?.syncUserDetails()
-                        }
-                    }
-                }
-            } catch {}
-        }.resume()
+                } catch {}
+            }.resume()
+        }
     }
 
     private func postExpense(title: String, amount: Double, notes: String) {
         guard let url = URL(string: "https://app.patholab.cloud/api/workspace/analytics") else { return }
 
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        ensureAuthToken { [weak self] token in
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        if let token = getAuthToken() {
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-            request.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
-        }
-
-        let payload: [String: Any] = [
-            "title": title,
-            "amount": amount,
-            "category": "MISC",
-            "paymentMode": "CASH",
-            "notes": notes
-        ]
-
-        guard let bodyData = try? JSONSerialization.data(withJSONObject: payload) else { return }
-        request.httpBody = bodyData
-
-        URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
-            DispatchQueue.main.async {
-                if let httpRes = response as? HTTPURLResponse, httpRes.statusCode >= 200, httpRes.statusCode < 300 {
-                    self?.fetchDashboardMetrics()
-                }
+            if let token = token {
+                request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+                request.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
             }
-        }.resume()
+
+            let payload: [String: Any] = [
+                "title": title,
+                "amount": amount,
+                "category": "MISC",
+                "paymentMode": "CASH",
+                "notes": notes
+            ]
+
+            guard let bodyData = try? JSONSerialization.data(withJSONObject: payload) else { return }
+            request.httpBody = bodyData
+
+            URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+                DispatchQueue.main.async {
+                    if let httpRes = response as? HTTPURLResponse, httpRes.statusCode >= 200, httpRes.statusCode < 300 {
+                        self?.fetchDashboardMetrics()
+                    }
+                }
+            }.resume()
+        }
     }
 
     @objc private func didTapViewBilling() {
@@ -739,69 +868,243 @@ class DashboardViewController: UIViewController {
     }
 
     private func syncUserDetails() {
-        var role = KeychainManager.shared.getUserRole() ?? "Lab Owner"
-        let lab = UserDefaults.standard.string(forKey: "lab_name") ?? KeychainManager.shared.getLabName() ?? "Care Diagnostics"
+        // Read only API-sourced values — never fall back to hard-coded dummy strings
+        let rawRole = KeychainManager.shared.getUserRole() ?? UserDefaults.standard.string(forKey: "user_role") ?? ""
+        let lab = UserDefaults.standard.string(forKey: "lab_name") ?? KeychainManager.shared.getLabName() ?? ""
 
-        var displayRole = "Lab Owner"
-        if role.caseInsensitiveCompare("LAB_OWNER") == .orderedSame { displayRole = "Lab Owner" }
-        else if role.caseInsensitiveCompare("LAB_MANAGER") == .orderedSame { displayRole = "Lab Manager" }
-        else if role.caseInsensitiveCompare("PATHOLOGIST") == .orderedSame { displayRole = "Pathologist" }
-        else if role.caseInsensitiveCompare("RECEPTIONIST") == .orderedSame { displayRole = "Reception Desk" }
-        else if role.caseInsensitiveCompare("SUPER_ADMIN") == .orderedSame { displayRole = "System Admin" }
+        var displayRole = ""
+        if rawRole.caseInsensitiveCompare("LAB_OWNER") == .orderedSame { displayRole = "Lab Owner" }
+        else if rawRole.caseInsensitiveCompare("LAB_MANAGER") == .orderedSame { displayRole = "Lab Manager" }
+        else if rawRole.caseInsensitiveCompare("PATHOLOGIST") == .orderedSame { displayRole = "Pathologist" }
+        else if rawRole.caseInsensitiveCompare("RECEPTIONIST") == .orderedSame { displayRole = "Reception Desk" }
+        else if rawRole.caseInsensitiveCompare("SUPER_ADMIN") == .orderedSame { displayRole = "System Admin" }
+        else if !rawRole.isEmpty { displayRole = rawRole }
 
-        userRoleLabLbl.text = "\(displayRole) • \(lab)"
+        if !displayRole.isEmpty && !lab.isEmpty {
+            userRoleLabLbl.text = "\(displayRole) \u{2022} \(lab)"
+            userRoleLabLbl.isHidden = false
+        } else if !lab.isEmpty {
+            userRoleLabLbl.text = lab
+            userRoleLabLbl.isHidden = false
+        } else if !displayRole.isEmpty {
+            userRoleLabLbl.text = displayRole
+            userRoleLabLbl.isHidden = false
+        } else {
+            userRoleLabLbl.text = "Financial Health Overview"
+            userRoleLabLbl.isHidden = false
+        }
+    }
+
+    // ── Number Parsing Helpers (Fixes NSNumber / Double / Int Casting Bug) ─────
+    private func parseDouble(_ val: Any?) -> Double {
+        if let n = val as? NSNumber { return n.doubleValue }
+        if let s = val as? String, let d = Double(s) { return d }
+        return 0.0
+    }
+
+    private func parseInt(_ val: Any?) -> Int {
+        if let n = val as? NSNumber { return n.intValue }
+        if let s = val as? String, let i = Int(s) { return i }
+        return 0
     }
 
     // ── Network Fetch ────────────────────────────────────────────────────────
     private func fetchDashboardMetrics() {
         refreshControl.beginRefreshing()
 
-        let urlStr = "https://app.patholab.cloud/api/workspace/analytics?timeframe=\(selectedTimeframe)"
-        guard let url = URL(string: urlStr) else {
-            refreshControl.endRefreshing()
+        ensureAuthToken { [weak self] token in
+            guard let self = self else { return }
+
+            var urlStr = "https://app.patholab.cloud/api/workspace/analytics?timeframe=\(self.selectedTimeframe)"
+            if let labId = UserDefaults.standard.string(forKey: "lab_id")?.trimmingCharacters(in: .whitespacesAndNewlines),
+               !labId.isEmpty,
+               labId.lowercased() != "null",
+               labId.lowercased() != "undefined" {
+                urlStr += "&labId=\(labId)"
+            }
+            guard let url = URL(string: urlStr) else {
+                DispatchQueue.main.async { self.refreshControl.endRefreshing() }
+                return
+            }
+
+            var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalAndRemoteCacheData, timeoutInterval: 12)
+            request.httpMethod = "GET"
+            request.setValue("application/json", forHTTPHeaderField: "Accept")
+
+            if let token = token {
+                request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+                request.setValue("token=\(token); auth-token=\(token)", forHTTPHeaderField: "Cookie")
+            }
+
+            URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+                guard let self = self else { return }
+
+                if let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode), let data = data {
+                    if let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] {
+                        let totalRev = self.parseDouble(json["totalRevenue"])
+                        let invCount = self.parseInt(json["invoicesCount"])
+                        if totalRev > 0 || invCount > 0 {
+                            DispatchQueue.main.async {
+                                self.refreshControl.endRefreshing()
+                                self.bindMetricsData(json)
+                            }
+                            return
+                        } else {
+                            self.fetchFallbackMetrics(token: token, initialJson: json)
+                            return
+                        }
+                    }
+                }
+                self.fetchFallbackMetrics(token: token, initialJson: nil)
+            }.resume()
+        }
+    }
+
+    private func fetchFallbackMetrics(token: String?, initialJson: [String: Any]?) {
+        guard let token = token, !token.isEmpty else {
+            DispatchQueue.main.async {
+                self.refreshControl.endRefreshing()
+                if let initial = initialJson { self.bindMetricsData(initial) }
+            }
             return
         }
 
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        request.timeoutInterval = 10
+        var merged = initialJson ?? [:]
+        let group = DispatchGroup()
 
-        if let token = getAuthToken() {
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-            request.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
+        // 1. Fallback: /api/labs/dashboard?range=30D
+        if let dUrl = URL(string: "https://app.patholab.cloud/api/labs/dashboard?range=30D") {
+            group.enter()
+            var req = URLRequest(url: dUrl, timeoutInterval: 8)
+            req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            req.setValue("token=\(token); auth-token=\(token)", forHTTPHeaderField: "Cookie")
+            URLSession.shared.dataTask(with: req) { data, _, _ in
+                defer { group.leave() }
+                if let data = data,
+                   let dRoot = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
+                   let kpi = dRoot["kpi"] as? [String: Any] {
+                    if self.parseDouble(merged["totalRevenue"]) == 0.0, let rev = kpi["revenue"] { merged["totalRevenue"] = rev }
+                    if self.parseDouble(merged["totalExpense"]) == 0.0, let exp = kpi["expenses"] { merged["totalExpense"] = exp }
+                    if self.parseDouble(merged["netProfit"]) == 0.0, let profit = kpi["netProfit"] { merged["netProfit"] = profit }
+                    if self.parseDouble(merged["pendingCollections"]) == 0.0, let dues = kpi["pendingDues"] { merged["pendingCollections"] = dues }
+                    if self.parseInt(merged["patientsCount"]) == 0, let pats = kpi["totalPatients"] { merged["patientsCount"] = pats }
+                }
+            }.resume()
         }
 
-        URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
-            DispatchQueue.main.async {
-                self?.refreshControl.endRefreshing()
-
-                guard let self = self, let data = data, error == nil else { return }
-
-                do {
-                    if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                        self.bindMetricsData(json)
+        // 2. Fallback: /api/workspace/invoices
+        if let iUrl = URL(string: "https://app.patholab.cloud/api/workspace/invoices") {
+            group.enter()
+            var req = URLRequest(url: iUrl, timeoutInterval: 8)
+            req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            req.setValue("token=\(token); auth-token=\(token)", forHTTPHeaderField: "Cookie")
+            URLSession.shared.dataTask(with: req) { data, _, _ in
+                defer { group.leave() }
+                if let data = data,
+                   let iRoot = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] {
+                    if let stats = iRoot["stats"] as? [String: Any] {
+                        if self.parseDouble(merged["totalRevenue"]) == 0.0 {
+                            let rev = stats["totalRevenue"] ?? stats["monthlyRevenue"]
+                            if let rev = rev { merged["totalRevenue"] = rev }
+                        }
+                        if self.parseDouble(merged["pendingCollections"]) == 0.0, let pending = stats["pendingAmount"] {
+                            merged["pendingCollections"] = pending
+                        }
                     }
-                } catch {}
-            }
-        }.resume()
+                    if let invs = iRoot["invoices"] as? [[String: Any]], !invs.isEmpty {
+                        if self.parseInt(merged["invoicesCount"]) == 0 { merged["invoicesCount"] = invs.count }
+                        if (merged["recentInvoices"] as? [[String: Any]])?.isEmpty ?? true {
+                            merged["recentInvoices"] = invs
+                        }
+                    }
+                }
+            }.resume()
+        }
+
+        group.notify(queue: .main) {
+            self.refreshControl.endRefreshing()
+            self.bindMetricsData(merged)
+        }
     }
 
     private func bindMetricsData(_ json: [String: Any]) {
-        let totalRev = json["totalRevenue"] as? Double ?? 0.0
-        let totalExp = json["totalExpense"] as? Double ?? 0.0
-        let netProfit = json["netProfit"] as? Double ?? 0.0
-        let profitMargin = json["profitMargin"] as? Double ?? 0.0
-        let pendingDue = json["pendingCollections"] as? Double ?? 0.0
+        // Extract live User and Lab identity
+        if let userObj = json["user"] as? [String: Any] {
+            if let name = userObj["name"] as? String, !name.isEmpty, !name.contains("@"), name.lowercased() != "null" {
+                UserDefaults.standard.set(name, forKey: "user_name")
+                KeychainManager.save(name, forKey: KeychainManager.nameKey)
+            }
+            if let role = userObj["role"] as? String, !role.isEmpty {
+                UserDefaults.standard.set(role, forKey: "user_role")
+                KeychainManager.save(role, forKey: KeychainManager.roleKey)
+            }
+            if let email = userObj["email"] as? String, !email.isEmpty {
+                KeychainManager.save(email, forKey: KeychainManager.emailKey)
+            }
+        }
+        if let labObj = json["lab"] as? [String: Any] {
+            if let labName = labObj["name"] as? String, !labName.isEmpty {
+                UserDefaults.standard.set(labName, forKey: "lab_name")
+            }
+            if let labId = labObj["id"] as? String, !labId.isEmpty {
+                UserDefaults.standard.set(labId, forKey: "lab_id")
+            }
+        }
+        self.syncUserDetails()
 
-        let invCount = json["invoicesCount"] as? Int ?? 0
-        let patCount = json["patientsCount"] as? Int ?? 0
+        var totalRev = parseDouble(json["totalRevenue"])
+        var totalExp = parseDouble(json["totalExpense"])
+        var netProfit = parseDouble(json["netProfit"])
+        var profitMargin = parseDouble(json["profitMargin"])
+        var pendingCollections = parseDouble(json["pendingCollections"])
+
+        var invCount = parseInt(json["invoicesCount"])
+        var patCount = parseInt(json["patientsCount"])
+
+        if let kpi = json["kpi"] as? [String: Any] {
+            if totalRev == 0.0 { totalRev = parseDouble(kpi["revenue"]) }
+            if totalExp == 0.0 { totalExp = parseDouble(kpi["expenses"]) }
+            if netProfit == 0.0 { netProfit = parseDouble(kpi["netProfit"]) }
+            if pendingCollections == 0.0 { pendingCollections = parseDouble(kpi["pendingDues"]) }
+            if patCount == 0 { patCount = parseInt(kpi["totalPatients"]) }
+        }
+
+        if let stats = json["stats"] as? [String: Any] {
+            if totalRev == 0.0 {
+                totalRev = parseDouble(stats["totalRevenue"])
+                if totalRev == 0.0 { totalRev = parseDouble(stats["monthlyRevenue"]) }
+            }
+            if pendingCollections == 0.0 { pendingCollections = parseDouble(stats["pendingAmount"]) }
+            if invCount == 0 { invCount = parseInt(stats["pendingCount"]) + parseInt(stats["overdueCount"]) }
+        }
+
+        if profitMargin == 0.0 && totalRev > 0.0 {
+            profitMargin = max(-100.0, min(100.0, ((totalRev - totalExp) / totalRev) * 100.0))
+        }
 
         // Bind Primary Bento KPIs
         lblTotalRevenue.text = formatINR(totalRev)
         lblTotalExpenses.text = formatINR(totalExp)
         lblNetProfit.text = formatINR(netProfit)
         lblProfitMargin.text = String(format: "%.1f%%", profitMargin)
-        lblPendingDue.text = formatINR(pendingDue)
+        lblPendingDue.text = formatINR(pendingCollections)
+
+        // Bind GST & Revenue Adjustments (Full Web Parity)
+        var grossBilling = parseDouble(json["grossBilling"])
+        let totalDiscounts = parseDouble(json["totalDiscounts"])
+        if grossBilling == 0.0 && totalRev > 0.0 {
+            grossBilling = totalRev + totalDiscounts
+        }
+        let discountPercentage = parseDouble(json["discountPercentage"])
+        let totalCGST = parseDouble(json["totalCGST"])
+        let totalSGST = parseDouble(json["totalSGST"])
+
+        lblGrossBilling.text = formatINR(grossBilling)
+        lblDiscountsGiven.text = formatINR(totalDiscounts)
+        lblDiscountPercent.text = String(format: "%.1f%%", discountPercentage)
+        lblDiscountSubtitle?.text = String(format: "%.1f%% of gross revenue.", discountPercentage)
+        lblCGST.text = formatINR(totalCGST)
+        lblSGST.text = formatINR(totalSGST)
 
         // Bind Operational Counters
         lblInvoicesCount.text = "\(invCount)"
@@ -811,40 +1114,106 @@ class DashboardViewController: UIViewController {
         cachedInvoices = json["recentInvoices"] as? [[String: Any]] ?? []
         cachedExpenses = json["recentExpenses"] as? [[String: Any]] ?? []
 
-        tabLedgerInvoices.setTitle("Recent Invoices (\(cachedInvoices.count))", for: .normal)
-        tabLedgerExpenses.setTitle("Recent Expenses (\(cachedExpenses.count))", for: .normal)
-
+        updateLedgerTabStyles()
         renderCurrentLedger()
     }
 
     private func renderCurrentLedger() {
         ledgerStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        emptyStateLbl.isHidden = true
 
-        if isShowingInvoices {
+        if selectedLedgerIndex == 0 {
+            // All Records: Show Recent Invoices followed by Recent Expenses (Full Web Parity)
+            let invHeader = makeSectionHeaderView(title: "RECENT INVOICES", count: cachedInvoices.count, color: UIColor(red: 0.05, green: 0.43, blue: 0.99, alpha: 1))
+            ledgerStack.addArrangedSubview(invHeader)
+
             if cachedInvoices.isEmpty {
-                emptyStateLbl.text = "No recent invoices found for this timeframe"
+                let emptyLbl = makeEmptyLedgerLabel("No recent invoices found.")
+                ledgerStack.addArrangedSubview(emptyLbl)
+            } else {
+                for inv in cachedInvoices {
+                    ledgerStack.addArrangedSubview(makeInvoiceCard(inv))
+                }
+            }
+
+            let expHeader = makeSectionHeaderView(title: "RECENT EXPENSES", count: cachedExpenses.count, color: UIColor(red: 0.88, green: 0.11, blue: 0.28, alpha: 1))
+            ledgerStack.addArrangedSubview(expHeader)
+
+            if cachedExpenses.isEmpty {
+                let emptyLbl = makeEmptyLedgerLabel("No recent expenses recorded.")
+                ledgerStack.addArrangedSubview(emptyLbl)
+            } else {
+                for exp in cachedExpenses {
+                    ledgerStack.addArrangedSubview(makeExpenseCard(exp))
+                }
+            }
+        } else if selectedLedgerIndex == 1 {
+            // Invoices Only
+            if cachedInvoices.isEmpty {
+                emptyStateLbl.text = "No recent invoices found."
                 emptyStateLbl.isHidden = false
                 return
             }
             emptyStateLbl.isHidden = true
-
             for inv in cachedInvoices {
-                let card = makeInvoiceCard(inv)
-                ledgerStack.addArrangedSubview(card)
+                ledgerStack.addArrangedSubview(makeInvoiceCard(inv))
             }
         } else {
+            // Expenses Only
             if cachedExpenses.isEmpty {
-                emptyStateLbl.text = "No recent expenses recorded for this timeframe"
+                emptyStateLbl.text = "No recent expenses recorded."
                 emptyStateLbl.isHidden = false
                 return
             }
             emptyStateLbl.isHidden = true
-
             for exp in cachedExpenses {
-                let card = makeExpenseCard(exp)
-                ledgerStack.addArrangedSubview(card)
+                ledgerStack.addArrangedSubview(makeExpenseCard(exp))
             }
         }
+    }
+
+    private func makeSectionHeaderView(title: String, count: Int, color: UIColor) -> UIView {
+        let view = UIView()
+        let stack = UIStackView()
+        stack.axis = .horizontal
+        stack.alignment = .center
+        stack.spacing = 8
+        stack.translatesAutoresizingMaskIntoConstraints = false
+
+        let lbl = UILabel()
+        lbl.text = title
+        lbl.font = .systemFont(ofSize: 11.5, weight: .bold)
+        lbl.textColor = UIColor(red: 0.28, green: 0.33, blue: 0.41, alpha: 1)
+
+        let badge = UILabel()
+        badge.text = "  \(count)  "
+        badge.font = .systemFont(ofSize: 10, weight: .bold)
+        badge.textColor = color
+        badge.backgroundColor = color.withAlphaComponent(0.12)
+        badge.layer.cornerRadius = 5
+        badge.clipsToBounds = true
+
+        stack.addArrangedSubview(lbl)
+        stack.addArrangedSubview(badge)
+        view.addSubview(stack)
+
+        NSLayoutConstraint.activate([
+            stack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 2),
+            stack.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor),
+            stack.topAnchor.constraint(equalTo: view.topAnchor, constant: 6),
+            stack.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -4),
+        ])
+        return view
+    }
+
+    private func makeEmptyLedgerLabel(_ text: String) -> UIView {
+        let lbl = UILabel()
+        lbl.text = text
+        lbl.font = .systemFont(ofSize: 12.5, weight: .medium)
+        lbl.textColor = UIColor(red: 0.58, green: 0.64, blue: 0.72, alpha: 1)
+        lbl.textAlignment = .center
+        lbl.heightAnchor.constraint(equalToConstant: 44).isActive = true
+        return lbl
     }
 
     private func makeInvoiceCard(_ inv: [String: Any]) -> UIView {
@@ -859,11 +1228,11 @@ class DashboardViewController: UIViewController {
         card.layer.shadowOffset = CGSize(width: 0, height: 1)
 
         let invNum = inv["invoiceNumber"] as? String ?? "INV-2026-0000"
-        let isB2B = inv["isB2B"] as? Bool ?? false
+        let isB2B = (inv["isB2B"] as? Bool) ?? (inv["agencyName"] != nil)
         let status = (inv["status"] as? String ?? "PAID").uppercased()
-        let grandTotal = inv["grandTotal"] as? Double ?? 0.0
+        let grandTotal = parseDouble(inv["grandTotal"])
         let dateStr = formatDate(inv["createdAt"] as? String)
-        let billedToName = inv["patientName"] as? String ?? "Walk-in Patient"
+        let billedToName = (inv["patientName"] as? String) ?? (inv["agencyName"] as? String) ?? "Walk-in Patient"
 
         // Top Row: Number + B2B tag + Status Badge
         let topRow = UIStackView()
@@ -955,6 +1324,10 @@ class DashboardViewController: UIViewController {
             stack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -12),
         ])
 
+        card.isUserInteractionEnabled = true
+        let tap = UITapGestureRecognizer(target: self, action: #selector(didTapViewBilling))
+        card.addGestureRecognizer(tap)
+
         return card
     }
 
@@ -972,7 +1345,7 @@ class DashboardViewController: UIViewController {
         let title = exp["title"] as? String ?? "Expense"
         let category = (exp["category"] as? String ?? "OPERATING").replacingOccurrences(of: "_", with: " ")
         let paymentMode = (exp["paymentMode"] as? String ?? "CASH").replacingOccurrences(of: "_", with: " ")
-        let amount = exp["amount"] as? Double ?? 0.0
+        let amount = parseDouble(exp["amount"])
         let dateStr = formatDate(exp["date"] as? String)
 
         // Top Row: Category + Payment Mode

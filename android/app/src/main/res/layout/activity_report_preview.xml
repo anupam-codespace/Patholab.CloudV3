@@ -6,9 +6,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#F8FAFC">
+    android:background="#0F172A">
 
-    <!-- Top Sapphire Header with Status Bar Inset Support -->
+    <!-- Top Sapphire Header -->
     <LinearLayout
         android:id="@+id/previewHeader"
         android:layout_width="match_parent"
@@ -17,8 +17,8 @@
         android:orientation="vertical"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
-        android:paddingTop="48dp"
-        android:paddingBottom="16dp">
+        android:paddingTop="14dp"
+        android:paddingBottom="12dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -29,15 +29,15 @@
             <!-- Back Button -->
             <FrameLayout
                 android:id="@+id/btnPreviewBack"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
                 android:background="@drawable/bg_pill_white"
                 android:clickable="true"
                 android:focusable="true">
 
                 <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
                     android:layout_gravity="center"
                     android:src="@drawable/ic_back_arrow"
                     app:tint="#0D6EFD" />
@@ -52,7 +52,7 @@
                 android:src="@drawable/ic_patient_avatar"
                 android:scaleType="centerCrop" />
 
-            <!-- Title & Patient Info -->
+            <!-- Title & Patient Info (Full horizontal width) -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -65,7 +65,7 @@
                     android:id="@+id/lblPreviewPatientName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="PRATIMA GHOSH"
+                    android:text="Patient Report"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:textColor="#FFFFFF"
@@ -76,7 +76,7 @@
                     android:id="@+id/lblPreviewSubTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Complete Blood Count (CBC) • v1.0"
+                    android:text="Clinical Diagnostic Investigation"
                     android:textSize="12sp"
                     android:textColor="#C7D2FE"
                     android:singleLine="true"
@@ -84,12 +84,11 @@
 
             </LinearLayout>
 
-            <!-- Action: Direct Print (🖨️) -->
+            <!-- Action: Reload / Fit Screen (🔄) -->
             <FrameLayout
-                android:id="@+id/btnPreviewPrint"
-                android:layout_width="38dp"
-                android:layout_height="38dp"
-                android:layout_marginEnd="8dp"
+                android:id="@+id/btnPreviewRefresh"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:background="@drawable/bg_pill_glass"
                 android:clickable="true"
                 android:focusable="true">
@@ -98,24 +97,7 @@
                     android:layout_width="18dp"
                     android:layout_height="18dp"
                     android:layout_gravity="center"
-                    android:src="@drawable/ic_document"
-                    app:tint="#FFFFFF" />
-            </FrameLayout>
-
-            <!-- Action: Direct Download (📥) -->
-            <FrameLayout
-                android:id="@+id/btnPreviewDownload"
-                android:layout_width="38dp"
-                android:layout_height="38dp"
-                android:background="@drawable/bg_pill_glass"
-                android:clickable="true"
-                android:focusable="true">
-
-                <ImageView
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_save"
+                    android:src="@drawable/ic_refresh"
                     app:tint="#FFFFFF" />
             </FrameLayout>
 
@@ -128,9 +110,9 @@
         android:id="@+id/progressPreviewLoading"
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
-        android:layout_height="4dp"
+        android:layout_height="3dp"
         android:indeterminate="true"
-        android:indeterminateTint="#0D6EFD"
+        android:indeterminateTint="#38BDF8"
         android:visibility="visible" />
 
     <!-- Report Web Canvas View -->
@@ -142,28 +124,187 @@
         <WebView
             android:id="@+id/webViewReportPreview"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            android:background="#0F172A" />
 
-        <!-- Floating Bottom Quick Action Bar -->
+        <!-- Floating In-App Download Success Notification Banner -->
+        <LinearLayout
+            android:id="@+id/bannerDownloadSuccess"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_wallet_hero_card_premium"
+            android:elevation="10dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="14dp"
+            android:paddingBottom="14dp"
+            android:visibility="gone">
+
+            <FrameLayout
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="@drawable/bg_circle_icon_emerald">
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_check_bold"
+                    app:tint="#10B981" />
+            </FrameLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="12dp"
+                android:layout_marginEnd="8dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Download Successful"
+                    android:textSize="13.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF" />
+
+                <TextView
+                    android:id="@+id/lblBannerDownloadMessage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Download successful! Report has been saved to your device."
+                    android:textSize="11.5sp"
+                    android:textColor="#94A3B8" />
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="VIEW"
+                android:textSize="11.5sp"
+                android:textStyle="bold"
+                android:textColor="#38BDF8"
+                android:padding="4dp" />
+
+        </LinearLayout>
+
+        <!-- Floating Zoom Controls Pill (Zoom In, Fit, Zoom Out) -->
+        <LinearLayout
+            android:id="@+id/panelZoomControls"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end|bottom"
+            android:layout_marginBottom="92dp"
+            android:layout_marginEnd="16dp"
+            android:orientation="vertical"
+            android:background="@drawable/bg_zoom_pill"
+            android:padding="4dp"
+            android:elevation="16dp"
+            android:gravity="center_horizontal">
+
+            <!-- Zoom In (+) -->
+            <FrameLayout
+                android:id="@+id/btnZoomIn"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="+"
+                    android:textColor="#FFFFFF"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+            </FrameLayout>
+
+            <View
+                android:layout_width="24dp"
+                android:layout_height="1dp"
+                android:background="#33FFFFFF"
+                android:layout_marginTop="2dp"
+                android:layout_marginBottom="2dp" />
+
+            <!-- Reset / Fit -->
+            <FrameLayout
+                android:id="@+id/btnZoomReset"
+                android:layout_width="40dp"
+                android:layout_height="32dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="FIT"
+                    android:textColor="#38BDF8"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+            </FrameLayout>
+
+            <View
+                android:layout_width="24dp"
+                android:layout_height="1dp"
+                android:background="#33FFFFFF"
+                android:layout_marginTop="2dp"
+                android:layout_marginBottom="2dp" />
+
+            <!-- Zoom Out (-) -->
+            <FrameLayout
+                android:id="@+id/btnZoomOut"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="–"
+                    android:textColor="#FFFFFF"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+            </FrameLayout>
+
+        </LinearLayout>
+
+        <!-- Floating Bottom Quick Action Bar (Only Two Clear Single-Line Actions) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
             android:background="@drawable/bg_bottom_nav_pill"
-            android:layout_marginStart="20dp"
-            android:layout_marginEnd="20dp"
-            android:layout_marginBottom="24dp"
-            android:padding="10dp"
-            android:elevation="8dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="16dp"
+            android:padding="8dp"
+            android:elevation="12dp"
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
-            <!-- Print Spooler Button -->
+            <!-- Action 1: Print Report Spooler Button (Icon-free, Clean & Professional) -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnBottomPrintSpooler"
                 android:layout_width="0dp"
-                android:layout_height="46dp"
+                android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:minHeight="50dp"
                 android:text="Print Report"
                 android:textSize="13.5sp"
                 android:textStyle="bold"
@@ -172,22 +313,41 @@
                 app:cornerRadius="14dp"
                 app:strokeColor="#BFDBFE"
                 app:strokeWidth="1.2dp"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:singleLine="true"
+                android:maxLines="1"
+                android:ellipsize="none"
+                app:autoSizeTextType="uniform"
+                app:autoSizeMinTextSize="10sp"
+                app:autoSizeMaxTextSize="13.5sp"
+                app:autoSizeStepGranularity="1sp"
                 android:elevation="0dp"
                 android:textAllCaps="false"
-                android:layout_marginEnd="8dp" />
+                android:layout_marginEnd="10dp" />
 
-            <!-- Download PDF Button -->
+            <!-- Action 2: Download PDF Button (Icon-free, Clean & Professional) -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnBottomDownloadPdf"
                 android:layout_width="0dp"
-                android:layout_height="46dp"
+                android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:minHeight="50dp"
                 android:text="Download PDF"
                 android:textSize="13.5sp"
                 android:textStyle="bold"
                 android:textColor="#FFFFFF"
                 android:backgroundTint="#0D6EFD"
                 app:cornerRadius="14dp"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:singleLine="true"
+                android:maxLines="1"
+                android:ellipsize="none"
+                app:autoSizeTextType="uniform"
+                app:autoSizeMinTextSize="10sp"
+                app:autoSizeMaxTextSize="13.5sp"
+                app:autoSizeStepGranularity="1sp"
                 android:elevation="0dp"
                 android:textAllCaps="false" />
 

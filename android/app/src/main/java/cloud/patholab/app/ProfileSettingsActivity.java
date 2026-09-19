@@ -102,6 +102,9 @@ public class ProfileSettingsActivity extends AppCompatActivity {
     private EditText inputWaApiKey;
     private EditText inputWaPhoneId;
 
+    // App Version Info
+    private TextView lblAndroidVersionBuild;
+
     // Bottom Save
     private MaterialButton btnSaveAll;
     private ProgressBar progressBarSave;
@@ -120,6 +123,7 @@ public class ProfileSettingsActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        updateAppVersion();
         loadAllSettings();
     }
 
@@ -180,8 +184,31 @@ public class ProfileSettingsActivity extends AppCompatActivity {
         inputWaApiKey  = findViewById(R.id.inputWaApiKey);
         inputWaPhoneId = findViewById(R.id.inputWaPhoneId);
 
+        lblAndroidVersionBuild = findViewById(R.id.lblAndroidVersionBuild);
+        updateAppVersion();
+
         btnSaveAll      = findViewById(R.id.btnSaveAll);
         progressBarSave = findViewById(R.id.progressBarSave);
+    }
+
+    private void updateAppVersion() {
+        try {
+            android.content.pm.PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+            String versionName = (pInfo.versionName != null && !pInfo.versionName.isEmpty()) ? pInfo.versionName : "1.0.4";
+            long versionCode;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                versionCode = pInfo.getLongVersionCode();
+            } else {
+                versionCode = pInfo.versionCode;
+            }
+            if (lblAndroidVersionBuild != null) {
+                lblAndroidVersionBuild.setText("v" + versionName + " (Build " + versionCode + ")");
+            }
+        } catch (Exception e) {
+            if (lblAndroidVersionBuild != null) {
+                lblAndroidVersionBuild.setText("v1.0.4 (Build 4)");
+            }
+        }
     }
 
     private void setupTabClicks() {

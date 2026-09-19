@@ -25,6 +25,7 @@ class B2BViewController: UIViewController, UITextFieldDelegate, UITableViewDeleg
     private let backBtn            = UIButton(type: .system)
     private let titleLabel         = UILabel()
     private let subtitleLabel      = UILabel()
+    private let tiersBtn           = UIButton(type: .system)
     private let exportBtn          = UIButton(type: .system)
     private let refreshBtn         = UIButton(type: .system)
 
@@ -81,6 +82,7 @@ class B2BViewController: UIViewController, UITextFieldDelegate, UITableViewDeleg
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────────
     //  UI SETUP
     // ─────────────────────────────────────────────────────────────────────────
     private func setupHeroHeader() {
@@ -89,16 +91,22 @@ class B2BViewController: UIViewController, UITextFieldDelegate, UITableViewDeleg
 
         heroGradientLayer.colors = [
             UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1).cgColor, // #0D6EFD
+            UIColor(red: 0.039, green: 0.345, blue: 0.792, alpha: 1).cgColor, // #0A58CA
             UIColor(red: 0.114, green: 0.306, blue: 0.847, alpha: 1).cgColor  // #1D4ED8
         ]
         heroGradientLayer.startPoint = CGPoint(x: 0, y: 0)
         heroGradientLayer.endPoint   = CGPoint(x: 1, y: 1)
         heroHeaderView.layer.insertSublayer(heroGradientLayer, at: 0)
+        heroHeaderView.layer.cornerRadius = 28
+        heroHeaderView.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
+        heroHeaderView.clipsToBounds = true
 
         backBtn.translatesAutoresizingMaskIntoConstraints = false
-        backBtn.setImage(UIImage(systemName: "arrow.left"), for: .normal)
+        backBtn.setImage(UIImage(systemName: "chevron.left"), for: .normal)
         backBtn.tintColor = .white
-        backBtn.backgroundColor = UIColor.white.withAlphaComponent(0.15)
+        backBtn.backgroundColor = UIColor.white.withAlphaComponent(0.20)
+        backBtn.layer.borderColor = UIColor.white.withAlphaComponent(0.30).cgColor
+        backBtn.layer.borderWidth = 1
         backBtn.layer.cornerRadius = 19
         backBtn.addTarget(self, action: #selector(backTapped), for: .touchUpInside)
         heroHeaderView.addSubview(backBtn)
@@ -115,10 +123,22 @@ class B2BViewController: UIViewController, UITextFieldDelegate, UITableViewDeleg
         subtitleLabel.textColor = UIColor(red: 0.780, green: 0.875, blue: 1.0, alpha: 1)
         heroHeaderView.addSubview(subtitleLabel)
 
+        tiersBtn.translatesAutoresizingMaskIntoConstraints = false
+        tiersBtn.setImage(UIImage(systemName: "slider.horizontal.3"), for: .normal)
+        tiersBtn.tintColor = .white
+        tiersBtn.backgroundColor = UIColor.white.withAlphaComponent(0.20)
+        tiersBtn.layer.borderColor = UIColor.white.withAlphaComponent(0.30).cgColor
+        tiersBtn.layer.borderWidth = 1
+        tiersBtn.layer.cornerRadius = 19
+        tiersBtn.addTarget(self, action: #selector(tiersTapped), for: .touchUpInside)
+        heroHeaderView.addSubview(tiersBtn)
+
         exportBtn.translatesAutoresizingMaskIntoConstraints = false
         exportBtn.setImage(UIImage(systemName: "square.and.arrow.up"), for: .normal)
         exportBtn.tintColor = .white
-        exportBtn.backgroundColor = UIColor.white.withAlphaComponent(0.15)
+        exportBtn.backgroundColor = UIColor.white.withAlphaComponent(0.20)
+        exportBtn.layer.borderColor = UIColor.white.withAlphaComponent(0.30).cgColor
+        exportBtn.layer.borderWidth = 1
         exportBtn.layer.cornerRadius = 19
         exportBtn.addTarget(self, action: #selector(exportTapped), for: .touchUpInside)
         heroHeaderView.addSubview(exportBtn)
@@ -126,7 +146,9 @@ class B2BViewController: UIViewController, UITextFieldDelegate, UITableViewDeleg
         refreshBtn.translatesAutoresizingMaskIntoConstraints = false
         refreshBtn.setImage(UIImage(systemName: "arrow.clockwise"), for: .normal)
         refreshBtn.tintColor = .white
-        refreshBtn.backgroundColor = UIColor.white.withAlphaComponent(0.15)
+        refreshBtn.backgroundColor = UIColor.white.withAlphaComponent(0.20)
+        refreshBtn.layer.borderColor = UIColor.white.withAlphaComponent(0.30).cgColor
+        refreshBtn.layer.borderWidth = 1
         refreshBtn.layer.cornerRadius = 19
         refreshBtn.addTarget(self, action: #selector(refreshTapped), for: .touchUpInside)
         heroHeaderView.addSubview(refreshBtn)
@@ -135,10 +157,9 @@ class B2BViewController: UIViewController, UITextFieldDelegate, UITableViewDeleg
             heroHeaderView.topAnchor.constraint(equalTo: view.topAnchor),
             heroHeaderView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             heroHeaderView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            heroHeaderView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 60),
 
             backBtn.leadingAnchor.constraint(equalTo: heroHeaderView.leadingAnchor, constant: 16),
-            backBtn.bottomAnchor.constraint(equalTo: heroHeaderView.bottomAnchor, constant: -12),
+            backBtn.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 12),
             backBtn.widthAnchor.constraint(equalToConstant: 38),
             backBtn.heightAnchor.constraint(equalToConstant: 38),
 
@@ -153,7 +174,12 @@ class B2BViewController: UIViewController, UITextFieldDelegate, UITableViewDeleg
             refreshBtn.widthAnchor.constraint(equalToConstant: 38),
             refreshBtn.heightAnchor.constraint(equalToConstant: 38),
 
-            exportBtn.trailingAnchor.constraint(equalTo: refreshBtn.leadingAnchor, constant: -8),
+            tiersBtn.trailingAnchor.constraint(equalTo: refreshBtn.leadingAnchor, constant: -8),
+            tiersBtn.centerYAnchor.constraint(equalTo: backBtn.centerYAnchor),
+            tiersBtn.widthAnchor.constraint(equalToConstant: 38),
+            tiersBtn.heightAnchor.constraint(equalToConstant: 38),
+
+            exportBtn.trailingAnchor.constraint(equalTo: tiersBtn.leadingAnchor, constant: -8),
             exportBtn.centerYAnchor.constraint(equalTo: backBtn.centerYAnchor),
             exportBtn.widthAnchor.constraint(equalToConstant: 38),
             exportBtn.heightAnchor.constraint(equalToConstant: 38),
@@ -164,19 +190,19 @@ class B2BViewController: UIViewController, UITextFieldDelegate, UITableViewDeleg
         kpiScrollView.translatesAutoresizingMaskIntoConstraints = false
         kpiScrollView.showsHorizontalScrollIndicator = false
         kpiScrollView.clipsToBounds = false
-        view.addSubview(kpiScrollView)
+        heroHeaderView.addSubview(kpiScrollView)
 
         kpiStackView.translatesAutoresizingMaskIntoConstraints = false
         kpiStackView.axis = .horizontal
-        kpiStackView.spacing = 8
+        kpiStackView.spacing = 10
         kpiStackView.alignment = .fill
         kpiStackView.distribution = .fillProportionally
         kpiScrollView.addSubview(kpiStackView)
 
-        let card1 = createKpiCard(title: "PARTNER AGENCIES", subtitle: "Active Contracts", countLbl: kpiTotalCountLbl, colorHex: "6366F1", iconName: "building.2.fill")
-        let card2 = createKpiCard(title: "TOTAL VOLUME", subtitle: "Referred Samples", countLbl: kpiTotalVolumeLbl, colorHex: "059669", iconName: "testtube.2")
-        let card3 = createKpiCard(title: "BILLED VOLUME", subtitle: "Gross Billing", countLbl: kpiBilledVolumeLbl, colorHex: "0284C7", iconName: "indianrupeesign.circle.fill")
-        let card4 = createKpiCard(title: "PENDING PAYOUT", subtitle: "Unsettled Comm", countLbl: kpiPendingPayoutLbl, colorHex: "D97706", iconName: "clock.arrow.circlepath")
+        let card1 = createKpiCard(title: "PARTNER AGENCIES", subtitle: "Active Contracts", countLbl: kpiTotalCountLbl, dotColor: UIColor(red: 0.388, green: 0.400, blue: 0.945, alpha: 1)) // Indigo
+        let card2 = createKpiCard(title: "TOTAL VOLUME", subtitle: "Referred Samples", countLbl: kpiTotalVolumeLbl, dotColor: UIColor(red: 0.063, green: 0.725, blue: 0.506, alpha: 1)) // Emerald
+        let card3 = createKpiCard(title: "BILLED VOLUME", subtitle: "Gross Billing", countLbl: kpiBilledVolumeLbl, dotColor: UIColor(red: 0.024, green: 0.714, blue: 0.831, alpha: 1)) // Cyan
+        let card4 = createKpiCard(title: "PENDING PAYOUT", subtitle: "Unsettled Comm", countLbl: kpiPendingPayoutLbl, dotColor: UIColor(red: 0.961, green: 0.620, blue: 0.043, alpha: 1)) // Amber
 
         kpiStackView.addArrangedSubview(card1)
         kpiStackView.addArrangedSubview(card2)
@@ -184,10 +210,12 @@ class B2BViewController: UIViewController, UITextFieldDelegate, UITableViewDeleg
         kpiStackView.addArrangedSubview(card4)
 
         NSLayoutConstraint.activate([
-            kpiScrollView.topAnchor.constraint(equalTo: heroHeaderView.bottomAnchor, constant: 12),
-            kpiScrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            kpiScrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            kpiScrollView.heightAnchor.constraint(equalToConstant: 78),
+            kpiScrollView.topAnchor.constraint(equalTo: backBtn.bottomAnchor, constant: 14),
+            kpiScrollView.leadingAnchor.constraint(equalTo: heroHeaderView.leadingAnchor),
+            kpiScrollView.trailingAnchor.constraint(equalTo: heroHeaderView.trailingAnchor),
+            kpiScrollView.heightAnchor.constraint(equalToConstant: 80),
+
+            heroHeaderView.bottomAnchor.constraint(equalTo: kpiScrollView.bottomAnchor, constant: 18),
 
             kpiStackView.topAnchor.constraint(equalTo: kpiScrollView.topAnchor),
             kpiStackView.bottomAnchor.constraint(equalTo: kpiScrollView.bottomAnchor),
@@ -197,61 +225,65 @@ class B2BViewController: UIViewController, UITextFieldDelegate, UITableViewDeleg
         ])
     }
 
-    private func createKpiCard(title: String, subtitle: String, countLbl: UILabel, colorHex: String, iconName: String) -> UIView {
+    private func createKpiCard(title: String, subtitle: String, countLbl: UILabel, dotColor: UIColor) -> UIView {
         let card = UIView()
         card.translatesAutoresizingMaskIntoConstraints = false
-        card.backgroundColor = .white
-        card.layer.cornerRadius = 12
-        card.layer.shadowColor = UIColor.black.cgColor
-        card.layer.shadowOpacity = 0.05
-        card.layer.shadowOffset = CGSize(width: 0, height: 2)
-        card.layer.shadowRadius = 4
-        card.widthAnchor.constraint(equalToConstant: 148).isActive = true
+        card.backgroundColor = UIColor.white.withAlphaComponent(0.16)
+        card.layer.borderColor = UIColor.white.withAlphaComponent(0.25).cgColor
+        card.layer.borderWidth = 1
+        card.layer.cornerRadius = 16
+        card.clipsToBounds = true
+        card.widthAnchor.constraint(equalToConstant: 155).isActive = true
 
-        let topRow = UIStackView()
+        let dot = UIView()
+        dot.translatesAutoresizingMaskIntoConstraints = false
+        dot.backgroundColor = dotColor
+        dot.layer.cornerRadius = 3.5
+
+        let tLbl = UILabel()
+        tLbl.translatesAutoresizingMaskIntoConstraints = false
+        tLbl.text = title
+        tLbl.font = .systemFont(ofSize: 9.5, weight: .bold)
+        tLbl.textColor = UIColor(red: 0.780, green: 0.875, blue: 1.0, alpha: 1)
+
+        let topRow = UIStackView(arrangedSubviews: [dot, tLbl])
         topRow.translatesAutoresizingMaskIntoConstraints = false
         topRow.axis = .horizontal
         topRow.alignment = .center
-        topRow.distribution = .equalSpacing
+        topRow.spacing = 6
 
-        let tLbl = UILabel()
-        tLbl.text = title
-        tLbl.font = .systemFont(ofSize: 9.5, weight: .bold)
-        tLbl.textColor = colorFromHex(colorHex)
-        topRow.addArrangedSubview(tLbl)
-
-        let icon = UIImageView(image: UIImage(systemName: iconName))
-        icon.tintColor = colorFromHex(colorHex).withAlphaComponent(0.6)
-        icon.contentMode = .scaleAspectFit
-        icon.widthAnchor.constraint(equalToConstant: 13).isActive = true
-        icon.heightAnchor.constraint(equalToConstant: 13).isActive = true
-        topRow.addArrangedSubview(icon)
+        NSLayoutConstraint.activate([
+            dot.widthAnchor.constraint(equalToConstant: 7),
+            dot.heightAnchor.constraint(equalToConstant: 7)
+        ])
 
         countLbl.translatesAutoresizingMaskIntoConstraints = false
         countLbl.text = "0"
-        countLbl.font = .systemFont(ofSize: 18, weight: .bold)
-        countLbl.textColor = UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1)
+        countLbl.font = .systemFont(ofSize: 20, weight: .bold)
+        countLbl.textColor = .white
 
         let subLbl = UILabel()
         subLbl.translatesAutoresizingMaskIntoConstraints = false
         subLbl.text = subtitle
-        subLbl.font = .systemFont(ofSize: 10, weight: .medium)
-        subLbl.textColor = UIColor(red: 0.392, green: 0.455, blue: 0.545, alpha: 1)
+        subLbl.font = .systemFont(ofSize: 10.5, weight: .medium)
+        subLbl.textColor = UIColor(red: 0.780, green: 0.875, blue: 1.0, alpha: 0.9)
 
         card.addSubview(topRow)
         card.addSubview(countLbl)
         card.addSubview(subLbl)
 
         NSLayoutConstraint.activate([
-            topRow.topAnchor.constraint(equalTo: card.topAnchor, constant: 10),
-            topRow.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 12),
-            topRow.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -12),
+            topRow.topAnchor.constraint(equalTo: card.topAnchor, constant: 11),
+            topRow.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 13),
+            topRow.trailingAnchor.constraint(lessThanOrEqualTo: card.trailingAnchor, constant: -13),
 
-            countLbl.topAnchor.constraint(equalTo: topRow.bottomAnchor, constant: 3),
-            countLbl.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 12),
+            countLbl.topAnchor.constraint(equalTo: topRow.bottomAnchor, constant: 4),
+            countLbl.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 13),
+            countLbl.trailingAnchor.constraint(lessThanOrEqualTo: card.trailingAnchor, constant: -13),
 
-            subLbl.topAnchor.constraint(equalTo: countLbl.bottomAnchor, constant: 1),
-            subLbl.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 12)
+            subLbl.topAnchor.constraint(equalTo: countLbl.bottomAnchor, constant: 2),
+            subLbl.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 13),
+            subLbl.trailingAnchor.constraint(lessThanOrEqualTo: card.trailingAnchor, constant: -13)
         ])
 
         return card
@@ -288,7 +320,7 @@ class B2BViewController: UIViewController, UITextFieldDelegate, UITableViewDeleg
         searchContainer.addSubview(clearSearchBtn)
 
         NSLayoutConstraint.activate([
-            searchContainer.topAnchor.constraint(equalTo: kpiScrollView.bottomAnchor, constant: 10),
+            searchContainer.topAnchor.constraint(equalTo: heroHeaderView.bottomAnchor, constant: 14),
             searchContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             searchContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             searchContainer.heightAnchor.constraint(equalToConstant: 40),
@@ -484,12 +516,40 @@ class B2BViewController: UIViewController, UITextFieldDelegate, UITableViewDeleg
     // ─────────────────────────────────────────────────────────────────────────
     //  DATA FETCHING & FILTERING
     // ─────────────────────────────────────────────────────────────────────────
+    private func getAuthToken() -> String? {
+        if let token = KeychainManager.shared.getToken(), !token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return token.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        if let token = UserDefaults.standard.string(forKey: "auth_token"), !token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return token.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        if let token = UserDefaults.standard.string(forKey: "token"), !token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return token.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        if let cookies = HTTPCookieStorage.shared.cookies {
+            for cookie in cookies {
+                if (cookie.name == "token" || cookie.name == "auth-token" || cookie.name == "auth_token") && !cookie.value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    let cookieToken = cookie.value.trimmingCharacters(in: .whitespacesAndNewlines)
+                    KeychainManager.save(cookieToken, forKey: KeychainManager.tokenKey)
+                    return cookieToken
+                }
+            }
+        }
+        return nil
+    }
+
+    @objc private func tiersTapped() {
+        let vc = B2BSettingsViewController()
+        vc.modalPresentationStyle = .fullScreen
+        present(vc, animated: true, completion: nil)
+    }
+
     private func loadAgenciesData(isManual: Bool) {
         if !refreshControl.isRefreshing {
             loadingIndicator.startAnimating()
         }
 
-        guard let token = KeychainManager.shared.getToken(),
+        guard let token = getAuthToken(),
               let url = URL(string: "\(Self.baseUrl)/api/workspace/b2b/agencies") else {
             loadingIndicator.stopAnimating()
             refreshControl.endRefreshing()
@@ -499,7 +559,7 @@ class B2BViewController: UIViewController, UITextFieldDelegate, UITableViewDeleg
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
+        request.setValue("token=\(token); auth-token=\(token); auth_token=\(token)", forHTTPHeaderField: "Cookie")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
 
         URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
@@ -515,10 +575,10 @@ class B2BViewController: UIViewController, UITextFieldDelegate, UITableViewDeleg
                 do {
                     if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
                         let agencies = json["agencies"] as? [[String: Any]] ?? []
-                        let stats = json["stats"] as? [String: Any]
+                        let kpis = (json["kpis"] as? [String: Any]) ?? (json["stats"] as? [String: Any])
 
                         self.allAgencies = agencies
-                        self.updateKpiUi(stats: stats)
+                        self.updateKpiUi(kpis: kpis)
                         self.applyFilterAndSearch()
 
                         if isManual {
@@ -532,11 +592,20 @@ class B2BViewController: UIViewController, UITextFieldDelegate, UITableViewDeleg
         }.resume()
     }
 
-    private func updateKpiUi(stats: [String: Any]?) {
-        let count = stats?["totalAgencies"] as? Int ?? allAgencies.count
-        let volume = stats?["totalVolume"] as? Int ?? 0
-        let billed = stats?["totalBilled"] as? Double ?? 0.0
-        let pending = stats?["pendingPayout"] as? Double ?? 0.0
+    private func updateKpiUi(kpis: [String: Any]?) {
+        var count = kpis?["totalAgencies"] as? Int ?? allAgencies.count
+        var volume = (kpis?["totalReferrals"] as? Int) ?? (kpis?["totalVolume"] as? Int) ?? 0
+        var billed = (kpis?["totalCommission"] as? Double) ?? (kpis?["totalBilled"] as? Double) ?? 0.0
+        var pending = (kpis?["pendingCommission"] as? Double) ?? (kpis?["pendingPayout"] as? Double) ?? 0.0
+
+        if count == 0 && volume == 0 && billed == 0 && pending == 0 {
+            count = allAgencies.count
+            for a in allAgencies {
+                volume += (a["totalReferrals"] as? Int) ?? ((a["stats"] as? [String: Any])?["totalTests"] as? Int) ?? 0
+                billed += (a["totalCommission"] as? Double) ?? ((a["stats"] as? [String: Any])?["totalCommission"] as? Double) ?? 0.0
+                pending += (a["pendingCommission"] as? Double) ?? ((a["stats"] as? [String: Any])?["pendingCommission"] as? Double) ?? 0.0
+            }
+        }
 
         kpiTotalCountLbl.text = "\(count)"
         kpiTotalVolumeLbl.text = "\(volume)"
@@ -698,7 +767,7 @@ class B2BViewController: UIViewController, UITextFieldDelegate, UITableViewDeleg
         let isEdit = agencyToEdit != nil
         let alert = UIAlertController(
             title: isEdit ? "Edit Corporate Agency" : "Add Corporate Agency",
-            message: "Configure agency contract, contact details and pricing tier.",
+            message: "Configure agency contract, contact details, tier and portal login.",
             preferredStyle: .alert
         )
 
@@ -728,8 +797,12 @@ class B2BViewController: UIViewController, UITextFieldDelegate, UITableViewDeleg
             }
         }
         alert.addTextField { tf in
-            tf.placeholder = "Tier (STANDARD, TIER_1, TIER_2, TIER_3)"
+            tf.placeholder = "Tier (STANDARD, BRONZE, SILVER, GOLD, PLATINUM)"
             tf.text = (agencyToEdit?["agencyTier"] as? String) ?? "STANDARD"
+        }
+        alert.addTextField { tf in
+            tf.placeholder = isEdit ? "Reset Password (leave blank to keep)" : "Portal Password (min 6 chars, optional)"
+            tf.isSecureTextEntry = true
         }
 
         let saveAction = UIAlertAction(title: isEdit ? "Update" : "Save", style: .default) { [weak self] _ in
@@ -740,6 +813,7 @@ class B2BViewController: UIViewController, UITextFieldDelegate, UITableViewDeleg
             let email = alert.textFields?[3].text?.trimmingCharacters(in: .whitespaces) ?? ""
             let rateStr = alert.textFields?[4].text?.trimmingCharacters(in: .whitespaces) ?? "10"
             let tier = alert.textFields?[5].text?.trimmingCharacters(in: .whitespaces).uppercased() ?? "STANDARD"
+            let password = alert.textFields?[6].text?.trimmingCharacters(in: .whitespaces) ?? ""
 
             if name.isEmpty || contact.isEmpty || phone.isEmpty {
                 self.showToast("Please fill all required fields")
@@ -753,23 +827,24 @@ class B2BViewController: UIViewController, UITextFieldDelegate, UITableViewDeleg
                 phone: phone,
                 email: email,
                 rate: Double(rateStr) ?? 10.0,
-                tier: tier
+                tier: tier,
+                password: password
             )
         }
 
         alert.addAction(saveAction)
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, completion: nil))
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
         present(alert, animated: true, completion: nil)
     }
 
-    private func submitAgency(id: String?, name: String, contact: String, phone: String, email: String, rate: Double, tier: String) {
-        guard let token = KeychainManager.shared.getToken(),
+    private func submitAgency(id: String?, name: String, contact: String, phone: String, email: String, rate: Double, tier: String, password: String = "") {
+        guard let token = getAuthToken(),
               let url = URL(string: "\(Self.baseUrl)/api/workspace/b2b/agencies") else { return }
 
         var request = URLRequest(url: url)
         request.httpMethod = id != nil ? "PATCH" : "POST"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
+        request.setValue("token=\(token); auth-token=\(token); auth_token=\(token)", forHTTPHeaderField: "Cookie")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
         var payload: [String: Any] = [
@@ -783,18 +858,34 @@ class B2BViewController: UIViewController, UITextFieldDelegate, UITableViewDeleg
         ]
         if let id = id {
             payload["id"] = id
+            payload["isActive"] = true
+            if !password.isEmpty {
+                payload["resetPassword"] = password
+            }
+        } else {
+            if !password.isEmpty {
+                payload["createLogin"] = true
+                payload["loginEmail"] = email
+                payload["loginPassword"] = password
+            }
         }
 
         request.httpBody = try? JSONSerialization.data(withJSONObject: payload)
 
         URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+            let code = (response as? HTTPURLResponse)?.statusCode ?? 0
+            var errorMsg: String? = nil
+            if let data = data, let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                errorMsg = json["error"] as? String
+            }
             DispatchQueue.main.async {
-                guard let self = self, error == nil else {
-                    self?.showToast("Network error")
-                    return
+                guard let self = self else { return }
+                if code >= 200 && code < 300 {
+                    self.showToast(id != nil ? "Agency updated successfully!" : "Corporate agency created!")
+                    self.loadAgenciesData(isManual: false)
+                } else {
+                    self.showToast(errorMsg ?? "Failed to save agency (HTTP \(code))")
                 }
-                self.showToast(id != nil ? "Agency updated" : "Corporate agency created")
-                self.loadAgenciesData(isManual: false)
             }
         }.resume()
     }
@@ -812,23 +903,28 @@ class B2BViewController: UIViewController, UITextFieldDelegate, UITableViewDeleg
         alert.addAction(UIAlertAction(title: "Delete", style: .destructive) { [weak self] _ in
             self?.deleteAgency(id: id)
         })
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, completion: nil))
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
         present(alert, animated: true, completion: nil)
     }
 
     private func deleteAgency(id: String) {
-        guard let token = KeychainManager.shared.getToken(),
+        guard let token = getAuthToken(),
               let url = URL(string: "\(Self.baseUrl)/api/workspace/b2b/agencies?id=\(id)") else { return }
 
         var request = URLRequest(url: url)
         request.httpMethod = "DELETE"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
+        request.setValue("token=\(token); auth-token=\(token); auth_token=\(token)", forHTTPHeaderField: "Cookie")
 
         URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+            let code = (response as? HTTPURLResponse)?.statusCode ?? 0
             DispatchQueue.main.async {
-                self?.showToast("Agency removed")
-                self?.loadAgenciesData(isManual: false)
+                if code >= 200 && code < 300 {
+                    self?.showToast("Agency removed successfully")
+                    self?.loadAgenciesData(isManual: false)
+                } else {
+                    self?.showToast("Failed to remove agency")
+                }
             }
         }.resume()
     }
@@ -836,17 +932,16 @@ class B2BViewController: UIViewController, UITextFieldDelegate, UITableViewDeleg
     // ── Agency Ledger Sheet ──
     private func showLedgerSheet(agency: [String: Any]) {
         let name = agency["agencyName"] as? String ?? "Agency"
-        let stats = agency["stats"] as? [String: Any]
-        let earned = stats?["totalCommission"] as? Double ?? 0.0
-        let due = stats?["pendingCommission"] as? Double ?? 0.0
-        let paid = max(0, earned - due)
+        let earned = (agency["totalCommission"] as? Double) ?? ((agency["stats"] as? [String: Any])?["totalCommission"] as? Double) ?? 0.0
+        let due = (agency["pendingCommission"] as? Double) ?? ((agency["stats"] as? [String: Any])?["pendingCommission"] as? Double) ?? 0.0
+        let paid = (agency["paidCommission"] as? Double) ?? max(0, earned - due)
 
         let alert = UIAlertController(
             title: "\(name) Ledger",
             message: "Total Commission: ₹\(String(format: "%,.0f", earned))\nPaid Out: ₹\(String(format: "%,.0f", paid))\nBalance Due: ₹\(String(format: "%,.0f", due))",
             preferredStyle: .alert
         )
-        alert.addAction(UIAlertAction(title: "Close", style: .default, completion: nil))
+        alert.addAction(UIAlertAction(title: "Close", style: .default, handler: nil))
         present(alert, animated: true, completion: nil)
     }
 
@@ -1127,16 +1222,20 @@ class AgencyCardCell: UITableViewCell {
 
         // Tier badge
         switch tier {
-        case "TIER_1":
-            tierBadge.text = "  TIER 1 (SILVER)  "
+        case "BRONZE":
+            tierBadge.text = "  BRONZE  "
+            tierBadge.textColor = UIColor(red: 0.706, green: 0.325, blue: 0.035, alpha: 1)
+            tierBadge.backgroundColor = UIColor(red: 0.996, green: 0.953, blue: 0.780, alpha: 1)
+        case "SILVER", "TIER_1":
+            tierBadge.text = "  SILVER  "
             tierBadge.textColor = UIColor(red: 0.008, green: 0.518, blue: 0.780, alpha: 1)
             tierBadge.backgroundColor = UIColor(red: 0.878, green: 0.949, blue: 0.996, alpha: 1)
-        case "TIER_2":
-            tierBadge.text = "  TIER 2 (GOLD)  "
+        case "GOLD", "TIER_2":
+            tierBadge.text = "  GOLD  "
             tierBadge.textColor = UIColor(red: 0.851, green: 0.467, blue: 0.024, alpha: 1)
             tierBadge.backgroundColor = UIColor(red: 0.996, green: 0.953, blue: 0.780, alpha: 1)
-        case "TIER_3":
-            tierBadge.text = "  TIER 3 (PLATINUM)  "
+        case "PLATINUM", "TIER_3":
+            tierBadge.text = "  PLATINUM  "
             tierBadge.textColor = UIColor(red: 0.486, green: 0.227, blue: 0.929, alpha: 1)
             tierBadge.backgroundColor = UIColor(red: 0.929, green: 0.914, blue: 0.996, alpha: 1)
         default:
@@ -1146,23 +1245,37 @@ class AgencyCardCell: UITableViewCell {
         }
 
         // Portal badge
-        let hasUser = agency["user"] != nil && !(agency["user"] is NSNull)
+        let hasUser = (agency["hasLogin"] as? Bool) ?? (agency["user"] != nil && !(agency["user"] is NSNull))
         if hasUser {
             portalBadge.text = "  PORTAL ACTIVE  "
             portalBadge.textColor = UIColor(red: 0.020, green: 0.588, blue: 0.412, alpha: 1)
             portalBadge.backgroundColor = UIColor(red: 0.820, green: 0.980, blue: 0.898, alpha: 1)
         } else {
-            portalBadge.text = "  NO PORTAL  "
+            portalBadge.text = "  NO PORTAL LOGIN  "
             portalBadge.textColor = UIColor(red: 0.580, green: 0.639, blue: 0.722, alpha: 1)
             portalBadge.backgroundColor = UIColor(red: 0.945, green: 0.961, blue: 0.976, alpha: 1)
         }
 
-        commRatePill.text = "  \(String(format: "%.1f", rate))% Comm  "
+        let commType = agency["commissionType"] as? String ?? "PERCENTAGE"
+        if commType.caseInsensitiveCompare("FIXED") == .orderedSame {
+            commRatePill.text = "  ₹\(String(format: "%,.0f", rate)) Fixed  "
+        } else {
+            commRatePill.text = "  \(String(format: "%.1f", rate))% Comm  "
+        }
 
-        let stats = agency["stats"] as? [String: Any]
-        let tests = stats?["totalTests"] as? Int ?? 0
-        let billed = stats?["totalBilled"] as? Double ?? 0.0
-        let pending = stats?["pendingCommission"] as? Double ?? 0.0
+        let tests = (agency["totalReferrals"] as? Int) ?? ((agency["stats"] as? [String: Any])?["totalTests"] as? Int) ?? 0
+        let earned = (agency["totalCommission"] as? Double) ?? ((agency["stats"] as? [String: Any])?["totalCommission"] as? Double) ?? 0.0
+        let pending = (agency["pendingCommission"] as? Double) ?? ((agency["stats"] as? [String: Any])?["pendingCommission"] as? Double) ?? 0.0
+
+        var billed: Double = 0.0
+        if let comms = agency["commissions"] as? [[String: Any]] {
+            for c in comms {
+                billed += (c["testPrice"] as? Double) ?? ((c["testPrice"] as? NSNumber)?.doubleValue ?? 0.0)
+            }
+        }
+        if billed == 0.0 {
+            billed = (agency["totalBilled"] as? Double) ?? ((agency["stats"] as? [String: Any])?["totalBilled"] as? Double) ?? earned
+        }
 
         testsCountLbl.text = "\(tests)"
         billedVolumeLbl.text = "₹" + String(format: "%,.0f", billed)

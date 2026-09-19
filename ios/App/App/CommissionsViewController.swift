@@ -91,17 +91,23 @@ class CommissionsViewController: UIViewController, UITextFieldDelegate, UITableV
 
         heroGradientLayer.colors = [
             UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1).cgColor, // #0D6EFD
+            UIColor(red: 0.039, green: 0.345, blue: 0.792, alpha: 1).cgColor, // #0A58CA
             UIColor(red: 0.114, green: 0.306, blue: 0.847, alpha: 1).cgColor  // #1D4ED8
         ]
         heroGradientLayer.startPoint = CGPoint(x: 0, y: 0)
         heroGradientLayer.endPoint   = CGPoint(x: 1, y: 1)
         heroHeaderView.layer.insertSublayer(heroGradientLayer, at: 0)
+        heroHeaderView.layer.cornerRadius = 28
+        heroHeaderView.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
+        heroHeaderView.clipsToBounds = true
 
         backBtn.translatesAutoresizingMaskIntoConstraints = false
-        backBtn.setImage(UIImage(systemName: "arrow.left"), for: .normal)
+        backBtn.setImage(UIImage(systemName: "chevron.left"), for: .normal)
         backBtn.tintColor = .white
-        backBtn.backgroundColor = UIColor.white.withAlphaComponent(0.15)
+        backBtn.backgroundColor = UIColor.white.withAlphaComponent(0.20)
         backBtn.layer.cornerRadius = 19
+        backBtn.layer.borderWidth = 1
+        backBtn.layer.borderColor = UIColor.white.withAlphaComponent(0.30).cgColor
         backBtn.addTarget(self, action: #selector(backTapped), for: .touchUpInside)
         heroHeaderView.addSubview(backBtn)
 
@@ -120,8 +126,10 @@ class CommissionsViewController: UIViewController, UITextFieldDelegate, UITableV
         refreshBtn.translatesAutoresizingMaskIntoConstraints = false
         refreshBtn.setImage(UIImage(systemName: "arrow.clockwise"), for: .normal)
         refreshBtn.tintColor = .white
-        refreshBtn.backgroundColor = UIColor.white.withAlphaComponent(0.15)
+        refreshBtn.backgroundColor = UIColor.white.withAlphaComponent(0.20)
         refreshBtn.layer.cornerRadius = 19
+        refreshBtn.layer.borderWidth = 1
+        refreshBtn.layer.borderColor = UIColor.white.withAlphaComponent(0.30).cgColor
         refreshBtn.addTarget(self, action: #selector(refreshTapped), for: .touchUpInside)
         heroHeaderView.addSubview(refreshBtn)
 
@@ -129,10 +137,9 @@ class CommissionsViewController: UIViewController, UITextFieldDelegate, UITableV
             heroHeaderView.topAnchor.constraint(equalTo: view.topAnchor),
             heroHeaderView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             heroHeaderView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            heroHeaderView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 60),
 
             backBtn.leadingAnchor.constraint(equalTo: heroHeaderView.leadingAnchor, constant: 16),
-            backBtn.bottomAnchor.constraint(equalTo: heroHeaderView.bottomAnchor, constant: -12),
+            backBtn.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 12),
             backBtn.widthAnchor.constraint(equalToConstant: 38),
             backBtn.heightAnchor.constraint(equalToConstant: 38),
 
@@ -153,19 +160,19 @@ class CommissionsViewController: UIViewController, UITextFieldDelegate, UITableV
         kpiScrollView.translatesAutoresizingMaskIntoConstraints = false
         kpiScrollView.showsHorizontalScrollIndicator = false
         kpiScrollView.clipsToBounds = false
-        view.addSubview(kpiScrollView)
+        heroHeaderView.addSubview(kpiScrollView)
 
         kpiStackView.translatesAutoresizingMaskIntoConstraints = false
         kpiStackView.axis = .horizontal
-        kpiStackView.spacing = 8
+        kpiStackView.spacing = 10
         kpiStackView.alignment = .fill
         kpiStackView.distribution = .fillProportionally
         kpiScrollView.addSubview(kpiStackView)
 
-        let card1 = createKpiCard(title: "TOTAL COMMISSIONS", subtitle: "Gross Earned", countLbl: kpiTotalCommLbl, colorHex: "6366F1", iconName: "banknote.fill")
-        let card2 = createKpiCard(title: "PENDING PAYOUTS", subtitle: "Unsettled Due", countLbl: kpiPendingCommLbl, colorHex: "D97706", iconName: "clock.arrow.circlepath")
-        let card3 = createKpiCard(title: "SETTLED DISBURSED", subtitle: "Paid to Partners", countLbl: kpiSettledCommLbl, colorHex: "059669", iconName: "checkmark.seal.fill")
-        let card4 = createKpiCard(title: "ACTIVE REFERRERS", subtitle: "Doctors & Labs", countLbl: kpiActiveRefLbl, colorHex: "0284C7", iconName: "person.2.fill")
+        let card1 = createKpiCard(title: "TOTAL COMMISSIONS", subtitle: "Gross Earned", countLbl: kpiTotalCommLbl, dotColor: UIColor(red: 0.388, green: 0.400, blue: 0.945, alpha: 1)) // Indigo
+        let card2 = createKpiCard(title: "PENDING PAYOUTS", subtitle: "Unsettled Due", countLbl: kpiPendingCommLbl, dotColor: UIColor(red: 0.961, green: 0.620, blue: 0.043, alpha: 1)) // Amber
+        let card3 = createKpiCard(title: "SETTLED DISBURSED", subtitle: "Paid to Partners", countLbl: kpiSettledCommLbl, dotColor: UIColor(red: 0.063, green: 0.725, blue: 0.506, alpha: 1)) // Emerald
+        let card4 = createKpiCard(title: "ACTIVE REFERRERS", subtitle: "Doctors & Labs", countLbl: kpiActiveRefLbl, dotColor: UIColor(red: 0.024, green: 0.714, blue: 0.831, alpha: 1)) // Cyan
 
         kpiStackView.addArrangedSubview(card1)
         kpiStackView.addArrangedSubview(card2)
@@ -173,10 +180,12 @@ class CommissionsViewController: UIViewController, UITextFieldDelegate, UITableV
         kpiStackView.addArrangedSubview(card4)
 
         NSLayoutConstraint.activate([
-            kpiScrollView.topAnchor.constraint(equalTo: heroHeaderView.bottomAnchor, constant: 12),
-            kpiScrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            kpiScrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            kpiScrollView.heightAnchor.constraint(equalToConstant: 78),
+            kpiScrollView.topAnchor.constraint(equalTo: backBtn.bottomAnchor, constant: 14),
+            kpiScrollView.leadingAnchor.constraint(equalTo: heroHeaderView.leadingAnchor),
+            kpiScrollView.trailingAnchor.constraint(equalTo: heroHeaderView.trailingAnchor),
+            kpiScrollView.heightAnchor.constraint(equalToConstant: 80),
+
+            heroHeaderView.bottomAnchor.constraint(equalTo: kpiScrollView.bottomAnchor, constant: 18),
 
             kpiStackView.topAnchor.constraint(equalTo: kpiScrollView.topAnchor),
             kpiStackView.bottomAnchor.constraint(equalTo: kpiScrollView.bottomAnchor),
@@ -186,61 +195,65 @@ class CommissionsViewController: UIViewController, UITextFieldDelegate, UITableV
         ])
     }
 
-    private func createKpiCard(title: String, subtitle: String, countLbl: UILabel, colorHex: String, iconName: String) -> UIView {
+    private func createKpiCard(title: String, subtitle: String, countLbl: UILabel, dotColor: UIColor) -> UIView {
         let card = UIView()
         card.translatesAutoresizingMaskIntoConstraints = false
-        card.backgroundColor = .white
-        card.layer.cornerRadius = 12
-        card.layer.shadowColor = UIColor.black.cgColor
-        card.layer.shadowOpacity = 0.05
-        card.layer.shadowOffset = CGSize(width: 0, height: 2)
-        card.layer.shadowRadius = 4
-        card.widthAnchor.constraint(equalToConstant: 148).isActive = true
+        card.backgroundColor = UIColor.white.withAlphaComponent(0.16)
+        card.layer.borderColor = UIColor.white.withAlphaComponent(0.25).cgColor
+        card.layer.borderWidth = 1
+        card.layer.cornerRadius = 16
+        card.clipsToBounds = true
+        card.widthAnchor.constraint(equalToConstant: 155).isActive = true
 
-        let topRow = UIStackView()
+        let dot = UIView()
+        dot.translatesAutoresizingMaskIntoConstraints = false
+        dot.backgroundColor = dotColor
+        dot.layer.cornerRadius = 3.5
+
+        let tLbl = UILabel()
+        tLbl.translatesAutoresizingMaskIntoConstraints = false
+        tLbl.text = title
+        tLbl.font = .systemFont(ofSize: 9.5, weight: .bold)
+        tLbl.textColor = UIColor(red: 0.780, green: 0.875, blue: 1.0, alpha: 1) // #C7DFFF
+
+        let topRow = UIStackView(arrangedSubviews: [dot, tLbl])
         topRow.translatesAutoresizingMaskIntoConstraints = false
         topRow.axis = .horizontal
         topRow.alignment = .center
-        topRow.distribution = .equalSpacing
+        topRow.spacing = 6
 
-        let tLbl = UILabel()
-        tLbl.text = title
-        tLbl.font = .systemFont(ofSize: 9.5, weight: .bold)
-        tLbl.textColor = colorFromHex(colorHex)
-        topRow.addArrangedSubview(tLbl)
-
-        let icon = UIImageView(image: UIImage(systemName: iconName))
-        icon.tintColor = colorFromHex(colorHex).withAlphaComponent(0.6)
-        icon.contentMode = .scaleAspectFit
-        icon.widthAnchor.constraint(equalToConstant: 13).isActive = true
-        icon.heightAnchor.constraint(equalToConstant: 13).isActive = true
-        topRow.addArrangedSubview(icon)
+        NSLayoutConstraint.activate([
+            dot.widthAnchor.constraint(equalToConstant: 7),
+            dot.heightAnchor.constraint(equalToConstant: 7)
+        ])
 
         countLbl.translatesAutoresizingMaskIntoConstraints = false
-        countLbl.text = "0"
-        countLbl.font = .systemFont(ofSize: 18, weight: .bold)
-        countLbl.textColor = UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1)
+        countLbl.text = "₹0"
+        countLbl.font = .systemFont(ofSize: 20, weight: .bold)
+        countLbl.textColor = .white
 
         let subLbl = UILabel()
         subLbl.translatesAutoresizingMaskIntoConstraints = false
         subLbl.text = subtitle
-        subLbl.font = .systemFont(ofSize: 10, weight: .medium)
-        subLbl.textColor = UIColor(red: 0.392, green: 0.455, blue: 0.545, alpha: 1)
+        subLbl.font = .systemFont(ofSize: 10.5, weight: .medium)
+        subLbl.textColor = UIColor(red: 0.780, green: 0.875, blue: 1.0, alpha: 0.9)
 
         card.addSubview(topRow)
         card.addSubview(countLbl)
         card.addSubview(subLbl)
 
         NSLayoutConstraint.activate([
-            topRow.topAnchor.constraint(equalTo: card.topAnchor, constant: 10),
-            topRow.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 12),
-            topRow.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -12),
+            topRow.topAnchor.constraint(equalTo: card.topAnchor, constant: 11),
+            topRow.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 13),
+            topRow.trailingAnchor.constraint(lessThanOrEqualTo: card.trailingAnchor, constant: -13),
 
-            countLbl.topAnchor.constraint(equalTo: topRow.bottomAnchor, constant: 3),
-            countLbl.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 12),
+            countLbl.topAnchor.constraint(equalTo: topRow.bottomAnchor, constant: 4),
+            countLbl.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 13),
+            countLbl.trailingAnchor.constraint(lessThanOrEqualTo: card.trailingAnchor, constant: -13),
 
-            subLbl.topAnchor.constraint(equalTo: countLbl.bottomAnchor, constant: 1),
-            subLbl.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 12)
+            subLbl.topAnchor.constraint(equalTo: countLbl.bottomAnchor, constant: 2),
+            subLbl.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 13),
+            subLbl.trailingAnchor.constraint(lessThanOrEqualTo: card.trailingAnchor, constant: -13)
         ])
 
         return card
@@ -269,7 +282,7 @@ class CommissionsViewController: UIViewController, UITextFieldDelegate, UITableV
         tabStackView.addArrangedSubview(tabAgenciesBtn)
 
         NSLayoutConstraint.activate([
-            tabStackView.topAnchor.constraint(equalTo: kpiScrollView.bottomAnchor, constant: 10),
+            tabStackView.topAnchor.constraint(equalTo: heroHeaderView.bottomAnchor, constant: 14),
             tabStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             tabStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             tabStackView.heightAnchor.constraint(equalToConstant: 38)
@@ -436,7 +449,7 @@ class CommissionsViewController: UIViewController, UITextFieldDelegate, UITableV
         }
         if let cookies = HTTPCookieStorage.shared.cookies {
             for cookie in cookies {
-                if cookie.name == "token" && !cookie.value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                if (cookie.name == "token" || cookie.name == "auth-token" || cookie.name == "auth_token") && !cookie.value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     let cookieToken = cookie.value.trimmingCharacters(in: .whitespacesAndNewlines)
                     KeychainManager.save(cookieToken, forKey: KeychainManager.tokenKey)
                     return cookieToken
@@ -464,7 +477,7 @@ class CommissionsViewController: UIViewController, UITextFieldDelegate, UITableV
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
+        request.setValue("token=\(token); auth-token=\(token); auth_token=\(token)", forHTTPHeaderField: "Cookie")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
 
         URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
@@ -479,7 +492,7 @@ class CommissionsViewController: UIViewController, UITextFieldDelegate, UITableV
 
                 do {
                     if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                        let stats = json["stats"] as? [String: Any]
+                        let kpis = json["kpis"] as? [String: Any] ?? json["stats"] as? [String: Any]
                         let docs = json["doctors"] as? [[String: Any]] ?? []
                         let ags = json["agencies"] as? [[String: Any]] ?? []
 
@@ -489,7 +502,7 @@ class CommissionsViewController: UIViewController, UITextFieldDelegate, UITableV
                         self.tabDoctorsBtn.setTitle("Referring Doctors (\(docs.count))", for: .normal)
                         self.tabAgenciesBtn.setTitle("Corporate Agencies (\(ags.count))", for: .normal)
 
-                        self.updateKpiUi(stats: stats)
+                        self.updateKpiUi(kpis: kpis)
                         self.switchTab(toDoctors: self.isDoctorTab)
 
                         if isManual {
@@ -503,11 +516,24 @@ class CommissionsViewController: UIViewController, UITextFieldDelegate, UITableV
         }.resume()
     }
 
-    private func updateKpiUi(stats: [String: Any]?) {
-        let total = stats?["totalCommissions"] as? Double ?? 0.0
-        let pending = stats?["pendingPayouts"] as? Double ?? 0.0
-        let settled = stats?["settledPayouts"] as? Double ?? 0.0
-        let count = (stats?["doctorCount"] as? Int ?? doctorList.count) + (stats?["agencyCount"] as? Int ?? agencyList.count)
+    private func updateKpiUi(kpis: [String: Any]?) {
+        var total = kpis?["totalGenerated"] as? Double ?? kpis?["totalCommissions"] as? Double ?? 0.0
+        var pending = kpis?["totalPending"] as? Double ?? kpis?["pendingPayouts"] as? Double ?? 0.0
+        var settled = kpis?["totalPaid"] as? Double ?? kpis?["settledPayouts"] as? Double ?? 0.0
+        var count = kpis?["activePartners"] as? Int ?? ((kpis?["doctorCount"] as? Int ?? doctorList.count) + (kpis?["agencyCount"] as? Int ?? agencyList.count))
+
+        if total == 0 && pending == 0 && settled == 0 {
+            for d in doctorList {
+                pending += d["totalPending"] as? Double ?? d["pendingCommission"] as? Double ?? 0.0
+                settled += d["totalPaid"] as? Double ?? d["paidCommission"] as? Double ?? 0.0
+            }
+            for a in agencyList {
+                pending += a["totalPending"] as? Double ?? a["pendingCommission"] as? Double ?? 0.0
+                settled += a["totalPaid"] as? Double ?? a["paidCommission"] as? Double ?? 0.0
+            }
+            total = pending + settled
+            count = doctorList.count + agencyList.count
+        }
 
         kpiTotalCommLbl.text = "₹" + String(format: "%,.0f", total)
         kpiPendingCommLbl.text = "₹" + String(format: "%,.0f", pending)
@@ -525,7 +551,7 @@ class CommissionsViewController: UIViewController, UITextFieldDelegate, UITableV
     private func applyFilterAndSearch() {
         filteredList = currentTabList.filter { item in
             let name = (item["name"] as? String ?? "").lowercased()
-            let phone = (item["phone"] as? String ?? "").lowercased()
+            let phone = (item["contact"] as? String ?? item["phone"] as? String ?? "").lowercased()
             let cat = ((item["specialization"] as? String) ?? (item["tier"] as? String) ?? "").lowercased()
 
             let q = searchQuery.lowercased()
@@ -620,13 +646,26 @@ class CommissionsViewController: UIViewController, UITextFieldDelegate, UITableV
     // ── Settle Commission Sheet ──
     private func showSettleSheet(referrer: [String: Any]) {
         let name = referrer["name"] as? String ?? "Partner"
-        let due = referrer["pendingCommission"] as? Double ?? 0.0
-        let entityType = isDoctorTab ? "DOCTOR" : "AGENCY"
-        guard let entityId = referrer["id"] as? String else { return }
+        let due = referrer["totalPending"] as? Double ?? referrer["pendingCommission"] as? Double ?? 0.0
+
+        // Extract pending commission IDs from recentCommissions array
+        let recentCommissions = referrer["recentCommissions"] as? [[String: Any]] ?? []
+        var pendingIds: [String] = []
+        for comm in recentCommissions {
+            if (comm["status"] as? String)?.uppercased() == "PENDING",
+               let cId = comm["id"] as? String, !cId.isEmpty {
+                pendingIds.append(cId)
+            }
+        }
+
+        if pendingIds.isEmpty && due <= 0 {
+            showToast("No pending commissions found to settle for \(name)")
+            return
+        }
 
         let alert = UIAlertController(
             title: "Settle Commission",
-            message: "Disburse payout to \(name).\nOutstanding Due: ₹\(String(format: "%,.0f", due))",
+            message: "Disburse payout to \(name).\nOutstanding Due: ₹\(String(format: "%,.0f", due)) (\(pendingIds.count) pending records)",
             preferredStyle: .alert
         )
 
@@ -654,30 +693,34 @@ class CommissionsViewController: UIViewController, UITextFieldDelegate, UITableV
                 return
             }
 
-            self.submitSettlement(entityType: entityType, entityId: entityId, amount: amount, mode: mode, note: note)
+            self.submitSettlement(commissionIds: pendingIds, amount: amount, mode: mode, note: note)
         }
 
         alert.addAction(confirmAction)
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, completion: nil))
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
         present(alert, animated: true, completion: nil)
     }
 
-    private func submitSettlement(entityType: String, entityId: String, amount: Double, mode: String, note: String) {
+    private func submitSettlement(commissionIds: [String], amount: Double, mode: String, note: String) {
+        guard !commissionIds.isEmpty else {
+            showToast("No pending commission IDs to settle")
+            return
+        }
+
         guard let token = getAuthToken(),
               let url = URL(string: "\(Self.baseUrl)/api/workspace/commissions") else { return }
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
+        request.setValue("token=\(token); auth-token=\(token); auth_token=\(token)", forHTTPHeaderField: "Cookie")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
 
+        let fullRef = "\(mode)\(note.isEmpty ? "" : " - \(note)")"
         let payload: [String: Any] = [
-            "entityType": entityType,
-            "entityId": entityId,
-            "amount": amount,
-            "paymentMode": mode,
-            "referenceNote": note
+            "commissionIds": commissionIds,
+            "transactionRef": fullRef
         ]
         request.httpBody = try? JSONSerialization.data(withJSONObject: payload)
 
@@ -687,7 +730,7 @@ class CommissionsViewController: UIViewController, UITextFieldDelegate, UITableV
                     self?.showToast("Network error")
                     return
                 }
-                self.showToast("₹\(String(format: "%,.0f", amount)) payout settled successfully!")
+                self.showToast("₹\(String(format: "%,.0f", amount)) payout settled successfully (\(commissionIds.count) records)!")
                 self.loadCommissionsData(isManual: false)
             }
         }.resume()
@@ -922,18 +965,33 @@ class CommissionReferrerCell: UITableViewCell {
 
     func configure(item: [String: Any], isDoctor: Bool) {
         let name = item["name"] as? String ?? "Partner"
-        let phone = item["phone"] as? String ?? ""
-        let cat = isDoctor ? (item["specialization"] as? String ?? "Doctor") : (item["tier"] as? String ?? "STANDARD")
-        let referrals = item["totalReferred"] as? Int ?? 0
-        let billed = item["totalBilled"] as? Double ?? 0.0
+        let phone = item["contact"] as? String ?? item["phone"] as? String ?? ""
+        let cat = isDoctor ? (item["specialization"] as? String ?? "General Practice") : (item["tier"] as? String ?? "STANDARD")
+        let commRule = item["commissionRule"] as? String ?? "Standard"
+
+        let recentCommissions = item["recentCommissions"] as? [[String: Any]] ?? []
+        let referrals = !recentCommissions.isEmpty ? recentCommissions.count : (item["totalReferred"] as? Int ?? item["pendingCount"] as? Int ?? 0)
+
+        var billed = 0.0
+        for comm in recentCommissions {
+            if let p = comm["testPrice"] as? Double {
+                billed += p
+            } else if let p = comm["testPrice"] as? Int {
+                billed += Double(p)
+            }
+        }
+        if billed == 0.0 {
+            billed = item["totalBilled"] as? Double ?? 0.0
+        }
+
         let earned = item["totalCommission"] as? Double ?? 0.0
-        let pending = item["pendingCommission"] as? Double ?? 0.0
+        let pending = item["totalPending"] as? Double ?? item["pendingCommission"] as? Double ?? 0.0
 
         currentPhone = phone
         currentName = name
 
         nameLabel.text = name
-        subtitleLabel.text = "\(phone.isEmpty ? "" : "\(phone) • ")\(referrals) Tests Referred"
+        subtitleLabel.text = "\(phone.isEmpty ? "" : "\(phone) • ")\(referrals) Tests Referred • \(commRule)"
 
         typeBadge.text = isDoctor ? "  DOCTOR  " : "  AGENCY  "
         typeBadge.textColor = isDoctor ? UIColor(red: 0.145, green: 0.388, blue: 0.922, alpha: 1) : UIColor(red: 0.051, green: 0.580, blue: 0.533, alpha: 1)

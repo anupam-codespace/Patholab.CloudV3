@@ -123,8 +123,7 @@ class AuthBaseViewController: UIViewController {
         return l
     }
 
-    func makeTextField(placeholder: String, isSecure: Bool = false, keyboardType: UIKeyboardType = .default) -> UITextField {
-        let tf = UITextField()
+    func configureTextField(_ tf: UITextField, placeholder: String, isSecure: Bool = false, keyboardType: UIKeyboardType = .default) {
         tf.placeholder = placeholder
         tf.isSecureTextEntry = isSecure
         tf.keyboardType = keyboardType
@@ -147,6 +146,11 @@ class AuthBaseViewController: UIViewController {
         tf.leftViewMode = .always
         tf.translatesAutoresizingMaskIntoConstraints = false
         tf.heightAnchor.constraint(equalToConstant: 52).isActive = true
+    }
+
+    func makeTextField(placeholder: String, isSecure: Bool = false, keyboardType: UIKeyboardType = .default) -> UITextField {
+        let tf = UITextField()
+        configureTextField(tf, placeholder: placeholder, isSecure: isSecure, keyboardType: keyboardType)
         return tf
     }
 

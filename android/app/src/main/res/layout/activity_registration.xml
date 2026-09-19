@@ -925,7 +925,7 @@
 
                     </LinearLayout>
 
-                    <!-- Referring Doctor Dropdown -->
+                    <!-- Referring Doctor Selector Card -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -935,18 +935,75 @@
                         android:textColor="#64748B"
                         android:layout_marginBottom="4dp" />
 
-                    <Spinner
-                        android:id="@+id/spinnerDoctor"
+                    <LinearLayout
+                        android:id="@+id/cardSelectDoctor"
                         android:layout_width="match_parent"
-                        android:layout_height="48dp"
+                        android:layout_height="wrap_content"
+                        android:minHeight="50dp"
                         android:background="@drawable/bg_input_field"
-                        android:popupBackground="@drawable/bg_spinner_popup"
-                        android:dropDownVerticalOffset="6dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
                         android:paddingStart="12dp"
                         android:paddingEnd="12dp"
-                        android:layout_marginBottom="12dp" />
+                        android:paddingTop="8dp"
+                        android:paddingBottom="8dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:layout_marginBottom="12dp">
 
-                    <!-- Referring Agency / Client Dropdown -->
+                        <FrameLayout
+                            android:layout_width="34dp"
+                            android:layout_height="34dp"
+                            android:background="@drawable/bg_mod_icon_blue">
+                            <ImageView
+                                android:layout_width="18dp"
+                                android:layout_height="18dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_stethoscope"
+                                android:tint="#0D6EFD" />
+                        </FrameLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="10dp"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/lblSelectedDoctorName"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Self (No Doctor)"
+                                android:textSize="13.5sp"
+                                android:textStyle="bold"
+                                android:textColor="#0F172A" />
+
+                            <TextView
+                                android:id="@+id/lblSelectedDoctorSubtitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Direct Walk-in / Self"
+                                android:textSize="11.5sp"
+                                android:textColor="#64748B" />
+
+                        </LinearLayout>
+
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:src="@drawable/ic_chevron_down_slate"
+                            android:tint="#94A3B8" />
+
+                    </LinearLayout>
+
+                    <Spinner
+                        android:id="@+id/spinnerDoctor"
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:visibility="gone" />
+
+                    <!-- Referring Agency / Client Selector Card -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -956,18 +1013,75 @@
                         android:textColor="#64748B"
                         android:layout_marginBottom="4dp" />
 
-                    <Spinner
-                        android:id="@+id/spinnerAgency"
+                    <LinearLayout
+                        android:id="@+id/cardSelectAgency"
                         android:layout_width="match_parent"
-                        android:layout_height="48dp"
+                        android:layout_height="wrap_content"
+                        android:minHeight="50dp"
                         android:background="@drawable/bg_input_field"
-                        android:popupBackground="@drawable/bg_spinner_popup"
-                        android:dropDownVerticalOffset="6dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
                         android:paddingStart="12dp"
                         android:paddingEnd="12dp"
-                        android:layout_marginBottom="12dp" />
+                        android:paddingTop="8dp"
+                        android:paddingBottom="8dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:layout_marginBottom="12dp">
 
-                    <!-- Collected By Dropdown -->
+                        <FrameLayout
+                            android:layout_width="34dp"
+                            android:layout_height="34dp"
+                            android:background="@drawable/bg_mod_icon_blue">
+                            <ImageView
+                                android:layout_width="18dp"
+                                android:layout_height="18dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_briefcase"
+                                android:tint="#0D6EFD" />
+                        </FrameLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="10dp"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/lblSelectedAgencyName"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Direct Walk-in"
+                                android:textSize="13.5sp"
+                                android:textStyle="bold"
+                                android:textColor="#0F172A" />
+
+                            <TextView
+                                android:id="@+id/lblSelectedAgencySubtitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Standard Direct Billing"
+                                android:textSize="11.5sp"
+                                android:textColor="#64748B" />
+
+                        </LinearLayout>
+
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:src="@drawable/ic_chevron_down_slate"
+                            android:tint="#94A3B8" />
+
+                    </LinearLayout>
+
+                    <Spinner
+                        android:id="@+id/spinnerAgency"
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:visibility="gone" />
+
+                    <!-- Collected By Selector Card -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -977,16 +1091,73 @@
                         android:textColor="#64748B"
                         android:layout_marginBottom="4dp" />
 
-                    <Spinner
-                        android:id="@+id/spinnerCollector"
+                    <LinearLayout
+                        android:id="@+id/cardSelectCollector"
                         android:layout_width="match_parent"
-                        android:layout_height="48dp"
+                        android:layout_height="wrap_content"
+                        android:minHeight="50dp"
                         android:background="@drawable/bg_input_field"
-                        android:popupBackground="@drawable/bg_spinner_popup"
-                        android:dropDownVerticalOffset="6dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
                         android:paddingStart="12dp"
                         android:paddingEnd="12dp"
-                        android:layout_marginBottom="12dp" />
+                        android:paddingTop="8dp"
+                        android:paddingBottom="8dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:layout_marginBottom="12dp">
+
+                        <FrameLayout
+                            android:layout_width="34dp"
+                            android:layout_height="34dp"
+                            android:background="@drawable/bg_mod_icon_blue">
+                            <ImageView
+                                android:layout_width="18dp"
+                                android:layout_height="18dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_user"
+                                android:tint="#0D6EFD" />
+                        </FrameLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="10dp"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/lblSelectedCollectorName"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Lab Phlebotomist"
+                                android:textSize="13.5sp"
+                                android:textStyle="bold"
+                                android:textColor="#0F172A" />
+
+                            <TextView
+                                android:id="@+id/lblSelectedCollectorSubtitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="In-Lab Sample Collection"
+                                android:textSize="11.5sp"
+                                android:textColor="#64748B" />
+
+                        </LinearLayout>
+
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:src="@drawable/ic_chevron_down_slate"
+                            android:tint="#94A3B8" />
+
+                    </LinearLayout>
+
+                    <Spinner
+                        android:id="@+id/spinnerCollector"
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:visibility="gone" />
 
                     <!-- Payment Mode -->
                     <TextView

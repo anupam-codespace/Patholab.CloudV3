@@ -78,7 +78,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="Lab Owner • Care Diagnostic Hub"
+                            android:text="Financial Health Overview"
                             android:textSize="11.5sp"
                             android:textColor="#C7DFFF" />
 
@@ -132,7 +132,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_gravity="center"
-                            android:text="U"
+                            android:text=""
                             android:textColor="#FFFFFF"
                             android:textSize="15sp"
                             android:textStyle="bold" />
@@ -151,7 +151,7 @@
                             android:id="@+id/lblDashboardUserName"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="User"
+                            android:text=""
                             android:textColor="#FFFFFF"
                             android:textSize="14sp"
                             android:textStyle="bold" />
@@ -161,7 +161,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="1dp"
-                            android:text="user@patholab.cloud"
+                            android:text=""
                             android:textColor="#C7DFFF"
                             android:textSize="11sp" />
 
@@ -496,7 +496,198 @@
 
                 </LinearLayout>
 
+                <!-- ── 3. GST & BILLING BREAKDOWN (Row 1: Gross Billing & Discounts Given) ── -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="GST &amp; REVENUE ADJUSTMENTS"
+                    android:textSize="10.5sp"
+                    android:textStyle="bold"
+                    android:textColor="#64748B"
+                    android:letterSpacing="0.06"
+                    android:layout_marginBottom="8dp" />
 
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="12dp">
+
+                    <!-- Gross Billing Card -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_dashboard_bento"
+                        android:orientation="vertical"
+                        android:padding="14dp"
+                        android:elevation="1dp"
+                        android:layout_marginEnd="6dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="GROSS BILLING"
+                            android:textSize="10sp"
+                            android:textStyle="bold"
+                            android:textColor="#64748B"
+                            android:letterSpacing="0.05" />
+
+                        <TextView
+                            android:id="@+id/lblDashGrossBilling"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="5dp"
+                            android:text="₹0"
+                            android:textSize="18sp"
+                            android:fontFamily="sans-serif-black"
+                            android:textStyle="bold"
+                            android:textColor="#0F172A" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="Subtotal before adjustments"
+                            android:textSize="9.5sp"
+                            android:textColor="#94A3B8" />
+
+                    </LinearLayout>
+
+                    <!-- Discounts Given Card -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_dashboard_bento"
+                        android:orientation="vertical"
+                        android:padding="14dp"
+                        android:elevation="1dp"
+                        android:layout_marginStart="6dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="DISCOUNTS GIVEN"
+                            android:textSize="10sp"
+                            android:textStyle="bold"
+                            android:textColor="#64748B"
+                            android:letterSpacing="0.05" />
+
+                        <TextView
+                            android:id="@+id/lblDashDiscountsGiven"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="5dp"
+                            android:text="₹0"
+                            android:textSize="18sp"
+                            android:fontFamily="sans-serif-black"
+                            android:textStyle="bold"
+                            android:textColor="#0F172A" />
+
+                        <TextView
+                            android:id="@+id/lblDashDiscountPercent"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="0.0% of gross revenue"
+                            android:textSize="9.5sp"
+                            android:textColor="#64748B" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- ── 4. GST BREAKDOWN (Row 2: CGST Collected & SGST Collected) ── -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="16dp">
+
+                    <!-- CGST Collected Card -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_dashboard_bento"
+                        android:orientation="vertical"
+                        android:padding="14dp"
+                        android:elevation="1dp"
+                        android:layout_marginEnd="6dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="CGST COLLECTED"
+                            android:textSize="10sp"
+                            android:textStyle="bold"
+                            android:textColor="#64748B"
+                            android:letterSpacing="0.05" />
+
+                        <TextView
+                            android:id="@+id/lblDashCGST"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="5dp"
+                            android:text="₹0"
+                            android:textSize="18sp"
+                            android:fontFamily="sans-serif-black"
+                            android:textStyle="bold"
+                            android:textColor="#0F172A" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="Central GST"
+                            android:textSize="9.5sp"
+                            android:textColor="#94A3B8" />
+
+                    </LinearLayout>
+
+                    <!-- SGST Collected Card -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_dashboard_bento"
+                        android:orientation="vertical"
+                        android:padding="14dp"
+                        android:elevation="1dp"
+                        android:layout_marginStart="6dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="SGST COLLECTED"
+                            android:textSize="10sp"
+                            android:textStyle="bold"
+                            android:textColor="#64748B"
+                            android:letterSpacing="0.05" />
+
+                        <TextView
+                            android:id="@+id/lblDashSGST"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="5dp"
+                            android:text="₹0"
+                            android:textSize="18sp"
+                            android:fontFamily="sans-serif-black"
+                            android:textStyle="bold"
+                            android:textColor="#0F172A" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="State GST"
+                            android:textSize="9.5sp"
+                            android:textColor="#94A3B8" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
 
                 <!-- Operational Counts Row -->
                 <LinearLayout
@@ -573,6 +764,22 @@
                     android:gravity="center_vertical"
                     android:layout_marginBottom="12dp">
 
+                    <!-- Tab All Records (Web Parity) -->
+                    <TextView
+                        android:id="@+id/tabLedgerAll"
+                        android:layout_width="0dp"
+                        android:layout_height="38dp"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="All Records"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:textColor="#0D6EFD"
+                        android:background="@drawable/bg_chip_toggle_active"
+                        android:layout_marginEnd="4dp"
+                        android:clickable="true"
+                        android:focusable="true" />
+
                     <!-- Tab Recent Invoices -->
                     <TextView
                         android:id="@+id/tabLedgerInvoices"
@@ -580,12 +787,13 @@
                         android:layout_height="38dp"
                         android:layout_weight="1"
                         android:gravity="center"
-                        android:text="Recent Invoices (0)"
+                        android:text="Invoices (0)"
                         android:textSize="12sp"
                         android:textStyle="bold"
-                        android:textColor="#0D6EFD"
-                        android:background="@drawable/bg_chip_toggle_active"
-                        android:layout_marginEnd="6dp"
+                        android:textColor="#64748B"
+                        android:background="@drawable/bg_chip_toggle_inactive"
+                        android:layout_marginStart="2dp"
+                        android:layout_marginEnd="2dp"
                         android:clickable="true"
                         android:focusable="true" />
 
@@ -596,12 +804,12 @@
                         android:layout_height="38dp"
                         android:layout_weight="1"
                         android:gravity="center"
-                        android:text="Recent Expenses (0)"
+                        android:text="Expenses (0)"
                         android:textSize="12sp"
                         android:textStyle="bold"
                         android:textColor="#64748B"
                         android:background="@drawable/bg_chip_toggle_inactive"
-                        android:layout_marginStart="6dp"
+                        android:layout_marginStart="4dp"
                         android:clickable="true"
                         android:focusable="true" />
 

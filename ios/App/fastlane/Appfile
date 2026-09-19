@@ -1,0 +1,4 @@
+app_identifier("com.patholab.cloud")
+apple_id(ENV["APPLE_ID"] || "")
+itc_team_id("3T35CAJ6B2")
+team_id("3T35CAJ6B2")

@@ -96,6 +96,7 @@ public class ReportsActivity extends AppCompatActivity {
         public String patientAge;
         public String patientGender;
         public String uhid;
+        public String patientDbId;
         public String testName;
         public String testCode;
         public String departmentName;
@@ -104,7 +105,7 @@ public class ReportsActivity extends AppCompatActivity {
         public ReportItem(String id, int version, String status, String pdfUrl, boolean isAmended,
                           String amendmentReason, String createdAt, String patientName,
                           String patientPhone, String patientEmail, String patientAge,
-                          String patientGender, String uhid, String testName, String testCode,
+                          String patientGender, String uhid, String patientDbId, String testName, String testCode,
                           String departmentName, String pathologistName) {
             this.id = id;
             this.version = version;
@@ -119,6 +120,7 @@ public class ReportsActivity extends AppCompatActivity {
             this.patientAge = patientAge != null && !patientAge.isEmpty() ? patientAge : "—";
             this.patientGender = patientGender != null && !patientGender.isEmpty() ? patientGender : "—";
             this.uhid = uhid != null && !uhid.isEmpty() ? uhid : "P-" + (id.length() > 5 ? id.substring(id.length() - 5).toUpperCase() : id.toUpperCase());
+            this.patientDbId = patientDbId != null ? patientDbId : "";
             this.testName = testName != null && !testName.isEmpty() ? testName : "Diagnostic Investigation";
             this.testCode = testCode != null && !testCode.isEmpty() ? testCode : "T_" + (testName.length() > 3 ? testName.substring(0, 3).toUpperCase() : "TEST");
             this.departmentName = departmentName != null && !departmentName.isEmpty() ? departmentName : "Pathology";
@@ -351,7 +353,13 @@ public class ReportsActivity extends AppCompatActivity {
                             JSONObject r = arr.getJSONObject(i);
                             JSONObject p = r.optJSONObject("patient");
                             String pName = p != null ? p.optString("name", "Patient") : "Patient";
-                            String pPhone = p != null ? p.optString("phone", "") : "";
+                            String pPhone = "";
+                            if (p != null && p.has("phone") && !p.isNull("phone")) {
+                                String raw = p.optString("phone", "").trim();
+                                if (!raw.equalsIgnoreCase("null")) {
+                                    pPhone = raw;
+                                }
+                            }
                             String pEmail = p != null ? p.optString("email", "") : "";
                             
                             String pAge = "—";
@@ -394,6 +402,8 @@ public class ReportsActivity extends AppCompatActivity {
                                 }
                             }
 
+                            String pDbId = p != null ? p.optString("id", "") : "";
+
                             JSONObject path = r.optJSONObject("pathologist");
                             String pathName = path != null && path.has("name") && !path.isNull("name") ? path.optString("name") : "Authorized Signatory";
 
@@ -414,6 +424,7 @@ public class ReportsActivity extends AppCompatActivity {
                                     pAge,
                                     pGender,
                                     pUhid,
+                                    pDbId,
                                     tName,
                                     tCode,
                                     dName,
@@ -490,6 +501,7 @@ public class ReportsActivity extends AppCompatActivity {
     private void openPreviewScreen(ReportItem report, boolean autoPrint) {
         Intent intent = new Intent(this, ReportPreviewActivity.class);
         intent.putExtra("report_id", report.id);
+        intent.putExtra("patient_db_id", report.patientDbId);
         intent.putExtra("patient_name", report.patientName);
         intent.putExtra("patient_phone", report.patientPhone);
         intent.putExtra("test_name", report.testName);
@@ -674,7 +686,22 @@ public class ReportsActivity extends AppCompatActivity {
             holder.lblVersionBadge.setTextColor(0xFFFFFFFF);
 
             holder.lblDate.setText("" + r.createdAt);
-            holder.lblMetaPhone.setText(r.patientPhone.isEmpty() ? "" : "+91 " + r.patientPhone);
+            if (r.patientPhone == null || r.patientPhone.isEmpty() || r.patientPhone.equalsIgnoreCase("null") || r.patientPhone.contains("null")) {
+                holder.lblMetaPhone.setVisibility(View.GONE);
+                holder.lblMetaPhone.setText("");
+            } else {
+                holder.lblMetaPhone.setVisibility(View.VISIBLE);
+                String displayPhone = r.patientPhone.trim();
+                if (displayPhone.startsWith("+")) {
+                    holder.lblMetaPhone.setText(displayPhone);
+                } else {
+                    holder.lblMetaPhone.setText("+91 " + displayPhone);
+                }
+            }
+
+            holder.itemView.setOnClickListener(v -> {
+                if (listener != null) listener.onDownload(r);
+            });
 
             // Status Badge: Soft Mint + Deep Forest Green for Approved
             String s = r.status.toUpperCase();

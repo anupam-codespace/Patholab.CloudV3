@@ -92,14 +92,14 @@ class ResetPasswordViewController: AuthBaseViewController {
 
         content.addArrangedSubview(makeLabel("New Password", size: 14, weight: .semibold, color: AuthBaseViewController.textPrimary))
         content.setCustomSpacing(6, after: content.arrangedSubviews.last!)
-        newPasswordField.copyProperties(from: makeTextField(placeholder: "Min. 8 characters", isSecure: true))
+        configureTextField(newPasswordField, placeholder: "Min. 8 characters", isSecure: true)
         let newContainer = createSecureContainer(tf: newPasswordField, identifier: "reset_new")
         content.addArrangedSubview(newContainer)
         setupErrorLabel(newPwdErrorLabel, to: content)
 
         content.addArrangedSubview(makeLabel("Confirm New Password", size: 14, weight: .semibold, color: AuthBaseViewController.textPrimary))
         content.setCustomSpacing(6, after: content.arrangedSubviews.last!)
-        confirmPasswordField.copyProperties(from: makeTextField(placeholder: "Re-enter new password", isSecure: true))
+        configureTextField(confirmPasswordField, placeholder: "Re-enter new password", isSecure: true)
         let confirmContainer = createSecureContainer(tf: confirmPasswordField, identifier: "reset_confirm")
         content.addArrangedSubview(confirmContainer)
         setupErrorLabel(confirmPwdErrorLabel, to: content)
@@ -170,9 +170,16 @@ class ResetPasswordViewController: AuthBaseViewController {
             DispatchQueue.main.async {
                 self?.setLoading(false)
                 if success {
-                    self?.view.window?.rootViewController?.dismiss(animated: true)
+                    self?.showSuccess("Password reset successfully! Please sign in.")
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+                        if let app = UIApplication.shared.delegate as? AppDelegate {
+                            app.presentNativeLogin(prefilledEmail: self?.email, successMessage: "Password reset successfully! Please sign in.")
+                        } else {
+                            self?.view.window?.rootViewController?.dismiss(animated: true)
+                        }
+                    }
                 } else {
-                    self?.showError(error ?? "Reset failed")
+                    self?.showError(error ?? "Password reset failed. Please check your code.")
                 }
             }
         }

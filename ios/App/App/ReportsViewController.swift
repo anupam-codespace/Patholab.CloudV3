@@ -17,6 +17,7 @@ struct DiagnosticReportItem {
     let patientAge: String
     let patientGender: String
     let uhid: String
+    let patientDbId: String
     let testName: String
     let testCode: String
     let departmentName: String
@@ -45,7 +46,11 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
 
     // UI Elements
     private let topHeaderView      = UIView()
+    private let headerGradient     = CAGradientLayer()
+    private let backBtn            = UIButton(type: .system)
+    private let titleLbl           = UILabel()
     private let subLbl             = UILabel()
+    private let refreshBtn         = UIButton(type: .system)
     private let kpiScrollView      = UIScrollView()
     private let kpiStack           = UIStackView()
     private let searchField        = UITextField()
@@ -79,6 +84,11 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
         fetchReports()
     }
 
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        headerGradient.frame = topHeaderView.bounds
+    }
+
     override var preferredStatusBarStyle: UIStatusBarStyle {
         return .lightContent
     }
@@ -88,43 +98,46 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
         topHeaderView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(topHeaderView)
 
-        let gradient = CAGradientLayer()
-        gradient.colors = [
-            UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1).cgColor,
-            UIColor(red: 0.118, green: 0.251, blue: 0.686, alpha: 1).cgColor
+        headerGradient.colors = [
+            UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1).cgColor, // #0D6EFD
+            UIColor(red: 0.039, green: 0.345, blue: 0.792, alpha: 1).cgColor, // #0A58CA
+            UIColor(red: 0.114, green: 0.306, blue: 0.847, alpha: 1).cgColor  // #1D4ED8
         ]
-        gradient.startPoint = CGPoint(x: 0, y: 0)
-        gradient.endPoint = CGPoint(x: 1, y: 1)
-        topHeaderView.layer.insertSublayer(gradient, at: 0)
+        headerGradient.startPoint = CGPoint(x: 0, y: 0)
+        headerGradient.endPoint   = CGPoint(x: 1, y: 1)
+        topHeaderView.layer.insertSublayer(headerGradient, at: 0)
+        topHeaderView.layer.cornerRadius = 24
+        topHeaderView.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
+        topHeaderView.clipsToBounds = true
 
-        let backBtn = UIButton(type: .system)
         backBtn.setImage(UIImage(systemName: "chevron.left"), for: .normal)
-        backBtn.tintColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1)
-        backBtn.backgroundColor = .white
+        backBtn.tintColor = .white
+        backBtn.backgroundColor = UIColor.white.withAlphaComponent(0.20)
+        backBtn.layer.borderColor = UIColor.white.withAlphaComponent(0.30).cgColor
+        backBtn.layer.borderWidth = 1
         backBtn.layer.cornerRadius = 19
         backBtn.addTarget(self, action: #selector(didTapBack), for: .touchUpInside)
         backBtn.translatesAutoresizingMaskIntoConstraints = false
         topHeaderView.addSubview(backBtn)
 
-        let titleLbl = UILabel()
-        titleLbl.text = "Report Dispatch"
+        titleLbl.text = "Reports & Dispatch"
         titleLbl.font = .systemFont(ofSize: 20, weight: .bold)
         titleLbl.textColor = .white
         titleLbl.translatesAutoresizingMaskIntoConstraints = false
         topHeaderView.addSubview(titleLbl)
 
-        let subLbl = UILabel()
-        subLbl.text = "Download, print, amend, and share verified reports with patients."
+        subLbl.text = "Download, print, amend, and share verified reports with patients"
         subLbl.font = .systemFont(ofSize: 11.5, weight: .medium)
         subLbl.textColor = UIColor(red: 0.78, green: 0.87, blue: 1.0, alpha: 1)
         subLbl.translatesAutoresizingMaskIntoConstraints = false
         topHeaderView.addSubview(subLbl)
 
-        let refreshBtn = UIButton(type: .system)
         refreshBtn.setImage(UIImage(systemName: "arrow.clockwise"), for: .normal)
         refreshBtn.tintColor = .white
         refreshBtn.backgroundColor = UIColor.white.withAlphaComponent(0.20)
-        refreshBtn.layer.cornerRadius = 18
+        refreshBtn.layer.borderColor = UIColor.white.withAlphaComponent(0.30).cgColor
+        refreshBtn.layer.borderWidth = 1
+        refreshBtn.layer.cornerRadius = 19
         refreshBtn.addTarget(self, action: #selector(didTapRefresh), for: .touchUpInside)
         refreshBtn.translatesAutoresizingMaskIntoConstraints = false
         topHeaderView.addSubview(refreshBtn)
@@ -133,12 +146,16 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
             topHeaderView.topAnchor.constraint(equalTo: view.topAnchor),
             topHeaderView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             topHeaderView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            topHeaderView.heightAnchor.constraint(equalToConstant: 104),
 
             backBtn.leadingAnchor.constraint(equalTo: topHeaderView.leadingAnchor, constant: 16),
-            backBtn.bottomAnchor.constraint(equalTo: topHeaderView.bottomAnchor, constant: -10),
+            backBtn.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
             backBtn.widthAnchor.constraint(equalToConstant: 38),
             backBtn.heightAnchor.constraint(equalToConstant: 38),
+
+            refreshBtn.trailingAnchor.constraint(equalTo: topHeaderView.trailingAnchor, constant: -16),
+            refreshBtn.centerYAnchor.constraint(equalTo: backBtn.centerYAnchor),
+            refreshBtn.widthAnchor.constraint(equalToConstant: 38),
+            refreshBtn.heightAnchor.constraint(equalToConstant: 38),
 
             titleLbl.leadingAnchor.constraint(equalTo: backBtn.trailingAnchor, constant: 12),
             titleLbl.topAnchor.constraint(equalTo: backBtn.topAnchor, constant: -2),
@@ -146,93 +163,107 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
 
             subLbl.leadingAnchor.constraint(equalTo: titleLbl.leadingAnchor),
             subLbl.topAnchor.constraint(equalTo: titleLbl.bottomAnchor, constant: 2),
-            subLbl.trailingAnchor.constraint(lessThanOrEqualTo: refreshBtn.leadingAnchor, constant: -8),
-
-            refreshBtn.trailingAnchor.constraint(equalTo: topHeaderView.trailingAnchor, constant: -16),
-            refreshBtn.centerYAnchor.constraint(equalTo: backBtn.centerYAnchor),
-            refreshBtn.widthAnchor.constraint(equalToConstant: 36),
-            refreshBtn.heightAnchor.constraint(equalToConstant: 36),
+            subLbl.trailingAnchor.constraint(lessThanOrEqualTo: refreshBtn.leadingAnchor, constant: -8)
         ])
     }
 
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        if let g = topHeaderView.layer.sublayers?.first as? CAGradientLayer {
-            g.frame = topHeaderView.bounds
-        }
-    }
-
-    // ── KPI Row ──────────────────────────────────────────────────────────────
+    // ── KPI Row (Embedded inside Curved Top Sapphire Header) ─────────────────
     private func setupKpiRow() {
         kpiScrollView.showsHorizontalScrollIndicator = false
+        kpiScrollView.clipsToBounds = false
         kpiScrollView.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(kpiScrollView)
+        topHeaderView.addSubview(kpiScrollView)
 
         kpiStack.axis = .horizontal
         kpiStack.spacing = 10
+        kpiStack.alignment = .fill
+        kpiStack.distribution = .fillProportionally
         kpiStack.translatesAutoresizingMaskIntoConstraints = false
         kpiScrollView.addSubview(kpiStack)
 
+        let card1 = makeKpiCard(title: "READY TO DISPATCH", valueLbl: lblReadyCount, dotColor: UIColor(red: 0.063, green: 0.725, blue: 0.506, alpha: 1), subText: "Verified & Signed")
+        let card2 = makeKpiCard(title: "DISPATCHED", valueLbl: lblSentCount, dotColor: UIColor(red: 0.024, green: 0.714, blue: 0.831, alpha: 1), subText: "WhatsApp & SMS Sent")
+        let card3 = makeKpiCard(title: "UNDER REVIEW", valueLbl: lblDraftCount, dotColor: UIColor(red: 0.961, green: 0.620, blue: 0.043, alpha: 1), subText: "Pending Doctor Sign")
+        let card4 = makeKpiCard(title: "AMENDED", valueLbl: lblAmendedCount, dotColor: UIColor(red: 0.490, green: 0.231, blue: 0.929, alpha: 1), subText: "Revision History v2+")
+
+        kpiStack.addArrangedSubview(card1)
+        kpiStack.addArrangedSubview(card2)
+        kpiStack.addArrangedSubview(card3)
+        kpiStack.addArrangedSubview(card4)
+
         NSLayoutConstraint.activate([
-            kpiScrollView.topAnchor.constraint(equalTo: topHeaderView.bottomAnchor, constant: 12),
-            kpiScrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            kpiScrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            kpiScrollView.heightAnchor.constraint(equalToConstant: 92),
+            kpiScrollView.topAnchor.constraint(equalTo: backBtn.bottomAnchor, constant: 14),
+            kpiScrollView.leadingAnchor.constraint(equalTo: topHeaderView.leadingAnchor),
+            kpiScrollView.trailingAnchor.constraint(equalTo: topHeaderView.trailingAnchor),
+            kpiScrollView.heightAnchor.constraint(equalToConstant: 80),
+
+            topHeaderView.bottomAnchor.constraint(equalTo: kpiScrollView.bottomAnchor, constant: 18),
 
             kpiStack.topAnchor.constraint(equalTo: kpiScrollView.topAnchor),
             kpiStack.bottomAnchor.constraint(equalTo: kpiScrollView.bottomAnchor),
             kpiStack.leadingAnchor.constraint(equalTo: kpiScrollView.leadingAnchor, constant: 16),
             kpiStack.trailingAnchor.constraint(equalTo: kpiScrollView.trailingAnchor, constant: -16),
+            kpiStack.heightAnchor.constraint(equalTo: kpiScrollView.heightAnchor)
         ])
-
-        kpiStack.addArrangedSubview(makeKpiCard(title: "PRINT READY", valueLbl: lblReadyCount, valueColor: UIColor(red: 0.02, green: 0.59, blue: 0.41, alpha: 1), subText: "Verified & Signed"))
-        kpiStack.addArrangedSubview(makeKpiCard(title: "DRAFTS", valueLbl: lblDraftCount, valueColor: UIColor(red: 0.85, green: 0.47, blue: 0.02, alpha: 1), subText: "Pending Doctor Sign"))
-        kpiStack.addArrangedSubview(makeKpiCard(title: "SENT", valueLbl: lblSentCount, valueColor: UIColor(red: 0.05, green: 0.43, blue: 0.99, alpha: 1), subText: "Dispatched to Patient"))
-        kpiStack.addArrangedSubview(makeKpiCard(title: "AMENDED", valueLbl: lblAmendedCount, valueColor: UIColor(red: 0.49, green: 0.23, blue: 0.93, alpha: 1), subText: "Revision History v2+"))
     }
 
-    private func makeKpiCard(title: String, valueLbl: UILabel, valueColor: UIColor, subText: String) -> UIView {
+    private func makeKpiCard(title: String, valueLbl: UILabel, dotColor: UIColor, subText: String) -> UIView {
         let card = UIView()
-        card.backgroundColor = .white
-        card.layer.cornerRadius = 16
-        card.layer.shadowColor = UIColor(red: 0.05, green: 0.15, blue: 0.30, alpha: 1).cgColor
-        card.layer.shadowOpacity = 0.05
-        card.layer.shadowRadius = 5
-        card.layer.shadowOffset = CGSize(width: 0, height: 2)
-        card.layer.borderWidth = 1
-        card.layer.borderColor = UIColor(red: 0.92, green: 0.94, blue: 0.97, alpha: 1).cgColor
         card.translatesAutoresizingMaskIntoConstraints = false
-        card.widthAnchor.constraint(equalToConstant: 156).isActive = true
+        card.backgroundColor = UIColor.white.withAlphaComponent(0.16)
+        card.layer.borderColor = UIColor.white.withAlphaComponent(0.25).cgColor
+        card.layer.borderWidth = 1
+        card.layer.cornerRadius = 16
+        card.clipsToBounds = true
+        card.widthAnchor.constraint(equalToConstant: 155).isActive = true
+
+        let dot = UIView()
+        dot.translatesAutoresizingMaskIntoConstraints = false
+        dot.backgroundColor = dotColor
+        dot.layer.cornerRadius = 3.5
+        dot.layer.shadowColor = dotColor.cgColor
+        dot.layer.shadowRadius = 4
+        dot.layer.shadowOpacity = 0.8
+        dot.layer.shadowOffset = .zero
 
         let tLbl = UILabel()
+        tLbl.translatesAutoresizingMaskIntoConstraints = false
         tLbl.text = title
-        tLbl.font = .systemFont(ofSize: 10, weight: .bold)
-        tLbl.textColor = UIColor(red: 0.39, green: 0.45, blue: 0.55, alpha: 1)
+        tLbl.font = .systemFont(ofSize: 9.5, weight: .bold)
+        tLbl.textColor = UIColor(red: 0.78, green: 0.87, blue: 1.0, alpha: 1) // #C7DFFF
 
-        valueLbl.text = "0"
+        let headerStack = UIStackView(arrangedSubviews: [dot, tLbl])
+        headerStack.translatesAutoresizingMaskIntoConstraints = false
+        headerStack.axis = .horizontal
+        headerStack.spacing = 6
+        headerStack.alignment = .center
+
+        valueLbl.translatesAutoresizingMaskIntoConstraints = false
         valueLbl.font = .systemFont(ofSize: 20, weight: .bold)
-        valueLbl.textColor = valueColor
+        valueLbl.textColor = .white
+        valueLbl.text = "0"
 
         let sLbl = UILabel()
+        sLbl.translatesAutoresizingMaskIntoConstraints = false
         sLbl.text = subText
-        sLbl.font = .systemFont(ofSize: 11, weight: .medium)
-        sLbl.textColor = UIColor(red: 0.58, green: 0.64, blue: 0.72, alpha: 1)
+        sLbl.font = .systemFont(ofSize: 10.5, weight: .medium)
+        sLbl.textColor = UIColor(red: 0.78, green: 0.87, blue: 1.0, alpha: 1) // #C7DFFF
 
-        [tLbl, valueLbl, sLbl].forEach {
-            $0.translatesAutoresizingMaskIntoConstraints = false
-            card.addSubview($0)
-        }
+        let vStack = UIStackView(arrangedSubviews: [headerStack, valueLbl, sLbl])
+        vStack.translatesAutoresizingMaskIntoConstraints = false
+        vStack.axis = .vertical
+        vStack.spacing = 3
+        vStack.alignment = .leading
+        card.addSubview(vStack)
 
         NSLayoutConstraint.activate([
-            tLbl.topAnchor.constraint(equalTo: card.topAnchor, constant: 12),
-            tLbl.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
-            tLbl.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14),
+            dot.widthAnchor.constraint(equalToConstant: 7),
+            dot.heightAnchor.constraint(equalToConstant: 7),
 
-            valueLbl.topAnchor.constraint(equalTo: tLbl.bottomAnchor, constant: 4),
-            valueLbl.leadingAnchor.constraint(equalTo: tLbl.leadingAnchor),
-
-            sLbl.topAnchor.constraint(equalTo: valueLbl.bottomAnchor, constant: 2),
-            sLbl.leadingAnchor.constraint(equalTo: tLbl.leadingAnchor),
+            vStack.topAnchor.constraint(equalTo: card.topAnchor, constant: 10),
+            vStack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -10),
+            vStack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
+            vStack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14)
         ])
 
         return card
@@ -270,7 +301,7 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
         filterScrollView.addSubview(filterChipsStack)
 
         NSLayoutConstraint.activate([
-            searchField.topAnchor.constraint(equalTo: kpiScrollView.bottomAnchor, constant: 8),
+            searchField.topAnchor.constraint(equalTo: topHeaderView.bottomAnchor, constant: 10),
             searchField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             searchField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             searchField.heightAnchor.constraint(equalToConstant: 44),
@@ -448,20 +479,25 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
                 for r in arr {
                     let patient = r["patient"] as? [String: Any]
                     let pName = patient?["name"] as? String ?? "Patient"
-                    let pPhone = patient?["phone"] as? String ?? ""
+                    let rawPhone = (patient?["phone"] as? String) ?? (patient?["mobile"] as? String ?? "")
+                    let pPhone = (rawPhone.isEmpty || rawPhone.lowercased() == "null") ? "" : rawPhone.trimmingCharacters(in: .whitespacesAndNewlines)
                     let pEmail = patient?["email"] as? String ?? ""
                     let pAge = "\(patient?["age"] ?? "")"
                     let pGender = patient?["gender"] as? String ?? ""
                     let pUhid = patient?["patientId"] as? String ?? patient?["uhid"] as? String ?? "P-00001"
+                    let pDbId = patient?["id"] as? String ?? ""
 
                     let test = r["test"] as? [String: Any]
                     let tName = test?["testName"] as? String ?? test?["name"] as? String ?? "Diagnostic Investigation"
                     let tCode = test?["testCode"] as? String ?? test?["testNumber"] as? String ?? "LAB-001"
-                    let dept = test?["department"] as? [String: Any]
+                    let dept = test?["department"] as? [String: Any] ?? test?["category"] as? [String: Any]
                     let dName = dept?["name"] as? String ?? "General Pathology"
 
                     let path = r["pathologist"] as? [String: Any]
                     let pathName = path?["name"] as? String ?? "Pathologist"
+
+                    let rawDate = r["createdAt"] as? String ?? ""
+                    let formattedDate = self.formatReportDate(rawDate)
 
                     loaded.append(DiagnosticReportItem(
                         id: r["id"] as? String ?? UUID().uuidString,
@@ -470,13 +506,14 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
                         pdfUrl: r["pdfUrl"] as? String,
                         isAmended: (r["isAmended"] as? Bool) ?? false,
                         amendmentReason: r["amendmentReason"] as? String,
-                        createdAt: "Today",
+                        createdAt: formattedDate,
                         patientName: pName,
                         patientPhone: pPhone,
                         patientEmail: pEmail,
                         patientAge: pAge,
                         patientGender: pGender,
                         uhid: pUhid,
+                        patientDbId: pDbId,
                         testName: tName,
                         testCode: tCode,
                         departmentName: dName,
@@ -498,6 +535,49 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
                 self.applyReportsFilter()
             }
         }.resume()
+    }
+
+    private func formatReportDate(_ dateStr: String) -> String {
+        guard !dateStr.isEmpty else { return "Recent" }
+
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        var date = isoFormatter.date(from: dateStr)
+
+        if date == nil {
+            isoFormatter.formatOptions = [.withInternetDateTime]
+            date = isoFormatter.date(from: dateStr)
+        }
+
+        if date == nil {
+            let df = DateFormatter()
+            df.locale = Locale(identifier: "en_US_POSIX")
+            df.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+            date = df.date(from: dateStr)
+        }
+
+        if date == nil {
+            let df = DateFormatter()
+            df.locale = Locale(identifier: "en_US_POSIX")
+            df.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
+            date = df.date(from: dateStr)
+        }
+
+        if date == nil {
+            let df = DateFormatter()
+            df.locale = Locale(identifier: "en_US_POSIX")
+            df.dateFormat = "yyyy-MM-dd"
+            if dateStr.count >= 10 {
+                date = df.date(from: String(dateStr.prefix(10)))
+            }
+        }
+
+        guard let validDate = date else { return dateStr }
+
+        let outFormatter = DateFormatter()
+        outFormatter.locale = Locale(identifier: "en_US")
+        outFormatter.dateFormat = "dd MMM yyyy, hh:mm a"
+        return outFormatter.string(from: validDate)
     }
 
     private func updateKpiStats() {
@@ -664,10 +744,14 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
             verBadge.trailingAnchor.constraint(equalTo: testBox.trailingAnchor, constant: -10),
         ])
 
+        let metaRow = UIView()
+        metaRow.translatesAutoresizingMaskIntoConstraints = false
+
         let dateStack = UIStackView()
         dateStack.axis = .horizontal
         dateStack.spacing = 5
         dateStack.alignment = .center
+        dateStack.translatesAutoresizingMaskIntoConstraints = false
 
         let dateIcon = UIImageView(image: UIImage(systemName: "calendar"))
         dateIcon.tintColor = UIColor(red: 0.392, green: 0.451, blue: 0.549, alpha: 1)
@@ -682,27 +766,52 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
         dateLbl.textColor = UIColor(red: 0.392, green: 0.451, blue: 0.549, alpha: 1)
         dateStack.addArrangedSubview(dateLbl)
 
+        let phoneLbl = UILabel()
+        phoneLbl.font = .systemFont(ofSize: 11.5, weight: .medium)
+        phoneLbl.textColor = UIColor(red: 0.58, green: 0.64, blue: 0.72, alpha: 1)
+        phoneLbl.translatesAutoresizingMaskIntoConstraints = false
+
+        let rawP = report.patientPhone.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !rawP.isEmpty && rawP.lowercased() != "null" && !rawP.contains("null") {
+            let digits = rawP.replacingOccurrences(of: "[^0-9]", with: "", options: .regularExpression)
+            if digits.count == 10 {
+                phoneLbl.text = "+91 \(digits)"
+            } else if rawP.hasPrefix("+") {
+                phoneLbl.text = rawP
+            } else {
+                phoneLbl.text = "+91 \(rawP)"
+            }
+            phoneLbl.isHidden = false
+        } else {
+            phoneLbl.text = ""
+            phoneLbl.isHidden = true
+        }
+
+        metaRow.addSubview(dateStack)
+        metaRow.addSubview(phoneLbl)
+
+        NSLayoutConstraint.activate([
+            dateStack.leadingAnchor.constraint(equalTo: metaRow.leadingAnchor),
+            dateStack.centerYAnchor.constraint(equalTo: metaRow.centerYAnchor),
+
+            phoneLbl.trailingAnchor.constraint(equalTo: metaRow.trailingAnchor),
+            phoneLbl.centerYAnchor.constraint(equalTo: metaRow.centerYAnchor),
+            phoneLbl.leadingAnchor.constraint(greaterThanOrEqualTo: dateStack.trailingAnchor, constant: 8),
+        ])
+
         // Modern Elevated Action Buttons
         let downloadBtn = UIButton(type: .system)
-        downloadBtn.setTitle("  Download", for: .normal)
-        downloadBtn.setImage(UIImage(systemName: "arrow.down.to.line"), for: .normal)
+        downloadBtn.setTitle("Download", for: .normal)
         downloadBtn.setTitleColor(.white, for: .normal)
-        downloadBtn.tintColor = .white
         downloadBtn.titleLabel?.font = .systemFont(ofSize: 12.5, weight: .bold)
         downloadBtn.backgroundColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1) // Sapphire Primary #0D6EFD
         downloadBtn.layer.cornerRadius = 12
-        downloadBtn.layer.shadowColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1).cgColor
-        downloadBtn.layer.shadowOpacity = 0.22
-        downloadBtn.layer.shadowOffset = CGSize(width: 0, height: 2)
-        downloadBtn.layer.shadowRadius = 4
         downloadBtn.tag = indexPath.row
         downloadBtn.addTarget(self, action: #selector(didTapDownloadAction(_:)), for: .touchUpInside)
 
         let printBtn = UIButton(type: .system)
-        printBtn.setTitle("  Print", for: .normal)
-        printBtn.setImage(UIImage(systemName: "printer.fill"), for: .normal)
+        printBtn.setTitle("Print", for: .normal)
         printBtn.setTitleColor(UIColor(red: 0.039, green: 0.345, blue: 0.792, alpha: 1), for: .normal)
-        printBtn.tintColor = UIColor(red: 0.039, green: 0.345, blue: 0.792, alpha: 1)
         printBtn.titleLabel?.font = .systemFont(ofSize: 12.5, weight: .bold)
         printBtn.backgroundColor = UIColor(red: 0.937, green: 0.965, blue: 1.0, alpha: 1) // Ice Blue #EFF6FF
         printBtn.layer.cornerRadius = 12
@@ -711,8 +820,10 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
         printBtn.tag = indexPath.row
         printBtn.addTarget(self, action: #selector(didTapPrintAction(_:)), for: .touchUpInside)
 
+        // 3. Report / Amend Button (Document with Pencil icon beside Print & Download as requested)
         let amendBtn = UIButton(type: .system)
-        amendBtn.setImage(UIImage(systemName: "doc.text.fill"), for: .normal)
+        let editImg = UIImage(systemName: "square.and.pencil") ?? UIImage(systemName: "doc.text")
+        amendBtn.setImage(editImg, for: .normal)
         amendBtn.tintColor = UIColor(red: 0.28, green: 0.33, blue: 0.41, alpha: 1)
         amendBtn.backgroundColor = UIColor(red: 0.945, green: 0.961, blue: 0.976, alpha: 1)
         amendBtn.layer.cornerRadius = 12
@@ -721,6 +832,7 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
         amendBtn.tag = indexPath.row
         amendBtn.addTarget(self, action: #selector(didTapAmendAction(_:)), for: .touchUpInside)
 
+        // 4. Share Button
         let shareBtn = UIButton(type: .system)
         shareBtn.setImage(UIImage(systemName: "square.and.arrow.up"), for: .normal)
         shareBtn.tintColor = UIColor(red: 0.28, green: 0.33, blue: 0.41, alpha: 1)
@@ -741,7 +853,7 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
             shareBtn.widthAnchor.constraint(equalToConstant: 40),
         ])
 
-        [avatarIV, nameLbl, uhidLbl, statusBadge, testBox, dateStack, btnStack].forEach {
+        [avatarIV, nameLbl, uhidLbl, statusBadge, testBox, metaRow, btnStack].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
             card.addSubview($0)
         }
@@ -769,10 +881,12 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
             testBox.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
             testBox.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14),
 
-            dateStack.topAnchor.constraint(equalTo: testBox.bottomAnchor, constant: 10),
-            dateStack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
+            metaRow.topAnchor.constraint(equalTo: testBox.bottomAnchor, constant: 10),
+            metaRow.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
+            metaRow.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14),
+            metaRow.heightAnchor.constraint(equalToConstant: 16),
 
-            btnStack.topAnchor.constraint(equalTo: dateStack.bottomAnchor, constant: 12),
+            btnStack.topAnchor.constraint(equalTo: metaRow.bottomAnchor, constant: 12),
             btnStack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
             btnStack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14),
             btnStack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -14),
@@ -780,6 +894,13 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
         ])
 
         return cell
+    }
+
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        guard indexPath.row < filteredReports.count else { return }
+        let report = filteredReports[indexPath.row]
+        openPreview(report: report, autoPrint: false)
     }
 
     // ── Action Handlers ──────────────────────────────────────────────────────
@@ -796,50 +917,36 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
     private func openPreview(report: DiagnosticReportItem, autoPrint: Bool) {
         let vc = ReportPreviewViewController()
         vc.reportId = report.id
+        vc.patientDbId = report.patientDbId
         vc.patientName = report.patientName
         vc.patientPhone = report.patientPhone
         vc.testName = report.testName
         vc.version = report.version
         vc.uhid = report.uhid
         vc.autoPrint = autoPrint
+        vc.pdfUrl = report.pdfUrl ?? ""
         vc.modalPresentationStyle = .fullScreen
         present(vc, animated: true, completion: nil)
     }
 
     @objc private func didTapShareAction(_ sender: UIButton) {
         let report = filteredReports[sender.tag]
-        let alert = UIAlertController(
-            title: "Share Report Link",
-            message: "Send a secure verification link for v\(report.version).0 to \(report.patientName).",
-            preferredStyle: .actionSheet
-        )
-
         let verifyUrl = "\(baseUrl)/verify/\(report.id)"
 
-        alert.addAction(UIAlertAction(title: "Send via WhatsApp", style: .default, handler: { [weak self] _ in
-            guard let self = self else { return }
-            let text = "Hello \(report.patientName),\n\nYour verified diagnostic laboratory report from Patholab Cloud is ready:\n• Test: \(report.testName)\n• Ref: \(report.uhid) (v\(report.version).0)\n\nView & Download Report:\n\(verifyUrl)\n\nThank you for choosing our pathology laboratory!"
-            let escaped = text.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-            let phone = report.patientPhone.hasPrefix("91") ? report.patientPhone : "91" + report.patientPhone
-            if let url = URL(string: "https://api.whatsapp.com/send?phone=\(phone)&text=\(escaped)") {
-                UIApplication.shared.open(url, options: [:], completionHandler: nil)
-            }
-        }))
+        let message = "Hello \(report.patientName),\n\nYour verified diagnostic report from Patholab Cloud is ready.\nTest: \(report.testName) \u{2022} \(report.uhid) (v\(report.version).0)\n\nView & Download: \(verifyUrl)"
 
-        alert.addAction(UIAlertAction(title: "Send via Email", style: .default, handler: { _ in
-            let text = "mailto:\(report.patientEmail)?subject=Diagnostic%20Report%20\(report.testName)&body=Your%20report%20is%20ready%20at%20\(verifyUrl)"
-            if let url = URL(string: text) {
-                UIApplication.shared.open(url, options: [:], completionHandler: nil)
-            }
-        }))
+        var items: [Any] = [message]
+        if let url = URL(string: verifyUrl) { items.append(url) }
 
-        alert.addAction(UIAlertAction(title: "Copy Secure Verification Link", style: .default, handler: { _ in
-            UIPasteboard.general.string = verifyUrl
-        }))
+        let activityVC = UIActivityViewController(activityItems: items, applicationActivities: nil)
+        activityVC.excludedActivityTypes = [.assignToContact, .saveToCameraRoll, .addToReadingList]
 
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        if let popover = activityVC.popoverPresentationController {
+            popover.sourceView = sender
+            popover.sourceRect = sender.bounds
+        }
 
-        present(alert, animated: true, completion: nil)
+        present(activityVC, animated: true, completion: nil)
     }
 
     @objc private func didTapAmendAction(_ sender: UIButton) {
@@ -873,7 +980,11 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
     }
 
     @objc private func didTapBack() {
-        dismiss(animated: true, completion: nil)
+        if let nav = navigationController, nav.viewControllers.count > 1 {
+            nav.popViewController(animated: true)
+        } else {
+            dismiss(animated: true, completion: nil)
+        }
     }
 
     @objc private func didTapRefresh() {

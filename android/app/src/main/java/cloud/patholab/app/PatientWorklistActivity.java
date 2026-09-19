@@ -100,6 +100,9 @@ public class PatientWorklistActivity extends AppCompatActivity {
         public String status; // COMPLETED, IN_PROGRESS, NO_TESTS
         public String reportId;
         public String invoiceId;
+        public String patientDbId = "";
+        public String uhid = "";
+        public String patientPhone = "";
 
         public PatientVisitItem(String id, String visitId, String dateFormatted, String tatFormatted,
                                 int tatColor, String patientName, String patientDetails, String doctor,
@@ -117,6 +120,16 @@ public class PatientWorklistActivity extends AppCompatActivity {
             this.status = status;
             this.reportId = reportId;
             this.invoiceId = invoiceId;
+        }
+
+        public PatientVisitItem(String id, String visitId, String dateFormatted, String tatFormatted,
+                                int tatColor, String patientName, String patientDetails, String doctor,
+                                String testsList, String financials, String status, String reportId, String invoiceId,
+                                String patientDbId, String uhid, String patientPhone) {
+            this(id, visitId, dateFormatted, tatFormatted, tatColor, patientName, patientDetails, doctor, testsList, financials, status, reportId, invoiceId);
+            this.patientDbId = patientDbId != null ? patientDbId : "";
+            this.uhid = uhid != null ? uhid : "";
+            this.patientPhone = patientPhone != null ? patientPhone : "";
         }
     }
 
@@ -151,6 +164,12 @@ public class PatientWorklistActivity extends AppCompatActivity {
         fetchPatientWorklist();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        fetchPatientWorklist();
+    }
+
     private void initViews() {
         btnWorklistBack = findViewById(R.id.btnWorklistBack);
         btnRefreshWorklist = findViewById(R.id.btnRefreshWorklist);
@@ -171,17 +190,27 @@ public class PatientWorklistActivity extends AppCompatActivity {
         worklistAdapter = new WorklistAdapter(filteredVisits, new WorklistAdapter.OnWorklistActionListener() {
             @Override
             public void onEnterResults(PatientVisitItem visit) {
-                showResultsEntrySheet(visit);
+                Intent intent = new Intent(PatientWorklistActivity.this, ResultsActivity.class);
+                if (visit.invoiceId != null && !visit.invoiceId.isEmpty()) {
+                    intent.putExtra("extra_invoice_id", visit.invoiceId);
+                }
+                intent.putExtra("extra_patient_name", visit.patientName);
+                startActivity(intent);
             }
 
             @Override
             public void onViewReport(PatientVisitItem visit) {
                 Intent intent = new Intent(PatientWorklistActivity.this, ReportPreviewActivity.class);
-                String idToPass = (visit.invoiceId != null && !visit.invoiceId.isEmpty()) ? visit.invoiceId : (visit.reportId != null ? visit.reportId : visit.visitId);
-                intent.putExtra("report_id", idToPass);
+                String targetId = (visit.patientDbId != null && !visit.patientDbId.isEmpty())
+                        ? visit.patientDbId
+                        : ((visit.uhid != null && !visit.uhid.isEmpty()) ? visit.uhid : visit.id);
+                intent.putExtra("report_id", targetId);
+                intent.putExtra("patient_db_id", visit.patientDbId);
+                intent.putExtra("uhid", (visit.uhid != null && !visit.uhid.isEmpty()) ? visit.uhid : visit.visitId);
                 intent.putExtra("patient_name", visit.patientName);
-                intent.putExtra("uhid", visit.visitId);
+                intent.putExtra("patient_phone", visit.patientPhone);
                 intent.putExtra("test_name", visit.testsList);
+                intent.putExtra("invoice_id", visit.invoiceId);
                 startActivity(intent);
             }
 
@@ -452,7 +481,10 @@ public class PatientWorklistActivity extends AppCompatActivity {
                                             finText,
                                             visitStatus,
                                             "rep_" + invNum,
-                                            invId
+                                            invId,
+                                            pId,
+                                            uhid,
+                                            phone
                                     ));
                                 }
                             } else {
@@ -470,7 +502,10 @@ public class PatientWorklistActivity extends AppCompatActivity {
                                         "Unbilled Registration",
                                         "NO_TESTS",
                                         null,
-                                        null
+                                        null,
+                                        pId,
+                                        uhid,
+                                        phone
                                 ));
                             }
                         }
@@ -855,6 +890,8 @@ public class PatientWorklistActivity extends AppCompatActivity {
                 h.btnWorklistViewReport.setVisibility(View.VISIBLE);
             }
 
+            h.itemView.setOnClickListener(x -> listener.onViewReport(v));
+            h.lblWorklistTestsList.setOnClickListener(x -> listener.onViewReport(v));
             h.btnWorklistEnterResults.setOnClickListener(x -> listener.onEnterResults(v));
             h.btnWorklistViewReport.setOnClickListener(x -> listener.onViewReport(v));
             h.btnWorklistInvoiceSlip.setOnClickListener(x -> listener.onInvoiceSlip(v));

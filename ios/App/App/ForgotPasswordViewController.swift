@@ -66,10 +66,9 @@ class ForgotPasswordViewController: AuthBaseViewController {
         content.addArrangedSubview(makeLabel("Email address", size: 14, weight: .semibold, color: AuthBaseViewController.textPrimary))
         content.setCustomSpacing(8, after: content.arrangedSubviews.last!)
 
-        let tf = makeTextField(placeholder: "workmail@gmail.com", keyboardType: .emailAddress)
-        emailField.copyProperties(from: tf)
-        content.addArrangedSubview(tf)
-        content.setCustomSpacing(24, after: tf)
+        configureTextField(emailField, placeholder: "workmail@gmail.com", keyboardType: .emailAddress)
+        content.addArrangedSubview(emailField)
+        content.setCustomSpacing(24, after: emailField)
 
         let btn = makePrimaryButton(title: "Send Reset Code")
         btn.addTarget(self, action: #selector(sendTapped), for: .touchUpInside)
@@ -120,14 +119,18 @@ class ForgotPasswordViewController: AuthBaseViewController {
         hideError()
         setLoading(true)
 
-        AuthService.forgotPassword(email: email) { [weak self] _, _ in
+        AuthService.forgotPassword(email: email) { [weak self] success, error in
             DispatchQueue.main.async {
                 self?.setLoading(false)
-                self?.showSuccess("If an account exists for \(email), a reset code was sent.")
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) {
-                    let otpVC = OtpVerifyViewController(email: email, mode: .reset)
-                    otpVC.modalPresentationStyle = .fullScreen
-                    self?.present(otpVC, animated: true)
+                if success {
+                    self?.showSuccess("Reset code sent to \(email)!")
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+                        let otpVC = OtpVerifyViewController(email: email, mode: .reset)
+                        otpVC.modalPresentationStyle = .fullScreen
+                        self?.present(otpVC, animated: true)
+                    }
+                } else {
+                    self?.showError(error ?? "No account found with this email address.")
                 }
             }
         }

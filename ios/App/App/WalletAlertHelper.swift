@@ -15,8 +15,15 @@ public class WalletAlertHelper {
      * Red circle badge with ✕ and message locking paid registration actions.
      * Only call this from RegistrationViewController.
      */
+    private static var keyWindow: UIWindow? {
+        UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap { $0.windows }
+            .first { $0.isKeyWindow }
+    }
+
     public static func showWalletEmptyToast(on viewController: UIViewController?, message: String = "Wallet balance is empty. Paid actions like Patient Registration are currently locked. Please recharge.") {
-        guard let window = viewController?.view.window ?? UIApplication.shared.windows.first(where: { $0.isKeyWindow }) else {
+        guard let window = viewController?.view.window ?? keyWindow else {
             return
         }
 
@@ -122,7 +129,7 @@ public class WalletAlertHelper {
 
     @objc private static func didTapToast(_ gr: UITapGestureRecognizer) {
         dismissCurrentToast()
-        if let topVC = UIApplication.shared.windows.first(where: { $0.isKeyWindow })?.rootViewController {
+        if let topVC = keyWindow?.rootViewController {
             let walletVC = WalletViewController()
             walletVC.modalPresentationStyle = .fullScreen
             topVC.present(walletVC, animated: true, completion: nil)

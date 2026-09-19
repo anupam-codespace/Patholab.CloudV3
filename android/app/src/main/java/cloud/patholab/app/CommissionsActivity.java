@@ -101,6 +101,7 @@ public class CommissionsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        StatusBarHelper.setStatusBarSapphire(this);
         setContentView(R.layout.activity_commissions);
 
         initViews();
@@ -257,7 +258,7 @@ public class CommissionsActivity extends AppCompatActivity {
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("GET");
                 conn.setRequestProperty("Authorization", "Bearer " + token);
-                conn.setRequestProperty("Cookie", "token=" + token);
+                conn.setRequestProperty("Cookie", "token=" + token + "; auth-token=" + token + "; auth_token=" + token);
                 conn.setRequestProperty("Accept", "application/json");
                 conn.setConnectTimeout(10000);
                 conn.setReadTimeout(15000);
@@ -267,7 +268,9 @@ public class CommissionsActivity extends AppCompatActivity {
                     String json = readStream(conn.getInputStream());
                     JSONObject response = new JSONObject(json);
 
-                    JSONObject stats = response.optJSONObject("stats");
+                    JSONObject kpis = response.optJSONObject("kpis");
+                    if (kpis == null) kpis = response.optJSONObject("stats");
+
                     JSONArray docsArr = response.optJSONArray("doctors");
                     JSONArray agArr = response.optJSONArray("agencies");
 
@@ -285,6 +288,7 @@ public class CommissionsActivity extends AppCompatActivity {
                         }
                     }
 
+                    final JSONObject finalKpis = kpis;
                     mainHandler.post(() -> {
                         progressCommissions.setVisibility(View.GONE);
                         doctorList.clear();
@@ -296,7 +300,7 @@ public class CommissionsActivity extends AppCompatActivity {
                         tabDoctors.setText("Referring Doctors (" + doctorList.size() + ")");
                         tabAgencies.setText("Corporate Agencies (" + agencyList.size() + ")");
 
-                        updateKpis(stats, doctorList, agencyList);
+                        updateKpis(finalKpis, doctorList, agencyList);
                         switchTab(isDoctorTab);
 
                         if (isManualRefresh) {
@@ -319,11 +323,31 @@ public class CommissionsActivity extends AppCompatActivity {
         }).start();
     }
 
-    private void updateKpis(JSONObject stats, List<JSONObject> docs, List<JSONObject> agencies) {
-        double total = stats != null ? stats.optDouble("totalCommissions", 0.0) : 0.0;
-        double pending = stats != null ? stats.optDouble("pendingPayouts", 0.0) : 0.0;
-        double settled = stats != null ? stats.optDouble("settledPayouts", 0.0) : 0.0;
-        int count = stats != null ? (stats.optInt("doctorCount", docs.size()) + stats.optInt("agencyCount", agencies.size())) : (docs.size() + agencies.size());
+    private void updateKpis(JSONObject kpis, List<JSONObject> docs, List<JSONObject> agencies) {
+        double total = 0.0;
+        double pending = 0.0;
+        double settled = 0.0;
+        int count = 0;
+
+        if (kpis != null) {
+            total = kpis.optDouble("totalGenerated", kpis.optDouble("totalCommissions", 0.0));
+            pending = kpis.optDouble("totalPending", kpis.optDouble("pendingPayouts", 0.0));
+            settled = kpis.optDouble("totalPaid", kpis.optDouble("settledPayouts", 0.0));
+            count = kpis.optInt("activePartners", kpis.optInt("doctorCount", 0) + kpis.optInt("agencyCount", 0));
+        }
+
+        if (total == 0 && pending == 0 && settled == 0) {
+            for (JSONObject d : docs) {
+                pending += d.optDouble("totalPending", d.optDouble("pendingCommission", 0.0));
+                settled += d.optDouble("totalPaid", d.optDouble("paidCommission", 0.0));
+            }
+            for (JSONObject a : agencies) {
+                pending += a.optDouble("totalPending", a.optDouble("pendingCommission", 0.0));
+                settled += a.optDouble("totalPaid", a.optDouble("paidCommission", 0.0));
+            }
+            total = pending + settled;
+            count = docs.size() + agencies.size();
+        }
 
         lblKpiTotalCommission.setText("₹" + String.format(Locale.getDefault(), "%,.0f", total));
         lblKpiPendingCommission.setText("₹" + String.format(Locale.getDefault(), "%,.0f", pending));
@@ -380,9 +404,23 @@ public class CommissionsActivity extends AppCompatActivity {
         ProgressBar progressSaving = view.findViewById(R.id.progressSettleSaving);
 
         String name = referrer.optString("name", "Partner");
-        double due = referrer.optDouble("pendingCommission", 0.0);
-        String entityType = isDoctorTab ? "DOCTOR" : "AGENCY";
-        String entityId = referrer.optString("id");
+        double due = referrer.optDouble("totalPending", referrer.optDouble("pendingCommission", 0.0));
+        int pendingCount = referrer.optInt("pendingCount", 0);
+
+        // Extract pending commission IDs from recentCommissions array
+        JSONArray recentCommissions = referrer.optJSONArray("recentCommissions");
+        final List<String> pendingCommissionIds = new ArrayList<>();
+        if (recentCommissions != null) {
+            for (int i = 0; i < recentCommissions.length(); i++) {
+                JSONObject c = recentCommissions.optJSONObject(i);
+                if (c != null && "PENDING".equalsIgnoreCase(c.optString("status"))) {
+                    String cId = c.optString("id");
+                    if (!cId.isEmpty()) {
+                        pendingCommissionIds.add(cId);
+                    }
+                }
+            }
+        }
 
         lblTargetName.setText(name + " (" + (isDoctorTab ? "Doctor" : "Agency") + ")");
         lblPendingAmount.setText("₹" + String.format(Locale.getDefault(), "%,.0f", due));
@@ -411,6 +449,12 @@ public class CommissionsActivity extends AppCompatActivity {
         btnClose.setOnClickListener(v -> sheet.dismiss());
 
         btnConfirm.setOnClickListener(v -> {
+            if (pendingCommissionIds.isEmpty()) {
+                lblError.setText("No pending commissions found to settle for " + name);
+                lblError.setVisibility(View.VISIBLE);
+                return;
+            }
+
             String amtStr = inputAmount.getText().toString().trim();
             if (amtStr.isEmpty()) {
                 lblError.setText("Please enter a valid payout amount.");
@@ -429,6 +473,7 @@ public class CommissionsActivity extends AppCompatActivity {
             }
 
             String refNote = inputReference.getText().toString().trim();
+            String fullRef = selectedMode[0] + (refNote.isEmpty() ? "" : " - " + refNote);
 
             lblError.setVisibility(View.GONE);
             btnConfirm.setEnabled(false);
@@ -442,17 +487,18 @@ public class CommissionsActivity extends AppCompatActivity {
                     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                     conn.setRequestMethod("POST");
                     conn.setRequestProperty("Authorization", "Bearer " + token);
-                    conn.setRequestProperty("Cookie", "token=" + token);
+                    conn.setRequestProperty("Cookie", "token=" + token + "; auth-token=" + token + "; auth_token=" + token);
                     conn.setRequestProperty("Content-Type", "application/json");
                     conn.setRequestProperty("Accept", "application/json");
                     conn.setDoOutput(true);
 
                     JSONObject payload = new JSONObject();
-                    payload.put("entityType", entityType);
-                    payload.put("entityId", entityId);
-                    payload.put("amount", amount);
-                    payload.put("paymentMode", selectedMode[0]);
-                    payload.put("referenceNote", refNote);
+                    JSONArray idsArray = new JSONArray();
+                    for (String id : pendingCommissionIds) {
+                        idsArray.put(id);
+                    }
+                    payload.put("commissionIds", idsArray);
+                    payload.put("transactionRef", fullRef);
 
                     OutputStream os = conn.getOutputStream();
                     os.write(payload.toString().getBytes(StandardCharsets.UTF_8));
@@ -463,7 +509,7 @@ public class CommissionsActivity extends AppCompatActivity {
                     if (resCode >= 200 && resCode < 300) {
                         mainHandler.post(() -> {
                             sheet.dismiss();
-                            Toast.makeText(this, "₹" + String.format(Locale.getDefault(), "%,.0f", amount) + " settled successfully!", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(this, "₹" + String.format(Locale.getDefault(), "%,.0f", amount) + " settled (" + pendingCommissionIds.size() + " records marked as PAID)!", Toast.LENGTH_SHORT).show();
                             loadCommissionsData(false);
                         });
                     } else {
@@ -506,8 +552,9 @@ public class CommissionsActivity extends AppCompatActivity {
                 String[] parts = cookies.split(";");
                 for (String part : parts) {
                     String trimmed = part.trim();
-                    if (trimmed.startsWith("token=")) {
-                        String cookieToken = trimmed.substring(6).trim();
+                    if (trimmed.startsWith("token=") || trimmed.startsWith("auth-token=") || trimmed.startsWith("auth_token=")) {
+                        int eqIdx = trimmed.indexOf('=');
+                        String cookieToken = trimmed.substring(eqIdx + 1).trim();
                         if (!cookieToken.isEmpty()) {
                             AuthManager.saveToken(this, cookieToken);
                             return cookieToken;
@@ -607,15 +654,29 @@ public class CommissionsActivity extends AppCompatActivity {
 
             void bind(JSONObject referrer, boolean isDoctor, CommissionActionListener listener) {
                 String name = referrer.optString("name", "Referrer");
-                String phone = referrer.optString("phone", "");
+                String phone = referrer.optString("contact", referrer.optString("phone", ""));
                 String category = isDoctor
                         ? referrer.optString("specialization", "General Medicine")
                         : referrer.optString("tier", "STANDARD");
 
-                int referralsCount = referrer.optInt("totalReferred", 0);
-                double billed = referrer.optDouble("totalBilled", 0.0);
+                JSONArray recent = referrer.optJSONArray("recentCommissions");
+                int referralsCount = recent != null ? recent.length() : referrer.optInt("pendingCount", 0);
+                double billed = 0.0;
+                if (recent != null) {
+                    for (int i = 0; i < recent.length(); i++) {
+                        JSONObject c = recent.optJSONObject(i);
+                        if (c != null) {
+                            billed += c.optDouble("testPrice", 0.0);
+                        }
+                    }
+                }
+                if (billed == 0.0) {
+                    billed = referrer.optDouble("totalBilled", 0.0);
+                }
+
                 double earned = referrer.optDouble("totalCommission", 0.0);
-                double pending = referrer.optDouble("pendingCommission", 0.0);
+                double pending = referrer.optDouble("totalPending", referrer.optDouble("pendingCommission", 0.0));
+                String commRule = referrer.optString("commissionRule", "Standard");
 
                 lblReferrerTypeBadge.setText(isDoctor ? "DOCTOR" : "AGENCY");
                 lblReferrerTypeBadge.setTextColor(isDoctor ? 0xFF2563EB : 0xFF0D9488);
@@ -623,7 +684,7 @@ public class CommissionsActivity extends AppCompatActivity {
 
                 lblReferrerCategory.setText(category);
                 lblReferrerName.setText(name);
-                lblReferrerSubtitle.setText((phone.isEmpty() ? "" : (phone + " • ")) + referralsCount + " Tests Referred");
+                lblReferrerSubtitle.setText((phone.isEmpty() ? "" : (phone + " • ")) + referralsCount + " Tests Referred • " + commRule);
 
                 lblReferrerBilled.setText("₹" + String.format(Locale.getDefault(), "%,.0f", billed));
                 lblReferrerEarned.setText("₹" + String.format(Locale.getDefault(), "%,.0f", earned));

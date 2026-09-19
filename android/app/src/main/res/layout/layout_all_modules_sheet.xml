@@ -37,10 +37,18 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="All Lab Modules"
-                android:textSize="19.5sp"
+                android:textSize="20sp"
                 android:textStyle="bold"
                 android:textColor="#0F172A"
                 android:letterSpacing="-0.02" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Complete Clinical, RIS/PACS &amp; Enterprise Directory"
+                android:textSize="11.5sp"
+                android:textColor="#64748B" />
 
         </LinearLayout>
 

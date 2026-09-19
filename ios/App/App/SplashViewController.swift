@@ -20,6 +20,13 @@ class SplashViewController: UIViewController {
         
         startTime = Date()
         checkSession()
+        
+        // Absolute failsafe: ensure the app navigates away from splash within 3.5 seconds regardless of network status
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.5) { [weak self] in
+            guard let self = self, !self.isApiFinished else { return }
+            NSLog("WARN: SplashViewController failsafe triggered after 3.5s timeout")
+            self.completeApiCheck(success: false, token: nil)
+        }
     }
     
     private func setupStatusBar() {
@@ -44,32 +51,30 @@ class SplashViewController: UIViewController {
         view.addSubview(logoImageView)
         
         NSLayoutConstraint.activate([
-            logoImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            logoImageView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            logoImageView.widthAnchor.constraint(equalToConstant: 320),
-            logoImageView.heightAnchor.constraint(equalToConstant: 570)
+            logoImageView.topAnchor.constraint(equalTo: view.topAnchor),
+            logoImageView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            logoImageView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            logoImageView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
         ])
     }
     
     private func checkSession() {
-        // Safety timeout in case network check hangs
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) { [weak self] in
-            guard let self = self, !self.isApiFinished else { return }
-            self.completeApiCheck(success: false, token: nil)
-        }
+        let token = (KeychainManager.read(forKey: KeychainManager.tokenKey) ?? UserDefaults.standard.string(forKey: "auth_token"))?.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        if let token = KeychainManager.read(forKey: KeychainManager.tokenKey), !token.isEmpty {
-            // Validate token in background
-            AuthService.getMe(token: token) { [weak self] valid in
-                DispatchQueue.main.async {
-                    self?.completeApiCheck(success: valid, token: token)
-                }
+        if let token = token, !token.isEmpty {
+            // Pre-sync webview cookie immediately so WebView is authenticated
+            AuthService.injectCookieIntoWebView(token: token)
+
+            // Validate and sync user info in background (non-blocking, never wipe session on network hiccup)
+            AuthService.getMe(token: token) { _ in
+                // Background profile sync complete
             }
+
+            // Route to main app after brief splash animation
+            completeApiCheck(success: true, token: token)
         } else {
-            // No token saved, complete API check immediately
-            DispatchQueue.main.async { [weak self] in
-                self?.completeApiCheck(success: false, token: nil)
-            }
+            // No token saved: route to Onboarding or Login
+            completeApiCheck(success: false, token: nil)
         }
     }
     
@@ -80,14 +85,10 @@ class SplashViewController: UIViewController {
         tokenToUse = token
         
         let elapsed = Date().timeIntervalSince(startTime ?? Date())
-        let remaining = MIN_SPLASH_TIME - elapsed
+        let remaining = max(0, MIN_SPLASH_TIME - elapsed)
         
-        if remaining > 0 {
-            DispatchQueue.main.asyncAfter(deadline: .now() + remaining) { [weak self] in
-                self?.routeToApp()
-            }
-        } else {
-            routeToApp()
+        DispatchQueue.main.asyncAfter(deadline: .now() + remaining) { [weak self] in
+            self?.routeToApp()
         }
     }
     
@@ -107,10 +108,13 @@ class SplashViewController: UIViewController {
                     }
                 }
             } else {
-                KeychainManager.delete(forKey: KeychainManager.tokenKey)
-                AuthService.clearWebViewCookie()
-                NSLog("DEBUG: SplashViewController routing to Onboarding")
-                appDelegate.presentOnboarding()
+                NSLog("DEBUG: SplashViewController routing to Onboarding or Login")
+                let hasCompletedOnboarding = UserDefaults.standard.bool(forKey: "has_completed_onboarding")
+                if hasCompletedOnboarding {
+                    appDelegate.presentNativeLogin()
+                } else {
+                    appDelegate.presentOnboarding()
+                }
             }
         }
     }

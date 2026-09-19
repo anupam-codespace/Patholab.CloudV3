@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:background="@drawable/bg_stat_card"
+    android:padding="14dp"
+    android:layout_marginBottom="8dp"
+    android:gravity="center_vertical">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <!-- Top Row: Accession Number & Urgent Tag -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/lblQueueAccession"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="#F1F5F9"
+                android:paddingStart="6dp"
+                android:paddingEnd="6dp"
+                android:paddingTop="2dp"
+                android:paddingBottom="2dp"
+                android:text="ACC-1001"
+                android:textSize="10.5sp"
+                android:textStyle="bold"
+                android:textColor="#475569"
+                android:fontFamily="monospace" />
+
+            <TextView
+                android:id="@+id/lblQueueUrgent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_status_cancelled"
+                android:paddingStart="6dp"
+                android:paddingEnd="6dp"
+                android:paddingTop="2dp"
+                android:paddingBottom="2dp"
+                android:text="URGENT"
+                android:textSize="9.5sp"
+                android:textStyle="bold"
+                android:textColor="#DC2626"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <!-- Patient Name -->
+        <TextView
+            android:id="@+id/lblQueuePatient"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:text="Jane Smith"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#0F172A" />
+
+        <!-- Scan Type -->
+        <TextView
+            android:id="@+id/lblQueueScan"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="CT Scan"
+            android:textSize="12sp"
+            android:textColor="#475569" />
+
+        <!-- Time -->
+        <TextView
+            android:id="@+id/lblQueueTime"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:text="Scanned: 10:15 AM"
+            android:textSize="11sp"
+            android:textColor="#94A3B8" />
+    </LinearLayout>
+
+    <ImageView
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:layout_marginStart="10dp"
+        android:src="@drawable/ic_chevron_right"
+        app:tint="#9333EA" />
+</LinearLayout>

@@ -87,16 +87,22 @@ class ReferralDoctorsViewController: UIViewController, UITextFieldDelegate, UITa
 
         heroGradientLayer.colors = [
             UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1).cgColor, // #0D6EFD
+            UIColor(red: 0.039, green: 0.345, blue: 0.792, alpha: 1).cgColor, // #0A58CA
             UIColor(red: 0.114, green: 0.306, blue: 0.847, alpha: 1).cgColor  // #1D4ED8
         ]
         heroGradientLayer.startPoint = CGPoint(x: 0, y: 0)
         heroGradientLayer.endPoint   = CGPoint(x: 1, y: 1)
         heroHeaderView.layer.insertSublayer(heroGradientLayer, at: 0)
+        heroHeaderView.layer.cornerRadius = 28
+        heroHeaderView.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
+        heroHeaderView.clipsToBounds = true
 
         backBtn.translatesAutoresizingMaskIntoConstraints = false
-        backBtn.setImage(UIImage(systemName: "arrow.left"), for: .normal)
+        backBtn.setImage(UIImage(systemName: "chevron.left"), for: .normal)
         backBtn.tintColor = .white
-        backBtn.backgroundColor = UIColor.white.withAlphaComponent(0.15)
+        backBtn.backgroundColor = UIColor.white.withAlphaComponent(0.20)
+        backBtn.layer.borderColor = UIColor.white.withAlphaComponent(0.30).cgColor
+        backBtn.layer.borderWidth = 1
         backBtn.layer.cornerRadius = 19
         backBtn.addTarget(self, action: #selector(backTapped), for: .touchUpInside)
         heroHeaderView.addSubview(backBtn)
@@ -116,7 +122,9 @@ class ReferralDoctorsViewController: UIViewController, UITextFieldDelegate, UITa
         refreshBtn.translatesAutoresizingMaskIntoConstraints = false
         refreshBtn.setImage(UIImage(systemName: "arrow.clockwise"), for: .normal)
         refreshBtn.tintColor = .white
-        refreshBtn.backgroundColor = UIColor.white.withAlphaComponent(0.15)
+        refreshBtn.backgroundColor = UIColor.white.withAlphaComponent(0.20)
+        refreshBtn.layer.borderColor = UIColor.white.withAlphaComponent(0.30).cgColor
+        refreshBtn.layer.borderWidth = 1
         refreshBtn.layer.cornerRadius = 19
         refreshBtn.addTarget(self, action: #selector(refreshTapped), for: .touchUpInside)
         heroHeaderView.addSubview(refreshBtn)
@@ -125,10 +133,9 @@ class ReferralDoctorsViewController: UIViewController, UITextFieldDelegate, UITa
             heroHeaderView.topAnchor.constraint(equalTo: view.topAnchor),
             heroHeaderView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             heroHeaderView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            heroHeaderView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 60),
 
             backBtn.leadingAnchor.constraint(equalTo: heroHeaderView.leadingAnchor, constant: 16),
-            backBtn.bottomAnchor.constraint(equalTo: heroHeaderView.bottomAnchor, constant: -12),
+            backBtn.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 12),
             backBtn.widthAnchor.constraint(equalToConstant: 38),
             backBtn.heightAnchor.constraint(equalToConstant: 38),
 
@@ -149,19 +156,19 @@ class ReferralDoctorsViewController: UIViewController, UITextFieldDelegate, UITa
         kpiScrollView.translatesAutoresizingMaskIntoConstraints = false
         kpiScrollView.showsHorizontalScrollIndicator = false
         kpiScrollView.clipsToBounds = false
-        view.addSubview(kpiScrollView)
+        heroHeaderView.addSubview(kpiScrollView)
 
         kpiStackView.translatesAutoresizingMaskIntoConstraints = false
         kpiStackView.axis = .horizontal
-        kpiStackView.spacing = 8
+        kpiStackView.spacing = 10
         kpiStackView.alignment = .fill
         kpiStackView.distribution = .fillProportionally
         kpiScrollView.addSubview(kpiStackView)
 
-        let card1 = createKpiCard(title: "ACTIVE DOCTORS", subtitle: "Prescribing Network", countLbl: kpiTotalCountLbl, colorHex: "6366F1", iconName: "stethoscope")
-        let card2 = createKpiCard(title: "TOTAL REFERRALS", subtitle: "Prescribed Tests", countLbl: kpiReferralsCountLbl, colorHex: "059669", iconName: "doc.text.fill")
-        let card3 = createKpiCard(title: "BILLED VOLUME", subtitle: "Referred Tests", countLbl: kpiBilledVolumeLbl, colorHex: "0284C7", iconName: "indianrupeesign.circle.fill")
-        let card4 = createKpiCard(title: "UNSETTLED DUE", subtitle: "Pending Payout", countLbl: kpiPendingCommLbl, colorHex: "D97706", iconName: "clock.arrow.circlepath")
+        let card1 = createKpiCard(title: "ACTIVE DOCTORS", subtitle: "Prescribing Network", countLbl: kpiTotalCountLbl, dotColor: UIColor(red: 0.388, green: 0.400, blue: 0.945, alpha: 1)) // Indigo
+        let card2 = createKpiCard(title: "TOTAL REFERRALS", subtitle: "Prescribed Tests", countLbl: kpiReferralsCountLbl, dotColor: UIColor(red: 0.063, green: 0.725, blue: 0.506, alpha: 1)) // Emerald
+        let card3 = createKpiCard(title: "BILLED VOLUME", subtitle: "Referred Tests", countLbl: kpiBilledVolumeLbl, dotColor: UIColor(red: 0.024, green: 0.714, blue: 0.831, alpha: 1)) // Cyan
+        let card4 = createKpiCard(title: "UNSETTLED DUE", subtitle: "Pending Payout", countLbl: kpiPendingCommLbl, dotColor: UIColor(red: 0.961, green: 0.620, blue: 0.043, alpha: 1)) // Amber
 
         kpiStackView.addArrangedSubview(card1)
         kpiStackView.addArrangedSubview(card2)
@@ -169,10 +176,12 @@ class ReferralDoctorsViewController: UIViewController, UITextFieldDelegate, UITa
         kpiStackView.addArrangedSubview(card4)
 
         NSLayoutConstraint.activate([
-            kpiScrollView.topAnchor.constraint(equalTo: heroHeaderView.bottomAnchor, constant: 12),
-            kpiScrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            kpiScrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            kpiScrollView.heightAnchor.constraint(equalToConstant: 78),
+            kpiScrollView.topAnchor.constraint(equalTo: backBtn.bottomAnchor, constant: 14),
+            kpiScrollView.leadingAnchor.constraint(equalTo: heroHeaderView.leadingAnchor),
+            kpiScrollView.trailingAnchor.constraint(equalTo: heroHeaderView.trailingAnchor),
+            kpiScrollView.heightAnchor.constraint(equalToConstant: 80),
+
+            heroHeaderView.bottomAnchor.constraint(equalTo: kpiScrollView.bottomAnchor, constant: 18),
 
             kpiStackView.topAnchor.constraint(equalTo: kpiScrollView.topAnchor),
             kpiStackView.bottomAnchor.constraint(equalTo: kpiScrollView.bottomAnchor),
@@ -182,61 +191,65 @@ class ReferralDoctorsViewController: UIViewController, UITextFieldDelegate, UITa
         ])
     }
 
-    private func createKpiCard(title: String, subtitle: String, countLbl: UILabel, colorHex: String, iconName: String) -> UIView {
+    private func createKpiCard(title: String, subtitle: String, countLbl: UILabel, dotColor: UIColor) -> UIView {
         let card = UIView()
         card.translatesAutoresizingMaskIntoConstraints = false
-        card.backgroundColor = .white
-        card.layer.cornerRadius = 12
-        card.layer.shadowColor = UIColor.black.cgColor
-        card.layer.shadowOpacity = 0.05
-        card.layer.shadowOffset = CGSize(width: 0, height: 2)
-        card.layer.shadowRadius = 4
-        card.widthAnchor.constraint(equalToConstant: 148).isActive = true
+        card.backgroundColor = UIColor.white.withAlphaComponent(0.16)
+        card.layer.borderColor = UIColor.white.withAlphaComponent(0.25).cgColor
+        card.layer.borderWidth = 1
+        card.layer.cornerRadius = 16
+        card.clipsToBounds = true
+        card.widthAnchor.constraint(equalToConstant: 155).isActive = true
 
-        let topRow = UIStackView()
+        let dot = UIView()
+        dot.translatesAutoresizingMaskIntoConstraints = false
+        dot.backgroundColor = dotColor
+        dot.layer.cornerRadius = 3.5
+
+        let tLbl = UILabel()
+        tLbl.translatesAutoresizingMaskIntoConstraints = false
+        tLbl.text = title
+        tLbl.font = .systemFont(ofSize: 9.5, weight: .bold)
+        tLbl.textColor = UIColor(red: 0.780, green: 0.875, blue: 1.0, alpha: 1)
+
+        let topRow = UIStackView(arrangedSubviews: [dot, tLbl])
         topRow.translatesAutoresizingMaskIntoConstraints = false
         topRow.axis = .horizontal
         topRow.alignment = .center
-        topRow.distribution = .equalSpacing
+        topRow.spacing = 6
 
-        let tLbl = UILabel()
-        tLbl.text = title
-        tLbl.font = .systemFont(ofSize: 9.5, weight: .bold)
-        tLbl.textColor = colorFromHex(colorHex)
-        topRow.addArrangedSubview(tLbl)
-
-        let icon = UIImageView(image: UIImage(systemName: iconName))
-        icon.tintColor = colorFromHex(colorHex).withAlphaComponent(0.6)
-        icon.contentMode = .scaleAspectFit
-        icon.widthAnchor.constraint(equalToConstant: 13).isActive = true
-        icon.heightAnchor.constraint(equalToConstant: 13).isActive = true
-        topRow.addArrangedSubview(icon)
+        NSLayoutConstraint.activate([
+            dot.widthAnchor.constraint(equalToConstant: 7),
+            dot.heightAnchor.constraint(equalToConstant: 7)
+        ])
 
         countLbl.translatesAutoresizingMaskIntoConstraints = false
         countLbl.text = "0"
-        countLbl.font = .systemFont(ofSize: 18, weight: .bold)
-        countLbl.textColor = UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1)
+        countLbl.font = .systemFont(ofSize: 20, weight: .bold)
+        countLbl.textColor = .white
 
         let subLbl = UILabel()
         subLbl.translatesAutoresizingMaskIntoConstraints = false
         subLbl.text = subtitle
-        subLbl.font = .systemFont(ofSize: 10, weight: .medium)
-        subLbl.textColor = UIColor(red: 0.392, green: 0.455, blue: 0.545, alpha: 1)
+        subLbl.font = .systemFont(ofSize: 10.5, weight: .medium)
+        subLbl.textColor = UIColor(red: 0.780, green: 0.875, blue: 1.0, alpha: 0.9)
 
         card.addSubview(topRow)
         card.addSubview(countLbl)
         card.addSubview(subLbl)
 
         NSLayoutConstraint.activate([
-            topRow.topAnchor.constraint(equalTo: card.topAnchor, constant: 10),
-            topRow.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 12),
-            topRow.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -12),
+            topRow.topAnchor.constraint(equalTo: card.topAnchor, constant: 11),
+            topRow.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 13),
+            topRow.trailingAnchor.constraint(lessThanOrEqualTo: card.trailingAnchor, constant: -13),
 
-            countLbl.topAnchor.constraint(equalTo: topRow.bottomAnchor, constant: 3),
-            countLbl.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 12),
+            countLbl.topAnchor.constraint(equalTo: topRow.bottomAnchor, constant: 4),
+            countLbl.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 13),
+            countLbl.trailingAnchor.constraint(lessThanOrEqualTo: card.trailingAnchor, constant: -13),
 
-            subLbl.topAnchor.constraint(equalTo: countLbl.bottomAnchor, constant: 1),
-            subLbl.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 12)
+            subLbl.topAnchor.constraint(equalTo: countLbl.bottomAnchor, constant: 2),
+            subLbl.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 13),
+            subLbl.trailingAnchor.constraint(lessThanOrEqualTo: card.trailingAnchor, constant: -13)
         ])
 
         return card
@@ -273,7 +286,7 @@ class ReferralDoctorsViewController: UIViewController, UITextFieldDelegate, UITa
         searchContainer.addSubview(clearSearchBtn)
 
         NSLayoutConstraint.activate([
-            searchContainer.topAnchor.constraint(equalTo: kpiScrollView.bottomAnchor, constant: 10),
+            searchContainer.topAnchor.constraint(equalTo: heroHeaderView.bottomAnchor, constant: 14),
             searchContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             searchContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             searchContainer.heightAnchor.constraint(equalToConstant: 40),
@@ -470,13 +483,30 @@ class ReferralDoctorsViewController: UIViewController, UITextFieldDelegate, UITa
     // ─────────────────────────────────────────────────────────────────────────
     //  DATA FETCHING & FILTERING
     // ─────────────────────────────────────────────────────────────────────────
+    private func getAuthToken() -> String? {
+        if let token = KeychainManager.shared.getToken(), !token.isEmpty {
+            return token
+        }
+        if let token = UserDefaults.standard.string(forKey: "auth_token"), !token.isEmpty {
+            return token
+        }
+        if let cookies = HTTPCookieStorage.shared.cookies {
+            for cookie in cookies {
+                if (cookie.name == "token" || cookie.name == "auth-token") && !cookie.value.isEmpty {
+                    return cookie.value
+                }
+            }
+        }
+        return nil
+    }
+
     private func loadDoctorsData(isManual: Bool) {
         if !refreshControl.isRefreshing {
             loadingIndicator.startAnimating()
         }
 
-        guard let token = KeychainManager.shared.getToken(),
-              let url = URL(string: "\(Self.baseUrl)/api/workspace/doctors") else {
+        let token = getAuthToken()
+        guard let url = URL(string: "\(Self.baseUrl)/api/workspace/doctors") else {
             loadingIndicator.stopAnimating()
             refreshControl.endRefreshing()
             return
@@ -484,35 +514,189 @@ class ReferralDoctorsViewController: UIViewController, UITextFieldDelegate, UITa
 
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
+        if let token = token, !token.isEmpty {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            request.setValue("token=\(token); auth-token=\(token)", forHTTPHeaderField: "Cookie")
+        }
         request.setValue("application/json", forHTTPHeaderField: "Accept")
 
         URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
-            DispatchQueue.main.async {
-                self?.loadingIndicator.stopAnimating()
-                self?.refreshControl.endRefreshing()
-
-                guard let self = self, let data = data, error == nil else {
-                    self?.showToast("Unable to connect to server")
-                    return
-                }
-
-                do {
-                    if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                        let docs = json["doctors"] as? [[String: Any]] ?? []
-                        let stats = json["stats"] as? [String: Any]
-
-                        self.allDoctors = docs
-                        self.updateKpiUi(stats: stats)
-                        self.applyFilterAndSearch()
-
-                        if isManual {
-                            self.showToast("Doctors synchronized")
-                        }
+            let httpStatus = (response as? HTTPURLResponse)?.statusCode ?? 0
+            if httpStatus == 200, let data = data,
+               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let docs = json["doctors"] as? [[String: Any]], !docs.isEmpty {
+                DispatchQueue.main.async {
+                    self?.loadingIndicator.stopAnimating()
+                    self?.refreshControl.endRefreshing()
+                    let stats = (json["stats"] as? [String: Any]) ?? (json["kpis"] as? [String: Any])
+                    self?.allDoctors = docs
+                    self?.updateKpiUi(stats: stats)
+                    self?.applyFilterAndSearch()
+                    if isManual {
+                        self?.showToast("Doctors synchronized")
                     }
-                } catch {
-                    self.showToast("Error parsing doctors")
+                }
+                return
+            }
+
+            // Fallback: Real-time Live Workspace Data Sync from active patients & visits
+            self?.fetchRealtimeWorkspaceDoctors(token: token, isManual: isManual)
+        }.resume()
+    }
+
+    private func fetchRealtimeWorkspaceDoctors(token: String?, isManual: Bool) {
+        guard let url = URL(string: "\(Self.baseUrl)/api/workspace/patients?limit=100") else {
+            DispatchQueue.main.async {
+                self.loadingIndicator.stopAnimating()
+                self.refreshControl.endRefreshing()
+                self.applyFilterAndSearch()
+            }
+            return
+        }
+
+        var req = URLRequest(url: url)
+        req.httpMethod = "GET"
+        if let token = token, !token.isEmpty {
+            req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            req.setValue("token=\(token); auth-token=\(token)", forHTTPHeaderField: "Cookie")
+        }
+        req.setValue("application/json", forHTTPHeaderField: "Accept")
+
+        URLSession.shared.dataTask(with: req) { [weak self] data, response, error in
+            guard let self = self else { return }
+            var doctorMap: [String: [String: Any]] = [:]
+            var totalReferralsCalc = 0
+            var totalBilledCalc = 0.0
+            var totalPendingCalc = 0.0
+
+            if let data = data,
+               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let patientsArr = json["patients"] as? [[String: Any]] {
+
+                for patient in patientsArr {
+                    let patientName = patient["name"] as? String ?? "Patient"
+                    let docObj = patient["doctor"] as? [String: Any]
+                    let docId = docObj?["id"] as? String ?? ""
+                    let docName = docObj?["name"] as? String ?? ""
+
+                    if docName.isEmpty || docName.caseInsensitiveCompare("Self") == .orderedSame || docName.lowercased().contains("no doctor") {
+                        continue
+                    }
+
+                    let key = !docId.isEmpty ? docId : docName.lowercased()
+                    var aggregatedDoc = doctorMap[key] ?? [:]
+
+                    if aggregatedDoc.isEmpty {
+                        if let docObj = docObj {
+                            for (k, v) in docObj {
+                                aggregatedDoc[k] = v
+                            }
+                        }
+                        if aggregatedDoc["id"] == nil || (aggregatedDoc["id"] as? String)?.isEmpty == true {
+                            aggregatedDoc["id"] = docId.isEmpty ? "doc_\(abs(key.hashValue))" : docId
+                        }
+                        if aggregatedDoc["name"] == nil || (aggregatedDoc["name"] as? String)?.isEmpty == true {
+                            aggregatedDoc["name"] = docName
+                        }
+                        if aggregatedDoc["specialization"] == nil || (aggregatedDoc["specialization"] as? String)?.isEmpty == true {
+                            aggregatedDoc["specialization"] = "General Physician"
+                        }
+                        if aggregatedDoc["clinic"] == nil || (aggregatedDoc["clinic"] as? String)?.isEmpty == true {
+                            aggregatedDoc["clinic"] = "Private Practice"
+                        }
+                        if aggregatedDoc["commissionRate"] == nil {
+                            aggregatedDoc["commissionRate"] = 10.0
+                        }
+                        if aggregatedDoc["commissionType"] == nil {
+                            aggregatedDoc["commissionType"] = "PERCENTAGE"
+                        }
+                        aggregatedDoc["totalReferrals"] = 0
+                        aggregatedDoc["totalPatients"] = 0
+                        aggregatedDoc["totalBilled"] = 0.0
+                        aggregatedDoc["totalCommission"] = 0.0
+                        aggregatedDoc["pendingCommission"] = 0.0
+                        aggregatedDoc["commissions"] = [[String: Any]]()
+                    }
+
+                    // Increment patients
+                    let prevPatients = aggregatedDoc["totalPatients"] as? Int ?? 0
+                    aggregatedDoc["totalPatients"] = prevPatients + 1
+
+                    // Invoices total
+                    let invoices = patient["invoices"] as? [[String: Any]] ?? []
+                    var patientBilled = 0.0
+                    for inv in invoices {
+                        let grand = inv["grandTotal"] as? Double ?? (inv["subtotal"] as? Double ?? 0.0)
+                        patientBilled += grand
+                    }
+                    let prevBilled = aggregatedDoc["totalBilled"] as? Double ?? 0.0
+                    aggregatedDoc["totalBilled"] = prevBilled + patientBilled
+                    totalBilledCalc += patientBilled
+
+                    // Tests & referrals
+                    let tests = patient["tests"] as? [[String: Any]] ?? []
+                    let testCount = max(1, tests.count)
+                    let prevRefs = aggregatedDoc["totalReferrals"] as? Int ?? 0
+                    aggregatedDoc["totalReferrals"] = prevRefs + testCount
+                    totalReferralsCalc += testCount
+
+                    let rate = aggregatedDoc["commissionRate"] as? Double ?? 10.0
+                    let commType = aggregatedDoc["commissionType"] as? String ?? "PERCENTAGE"
+                    let docComm = commType.caseInsensitiveCompare("FIXED") == .orderedSame ? (rate * Double(testCount)) : (patientBilled * rate / 100.0)
+
+                    let prevComm = aggregatedDoc["totalCommission"] as? Double ?? 0.0
+                    aggregatedDoc["totalCommission"] = prevComm + docComm
+
+                    let prevPending = aggregatedDoc["pendingCommission"] as? Double ?? 0.0
+                    aggregatedDoc["pendingCommission"] = prevPending + docComm
+                    totalPendingCalc += docComm
+
+                    // Ledger items
+                    var commsArr = aggregatedDoc["commissions"] as? [[String: Any]] ?? []
+                    if !tests.isEmpty {
+                        for t in tests {
+                            var item: [String: Any] = [:]
+                            item["id"] = t["id"] as? String ?? "comm_\(Int(Date().timeIntervalSince1970 * 1000))"
+                            item["patientName"] = patientName
+                            item["testName"] = t["testName"] as? String ?? "Investigation"
+                            item["amount"] = commType.caseInsensitiveCompare("FIXED") == .orderedSame ? rate : (patientBilled > 0 ? (patientBilled * rate / 100.0) : (rate * 15.0))
+                            item["status"] = "PENDING"
+                            item["createdAt"] = t["createdAt"] as? String ?? (patient["createdAt"] as? String ?? "")
+                            commsArr.append(item)
+                        }
+                    } else {
+                        var item: [String: Any] = [:]
+                        item["id"] = "comm_\(Int(Date().timeIntervalSince1970 * 1000))"
+                        item["patientName"] = patientName
+                        item["testName"] = "Clinical Consultation"
+                        item["amount"] = docComm
+                        item["status"] = "PENDING"
+                        item["createdAt"] = patient["createdAt"] as? String ?? ""
+                        commsArr.append(item)
+                    }
+                    aggregatedDoc["commissions"] = commsArr
+
+                    doctorMap[key] = aggregatedDoc
+                }
+            }
+
+            let resultList = Array(doctorMap.values)
+            let computedKpis: [String: Any] = [
+                "totalDoctors": resultList.count,
+                "totalReferrals": totalReferralsCalc,
+                "totalBilled": totalBilledCalc,
+                "pendingCommission": totalPendingCalc
+            ]
+
+            DispatchQueue.main.async {
+                self.loadingIndicator.stopAnimating()
+                self.refreshControl.endRefreshing()
+                self.allDoctors = resultList
+                self.updateKpiUi(stats: computedKpis)
+                self.applyFilterAndSearch()
+
+                if isManual {
+                    self.showToast("Doctors synchronized (\(resultList.count) active)")
                 }
             }
         }.resume()
@@ -520,9 +704,25 @@ class ReferralDoctorsViewController: UIViewController, UITextFieldDelegate, UITa
 
     private func updateKpiUi(stats: [String: Any]?) {
         let count = stats?["totalDoctors"] as? Int ?? allDoctors.count
-        let referrals = stats?["totalReferrals"] as? Int ?? 0
-        let billed = stats?["totalBilled"] as? Double ?? 0.0
-        let pending = stats?["pendingCommission"] as? Double ?? 0.0
+        var referrals = stats?["totalReferrals"] as? Int ?? 0
+        var billed = stats?["totalBilled"] as? Double ?? (stats?["totalCommission"] as? Double ?? 0.0)
+        var pending = stats?["pendingCommission"] as? Double ?? 0.0
+
+        if referrals == 0 || billed == 0.0 || pending == 0.0 {
+            var calcReferrals = 0
+            var calcBilled = 0.0
+            var calcPending = 0.0
+            for doc in allDoctors {
+                let docStats = doc["stats"] as? [String: Any]
+                calcReferrals += docStats?["totalReferrals"] as? Int ?? (doc["totalReferrals"] as? Int ?? 0)
+                let b = docStats?["totalBilled"] as? Double ?? (doc["totalBilled"] as? Double ?? (doc["totalCommission"] as? Double ?? 0.0))
+                calcBilled += b
+                calcPending += docStats?["pendingCommission"] as? Double ?? (doc["pendingCommission"] as? Double ?? 0.0)
+            }
+            if referrals == 0 { referrals = calcReferrals }
+            if billed == 0.0 { billed = calcBilled }
+            if pending == 0.0 { pending = calcPending }
+        }
 
         kpiTotalCountLbl.text = "\(count)"
         kpiReferralsCountLbl.text = "\(referrals)"
@@ -721,18 +921,18 @@ class ReferralDoctorsViewController: UIViewController, UITextFieldDelegate, UITa
         }
 
         alert.addAction(saveAction)
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, completion: nil))
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
         present(alert, animated: true, completion: nil)
     }
 
     private func submitDoctor(id: String?, name: String, phone: String, regNo: String, spec: String, clinic: String, rate: Double) {
-        guard let token = KeychainManager.shared.getToken(),
+        guard let token = getAuthToken(),
               let url = URL(string: "\(Self.baseUrl)/api/workspace/doctors") else { return }
 
         var request = URLRequest(url: url)
         request.httpMethod = id != nil ? "PATCH" : "POST"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
+        request.setValue("token=\(token); auth-token=\(token)", forHTTPHeaderField: "Cookie")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
         var payload: [String: Any] = [
@@ -775,18 +975,18 @@ class ReferralDoctorsViewController: UIViewController, UITextFieldDelegate, UITa
         alert.addAction(UIAlertAction(title: "Delete", style: .destructive) { [weak self] _ in
             self?.deleteDoctor(id: id)
         })
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, completion: nil))
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
         present(alert, animated: true, completion: nil)
     }
 
     private func deleteDoctor(id: String) {
-        guard let token = KeychainManager.shared.getToken(),
+        guard let token = getAuthToken(),
               let url = URL(string: "\(Self.baseUrl)/api/workspace/doctors?id=\(id)") else { return }
 
         var request = URLRequest(url: url)
         request.httpMethod = "DELETE"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
+        request.setValue("token=\(token); auth-token=\(token)", forHTTPHeaderField: "Cookie")
 
         URLSession.shared.dataTask(with: request) { [weak self] _, _, _ in
             DispatchQueue.main.async {
@@ -800,16 +1000,28 @@ class ReferralDoctorsViewController: UIViewController, UITextFieldDelegate, UITa
     private func showLedgerSheet(doctor: [String: Any]) {
         let name = doctor["name"] as? String ?? "Doctor"
         let stats = doctor["stats"] as? [String: Any]
-        let earned = stats?["totalCommission"] as? Double ?? 0.0
-        let due = stats?["pendingCommission"] as? Double ?? 0.0
+        let earned = stats?["totalCommission"] as? Double ?? (doctor["totalCommission"] as? Double ?? 0.0)
+        let due = stats?["pendingCommission"] as? Double ?? (doctor["pendingCommission"] as? Double ?? 0.0)
         let paid = max(0, earned - due)
+        let comms = doctor["commissions"] as? [[String: Any]] ?? []
+
+        var msg = "Total Commission: ₹\(String(format: "%,.0f", earned))\nPaid Out: ₹\(String(format: "%,.0f", paid))\nBalance Due: ₹\(String(format: "%,.0f", due))"
+        if !comms.isEmpty {
+            msg += "\n\nRecent Referred Items (\(comms.count)):\n"
+            for (idx, c) in comms.prefix(5).enumerated() {
+                let pName = c["patientName"] as? String ?? "Patient"
+                let tName = c["testName"] as? String ?? "Investigation"
+                let amt = c["amount"] as? Double ?? 0.0
+                msg += "\(idx + 1). \(pName) - \(tName) (₹\(String(format: "%.0f", amt)))\n"
+            }
+        }
 
         let alert = UIAlertController(
             title: "\(name) Ledger",
-            message: "Total Commission: ₹\(String(format: "%,.0f", earned))\nPaid Out: ₹\(String(format: "%,.0f", paid))\nBalance Due: ₹\(String(format: "%,.0f", due))",
+            message: msg,
             preferredStyle: .alert
         )
-        alert.addAction(UIAlertAction(title: "Close", style: .default, completion: nil))
+        alert.addAction(UIAlertAction(title: "Close", style: .default, handler: nil))
         present(alert, animated: true, completion: nil)
     }
 
@@ -1093,9 +1305,9 @@ class DoctorCardCell: UITableViewCell {
         commRatePill.text = "  \(String(format: "%.1f", rate))% Comm  "
 
         let stats = doctor["stats"] as? [String: Any]
-        let referrals = stats?["totalReferrals"] as? Int ?? 0
-        let billed = stats?["totalBilled"] as? Double ?? 0.0
-        let pending = stats?["pendingCommission"] as? Double ?? 0.0
+        let referrals = stats?["totalReferrals"] as? Int ?? (doctor["totalReferrals"] as? Int ?? 0)
+        let billed = stats?["totalBilled"] as? Double ?? (doctor["totalBilled"] as? Double ?? (doctor["totalCommission"] as? Double ?? 0.0))
+        let pending = stats?["pendingCommission"] as? Double ?? (doctor["pendingCommission"] as? Double ?? 0.0)
 
         referralsCountLbl.text = "\(referrals)"
         billedVolumeLbl.text = "₹" + String(format: "%,.0f", billed)

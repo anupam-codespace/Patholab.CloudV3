@@ -56,6 +56,9 @@ class StaffManagementViewController: UIViewController, UITableViewDataSource, UI
     private let lblDoctors        = UILabel()
     private let lblReceptionists  = UILabel()
 
+    // Floating Action Button
+    private let fabAddStaff       = UIButton(type: .system)
+
     // Data State
     private var allStaff: [StaffItem] = []
     private var filteredStaff: [StaffItem] = []
@@ -73,6 +76,7 @@ class StaffManagementViewController: UIViewController, UITableViewDataSource, UI
         setupSearchAndFilters()
         setupTableView()
         setupEmptyState()
+        setupFab()
 
         fetchUserInfoAndData()
     }
@@ -89,18 +93,24 @@ class StaffManagementViewController: UIViewController, UITableViewDataSource, UI
 
         let gradient = CAGradientLayer()
         gradient.colors = [
-            UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1).cgColor,
-            UIColor(red: 0.118, green: 0.251, blue: 0.686, alpha: 1).cgColor
+            UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1).cgColor, // #0D6EFD
+            UIColor(red: 0.039, green: 0.345, blue: 0.792, alpha: 1).cgColor, // #0A58CA
+            UIColor(red: 0.114, green: 0.306, blue: 0.847, alpha: 1).cgColor  // #1D4ED8
         ]
         gradient.startPoint = CGPoint(x: 0, y: 0)
         gradient.endPoint = CGPoint(x: 1, y: 1)
         topHeaderView.layer.insertSublayer(gradient, at: 0)
+        topHeaderView.layer.cornerRadius = 24
+        topHeaderView.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
+        topHeaderView.clipsToBounds = true
 
         // Back Button
         let backBtn = UIButton(type: .system)
         backBtn.setImage(UIImage(systemName: "chevron.left"), for: .normal)
-        backBtn.tintColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1)
-        backBtn.backgroundColor = .white
+        backBtn.tintColor = .white
+        backBtn.backgroundColor = UIColor.white.withAlphaComponent(0.20)
+        backBtn.layer.borderColor = UIColor.white.withAlphaComponent(0.30).cgColor
+        backBtn.layer.borderWidth = 1
         backBtn.layer.cornerRadius = 19
         backBtn.addTarget(self, action: #selector(didTapBack), for: .touchUpInside)
         backBtn.translatesAutoresizingMaskIntoConstraints = false
@@ -131,40 +141,44 @@ class StaffManagementViewController: UIViewController, UITableViewDataSource, UI
         subLbl.translatesAutoresizingMaskIntoConstraints = false
         topHeaderView.addSubview(subLbl)
 
-        // + Add Staff Button
-        let addBtn = UIButton(type: .system)
-        addBtn.setTitle("＋ Add Staff", for: .normal)
-        addBtn.setTitleColor(.white, for: .normal)
-        addBtn.titleLabel?.font = .systemFont(ofSize: 12.5, weight: .bold)
-        addBtn.backgroundColor = UIColor(red: 0.02, green: 0.59, blue: 0.41, alpha: 1)
-        addBtn.layer.cornerRadius = 10
-        addBtn.contentEdgeInsets = UIEdgeInsets(top: 6, left: 10, bottom: 6, right: 10)
-        addBtn.addTarget(self, action: #selector(didTapAddStaff), for: .touchUpInside)
-        addBtn.translatesAutoresizingMaskIntoConstraints = false
-        topHeaderView.addSubview(addBtn)
-
         // Refresh Button
         let refreshBtn = UIButton(type: .system)
         refreshBtn.setImage(UIImage(systemName: "arrow.clockwise"), for: .normal)
         refreshBtn.tintColor = .white
         refreshBtn.backgroundColor = UIColor.white.withAlphaComponent(0.20)
-        refreshBtn.layer.cornerRadius = 16
+        refreshBtn.layer.borderColor = UIColor.white.withAlphaComponent(0.30).cgColor
+        refreshBtn.layer.borderWidth = 1
+        refreshBtn.layer.cornerRadius = 19
         refreshBtn.addTarget(self, action: #selector(didTapRefresh), for: .touchUpInside)
         refreshBtn.translatesAutoresizingMaskIntoConstraints = false
         topHeaderView.addSubview(refreshBtn)
+
+        // + Add Staff Button
+        let addBtn = UIButton(type: .system)
+        addBtn.setTitle("＋ Add Staff", for: .normal)
+        addBtn.setTitleColor(.white, for: .normal)
+        addBtn.titleLabel?.font = .systemFont(ofSize: 12.5, weight: .bold)
+        addBtn.backgroundColor = UIColor.white.withAlphaComponent(0.22)
+        addBtn.layer.cornerRadius = 17
+        addBtn.layer.borderWidth = 1
+        addBtn.layer.borderColor = UIColor.white.withAlphaComponent(0.35).cgColor
+        addBtn.contentEdgeInsets = UIEdgeInsets(top: 6, left: 12, bottom: 6, right: 12)
+        addBtn.addTarget(self, action: #selector(didTapAddStaff), for: .touchUpInside)
+        addBtn.translatesAutoresizingMaskIntoConstraints = false
+        topHeaderView.addSubview(addBtn)
 
         NSLayoutConstraint.activate([
             topHeaderView.topAnchor.constraint(equalTo: view.topAnchor),
             topHeaderView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             topHeaderView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            topHeaderView.heightAnchor.constraint(equalToConstant: 104),
+            topHeaderView.bottomAnchor.constraint(equalTo: backBtn.bottomAnchor, constant: 14),
 
-            backBtn.leadingAnchor.constraint(equalTo: topHeaderView.leadingAnchor, constant: 14),
-            backBtn.bottomAnchor.constraint(equalTo: topHeaderView.bottomAnchor, constant: -10),
+            backBtn.leadingAnchor.constraint(equalTo: topHeaderView.leadingAnchor, constant: 16),
+            backBtn.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 12),
             backBtn.widthAnchor.constraint(equalToConstant: 38),
             backBtn.heightAnchor.constraint(equalToConstant: 38),
 
-            titleLbl.leadingAnchor.constraint(equalTo: backBtn.trailingAnchor, constant: 10),
+            titleLbl.leadingAnchor.constraint(equalTo: backBtn.trailingAnchor, constant: 12),
             titleLbl.topAnchor.constraint(equalTo: backBtn.topAnchor, constant: -2),
 
             countBadgeLbl.leadingAnchor.constraint(equalTo: titleLbl.trailingAnchor, constant: 8),
@@ -176,14 +190,14 @@ class StaffManagementViewController: UIViewController, UITableViewDataSource, UI
             subLbl.topAnchor.constraint(equalTo: titleLbl.bottomAnchor, constant: 2),
             subLbl.trailingAnchor.constraint(lessThanOrEqualTo: addBtn.leadingAnchor, constant: -8),
 
-            refreshBtn.trailingAnchor.constraint(equalTo: topHeaderView.trailingAnchor, constant: -14),
+            refreshBtn.trailingAnchor.constraint(equalTo: topHeaderView.trailingAnchor, constant: -16),
             refreshBtn.centerYAnchor.constraint(equalTo: backBtn.centerYAnchor),
-            refreshBtn.widthAnchor.constraint(equalToConstant: 32),
-            refreshBtn.heightAnchor.constraint(equalToConstant: 32),
+            refreshBtn.widthAnchor.constraint(equalToConstant: 38),
+            refreshBtn.heightAnchor.constraint(equalToConstant: 38),
 
             addBtn.trailingAnchor.constraint(equalTo: refreshBtn.leadingAnchor, constant: -8),
             addBtn.centerYAnchor.constraint(equalTo: backBtn.centerYAnchor),
-            addBtn.heightAnchor.constraint(equalToConstant: 32),
+            addBtn.heightAnchor.constraint(equalToConstant: 34),
         ])
     }
 
@@ -414,6 +428,8 @@ class StaffManagementViewController: UIViewController, UITableViewDataSource, UI
         tableView.dataSource = self
         tableView.delegate = self
         tableView.register(StaffCardCell.self, forCellReuseIdentifier: "StaffCardCell")
+        tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 76, right: 0)
+        tableView.scrollIndicatorInsets = tableView.contentInset
         tableView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(tableView)
 
@@ -478,16 +494,43 @@ class StaffManagementViewController: UIViewController, UITableViewDataSource, UI
             icon.topAnchor.constraint(equalTo: emptyStateView.topAnchor),
             icon.centerXAnchor.constraint(equalTo: emptyStateView.centerXAnchor),
 
-            title.topAnchor.constraint(equalTo: icon.bottomAnchor, constant: 8),
+            title.topAnchor.constraint(equalTo: icon.bottomAnchor, constant: 12),
             title.centerXAnchor.constraint(equalTo: emptyStateView.centerXAnchor),
 
             sub.topAnchor.constraint(equalTo: title.bottomAnchor, constant: 4),
             sub.leadingAnchor.constraint(equalTo: emptyStateView.leadingAnchor),
             sub.trailingAnchor.constraint(equalTo: emptyStateView.trailingAnchor),
 
-            addBtn.topAnchor.constraint(equalTo: sub.bottomAnchor, constant: 14),
+            addBtn.topAnchor.constraint(equalTo: sub.bottomAnchor, constant: 16),
             addBtn.centerXAnchor.constraint(equalTo: emptyStateView.centerXAnchor),
+            addBtn.heightAnchor.constraint(equalToConstant: 42),
             addBtn.bottomAnchor.constraint(equalTo: emptyStateView.bottomAnchor),
+        ])
+    }
+
+    // ── Floating Action Button (+ Add Staff) ─────────────────────────────────
+
+    private func setupFab() {
+        fabAddStaff.translatesAutoresizingMaskIntoConstraints = false
+        fabAddStaff.setTitle("  + Add Staff", for: .normal)
+        fabAddStaff.titleLabel?.font = .systemFont(ofSize: 13.5, weight: .bold)
+        fabAddStaff.setTitleColor(.white, for: .normal)
+        fabAddStaff.backgroundColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1) // #0D6EFD
+        fabAddStaff.layer.cornerRadius = 24
+        fabAddStaff.layer.shadowColor = UIColor.black.cgColor
+        fabAddStaff.layer.shadowOpacity = 0.25
+        fabAddStaff.layer.shadowOffset = CGSize(width: 0, height: 4)
+        fabAddStaff.layer.shadowRadius = 8
+        fabAddStaff.contentEdgeInsets = UIEdgeInsets(top: 12, left: 20, bottom: 12, right: 20)
+        fabAddStaff.setImage(UIImage(systemName: "plus"), for: .normal)
+        fabAddStaff.tintColor = .white
+        fabAddStaff.addTarget(self, action: #selector(didTapAddStaff), for: .touchUpInside)
+        view.addSubview(fabAddStaff)
+
+        NSLayoutConstraint.activate([
+            fabAddStaff.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -18),
+            fabAddStaff.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
+            fabAddStaff.heightAnchor.constraint(equalToConstant: 48)
         ])
     }
 
@@ -822,11 +865,11 @@ class StaffManagementViewController: UIViewController, UITableViewDataSource, UI
         let staff = filteredStaff[indexPath.row]
         cell.configure(with: staff, onMore: { [weak self] btn in
             self?.showActionSheet(for: staff, sourceView: btn)
-        }, onPhone: { [weak self] in
+        }, onPhone: {
             if !staff.phone.isEmpty, let url = URL(string: "tel:\(staff.phone)") {
                 UIApplication.shared.open(url)
             }
-        }, onEmail: { [weak self] in
+        }, onEmail: {
             if !staff.email.isEmpty, let url = URL(string: "mailto:\(staff.email)") {
                 UIApplication.shared.open(url)
             }

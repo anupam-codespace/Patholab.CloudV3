@@ -1,0 +1,27 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+  <!-- Document Contour with Open Bottom Right for Pencil -->
+  <path
+      android:pathData="M4,13.5V4C4,2.9 4.9,2 6,2H14.5L20,7.5V20C20,21.1 19.1,22 18,22H12.5"
+      android:strokeColor="#64748B"
+      android:strokeWidth="1.8"
+      android:strokeLineCap="round"
+      android:strokeLineJoin="round"/>
+  <!-- Fold Corner Line -->
+  <path
+      android:pathData="M14,2V8H20"
+      android:strokeColor="#64748B"
+      android:strokeWidth="1.8"
+      android:strokeLineCap="round"
+      android:strokeLineJoin="round"/>
+  <!-- Pencil -->
+  <path
+      android:pathData="M10.42,12.61A2.1,2.1 0 1,1 13.39,15.58L7.95,21L4,22L5,18.05L10.42,12.61Z"
+      android:strokeColor="#64748B"
+      android:strokeWidth="1.8"
+      android:strokeLineCap="round"
+      android:strokeLineJoin="round"/>
+</vector>

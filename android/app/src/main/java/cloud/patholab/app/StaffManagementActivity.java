@@ -38,6 +38,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -153,6 +154,7 @@ public class StaffManagementActivity extends AppCompatActivity {
     private RecyclerView recyclerStaffDirectory;
     private LinearLayout emptyStateStaff;
     private Button btnAddStaffEmpty;
+    private ExtendedFloatingActionButton fabAddStaff;
 
     // State
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -199,6 +201,7 @@ public class StaffManagementActivity extends AppCompatActivity {
         recyclerStaffDirectory = findViewById(R.id.recyclerStaffDirectory);
         emptyStateStaff = findViewById(R.id.emptyStateStaff);
         btnAddStaffEmpty = findViewById(R.id.btnAddStaffEmpty);
+        fabAddStaff = findViewById(R.id.fabAddStaff);
 
         recyclerStaffDirectory.setLayoutManager(new LinearLayoutManager(this));
         staffAdapter = new StaffAdapter(filteredStaff, new StaffActionListener() {
@@ -301,6 +304,9 @@ public class StaffManagementActivity extends AppCompatActivity {
         });
         btnAddStaffHeader.setOnClickListener(v -> showAddEditStaffDialog(null));
         btnAddStaffEmpty.setOnClickListener(v -> showAddEditStaffDialog(null));
+        if (fabAddStaff != null) {
+            fabAddStaff.setOnClickListener(v -> showAddEditStaffDialog(null));
+        }
 
         inputSearchStaff.addTextChangedListener(new TextWatcher() {
             @Override

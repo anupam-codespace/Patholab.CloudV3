@@ -1,4 +1,5 @@
 import UIKit
+import WebKit
 
 /**
  * B2BSettingsViewController
@@ -7,14 +8,18 @@ import UIKit
  * 100% web parity with /workspace/settings/b2b-tiers:
  *  - Master Tiers: STANDARD, BRONZE, SILVER, GOLD, PLATINUM
  *  - Global Pricing Rules: B2B Net Price (₹), Discount Margin (%), Discount Flat (₹)
- *  - Catalog test search & autocomplete to add individual tests
+ *  - Catalog test search & autocomplete to add individual tests (fixed z-index)
+ *  - Live calculated pricing badge (B2B Pays: ₹... Save ₹... / ...%)
  *  - Bulk Action: "Add All Catalog Tests"
  *  - Bulk Action: "Clear All" with confirmation
- *  - Direct two-way sync with /api/workspace/b2b/tiers
+ *  - Real-time two-way sync with /api/workspace/b2b/tiers
+ *  - Full cookie & WKWebsiteDataStore auth with dual-host fallback
+ *  - Royal Sapphire frosted header design system (#0D6EFD -> #0A58CA -> #1D4ED8)
  */
 class B2BSettingsViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, UITextFieldDelegate {
 
-    private static let baseUrl = "https://app.patholab.cloud"
+    private static let primaryBaseUrl = "https://app.patholab.cloud"
+    private static let fallbackBaseUrl = "https://patholab.cloud"
     private static let tiers = ["STANDARD", "BRONZE", "SILVER", "GOLD", "PLATINUM"]
 
     // ── Header Views ──
@@ -46,6 +51,9 @@ class B2BSettingsViewController: UIViewController, UITableViewDelegate, UITableV
     private let tableView          = UITableView(frame: .zero, style: .plain)
     private let refreshControl     = UIRefreshControl()
     private let emptyView          = UIView()
+    private let emptyTitleLabel    = UILabel()
+    private let emptySubLabel      = UILabel()
+    private let retryBtn           = UIButton(type: .system)
     private let loadingIndicator   = UIActivityIndicatorView(style: .medium)
 
     // ── Data Models & State ──
@@ -74,6 +82,7 @@ class B2BSettingsViewController: UIViewController, UITableViewDelegate, UITableV
     ]
     private var allCatalogTests: [CatalogTest] = []
     private var filteredSuggestions: [CatalogTest] = []
+    private var activeHost = B2BSettingsViewController.primaryBaseUrl
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -89,31 +98,47 @@ class B2BSettingsViewController: UIViewController, UITableViewDelegate, UITableV
         loadTierSettings()
     }
 
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        loadTierSettings()
+    }
+
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         heroGradientLayer.frame = heroHeaderView.bounds
     }
 
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        return .lightContent
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
-    //  UI SETUP
+    //  UI SETUP: ROYAL SAPPHIRE HEADER & CONTROLS
     // ─────────────────────────────────────────────────────────────────────────
     private func setupHeroHeader() {
         heroHeaderView.translatesAutoresizingMaskIntoConstraints = false
+        heroHeaderView.layer.cornerRadius = 28
+        heroHeaderView.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
+        heroHeaderView.clipsToBounds = true
         view.addSubview(heroHeaderView)
 
         heroGradientLayer.colors = [
             UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1).cgColor, // #0D6EFD
+            UIColor(red: 0.039, green: 0.345, blue: 0.792, alpha: 1).cgColor, // #0A58CA
             UIColor(red: 0.114, green: 0.306, blue: 0.847, alpha: 1).cgColor  // #1D4ED8
         ]
         heroGradientLayer.startPoint = CGPoint(x: 0, y: 0)
         heroGradientLayer.endPoint   = CGPoint(x: 1, y: 1)
         heroHeaderView.layer.insertSublayer(heroGradientLayer, at: 0)
 
+        // Frosted Glass Back Button
         backBtn.translatesAutoresizingMaskIntoConstraints = false
         backBtn.setImage(UIImage(systemName: "arrow.left"), for: .normal)
         backBtn.tintColor = .white
-        backBtn.backgroundColor = UIColor.white.withAlphaComponent(0.15)
+        backBtn.backgroundColor = UIColor.white.withAlphaComponent(0.18)
         backBtn.layer.cornerRadius = 19
+        backBtn.layer.borderWidth = 1
+        backBtn.layer.borderColor = UIColor.white.withAlphaComponent(0.30).cgColor
         backBtn.addTarget(self, action: #selector(backTapped), for: .touchUpInside)
         heroHeaderView.addSubview(backBtn)
 
@@ -126,15 +151,18 @@ class B2BSettingsViewController: UIViewController, UITableViewDelegate, UITableV
         subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
         subtitleLabel.text = "Master net pricing & enterprise margins"
         subtitleLabel.font = .systemFont(ofSize: 11.5, weight: .medium)
-        subtitleLabel.textColor = UIColor(red: 0.780, green: 0.875, blue: 1.0, alpha: 1)
+        subtitleLabel.textColor = UIColor(red: 0.780, green: 0.875, blue: 1.0, alpha: 1) // #C7DFFF
         heroHeaderView.addSubview(subtitleLabel)
 
+        // Frosted Save Button
         saveBtn.translatesAutoresizingMaskIntoConstraints = false
         saveBtn.setTitle("Save Tier", for: .normal)
         saveBtn.titleLabel?.font = .systemFont(ofSize: 13, weight: .bold)
         saveBtn.setTitleColor(.white, for: .normal)
-        saveBtn.backgroundColor = UIColor.white.withAlphaComponent(0.2)
-        saveBtn.layer.cornerRadius = 12
+        saveBtn.backgroundColor = UIColor.white.withAlphaComponent(0.22)
+        saveBtn.layer.cornerRadius = 14
+        saveBtn.layer.borderWidth = 1
+        saveBtn.layer.borderColor = UIColor.white.withAlphaComponent(0.35).cgColor
         saveBtn.contentEdgeInsets = UIEdgeInsets(top: 8, left: 14, bottom: 8, right: 14)
         saveBtn.addTarget(self, action: #selector(saveTapped), for: .touchUpInside)
         heroHeaderView.addSubview(saveBtn)
@@ -148,10 +176,10 @@ class B2BSettingsViewController: UIViewController, UITableViewDelegate, UITableV
             heroHeaderView.topAnchor.constraint(equalTo: view.topAnchor),
             heroHeaderView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             heroHeaderView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            heroHeaderView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 60),
+            heroHeaderView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 64),
 
             backBtn.leadingAnchor.constraint(equalTo: heroHeaderView.leadingAnchor, constant: 16),
-            backBtn.bottomAnchor.constraint(equalTo: heroHeaderView.bottomAnchor, constant: -12),
+            backBtn.bottomAnchor.constraint(equalTo: heroHeaderView.bottomAnchor, constant: -14),
             backBtn.widthAnchor.constraint(equalToConstant: 38),
             backBtn.heightAnchor.constraint(equalToConstant: 38),
 
@@ -306,7 +334,7 @@ class B2BSettingsViewController: UIViewController, UITableViewDelegate, UITableV
         clearSearchBtn.addTarget(self, action: #selector(clearSearchTapped), for: .touchUpInside)
         searchBox.addSubview(clearSearchBtn)
 
-        // Suggestions TableView
+        // Suggestions TableView (Created and layered on top)
         suggestionsTable.translatesAutoresizingMaskIntoConstraints = false
         suggestionsTable.delegate = self
         suggestionsTable.dataSource = self
@@ -314,6 +342,11 @@ class B2BSettingsViewController: UIViewController, UITableViewDelegate, UITableV
         suggestionsTable.layer.cornerRadius = 10
         suggestionsTable.layer.borderWidth = 1
         suggestionsTable.layer.borderColor = UIColor(red: 0.886, green: 0.910, blue: 0.941, alpha: 1).cgColor
+        suggestionsTable.backgroundColor = .white
+        suggestionsTable.layer.shadowColor = UIColor.black.cgColor
+        suggestionsTable.layer.shadowOpacity = 0.1
+        suggestionsTable.layer.shadowOffset = CGSize(width: 0, height: 4)
+        suggestionsTable.layer.shadowRadius = 8
         suggestionsTable.isHidden = true
         view.addSubview(suggestionsTable)
 
@@ -379,7 +412,7 @@ class B2BSettingsViewController: UIViewController, UITableViewDelegate, UITableV
             suggestionsTable.topAnchor.constraint(equalTo: toolbarCard.topAnchor, constant: 46),
             suggestionsTable.leadingAnchor.constraint(equalTo: toolbarCard.leadingAnchor, constant: 10),
             suggestionsTable.trailingAnchor.constraint(equalTo: toolbarCard.trailingAnchor, constant: -10),
-            suggestionsTable.heightAnchor.constraint(equalToConstant: 160),
+            suggestionsTable.heightAnchor.constraint(equalToConstant: 180),
         ])
     }
 
@@ -422,21 +455,30 @@ class B2BSettingsViewController: UIViewController, UITableViewDelegate, UITableV
         icon.tintColor = UIColor(red: 0.796, green: 0.835, blue: 0.882, alpha: 1)
         emptyView.addSubview(icon)
 
-        let title = UILabel()
-        title.translatesAutoresizingMaskIntoConstraints = false
-        title.text = "No rules configured"
-        title.font = .systemFont(ofSize: 16, weight: .bold)
-        title.textColor = UIColor(red: 0.200, green: 0.255, blue: 0.333, alpha: 1)
-        emptyView.addSubview(title)
+        emptyTitleLabel.translatesAutoresizingMaskIntoConstraints = false
+        emptyTitleLabel.text = "No rules configured"
+        emptyTitleLabel.font = .systemFont(ofSize: 16, weight: .bold)
+        emptyTitleLabel.textColor = UIColor(red: 0.200, green: 0.255, blue: 0.333, alpha: 1)
+        emptyView.addSubview(emptyTitleLabel)
 
-        let subtitle = UILabel()
-        subtitle.translatesAutoresizingMaskIntoConstraints = false
-        subtitle.text = "Search a test above or tap 'Add All Catalog Tests' to create rules for this tier."
-        subtitle.font = .systemFont(ofSize: 12.5)
-        subtitle.textColor = UIColor(red: 0.580, green: 0.639, blue: 0.722, alpha: 1)
-        subtitle.textAlignment = .center
-        subtitle.numberOfLines = 2
-        emptyView.addSubview(subtitle)
+        emptySubLabel.translatesAutoresizingMaskIntoConstraints = false
+        emptySubLabel.text = "Search a test above or tap 'Add All Catalog Tests' to create rules for this tier."
+        emptySubLabel.font = .systemFont(ofSize: 12.5)
+        emptySubLabel.textColor = UIColor(red: 0.580, green: 0.639, blue: 0.722, alpha: 1)
+        emptySubLabel.textAlignment = .center
+        emptySubLabel.numberOfLines = 2
+        emptyView.addSubview(emptySubLabel)
+
+        retryBtn.translatesAutoresizingMaskIntoConstraints = false
+        retryBtn.setTitle("Retry Loading", for: .normal)
+        retryBtn.titleLabel?.font = .systemFont(ofSize: 13, weight: .bold)
+        retryBtn.setTitleColor(.white, for: .normal)
+        retryBtn.backgroundColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1)
+        retryBtn.layer.cornerRadius = 10
+        retryBtn.contentEdgeInsets = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
+        retryBtn.isHidden = true
+        retryBtn.addTarget(self, action: #selector(handleRefresh), for: .touchUpInside)
+        emptyView.addSubview(retryBtn)
 
         NSLayoutConstraint.activate([
             emptyView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
@@ -449,14 +491,16 @@ class B2BSettingsViewController: UIViewController, UITableViewDelegate, UITableV
             icon.widthAnchor.constraint(equalToConstant: 48),
             icon.heightAnchor.constraint(equalToConstant: 48),
 
-            title.centerXAnchor.constraint(equalTo: emptyView.centerXAnchor),
-            title.topAnchor.constraint(equalTo: icon.bottomAnchor, constant: 12),
+            emptyTitleLabel.topAnchor.constraint(equalTo: icon.bottomAnchor, constant: 12),
+            emptyTitleLabel.centerXAnchor.constraint(equalTo: emptyView.centerXAnchor),
 
-            subtitle.centerXAnchor.constraint(equalTo: emptyView.centerXAnchor),
-            subtitle.topAnchor.constraint(equalTo: title.bottomAnchor, constant: 4),
-            subtitle.leadingAnchor.constraint(equalTo: emptyView.leadingAnchor),
-            subtitle.trailingAnchor.constraint(equalTo: emptyView.trailingAnchor),
-            subtitle.bottomAnchor.constraint(equalTo: emptyView.bottomAnchor),
+            emptySubLabel.topAnchor.constraint(equalTo: emptyTitleLabel.bottomAnchor, constant: 6),
+            emptySubLabel.leadingAnchor.constraint(equalTo: emptyView.leadingAnchor),
+            emptySubLabel.trailingAnchor.constraint(equalTo: emptyView.trailingAnchor),
+
+            retryBtn.topAnchor.constraint(equalTo: emptySubLabel.bottomAnchor, constant: 14),
+            retryBtn.centerXAnchor.constraint(equalTo: emptyView.centerXAnchor),
+            retryBtn.bottomAnchor.constraint(equalTo: emptyView.bottomAnchor),
         ])
     }
 
@@ -464,12 +508,12 @@ class B2BSettingsViewController: UIViewController, UITableViewDelegate, UITableV
     //  ACTIONS & HANDLERS
     // ─────────────────────────────────────────────────────────────────────────
     @objc private func backTapped() {
-        dismiss(animated: true)
+        dismiss(animated: true, completion: nil)
     }
 
     @objc private func tabTapped(_ sender: UIButton) {
         let index = sender.tag
-        if index >= 0 && index < Self.tiers.count {
+        if index < Self.tiers.count {
             activeTier = Self.tiers[index]
             renderTierTabs()
             renderRules()
@@ -477,26 +521,21 @@ class B2BSettingsViewController: UIViewController, UITableViewDelegate, UITableV
     }
 
     @objc private func searchChanged() {
-        let text = searchField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        clearSearchBtn.isHidden = text.isEmpty
-
-        if text.isEmpty {
-            suggestionsTable.isHidden = true
+        let q = searchField.text?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() ?? ""
+        clearSearchBtn.isHidden = q.isEmpty
+        if q.isEmpty {
             filteredSuggestions.removeAll()
+            suggestionsTable.isHidden = true
+        } else {
+            let currentRules = tierRulesMap[activeTier] ?? []
+            let addedIds = Set(currentRules.map { $0.testTemplateId })
+            filteredSuggestions = allCatalogTests.filter {
+                $0.name.lowercased().contains(q) && !addedIds.contains($0.id)
+            }
+            suggestionsTable.isHidden = filteredSuggestions.isEmpty
+            view.bringSubviewToFront(suggestionsTable)
             suggestionsTable.reloadData()
-            return
         }
-
-        let currentRules = tierRulesMap[activeTier] ?? []
-        let addedIds = Set(currentRules.map { $0.testTemplateId })
-
-        let lower = text.lowercased()
-        filteredSuggestions = allCatalogTests.filter {
-            !addedIds.contains($0.id) && $0.name.lowercased().contains(lower)
-        }
-
-        suggestionsTable.isHidden = filteredSuggestions.isEmpty
-        suggestionsTable.reloadData()
     }
 
     @objc private func clearSearchTapped() {
@@ -564,6 +603,7 @@ class B2BSettingsViewController: UIViewController, UITableViewDelegate, UITableV
     }
 
     @objc private func saveTapped() {
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         saveCurrentTierRules()
     }
 
@@ -573,6 +613,9 @@ class B2BSettingsViewController: UIViewController, UITableViewDelegate, UITableV
         emptyView.isHidden = !currentRules.isEmpty
         tableView.isHidden = currentRules.isEmpty
         clearAllBtn.isHidden = currentRules.isEmpty
+        retryBtn.isHidden = true
+        emptyTitleLabel.text = "No rules configured"
+        emptySubLabel.text = "Search a test above or tap 'Add All Catalog Tests' to create rules for this tier."
         tableView.reloadData()
     }
 
@@ -605,7 +648,7 @@ class B2BSettingsViewController: UIViewController, UITableViewDelegate, UITableV
             return UITableViewCell()
         }
 
-        var currentRules = tierRulesMap[activeTier] ?? []
+        let currentRules = tierRulesMap[activeTier] ?? []
         let rule = currentRules[indexPath.row]
 
         cell.configure(with: rule, index: indexPath.row) { [weak self] updatedRule, idx in
@@ -655,41 +698,133 @@ class B2BSettingsViewController: UIViewController, UITableViewDelegate, UITableV
     // ─────────────────────────────────────────────────────────────────────────
     //  NETWORKING & REAL-TIME SYNC
     // ─────────────────────────────────────────────────────────────────────────
-    private func loadTierSettings() {
-        loadingIndicator.startAnimating()
+    private func getAuthToken() -> String? {
+        if let token = KeychainManager.shared.getToken(), !token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return token.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        if let token = UserDefaults.standard.string(forKey: "auth_token"), !token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return token.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        if let token = UserDefaults.standard.string(forKey: "token"), !token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return token.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        if let cookies = HTTPCookieStorage.shared.cookies {
+            for cookie in cookies {
+                if (cookie.name == "token" || cookie.name == "auth-token" || cookie.name == "auth_token") && !cookie.value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    let cookieToken = cookie.value.trimmingCharacters(in: .whitespacesAndNewlines)
+                    KeychainManager.save(cookieToken, forKey: KeychainManager.tokenKey)
+                    return cookieToken
+                }
+            }
+        }
+        return nil
+    }
 
-        guard let url = URL(string: "\(Self.baseUrl)/api/workspace/b2b/tiers") else { return }
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        if let token = AuthService.getStoredToken() {
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+    private func executeWithCookies(url: URL, method: String, body: Data?, host: String, completion: @escaping (Data?, HTTPURLResponse?, Error?) -> Void) {
+        let token = getAuthToken()
+        let store = WKWebsiteDataStore.default()
+
+        store.httpCookieStore.getAllCookies { cookies in
+            var request = URLRequest(url: url, timeoutInterval: 12)
+            request.httpMethod = method
+            request.setValue("application/json", forHTTPHeaderField: "Accept")
+            if body != nil {
+                request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                request.httpBody = body
+            }
+
+            if let token = token, !token.isEmpty {
+                request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            }
+
+            var cookieParts: [String] = []
+            if let token = token, !token.isEmpty {
+                cookieParts.append("token=\(token)")
+                cookieParts.append("auth-token=\(token)")
+                cookieParts.append("auth_token=\(token)")
+            }
+            for c in cookies where c.domain.contains("patholab.cloud") {
+                cookieParts.append("\(c.name)=\(c.value)")
+            }
+            if !cookieParts.isEmpty {
+                request.setValue(cookieParts.joined(separator: "; "), forHTTPHeaderField: "Cookie")
+            }
+
+            URLSession.shared.dataTask(with: request) { data, response, error in
+                let http = response as? HTTPURLResponse
+                completion(data, http, error)
+            }.resume()
+        }
+    }
+
+    private func loadTierSettings() {
+        if !refreshControl.isRefreshing {
+            loadingIndicator.startAnimating()
         }
 
-        URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+        guard let url = URL(string: "\(activeHost)/api/workspace/b2b/tiers") else {
+            loadingIndicator.stopAnimating()
+            refreshControl.endRefreshing()
+            return
+        }
+
+        executeWithCookies(url: url, method: "GET", body: nil, host: activeHost) { [weak self] data, response, error in
             DispatchQueue.main.async {
                 guard let self = self else { return }
+
+                // If primary host returned 404 or connection error, fallback to secondary host once
+                if (response == nil || response?.statusCode == 404) && self.activeHost == Self.primaryBaseUrl {
+                    self.activeHost = Self.fallbackBaseUrl
+                    self.loadTierSettings()
+                    return
+                }
+
                 self.loadingIndicator.stopAnimating()
                 self.refreshControl.endRefreshing()
 
                 if let error = error {
-                    self.showToast("Network error: \(error.localizedDescription)")
+                    self.showErrorState("Network error: \(error.localizedDescription)")
                     return
                 }
 
-                guard let data = data,
+                guard let response = response, (200...299).contains(response.statusCode),
+                      let data = data,
                       let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-                    self.showToast("Error parsing tier rules")
+                    let code = response?.statusCode ?? 0
+                    self.showErrorState("Failed to load tier settings (\(code))")
                     return
                 }
 
                 // 1. Catalog Tests
+                var loadedCatalog: [CatalogTest] = []
                 if let catalog = json["catalog"] as? [[String: Any]] {
-                    self.allCatalogTests = catalog.map {
+                    loadedCatalog = catalog.map {
                         CatalogTest(
                             id: $0["id"] as? String ?? "",
                             name: $0["name"] as? String ?? "Test",
                             price: ($0["price"] as? NSNumber)?.doubleValue ?? 0
                         )
+                    }
+                }
+                self.allCatalogTests = loadedCatalog
+
+                // Fallback: If catalog is empty in /b2b/tiers, fetch from /b2b/agencies
+                if self.allCatalogTests.isEmpty, let agUrl = URL(string: "\(self.activeHost)/api/workspace/b2b/agencies") {
+                    self.executeWithCookies(url: agUrl, method: "GET", body: nil, host: self.activeHost) { [weak self] agData, _, _ in
+                        if let agData = agData,
+                           let agJson = try? JSONSerialization.jsonObject(with: agData) as? [String: Any],
+                           let cat = agJson["catalog"] as? [[String: Any]] {
+                            let fbCatalog = cat.map {
+                                CatalogTest(
+                                    id: $0["id"] as? String ?? "",
+                                    name: $0["name"] as? String ?? "Test",
+                                    price: ($0["price"] as? NSNumber)?.doubleValue ?? 0
+                                )
+                            }
+                            DispatchQueue.main.async {
+                                self?.allCatalogTests = fbCatalog
+                            }
+                        }
                     }
                 }
 
@@ -713,7 +848,16 @@ class B2BSettingsViewController: UIViewController, UITableViewDelegate, UITableV
                 self.renderTierTabs()
                 self.renderRules()
             }
-        }.resume()
+        }
+    }
+
+    private func showErrorState(_ message: String) {
+        tableView.isHidden = true
+        emptyView.isHidden = false
+        emptyTitleLabel.text = "Connection Error"
+        emptySubLabel.text = message
+        retryBtn.isHidden = false
+        showToast(message)
     }
 
     private func saveCurrentTierRules() {
@@ -736,34 +880,29 @@ class B2BSettingsViewController: UIViewController, UITableViewDelegate, UITableV
             "rules": payloadRules
         ]
 
-        guard let url = URL(string: "\(Self.baseUrl)/api/workspace/b2b/tiers"),
+        guard let url = URL(string: "\(activeHost)/api/workspace/b2b/tiers"),
               let postData = try? JSONSerialization.data(withJSONObject: body) else {
             saveBtn.isHidden = false
             saveSpinner.stopAnimating()
             return
         }
 
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        if let token = AuthService.getStoredToken() {
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        }
-        request.httpBody = postData
-
-        URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+        executeWithCookies(url: url, method: "POST", body: postData, host: activeHost) { [weak self] data, response, error in
             DispatchQueue.main.async {
                 guard let self = self else { return }
                 self.saveBtn.isHidden = false
                 self.saveSpinner.stopAnimating()
 
-                if let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) {
+                if let http = response, (200...299).contains(http.statusCode) {
+                    UINotificationFeedbackGenerator().notificationOccurred(.success)
                     self.showToast("\(self.activeTier.capitalized) tier rules saved!")
+                    self.loadTierSettings()
                 } else {
-                    self.showToast("Failed to save rules")
+                    UINotificationFeedbackGenerator().notificationOccurred(.error)
+                    self.showToast("Failed to save rules (\(response?.statusCode ?? 0))")
                 }
             }
-        }.resume()
+        }
     }
 
     private func showToast(_ msg: String) {
@@ -785,7 +924,7 @@ class B2BSettingsViewController: UIViewController, UITableViewDelegate, UITableV
             toast.widthAnchor.constraint(lessThanOrEqualTo: view.widthAnchor, constant: -48)
         ])
 
-        UIView.animate(withDuration: 0.3, delay: 2.0, options: .curveEaseOut) {
+        UIView.animate(withDuration: 0.3, delay: 2.2, options: .curveEaseOut) {
             toast.alpha = 0
         } completion: { _ in
             toast.removeFromSuperview()
@@ -794,17 +933,20 @@ class B2BSettingsViewController: UIViewController, UITableViewDelegate, UITableV
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  TIER RULE CUSTOM CELL
+//  TIER RULE CUSTOM CELL WITH DYNAMIC PRICE CALCULATION
 // ─────────────────────────────────────────────────────────────────────────────
 class TierRuleCell: UITableViewCell {
 
-    private let cardView        = UIView()
-    private let testNameLabel   = UILabel()
-    private let basePriceLabel  = UILabel()
-    private let deleteBtn       = UIButton(type: .system)
+    private let cardView            = UIView()
+    private let testNameLabel       = UILabel()
+    private let basePriceLabel      = UILabel()
+    private let deleteBtn           = UIButton(type: .system)
 
-    private let typeSegment     = UISegmentedControl(items: ["Net Price", "Margin %", "Flat ₹"])
-    private let valueField      = UITextField()
+    private let typeSegment         = UISegmentedControl(items: ["Net Price", "Margin %", "Flat ₹"])
+    private let valueField          = UITextField()
+
+    private let effectiveBadgeView  = UIView()
+    private let effectivePriceLabel = UILabel()
 
     private var currentIndex: Int = 0
     private var onUpdate: ((B2BSettingsViewController.TierRule, Int) -> Void)?
@@ -868,6 +1010,17 @@ class TierRuleCell: UITableViewCell {
         valueField.addTarget(self, action: #selector(valueChanged), for: .editingChanged)
         cardView.addSubview(valueField)
 
+        // Effective Price Live Badge
+        effectiveBadgeView.translatesAutoresizingMaskIntoConstraints = false
+        effectiveBadgeView.backgroundColor = UIColor(red: 0.925, green: 0.992, blue: 0.961, alpha: 1) // emerald soft
+        effectiveBadgeView.layer.cornerRadius = 6
+        cardView.addSubview(effectiveBadgeView)
+
+        effectivePriceLabel.translatesAutoresizingMaskIntoConstraints = false
+        effectivePriceLabel.font = .systemFont(ofSize: 11.5, weight: .bold)
+        effectivePriceLabel.textColor = UIColor(red: 0.020, green: 0.588, blue: 0.412, alpha: 1) // #059669
+        effectiveBadgeView.addSubview(effectivePriceLabel)
+
         NSLayoutConstraint.activate([
             cardView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 4),
             cardView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
@@ -894,13 +1047,22 @@ class TierRuleCell: UITableViewCell {
             typeSegment.topAnchor.constraint(equalTo: divider.bottomAnchor, constant: 10),
             typeSegment.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 14),
             typeSegment.heightAnchor.constraint(equalToConstant: 32),
-            typeSegment.bottomAnchor.constraint(equalTo: cardView.bottomAnchor, constant: -12),
 
             valueField.leadingAnchor.constraint(equalTo: typeSegment.trailingAnchor, constant: 10),
             valueField.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -14),
             valueField.centerYAnchor.constraint(equalTo: typeSegment.centerYAnchor),
             valueField.heightAnchor.constraint(equalToConstant: 32),
             valueField.widthAnchor.constraint(equalToConstant: 90),
+
+            effectiveBadgeView.topAnchor.constraint(equalTo: typeSegment.bottomAnchor, constant: 8),
+            effectiveBadgeView.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 14),
+            effectiveBadgeView.bottomAnchor.constraint(equalTo: cardView.bottomAnchor, constant: -10),
+            effectiveBadgeView.trailingAnchor.constraint(lessThanOrEqualTo: cardView.trailingAnchor, constant: -14),
+
+            effectivePriceLabel.topAnchor.constraint(equalTo: effectiveBadgeView.topAnchor, constant: 4),
+            effectivePriceLabel.bottomAnchor.constraint(equalTo: effectiveBadgeView.bottomAnchor, constant: -4),
+            effectivePriceLabel.leadingAnchor.constraint(equalTo: effectiveBadgeView.leadingAnchor, constant: 8),
+            effectivePriceLabel.trailingAnchor.constraint(equalTo: effectiveBadgeView.trailingAnchor, constant: -8),
         ])
     }
 
@@ -921,6 +1083,23 @@ class TierRuleCell: UITableViewCell {
         } else {
             typeSegment.selectedSegmentIndex = 0
         }
+
+        updateEffectivePrice()
+    }
+
+    private func updateEffectivePrice() {
+        guard let rule = currentRule else { return }
+        var effective: Double = 0
+        if rule.ruleType == "PERCENTAGE" {
+            effective = max(0, rule.basePrice * (1.0 - rule.value / 100.0))
+        } else if rule.ruleType == "FIXED" {
+            effective = max(0, rule.basePrice - rule.value)
+        } else {
+            effective = rule.value
+        }
+        let savings = max(0, rule.basePrice - effective)
+        let pct = rule.basePrice > 0 ? (savings / rule.basePrice) * 100.0 : 0
+        effectivePriceLabel.text = String(format: "B2B Pays: ₹%.0f (Save ₹%.0f / %.0f%%)", effective, savings, pct)
     }
 
     @objc private func typeChanged() {
@@ -931,6 +1110,7 @@ class TierRuleCell: UITableViewCell {
         default: rule.ruleType = "NET_PRICE"
         }
         currentRule = rule
+        updateEffectivePrice()
         onUpdate?(rule, currentIndex)
     }
 
@@ -939,6 +1119,7 @@ class TierRuleCell: UITableViewCell {
         if let val = Double(valueField.text ?? "") {
             rule.value = val
             currentRule = rule
+            updateEffectivePrice()
             onUpdate?(rule, currentIndex)
         }
     }

@@ -32,6 +32,170 @@ struct BillingKpiStats {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// MARK: – Dedicated Invoice UITableViewCell (Crash-Proof & 60 FPS)
+// ─────────────────────────────────────────────────────────────────────────────
+class BillingInvoiceCell: UITableViewCell {
+    static let reuseIdentifier = "BillingInvoiceCell"
+
+    private let card = UIView()
+    private let avatarIV = PatientAvatarHelper.createAvatar(size: 38)
+    private let nameLbl = UILabel()
+    private let detailsLbl = UILabel()
+    private let numBadge = UILabel()
+    private let dateLbl = UILabel()
+    private let statusBadge = UILabel()
+    private let totalLbl = UILabel()
+    private let viewBtn = UIButton(type: .system)
+
+    var onReceiptTapped: (() -> Void)?
+
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        backgroundColor = .clear
+        selectionStyle = .none
+        setupViews()
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    private func setupViews() {
+        card.backgroundColor = .white
+        card.layer.cornerRadius = 18
+        card.layer.shadowColor = UIColor(red: 0.05, green: 0.15, blue: 0.30, alpha: 1).cgColor
+        card.layer.shadowOpacity = 0.06
+        card.layer.shadowRadius = 6
+        card.layer.shadowOffset = CGSize(width: 0, height: 3)
+        card.layer.borderWidth = 1
+        card.layer.borderColor = UIColor(red: 0.92, green: 0.94, blue: 0.97, alpha: 1).cgColor
+        card.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(card)
+
+        nameLbl.font = .systemFont(ofSize: 16, weight: .bold)
+        nameLbl.textColor = UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1)
+
+        detailsLbl.font = .systemFont(ofSize: 12, weight: .medium)
+        detailsLbl.textColor = UIColor(red: 0.392, green: 0.451, blue: 0.549, alpha: 1)
+
+        numBadge.font = .systemFont(ofSize: 12, weight: .bold)
+        numBadge.textColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1)
+        numBadge.backgroundColor = UIColor(red: 0.937, green: 0.965, blue: 1.0, alpha: 1)
+        numBadge.layer.cornerRadius = 8
+        numBadge.clipsToBounds = true
+
+        dateLbl.font = .systemFont(ofSize: 12, weight: .medium)
+        dateLbl.textColor = UIColor(red: 0.392, green: 0.451, blue: 0.549, alpha: 1)
+
+        statusBadge.font = .systemFont(ofSize: 11, weight: .bold)
+        statusBadge.layer.cornerRadius = 6
+        statusBadge.clipsToBounds = true
+
+        totalLbl.font = .systemFont(ofSize: 18.5, weight: .bold)
+        totalLbl.textColor = UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1)
+
+        if #available(iOS 15.0, *) {
+            var config = UIButton.Configuration.filled()
+            config.title = "Receipt"
+            config.image = UIImage(systemName: "doc.text.fill")
+            config.imagePadding = 6
+            config.baseForegroundColor = UIColor(red: 4/255, green: 30/255, blue: 73/255, alpha: 1) // #041E49
+            config.baseBackgroundColor = UIColor(red: 211/255, green: 227/255, blue: 253/255, alpha: 1) // #D3E3FD
+            config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 14, bottom: 8, trailing: 16)
+            config.cornerStyle = .capsule
+            var titleAttr = AttributeContainer()
+            titleAttr.font = .systemFont(ofSize: 13, weight: .bold)
+            config.attributedTitle = AttributedString("Receipt", attributes: titleAttr)
+            viewBtn.configuration = config
+        } else {
+            viewBtn.setTitle(" Receipt", for: .normal)
+            viewBtn.setImage(UIImage(systemName: "doc.text.fill"), for: .normal)
+            viewBtn.tintColor = UIColor(red: 4/255, green: 30/255, blue: 73/255, alpha: 1)
+            viewBtn.setTitleColor(UIColor(red: 4/255, green: 30/255, blue: 73/255, alpha: 1), for: .normal)
+            viewBtn.titleLabel?.font = .systemFont(ofSize: 13, weight: .bold)
+            viewBtn.backgroundColor = UIColor(red: 211/255, green: 227/255, blue: 253/255, alpha: 1)
+            viewBtn.layer.cornerRadius = 18
+            viewBtn.contentEdgeInsets = UIEdgeInsets(top: 8, left: 14, bottom: 8, right: 16)
+        }
+        viewBtn.layer.cornerRadius = 18
+        viewBtn.layer.borderWidth = 0
+        viewBtn.layer.shadowColor = UIColor.black.cgColor
+        viewBtn.layer.shadowOpacity = 0.06
+        viewBtn.layer.shadowRadius = 3
+        viewBtn.layer.shadowOffset = CGSize(width: 0, height: 1)
+        viewBtn.addTarget(self, action: #selector(didTapReceipt), for: .touchUpInside)
+
+        [avatarIV, nameLbl, detailsLbl, numBadge, dateLbl, statusBadge, totalLbl, viewBtn].forEach {
+            $0.translatesAutoresizingMaskIntoConstraints = false
+            card.addSubview($0)
+        }
+
+        NSLayoutConstraint.activate([
+            card.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 6),
+            card.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            card.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            card.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -6),
+
+            avatarIV.topAnchor.constraint(equalTo: card.topAnchor, constant: 14),
+            avatarIV.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
+            avatarIV.widthAnchor.constraint(equalToConstant: 38),
+            avatarIV.heightAnchor.constraint(equalToConstant: 38),
+
+            nameLbl.topAnchor.constraint(equalTo: avatarIV.topAnchor),
+            nameLbl.leadingAnchor.constraint(equalTo: avatarIV.trailingAnchor, constant: 10),
+            nameLbl.trailingAnchor.constraint(lessThanOrEqualTo: numBadge.leadingAnchor, constant: -8),
+
+            numBadge.centerYAnchor.constraint(equalTo: nameLbl.centerYAnchor),
+            numBadge.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14),
+
+            detailsLbl.topAnchor.constraint(equalTo: nameLbl.bottomAnchor, constant: 3),
+            detailsLbl.leadingAnchor.constraint(equalTo: nameLbl.leadingAnchor),
+            detailsLbl.trailingAnchor.constraint(lessThanOrEqualTo: card.trailingAnchor, constant: -14),
+
+            dateLbl.topAnchor.constraint(equalTo: avatarIV.bottomAnchor, constant: 10),
+            dateLbl.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
+
+            statusBadge.centerYAnchor.constraint(equalTo: dateLbl.centerYAnchor),
+            statusBadge.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14),
+
+            totalLbl.topAnchor.constraint(equalTo: dateLbl.bottomAnchor, constant: 12),
+            totalLbl.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
+            totalLbl.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -14),
+
+            viewBtn.centerYAnchor.constraint(equalTo: totalLbl.centerYAnchor),
+            viewBtn.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14),
+            viewBtn.heightAnchor.constraint(equalToConstant: 36)
+        ])
+    }
+
+    @objc private func didTapReceipt() {
+        onReceiptTapped?()
+    }
+
+    func configure(with item: BillingInvoiceItem, onReceiptTap: @escaping () -> Void) {
+        self.onReceiptTapped = onReceiptTap
+
+        nameLbl.text = item.patientName
+        detailsLbl.text = item.patientDetails
+        numBadge.text = " \(item.invoiceNumber) "
+        dateLbl.text = "\(item.dateLogged) • \(item.paymentMethod)"
+        statusBadge.text = " \(item.paymentStatus) "
+        totalLbl.text = String(format: "₹%.2f", item.grandTotal)
+
+        if item.paymentStatus.uppercased() == "PAID" {
+            statusBadge.textColor = UIColor(red: 0.02, green: 0.59, blue: 0.41, alpha: 1)
+            statusBadge.backgroundColor = UIColor(red: 0.93, green: 0.98, blue: 0.95, alpha: 1)
+        } else if item.paymentStatus.uppercased() == "OVERDUE" {
+            statusBadge.textColor = UIColor(red: 0.88, green: 0.11, blue: 0.28, alpha: 1)
+            statusBadge.backgroundColor = UIColor(red: 1.0, green: 0.93, blue: 0.95, alpha: 1)
+        } else {
+            statusBadge.textColor = UIColor(red: 0.85, green: 0.47, blue: 0.02, alpha: 1)
+            statusBadge.backgroundColor = UIColor(red: 1.0, green: 0.95, blue: 0.88, alpha: 1)
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // MARK: – Native Billing & Revenue Ledger Controller
 // ─────────────────────────────────────────────────────────────────────────────
 class BillingViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, UITextFieldDelegate {
@@ -46,7 +210,13 @@ class BillingViewController: UIViewController, UITableViewDataSource, UITableVie
 
     // UI Elements
     private let topHeaderView      = UIView()
+    private let headerGradient     = CAGradientLayer()
+    private let backBtn            = UIButton(type: .system)
+    private let refreshBtn         = UIButton(type: .system)
+    private let headerNewInvoiceBtn = UIButton(type: .system)
+    private let titleLabel         = UILabel()
     private let subLbl             = UILabel()
+
     private let kpiScrollView      = UIScrollView()
     private let kpiStack           = UIStackView()
     private let searchField        = UITextField()
@@ -62,12 +232,14 @@ class BillingViewController: UIViewController, UITableViewDataSource, UITableVie
     private let lblSettledCnt = UILabel()
     private let lblTotalCnt   = UILabel()
 
+    // Auto-refresh timer (60s) matching Android's real-time polling
+    private var refreshTimer: Timer?
+
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = UIColor(red: 0.973, green: 0.980, blue: 0.988, alpha: 1) // #F8FAFC
 
         setupHeader()
-        setupKpiRow()
         setupSearchAndFilters()
         setupTableView()
         setupEmptyState()
@@ -75,154 +247,211 @@ class BillingViewController: UIViewController, UITableViewDataSource, UITableVie
         fetchInvoices()
     }
 
-    override var preferredStatusBarStyle: UIStatusBarStyle {
-        return .lightContent
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        fetchInvoices()
+        startRefreshTimer()
     }
 
-    // ── Header Setup ─────────────────────────────────────────────────────────
-    private func setupHeader() {
-        topHeaderView.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(topHeaderView)
-
-        let gradient = CAGradientLayer()
-        gradient.colors = [
-            UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1).cgColor, // #0D6EFD
-            UIColor(red: 0.114, green: 0.306, blue: 0.847, alpha: 1).cgColor  // #1D4ED8
-        ]
-        gradient.startPoint = CGPoint(x: 0, y: 0)
-        gradient.endPoint = CGPoint(x: 1, y: 1)
-        topHeaderView.layer.insertSublayer(gradient, at: 0)
-        topHeaderView.layer.cornerRadius = 20
-        topHeaderView.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
-        topHeaderView.clipsToBounds = true
-
-        let backBtn = UIButton(type: .system)
-        backBtn.setImage(UIImage(systemName: "chevron.left"), for: .normal)
-        backBtn.tintColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1)
-        backBtn.backgroundColor = .white
-        backBtn.layer.cornerRadius = 19
-        backBtn.layer.shadowColor = UIColor.black.cgColor
-        backBtn.layer.shadowOpacity = 0.08
-        backBtn.layer.shadowRadius = 4
-        backBtn.layer.shadowOffset = CGSize(width: 0, height: 2)
-        backBtn.addTarget(self, action: #selector(didTapBack), for: .touchUpInside)
-        backBtn.translatesAutoresizingMaskIntoConstraints = false
-        topHeaderView.addSubview(backBtn)
-
-        let titleLbl = UILabel()
-        titleLbl.text = "Billing & Invoices"
-        titleLbl.font = .systemFont(ofSize: 20, weight: .bold)
-        titleLbl.textColor = .white
-        titleLbl.translatesAutoresizingMaskIntoConstraints = false
-        topHeaderView.addSubview(titleLbl)
-
-        subLbl.text = "Financial Ledger & Revenue Hub"
-        subLbl.font = .systemFont(ofSize: 11.5, weight: .medium)
-        subLbl.textColor = UIColor(red: 0.780, green: 0.880, blue: 1.0, alpha: 1) // #C7DFFF
-        subLbl.translatesAutoresizingMaskIntoConstraints = false
-        topHeaderView.addSubview(subLbl)
-
-        NSLayoutConstraint.activate([
-            topHeaderView.topAnchor.constraint(equalTo: view.topAnchor),
-            topHeaderView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            topHeaderView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            topHeaderView.heightAnchor.constraint(equalToConstant: 104),
-
-            backBtn.leadingAnchor.constraint(equalTo: topHeaderView.leadingAnchor, constant: 16),
-            backBtn.bottomAnchor.constraint(equalTo: topHeaderView.bottomAnchor, constant: -12),
-            backBtn.widthAnchor.constraint(equalToConstant: 38),
-            backBtn.heightAnchor.constraint(equalToConstant: 38),
-
-            titleLbl.leadingAnchor.constraint(equalTo: backBtn.trailingAnchor, constant: 12),
-            titleLbl.topAnchor.constraint(equalTo: backBtn.topAnchor, constant: -1),
-            titleLbl.trailingAnchor.constraint(lessThanOrEqualTo: topHeaderView.trailingAnchor, constant: -16),
-
-            subLbl.leadingAnchor.constraint(equalTo: titleLbl.leadingAnchor),
-            subLbl.topAnchor.constraint(equalTo: titleLbl.bottomAnchor, constant: 2),
-            subLbl.trailingAnchor.constraint(lessThanOrEqualTo: topHeaderView.trailingAnchor, constant: -16),
-        ])
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        stopRefreshTimer()
     }
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        if let g = topHeaderView.layer.sublayers?.first as? CAGradientLayer {
-            g.frame = topHeaderView.bounds
-        }
+        headerGradient.frame = topHeaderView.bounds
     }
 
-    // ── KPI Revenue Cards ────────────────────────────────────────────────────
-    private func setupKpiRow() {
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        return .lightContent
+    }
+
+    // ── Ultra-Premium 3-Tier Sapphire Header & Bento KPI Cards ────────────────
+    private func setupHeader() {
+        topHeaderView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(topHeaderView)
+
+        headerGradient.colors = [
+            UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1).cgColor, // #0D6EFD
+            UIColor(red: 0.039, green: 0.345, blue: 0.792, alpha: 1).cgColor, // #0A58CA
+            UIColor(red: 0.114, green: 0.306, blue: 0.847, alpha: 1).cgColor  // #1D4ED8
+        ]
+        headerGradient.startPoint = CGPoint(x: 0, y: 0)
+        headerGradient.endPoint   = CGPoint(x: 1, y: 1)
+        topHeaderView.layer.insertSublayer(headerGradient, at: 0)
+        topHeaderView.layer.cornerRadius = 28
+        topHeaderView.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
+        topHeaderView.clipsToBounds = true
+
+        // Tier 1: Action Navigation Bar
+        let topBar = UIView()
+        topBar.translatesAutoresizingMaskIntoConstraints = false
+        topHeaderView.addSubview(topBar)
+
+        backBtn.setImage(UIImage(systemName: "chevron.left"), for: .normal)
+        backBtn.tintColor = .white
+        backBtn.backgroundColor = UIColor.white.withAlphaComponent(0.20)
+        backBtn.layer.cornerRadius = 19
+        backBtn.layer.borderWidth = 1
+        backBtn.layer.borderColor = UIColor.white.withAlphaComponent(0.30).cgColor
+        backBtn.translatesAutoresizingMaskIntoConstraints = false
+        backBtn.addTarget(self, action: #selector(didTapBack), for: .touchUpInside)
+        topBar.addSubview(backBtn)
+
+        refreshBtn.setImage(UIImage(systemName: "arrow.clockwise"), for: .normal)
+        refreshBtn.tintColor = .white
+        refreshBtn.backgroundColor = UIColor.white.withAlphaComponent(0.20)
+        refreshBtn.layer.cornerRadius = 19
+        refreshBtn.layer.borderWidth = 1
+        refreshBtn.layer.borderColor = UIColor.white.withAlphaComponent(0.30).cgColor
+        refreshBtn.translatesAutoresizingMaskIntoConstraints = false
+        refreshBtn.addTarget(self, action: #selector(didTapRefresh), for: .touchUpInside)
+        topBar.addSubview(refreshBtn)
+
+        // White Capsule CTA "+ New Invoice"
+        headerNewInvoiceBtn.setTitle("+ New Invoice", for: .normal)
+        headerNewInvoiceBtn.titleLabel?.font = .systemFont(ofSize: 13.5, weight: .bold)
+        headerNewInvoiceBtn.setTitleColor(UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1), for: .normal)
+        headerNewInvoiceBtn.backgroundColor = .white
+        headerNewInvoiceBtn.layer.cornerRadius = 18
+        headerNewInvoiceBtn.layer.shadowColor = UIColor.black.cgColor
+        headerNewInvoiceBtn.layer.shadowOpacity = 0.12
+        headerNewInvoiceBtn.layer.shadowRadius = 4
+        headerNewInvoiceBtn.layer.shadowOffset = CGSize(width: 0, height: 2)
+        headerNewInvoiceBtn.contentEdgeInsets = UIEdgeInsets(top: 8, left: 14, bottom: 8, right: 16)
+        headerNewInvoiceBtn.translatesAutoresizingMaskIntoConstraints = false
+        headerNewInvoiceBtn.addTarget(self, action: #selector(didTapNewInvoice), for: .touchUpInside)
+        topBar.addSubview(headerNewInvoiceBtn)
+
+        // Tier 2: Hero Greeting Title & Subtitle
+        titleLabel.text = "Billing & Invoices"
+        titleLabel.font = .systemFont(ofSize: 24, weight: .heavy)
+        titleLabel.textColor = .white
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+
+        subLbl.text = "Financial Ledger & Revenue Hub"
+        subLbl.font = .systemFont(ofSize: 12.5, weight: .medium)
+        subLbl.textColor = UIColor(red: 0.780, green: 0.875, blue: 1.0, alpha: 1) // #C7DFFF
+        subLbl.translatesAutoresizingMaskIntoConstraints = false
+
+        let titleStack = UIStackView(arrangedSubviews: [titleLabel, subLbl])
+        titleStack.axis = .vertical
+        titleStack.spacing = 3
+        titleStack.translatesAutoresizingMaskIntoConstraints = false
+        topHeaderView.addSubview(titleStack)
+
+        // Tier 3: 4 Frosted Glass Bento KPI Stat Cards
         kpiScrollView.showsHorizontalScrollIndicator = false
+        kpiScrollView.clipsToBounds = false
         kpiScrollView.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(kpiScrollView)
+        topHeaderView.addSubview(kpiScrollView)
 
         kpiStack.axis = .horizontal
         kpiStack.spacing = 10
         kpiStack.translatesAutoresizingMaskIntoConstraints = false
         kpiScrollView.addSubview(kpiStack)
 
+        kpiStack.addArrangedSubview(makeGlassKpiCard(title: "TOTAL REVENUE", valueLbl: lblTotalRev, dotColor: UIColor(red: 0.31, green: 0.89, blue: 0.63, alpha: 1), tagColor: UIColor(red: 0.65, green: 0.95, blue: 0.82, alpha: 1), subText: "All time collections"))
+        kpiStack.addArrangedSubview(makeGlassKpiCard(title: "THIS MONTH", valueLbl: lblMonthRev, dotColor: UIColor(red: 0.49, green: 0.83, blue: 0.99, alpha: 1), tagColor: UIColor(red: 0.73, green: 0.91, blue: 1.0, alpha: 1), subText: "Current month"))
+        kpiStack.addArrangedSubview(makeGlassKpiCard(title: "SETTLED INVOICES", valueLbl: lblSettledCnt, dotColor: UIColor(red: 0.99, green: 0.90, blue: 0.54, alpha: 1), tagColor: UIColor(red: 0.99, green: 0.90, blue: 0.54, alpha: 1), subText: "Fully paid"))
+        kpiStack.addArrangedSubview(makeGlassKpiCard(title: "TOTAL INVOICES", valueLbl: lblTotalCnt, dotColor: UIColor(red: 0.80, green: 0.85, blue: 1.0, alpha: 1), tagColor: UIColor(red: 0.85, green: 0.88, blue: 1.0, alpha: 1), subText: "All generated"))
+
         NSLayoutConstraint.activate([
-            kpiScrollView.topAnchor.constraint(equalTo: topHeaderView.bottomAnchor, constant: 8),
-            kpiScrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            kpiScrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            kpiScrollView.heightAnchor.constraint(equalToConstant: 92),
+            topHeaderView.topAnchor.constraint(equalTo: view.topAnchor),
+            topHeaderView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            topHeaderView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+
+            topBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 4),
+            topBar.leadingAnchor.constraint(equalTo: topHeaderView.leadingAnchor, constant: 18),
+            topBar.trailingAnchor.constraint(equalTo: topHeaderView.trailingAnchor, constant: -18),
+            topBar.heightAnchor.constraint(equalToConstant: 42),
+
+            backBtn.leadingAnchor.constraint(equalTo: topBar.leadingAnchor),
+            backBtn.centerYAnchor.constraint(equalTo: topBar.centerYAnchor),
+            backBtn.widthAnchor.constraint(equalToConstant: 38),
+            backBtn.heightAnchor.constraint(equalToConstant: 38),
+
+            refreshBtn.leadingAnchor.constraint(equalTo: backBtn.trailingAnchor, constant: 8),
+            refreshBtn.centerYAnchor.constraint(equalTo: topBar.centerYAnchor),
+            refreshBtn.widthAnchor.constraint(equalToConstant: 38),
+            refreshBtn.heightAnchor.constraint(equalToConstant: 38),
+
+            headerNewInvoiceBtn.trailingAnchor.constraint(equalTo: topBar.trailingAnchor),
+            headerNewInvoiceBtn.centerYAnchor.constraint(equalTo: topBar.centerYAnchor),
+            headerNewInvoiceBtn.heightAnchor.constraint(equalToConstant: 36),
+
+            titleStack.topAnchor.constraint(equalTo: topBar.bottomAnchor, constant: 14),
+            titleStack.leadingAnchor.constraint(equalTo: topHeaderView.leadingAnchor, constant: 18),
+            titleStack.trailingAnchor.constraint(equalTo: topHeaderView.trailingAnchor, constant: -18),
+
+            kpiScrollView.topAnchor.constraint(equalTo: titleStack.bottomAnchor, constant: 16),
+            kpiScrollView.leadingAnchor.constraint(equalTo: topHeaderView.leadingAnchor),
+            kpiScrollView.trailingAnchor.constraint(equalTo: topHeaderView.trailingAnchor),
+            kpiScrollView.heightAnchor.constraint(equalToConstant: 80),
+            kpiScrollView.bottomAnchor.constraint(equalTo: topHeaderView.bottomAnchor, constant: -18),
 
             kpiStack.topAnchor.constraint(equalTo: kpiScrollView.topAnchor),
             kpiStack.bottomAnchor.constraint(equalTo: kpiScrollView.bottomAnchor),
-            kpiStack.leadingAnchor.constraint(equalTo: kpiScrollView.leadingAnchor, constant: 16),
-            kpiStack.trailingAnchor.constraint(equalTo: kpiScrollView.trailingAnchor, constant: -16),
+            kpiStack.leadingAnchor.constraint(equalTo: kpiScrollView.leadingAnchor, constant: 18),
+            kpiStack.trailingAnchor.constraint(equalTo: kpiScrollView.trailingAnchor, constant: -18),
+            kpiStack.heightAnchor.constraint(equalTo: kpiScrollView.heightAnchor)
         ])
-
-        kpiStack.addArrangedSubview(makeKpiCard(title: "TOTAL REVENUE", valueLbl: lblTotalRev, valueColor: UIColor(red: 0.02, green: 0.59, blue: 0.41, alpha: 1), subText: "All Time Collections"))
-        kpiStack.addArrangedSubview(makeKpiCard(title: "MONTHLY REVENUE", valueLbl: lblMonthRev, valueColor: UIColor(red: 0.05, green: 0.43, blue: 0.99, alpha: 1), subText: "Current Month"))
-        kpiStack.addArrangedSubview(makeKpiCard(title: "SETTLED INVOICES", valueLbl: lblSettledCnt, valueColor: UIColor(red: 0.02, green: 0.59, blue: 0.41, alpha: 1), subText: "Fully Paid"))
-        kpiStack.addArrangedSubview(makeKpiCard(title: "TOTAL INVOICES", valueLbl: lblTotalCnt, valueColor: UIColor(red: 0.39, green: 0.45, blue: 0.55, alpha: 1), subText: "All Generated"))
     }
 
-    private func makeKpiCard(title: String, valueLbl: UILabel, valueColor: UIColor, subText: String? = nil, subLbl: UILabel? = nil) -> UIView {
+    private func makeGlassKpiCard(title: String, valueLbl: UILabel, dotColor: UIColor, tagColor: UIColor, subText: String) -> UIView {
         let card = UIView()
-        card.backgroundColor = .white
+        card.backgroundColor = UIColor.white.withAlphaComponent(0.15)
         card.layer.cornerRadius = 16
-        card.layer.shadowColor = UIColor(red: 0.05, green: 0.15, blue: 0.30, alpha: 1).cgColor
-        card.layer.shadowOpacity = 0.05
-        card.layer.shadowRadius = 5
-        card.layer.shadowOffset = CGSize(width: 0, height: 2)
         card.layer.borderWidth = 1
-        card.layer.borderColor = UIColor(red: 0.92, green: 0.94, blue: 0.97, alpha: 1).cgColor
+        card.layer.borderColor = UIColor.white.withAlphaComponent(0.24).cgColor
+        card.layer.masksToBounds = true
         card.translatesAutoresizingMaskIntoConstraints = false
-        card.widthAnchor.constraint(equalToConstant: 156).isActive = true
+        card.widthAnchor.constraint(equalToConstant: 148).isActive = true
+        card.heightAnchor.constraint(equalToConstant: 80).isActive = true
 
-        let tLbl = UILabel()
-        tLbl.text = title
-        tLbl.font = .systemFont(ofSize: 10, weight: .bold)
-        tLbl.textColor = UIColor(red: 0.39, green: 0.45, blue: 0.55, alpha: 1)
+        let dotView = UIView()
+        dotView.backgroundColor = dotColor
+        dotView.layer.cornerRadius = 3
+        dotView.translatesAutoresizingMaskIntoConstraints = false
+        dotView.widthAnchor.constraint(equalToConstant: 6).isActive = true
+        dotView.heightAnchor.constraint(equalToConstant: 6).isActive = true
+
+        let tagLbl = UILabel()
+        tagLbl.text = title
+        tagLbl.font = .systemFont(ofSize: 10, weight: .bold)
+        tagLbl.textColor = tagColor
+        tagLbl.translatesAutoresizingMaskIntoConstraints = false
+
+        let tagRow = UIStackView(arrangedSubviews: [dotView, tagLbl])
+        tagRow.axis = .horizontal
+        tagRow.spacing = 5
+        tagRow.alignment = .center
+        tagRow.translatesAutoresizingMaskIntoConstraints = false
 
         valueLbl.text = "₹0"
-        valueLbl.font = .systemFont(ofSize: 22, weight: .black)
-        valueLbl.textColor = valueColor
+        valueLbl.font = .systemFont(ofSize: 20, weight: .heavy)
+        valueLbl.textColor = .white
+        valueLbl.translatesAutoresizingMaskIntoConstraints = false
 
-        let sLbl = subLbl ?? UILabel()
-        if let subText = subText {
-            sLbl.text = subText
-        }
-        sLbl.font = .systemFont(ofSize: 11, weight: .medium)
-        sLbl.textColor = UIColor(red: 0.58, green: 0.64, blue: 0.72, alpha: 1)
+        let sLbl = UILabel()
+        sLbl.text = subText
+        sLbl.font = .systemFont(ofSize: 10, weight: .medium)
+        sLbl.textColor = UIColor(red: 0.780, green: 0.875, blue: 1.0, alpha: 1)
+        sLbl.translatesAutoresizingMaskIntoConstraints = false
 
-        [tLbl, valueLbl, sLbl].forEach {
-            $0.translatesAutoresizingMaskIntoConstraints = false
-            card.addSubview($0)
-        }
+        let stack = UIStackView(arrangedSubviews: [tagRow, valueLbl, sLbl])
+        stack.axis = .vertical
+        stack.spacing = 2
+        stack.alignment = .leading
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(stack)
 
         NSLayoutConstraint.activate([
-            tLbl.topAnchor.constraint(equalTo: card.topAnchor, constant: 12),
-            tLbl.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
-            tLbl.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14),
-
-            valueLbl.topAnchor.constraint(equalTo: tLbl.bottomAnchor, constant: 4),
-            valueLbl.leadingAnchor.constraint(equalTo: tLbl.leadingAnchor),
-
-            sLbl.topAnchor.constraint(equalTo: valueLbl.bottomAnchor, constant: 2),
-            sLbl.leadingAnchor.constraint(equalTo: tLbl.leadingAnchor),
+            stack.topAnchor.constraint(equalTo: card.topAnchor, constant: 10),
+            stack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 13),
+            stack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -13),
+            stack.bottomAnchor.constraint(lessThanOrEqualTo: card.bottomAnchor, constant: -10)
         ])
 
         return card
@@ -238,16 +467,17 @@ class BillingViewController: UIViewController, UITableViewDataSource, UITableVie
         searchField.layer.borderColor = UIColor(red: 0.89, green: 0.91, blue: 0.95, alpha: 1).cgColor
         searchField.clearButtonMode = .whileEditing
         searchField.delegate = self
-        searchField.addTarget(self, action: #selector(didSearchInvoices), for: .editingChanged)
-
-        let leftIcon = UIImageView(image: UIImage(systemName: "magnifyingglass"))
-        leftIcon.tintColor = UIColor(red: 0.58, green: 0.64, blue: 0.72, alpha: 1)
-        leftIcon.frame = CGRect(x: 12, y: 12, width: 20, height: 20)
-        let leftPad = UIView(frame: CGRect(x: 0, y: 0, width: 40, height: 44))
-        leftPad.addSubview(leftIcon)
-        searchField.leftView = leftPad
-        searchField.leftViewMode = .always
+        searchField.returnKeyType = .search
         searchField.translatesAutoresizingMaskIntoConstraints = false
+
+        let searchIconContainer = UIView(frame: CGRect(x: 0, y: 0, width: 38, height: 38))
+        let searchIcon = UIImageView(image: UIImage(systemName: "magnifyingglass"))
+        searchIcon.tintColor = UIColor(red: 0.580, green: 0.639, blue: 0.722, alpha: 1)
+        searchIcon.frame = CGRect(x: 12, y: 10, width: 18, height: 18)
+        searchIconContainer.addSubview(searchIcon)
+        searchField.leftView = searchIconContainer
+        searchField.leftViewMode = .always
+        searchField.addTarget(self, action: #selector(didSearchInvoices), for: .editingChanged)
         view.addSubview(searchField)
 
         filterScrollView.showsHorizontalScrollIndicator = false
@@ -260,7 +490,7 @@ class BillingViewController: UIViewController, UITableViewDataSource, UITableVie
         filterScrollView.addSubview(filterChipsStack)
 
         NSLayoutConstraint.activate([
-            searchField.topAnchor.constraint(equalTo: kpiScrollView.bottomAnchor, constant: 8),
+            searchField.topAnchor.constraint(equalTo: topHeaderView.bottomAnchor, constant: 14),
             searchField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             searchField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             searchField.heightAnchor.constraint(equalToConstant: 44),
@@ -274,6 +504,7 @@ class BillingViewController: UIViewController, UITableViewDataSource, UITableVie
             filterChipsStack.bottomAnchor.constraint(equalTo: filterScrollView.bottomAnchor),
             filterChipsStack.leadingAnchor.constraint(equalTo: filterScrollView.leadingAnchor, constant: 16),
             filterChipsStack.trailingAnchor.constraint(equalTo: filterScrollView.trailingAnchor, constant: -16),
+            filterChipsStack.heightAnchor.constraint(equalTo: filterScrollView.heightAnchor)
         ])
 
         setupFilterChips()
@@ -330,7 +561,7 @@ class BillingViewController: UIViewController, UITableViewDataSource, UITableVie
         tableView.separatorStyle = .none
         tableView.dataSource = self
         tableView.delegate = self
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "InvoiceCardCell")
+        tableView.register(BillingInvoiceCell.self, forCellReuseIdentifier: BillingInvoiceCell.reuseIdentifier)
         tableView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(tableView)
 
@@ -395,7 +626,7 @@ class BillingViewController: UIViewController, UITableViewDataSource, UITableVie
         let token = KeychainManager.read(forKey: KeychainManager.tokenKey) ?? UserDefaults.standard.string(forKey: "auth_token")
         if let token = token {
             req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-            req.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
+            req.setValue("token=\(token); auth-token=\(token); auth_token=\(token)", forHTTPHeaderField: "Cookie")
         }
 
         URLSession.shared.dataTask(with: req) { [weak self] data, _, _ in
@@ -413,16 +644,48 @@ class BillingViewController: UIViewController, UITableViewDataSource, UITableVie
         }.resume()
     }
 
+    @objc private func didTapRefresh() {
+        fetchInvoices()
+    }
+
+    private func startRefreshTimer() {
+        stopRefreshTimer()
+        refreshTimer = Timer.scheduledTimer(withTimeInterval: 60.0, repeats: true) { [weak self] _ in
+            self?.fetchInvoices()
+        }
+    }
+
+    private func stopRefreshTimer() {
+        refreshTimer?.invalidate()
+        refreshTimer = nil
+    }
+
+    private func getAuthToken() -> String? {
+        // Try all fallback paths just like Android checks multiple token sources
+        if let token = KeychainManager.shared.getToken(), !token.isEmpty { return token }
+        if let token = KeychainManager.read(forKey: KeychainManager.tokenKey), !token.isEmpty { return token }
+        if let token = UserDefaults.standard.string(forKey: "auth_token"), !token.isEmpty { return token }
+        if let token = UserDefaults.standard.string(forKey: "token"), !token.isEmpty { return token }
+        if let cookies = HTTPCookieStorage.shared.cookies {
+            for cookie in cookies {
+                if (cookie.name == "token" || cookie.name == "auth-token") && !cookie.value.isEmpty {
+                    return cookie.value
+                }
+            }
+        }
+        return nil
+    }
+
     private func fetchInvoices() {
         fetchUserInfo()
         spinner.startAnimating()
+        let token = getAuthToken()
         guard let url = URL(string: baseUrl + "/api/workspace/invoices") else { return }
         var req = URLRequest(url: url)
         req.httpMethod = "GET"
-        let token = KeychainManager.read(forKey: KeychainManager.tokenKey) ?? UserDefaults.standard.string(forKey: "auth_token")
         if let token = token {
             req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-            req.setValue("token=\(token)", forHTTPHeaderField: "Cookie")
+            req.setValue("token=\(token); auth-token=\(token); auth_token=\(token)", forHTTPHeaderField: "Cookie")
         }
 
         URLSession.shared.dataTask(with: req) { [weak self] data, response, error in
@@ -432,12 +695,12 @@ class BillingViewController: UIViewController, UITableViewDataSource, UITableVie
             if let data = data,
                let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
 
-                // Parse Stats
+                // Parse Stats — handle both Double and Int types from API
                 if let stats = json["stats"] as? [String: Any] {
-                    self.kpiStats.totalRevenue = (stats["totalRevenue"] as? NSNumber)?.doubleValue ?? 0
-                    self.kpiStats.monthlyRevenue = (stats["monthlyRevenue"] as? NSNumber)?.doubleValue ?? 0
-                    self.kpiStats.settledCount = (stats["settledCount"] as? Int) ?? ((stats["paidCount"] as? Int) ?? 0)
-                    self.kpiStats.totalCount = (stats["totalCount"] as? Int) ?? ((stats["invoiceCount"] as? Int) ?? 0)
+                    self.kpiStats.totalRevenue   = (stats["totalRevenue"]   as? Double) ?? Double((stats["totalRevenue"]   as? Int) ?? 0)
+                    self.kpiStats.monthlyRevenue = (stats["monthlyRevenue"] as? Double) ?? Double((stats["monthlyRevenue"] as? Int) ?? 0)
+                    self.kpiStats.settledCount   = (stats["settledCount"]   as? Int) ?? ((stats["paidCount"]     as? Int) ?? 0)
+                    self.kpiStats.totalCount     = (stats["totalCount"]     as? Int) ?? ((stats["invoiceCount"]  as? Int) ?? 0)
                 }
 
                 // Parse Invoices
@@ -451,72 +714,88 @@ class BillingViewController: UIViewController, UITableViewDataSource, UITableVie
                         let pGender = patient?["gender"] as? String ?? ""
 
                         var details = pAge > 0 ? "\(pAge)Y" : ""
-                        if !pGender.isEmpty { details += (details.isEmpty ? "" : " • ") + pGender }
-                        if !pPhone.isEmpty { details += (details.isEmpty ? "" : " • ") + pPhone }
+                        if !pGender.isEmpty {
+                            details = details.isEmpty ? pGender : "\(details) • \(pGender)"
+                        }
+                        if !pPhone.isEmpty {
+                            details = details.isEmpty ? pPhone : "\(details) • \(pPhone)"
+                        }
+                        if details.isEmpty { details = "General Patient" }
 
-                        let total = (inv["grandTotal"] as? NSNumber)?.doubleValue ?? ((inv["total"] as? NSNumber)?.doubleValue ?? 0)
+                        let grandTotal = (inv["grandTotal"] as? NSNumber)?.doubleValue ?? ((inv["total"] as? NSNumber)?.doubleValue ?? 0)
                         let paid = (inv["paidAmount"] as? NSNumber)?.doubleValue ?? 0
-                        let bal = (inv["balance"] as? NSNumber)?.doubleValue ?? max(0, total - paid)
                         let discount = (inv["discount"] as? NSNumber)?.doubleValue ?? 0
-                        let subtotal = (inv["subtotal"] as? NSNumber)?.doubleValue ?? (total + discount)
+                        let subtotal = (inv["subtotal"] as? NSNumber)?.doubleValue ?? (grandTotal + discount)
+                        let balance = (inv["balance"] as? NSNumber)?.doubleValue ?? max(0, grandTotal - paid)
 
-                        var items: [BillingTestLine] = []
-                        if let itArr = inv["items"] as? [[String: Any]] {
-                            for it in itArr {
-                                let name = (it["name"] as? String) ?? ((it["testName"] as? String) ?? "Diagnostic Test")
-                                let price = (it["price"] as? NSNumber)?.doubleValue ?? 0
-                                items.append(BillingTestLine(testName: name, price: price))
+                        var status = inv["paymentStatus"] as? String ?? (balance == 0 ? "PAID" : "PENDING")
+                        if status.isEmpty { status = balance == 0 ? "PAID" : "PENDING" }
+
+                        var lines: [BillingTestLine] = []
+                        if let items = inv["items"] as? [[String: Any]] {
+                            for it in items {
+                                let lineName = it["description"] as? String ?? (it["name"] as? String ?? (it["testName"] as? String ?? "Diagnostic Test"))
+                                let linePrice = (it["total"] as? NSNumber)?.doubleValue ?? ((it["unitPrice"] as? NSNumber)?.doubleValue ?? ((it["price"] as? NSNumber)?.doubleValue ?? 0))
+                                lines.append(BillingTestLine(testName: lineName, price: linePrice))
                             }
                         }
 
-                        loaded.append(BillingInvoiceItem(
+                        let item = BillingInvoiceItem(
                             id: inv["id"] as? String ?? UUID().uuidString,
-                            invoiceNumber: inv["invoiceNumber"] as? String ?? "INV-100",
+                            invoiceNumber: inv["invoiceNumber"] as? String ?? "INV-\(loaded.count + 1000)",
                             patientName: pName,
                             patientDetails: details,
-                            dateLogged: "Recent",
+                            dateLogged: self.formatDate(inv["createdAt"] as? String ?? ""),
                             paymentMethod: inv["paymentMethod"] as? String ?? "UPI",
-                            paymentStatus: inv["paymentStatus"] as? String ?? (bal == 0 ? "PAID" : "PENDING"),
-                            grandTotal: total,
+                            paymentStatus: status,
+                            grandTotal: grandTotal,
                             paidAmount: paid,
-                            balanceDue: bal,
+                            balanceDue: balance,
                             discount: discount,
                             subtotal: subtotal,
-                            items: items
-                        ))
+                            items: lines
+                        )
+                        loaded.append(item)
                     }
+                    self.allInvoices = loaded
+                }
 
-                    DispatchQueue.main.async {
-                        self.allInvoices = loaded
-                        self.computeAndApplyKpis()
-                        self.applyInvoicesFilter()
-                    }
-                    return
+                DispatchQueue.main.async {
+                    self.computeAndApplyKpis()
+                    self.applyInvoicesFilter()
                 }
             }
-
-            DispatchQueue.main.async {
-                self.allInvoices = []
-                self.computeAndApplyKpis()
-                self.applyInvoicesFilter()
-            }
         }.resume()
+    }
+
+    private func formatDate(_ iso: String) -> String {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let d = formatter.date(from: iso) {
+            let out = DateFormatter()
+            out.dateFormat = "dd MMM, hh:mm a"
+            return out.string(from: d)
+        }
+        let fallback = DateFormatter()
+        fallback.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+        if let d = fallback.date(from: iso) {
+            let out = DateFormatter()
+            out.dateFormat = "dd MMM, hh:mm a"
+            return out.string(from: d)
+        }
+        return "Recent"
     }
 
     private func computeAndApplyKpis() {
         var totalRev: Double = 0
         var monthlyRev: Double = 0
-        var settledCnt: Int = 0
-        let totalCnt: Int = allInvoices.count
-
-        if kpiStats.totalRevenue > 0 || kpiStats.monthlyRevenue > 0 {
-            totalRev = kpiStats.totalRevenue
-            monthlyRev = kpiStats.monthlyRevenue
-            if kpiStats.settledCount > 0 { settledCnt = kpiStats.settledCount }
-        }
+        var settledCnt = 0
+        let totalCnt = allInvoices.count
 
         for inv in allInvoices {
-            if kpiStats.totalRevenue == 0 {
+            if inv.paymentStatus.uppercased() == "PAID" {
+                totalRev += inv.grandTotal
+            } else {
                 totalRev += inv.paidAmount
             }
             if inv.paymentStatus.uppercased() == "PAID" {
@@ -580,158 +859,19 @@ class BillingViewController: UIViewController, UITableViewDataSource, UITableVie
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "InvoiceCardCell", for: indexPath)
-        cell.backgroundColor = .clear
-        cell.selectionStyle = .none
-        cell.contentView.subviews.forEach { $0.removeFromSuperview() }
-
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: BillingInvoiceCell.reuseIdentifier, for: indexPath) as? BillingInvoiceCell else {
+            return UITableViewCell()
+        }
         let item = filteredInvoices[indexPath.row]
-
-        let card = UIView()
-        card.backgroundColor = .white
-        card.layer.cornerRadius = 18
-        card.layer.shadowColor = UIColor(red: 0.05, green: 0.15, blue: 0.30, alpha: 1).cgColor
-        card.layer.shadowOpacity = 0.06
-        card.layer.shadowRadius = 6
-        card.layer.shadowOffset = CGSize(width: 0, height: 3)
-        card.layer.borderWidth = 1
-        card.layer.borderColor = UIColor(red: 0.92, green: 0.94, blue: 0.97, alpha: 1).cgColor
-        card.translatesAutoresizingMaskIntoConstraints = false
-        cell.contentView.addSubview(card)
-
-        // Standardized Patient Avatar
-        let avatarIV = PatientAvatarHelper.createAvatar(size: 38)
-
-        let nameLbl = UILabel()
-        nameLbl.text = item.patientName
-        nameLbl.font = .systemFont(ofSize: 16, weight: .bold)
-        nameLbl.textColor = UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1)
-
-        let detailsLbl = UILabel()
-        detailsLbl.text = item.patientDetails
-        detailsLbl.font = .systemFont(ofSize: 12, weight: .medium)
-        detailsLbl.textColor = UIColor(red: 0.392, green: 0.451, blue: 0.549, alpha: 1)
-
-        let numBadge = UILabel()
-        numBadge.text = " \(item.invoiceNumber) "
-        numBadge.font = .systemFont(ofSize: 12, weight: .bold)
-        numBadge.textColor = UIColor(red: 0.051, green: 0.431, blue: 0.992, alpha: 1)
-        numBadge.backgroundColor = UIColor(red: 0.937, green: 0.965, blue: 1.0, alpha: 1)
-        numBadge.layer.cornerRadius = 8
-        numBadge.clipsToBounds = true
-
-        let dateLbl = UILabel()
-        dateLbl.text = "\(item.dateLogged) • \(item.paymentMethod)"
-        dateLbl.font = .systemFont(ofSize: 12, weight: .medium)
-        dateLbl.textColor = UIColor(red: 0.392, green: 0.451, blue: 0.549, alpha: 1)
-
-        let statusBadge = UILabel()
-        statusBadge.text = " \(item.paymentStatus) "
-        statusBadge.font = .systemFont(ofSize: 11, weight: .bold)
-        statusBadge.layer.cornerRadius = 6
-        statusBadge.clipsToBounds = true
-
-        if item.paymentStatus.uppercased() == "PAID" {
-            statusBadge.textColor = UIColor(red: 0.02, green: 0.59, blue: 0.41, alpha: 1)
-            statusBadge.backgroundColor = UIColor(red: 0.93, green: 0.98, blue: 0.95, alpha: 1)
-        } else if item.paymentStatus.uppercased() == "OVERDUE" {
-            statusBadge.textColor = UIColor(red: 0.88, green: 0.11, blue: 0.28, alpha: 1)
-            statusBadge.backgroundColor = UIColor(red: 1.0, green: 0.93, blue: 0.95, alpha: 1)
-        } else {
-            statusBadge.textColor = UIColor(red: 0.85, green: 0.47, blue: 0.02, alpha: 1)
-            statusBadge.backgroundColor = UIColor(red: 1.0, green: 0.95, blue: 0.88, alpha: 1)
+        cell.configure(with: item) { [weak self] in
+            self?.showInvoiceDetailSheet(item)
         }
-
-        let totalLbl = UILabel()
-        totalLbl.text = String(format: "₹%.2f", item.grandTotal)
-        totalLbl.font = .systemFont(ofSize: 18.5, weight: .bold)
-        totalLbl.textColor = UIColor(red: 0.059, green: 0.090, blue: 0.165, alpha: 1)
-
-        let viewBtn = UIButton(type: .system)
-        if #available(iOS 15.0, *) {
-            var config = UIButton.Configuration.filled()
-            config.title = "Receipt"
-            config.image = UIImage(systemName: "doc.text.fill")
-            config.imagePadding = 6
-            config.baseForegroundColor = UIColor(red: 4/255, green: 30/255, blue: 73/255, alpha: 1) // #041E49
-            config.baseBackgroundColor = UIColor(red: 211/255, green: 227/255, blue: 253/255, alpha: 1) // #D3E3FD
-            config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 14, bottom: 8, trailing: 16)
-            config.cornerStyle = .capsule
-            var titleAttr = AttributeContainer()
-            titleAttr.font = .systemFont(ofSize: 13, weight: .bold)
-            config.attributedTitle = AttributedString("Receipt", attributes: titleAttr)
-            viewBtn.configuration = config
-        } else {
-            viewBtn.setTitle(" Receipt", for: .normal)
-            viewBtn.setImage(UIImage(systemName: "doc.text.fill"), for: .normal)
-            viewBtn.tintColor = UIColor(red: 4/255, green: 30/255, blue: 73/255, alpha: 1)
-            viewBtn.setTitleColor(UIColor(red: 4/255, green: 30/255, blue: 73/255, alpha: 1), for: .normal)
-            viewBtn.titleLabel?.font = .systemFont(ofSize: 13, weight: .bold)
-            viewBtn.backgroundColor = UIColor(red: 211/255, green: 227/255, blue: 253/255, alpha: 1)
-            viewBtn.layer.cornerRadius = 18
-            viewBtn.contentEdgeInsets = UIEdgeInsets(top: 8, left: 14, bottom: 8, right: 16)
-        }
-        viewBtn.layer.cornerRadius = 18
-        viewBtn.layer.borderWidth = 0
-        viewBtn.layer.shadowColor = UIColor.black.cgColor
-        viewBtn.layer.shadowOpacity = 0.06
-        viewBtn.layer.shadowRadius = 3
-        viewBtn.layer.shadowOffset = CGSize(width: 0, height: 1)
-        viewBtn.tag = indexPath.row
-        viewBtn.addTarget(self, action: #selector(didTapReceiptDetail(_:)), for: .touchUpInside)
-
-        [avatarIV, nameLbl, detailsLbl, numBadge, dateLbl, statusBadge, totalLbl, viewBtn].forEach {
-            $0.translatesAutoresizingMaskIntoConstraints = false
-            card.addSubview($0)
-        }
-
-        NSLayoutConstraint.activate([
-            card.topAnchor.constraint(equalTo: cell.contentView.topAnchor, constant: 6),
-            card.leadingAnchor.constraint(equalTo: cell.contentView.leadingAnchor, constant: 16),
-            card.trailingAnchor.constraint(equalTo: cell.contentView.trailingAnchor, constant: -16),
-            card.bottomAnchor.constraint(equalTo: cell.contentView.bottomAnchor, constant: -6),
-
-            avatarIV.topAnchor.constraint(equalTo: card.topAnchor, constant: 14),
-            avatarIV.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
-
-            nameLbl.topAnchor.constraint(equalTo: avatarIV.topAnchor),
-            nameLbl.leadingAnchor.constraint(equalTo: avatarIV.trailingAnchor, constant: 10),
-            nameLbl.trailingAnchor.constraint(lessThanOrEqualTo: numBadge.leadingAnchor, constant: -8),
-
-            numBadge.centerYAnchor.constraint(equalTo: nameLbl.centerYAnchor),
-            numBadge.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14),
-
-            detailsLbl.topAnchor.constraint(equalTo: nameLbl.bottomAnchor, constant: 3),
-            detailsLbl.leadingAnchor.constraint(equalTo: nameLbl.leadingAnchor),
-
-            dateLbl.topAnchor.constraint(equalTo: avatarIV.bottomAnchor, constant: 10),
-            dateLbl.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
-
-            statusBadge.centerYAnchor.constraint(equalTo: dateLbl.centerYAnchor),
-            statusBadge.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14),
-
-            totalLbl.topAnchor.constraint(equalTo: dateLbl.bottomAnchor, constant: 12),
-            totalLbl.leadingAnchor.constraint(equalTo: nameLbl.leadingAnchor),
-            totalLbl.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -14),
-
-            viewBtn.centerYAnchor.constraint(equalTo: totalLbl.centerYAnchor),
-            viewBtn.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14),
-            viewBtn.heightAnchor.constraint(equalToConstant: 36),
-        ])
-
         return cell
     }
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let item = filteredInvoices[indexPath.row]
         showInvoiceDetailSheet(item)
-    }
-
-    @objc private func didTapReceiptDetail(_ sender: UIButton) {
-        if sender.tag < filteredInvoices.count {
-            let item = filteredInvoices[sender.tag]
-            showInvoiceDetailSheet(item)
-        }
     }
 
     private func showInvoiceDetailSheet(_ item: BillingInvoiceItem) {
@@ -747,6 +887,8 @@ class BillingViewController: UIViewController, UITableViewDataSource, UITableVie
         """, preferredStyle: .actionSheet)
 
         alert.addAction(UIAlertAction(title: "Close", style: .cancel, handler: nil))
+        alert.popoverPresentationController?.sourceView = self.view
+        alert.popoverPresentationController?.sourceRect = CGRect(x: self.view.bounds.midX, y: self.view.bounds.midY, width: 0, height: 0)
         present(alert, animated: true, completion: nil)
     }
 }

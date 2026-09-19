@@ -239,8 +239,9 @@ public class BillingActivity extends AppCompatActivity {
                 String[] parts = cookies.split(";");
                 for (String part : parts) {
                     String trimmed = part.trim();
-                    if (trimmed.startsWith("token=")) {
-                        String cookieToken = trimmed.substring(6).trim();
+                    if (trimmed.startsWith("token=") || trimmed.startsWith("auth-token=") || trimmed.startsWith("auth_token=")) {
+                        int eqIdx = trimmed.indexOf('=');
+                        String cookieToken = trimmed.substring(eqIdx + 1).trim();
                         if (!cookieToken.isEmpty()) {
                             AuthManager.saveToken(this, cookieToken);
                             return cookieToken;
@@ -260,7 +261,7 @@ public class BillingActivity extends AppCompatActivity {
                 URL url = new URL(BASE_URL + "/api/auth/me");
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestProperty("Authorization", "Bearer " + token);
-                conn.setRequestProperty("Cookie", "token=" + token);
+                conn.setRequestProperty("Cookie", "token=" + token + "; auth-token=" + token + "; auth_token=" + token);
                 conn.setConnectTimeout(5000);
                 conn.setReadTimeout(5000);
 
@@ -294,7 +295,7 @@ public class BillingActivity extends AppCompatActivity {
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 if (token != null) {
                     conn.setRequestProperty("Authorization", "Bearer " + token);
-                    conn.setRequestProperty("Cookie", "token=" + token);
+                    conn.setRequestProperty("Cookie", "token=" + token + "; auth-token=" + token + "; auth_token=" + token);
                 } else {
                     android.webkit.CookieManager cm = android.webkit.CookieManager.getInstance();
                     String cookie = cm.getCookie(BASE_URL);
@@ -454,8 +455,15 @@ public class BillingActivity extends AppCompatActivity {
         View sheet = getLayoutInflater().inflate(R.layout.layout_invoice_detail_sheet, null);
         dialog.setContentView(sheet);
 
-        BottomSheetBehavior<View> behavior = BottomSheetBehavior.from((View) sheet.getParent());
-        behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+        dialog.setOnShowListener(d -> {
+            try {
+                FrameLayout bottomSheet = dialog.findViewById(com.google.android.material.R.id.design_bottom_sheet);
+                if (bottomSheet != null) {
+                    BottomSheetBehavior<FrameLayout> behavior = BottomSheetBehavior.from(bottomSheet);
+                    behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+                }
+            } catch (Exception ignored) {}
+        });
 
         TextView lblInvNum = sheet.findViewById(R.id.lblSheetInvoiceNumber);
         TextView lblInvDate = sheet.findViewById(R.id.lblSheetInvoiceDate);

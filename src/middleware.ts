@@ -38,6 +38,16 @@ export async function middleware(request: NextRequest) {
   // 4. Verify Session (Token Exists)
   const payload = await verifyToken(token);
   if (!payload) {
+    if (isPublicPath || pathname === '/login') {
+      const response = NextResponse.next();
+      response.cookies.delete('token');
+      return response;
+    }
+    if (pathname.startsWith('/api')) {
+      const response = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      response.cookies.delete('token');
+      return response;
+    }
     // Token is invalid/expired. Clear it and redirect to login.
     const response = NextResponse.redirect(new URL('/login', request.url));
     response.cookies.delete('token');

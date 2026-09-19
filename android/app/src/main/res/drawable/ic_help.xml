@@ -6,7 +6,7 @@
     <!-- Outer Circle Outline -->
     <path
         android:fillColor="@android:color/transparent"
-        android:strokeColor="#0D6EFD"
+        android:strokeColor="#FFFFFF"
         android:strokeWidth="2"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
@@ -14,13 +14,13 @@
     <!-- Question Mark Hook -->
     <path
         android:fillColor="@android:color/transparent"
-        android:strokeColor="#0D6EFD"
+        android:strokeColor="#FFFFFF"
         android:strokeWidth="2"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
         android:pathData="M9.5,9.0c0,-1.38 1.12,-2.5 2.5,-2.5s2.5,1.12 2.5,2.5c0,1.0 -0.6,1.7 -1.5,2.1C12.3,11.5 12.0,12.2 12.0,12.7L12.0,13.2" />
     <!-- Dot at bottom -->
     <path
-        android:fillColor="#0D6EFD"
+        android:fillColor="#FFFFFF"
         android:pathData="M12,17m-1.1,0a1.1,1.1 0 1,1 2.2,0a1.1,1.1 0 1,1 -2.2,0" />
 </vector>
