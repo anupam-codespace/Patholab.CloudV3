@@ -128,12 +128,20 @@
             android:focusable="true"
             android:elevation="1dp">
 
-            <!-- Authentic WhatsApp Squircle Logo -->
-            <ImageView
+            <!-- Professional messaging icon: clean vector, green tint -->
+            <FrameLayout
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:src="@drawable/ic_whatsapp_official"
-                android:scaleType="fitCenter" />
+                android:background="@drawable/bg_pill_white"
+                android:backgroundTint="#DCFCE7">
+
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_chat_bubble"
+                    app:tint="#16A34A" />
+            </FrameLayout>
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -170,7 +178,7 @@
                 android:paddingEnd="12dp"
                 android:paddingTop="5dp"
                 android:paddingBottom="5dp"
-                android:text="Send ↗"
+                android:text="Send ->"
                 android:textSize="12sp"
                 android:textStyle="bold"
                 android:textColor="#FFFFFF" />
@@ -191,12 +199,20 @@
             android:focusable="true"
             android:elevation="1dp">
 
-            <!-- Authentic Gmail Logo -->
-            <ImageView
+            <!-- Professional email icon: clean vector, blue tint -->
+            <FrameLayout
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:src="@drawable/ic_gmail_official"
-                android:scaleType="fitCenter" />
+                android:background="@drawable/bg_pill_white"
+                android:backgroundTint="#DBEAFE">
+
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_envelope"
+                    app:tint="#1D4ED8" />
+            </FrameLayout>
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -233,7 +249,7 @@
                 android:paddingEnd="12dp"
                 android:paddingTop="5dp"
                 android:paddingBottom="5dp"
-                android:text="Send ↗"
+                android:text="Send ->"
                 android:textSize="12sp"
                 android:textStyle="bold"
                 android:textColor="#FFFFFF" />
@@ -303,7 +319,7 @@
                 android:paddingEnd="12dp"
                 android:paddingTop="5dp"
                 android:paddingBottom="5dp"
-                android:text="Copy 📋"
+                android:text="Copy"
                 android:textSize="12sp"
                 android:textStyle="bold"
                 android:textColor="#334155" />

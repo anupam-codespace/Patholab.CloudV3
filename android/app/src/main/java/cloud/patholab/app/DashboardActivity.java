@@ -309,31 +309,32 @@ public class DashboardActivity extends AppCompatActivity {
     private void syncUserDetails() {
         String name = AuthManager.getUserName(this);
         String email = AuthManager.getUserEmail(this);
-        String role = AuthManager.getUserRole(this);
-        String lab = AuthManager.getLabName(this);
 
-        if (name == null || name.trim().isEmpty() || "null".equalsIgnoreCase(name)) name = "User";
-        if (email == null || email.trim().isEmpty() || "null".equalsIgnoreCase(email)) email = "user@patholab.cloud";
-        if (role == null || role.trim().isEmpty()) role = "Lab Owner";
-        if (lab == null || lab.trim().isEmpty()) lab = "Care Diagnostics";
-
-        if (role.equalsIgnoreCase("LAB_OWNER")) role = "Lab Owner";
-        else if (role.equalsIgnoreCase("LAB_MANAGER")) role = "Lab Manager";
-        else if (role.equalsIgnoreCase("PATHOLOGIST")) role = "Pathologist";
-        else if (role.equalsIgnoreCase("RECEPTIONIST")) role = "Reception Desk";
-        else if (role.equalsIgnoreCase("SUPER_ADMIN")) role = "System Admin";
+        // Show only the real user name — hide role/lab/email labels from the UI
+        // (Lab Owner, Care Diagnostics and Gmail ID are never displayed)
+        if (name == null || name.trim().isEmpty() || "null".equalsIgnoreCase(name)) name = "";
 
         if (lblDashboardUserName != null) lblDashboardUserName.setText(name);
-        if (lblDashboardUserEmail != null) lblDashboardUserEmail.setText(email);
-        if (lblDashboardAvatarInitial != null) {
-            String initial = !name.isEmpty() ? String.valueOf(name.charAt(0)).toUpperCase(Locale.ROOT) : "U";
-            lblDashboardAvatarInitial.setText(initial);
+
+        // Hide email address — never show Gmail or any personal email in analytics header
+        if (lblDashboardUserEmail != null) {
+            lblDashboardUserEmail.setVisibility(android.view.View.GONE);
         }
+
+        // Hide "Lab Owner • Care Diagnostics" role-lab subtitle
         if (lblDashboardUserRoleLab != null) {
-            lblDashboardUserRoleLab.setText(role + " • " + lab);
+            lblDashboardUserRoleLab.setVisibility(android.view.View.GONE);
         }
+
+        // Hide lab name badge (e.g., "Care Diagnostics")
         if (lblDashboardLabBadge != null) {
-            lblDashboardLabBadge.setText(lab);
+            lblDashboardLabBadge.setVisibility(android.view.View.GONE);
+        }
+
+        if (lblDashboardAvatarInitial != null) {
+            String initial = (name != null && !name.isEmpty())
+                    ? String.valueOf(name.charAt(0)).toUpperCase(Locale.ROOT) : "U";
+            lblDashboardAvatarInitial.setText(initial);
         }
     }
 

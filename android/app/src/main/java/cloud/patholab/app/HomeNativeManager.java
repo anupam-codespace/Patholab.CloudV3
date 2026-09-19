@@ -1037,7 +1037,6 @@ public class HomeNativeManager {
             if (contentContainer != null) {
                 // 1. OVERVIEW
                 List<SheetModDef> overviewList = Arrays.asList(
-                        new SheetModDef("Home", "/dashboard", "ic_mod_clean_home", "bg_mod_icon_blue"),
                         new SheetModDef("Dashboard", "/dashboard", "ic_mod_clean_dashboard", "bg_mod_icon_sky"),
                         new SheetModDef("Financial Analytics", "/workspace/analytics", "ic_mod_clean_analytics", "bg_mod_icon_emerald"),
                         new SheetModDef("Online Booking", "/workspace/online-booking", "ic_mod_clean_booking", "bg_mod_icon_purple")
@@ -1054,15 +1053,17 @@ public class HomeNativeManager {
                 );
                 buildCategorySection(sheet, contentContainer, "CLINICAL OPERATIONS", clinicalList);
 
+                // 2.5. INVENTORY & LOGISTICS
+                List<SheetModDef> inventoryList = Arrays.asList(
+                        new SheetModDef("Inventory & Stock", "/workspace/inventory",  "ic_mod_clean_inventory", "bg_mod_icon_emerald"),
+                        new SheetModDef("Logistics",          "/workspace/logistics",  "ic_mod_clean_logistics",  "bg_mod_icon_blue")
+                );
+                buildCategorySection(sheet, contentContainer, "INVENTORY & LOGISTICS", inventoryList);
+
                 // 3. RADIOLOGY
                 List<SheetModDef> radiologyList = Arrays.asList(
                         new SheetModDef("RIS Dashboard", "/workspace/radiology/dashboard", "ic_mod_clean_ris", "bg_mod_icon_purple"),
                         new SheetModDef("Scan Schedule", "/workspace/radiology/dashboard/appointments", "ic_mod_clean_scan_schedule", "bg_mod_icon_blue"),
-                        new SheetModDef("Technician Worklist", "/workspace/radiology/worklist", "ic_mod_clean_tech_worklist", "bg_mod_icon_teal"),
-                        new SheetModDef("PACS Viewer", "/workspace/radiology/pacs", "ic_mod_clean_pacs", "bg_mod_icon_indigo"),
-                        new SheetModDef("Media Library", "/workspace/radiology/media", "ic_mod_clean_media", "bg_mod_icon_rose"),
-                        new SheetModDef("Reporting Queue", "/workspace/radiology/reporting", "ic_mod_clean_rad_reporting", "bg_mod_icon_emerald"),
-                        new SheetModDef("Reports Archive", "/workspace/radiology/archive", "ic_mod_clean_archive", "bg_mod_icon_amber"),
                         new SheetModDef("Machines", "/workspace/radiology/machines", "ic_mod_clean_machines", "bg_mod_icon_teal"),
                         new SheetModDef("RIS Macros", "/workspace/radiology/macros", "ic_mod_clean_macros", "bg_mod_icon_orange"),
                         new SheetModDef("DICOM Settings", "/workspace/radiology/settings/dicom", "ic_mod_clean_dicom", "bg_mod_icon_blue"),
@@ -1070,23 +1071,7 @@ public class HomeNativeManager {
                 );
                 buildCategorySection(sheet, contentContainer, "RADIOLOGY", radiologyList);
 
-                // 4. RESOURCES & LOGISTICS
-                List<SheetModDef> resourcesList = Arrays.asList(
-                        new SheetModDef("Inventory & Stock", "/workspace/inventory", "ic_mod_clean_inventory", "bg_mod_icon_teal"),
-                        new SheetModDef("Logistics / Trips", "/workspace/logistics", "ic_mod_clean_logistics", "bg_mod_icon_sky"),
-                        new SheetModDef("Home Collection", "/workspace/home-collection", "ic_mod_clean_samples", "bg_mod_icon_rose")
-                );
-                buildCategorySection(sheet, contentContainer, "RESOURCES & LOGISTICS", resourcesList);
-
-                // 5. MACHINE & AI
-                List<SheetModDef> machineAiList = Arrays.asList(
-                        new SheetModDef("Analyzer", "/workspace/analyzers", "ic_mod_clean_analyzer", "bg_mod_icon_sky"),
-                        new SheetModDef("Visual Mapper", "/workspace/analyzers/mapper", "ic_mod_clean_mapper", "bg_mod_icon_indigo"),
-                        new SheetModDef("Mappings", "/workspace/analyzers/mappings", "ic_mod_clean_mappings", "bg_mod_icon_purple")
-                );
-                buildCategorySection(sheet, contentContainer, "MACHINE & AI", machineAiList);
-
-                // 6. B2B & GROWTH
+                // 4. B2B & GROWTH
                 List<SheetModDef> b2bGrowthList = Arrays.asList(
                         new SheetModDef("Referral Doctors", "/workspace/doctors", "ic_mod_clean_doctors", "bg_mod_icon_blue"),
                         new SheetModDef("Corporate Agencies", "/workspace/agencies", "ic_mod_clean_agencies", "bg_mod_icon_orange"),
@@ -1095,19 +1080,15 @@ public class HomeNativeManager {
                 );
                 buildCategorySection(sheet, contentContainer, "B2B & GROWTH", b2bGrowthList);
 
-                // 7. ADMINISTRATION
+                // 5. ADMINISTRATION
                 List<SheetModDef> adminList = Arrays.asList(
                         new SheetModDef("Lab Settings", "/workspace/settings", "ic_mod_clean_settings", "bg_mod_icon_indigo"),
                         new SheetModDef("Report Templates", "/workspace/settings/templates", "ic_mod_clean_templates", "bg_mod_icon_purple"),
                         new SheetModDef("Invoice Branding", "/workspace/settings/branding", "ic_mod_clean_branding", "bg_mod_icon_sky"),
-                        new SheetModDef("Service Areas", "/workspace/settings/service-areas", "ic_mod_clean_service_areas", "bg_mod_icon_amber"),
                         new SheetModDef("Payment Settings", "/workspace/settings/payments", "ic_mod_clean_payment_settings", "bg_mod_icon_emerald"),
                         new SheetModDef("Notifications", "/workspace/settings/notifications", "ic_mod_clean_notifications", "bg_mod_icon_rose"),
-                        new SheetModDef("B2B Settings", "/workspace/settings/b2b", "ic_mod_clean_b2b_settings", "bg_mod_icon_blue"),
                         new SheetModDef("Staff Management", "/workspace/staff", "ic_mod_clean_staff", "bg_mod_icon_fuchsia"),
                         new SheetModDef("Invoices & Payments", "/workspace/billing", "ic_mod_clean_billing", "bg_mod_icon_emerald"),
-                        new SheetModDef("Expenses", "/workspace/expenses", "ic_mod_clean_expenses", "bg_mod_icon_rose"),
-                        new SheetModDef("Audit Logs", "/workspace/audit-logs", "ic_mod_clean_audit", "bg_mod_icon_teal"),
                         new SheetModDef("Wallet & Billing", "/workspace/wallet", "ic_mod_clean_wallet", "bg_mod_icon_indigo"),
                         new SheetModDef("Wallet Recharge", "/workspace/wallet/recharge", "ic_mod_clean_recharge", "bg_mod_icon_emerald"),
                         new SheetModDef("Help & Support", "/workspace/support", "ic_mod_clean_support", "bg_mod_icon_orange")

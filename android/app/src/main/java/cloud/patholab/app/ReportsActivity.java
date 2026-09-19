@@ -496,6 +496,7 @@ public class ReportsActivity extends AppCompatActivity {
         intent.putExtra("version", report.version);
         intent.putExtra("uhid", report.uhid);
         intent.putExtra("auto_print", autoPrint);
+        intent.putExtra("pdf_url", report.pdfUrl != null ? report.pdfUrl : "");
         startActivity(intent);
     }
 

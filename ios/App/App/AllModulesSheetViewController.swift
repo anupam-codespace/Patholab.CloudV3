@@ -29,7 +29,6 @@ class AllModulesSheetViewController: UIViewController, UITextFieldDelegate {
 
     // ── 1. Overview ──
     private let overviewModules: [SheetModule] = [
-        SheetModule(name: "Home",                path: "/dashboard",                  icon: "house.fill",            bgHex: "EFF6FF", tintHex: "2563EB"),
         SheetModule(name: "Dashboard",           path: "/dashboard",                 icon: "square.grid.2x2.fill",  bgHex: "F0F9FF", tintHex: "0284C7"),
         SheetModule(name: "Financial Analytics", path: "/workspace/analytics",       icon: "chart.bar.xaxis",       bgHex: "ECFDF5", tintHex: "059669"),
         SheetModule(name: "Online Booking",      path: "/workspace/online-booking",  icon: "calendar",              bgHex: "FAF5FF", tintHex: "9333EA"),
@@ -48,29 +47,18 @@ class AllModulesSheetViewController: UIViewController, UITextFieldDelegate {
     private let radiologyModules: [SheetModule] = [
         SheetModule(name: "RIS Dashboard",       path: "/workspace/radiology/dashboard",              icon: "waveform.path.ecg",    bgHex: "FAF5FF", tintHex: "9333EA"),
         SheetModule(name: "Scan Schedule",       path: "/workspace/radiology/dashboard/appointments",icon: "calendar",            bgHex: "EFF6FF", tintHex: "2563EB"),
-        SheetModule(name: "Technician Worklist", path: "/workspace/radiology/worklist",              icon: "list.clipboard.fill", bgHex: "F0FDFA", tintHex: "0D9488"),
-        SheetModule(name: "PACS Viewer",         path: "/workspace/radiology/pacs",                  icon: "desktopcomputer",     bgHex: "FAF5FF", tintHex: "9333EA"),
-        SheetModule(name: "Media Library",       path: "/workspace/radiology/media",                 icon: "photo.stack.fill",    bgHex: "FFF1F2", tintHex: "E11D48"),
-        SheetModule(name: "Reporting Queue",     path: "/workspace/radiology/reporting",             icon: "doc.text.fill.badge.plus", bgHex: "ECFDF5", tintHex: "059669"),
-        SheetModule(name: "Reports Archive",     path: "/workspace/radiology/archive",               icon: "archivebox.fill",     bgHex: "FFFBEB", tintHex: "D97706"),
         SheetModule(name: "Machines",            path: "/workspace/radiology/machines",              icon: "gearshape.2.fill",    bgHex: "F8FAFC", tintHex: "475569"),
         SheetModule(name: "RIS Macros",          path: "/workspace/radiology/macros",                icon: "square.and.pencil",   bgHex: "FFF7ED", tintHex: "EA580C"),
         SheetModule(name: "DICOM Settings",      path: "/workspace/radiology/settings/dicom",        icon: "gearshape.fill",      bgHex: "EFF6FF", tintHex: "2563EB"),
         SheetModule(name: "RIS Letterhead",      path: "/workspace/radiology/settings/letterhead",   icon: "doc.richtext.fill",   bgHex: "FAF5FF", tintHex: "9333EA"),
     ]
 
-    // ── 4. Resources & Logistics ──
-    private let resourcesModules: [SheetModule] = [
-        SheetModule(name: "Inventory & Stock",   path: "/workspace/inventory",       icon: "shippingbox.fill",      bgHex: "F0FDFA", tintHex: "0D9488"),
-        SheetModule(name: "Logistics / Trips",   path: "/workspace/logistics",       icon: "box.truck.fill",        bgHex: "FFFBEB", tintHex: "D97706"),
-        SheetModule(name: "Home Collection",     path: "/workspace/home-collection", icon: "house.circle.fill",     bgHex: "ECFDF5", tintHex: "059669"),
-    ]
-
-    // ── 5. Machine & AI ──
-    private let machineAiModules: [SheetModule] = [
-        SheetModule(name: "Analyzer",            path: "/workspace/analyzers",       icon: "cpu.fill",              bgHex: "ECFEFF", tintHex: "0891B2"),
-        SheetModule(name: "Visual Mapper",       path: "/workspace/analyzers/mapper",icon: "arrow.triangle.swap",   bgHex: "EEF2FF", tintHex: "4F46E5"),
-        SheetModule(name: "Mappings",            path: "/workspace/analyzers/mappings", icon: "point.3.filled.connected.trianglepath.dotted", bgHex: "FAF5FF", tintHex: "7C3AED"),
+    // ── 3.5. Inventory & Logistics ──
+    private let inventoryModules: [SheetModule] = [
+        SheetModule(name: "Inventory & Stock", path: "/workspace/inventory",
+                    icon: "shippingbox.fill",   bgHex: "ECFDF5", tintHex: "059669"),
+        SheetModule(name: "Logistics",          path: "/workspace/logistics",
+                    icon: "truck.box.fill",     bgHex: "EFF6FF", tintHex: "2563EB"),
     ]
 
     // ── 6. B2B & Growth ──
@@ -81,19 +69,15 @@ class AllModulesSheetViewController: UIViewController, UITextFieldDelegate {
         SheetModule(name: "B2B Settings",        path: "/workspace/settings/b2b-tiers", icon: "slider.horizontal.3",  bgHex: "EFF6FF", tintHex: "2563EB"),
     ]
 
-    // ── 7. Administration ──
+    // ── 4. Administration ──
     private let adminModules: [SheetModule] = [
         SheetModule(name: "Lab Settings",        path: "/workspace/settings",             icon: "gearshape.fill",        bgHex: "EEF2FF", tintHex: "4F46E5"),
         SheetModule(name: "Report Templates",    path: "/workspace/settings/templates",   icon: "doc.text.image.fill",   bgHex: "FAF5FF", tintHex: "9333EA"),
         SheetModule(name: "Invoice Branding",    path: "/workspace/settings/branding",    icon: "paintbrush.fill",       bgHex: "F0F9FF", tintHex: "0284C7"),
-        SheetModule(name: "Service Areas",       path: "/workspace/settings/service-areas",icon: "map.fill",             bgHex: "FFFBEB", tintHex: "D97706"),
         SheetModule(name: "Payment Settings",    path: "/workspace/settings/payments",    icon: "qrcode",                bgHex: "ECFDF5", tintHex: "059669"),
         SheetModule(name: "Notifications",       path: "/workspace/settings/notifications",icon: "bell.fill",            bgHex: "FFF1F2", tintHex: "E11D48"),
-        SheetModule(name: "B2B Settings",        path: "/workspace/settings/b2b",         icon: "person.3.sequence.fill",bgHex: "EFF6FF", tintHex: "2563EB"),
         SheetModule(name: "Staff Management",    path: "/workspace/staff",                icon: "person.badge.shield.checkmark.fill", bgHex: "FDF4FF", tintHex: "C026D3"),
         SheetModule(name: "Invoices & Payments", path: "/workspace/billing",              icon: "receipt",               bgHex: "ECFDF5", tintHex: "059669"),
-        SheetModule(name: "Expenses",            path: "/workspace/expenses",             icon: "creditcard.and.123",    bgHex: "FFF1F2", tintHex: "E11D48"),
-        SheetModule(name: "Audit Logs",          path: "/workspace/audit-logs",           icon: "shield.lefthalf.filled",bgHex: "F0FDFA", tintHex: "0D9488"),
         SheetModule(name: "Wallet & Billing",    path: "/workspace/wallet",               icon: "wallet.pass.fill",      bgHex: "EEF2FF", tintHex: "4F46E5"),
         SheetModule(name: "Wallet Recharge",     path: "/workspace/wallet/recharge",      icon: "plus.circle.fill",      bgHex: "ECFDF5", tintHex: "059669"),
         SheetModule(name: "Help & Support",      path: "/workspace/support",              icon: "questionmark.circle.fill",bgHex: "FFF7ED", tintHex: "EA580C"),
@@ -159,7 +143,7 @@ class AllModulesSheetViewController: UIViewController, UITextFieldDelegate {
     }
 
     private func setupSearchOmnibar() {
-        searchField.placeholder = "Search any module (e.g. DICOM, PACS, Payout, Analyzer)..."
+        searchField.placeholder = "Search any module (e.g. DICOM, RIS, Payout, Billing)..."
         searchField.font = .systemFont(ofSize: 13.5, weight: .medium)
         searchField.backgroundColor = UIColor(red: 0.973, green: 0.980, blue: 0.988, alpha: 1)
         searchField.layer.cornerRadius = 12
@@ -221,16 +205,13 @@ class AllModulesSheetViewController: UIViewController, UITextFieldDelegate {
         // 3. Radiology
         addCategorySection(title: "RADIOLOGY", modules: radiologyModules)
 
-        // 4. Resources & Logistics
-        addCategorySection(title: "RESOURCES & LOGISTICS", modules: resourcesModules)
+        // 3.5. Inventory & Logistics
+        addCategorySection(title: "INVENTORY & LOGISTICS", modules: inventoryModules)
 
-        // 5. Machine & AI
-        addCategorySection(title: "MACHINE & AI", modules: machineAiModules)
-
-        // 6. B2B & Growth
+        // 4. B2B & Growth
         addCategorySection(title: "B2B & GROWTH", modules: b2bGrowthModules)
 
-        // 7. Administration
+        // 5. Administration
         addCategorySection(title: "ADMINISTRATION", modules: adminModules)
     }
 

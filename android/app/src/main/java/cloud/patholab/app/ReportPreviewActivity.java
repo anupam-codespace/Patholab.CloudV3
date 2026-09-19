@@ -58,6 +58,9 @@ public class ReportPreviewActivity extends AppCompatActivity {
     private String testName = "Diagnostic Investigation";
     private int version = 1;
     private String uhid = "";
+    private String pdfUrl = "";        // direct PDF URL from the reports API
+    private boolean autoPrint = false; // if true → trigger print on load; false → trigger download
+    private boolean actionFired = false; // guard: fire auto-action only once per load
 
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
@@ -76,12 +79,14 @@ public class ReportPreviewActivity extends AppCompatActivity {
     private void extractIntentData() {
         Intent i = getIntent();
         if (i != null) {
-            reportId = i.getStringExtra("report_id") != null ? i.getStringExtra("report_id") : "";
+            reportId    = i.getStringExtra("report_id")    != null ? i.getStringExtra("report_id")    : "";
             patientName = i.getStringExtra("patient_name") != null ? i.getStringExtra("patient_name") : "Patient";
-            patientPhone = i.getStringExtra("patient_phone") != null ? i.getStringExtra("patient_phone") : "";
-            testName = i.getStringExtra("test_name") != null ? i.getStringExtra("test_name") : "Diagnostic Investigation";
-            version = i.getIntExtra("version", 1);
-            uhid = i.getStringExtra("uhid") != null ? i.getStringExtra("uhid") : "";
+            patientPhone= i.getStringExtra("patient_phone")!= null ? i.getStringExtra("patient_phone"): "";
+            testName    = i.getStringExtra("test_name")    != null ? i.getStringExtra("test_name")    : "Diagnostic Investigation";
+            version     = i.getIntExtra("version", 1);
+            uhid        = i.getStringExtra("uhid")         != null ? i.getStringExtra("uhid")         : "";
+            pdfUrl      = i.getStringExtra("pdf_url")      != null ? i.getStringExtra("pdf_url")      : "";
+            autoPrint   = i.getBooleanExtra("auto_print", false);
         }
     }
 
@@ -149,11 +154,21 @@ public class ReportPreviewActivity extends AppCompatActivity {
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
                 progressPreviewLoading.setVisibility(View.VISIBLE);
+                actionFired = false; // reset guard on each new page load
             }
 
             @Override
             public void onPageFinished(WebView view, String url) {
                 progressPreviewLoading.setVisibility(View.GONE);
+                // Auto-trigger print or download once the report page is fully loaded
+                if (!actionFired) {
+                    actionFired = true;
+                    if (autoPrint) {
+                        mainHandler.postDelayed(() -> triggerNativePrintSpooler(), 600);
+                    } else {
+                        mainHandler.postDelayed(() -> performPdfDownload(), 600);
+                    }
+                }
             }
 
             @Override
@@ -162,12 +177,15 @@ public class ReportPreviewActivity extends AppCompatActivity {
             }
         });
 
-        // Load report print canvas with hideNav and app flags
-        String encodedId = reportId;
-        try {
-            encodedId = URLEncoder.encode(reportId, "UTF-8");
-        } catch (Exception ignored) {}
-        String targetUrl = BASE_URL + "/workspace/reports/print/" + encodedId + "?app=true&hideNav=true";
+        // Prefer the direct pdfUrl from the API; fall back to the web print-canvas URL
+        String targetUrl;
+        if (pdfUrl != null && !pdfUrl.isEmpty() && pdfUrl.startsWith("http")) {
+            targetUrl = pdfUrl;
+        } else {
+            String encodedId = reportId;
+            try { encodedId = URLEncoder.encode(reportId, "UTF-8"); } catch (Exception ignored) {}
+            targetUrl = BASE_URL + "/workspace/reports/print/" + encodedId + "?app=true&hideNav=true";
+        }
         webViewReportPreview.loadUrl(targetUrl);
     }
 

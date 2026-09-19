@@ -1771,8 +1771,6 @@ public class MainActivity extends BridgeActivity {
         allModules = new ArrayList<>();
 
         // ── Overview ──────────────────────────────────────────────────────────
-        allModules.add(new ModuleItem("Home", "/dashboard", "Overview",
-                "Main overview dashboard & quick statistics", R.drawable.ic_mod_clean_home, false));
         allModules.add(new ModuleItem("Dashboard", "/workspace/analytics", "Overview",
                 "Operations overview & performance tracking", R.drawable.ic_mod_clean_dashboard, false));
         allModules.add(new ModuleItem("Financial Analytics", "/workspace/analytics", "Overview",
@@ -1792,21 +1790,17 @@ public class MainActivity extends BridgeActivity {
         allModules.add(new ModuleItem("Report Dispatch", "/workspace/reports", "Clinical",
                 "Sign off & dispatch PDF reports", R.drawable.ic_mod_clean_reports, false));
 
+        // ── Inventory & Logistics ─────────────────────────────────────────────
+        allModules.add(new ModuleItem("Inventory & Stock", "/workspace/inventory", "Inventory & Logistics",
+                "Reagent & consumable stock tracking", R.drawable.ic_mod_clean_inventory, false));
+        allModules.add(new ModuleItem("Logistics", "/workspace/logistics", "Inventory & Logistics",
+                "Track specimen and sample logistics", R.drawable.ic_mod_clean_logistics, false));
+
         // ── Radiology (RIS) ───────────────────────────────────────────────────
         allModules.add(new ModuleItem("RIS Dashboard", "/workspace/radiology/dashboard", "Radiology",
                 "Radiology Information System overview", R.drawable.ic_mod_clean_ris, false));
         allModules.add(new ModuleItem("Scan Schedule", "/workspace/radiology/dashboard/appointments", "Radiology",
                 "Book & manage radiology scans", R.drawable.ic_mod_clean_scan_schedule, false));
-        allModules.add(new ModuleItem("Technician Worklist", "/workspace/radiology/worklist", "Radiology",
-                "View and complete scanning tasks", R.drawable.ic_mod_clean_tech_worklist, false));
-        allModules.add(new ModuleItem("PACS Viewer", "/workspace/radiology/pacs", "Radiology",
-                "View digital imaging & PACS DICOM files", R.drawable.ic_mod_clean_pacs, false));
-        allModules.add(new ModuleItem("Media Library", "/workspace/radiology/media", "Radiology",
-                "DICOM & imaging media storage archive", R.drawable.ic_mod_clean_media, false));
-        allModules.add(new ModuleItem("Reporting Queue", "/workspace/radiology/reporting", "Radiology",
-                "Radiologist report queue & sign-off", R.drawable.ic_mod_clean_rad_reporting, false));
-        allModules.add(new ModuleItem("Reports Archive", "/workspace/radiology/archive", "Radiology",
-                "Historical signed radiology reports archive", R.drawable.ic_mod_clean_archive, false));
         allModules.add(new ModuleItem("Machines", "/workspace/radiology/machines", "Radiology",
                 "Configure radiology equipment & modalities", R.drawable.ic_mod_clean_machines, false));
         allModules.add(new ModuleItem("RIS Macros", "/workspace/radiology/macros", "Radiology",
@@ -1815,22 +1809,6 @@ public class MainActivity extends BridgeActivity {
                 "PACS node configuration & AE titles", R.drawable.ic_mod_clean_dicom, false));
         allModules.add(new ModuleItem("RIS Letterhead", "/workspace/radiology/settings/letterhead", "Radiology",
                 "Custom report letterhead & branding", R.drawable.ic_mod_clean_letterhead, false));
-
-        // ── Resources & Logistics ─────────────────────────────────────────────
-        allModules.add(new ModuleItem("Inventory & Stock", "/workspace/inventory", "Logistics",
-                "Track reagents, consumables & items", R.drawable.ic_mod_clean_inventory, false));
-        allModules.add(new ModuleItem("Logistics / Trips", "/workspace/logistics", "Logistics",
-                "Manage field agents & pickup trips", R.drawable.ic_mod_clean_logistics, false));
-        allModules.add(new ModuleItem("Home Collection", "/workspace/home-collection", "Logistics",
-                "Assign phlebotomists & track home visits", R.drawable.ic_mod_clean_samples, false));
-
-        // ── Machine & AI ──────────────────────────────────────────────────────
-        allModules.add(new ModuleItem("Analyzer", "/workspace/analyzers", "Machine",
-                "Connect analyzers & view output logs", R.drawable.ic_mod_clean_analyzer, false));
-        allModules.add(new ModuleItem("Visual Mapper", "/workspace/analyzers/mapper", "Machine",
-                "Map barcode codes visually to fields", R.drawable.ic_mod_clean_mapper, false));
-        allModules.add(new ModuleItem("Mappings", "/workspace/analyzers/mappings", "Machine",
-                "Configure machine integration parameters", R.drawable.ic_mod_clean_mappings, false));
 
         // ── B2B & Growth ──────────────────────────────────────────────────────
         allModules.add(new ModuleItem("Referral Doctors", "/workspace/doctors", "B2B",
@@ -1847,8 +1825,6 @@ public class MainActivity extends BridgeActivity {
                 "Design & manage report layout templates", R.drawable.ic_mod_clean_templates, false));
         allModules.add(new ModuleItem("Invoice Branding", "/workspace/settings/branding", "Admin",
                 "Custom bill branding & header templates", R.drawable.ic_mod_clean_branding, false));
-        allModules.add(new ModuleItem("Service Areas", "/workspace/settings/service-areas", "Admin",
-                "Manage sample collection coverage areas", R.drawable.ic_mod_clean_service_areas, false));
         allModules.add(new ModuleItem("Payment Settings", "/workspace/settings/payments", "Admin",
                 "Configure QR codes & online payment gateways", R.drawable.ic_mod_clean_payment_settings, false));
         allModules.add(new ModuleItem("Notifications", "/workspace/settings/notifications", "Admin",
@@ -1859,10 +1835,6 @@ public class MainActivity extends BridgeActivity {
                 "Manage team roles, access keys & logs", R.drawable.ic_mod_clean_staff, false));
         allModules.add(new ModuleItem("Invoices & Payments", "/workspace/billing", "Admin",
                 "Track cash flow, bills & receipts", R.drawable.ic_mod_clean_billing, false));
-        allModules.add(new ModuleItem("Expenses", "/workspace/expenses", "Admin",
-                "Record & categorise lab expenses", R.drawable.ic_mod_clean_expenses, false));
-        allModules.add(new ModuleItem("Audit Logs", "/workspace/audit-logs", "Admin",
-                "View security access logs & trace changes", R.drawable.ic_mod_clean_audit, false));
         allModules.add(new ModuleItem("Wallet & Billing", "/workspace/wallet", "Admin",
                 "Top-up wallet & view billing history", R.drawable.ic_mod_clean_wallet, false));
         allModules.add(new ModuleItem("Wallet Recharge", "/workspace/wallet/recharge", "Admin",
