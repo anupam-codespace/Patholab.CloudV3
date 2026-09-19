@@ -1,21 +1,32 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# ── Capacitor & Cordova Core Rules ─────────────────────────────────────────
+-keep class com.getcapacitor.** { *; }
+-keep interface com.getcapacitor.** { *; }
+-keep @com.getcapacitor.annotation.CapacitorPlugin class * { *; }
+-keepclassmembers class * {
+    @com.getcapacitor.PluginMethod public *;
+}
+-keep class org.apache.cordova.** { *; }
+-keep interface org.apache.cordova.** { *; }
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# ── WebView JavaScript Interface Rules ──────────────────────────────────────
+-keepclassmembers class * {
+    @android.webkit.JavascriptInterface <methods>;
+}
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# ── Application Native Classes ─────────────────────────────────────────────
+-keep class cloud.patholab.app.** { *; }
+-keep class androidx.security.crypto.** { *; }
+-keep class com.google.crypto.tink.** { *; }
+-keep class com.google.zxing.** { *; }
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# ── Suppress Missing Annotations in Third-Party Libraries ──────────────────
+-dontwarn javax.annotation.**
+-dontwarn javax.annotation.Nullable
+-dontwarn javax.annotation.concurrent.GuardedBy
+-dontwarn com.google.crypto.tink.**
+-dontwarn com.getcapacitor.**
+-dontwarn org.apache.cordova.**
+
+# ── Keep Line Numbers for Crashlytics / Stack Traces ────────────────────────
+-keepattributes SourceFile,LineNumberTable
+-keepattributes *Annotation*

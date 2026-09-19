@@ -754,28 +754,7 @@ public class NotificationsActivity extends AppCompatActivity {
     }
 
     private void loadAttachmentImage(String urlString, ImageView imageView) {
-        Bitmap cached = imageCache.get(urlString);
-        if (cached != null) {
-            imageView.setImageBitmap(cached);
-            return;
-        }
-
-        imageView.setImageBitmap(null);
-        new Thread(() -> {
-            try {
-                URL url = new URL(urlString);
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setConnectTimeout(5000);
-                conn.setReadTimeout(5000);
-                InputStream is = conn.getInputStream();
-                Bitmap bm = BitmapFactory.decodeStream(is);
-                conn.disconnect();
-                if (bm != null) {
-                    imageCache.put(urlString, bm);
-                    mainHandler.post(() -> imageView.setImageBitmap(bm));
-                }
-            } catch (Exception ignored) {}
-        }).start();
+        ImageLoaderHelper.load(this, urlString, imageView, 0);
     }
 
     private String stripEmail(String text) {

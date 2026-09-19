@@ -5,12 +5,12 @@ platform :ios do
   desc "Build and upload to TestFlight"
   lane :beta do
     gym(
-      project: "App.xcodeproj",
+      workspace: "App.xcworkspace",
       scheme: "App",
       configuration: "Release",
       export_method: "app-store",
       clean: true,
-      output_directory: "/tmp",
+      output_directory: "./build",
       output_name: "Patholab_3.0_build7.ipa",
       xcargs: "CODE_SIGN_STYLE=Automatic DEVELOPMENT_TEAM=3T35CAJ6B2",
       export_options: {

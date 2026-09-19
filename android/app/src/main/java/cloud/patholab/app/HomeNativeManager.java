@@ -2160,48 +2160,22 @@ public class HomeNativeManager {
             });
             return;
         }
-        new Thread(() -> {
-            try {
-                Bitmap bmp = null;
-                if (raw.startsWith("data:image")) {
-                    String data = raw.substring(raw.indexOf(",") + 1);
-                    byte[] decoded = Base64.decode(data, Base64.DEFAULT);
-                    bmp = BitmapFactory.decodeByteArray(decoded, 0, decoded.length);
-                } else if (raw.startsWith("http://") || raw.startsWith("https://")) {
-                    URL url = new URL(raw);
-                    InputStream is = url.openStream();
-                    bmp = BitmapFactory.decodeStream(is);
-                }
-                if (bmp != null) {
-                    final Bitmap finalBmp = bmp;
-                    mainHandler.post(() -> {
-                        if (avatarImage != null) {
-                            avatarImage.setImageBitmap(finalBmp);
-                            avatarImage.setVisibility(View.VISIBLE);
-                        }
-                        if (avatarInitial != null) {
-                            avatarInitial.setVisibility(View.GONE);
-                        }
-                    });
-                } else {
-                    mainHandler.post(() -> {
-                        if (avatarImage != null) {
-                            avatarImage.setImageResource(getDefaultAvatarRes());
-                            avatarImage.setVisibility(View.VISIBLE);
-                        }
-                        if (avatarInitial != null) avatarInitial.setVisibility(View.GONE);
-                    });
-                }
-            } catch (Exception ignored) {
-                mainHandler.post(() -> {
-                    if (avatarImage != null) {
-                        avatarImage.setImageResource(getDefaultAvatarRes());
-                        avatarImage.setVisibility(View.VISIBLE);
-                    }
-                    if (avatarInitial != null) avatarInitial.setVisibility(View.GONE);
-                });
+        ImageLoaderHelper.load(ctx, raw, avatarImage, getDefaultAvatarRes(), new ImageLoaderHelper.ImageCallback() {
+            @Override
+            public void onLoaded(Bitmap bitmap) {
+                if (avatarImage != null) avatarImage.setVisibility(View.VISIBLE);
+                if (avatarInitial != null) avatarInitial.setVisibility(View.GONE);
             }
-        }).start();
+
+            @Override
+            public void onError() {
+                if (avatarImage != null) {
+                    avatarImage.setImageResource(getDefaultAvatarRes());
+                    avatarImage.setVisibility(View.VISIBLE);
+                }
+                if (avatarInitial != null) avatarInitial.setVisibility(View.GONE);
+            }
+        });
     }
 
     private void applyUserName(String fullName) {

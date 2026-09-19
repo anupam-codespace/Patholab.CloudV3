@@ -23,7 +23,9 @@ public class StatusBarHelper {
         if (activity == null) return;
         try {
             Window window = activity.getWindow();
-            window.setStatusBarColor(0xFF0D6EFD);
+            if (Build.VERSION.SDK_INT < 35) {
+                window.setStatusBarColor(0xFF0D6EFD);
+            }
 
             WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window, window.getDecorView());
             if (controller != null) {
@@ -45,7 +47,9 @@ public class StatusBarHelper {
         if (activity == null) return;
         try {
             Window window = activity.getWindow();
-            window.setStatusBarColor(0xFF0A0F2E);
+            if (Build.VERSION.SDK_INT < 35) {
+                window.setStatusBarColor(0xFF0A0F2E);
+            }
 
             WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window, window.getDecorView());
             if (controller != null) {
@@ -66,11 +70,30 @@ public class StatusBarHelper {
         if (activity == null) return;
         try {
             Window window = activity.getWindow();
-            window.setStatusBarColor(0xFF0F172A);
+            if (Build.VERSION.SDK_INT < 35) {
+                window.setStatusBarColor(0xFF0F172A);
+            }
 
             WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window, window.getDecorView());
             if (controller != null) {
                 controller.setAppearanceLightStatusBars(false);
+            }
+        } catch (Exception ignored) {}
+    }
+
+    /**
+     * Sets navigation bar color safely on pre-Android 15 devices, and controls icon contrast via WindowInsetsControllerCompat.
+     */
+    public static void setNavigationBarColor(Activity activity, int color, boolean isLightIcons) {
+        if (activity == null) return;
+        try {
+            Window window = activity.getWindow();
+            if (Build.VERSION.SDK_INT < 35) {
+                window.setNavigationBarColor(color);
+            }
+            WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window, window.getDecorView());
+            if (controller != null) {
+                controller.setAppearanceLightNavigationBars(!isLightIcons);
             }
         } catch (Exception ignored) {}
     }

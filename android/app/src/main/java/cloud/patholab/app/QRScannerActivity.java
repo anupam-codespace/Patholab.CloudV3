@@ -67,9 +67,10 @@ public class QRScannerActivity extends AppCompatActivity {
 
         // Full-screen translucent status bar
         Window window = getWindow();
-        window.getDecorView().setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
-        window.setStatusBarColor(0x00000000);
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false);
+        if (android.os.Build.VERSION.SDK_INT < 35) {
+            window.setStatusBarColor(0x00000000);
+        }
 
         setContentView(R.layout.activity_qr_scanner);
 

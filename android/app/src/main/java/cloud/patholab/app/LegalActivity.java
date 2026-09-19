@@ -66,9 +66,12 @@ public class LegalActivity extends AppCompatActivity {
         setContentView(R.layout.activity_legal);
 
         // Edge-to-edge status bar
-        getWindow().setStatusBarColor(0xFF4338CA);
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-            getWindow().getDecorView().setSystemUiVisibility(0);
+        if (android.os.Build.VERSION.SDK_INT < 35) {
+            getWindow().setStatusBarColor(0xFF4338CA);
+        }
+        androidx.core.view.WindowInsetsControllerCompat controller = androidx.core.view.WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+        if (controller != null) {
+            controller.setAppearanceLightStatusBars(false);
         }
 
         // Apply insets to header

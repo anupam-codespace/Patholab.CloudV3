@@ -173,10 +173,10 @@ public class MainActivity extends BridgeActivity {
         // Status bar and Navigation Bar icons & colors
         if (isDark) {
             StatusBarHelper.setStatusBarDark(this);
-            getWindow().setNavigationBarColor(android.graphics.Color.parseColor("#0F172A"));
+            StatusBarHelper.setNavigationBarColor(this, android.graphics.Color.parseColor("#0F172A"), false);
         } else {
             StatusBarHelper.setStatusBarSapphire(this);
-            getWindow().setNavigationBarColor(android.graphics.Color.TRANSPARENT);
+            StatusBarHelper.setNavigationBarColor(this, android.graphics.Color.TRANSPARENT, true);
         }
 
         // Parent root layout

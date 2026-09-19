@@ -273,36 +273,7 @@ public class RISLetterheadActivity extends AppCompatActivity {
     }
 
     private void loadIntoImageView(String src, ImageView iv) {
-        if (src == null || src.isEmpty()) {
-            iv.setImageDrawable(null);
-            return;
-        }
-
-        if (src.startsWith("data:image")) {
-            try {
-                int commaIdx = src.indexOf(",");
-                if (commaIdx != -1) {
-                    byte[] bytes = Base64.decode(src.substring(commaIdx + 1), Base64.DEFAULT);
-                    Bitmap bm = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                    iv.setImageBitmap(bm);
-                    return;
-                }
-            } catch (Exception ignored) {}
-        } else if (src.startsWith("http")) {
-            new Thread(() -> {
-                try {
-                    URL url = new URL(src);
-                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                    conn.setConnectTimeout(8000);
-                    conn.connect();
-                    InputStream is = conn.getInputStream();
-                    Bitmap bm = BitmapFactory.decodeStream(is);
-                    is.close();
-                    conn.disconnect();
-                    mainHandler.post(() -> iv.setImageBitmap(bm));
-                } catch (Exception ignored) {}
-            }).start();
-        }
+        ImageLoaderHelper.load(this, src, iv, 0);
     }
 
     // ── API: Fetch (GET with Dual Sync) ──

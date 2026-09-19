@@ -542,6 +542,7 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_SUPPRESS_WARNINGS = YES;
 				VALIDATE_PRODUCT = YES;
+				DEAD_CODE_STRIPPING = YES;
 			};
 			name = Release;
 		};
