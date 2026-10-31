@@ -1,8 +1,8 @@
-# 🔬 Patholab - Laboratory Management SaaS
+#  Patholab - Laboratory Management SaaS
 
 A comprehensive, production-ready Laboratory Management System built with Next.js 14, PostgreSQL (Neon), Prisma, TanStack Query, and Razorpay integration.
 
-## 📋 Table of Contents
+##  Table of Contents
 
 - [Features](#features)
 - [Tech Stack](#tech-stack)
@@ -17,16 +17,16 @@ A comprehensive, production-ready Laboratory Management System built with Next.j
 - [Deployment](#deployment)
 - [Contributing](#contributing)
 
-## ✨ Features
+##  Features
 
-### 🔐 Authentication & Authorization
+###  Authentication & Authorization
 - ✅ Email/Password registration with OTP verification
 - ✅ Secure JWT-based authentication
 - ✅ Role-based access control (Super Admin, Lab Owner, Technician, Receptionist)
 - ✅ Password reset with OTP
 - ✅ Email verification system
 
-### 💳 Subscription & Billing
+###  Subscription & Billing
 - ✅ Multiple subscription plans (Monthly, Quarterly, Yearly)
 - ✅ Razorpay payment integration
 - ✅ Automated payment verification
@@ -35,7 +35,7 @@ A comprehensive, production-ready Laboratory Management System built with Next.j
 - ✅ Payment history and receipts
 - ✅ Usage tracking and limits
 
-### 🏥 Laboratory Management
+###  Laboratory Management
 - ✅ Lab registration and profile management
 - ✅ Staff management with role assignments
 - ✅ Patient registration and management
@@ -45,7 +45,7 @@ A comprehensive, production-ready Laboratory Management System built with Next.j
 - ✅ Report generation and delivery
 - ✅ Appointment scheduling
 
-### 📊 Analytics & Reporting
+###  Analytics & Reporting
 - ✅ Beautiful charts with Recharts
 - ✅ Revenue analytics
 - ✅ Test statistics
@@ -53,7 +53,7 @@ A comprehensive, production-ready Laboratory Management System built with Next.j
 - ✅ Subscription metrics
 - ✅ Custom date range filters
 
-### 🎨 UI/UX Features
+###  UI/UX Features
 - ✅ Dark/Light theme support
 - ✅ Responsive design for all devices
 - ✅ Modern, clean interface
@@ -61,14 +61,14 @@ A comprehensive, production-ready Laboratory Management System built with Next.j
 - ✅ Toast notifications
 - ✅ Real-time updates
 
-### 🆘 Support System
+###  Support System
 - ✅ Ticket-based support system
 - ✅ Support sidebar for quick access
 - ✅ Priority levels (Low, Medium, High, Urgent)
 - ✅ Ticket status tracking
 - ✅ Email notifications
 
-### 🔔 Notifications
+###  Notifications
 - ✅ In-app notifications
 - ✅ Email notifications for:
   - Account verification
@@ -77,7 +77,7 @@ A comprehensive, production-ready Laboratory Management System built with Next.j
   - Test status changes
   - Support ticket updates
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 ### Frontend
 - **Framework:** Next.js 14 (App Router)
@@ -106,7 +106,7 @@ A comprehensive, production-ready Laboratory Management System built with Next.j
 - **Email Service:** Gmail SMTP / SendGrid
 - **Payment Gateway:** Razorpay
 
-## 📦 Prerequisites
+##  Prerequisites
 
 Before you begin, ensure you have:
 
@@ -116,7 +116,7 @@ Before you begin, ensure you have:
 - **Razorpay account** (test/live)
 - **Email service** credentials (Gmail/SendGrid)
 
-## 🚀 Installation
+##  Installation
 
 ### Step 1: Clone the Repository
 
@@ -373,7 +373,7 @@ npm run prisma:studio
 # Create new migration
 npm run prisma:migrate
 
-# Reset database (⚠️ Deletes all data)
+# Reset database (Deletes all data)
 npx prisma migrate reset
 
 # Format schema
@@ -544,7 +544,7 @@ Response: { plans }
 - Billing and invoicing
 - Test booking
 
-## 🚢 Deployment
+##  Deployment
 
 ### Deploy to Vercel (Recommended)
 
