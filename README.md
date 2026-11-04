@@ -21,11 +21,11 @@ A comprehensive, production-ready Laboratory Management System built with Next.j
 ##  Features
 
 ###  Authentication & Authorization
-- ✅ Email/Password registration with OTP verification
-- ✅ Secure JWT-based authentication
-- ✅ Role-based access control (Super Admin, Lab Owner, Technician, Receptionist)
-- ✅ Password reset with OTP
-- ✅ Email verification system
+-  Email/Password registration with OTP verification
+-  Secure JWT-based authentication
+-  Role-based access control (Super Admin, Lab Owner, Technician, Receptionist)
+-  Password reset with OTP
+-  Email verification system
 
 ###  Subscription & Billing
 - ✅ Multiple subscription plans (Monthly, Quarterly, Yearly)
