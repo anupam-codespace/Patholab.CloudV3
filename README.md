@@ -1,5 +1,6 @@
 #  Patholab - Laboratory Management SaaS
 
+
 A comprehensive, production-ready Laboratory Management System built with Next.js 14, PostgreSQL (Neon), Prisma, TanStack Query, and Razorpay integration.
 
 ##  Table of Contents
