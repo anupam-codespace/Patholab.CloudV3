@@ -110,7 +110,6 @@ A comprehensive, production-ready Laboratory Management System built with Next.j
 ##  Prerequisites
 
 Before you begin, ensure you have:
-
 - **Node.js** 18+ installed
 - **npm** or **yarn** or **pnpm**
 - **PostgreSQL database** (Neon recommended)
