@@ -4,7 +4,6 @@
 A comprehensive, production-ready Laboratory Management System built with Next.js 14, PostgreSQL (Neon), Prisma, TanStack Query, and Razorpay integration.
 
 ##  Table of Contents
-
 - [Features](#features)
 - [Tech Stack](#tech-stack)
 - [Prerequisites](#prerequisites)
@@ -19,7 +18,6 @@ A comprehensive, production-ready Laboratory Management System built with Next.j
 - [Contributing](#contributing)
 
 ##  Features
-
 ###  Authentication & Authorization
 -  Email/Password registration with OTP verification
 -  Secure JWT-based authentication
@@ -108,7 +106,6 @@ A comprehensive, production-ready Laboratory Management System built with Next.j
 - **Payment Gateway:** Razorpay
 
 ##  Prerequisites
-
 Before you begin, ensure you have:
 - **Node.js** 18+ installed
 - **npm** or **yarn** or **pnpm**
